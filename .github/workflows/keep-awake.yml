@@ -1,0 +1,22 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    # Runs every 14 minutes
+    - cron: "*/14 * * * *"
+  workflow_dispatch: # Allows you to manually trigger the workflow from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Frontend
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" https://akwaaba-homes-frontend.onrender.com
+          echo " Pinging frontend complete!"
+          
+      # Uncomment and replace the URL below with your actual backend URL to keep it awake too!
+      # - name: Ping Backend
+      #   run: |
+      #     curl -s -o /dev/null -w "%{http_code}" https://your-backend-url.onrender.com/api/health
+      #     echo " Pinging backend complete!"
