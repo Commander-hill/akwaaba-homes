@@ -7,6 +7,7 @@ import { encryptData, decryptData } from '../utils/crypto';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { UAParser } from 'ua-parser-js';
+import { getTransporter } from '../utils/notification.service';
 
 
 
@@ -82,15 +83,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
     
-    if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_gmail_address@gmail.com') {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-
+    const transporter = getTransporter();
+    
+    if (transporter) {
       const mailOptions = {
         from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
         to: user.email,
@@ -487,15 +482,9 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     });
 
     // Send email
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    const transporter = getTransporter();
+    
+    if (transporter) {
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
@@ -525,6 +514,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
         console.log(`🔗 Password Reset Link: ${resetUrl}`);
         console.log('=============================================\n');
       });
+    }
 
     res.status(200).json({ message: 'If an account with that email exists, we have sent a reset link.' });
   } catch (error) {

@@ -51,13 +51,20 @@ const badge = (label: string, value: string, color = '#EEF2FF', textColor = '#4F
 
 const getFrontendUrl = () => process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// ─── SMTP Transporter ─────────────────────────────────────────────────────────
-const getTransporter = () => {
+// ─── Global SMTP Transporter (Pooled) ─────────────────────────────────────────
+let transporterInstance: nodemailer.Transporter | null = null;
+export const getTransporter = () => {
   if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your_gmail_address@gmail.com') return null;
-  return nodemailer.createTransport({
+  if (transporterInstance) return transporterInstance;
+  
+  transporterInstance = nodemailer.createTransport({
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
     service: 'gmail',
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
   });
+  return transporterInstance;
 };
 
 // ─── Core Dispatch ────────────────────────────────────────────────────────────
