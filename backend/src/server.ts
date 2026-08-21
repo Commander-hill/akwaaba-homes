@@ -39,7 +39,10 @@ app.use(helmet({
   crossOriginResourcePolicy: false, // Allow serving images cross-origin
 }));
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true })); // Important for HTTP-only cookies
+app.use(cors({ 
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', 
+  credentials: true 
+})); // Important for HTTP-only cookies
 app.use(express.json({ limit: '10mb' })); // Increase limit for Base64 signatures
 app.use(cookieParser());
 

@@ -79,7 +79,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     // REAL EMAIL SENDING VIA GMAIL SMTP
-    const verifyLink = `http://localhost:3000/verify-email?token=${verificationToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
     
     if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_gmail_address@gmail.com') {
       const transporter = nodemailer.createTransport({
@@ -476,7 +477,8 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       },
     });
 
-    const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
     try {
       await transporter.sendMail({

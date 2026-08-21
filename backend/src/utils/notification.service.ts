@@ -49,6 +49,8 @@ const btn = (text: string, href: string, color = '#4F46E5') =>
 const badge = (label: string, value: string, color = '#EEF2FF', textColor = '#4F46E5') =>
   `<div style="display:inline-block;background:${color};color:${textColor};padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;margin:4px 4px 4px 0;">${label}: <strong>${value}</strong></div>`;
 
+const getFrontendUrl = () => process.env.FRONTEND_URL || 'http://localhost:3000';
+
 // ─── SMTP Transporter ─────────────────────────────────────────────────────────
 const getTransporter = () => {
   if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your_gmail_address@gmail.com') return null;
@@ -124,7 +126,7 @@ export const notifyBookingCreated = async (opts: {
        <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.landlordName}</strong>,</p>
        <p style="color:#475569;font-size:15px;line-height:1.7;"><strong>${opts.tenantName}</strong> has submitted a booking request for your property:</p>
        ${badge('Property', opts.propertyTitle)}
-       ${btn('Review Booking Request', 'http://localhost:3000/dashboard/landlord')}
+       ${btn('Review Booking Request', `${getFrontendUrl()}/dashboard/landlord`)}
        <p style="color:#94a3b8;font-size:13px;text-align:center;">Log in to your Landlord Dashboard to accept or reject this request.</p>`
     )
   });
@@ -158,7 +160,7 @@ export const notifyBookingStatusChanged = async (opts: {
          <span style="color:${statusColor};font-size:20px;font-weight:800;">${opts.status}</span>
        </div>
        ${isApproved ? `<p style="color:#475569;font-size:14px;">Congratulations! Your accommodation has been confirmed. Please proceed to complete your move-in arrangements.</p>` : ''}
-       ${btn('View My Bookings', 'http://localhost:3000/dashboard/tenant')}` 
+       ${btn('View My Bookings', `${getFrontendUrl()}/dashboard/tenant`)}` 
     )
   });
 };
@@ -187,7 +189,7 @@ export const notifySubscriptionExpirySoon = async (opts: {
          ${badge('Days Remaining', String(opts.daysLeft), '#fef3c7', '#92400e')}
          <p style="color:#78350f;font-size:13px;margin:12px 0 0;">After expiry, your property listings will be hidden from tenant searches until your subscription is renewed.</p>
        </div>
-       ${btn('Renew Subscription', 'http://localhost:3000/dashboard/landlord/subscription', '#d97706')}`
+       ${btn('Renew Subscription', `${getFrontendUrl()}/dashboard/landlord/subscription`, '#d97706')}`
     )
   });
 };
@@ -216,7 +218,7 @@ export const notifyPropertyApproval = async (opts: {
          <strong style="color:${isApproved ? '#059669' : '#dc2626'};font-size:16px;">${isApproved ? '✓ Your listing is now live on Akwaaba Homes!' : '✗ Your listing requires changes before approval.'}</strong>
          ${opts.reason ? `<p style="color:#475569;font-size:13px;margin:8px 0 0;">${opts.reason}</p>` : ''}
        </div>
-       ${btn('View My Properties', 'http://localhost:3000/dashboard/landlord/properties', isApproved ? '#059669' : '#4F46E5')}`
+       ${btn('View My Properties', `${getFrontendUrl()}/dashboard/landlord/properties`, isApproved ? '#059669' : '#4F46E5')}`
     )
   });
 };
