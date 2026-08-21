@@ -37,10 +37,20 @@ export const xssSanitizer = (req: Request, res: Response, next: NextFunction) =>
     req.body = cleanData(req.body);
   }
   if (req.query) {
-    req.query = cleanData(req.query);
+    Object.defineProperty(req, 'query', { 
+      value: cleanData(req.query), 
+      configurable: true, 
+      enumerable: true, 
+      writable: true 
+    });
   }
   if (req.params) {
-    req.params = cleanData(req.params);
+    Object.defineProperty(req, 'params', { 
+      value: cleanData(req.params), 
+      configurable: true, 
+      enumerable: true, 
+      writable: true 
+    });
   }
   next();
 };
