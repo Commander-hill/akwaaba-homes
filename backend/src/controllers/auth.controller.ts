@@ -109,16 +109,18 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         `,
       };
 
-      try {
-        await transporter.sendMail(mailOptions);
-        console.log(`✉️  Verification email successfully sent to ${user.email}`);
-      } catch (emailError) {
-        console.error('Failed to send verification email via SMTP:', emailError);
-        console.log('\n=============================================');
-        console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL SENT TO: ${user.email}`);
-        console.log(`🔗 Verification Link: ${verifyLink}`);
-        console.log('=============================================\n');
-      }
+      // Send email asynchronously to prevent blocking the registration request
+      transporter.sendMail(mailOptions)
+        .then(() => {
+          console.log(`✉️  Verification email successfully sent to ${user.email}`);
+        })
+        .catch((emailError) => {
+          console.error('Failed to send verification email via SMTP:', emailError);
+          console.log('\n=============================================');
+          console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+          console.log(`🔗 Verification Link: ${verifyLink}`);
+          console.log('=============================================\n');
+        });
     } else {
       // Fallback for development if real credentials aren't set yet
       console.log('\n=============================================');
@@ -498,31 +500,31 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
-    try {
-      await transporter.sendMail({
-        from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
-        to: user.email,
-        subject: 'Password Reset Request',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-w-2xl; margin: 0 auto;">
-            <h2>Password Reset Request</h2>
-            <p>You requested a password reset for your AkwaabaHomes account.</p>
-            <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
-            <br />
-            <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
-            <br /><br />
-            <p>If you did not request this, please ignore this email.</p>
-          </div>
-        `,
+    // Send email asynchronously
+    transporter.sendMail({
+      from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
+      to: user.email,
+      subject: 'Password Reset Request',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-w-2xl; margin: 0 auto;">
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset for your AkwaabaHomes account.</p>
+          <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
+          <br />
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <br /><br />
+          <p>If you did not request this, please ignore this email.</p>
+        </div>
+      `,
+    })
+      .then(() => console.log(`✉️  Password reset email successfully sent to ${user.email}`))
+      .catch((emailError) => {
+        console.error('Failed to send password reset email via SMTP:', emailError);
+        console.log('\n=============================================');
+        console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+        console.log(`🔗 Password Reset Link: ${resetUrl}`);
+        console.log('=============================================\n');
       });
-      console.log(`✉️  Password reset email successfully sent to ${user.email}`);
-    } catch (emailError) {
-      console.error('Failed to send password reset email via SMTP:', emailError);
-      console.log('\n=============================================');
-      console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL SENT TO: ${user.email}`);
-      console.log(`🔗 Password Reset Link: ${resetUrl}`);
-      console.log('=============================================\n');
-    }
 
     res.status(200).json({ message: 'If an account with that email exists, we have sent a reset link.' });
   } catch (error) {
