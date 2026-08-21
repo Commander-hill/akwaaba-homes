@@ -1,0 +1,189 @@
+'use client';
+
+import { useQuery } from '@tanstack/react-query';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Home, Search, UserCircle, LogIn, Menu, X } from 'lucide-react';
+import clsx from 'clsx';
+import { useState, useEffect } from 'react';
+import api from '@/lib/axios';
+import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const isHome = pathname === '/';
+  const isScrolled = isHome ? scrolled : true;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  const { data: userResponse } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const { data } = await api.get('/auth/me');
+      return data;
+    },
+    retry: false,
+  });
+
+  const isAuthenticated = !!userResponse?.user;
+  const role = userResponse?.user?.role;
+  const dashboardHref = role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
+
+  const navLinks = [
+    { name: 'Home', href: '/', icon: Home },
+    { name: 'Properties', href: '/properties', icon: Search },
+  ];
+  
+  return (
+    <nav className={clsx(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+      isScrolled 
+        ? "bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl" 
+        : "bg-transparent border-b border-transparent"
+    )}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-20 items-center">
+          
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--primary)]/20 group-hover:shadow-[var(--primary)]/40 transition-all">
+              <span className="text-white font-black text-xl tracking-tighter">A</span>
+            </div>
+            <span className={clsx(
+              "font-bold text-2xl tracking-tight transition-colors", 
+              isScrolled ? "text-gradient dark:text-white" : "text-white"
+            )}>
+              AKWAABA Homes
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center space-x-10">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={clsx(
+                    "flex items-center gap-2 text-[15px] font-bold transition-colors",
+                    isActive 
+                      ? "text-[#5B4CFF]" 
+                      : isScrolled 
+                        ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" 
+                        : "text-white/80 hover:text-white"
+                  )}
+                >
+                  <Icon className={clsx("w-4 h-4", isActive ? "text-[#5B4CFF]" : "")} />
+                  {link.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Actions */}
+          <div className="hidden md:flex items-center space-x-5">
+            <ThemeToggle isScrolled={isScrolled} />
+            
+            {isAuthenticated ? (
+              <div className="flex items-center gap-6">
+                <NotificationBell />
+                <Link href={dashboardHref} className={clsx(
+                  "flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-bold transition-colors",
+                  isScrolled 
+                    ? "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10" 
+                    : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                )}>
+                  <UserCircle className="w-5 h-5 text-[#5B4CFF]" />
+                  Dashboard
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Link href="/login" className={clsx(
+                  "text-[15px] font-bold transition-colors",
+                  isScrolled 
+                    ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" 
+                    : "text-white/80 hover:text-white"
+                )}>
+                  Sign In
+                </Link>
+                <Link href="/register" className="bg-[#5B4CFF] text-white hover:bg-[#4B3DEE] px-6 py-2.5 rounded-full text-[15px] font-bold transition-all shadow-[0_0_20px_rgba(91,76,255,0.3)]">
+                  Create Account
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center gap-4">
+            <ThemeToggle isScrolled={isScrolled} />
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={clsx(
+              "p-2 transition-colors", 
+              isScrolled ? "text-slate-900 dark:text-white" : "text-white"
+            )}>
+              {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white dark:bg-[#1C1A1B] border-b border-slate-200 dark:border-white/10 absolute top-20 left-0 w-full shadow-2xl">
+          <div className="px-4 py-6 space-y-2">
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={clsx(
+                    "flex items-center gap-3 text-lg font-bold p-3 rounded-2xl transition-colors",
+                    isActive 
+                      ? "bg-indigo-50 dark:bg-[#5B4CFF]/10 text-[#5B4CFF] dark:text-white" 
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-[#A1A1AA] dark:hover:bg-[#2A2A2B]/40 dark:hover:text-white"
+                  )}
+                >
+                  <Icon className={clsx("w-6 h-6", isActive ? "text-[#5B4CFF]" : "text-slate-400 dark:text-[#71717A]")} />
+                  {link.name}
+                </Link>
+              );
+            })}
+            
+            <div className="border-t border-slate-100 dark:border-white/10 pt-6 mt-4 flex flex-col gap-3">
+              {isAuthenticated ? (
+                <Link href={dashboardHref} onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-lg font-bold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10">
+                  <UserCircle className="w-6 h-6 text-[#5B4CFF]" />
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center gap-2 w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#2A2A2B]/40 text-lg font-bold text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-white/10">
+                    <LogIn className="w-6 h-6 text-slate-400 dark:text-[#71717A]" />
+                    Sign In
+                  </Link>
+                  <Link href="/register" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-center w-full px-6 py-4 rounded-2xl bg-[#5B4CFF] text-lg font-bold text-white hover:bg-[#4B3DEE]">
+                    Create Account
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}

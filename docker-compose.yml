@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: akwaaba_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      # Mount the SQLite database file to persist data across container restarts
+      - sqlite_data:/app/prisma
+      # Alternatively, use a bind mount to a local directory:
+      # - ./backend/prisma:/app/prisma
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - JWT_SECRET=${JWT_SECRET:-akwaaba_super_secret_jwt_key_2026_dev}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-faf3343dd39a755a75f090a4cab7bc0685589349aa2855148319f3658e10105f}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-israelboateng5@gmail.com}
+      - SMTP_PASS=${SMTP_PASS:-cuiyccxjvvbwgmms}
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY:-sk_test_replace_with_your_actual_paystack_secret_key}
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Pass the backend API URL to Next.js during build time
+        - NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
+    container_name: akwaaba_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+volumes:
+  sqlite_data:

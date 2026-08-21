@@ -1,0 +1,715 @@
+'use client';
+
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert } from 'lucide-react';
+import Link from 'next/link';
+import NoticeBoard from '@/components/NoticeBoard';
+import CommuteWidget from '@/components/CommuteWidget';
+import clsx from 'clsx';
+
+export default function TenantDashboard() {
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates'>('bookings');
+  
+  // Review State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState('');
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
+
+  // Appeal State
+  const [appealModalOpen, setAppealModalOpen] = useState(false);
+  const [appealTargetId, setAppealTargetId] = useState('');
+  const [appealNote, setAppealNote] = useState('');
+
+  // Ticket State
+  const [ticketModalOpen, setTicketModalOpen] = useState(false);
+  const [ticketPropertyId, setTicketPropertyId] = useState('');
+  const [ticketTitle, setTicketTitle] = useState('');
+  const [ticketDesc, setTicketDesc] = useState('');
+  const [ticketPriority, setTicketPriority] = useState('MEDIUM');
+  const [ticketError, setTicketError] = useState('');
+
+  // Roommate Profile State
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [roommateProfile, setRoommateProfile] = useState({
+    budget: 5000,
+    cleanliness: 'AVERAGE',
+    sleepHabits: 'EARLY_BIRD',
+    studyHabits: 'QUIET',
+    bio: ''
+  });
+
+  // Queries
+  const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['bookings', 'tenant'],
+    queryFn: async () => {
+      const { data } = await api.get('/bookings/me');
+      return data;
+    }
+  });
+
+  const { data: ticketsResponse, isLoading: ticketsLoading } = useQuery({
+    queryKey: ['tickets', 'tenant'],
+    queryFn: async () => {
+      const { data } = await api.get('/tickets/me');
+      return data;
+    }
+  });
+
+  const { data: roommateProfileResponse, isLoading: profileLoading } = useQuery({
+    queryKey: ['roommateProfile', 'me'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/roommates/profile');
+        if (data.profile) {
+          setRoommateProfile({
+            budget: data.profile.budget,
+            cleanliness: data.profile.cleanliness,
+            sleepHabits: data.profile.sleepHabits,
+            studyHabits: data.profile.studyHabits,
+            bio: data.profile.bio || ''
+          });
+        }
+        return data;
+      } catch (err: any) {
+        if (err.response?.status === 404) return null; // No profile yet
+        throw err;
+      }
+    }
+  });
+
+  const { data: roommateMatchesResponse, isLoading: matchesLoading } = useQuery({
+    queryKey: ['roommateMatches'],
+    queryFn: async () => {
+      const { data } = await api.get('/roommates/matches');
+      return data;
+    },
+    enabled: !!roommateProfileResponse?.profile
+  });
+
+  // Mutations
+  const reviewMutation = useMutation({
+    mutationFn: async (reviewData: { bookingId: string; rating: number; comment: string }) => {
+      const res = await api.post('/reviews', reviewData);
+      return res.data;
+    },
+    onSuccess: () => {
+      setReviewModalOpen(false);
+      setComment('');
+      setRating(5);
+      setReviewSuccess('Your review was submitted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['myReviews'] });
+      setTimeout(() => setReviewSuccess(''), 5000);
+    },
+    onError: (err: any) => {
+      setReviewError(err.response?.data?.message || 'Failed to submit review');
+    }
+  });
+
+  const { data: myReviewsData, isLoading: myReviewsLoading } = useQuery({
+    queryKey: ['myReviews'],
+    queryFn: async () => {
+      const { data } = await api.get('/reviews/mine');
+      return data;
+    },
+    enabled: activeTab === 'reviews'
+  });
+
+  const appealMutation = useMutation({
+    mutationFn: async ({ id, note }: { id: string; note: string }) => {
+      const res = await api.put(`/reviews/${id}/appeal`, { appealNote: note });
+      return res.data;
+    },
+    onSuccess: () => {
+      setAppealModalOpen(false);
+      setAppealNote('');
+      queryClient.invalidateQueries({ queryKey: ['myReviews'] });
+    }
+  });
+
+  const ticketMutation = useMutation({
+    mutationFn: async (ticketData: { propertyId: string; title: string; description: string; priority: string }) => {
+      const res = await api.post('/tickets', ticketData);
+      return res.data;
+    },
+    onSuccess: () => {
+      setTicketModalOpen(false);
+      setTicketTitle('');
+      setTicketDesc('');
+      setTicketPriority('MEDIUM');
+      queryClient.invalidateQueries({ queryKey: ['tickets', 'tenant'] });
+      alert('Maintenance request submitted successfully!');
+    },
+    onError: (err: any) => {
+      setTicketError(err.response?.data?.message || 'Failed to submit request');
+    }
+  });
+
+  const profileMutation = useMutation({
+    mutationFn: async (profileData: any) => {
+      const res = await api.post('/roommates/profile', profileData);
+      return res.data;
+    },
+    onSuccess: () => {
+      setIsEditingProfile(false);
+      queryClient.invalidateQueries({ queryKey: ['roommateProfile', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['roommateMatches'] });
+    }
+  });
+
+  const bookings = bookingsResponse?.bookings || [];
+  const tickets = ticketsResponse?.tickets || [];
+  const matches = roommateMatchesResponse?.matches || [];
+  const hasProfile = !!roommateProfileResponse?.profile;
+
+  // Helpers
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED': return <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Approved</span>;
+      case 'PENDING': return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold"><Clock className="w-3 h-3" /> Pending</span>;
+      case 'REJECTED': return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold"><XCircle className="w-3 h-3" /> Rejected</span>;
+      case 'COMPLETED': return <span className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Completed</span>;
+      
+      // Ticket specific
+      case 'IN_PROGRESS': return <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold"><PenTool className="w-3 h-3" /> In Progress</span>;
+      case 'RESOLVED': return <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Resolved</span>;
+      default: return null;
+    }
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'LOW': return <span className="text-slate-500 font-bold text-xs bg-slate-100 px-2 py-1 rounded">LOW</span>;
+      case 'MEDIUM': return <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-1 rounded border border-amber-200">MEDIUM</span>;
+      case 'HIGH': return <span className="text-orange-600 font-bold text-xs bg-orange-50 px-2 py-1 rounded border border-orange-200">HIGH</span>;
+      case 'URGENT': return <span className="text-red-600 font-bold text-xs bg-red-50 px-2 py-1 rounded flex items-center gap-1 border border-red-200"><AlertTriangle className="w-3 h-3" /> URGENT</span>;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-in">
+      <NoticeBoard />
+      
+      <div>
+        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
+        <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex flex-wrap space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab('bookings')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+            activeTab === 'bookings' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          My Bookings
+        </button>
+        <button
+          onClick={() => setActiveTab('tickets')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+            activeTab === 'tickets' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          Maintenance Requests
+        </button>
+        <button
+          onClick={() => setActiveTab('reviews')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'reviews' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <Star className="w-4 h-4" /> My Reviews
+        </button>
+        <button
+          onClick={() => setActiveTab('roommates')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'roommates' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <HeartHandshake className="w-4 h-4" /> Roommate Finder
+        </button>
+      </div>
+
+      {activeTab === 'bookings' && (
+        <div className="animate-in">
+          {bookingsLoading ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+          ) : bookings.length === 0 ? (
+            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <Calendar className="w-8 h-8 text-[var(--muted-foreground)]" />
+              </div>
+              <h3 className="text-lg font-bold">No bookings yet</h3>
+              <p className="text-[var(--muted-foreground)] mb-6">You haven't requested to stay at any properties yet.</p>
+              <Link href="/properties" className="bg-[var(--primary)] text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:opacity-90 transition-opacity">
+                Browse Properties
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {bookings.map((booking: any) => (
+                <div key={booking.id} className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+                  <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 relative">
+                    {booking.property.images?.[0] ? (
+                      <img src={booking.property.images[0]} className="w-full h-full object-cover" alt="Property" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]"><Calendar /></div>
+                    )}
+                  </div>
+                  
+                  <div className="flex-1 space-y-3 w-full">
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-[var(--foreground)] leading-tight">{booking.property.title}</h3>
+                        <div className="flex items-center gap-1 text-sm text-[var(--muted-foreground)] mt-1">
+                          <MapPin className="w-4 h-4" /> {booking.property.location}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {getStatusBadge(booking.status)}
+                        <div className="flex gap-2">
+                          {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
+                            <>
+                              <Link 
+                                href={`/dashboard/agreements/${booking.id}`}
+                                className="text-xs font-bold text-white bg-[var(--primary)] px-3 py-1.5 rounded-full hover:opacity-90 transition-colors flex items-center gap-1 shadow-md shadow-[var(--primary)]/20"
+                              >
+                                View Agreement
+                              </Link>
+                              <button 
+                                onClick={() => { setTicketPropertyId(booking.propertyId); setTicketError(''); setTicketModalOpen(true); }}
+                                className="text-xs font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                              >
+                                <PenTool className="w-3 h-3" /> Report Issue
+                              </button>
+                            </>
+                          )}
+                          {booking.status === 'COMPLETED' && (
+                            <button 
+                              onClick={() => { setSelectedBookingId(booking.id); setReviewError(''); setReviewModalOpen(true); }}
+                              className="text-xs font-bold text-[var(--primary)] bg-indigo-50 dark:bg-slate-800 px-3 py-1.5 rounded-full hover:bg-indigo-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                            >
+                              <Star className="w-3 h-3 fill-current" /> Leave Review
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
+                      <div>
+                        <span className="text-[var(--muted-foreground)] block text-xs uppercase tracking-wide font-semibold mb-0.5">Check In</span>
+                        <span className="font-medium">{new Date(booking.startDate).toLocaleDateString()}</span>
+                      </div>
+                      <div>
+                        <span className="text-[var(--muted-foreground)] block text-xs uppercase tracking-wide font-semibold mb-0.5">Check Out</span>
+                        <span className="font-medium">{new Date(booking.endDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Commute Widget */}
+                    {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
+                      <CommuteWidget propertyId={booking.propertyId} />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'tickets' && (
+        <div className="animate-in">
+          {ticketsLoading ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+          ) : tickets.length === 0 ? (
+            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <PenTool className="w-8 h-8 text-[var(--muted-foreground)]" />
+              </div>
+              <h3 className="text-lg font-bold">No maintenance requests</h3>
+              <p className="text-[var(--muted-foreground)] mb-6">Everything seems to be working perfectly!</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {tickets.map((ticket: any) => (
+                <div key={ticket.id} className="glass-card p-5 rounded-xl border flex flex-col sm:flex-row justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="font-bold text-lg">{ticket.title}</h3>
+                      {getPriorityBadge(ticket.priority)}
+                    </div>
+                    <p className="text-sm text-[var(--muted-foreground)] mb-3">{ticket.description}</p>
+                    <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {ticket.property.title}</span>
+                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start shrink-0">
+                    {getStatusBadge(ticket.status)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* My Reviews Tab */}
+      {activeTab === 'reviews' && (
+        <div className="animate-in space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">My Reviews</h2>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">Reviews you've submitted for completed stays. You can appeal any flagged review.</p>
+            </div>
+          </div>
+
+          {reviewSuccess && (
+            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 shrink-0" /> {reviewSuccess}
+            </div>
+          )}
+
+          {myReviewsLoading ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+          ) : myReviewsData?.reviews?.length === 0 ? (
+            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center border border-[var(--border)]">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <Star className="w-8 h-8 text-[var(--muted-foreground)]" />
+              </div>
+              <h3 className="text-lg font-bold">No reviews yet</h3>
+              <p className="text-[var(--muted-foreground)] mt-2">Once you complete a stay, you can leave a verified review for the property.</p>
+            </div>
+          ) : (
+            <div className="grid gap-5">
+              {myReviewsData?.reviews?.map((review: any) => (
+                <div key={review.id} className={`glass-card rounded-2xl p-6 border ${review.isFlagged ? 'border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-900/10' : 'border-[var(--border)]'}`}>
+                  <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg">{review.booking?.property?.title || 'Property'}</h3>
+                      <p className="text-sm text-[var(--muted-foreground)] flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3" /> {review.booking?.property?.location || 'Location'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {review.isFlagged ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
+                          <Flag className="w-3 h-3" /> Flagged
+                        </span>
+                      ) : review.isModerated ? (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 rounded-full text-xs font-bold">
+                          <ShieldAlert className="w-3 h-3" /> Moderated
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold">
+                          <CheckCircle className="w-3 h-3" /> Published
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-5 h-5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-700'}`} />
+                    ))}
+                    <span className="text-sm text-[var(--muted-foreground)] ml-1">{new Date(review.createdAt).toLocaleDateString()}</span>
+                  </div>
+
+                  {review.comment && (
+                    <p className="text-sm text-[var(--muted-foreground)] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-[var(--border)] italic leading-relaxed">&quot;{review.comment}&quot;</p>
+                  )}
+
+                  {/* Appeal Section */}
+                  {(review.isFlagged || review.isModerated) && (
+                    <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                      {review.appealStatus === 'PENDING' ? (
+                        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 font-medium">
+                          <Clock className="w-4 h-4" /> Your appeal is pending admin review.
+                        </div>
+                      ) : review.appealStatus === 'ACCEPTED' ? (
+                        <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 font-medium">
+                          <CheckCircle className="w-4 h-4" /> Appeal accepted — your review is reinstated.
+                        </div>
+                      ) : review.appealStatus === 'REJECTED' ? (
+                        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 font-medium">
+                          <XCircle className="w-4 h-4" /> Appeal rejected by admin.
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setAppealTargetId(review.id); setAppealNote(''); setAppealModalOpen(true); }}
+                          className="flex items-center gap-2 text-sm font-bold text-[var(--primary)] hover:underline"
+                        >
+                          <MessageSquare className="w-4 h-4" /> Submit an Appeal
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'roommates' && (
+        <div className="animate-in space-y-6">
+          {profileLoading ? (
+            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+          ) : !hasProfile || isEditingProfile ? (
+            <div className="glass-card p-8 rounded-2xl max-w-2xl border">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
+                  <UserPlus className="w-6 h-6 text-[var(--primary)]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">{hasProfile ? 'Edit' : 'Create'} Roommate Profile</h2>
+                  <p className="text-sm text-[var(--muted-foreground)]">Share your habits to find the perfect compatible roommate.</p>
+                </div>
+              </div>
+              
+              <div className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Max Budget (GHS / yr)</label>
+                    <input type="number" className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.budget} onChange={(e) => setRoommateProfile({...roommateProfile, budget: Number(e.target.value)})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Cleanliness</label>
+                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.cleanliness} onChange={(e) => setRoommateProfile({...roommateProfile, cleanliness: e.target.value})}>
+                      <option value="NEAT">Very Neat</option>
+                      <option value="AVERAGE">Average</option>
+                      <option value="MESSY">A bit messy</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Sleep Habits</label>
+                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.sleepHabits} onChange={(e) => setRoommateProfile({...roommateProfile, sleepHabits: e.target.value})}>
+                      <option value="EARLY_BIRD">Early Bird</option>
+                      <option value="NIGHT_OWL">Night Owl</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Study Habits</label>
+                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.studyHabits} onChange={(e) => setRoommateProfile({...roommateProfile, studyHabits: e.target.value})}>
+                      <option value="QUIET">Quiet & Focused</option>
+                      <option value="SOCIAL">Social & Collaborative</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bio (Optional)</label>
+                  <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[80px]" placeholder="Tell potential roommates a bit about yourself..." value={roommateProfile.bio} onChange={(e) => setRoommateProfile({...roommateProfile, bio: e.target.value})} />
+                </div>
+                <div className="flex justify-end gap-3 pt-4">
+                  {hasProfile && (
+                    <button onClick={() => setIsEditingProfile(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
+                  )}
+                  <button onClick={() => profileMutation.mutate(roommateProfile)} disabled={profileMutation.isPending} className="px-6 py-2 bg-[var(--primary)] text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
+                    {profileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Save Profile
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900">
+                <div className="flex items-center gap-3">
+                  <HeartHandshake className="w-6 h-6 text-[var(--primary)]" />
+                  <div>
+                    <h3 className="font-bold text-sm">Roommate Finder is Active</h3>
+                    <p className="text-xs text-[var(--muted-foreground)]">You are currently visible to other {roommateProfileResponse?.profile?.user?.gender || 'students'} at your campus.</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsEditingProfile(true)} className="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-800 shadow-sm border rounded-lg hover:bg-slate-50 flex items-center gap-2">
+                  <Edit3 className="w-3 h-3" /> Edit Profile
+                </button>
+              </div>
+
+              {matchesLoading ? (
+                <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+              ) : matches.length === 0 ? (
+                <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center border">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                    <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
+                  </div>
+                  <h3 className="text-lg font-bold">No exact matches yet</h3>
+                  <p className="text-[var(--muted-foreground)]">Check back later as more students at your campus join.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {matches.map((match: any) => (
+                    <div key={match.id} className="glass-card rounded-2xl p-6 border flex flex-col h-full hover:border-[var(--primary)] transition-colors">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center text-indigo-700 font-bold text-lg">
+                            {match.user.firstName[0]}
+                          </div>
+                          <div>
+                            <h3 className="font-bold">{match.user.firstName} {match.user.lastName[0]}.</h3>
+                            <p className="text-xs text-[var(--muted-foreground)]">{match.user.campus}</p>
+                          </div>
+                        </div>
+                        {match.score > 2 && <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full">Top Match</span>}
+                      </div>
+                      
+                      <div className="space-y-2 mb-6 flex-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-[var(--muted-foreground)]">Budget:</span>
+                          <span className="font-bold">GHS {match.budget}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[var(--muted-foreground)]">Cleanliness:</span>
+                          <span className="font-medium">{match.cleanliness}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[var(--muted-foreground)]">Sleep:</span>
+                          <span className="font-medium">{match.sleepHabits.replace('_', ' ')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-[var(--muted-foreground)]">Study:</span>
+                          <span className="font-medium">{match.studyHabits}</span>
+                        </div>
+                        {match.bio && (
+                          <div className="pt-2 mt-2 border-t text-xs text-slate-600 dark:text-slate-400 italic">
+                            "{match.bio}"
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-4 mt-auto border-t">
+                        <p className="text-xs font-semibold mb-2">Contact:</p>
+                        <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
+                          <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded w-full text-center select-all">{match.user.email}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
+            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Leave a Review</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-5">Your honest feedback helps other students find great accommodation.</p>
+            {reviewError && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl text-sm font-medium">{reviewError}</div>}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Your Rating</label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button key={star} onClick={() => setRating(star)} className="p-1 focus:outline-none transition-transform hover:scale-125">
+                      <Star className={`w-9 h-9 transition-colors ${rating >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
+                    </button>
+                  ))}
+                  <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{['','Poor','Fair','Good','Great','Excellent'][rating]}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Your Comment</label>
+                <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[120px] resize-none" placeholder="Describe your experience — cleanliness, landlord responsiveness, location, value for money..." value={comment} onChange={(e) => setComment(e.target.value)} />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button onClick={() => { setReviewModalOpen(false); setReviewError(''); }} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
+                <button
+                  onClick={() => { if (!comment.trim()) { setReviewError('Please write a comment before submitting'); return; } setReviewError(''); reviewMutation.mutate({ bookingId: selectedBookingId, rating, comment }); }}
+                  disabled={reviewMutation.isPending}
+                  className="px-6 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+                >
+                  {reviewMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <><Star className="w-4 h-4" /> Submit Review</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Appeal Modal */}
+      {appealModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in">
+            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-[var(--primary)]" /> Submit an Appeal</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-5">Explain why you believe this review should be reinstated. An admin will review your appeal.</p>
+            <textarea
+              value={appealNote}
+              onChange={(e) => setAppealNote(e.target.value)}
+              rows={4}
+              placeholder="Provide your justification here..."
+              className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none resize-none mb-4"
+            />
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setAppealModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
+              <button
+                onClick={() => { if (appealNote.trim()) appealMutation.mutate({ id: appealTargetId, note: appealNote }); }}
+                disabled={appealMutation.isPending || !appealNote.trim()}
+                className="px-6 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
+              >
+                {appealMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : 'Submit Appeal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ticket Modal */}
+      {ticketModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
+            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquarePlus className="w-5 h-5 text-[var(--primary)]" /> Report an Issue</h3>
+            <p className="text-sm text-[var(--muted-foreground)] mb-6">Your landlord will be notified immediately.</p>
+            
+            {ticketError && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium">{ticketError}</div>}
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Title (What's wrong?)</label>
+                <input type="text" className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" placeholder="e.g. Leaking sink in bathroom" value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">Priority Level</label>
+                <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={ticketPriority} onChange={(e) => setTicketPriority(e.target.value)}>
+                  <option value="LOW">Low - Not urgent</option>
+                  <option value="MEDIUM">Medium - Needs attention</option>
+                  <option value="HIGH">High - Impacts daily life</option>
+                  <option value="URGENT">Urgent - Emergency</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Description</label>
+                <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[100px]" placeholder="Provide more details about the issue..." value={ticketDesc} onChange={(e) => setTicketDesc(e.target.value)} />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button onClick={() => setTicketModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
+                <button onClick={() => { if (!ticketTitle || !ticketDesc) { setTicketError('Provide a title and description'); return; } ticketMutation.mutate({ propertyId: ticketPropertyId, title: ticketTitle, description: ticketDesc, priority: ticketPriority }); }} disabled={ticketMutation.isPending} className="px-6 py-2 bg-[var(--primary)] text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
+                  {ticketMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Submit Ticket
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

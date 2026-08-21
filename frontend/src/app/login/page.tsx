@@ -1,0 +1,162 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import api from '@/lib/axios';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      
+      if (response.data.user.role === 'ADMIN') {
+        window.location.href = '/dashboard/admin';
+      } else if (response.data.user.role === 'LANDLORD') {
+        window.location.href = '/dashboard/landlord';
+      } else {
+        // Tenant
+        if (!response.data.user.studentId) {
+          window.location.href = '/onboarding';
+        } else {
+          window.location.href = '/dashboard/tenant';
+        }
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Invalid email or password.');
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#111111]">
+      {/* Full screen background image */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          backgroundImage: 'url(/images/sunset-bg.png)',
+          filter: 'brightness(0.7) contrast(1.1)' 
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60"></div>
+      </div>
+
+      {/* Login Card */}
+      <div className="w-full max-w-md z-10 mx-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        
+        <div className="bg-[#1C1A1B]/80 backdrop-blur-xl rounded-[28px] p-8 sm:p-10 shadow-2xl border border-white/10">
+          
+          <div className="text-center mb-8">
+            <h1 className="text-[32px] font-extrabold tracking-tight text-white mb-2">
+              Welcome back
+            </h1>
+            <p className="text-[#A1A1AA] text-sm">
+              Don&apos;t have an account? <Link href="/register" className="text-white font-bold hover:underline transition-all">Sign up today</Link>
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium flex items-start gap-3">
+              <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Email Address */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-white">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-[#71717A]" />
+                </div>
+                <input 
+                  type="email" 
+                  required 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-[#2A2A2B]/60 border border-white/5 rounded-2xl text-white placeholder-[#71717A] focus:bg-[#2A2A2B] focus:border-[#5B4CFF] focus:ring-1 focus:ring-[#5B4CFF] outline-none transition-all" 
+                  placeholder="john@example.com" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-white">Password</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-[#71717A]" />
+                </div>
+                <input 
+                  type="password" 
+                  required 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-[#2A2A2B]/60 border border-white/5 rounded-2xl text-white placeholder-[#71717A] focus:bg-[#2A2A2B] focus:border-[#5B4CFF] focus:ring-1 focus:ring-[#5B4CFF] outline-none transition-all" 
+                  placeholder="••••••••" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                />
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center justify-between pt-1 pb-2">
+              <div className="flex items-center">
+                <input 
+                  id="remember-me" 
+                  name="remember-me" 
+                  type="checkbox" 
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded bg-[#2A2A2B] border-white/10 text-[#5B4CFF] focus:ring-[#5B4CFF]" 
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#A1A1AA]">
+                  Remember me
+                </label>
+              </div>
+
+              <div className="text-sm">
+                <Link href="/forgot-password" className="font-bold text-white hover:text-white/80 transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-white bg-[#5B4CFF] hover:bg-[#4B3DEE] font-bold text-[15px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B4CFF] focus:ring-offset-[#1C1A1B] transition-all shadow-[0_0_20px_rgba(91,76,255,0.3)] disabled:opacity-70"
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>Sign in <ArrowRight className="w-5 h-5" /></>
+              )}
+            </button>
+            
+          </form>
+
+        </div>
+      </div>
+      
+      {/* Brand logo simple text bottom left */}
+      <div className="absolute bottom-6 left-6 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
+        <span className="text-white font-bold text-sm">A</span>
+      </div>
+    </div>
+  );
+}

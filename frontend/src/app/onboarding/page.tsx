@@ -1,0 +1,144 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
+import api from '@/lib/axios';
+import { Loader2, ArrowRight, User, School, Calendar, UserCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export default function OnboardingPage() {
+  const router = useRouter();
+  
+  const [formData, setFormData] = useState({
+    studentId: '',
+    campus: '',
+    dateOfBirth: '',
+    guardianName: '',
+    guardianContact: ''
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      // The backend route PUT /auth/profile should handle this
+      const response = await api.put('/auth/profile', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Profile completed successfully!');
+      // Force reload to get updated token/session data if needed, or just push
+      window.location.href = '/dashboard/tenant';
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update profile');
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.studentId || !formData.campus || !formData.dateOfBirth || !formData.guardianName || !formData.guardianContact) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    mutation.mutate(formData);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#111111] flex flex-col items-center justify-center p-4">
+      <div className="max-w-xl w-full">
+        
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">Complete Your Profile</h1>
+          <p className="text-[var(--muted-foreground)]">Just a few more details before you can start booking properties.</p>
+        </div>
+
+        <div className="bg-white dark:bg-[#1C1A1B] rounded-[24px] p-8 shadow-xl border border-slate-200 dark:border-white/10">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Student ID */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)]">Student ID *</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    value={formData.studentId}
+                    onChange={e => setFormData({...formData, studentId: e.target.value})}
+                    placeholder="e.g. 10293847"
+                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Campus */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)]">Campus *</label>
+                <div className="relative">
+                  <School className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input 
+                    type="text" 
+                    value={formData.campus}
+                    onChange={e => setFormData({...formData, campus: e.target.value})}
+                    placeholder="e.g. Main Campus"
+                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Date of Birth */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[var(--foreground)]">Date of Birth *</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input 
+                  type="date" 
+                  value={formData.dateOfBirth}
+                  onChange={e => setFormData({...formData, dateOfBirth: e.target.value})}
+                  className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="border-t border-slate-200 dark:border-white/10 pt-6 mt-6">
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Emergency Contact</h3>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[var(--foreground)]">Guardian Name *</label>
+                  <input 
+                    type="text" 
+                    value={formData.guardianName}
+                    onChange={e => setFormData({...formData, guardianName: e.target.value})}
+                    placeholder="Full Name"
+                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-[var(--foreground)]">Guardian Contact *</label>
+                  <input 
+                    type="text" 
+                    value={formData.guardianContact}
+                    onChange={e => setFormData({...formData, guardianContact: e.target.value})}
+                    placeholder="Phone Number"
+                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={mutation.isPending}
+              className="w-full mt-6 bg-[var(--primary)] text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {mutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <UserCheck className="w-5 h-5" />}
+              {mutation.isPending ? 'Saving...' : 'Complete Profile'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
