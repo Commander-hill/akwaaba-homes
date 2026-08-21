@@ -34,6 +34,9 @@ const port = process.env.PORT || 5000;
 // Initialize Socket.io
 initializeSocket(httpServer);
 
+// Trust proxy for Render deployment (needed for rate limiting and cookies)
+app.set('trust proxy', 1);
+
 // Strict HTTP Header Protection
 app.use(helmet({
   crossOriginResourcePolicy: false, // Allow serving images cross-origin
