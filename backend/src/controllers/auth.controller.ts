@@ -247,6 +247,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       message: 'Logged in successfully',
+      accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -306,7 +307,10 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       path: '/'
     });
 
-    res.status(200).json({ message: 'Token refreshed successfully' });
+    res.status(200).json({ 
+      message: 'Token refreshed successfully',
+      accessToken 
+    });
   } catch (error) {
     console.error('Refresh error:', error);
     res.status(500).json({ message: 'Internal server error' });

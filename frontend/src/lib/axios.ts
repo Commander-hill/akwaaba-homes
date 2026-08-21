@@ -11,6 +11,17 @@ const api = axios.create({
 let isRefreshing = false;
 let failedQueue: any[] = [];
 
+// Attach token from localStorage if available (Fallback for strict browsers blocking 3rd-party cookies)
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('akwaaba_access_token');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -24,7 +35,16 @@ const processQueue = (error: any, token: string | null = null) => {
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If the server returns a token in the payload (login/refresh fallback), save it
+    if (typeof window !== 'undefined' && response.data?.accessToken) {
+      localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+    }
+    if (typeof window !== 'undefined' && response.config.url?.includes('/auth/logout')) {
+      localStorage.removeItem('akwaaba_access_token');
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -51,6 +71,7 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         // If refresh fails (e.g. token expired/invalid), redirect to login
         if (typeof window !== 'undefined') {
+          localStorage.removeItem('akwaaba_access_token');
           const publicPaths = ['/login', '/register', '/admin/login', '/forgot-password', '/reset-password'];
           if (!publicPaths.includes(window.location.pathname) && window.location.pathname !== '/') {
             window.location.href = '/login';
