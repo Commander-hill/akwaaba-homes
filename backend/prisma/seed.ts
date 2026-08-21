@@ -29,8 +29,7 @@ async function main() {
       firstName: 'System',
       lastName: 'Administrator',
       role: 'ADMIN',
-      emailVerified: true,
-      profileCompleted: true
+      isEmailVerified: true
     }
   });
 
