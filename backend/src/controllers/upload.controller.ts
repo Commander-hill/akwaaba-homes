@@ -135,8 +135,8 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
     }
 
     res.status(200).json({ urls });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error uploading property images:', error);
-    res.status(500).json({ error: 'Internal server error during property images upload' });
+    res.status(500).json({ error: `Internal server error during property images upload: ${error?.message || String(error)}` });
   }
 };
