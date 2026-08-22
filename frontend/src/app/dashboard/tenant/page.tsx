@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
+import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 
 export default function TenantDashboard() {
@@ -277,11 +278,16 @@ export default function TenantDashboard() {
               {bookings.map((booking: any) => (
                 <div key={booking.id} className="glass-card rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
                   <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 relative">
-                    {booking.property.images?.[0] ? (
-                      <img src={booking.property.images[0]} className="w-full h-full object-cover" alt="Property" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]"><Calendar /></div>
-                    )}
+                    {(() => {
+                      try {
+                        let imgs = booking.property.images;
+                        if (typeof imgs === 'string') imgs = JSON.parse(imgs);
+                        if (Array.isArray(imgs) && imgs.length > 0) {
+                          return <img src={getImageUrl(imgs[0])} className="w-full h-full object-cover" alt="Property" />;
+                        }
+                      } catch (e) {}
+                      return <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]"><Calendar /></div>;
+                    })()}
                   </div>
                   
                   <div className="flex-1 space-y-3 w-full">
