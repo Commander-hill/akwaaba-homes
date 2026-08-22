@@ -139,8 +139,6 @@ export const notifyBookingCreated = async (opts: {
   });
 };
 
-};
-
 export const notifyPaymentReceipt = async (opts: {
   tenantId: string; tenantEmail: string; tenantName: string;
   propertyTitle: string; amount: number; bookingId: string;
