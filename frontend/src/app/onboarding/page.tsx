@@ -44,15 +44,22 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#111111] flex flex-col items-center justify-center p-4">
-      <div className="max-w-xl w-full">
+    <div className="min-h-screen relative flex flex-col items-center justify-center p-4 overflow-hidden bg-slate-50 dark:bg-[#0a0a0a]">
+      
+      {/* Decorative Background Orbs for Glassmorphism Effect */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[var(--primary)]/20 blur-[120px]" />
+        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-[var(--primary)]/10 blur-[100px]" />
+      </div>
+
+      <div className="max-w-xl w-full relative z-10">
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">Complete Your Profile</h1>
           <p className="text-[var(--muted-foreground)]">Just a few more details before you can start booking properties.</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1C1A1B] rounded-[24px] p-8 shadow-xl border border-slate-200 dark:border-white/10">
+        <div className="glass-card rounded-[24px] p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
