@@ -201,7 +201,12 @@ export default function NewPropertyPage() {
               <label className="text-sm font-bold text-[var(--foreground)]">Room Type *</label>
               <select 
                 value={formData.roomType}
-                onChange={e => setFormData({...formData, roomType: e.target.value})}
+                onChange={e => {
+                  const roomType = e.target.value;
+                  // Extract the number from the room type string (e.g. '2 in a room' → 2)
+                  const bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
+                  setFormData({...formData, roomType, roomCapacity: bedsPerRoom});
+                }}
                 className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
               >
                 <option value="1 in a room">1 in a room</option>
@@ -211,14 +216,15 @@ export default function NewPropertyPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Beds per Room *</label>
-              <input 
-                type="number" 
-                min="1"
-                value={formData.roomCapacity}
-                onChange={e => setFormData({...formData, roomCapacity: parseInt(e.target.value, 10)})}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              />
+              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
+                Beds per Room
+                <span className="text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-[var(--primary)] px-2 py-0.5 rounded-full">Auto</span>
+              </label>
+              <div className="w-full bg-slate-50 dark:bg-slate-800/60 border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] font-extrabold text-lg flex items-center gap-2 select-none">
+                {formData.roomCapacity}
+                <span className="text-sm font-normal text-[var(--muted-foreground)]">bed{formData.roomCapacity > 1 ? 's' : ''} / room</span>
+              </div>
+              <p className="text-xs text-[var(--muted-foreground)]">Set automatically from Room Type</p>
             </div>
           </div>
 
