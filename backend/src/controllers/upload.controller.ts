@@ -3,6 +3,22 @@ import { Request, Response } from 'express';
 import sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Ensure env is loaded even if imported early
+
+// Explicitly configure cloudinary since import hoisting might load it before server.ts dotenv
+if (process.env.CLOUDINARY_URL) {
+  // Extract parts from the URL if needed, but cloudinary.config(true) usually forces a reload
+  // Wait, let's just parse the URL manually to be 100% foolproof
+  const url = new URL(process.env.CLOUDINARY_URL);
+  cloudinary.config({
+    cloud_name: url.hostname,
+    api_key: url.username,
+    api_secret: url.password,
+    secure: true
+  });
+}
 
 // Helper function to upload a buffer to Cloudinary
 const streamUpload = (buffer: Buffer, folder: string, resourceType: 'image' | 'video' | 'auto' = 'auto'): Promise<string> => {
