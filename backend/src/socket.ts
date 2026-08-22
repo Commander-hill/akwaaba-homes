@@ -7,6 +7,7 @@ import { parseCookie } from 'cookie';
 interface SocketUser {
   id: string;
   role: string;
+  exp?: number;
 }
 
 // Extend Socket interface to include user
@@ -55,6 +56,21 @@ export const initializeSocket = (server: HttpServer) => {
 
     // Join a personal room for the user to receive private messages
     socket.join(socket.user!.id);
+
+    // Schedule automatic disconnect when token expires
+    let expiryTimer: NodeJS.Timeout | null = null;
+    if (socket.user?.exp) {
+      const timeUntilExpiry = (socket.user.exp * 1000) - Date.now();
+      if (timeUntilExpiry <= 0) {
+        socket.disconnect(true);
+        return;
+      }
+      expiryTimer = setTimeout(() => {
+        console.log(`🔌 Socket auto-disconnected due to token expiration for user: ${socket.user?.id}`);
+        socket.emit('auth_expired', { message: 'Session token expired. Please refresh your session.' });
+        socket.disconnect(true);
+      }, timeUntilExpiry);
+    }
 
     // Join a specific conversation room (optional, but good for keeping track of active chats)
     socket.on('join_conversation', (conversationId: string) => {
@@ -106,6 +122,7 @@ export const initializeSocket = (server: HttpServer) => {
     });
 
     socket.on('disconnect', () => {
+      if (expiryTimer) clearTimeout(expiryTimer);
       console.log(`🔌 User disconnected: ${socket.user?.id}`);
     });
   });
