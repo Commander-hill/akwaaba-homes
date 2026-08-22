@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Plus, ShieldCheck, Building, CreditCard, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, ShieldCheck, Building, CreditCard, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { SocketProvider } from '@/providers/SocketProvider';
@@ -61,6 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Dashboard', href: '/dashboard/landlord', icon: ListTodo },
           { name: 'Properties', href: '/dashboard/landlord/properties', icon: Building },
+          { name: 'Tenants', href: '/dashboard/landlord/tenants', icon: Users },
           { name: 'List Property', href: '/dashboard/landlord/new', icon: Plus },
         ]
       },

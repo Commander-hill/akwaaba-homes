@@ -117,7 +117,7 @@ export const getLandlordBookings = async (req: Request, res: Response): Promise<
       where: { property: { landlordId } },
       include: {
         property: { select: { title: true } },
-        tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true } }
+        tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true, avatarUrl: true, gender: true, studentId: true, programmeOfStudy: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
