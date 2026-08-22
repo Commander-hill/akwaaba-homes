@@ -6,6 +6,7 @@ import { Loader2, Search, Mail, Phone, User, GraduationCap, MapPin, Building, St
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { getImageUrl } from '@/lib/utils';
+import SkeletonTable from '@/components/SkeletonTable';
 
 export default function LandlordTenantsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,9 +132,7 @@ export default function LandlordTenantsPage() {
         {/* Table Content */}
         <div className="flex-1 overflow-auto bg-white dark:bg-[#0a0a0a]">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-            </div>
+            <SkeletonTable rows={5} columns={5} />
           ) : filteredBookings.length === 0 ? (
             <div className="flex flex-col h-full items-center justify-center text-center p-8">
               <User className="w-16 h-16 text-slate-200 dark:text-slate-800 mb-4" />

@@ -10,6 +10,7 @@ import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
+import SkeletonTable from '@/components/SkeletonTable';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
@@ -289,7 +290,7 @@ export default function TenantDashboard() {
       {activeTab === 'bookings' && (
         <div className="animate-in">
           {bookingsLoading ? (
-            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+            <SkeletonTable rows={3} columns={4} />
           ) : bookings.length === 0 ? (
             <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
@@ -405,7 +406,7 @@ export default function TenantDashboard() {
       {activeTab === 'tickets' && (
         <div className="animate-in">
           {ticketsLoading ? (
-            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+            <SkeletonTable rows={3} columns={4} />
           ) : tickets.length === 0 ? (
             <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
