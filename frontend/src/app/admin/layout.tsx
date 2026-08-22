@@ -100,7 +100,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
         {/* Isolated Admin Sidebar */}
-        <div className="w-full md:w-64 shrink-0">
+        <div className="w-full md:w-64 shrink-0 relative z-20">
           <div className="bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl p-4 sticky top-24 shadow-sm">
             <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 px-3">System Controls</div>
             <nav className="space-y-1">
