@@ -87,13 +87,29 @@ export default function AgreementPage() {
   };
 
   const handleSaveSignature = () => {
-    if (sigCanvas.current?.isEmpty()) {
+    console.log('Confirm & Sign clicked!');
+    if (!sigCanvas.current) {
+      console.error('Signature canvas ref is null!');
+      toast.error('System error: Canvas not initialized. Please refresh.');
+      return;
+    }
+    if (sigCanvas.current.isEmpty()) {
+      console.log('Signature is empty');
       toast.error("Please provide a signature first.");
       return;
     }
-    const dataURL = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
-    if (dataURL) {
-      signMutation.mutate(dataURL);
+    
+    try {
+      const canvas = sigCanvas.current.getTrimmedCanvas();
+      const dataURL = canvas.toDataURL('image/png');
+      console.log('Generated signature dataURL length:', dataURL.length);
+      
+      if (dataURL) {
+        signMutation.mutate(dataURL);
+      }
+    } catch (err) {
+      console.error('Error generating signature:', err);
+      toast.error('Failed to generate signature image.');
     }
   };
 
@@ -229,7 +245,7 @@ export default function AgreementPage() {
             
             <div className="border-2 border-dashed border-[var(--border)] rounded-xl bg-slate-50 dark:bg-slate-900/50 mb-4 overflow-hidden relative">
               <SignatureCanvas 
-                ref={sigCanvas}
+                ref={(ref) => { sigCanvas.current = ref; }}
                 penColor="black"
                 canvasProps={{ className: 'w-full h-48 signature-canvas' }}
               />
@@ -237,12 +253,14 @@ export default function AgreementPage() {
             
             <div className="flex gap-3">
               <button 
+                type="button"
                 onClick={handleClearSignature}
                 className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-[var(--foreground)] rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 Clear
               </button>
               <button 
+                type="button"
                 onClick={handleSaveSignature}
                 disabled={signMutation.isPending}
                 className="flex-[2] py-3 bg-[var(--primary)] text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"

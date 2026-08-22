@@ -56,10 +56,12 @@ export const getAgreementByBooking = async (req: Request, res: Response): Promis
 
 export const signAgreement = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('--- signAgreement HIT! ---');
     const { bookingId } = req.params;
     const { signature } = req.body;
     const userId = req.user?.id;
     const role = req.user?.role;
+    console.log('bookingId:', bookingId, 'userId:', userId, 'role:', role, 'signature length:', signature?.length);
 
     if (!userId || !signature) {
       res.status(400).json({ message: 'Missing user or signature data' });
