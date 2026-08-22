@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
@@ -163,6 +163,20 @@ export default function TenantDashboard() {
     }
   });
 
+  const payBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await api.post(`/bookings/${bookingId}/pay`);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      alert('Payment successful! Your booking is now complete.');
+    },
+    onError: (err: any) => {
+      alert(err.response?.data?.message || 'Failed to process payment');
+    }
+  });
+
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
   const matches = roommateMatchesResponse?.matches || [];
@@ -288,6 +302,15 @@ export default function TenantDashboard() {
                               >
                                 View Agreement
                               </Link>
+                              {booking.status === 'APPROVED' && (
+                                <button 
+                                  onClick={() => payBookingMutation.mutate(booking.id)}
+                                  disabled={payBookingMutation.isPending}
+                                  className="text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors flex items-center gap-1"
+                                >
+                                  {payBookingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />} Pay Rent
+                                </button>
+                              )}
                               <button 
                                 onClick={() => { setTicketPropertyId(booking.propertyId); setTicketError(''); setTicketModalOpen(true); }}
                                 className="text-xs font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
