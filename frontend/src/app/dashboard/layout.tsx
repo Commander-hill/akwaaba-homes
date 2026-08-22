@@ -67,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {
         title: 'ACCOUNT',
         links: [
+          { name: 'Subscription', href: '/dashboard/landlord/subscription', icon: CreditCard },
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
           { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },
