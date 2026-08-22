@@ -80,7 +80,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
+    <div className="flex h-[calc(100vh-5rem)] w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
       <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
 
       {/* Main Content Area */}

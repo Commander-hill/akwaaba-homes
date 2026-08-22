@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className="font-sans" suppressHydrationWarning>
         <Providers>
           <Navbar />
-          <main className="pt-16 min-h-screen">
+          <main className="pt-20 min-h-screen">
             {children}
           </main>
         </Providers>

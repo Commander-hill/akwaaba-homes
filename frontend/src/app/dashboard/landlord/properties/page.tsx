@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, CreditCard, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -52,7 +52,7 @@ export default function LandlordPropertiesPage() {
       const { data } = await api.post('/subscriptions/initialize', { propertyId });
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       if (data.authorization_url) {
         window.location.href = data.authorization_url;
       }
@@ -67,7 +67,7 @@ export default function LandlordPropertiesPage() {
       const { data } = await api.post('/subscriptions/verify', { paymentReference: reference });
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       setPaymentMsg({ text: 'Listing published successfully!', type: 'success' });
       refetch();
       router.replace('/dashboard/landlord/properties');

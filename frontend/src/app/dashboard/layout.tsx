@@ -95,7 +95,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
+    <div className="flex h-[calc(100vh-5rem)] w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
       <ModernSidebar user={user} groups={sidebarGroups} onLogout={handleLogout} />
 
       {/* Main Content Area */}
