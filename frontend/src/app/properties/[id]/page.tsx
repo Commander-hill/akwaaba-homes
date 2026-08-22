@@ -6,7 +6,7 @@ import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, St
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
-import { useState, use } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -38,6 +38,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       return res.data.property;
     }
   });
+
+  useEffect(() => {
+    if (session && session.role === 'LANDLORD') {
+      router.push('/dashboard/landlord');
+    }
+  }, [session, router]);
 
   const { data: reviewsData } = useQuery({
     queryKey: ['reviews', propertyId],
