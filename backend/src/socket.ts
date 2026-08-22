@@ -21,7 +21,7 @@ let io: Server;
 export const initializeSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      origin: true, // Allow any origin, reflecting it back (matches Express config)
       methods: ['GET', 'POST'],
       credentials: true,
     },

@@ -25,8 +25,12 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     // Extract token from cookie (assuming the server set an HTTP-only cookie, 
     // we can't easily read it from JS. We need to pass it, or let the socket use withCredentials: true)
     
+    // Connect to the root domain, stripping /api or /api/v1 if it exists in the NEXT_PUBLIC_API_URL
+    const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const socketUrl = rawUrl.replace(/\/api(\/v1)?\/?$/, '');
+
     // With credentials allows the socket connection to send the HTTP-only cookies automatically
-    const socketInstance = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', {
+    const socketInstance = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
     });
