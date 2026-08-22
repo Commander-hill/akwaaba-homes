@@ -93,8 +93,9 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Amount for annual property listing: GHS 100.00 = 10000 pesewas
-    const amountInPesewas = 10000;
+    // Amount for annual property listing: derived from SUBSCRIPTION_FEE_GHS (defaults to 100 GHS = 10000 pesewas)
+    const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+    const amountInPesewas = Math.round(feeInGhs * 100);
 
     // Check if user provided dummy Paystack key or if it's not set
     if (!process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
