@@ -21,3 +21,14 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Dedicated strict rate limit for password reset requests
+export const passwordResetRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit to 5 attempts per window to prevent email flooding and token brute force
+  message: {
+    message: 'Too many password reset requests from this IP. Please try again after 15 minutes.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
