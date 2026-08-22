@@ -33,7 +33,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     queryKey: ['property', propertyId],
     queryFn: async () => {
       const res = await api.get(`/properties/${propertyId}`);
-      return res.data;
+      return res.data.property;
     }
   });
 
@@ -128,8 +128,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     return <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center font-bold text-2xl">Property not found</div>;
   }
 
-  const parsedImages = JSON.parse(property.images);
-  const parsedAmenities = JSON.parse(property.amenities);
+  const parsedImages = Array.isArray(property.images) ? property.images : (property.images ? JSON.parse(property.images) : []);
+  const parsedAmenities = Array.isArray(property.amenities) ? property.amenities : (property.amenities ? JSON.parse(property.amenities) : []);
   const mainImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
 
   return (
