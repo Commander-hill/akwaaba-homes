@@ -248,6 +248,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({
       message: 'Logged in successfully',
       accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -265,7 +266,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { refreshToken } = req.cookies;
+    let { refreshToken } = req.cookies;
+    
+    // Fallback to request body for environments where 3rd-party cookies are blocked
+    if (!refreshToken && req.body.refreshToken) {
+      refreshToken = req.body.refreshToken;
+    }
 
     if (!refreshToken) {
       res.status(401).json({ message: 'No refresh token provided' });
@@ -309,7 +315,8 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ 
       message: 'Token refreshed successfully',
-      accessToken 
+      accessToken,
+      refreshToken // Return the same refresh token so frontend can keep it if needed
     });
   } catch (error) {
     console.error('Refresh error:', error);

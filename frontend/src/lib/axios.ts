@@ -40,8 +40,12 @@ api.interceptors.response.use(
     if (typeof window !== 'undefined' && response.data?.accessToken) {
       localStorage.setItem('akwaaba_access_token', response.data.accessToken);
     }
+    if (typeof window !== 'undefined' && response.data?.refreshToken) {
+      localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
+    }
     if (typeof window !== 'undefined' && response.config.url?.includes('/auth/logout')) {
       localStorage.removeItem('akwaaba_access_token');
+      localStorage.removeItem('akwaaba_refresh_token');
     }
     return response;
   },
@@ -64,7 +68,8 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        await api.post('/auth/refresh');
+        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
+        await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
         processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
@@ -72,6 +77,7 @@ api.interceptors.response.use(
         // If refresh fails (e.g. token expired/invalid), redirect to login
         if (typeof window !== 'undefined') {
           localStorage.removeItem('akwaaba_access_token');
+          localStorage.removeItem('akwaaba_refresh_token');
           const publicPaths = ['/login', '/register', '/admin/login', '/forgot-password', '/reset-password'];
           if (!publicPaths.includes(window.location.pathname) && window.location.pathname !== '/') {
             window.location.href = '/login';

@@ -27,7 +27,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   const decoded = verifyAccessToken(token) as any;
 
   if (!decoded) {
-    res.status(403).json({ message: 'Invalid or expired token.' });
+    res.status(401).json({ message: 'Invalid or expired token.' });
     return;
   }
 
