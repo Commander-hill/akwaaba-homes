@@ -3,13 +3,15 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
+import { safeJsonParse } from '../utils/json';
 
-// Helper to safely parse JSON strings from SQLite
+// Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property: any) => {
+  if (!property) return property;
   return {
     ...property,
-    amenities: property.amenities ? JSON.parse(property.amenities) : [],
-    images: property.images ? JSON.parse(property.images) : [],
+    amenities: safeJsonParse(property.amenities, []),
+    images: safeJsonParse(property.images, []),
   };
 };
 

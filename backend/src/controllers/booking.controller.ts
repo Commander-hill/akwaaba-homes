@@ -5,6 +5,7 @@ import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
 import { notifyBookingCreated, notifyBookingStatusChanged, notifyPaymentReceipt } from '../utils/notification.service';
 import { getIO } from '../socket';
+import { safeJsonParse } from '../utils/json';
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -101,7 +102,7 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
 
     const parsedBookings = bookings.map(b => ({
       ...b,
-      property: { ...b.property, images: b.property.images ? JSON.parse(b.property.images) : [] }
+      property: { ...b.property, images: safeJsonParse(b.property.images, []) }
     }));
 
     res.status(200).json({ bookings: parsedBookings });

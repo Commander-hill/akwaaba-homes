@@ -5,6 +5,7 @@ import { notifyPropertyApproval } from '../utils/notification.service';
 import { decryptData } from '../utils/crypto';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
+import { safeJsonParse } from '../utils/json';
 
 export const getAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -152,8 +153,8 @@ export const getAllProperties = async (req: Request, res: Response): Promise<voi
     
     const parsedProperties = properties.map(p => ({
       ...p,
-      images: p.images ? JSON.parse(p.images) : [],
-      amenities: p.amenities ? JSON.parse(p.amenities) : []
+      images: safeJsonParse(p.images, []),
+      amenities: safeJsonParse(p.amenities, [])
     }));
 
     res.status(200).json(parsedProperties);
