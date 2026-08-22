@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Plus, Edit2, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Plus, Edit2, Trash2, CheckCircle, XCircle, BellRing, Megaphone, X, Hash, Sparkles, Type, Heading2, AlignLeft, Link as LinkIcon, Check } from 'lucide-react';
 
 interface Notice {
   id: string;
@@ -96,9 +96,9 @@ export default function AdminNoticesPage() {
         </div>
         <button
           onClick={handleAddNew}
-          className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold shadow-md transition-colors"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02]"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Add Notice
         </button>
       </div>
@@ -167,68 +167,182 @@ export default function AdminNoticesPage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="bg-white dark:bg-slate-950 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-[var(--border)]">
-            <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
-              <h3 className="font-bold text-lg">{editingNotice ? 'Edit Notice' : 'Create Notice'}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="bg-white dark:bg-slate-950 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
+
+            {/* ── Gradient Header ── */}
+            <div className="relative px-6 py-5 bg-gradient-to-r from-indigo-600 via-purple-600 to-sky-600 overflow-hidden">
+              {/* decorative glow orbs */}
+              <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -left-4 -bottom-6 w-24 h-24 bg-purple-300/20 rounded-full blur-xl pointer-events-none" />
+
+              <div className="relative flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-inner ring-1 ring-white/30">
+                    <Megaphone className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-xl tracking-tight text-white leading-tight">
+                      {editingNotice ? 'Edit Broadcast Notice' : 'Create Broadcast Notice'}
+                    </h3>
+                    <p className="text-xs text-indigo-100/80 mt-0.5">
+                      Configure dynamic alert banners shown to tenants &amp; landlords.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Order Index (Number)</label>
-                  <input type="number" name="orderIndex" defaultValue={editingNotice?.orderIndex || 0} className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]" />
+
+            {/* ── Form Body ── */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[78vh] overflow-y-auto">
+
+              {/* Section 1 – Meta */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
+                      <Hash className="w-3.5 h-3.5 text-indigo-500" /> Order Priority
+                    </label>
+                    <input
+                      type="number"
+                      name="orderIndex"
+                      defaultValue={editingNotice?.orderIndex || 0}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-[var(--foreground)] outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-500" /> Icon Theme
+                    </label>
+                    <select
+                      name="iconType"
+                      defaultValue={editingNotice?.iconType || ''}
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-[var(--foreground)] outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-500 transition-all"
+                    >
+                      <option value="">None (Standard)</option>
+                      <option value="CAUTION">⚠️ Caution / Warning</option>
+                      <option value="PAYMENT">💳 Payment &amp; Fees</option>
+                      <option value="INFO">ℹ️ General Announcement</option>
+                    </select>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Icon Type</label>
-                  <select name="iconType" defaultValue={editingNotice?.iconType || ''} className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]">
-                    <option value="">None</option>
-                    <option value="CAUTION">Caution</option>
-                    <option value="PAYMENT">Payment</option>
-                    <option value="INFO">Info</option>
-                  </select>
+                  <label className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
+                    <Type className="w-3.5 h-3.5 text-sky-500" /> Top Tagline <span className="text-slate-400 normal-case font-medium">(optional small caps)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="topLabel"
+                    defaultValue={editingNotice?.topLabel || ''}
+                    placeholder="e.g. ONLINE BOOKING NOTICE"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-[var(--foreground)] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-sky-400/40 focus:border-sky-500 transition-all"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Top Label (Optional small caps)</label>
-                <input type="text" name="topLabel" defaultValue={editingNotice?.topLabel || ''} placeholder="e.g. ONLINE BOOKING" className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Title *</label>
-                <input type="text" name="title" required defaultValue={editingNotice?.title} placeholder="e.g. Strict Prohibition on Bed Sales" className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Description *</label>
-                <textarea name="description" required rows={3} defaultValue={editingNotice?.description} className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]"></textarea>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              {/* Section 2 – Content */}
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Button Text (Optional)</label>
-                  <input type="text" name="buttonText" defaultValue={editingNotice?.buttonText || ''} placeholder="e.g. Checkout Rooms" className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]" />
+                  <label className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
+                    <Heading2 className="w-3.5 h-3.5 text-indigo-500" /> Notice Title <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    required
+                    defaultValue={editingNotice?.title}
+                    placeholder="e.g. Strict Prohibition on Bed & Hostel Slot Reselling"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-[var(--foreground)] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400/40 focus:border-indigo-500 transition-all"
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">Button Link (Optional)</label>
-                  <input type="text" name="buttonLink" defaultValue={editingNotice?.buttonLink || ''} placeholder="e.g. /properties" className="w-full px-3 py-2 border rounded-xl dark:bg-slate-900 border-[var(--border)] outline-none focus:border-[var(--primary)]" />
+                  <label className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mb-1.5">
+                    <AlignLeft className="w-3.5 h-3.5 text-purple-500" /> Detailed Description <span className="text-red-400">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    required
+                    rows={3}
+                    defaultValue={editingNotice?.description}
+                    placeholder="Describe the rules, guidelines, or notice details for tenants..."
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-[var(--foreground)] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-purple-400/40 focus:border-purple-500 transition-all resize-none"
+                  ></textarea>
                 </div>
               </div>
 
-              <div className="flex items-center pt-2">
-                <input type="checkbox" id="isActive" name="isActive" defaultChecked={editingNotice ? editingNotice.isActive : true} className="w-4 h-4 text-[var(--primary)] border-[var(--border)] rounded" />
-                <label htmlFor="isActive" className="ml-2 text-sm font-medium text-[var(--foreground)]">Notice is Active (Visible to users)</label>
+              {/* Section 3 – CTA */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-3">
+                <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                  <LinkIcon className="w-3.5 h-3.5 text-sky-500" /> Call-to-Action Button <span className="text-slate-400 normal-case font-medium">(optional)</span>
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    name="buttonText"
+                    defaultValue={editingNotice?.buttonText || ''}
+                    placeholder="Button label (e.g. View Guidelines)"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-[var(--foreground)] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-sky-400/40 focus:border-sky-500 transition-all"
+                  />
+                  <input
+                    type="text"
+                    name="buttonLink"
+                    defaultValue={editingNotice?.buttonLink || ''}
+                    placeholder="URL (e.g. /properties)"
+                    className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-[var(--foreground)] placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-sky-400/40 focus:border-sky-500 transition-all"
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border border-[var(--border)] text-[var(--foreground)] rounded-xl font-medium hover:bg-slate-50 dark:hover:bg-slate-900">
+              {/* Section 4 – Visibility Toggle */}
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <label htmlFor="isActive" className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 block">
+                      Broadcast Visibility
+                    </label>
+                    <p className="text-xs text-emerald-700/70 dark:text-emerald-400/70">Make this notice visible to users immediately on save.</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  defaultChecked={editingNotice ? editingNotice.isActive : true}
+                  className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
+                />
+              </div>
+
+              {/* ── Footer Buttons ── */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl transition-colors cursor-pointer"
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={saveMutation.isPending} className="px-6 py-2 bg-[var(--primary)] text-white rounded-xl font-medium hover:opacity-90 flex items-center gap-2">
-                  {saveMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                  Save Notice
+                <button
+                  type="submit"
+                  disabled={saveMutation.isPending}
+                  className="px-7 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition-all hover:scale-[1.02] disabled:opacity-60 cursor-pointer"
+                >
+                  {saveMutation.isPending
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <BellRing className="w-4 h-4" />
+                  }
+                  {editingNotice ? 'Update Notice' : 'Save & Publish Notice'}
                 </button>
               </div>
             </form>
