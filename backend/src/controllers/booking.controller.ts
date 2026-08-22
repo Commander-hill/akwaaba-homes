@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
+import axios from 'axios';
 import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
 import { notifyBookingCreated, notifyBookingStatusChanged, notifyPaymentReceipt } from '../utils/notification.service';
@@ -226,15 +227,69 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Mock verification delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const paystackRes = await axios.post(
+      'https://api.paystack.co/transaction/initialize',
+      {
+        email: booking.tenant.email,
+        amount: Math.round(booking.property.price * 100), // GHS to pesewas
+        callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}`,
+        metadata: { bookingId: booking.id, tenantId: booking.tenantId }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    res.status(200).json({ authorization_url: paystackRes.data.data.authorization_url, reference: paystackRes.data.data.reference });
+  } catch (error: any) {
+    console.error('Error initializing payment:', error.response?.data || error);
+    res.status(500).json({ message: 'Internal server error during Paystack initialization' });
+  }
+};
+
+export const verifyPayment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user.id;
+    const { id } = req.params;
+    const { reference } = req.body;
+
+    if (!reference) {
+      res.status(400).json({ message: 'Payment reference is required' });
+      return;
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: { property: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
+    });
+
+    if (!booking || booking.tenantId !== tenantId) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    if (booking.status === 'COMPLETED') {
+      res.status(200).json({ message: 'Booking is already paid', booking });
+      return;
+    }
+
+    const verifyRes = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+      headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+    });
+
+    if (verifyRes.data.data.status !== 'success') {
+      res.status(400).json({ message: 'Payment verification failed' });
+      return;
+    }
 
     const updatedBooking = await prisma.booking.update({
       where: { id },
       data: { status: 'COMPLETED' }
     });
 
-    // Notify landlord
     await notifyBookingStatusChanged({
       tenantId: booking.tenantId,
       tenantEmail: booking.tenant.email,
@@ -243,19 +298,18 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       status: 'COMPLETED'
     });
 
-    // Notify tenant payment receipt
     await notifyPaymentReceipt({
       tenantId: booking.tenantId,
       tenantEmail: booking.tenant.email,
       tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
       propertyTitle: booking.property.title,
-      amount: 1000,
+      amount: verifyRes.data.data.amount / 100,
       bookingId: booking.id
     });
 
-    res.status(200).json({ message: 'Payment successful, booking completed', booking: updatedBooking });
-  } catch (error) {
-    console.error('Error paying booking:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(200).json({ message: 'Payment verified and booking completed', booking: updatedBooking });
+  } catch (error: any) {
+    console.error('Error verifying payment:', error.response?.data || error);
+    res.status(500).json({ message: 'Internal server error during payment verification' });
   }
 };

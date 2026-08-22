@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard } from 'lucide-react';
@@ -14,6 +14,17 @@ import clsx from 'clsx';
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates'>('bookings');
+  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyId = urlParams.get('verify');
+    const reference = urlParams.get('reference');
+    const trxref = urlParams.get('trxref');
+
+    if (verifyId && (reference || trxref)) {
+      verifyPaymentMutation.mutate({ bookingId: verifyId, reference: (reference || trxref) as string });
+    }
+  }, []);
   
   // Review State
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -170,12 +181,29 @@ export default function TenantDashboard() {
       const res = await api.post(`/bookings/${bookingId}/pay`);
       return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-      toast.success('Payment successful! Your booking is now complete.');
+    onSuccess: (data) => {
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to process payment');
+    }
+  });
+
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async ({ bookingId, reference }: { bookingId: string, reference: string }) => {
+      const res = await api.post(`/bookings/${bookingId}/verify-payment`, { reference });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      toast.success('Payment verified! Your booking is now complete.');
+      // Remove query params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to verify payment');
     }
   });
 
