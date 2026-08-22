@@ -7,6 +7,7 @@ import api from '@/lib/axios';
 import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
+import { getImageUrl } from '@/lib/utils';
 
 interface RoomInput {
   id: string;
@@ -389,7 +390,7 @@ export default function NewPropertyPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {formData.images.map((url, idx) => (
                 <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border border-[var(--border)] group">
-                  <img src={url} alt="Property" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(url)} alt="Property" className="w-full h-full object-cover" />
                   <button 
                     type="button" 
                     onClick={() => setFormData(p => ({...p, images: p.images.filter((_, i) => i !== idx)}))}
