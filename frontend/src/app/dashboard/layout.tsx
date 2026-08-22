@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/admin/dashboard');
       } else if (user.role === 'TENANT' && pathname.includes('/landlord')) {
         router.push('/dashboard/tenant');
-      } else if (user.role === 'LANDLORD' && pathname.includes('/tenant')) {
+      } else if (user.role === 'LANDLORD' && pathname.startsWith('/dashboard/tenant')) {
         router.push('/dashboard/landlord');
       }
     }
