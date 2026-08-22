@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
@@ -144,7 +145,7 @@ export default function TenantDashboard() {
       setTicketDesc('');
       setTicketPriority('MEDIUM');
       queryClient.invalidateQueries({ queryKey: ['tickets', 'tenant'] });
-      alert('Maintenance request submitted successfully!');
+      toast.success('Maintenance request submitted successfully!');
     },
     onError: (err: any) => {
       setTicketError(err.response?.data?.message || 'Failed to submit request');
@@ -170,10 +171,10 @@ export default function TenantDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-      alert('Payment successful! Your booking is now complete.');
+      toast.success('Payment successful! Your booking is now complete.');
     },
     onError: (err: any) => {
-      alert(err.response?.data?.message || 'Failed to process payment');
+      toast.error(err.response?.data?.message || 'Failed to process payment');
     }
   });
 

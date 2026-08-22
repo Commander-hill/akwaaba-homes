@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, FileSignature, CheckCircle, Printer, AlertTriangle } from 'lucide-react';
 import SignatureCanvas from 'react-signature-canvas';
+import toast from 'react-hot-toast';
 
 export default function AgreementPage() {
   const { id: bookingId } = useParams();
@@ -42,6 +43,10 @@ export default function AgreementPage() {
     onSuccess: () => {
       setShowSignModal(false);
       queryClient.invalidateQueries({ queryKey: ['agreement', bookingId] });
+      toast.success('Signature applied successfully!');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to submit signature');
     }
   });
 
@@ -83,7 +88,7 @@ export default function AgreementPage() {
 
   const handleSaveSignature = () => {
     if (sigCanvas.current?.isEmpty()) {
-      alert("Please provide a signature first.");
+      toast.error("Please provide a signature first.");
       return;
     }
     const dataURL = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
