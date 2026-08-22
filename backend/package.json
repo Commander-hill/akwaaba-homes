@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "npx tsx watch src/server.ts",
-    "build": "tsc && npx prisma db seed",
+    "build": "tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
