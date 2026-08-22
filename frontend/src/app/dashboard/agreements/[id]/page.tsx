@@ -100,16 +100,16 @@ export default function AgreementPage() {
     }
     
     try {
-      const canvas = sigCanvas.current.getTrimmedCanvas();
+      const canvas = sigCanvas.current.getCanvas();
       const dataURL = canvas.toDataURL('image/png');
       console.log('Generated signature dataURL length:', dataURL.length);
       
       if (dataURL) {
         signMutation.mutate(dataURL);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error generating signature:', err);
-      toast.error('Failed to generate signature image.');
+      toast.error('Failed to generate signature image: ' + (err.message || 'Unknown error'));
     }
   };
 
