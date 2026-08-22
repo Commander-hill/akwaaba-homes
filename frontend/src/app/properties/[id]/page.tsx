@@ -15,6 +15,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const unwrappedParams = use(params);
   const propertyId = unwrappedParams.id;
   
+  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
@@ -118,12 +119,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       await new Promise(resolve => setTimeout(resolve, 2000));
       await api.post('/bookings', {
         propertyId,
+        roomId: selectedRoomId,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString()
       });
       setBookingMessage({ text: 'Booking request sent successfully!', type: 'success' });
       setStartDate('');
       setEndDate('');
+      setSelectedRoomId('');
     } catch (error: any) {
       setBookingMessage({ text: error.response?.data?.message || 'Failed to request booking', type: 'error' });
     } finally {
@@ -142,6 +145,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const parsedImages = Array.isArray(property.images) ? property.images : (property.images ? JSON.parse(property.images) : []);
   const parsedAmenities = Array.isArray(property.amenities) ? property.amenities : (property.amenities ? JSON.parse(property.amenities) : []);
   const mainImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
+
+  const selectedRoom = property.rooms?.find((r: any) => r.id === selectedRoomId);
+  const displayPrice = selectedRoom ? selectedRoom.price : property.price;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-h-[calc(100vh-4rem)]">
@@ -177,7 +183,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">{property.title}</h1>
               <div className="text-right">
-                <div className="text-3xl font-bold text-[var(--primary)]">GH₵{property.price}</div>
+                {!selectedRoomId && <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Starting from</div>}
+                <div className="text-3xl font-bold text-[var(--primary)]">GH₵{displayPrice}</div>
                 <div className="text-sm text-[var(--muted-foreground)]">per academic year</div>
               </div>
             </div>
@@ -202,8 +209,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <Bed className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Room</div>
-                <div className="font-bold">{property.roomType || '1 in a room'}</div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Room Types</div>
+                <div className="font-bold">{property.rooms?.length || 0} Options</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -211,8 +218,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <Users className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Total Rooms</div>
-                <div className="font-bold">{property.totalCapacity || property.roomCapacity} beds</div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Total Capacity</div>
+                <div className="font-bold">{property.totalCapacity} beds</div>
               </div>
             </div>
             {/* Live Availability Block */}
@@ -444,6 +451,45 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             )}
 
             <form onSubmit={handleBooking} className="space-y-4">
+              
+              <div className="space-y-3 mb-6">
+                <label className="block text-sm font-bold text-[var(--foreground)]">Select Room Type</label>
+                {property.rooms?.map((room: any) => (
+                  <label 
+                    key={room.id}
+                    className={`block relative p-4 border rounded-xl cursor-pointer transition-all ${
+                      selectedRoomId === room.id 
+                        ? 'border-[var(--primary)] bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md ring-1 ring-[var(--primary)]' 
+                        : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    } ${room.remainingCapacity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="radio" 
+                          name="roomSelection" 
+                          value={room.id}
+                          disabled={room.remainingCapacity === 0}
+                          checked={selectedRoomId === room.id}
+                          onChange={(e) => setSelectedRoomId(e.target.value)}
+                          className="w-4 h-4 text-[var(--primary)] focus:ring-[var(--primary)]"
+                        />
+                        <div>
+                          <div className="font-bold text-[var(--foreground)]">{room.roomType}</div>
+                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                            {room.remainingCapacity === 0 
+                              ? <span className="text-red-500 font-semibold">Fully Booked</span> 
+                              : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
+                            }
+                          </div>
+                        </div>
+                      </div>
+                      <div className="font-extrabold text-[var(--foreground)]">GH₵{room.price}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Start Date</label>
                 <div className="relative">
@@ -463,10 +509,10 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={isBooking || !property.isAvailable}
+                  disabled={isBooking || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
                   className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : property.isAvailable ? 'Request to Book' : 'Currently Unavailable'}
+                  {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : !selectedRoomId ? 'Select a Room' : (selectedRoom && selectedRoom.remainingCapacity === 0) ? 'Room Unavailable' : 'Request to Book'}
                 </button>
               </div>
             </form>
@@ -490,6 +536,10 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span className="font-bold text-right truncate w-48">{property.title}</span>
               </div>
               <div className="flex justify-between border-b pb-2">
+                <span className="text-[var(--muted-foreground)]">Room</span>
+                <span className="font-bold text-right truncate w-48">{selectedRoom?.roomType}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2">
                 <span className="text-[var(--muted-foreground)]">Check In</span>
                 <span className="font-bold">{new Date(startDate).toLocaleDateString()}</span>
               </div>
@@ -499,7 +549,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
               <div className="flex justify-between items-end pt-2">
                 <span className="font-bold text-lg">Total Due</span>
-                <span className="text-2xl font-black text-[var(--primary)]">GHS {property.price}</span>
+                <span className="text-2xl font-black text-[var(--primary)]">GHS {displayPrice}</span>
               </div>
             </div>
 

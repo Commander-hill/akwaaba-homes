@@ -4,9 +4,16 @@ import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
-import { Loader2, Lock, Building2, MapPin, DollarSign, UploadCloud, Info, Video, Image as ImageIcon, X } from 'lucide-react';
+import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
+
+interface RoomInput {
+  id: string;
+  roomType: string;
+  numberOfRooms: number;
+  price: string;
+}
 
 export default function NewPropertyPage() {
   const router = useRouter();
@@ -23,11 +30,7 @@ export default function NewPropertyPage() {
   const [formData, setFormData] = useState({
     title: '',
     type: 'Hostel',
-    roomType: '1 in a room',
-    numberOfRooms: 1,
-    roomCapacity: 1,
     description: '',
-    price: '',
     location: '',
     amenities: '',
     latitude: null as number | null,
@@ -35,6 +38,10 @@ export default function NewPropertyPage() {
     videoUrl: '',
     images: [] as string[],
   });
+
+  const [rooms, setRooms] = useState<RoomInput[]>([
+    { id: Date.now().toString(), roomType: '1 in a room', numberOfRooms: 1, price: '' }
+  ]);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
@@ -46,6 +53,11 @@ export default function NewPropertyPage() {
     mutationFn: async (data: any) => {
       const formattedData = {
         ...data,
+        rooms: rooms.map(r => ({
+          roomType: r.roomType,
+          numberOfRooms: r.numberOfRooms,
+          price: r.price
+        })),
         amenities: data.amenities.split(',').map((a: string) => a.trim()).filter(Boolean),
         images: data.images.length > 0 ? data.images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop'] // Default image for demo
       };
@@ -140,12 +152,39 @@ export default function NewPropertyPage() {
     }
   };
 
+  const handleAddRoom = () => {
+    setRooms(prev => [...prev, { id: Date.now().toString(), roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
+  };
+
+  const handleRemoveRoom = (id: string) => {
+    setRooms(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleRoomChange = (id: string, field: keyof RoomInput, value: any) => {
+    setRooms(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const totalCapacity = rooms.reduce((acc, r) => {
+    const beds = parseInt(r.roomType.split(' ')[0], 10) || 1;
+    return acc + (r.numberOfRooms * beds);
+  }, 0);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!formData.title || !formData.type || !formData.roomType || !formData.numberOfRooms || !formData.roomCapacity || !formData.description || !formData.price || !formData.location) {
-      setError('Please fill in all required fields, including the number of rooms.');
+    if (!formData.title || !formData.type || !formData.description || !formData.location) {
+      setError('Please fill in all required property fields.');
       return;
+    }
+    if (rooms.length === 0) {
+      setError('You must add at least one room configuration.');
+      return;
+    }
+    for (const room of rooms) {
+      if (!room.roomType || !room.numberOfRooms || !room.price) {
+        setError('Please fill in all fields for every room configuration.');
+        return;
+      }
     }
     if (videoUploading || imagesUploading) {
       setError('Please wait for media to finish uploading');
@@ -184,7 +223,7 @@ export default function NewPropertyPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)]">Property Type *</label>
               <select 
@@ -198,74 +237,6 @@ export default function NewPropertyPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Room Type *</label>
-              <select 
-                value={formData.roomType}
-                onChange={e => {
-                  const roomType = e.target.value;
-                  // Extract the number from the room type string (e.g. '2 in a room' → 2)
-                  const bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
-                  setFormData({...formData, roomType, roomCapacity: bedsPerRoom});
-                }}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              >
-                <option value="1 in a room">1 in a room</option>
-                <option value="2 in a room">2 in a room</option>
-                <option value="3 in a room">3 in a room</option>
-                <option value="4 in a room">4 in a room</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
-                Beds per Room
-                <span className="text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-[var(--primary)] px-2 py-0.5 rounded-full">Auto</span>
-              </label>
-              <div className="w-full bg-slate-50 dark:bg-slate-800/60 border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] font-extrabold text-lg flex items-center gap-2 select-none">
-                {formData.roomCapacity}
-                <span className="text-sm font-normal text-[var(--muted-foreground)]">bed{formData.roomCapacity > 1 ? 's' : ''} / room</span>
-              </div>
-              <p className="text-xs text-[var(--muted-foreground)]">Set automatically from Room Type</p>
-            </div>
-          </div>
-
-          {/* Number of Rooms - separate prominent row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Number of Rooms *</label>
-              <p className="text-xs text-[var(--muted-foreground)]">How many physical rooms does this property contain?</p>
-              <input 
-                type="number" 
-                min="1"
-                value={formData.numberOfRooms}
-                onChange={e => setFormData({...formData, numberOfRooms: parseInt(e.target.value, 10)})}
-                placeholder="e.g. 10"
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              />
-            </div>
-            <div className="space-y-2 flex flex-col justify-end">
-              <div className="bg-slate-50 dark:bg-slate-800/50 border border-[var(--border)] rounded-xl p-4">
-                <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Total Capacity</p>
-                <p className="text-2xl font-extrabold text-[var(--primary)]">{formData.numberOfRooms * formData.roomCapacity}</p>
-                <p className="text-xs text-[var(--muted-foreground)]">Max tenants this property can accommodate</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Price per Year (GHS) *</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input 
-                  type="number" 
-                  value={formData.price}
-                  onChange={e => setFormData({...formData, price: e.target.value})}
-                  placeholder="3500"
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)]">Location Name *</label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -276,6 +247,91 @@ export default function NewPropertyPage() {
                   placeholder="e.g. Ayeduase"
                   className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-[var(--foreground)]">Room Configurations *</h3>
+                <p className="text-xs text-[var(--muted-foreground)]">Add the types of rooms available in this property.</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={handleAddRoom}
+                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add Room Type
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {rooms.map((room, index) => (
+                <div key={room.id} className="p-5 border border-[var(--border)] rounded-xl bg-slate-50/50 dark:bg-slate-800/20 relative">
+                  {rooms.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveRoom(room.id)}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mr-8">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--foreground)]">Room Type</label>
+                      <select 
+                        value={room.roomType}
+                        onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
+                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                      >
+                        <option value="1 in a room">1 in a room</option>
+                        <option value="2 in a room">2 in a room</option>
+                        <option value="3 in a room">3 in a room</option>
+                        <option value="4 in a room">4 in a room</option>
+                      </select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--foreground)]">Number of Rooms</label>
+                      <input 
+                        type="number" 
+                        min="1"
+                        value={room.numberOfRooms}
+                        onChange={e => handleRoomChange(room.id, 'numberOfRooms', parseInt(e.target.value) || '')}
+                        placeholder="Qty"
+                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--foreground)]">Price/Year (GHS)</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input 
+                          type="number" 
+                          min="1"
+                          value={room.price}
+                          onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
+                          placeholder="Amount"
+                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 pl-8 pr-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="bg-slate-50 dark:bg-slate-800/50 border border-[var(--border)] rounded-xl p-4 mt-2">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Total Capacity</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">Maximum tenants this property can accommodate</p>
+                </div>
+                <div className="text-2xl font-extrabold text-[var(--primary)]">{totalCapacity}</div>
               </div>
             </div>
           </div>

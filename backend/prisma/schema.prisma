@@ -69,22 +69,20 @@ model Property {
   landlord       User     @relation(fields: [landlordId], references: [id])
   title          String
   type           String   @default("Hostel") // Hostel, Homestay, Apartment
-  roomType       String   @default("1 in a room") // 1 in a room, 2 in a room, etc
-  numberOfRooms  Int      @default(1) // How many physical rooms does the property have
-  roomCapacity   Int      @default(1) // How many beds/tenants per room
   description    String
-  price          Float // Represented in GHS (Ghana Cedis)
-  location       String // e.g., "Legon", "Ayeduase"
+  price          Float    @default(0) // Floor/min price, derived from rooms for search indexing
+  location       String
   latitude       Float?
   longitude      Float?
-  amenities      String // SQLite does not support String[]. Store as JSON string.
-  images         String // SQLite does not support String[]. Store as JSON string.
+  amenities      String // Store as JSON string
+  images         String // Store as JSON string
   videoUrl       String?
   isAvailable    Boolean  @default(true)
   approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  rooms        Room[]
   bookings     Booking[]
   tickets      MaintenanceTicket[] @relation("PropertyTickets")
   BreachReport BreachReport[]
@@ -92,8 +90,25 @@ model Property {
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
-  @@index([type, roomType])
+  @@index([type])
   @@index([price])
+}
+
+model Room {
+  id            String   @id @default(uuid())
+  propertyId    String
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomType      String   // "1 in a room", "2 in a room", etc.
+  bedsPerRoom   Int      @default(1) // Derived from roomType and stored explicitly
+  numberOfRooms Int      @default(1) // How many rooms of this type exist
+  price         Float    // Annual price for this room type in GHS
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  bookings     Booking[]
+  transactions Transaction[]
+
+  @@index([propertyId])
 }
 
 model Booking {
@@ -102,13 +117,15 @@ model Booking {
   tenant     User     @relation(fields: [tenantId], references: [id])
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id])
+  roomId     String?  // Which specific room type was booked
+  room       Room?    @relation(fields: [roomId], references: [id])
   startDate  DateTime
   endDate    DateTime
-  status     String   @default("PENDING") // SQLite does not support enums
+  status     String   @default("PENDING")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  review         Review? // One-to-one relation, only allowed if COMPLETED
+  review         Review?
   leaseAgreement LeaseAgreement?
   transaction    Transaction?
 
@@ -293,6 +310,8 @@ model Transaction {
   landlord    User     @relation("LandlordTransactions", fields: [landlordId], references: [id])
   propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
+  roomId      String?  // Which room type was involved
+  room        Room?    @relation(fields: [roomId], references: [id])
   
   amount      Float
   reference   String   @unique // Paystack reference

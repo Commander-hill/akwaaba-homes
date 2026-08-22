@@ -9,8 +9,8 @@ const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
 const crypto_1 = require("../utils/crypto");
 const crypto_2 = __importDefault(require("crypto"));
-const nodemailer_1 = __importDefault(require("nodemailer"));
 const ua_parser_js_1 = require("ua-parser-js");
+const notification_service_1 = require("../utils/notification.service");
 const register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
@@ -67,15 +67,10 @@ const register = async (req, res) => {
             },
         });
         // REAL EMAIL SENDING VIA GMAIL SMTP
-        const verifyLink = `http://localhost:3000/verify-email?token=${verificationToken}`;
-        if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_gmail_address@gmail.com') {
-            const transporter = nodemailer_1.default.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: process.env.SMTP_USER,
-                    pass: process.env.SMTP_PASS,
-                },
-            });
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
+        const transporter = (0, notification_service_1.getTransporter)();
+        if (transporter) {
             const mailOptions = {
                 from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
                 to: user.email,
@@ -93,17 +88,18 @@ const register = async (req, res) => {
           </div>
         `,
             };
-            try {
-                await transporter.sendMail(mailOptions);
+            // Send email asynchronously to prevent blocking the registration request
+            transporter.sendMail(mailOptions)
+                .then(() => {
                 console.log(`✉️  Verification email successfully sent to ${user.email}`);
-            }
-            catch (emailError) {
+            })
+                .catch((emailError) => {
                 console.error('Failed to send verification email via SMTP:', emailError);
                 console.log('\n=============================================');
-                console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL SENT TO: ${user.email}`);
+                console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
                 console.log(`🔗 Verification Link: ${verifyLink}`);
                 console.log('=============================================\n');
-            }
+            });
         }
         else {
             // Fallback for development if real credentials aren't set yet
@@ -203,22 +199,24 @@ const login = async (req, res) => {
                 expiresAt
             }
         });
+        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 15 * 60 * 1000, // 15 mins
             path: '/'
         });
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             path: '/'
         });
         res.status(200).json({
             message: 'Logged in successfully',
+            accessToken,
             user: {
                 id: user.id,
                 email: user.email,
@@ -262,14 +260,18 @@ const refresh = async (req, res) => {
             where: { id: session.id },
             data: { lastActive: new Date() }
         });
+        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
             maxAge: 15 * 60 * 1000, // 15 mins
             path: '/'
         });
-        res.status(200).json({ message: 'Token refreshed successfully' });
+        res.status(200).json({
+            message: 'Token refreshed successfully',
+            accessToken
+        });
     }
     catch (error) {
         console.error('Refresh error:', error);
@@ -287,8 +289,21 @@ const logout = async (req, res) => {
                 data: { isValid: false }
             });
         }
-        res.cookie('accessToken', '', { httpOnly: true, expires: new Date(0), path: '/' });
-        res.cookie('refreshToken', '', { httpOnly: true, expires: new Date(0), path: '/' });
+        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+        res.cookie('accessToken', '', {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
+            expires: new Date(0),
+            path: '/'
+        });
+        res.cookie('refreshToken', '', {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
+            expires: new Date(0),
+            path: '/'
+        });
         res.status(200).json({ message: 'Logged out successfully' });
     }
     catch (error) {
@@ -414,41 +429,35 @@ const forgotPassword = async (req, res) => {
             data: { resetPasswordToken, resetPasswordExpires }
         });
         // Send email
-        const transporter = nodemailer_1.default.createTransport({
-            host: process.env.SMTP_HOST,
-            port: parseInt(process.env.SMTP_PORT || '587'),
-            secure: process.env.SMTP_SECURE === 'true',
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-        const resetUrl = `http://localhost:3000/reset-password?token=${resetToken}`;
-        try {
-            await transporter.sendMail({
+        const transporter = (0, notification_service_1.getTransporter)();
+        if (transporter) {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+            const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+            // Send email asynchronously
+            transporter.sendMail({
                 from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
                 to: user.email,
                 subject: 'Password Reset Request',
                 html: `
-          <div style="font-family: Arial, sans-serif; max-w-2xl; margin: 0 auto;">
-            <h2>Password Reset Request</h2>
-            <p>You requested a password reset for your AkwaabaHomes account.</p>
-            <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
-            <br />
-            <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
-            <br /><br />
-            <p>If you did not request this, please ignore this email.</p>
-          </div>
-        `,
+        <div style="font-family: Arial, sans-serif; max-w-2xl; margin: 0 auto;">
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset for your AkwaabaHomes account.</p>
+          <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
+          <br />
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <br /><br />
+          <p>If you did not request this, please ignore this email.</p>
+        </div>
+      `,
+            })
+                .then(() => console.log(`✉️  Password reset email successfully sent to ${user.email}`))
+                .catch((emailError) => {
+                console.error('Failed to send password reset email via SMTP:', emailError);
+                console.log('\n=============================================');
+                console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL LOG:`);
+                console.log(`🔗 Password Reset Link: ${resetUrl}`);
+                console.log('=============================================\n');
             });
-            console.log(`✉️  Password reset email successfully sent to ${user.email}`);
-        }
-        catch (emailError) {
-            console.error('Failed to send password reset email via SMTP:', emailError);
-            console.log('\n=============================================');
-            console.log(`⚠️ SMTP SEND FAILED. MOCK EMAIL SENT TO: ${user.email}`);
-            console.log(`🔗 Password Reset Link: ${resetUrl}`);
-            console.log('=============================================\n');
         }
         res.status(200).json({ message: 'If an account with that email exists, we have sent a reset link.' });
     }

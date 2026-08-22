@@ -12,9 +12,7 @@ interface Property {
   id: string;
   title: string;
   type: string;
-  roomType: string;
-  roomCapacity: number;
-  numberOfRooms: number;
+  rooms: { roomType: string }[];
   totalCapacity: number;
   remainingCapacity: number;
   description: string;
@@ -273,7 +271,11 @@ export default function PropertiesPage() {
 
                       <div className="flex flex-wrap gap-2 mb-3">
                         <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{property.type || 'Hostel'}</span>
-                        <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{property.roomType || '1 in a room'}</span>
+                        {property.rooms && property.rooms.length > 0 && (
+                          <span className="text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-[var(--primary)] px-2 py-1 rounded-md">
+                            {property.rooms.length} Room Type{property.rooms.length > 1 ? 's' : ''}
+                          </span>
+                        )}
                       </div>
 
                       {/* Availability Meter */}
@@ -304,6 +306,7 @@ export default function PropertiesPage() {
                       
                       <div className="mt-auto pt-4 border-t border-[var(--border)] flex items-center justify-between">
                         <div>
+                          <span className="text-xs text-[var(--muted-foreground)] font-semibold block mb-0.5">Starting from</span>
                           <span className="text-xl font-extrabold text-[var(--foreground)]">GHS {property.price.toLocaleString()}</span>
                         </div>
                         <span className="text-[var(--primary)] text-sm font-bold bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-lg group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">

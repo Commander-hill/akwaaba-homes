@@ -7,6 +7,7 @@ import path from 'path';
 import authRoutes from './routes/auth.routes';
 import propertyRoutes from './routes/property.routes';
 import bookingRoutes from './routes/booking.routes';
+import roomRoutes from './routes/room.routes';
 import reviewRoutes from './routes/review.routes';
 import subscriptionRoutes from './routes/subscription.routes';
 import adminRoutes from './routes/admin.routes';
@@ -71,6 +72,7 @@ app.use('/api', apiRateLimiter);
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/properties', propertyRoutes);
+app.use('/api/v1/rooms', roomRoutes);
 app.use('/api/v1/bookings', bookingRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/subscriptions', subscriptionRoutes);

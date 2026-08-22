@@ -1,3 +1,5 @@
+import nodemailer from 'nodemailer';
+export declare const getTransporter: () => nodemailer.Transporter<any, nodemailer.TransportOptions>;
 interface NotifyParams {
     userId: string;
     recipientEmail: string;

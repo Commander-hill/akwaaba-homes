@@ -9,9 +9,9 @@ import { getIO } from '../socket';
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { propertyId, startDate, endDate } = req.body;
+    const { propertyId, roomId, startDate, endDate } = req.body;
 
-    if (!propertyId || !startDate || !endDate) {
+    if (!propertyId || !roomId || !startDate || !endDate) {
       res.status(400).json({ message: 'Missing required fields' });
       return;
     }
@@ -24,14 +24,24 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       res.status(404).json({ message: 'Property not found' });
       return;
     }
+    
+    const room = await prisma.room.findUnique({ where: { id: roomId } });
+    if (!room || room.propertyId !== propertyId) {
+      res.status(400).json({ message: 'Invalid room selected' });
+      return;
+    }
+    
+    // We do not check property.isAvailable as strictly here, we'll rely on room availability during payment,
+    // but we can still check it.
     if (!property.isAvailable) {
       res.status(400).json({ message: 'Property is currently not available for booking' });
       return;
     }
+    
     const tenant = await prisma.user.findUnique({ where: { id: tenantId }, select: { firstName: true, lastName: true, email: true } });
 
     const booking = await prisma.booking.create({
-      data: { tenantId, propertyId, startDate: new Date(startDate), endDate: new Date(endDate), status: 'PENDING' },
+      data: { tenantId, propertyId, roomId, startDate: new Date(startDate), endDate: new Date(endDate), status: 'PENDING' },
     });
 
     // Notify landlord via email + in-app
@@ -51,7 +61,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         tenantEmail: tenant.email,
         tenantName: `${tenant.firstName} ${tenant.lastName}`,
         propertyTitle: property.title,
-        amount: property.price,
+        amount: room.price,
         bookingId: booking.id
       });
     }
@@ -210,7 +220,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { property: true, tenant: { select: { firstName: true, lastName: true, email: true } }, leaseAgreement: true }
+      include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } }, leaseAgreement: true }
     });
 
     if (!booking) {
@@ -234,25 +244,20 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
     }
 
     // Capacity Check Loophole Fix
-    if (!booking.property.isAvailable) {
-      res.status(400).json({ message: 'This property is no longer available.' });
+    if (!booking.room) {
+      res.status(400).json({ message: 'Invalid booking data (missing room)' });
       return;
     }
 
     const completedBookingsCount = await prisma.booking.count({
       where: {
-        propertyId: booking.propertyId,
+        roomId: booking.roomId,
         status: 'COMPLETED'
       }
     });
 
-    if (completedBookingsCount >= booking.property.numberOfRooms * booking.property.roomCapacity) {
-      // Auto-update to false if it slipped through
-      await prisma.property.update({
-        where: { id: booking.propertyId },
-        data: { isAvailable: false }
-      });
-      res.status(400).json({ message: 'This property has reached its maximum capacity and is no longer available for payment.' });
+    if (completedBookingsCount >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
+      res.status(400).json({ message: 'This room type has reached its maximum capacity and is no longer available for payment.' });
       return;
     }
 
@@ -260,7 +265,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       'https://api.paystack.co/transaction/initialize',
       {
         email: booking.tenant.email,
-        amount: Math.round(booking.property.price * 100), // GHS to pesewas
+        amount: Math.round(booking.room!.price * 100), // GHS to pesewas
         callback_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}`,
         metadata: { bookingId: booking.id, tenantId: booking.tenantId }
       },
@@ -292,7 +297,7 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { property: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
+      include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
     });
 
     if (!booking || booking.tenantId !== tenantId) {
@@ -325,7 +330,8 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
           tenantId: booking.tenantId,
           landlordId: booking.property.landlordId,
           propertyId: booking.propertyId,
-          amount: booking.property.price,
+          roomId: booking.roomId,
+          amount: booking.room!.price,
           reference: reference,
           status: 'SUCCESS'
         }
@@ -333,28 +339,25 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     ]);
 
     // Recalibrate Capacity and Close Loophole
-    const completedBookings = await prisma.booking.count({
-      where: {
-        propertyId: booking.propertyId,
-        status: 'COMPLETED'
-      }
-    });
-
-    if (completedBookings >= booking.property.numberOfRooms * booking.property.roomCapacity) {
-      await prisma.property.update({
-        where: { id: booking.propertyId },
-        data: { isAvailable: false }
-      });
-      
-      // Auto-reject any remaining pending or approved bookings since it's full
-      await prisma.booking.updateMany({
+    if (booking.roomId && booking.room) {
+      const completedBookings = await prisma.booking.count({
         where: {
-          propertyId: booking.propertyId,
-          id: { not: booking.id },
-          status: { in: ['PENDING', 'APPROVED'] }
-        },
-        data: { status: 'REJECTED' }
+          roomId: booking.roomId,
+          status: 'COMPLETED'
+        }
       });
+
+      if (completedBookings >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
+        // Auto-reject any remaining pending or approved bookings for THIS room
+        await prisma.booking.updateMany({
+          where: {
+            roomId: booking.roomId,
+            id: { not: booking.id },
+            status: { in: ['PENDING', 'APPROVED'] }
+          },
+          data: { status: 'REJECTED' }
+        });
+      }
     }
 
     await notifyBookingStatusChanged({

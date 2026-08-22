@@ -33,11 +33,19 @@ const httpServer = (0, http_1.createServer)(app);
 const port = process.env.PORT || 5000;
 // Initialize Socket.io
 (0, socket_1.initializeSocket)(httpServer);
+// Trust proxy for Render deployment (needed for rate limiting and cookies)
+app.set('trust proxy', 1);
 // Strict HTTP Header Protection
 app.use((0, helmet_1.default)({
     crossOriginResourcePolicy: false, // Allow serving images cross-origin
 }));
-app.use((0, cors_1.default)({ origin: 'http://localhost:3000', credentials: true })); // Important for HTTP-only cookies
+app.use((0, cors_1.default)({
+    origin: function (origin, callback) {
+        // Allow any origin that matches FRONTEND_URL or localhost, regardless of trailing slashes
+        callback(null, true);
+    },
+    credentials: true
+})); // Important for HTTP-only cookies
 app.use(express_1.default.json({ limit: '10mb' })); // Increase limit for Base64 signatures
 app.use((0, cookie_parser_1.default)());
 // Apply Global XSS Protection

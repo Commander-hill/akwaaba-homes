@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.notifyAdminAnnouncement = exports.notifyPropertyApproval = exports.notifySubscriptionExpirySoon = exports.notifyBookingStatusChanged = exports.notifyBookingCreated = exports.notify = void 0;
+exports.notifyAdminAnnouncement = exports.notifyPropertyApproval = exports.notifySubscriptionExpirySoon = exports.notifyBookingStatusChanged = exports.notifyBookingCreated = exports.notify = exports.getTransporter = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const prisma_1 = __importDefault(require("./prisma"));
 // ─── Branded Email Template Builder ──────────────────────────────────────────
@@ -49,15 +49,24 @@ const btn = (text, href, color = '#4F46E5') => `<div style="text-align:center;ma
     <a href="${href}" style="background:${color};color:#ffffff;padding:14px 32px;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;display:inline-block;">${text}</a>
   </div>`;
 const badge = (label, value, color = '#EEF2FF', textColor = '#4F46E5') => `<div style="display:inline-block;background:${color};color:${textColor};padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;margin:4px 4px 4px 0;">${label}: <strong>${value}</strong></div>`;
-// ─── SMTP Transporter ─────────────────────────────────────────────────────────
+const getFrontendUrl = () => process.env.FRONTEND_URL || 'http://localhost:3000';
+// ─── Global SMTP Transporter (Pooled) ─────────────────────────────────────────
+let transporterInstance = null;
 const getTransporter = () => {
     if (!process.env.SMTP_USER || process.env.SMTP_USER === 'your_gmail_address@gmail.com')
         return null;
-    return nodemailer_1.default.createTransport({
+    if (transporterInstance)
+        return transporterInstance;
+    transporterInstance = nodemailer_1.default.createTransport({
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
         service: 'gmail',
         auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
     });
+    return transporterInstance;
 };
+exports.getTransporter = getTransporter;
 const notify = async (params) => {
     const { userId, recipientEmail, recipientName, type, title, message, link, emailSubject, emailBodyHtml } = params;
     // 1. Always persist in-app notification
@@ -70,7 +79,7 @@ const notify = async (params) => {
         console.error('[Notifications] Failed to persist notification:', err);
     }
     // 2. Send email if SMTP is configured
-    const transporter = getTransporter();
+    const transporter = (0, exports.getTransporter)();
     if (transporter) {
         try {
             await transporter.sendMail({
@@ -105,7 +114,7 @@ const notifyBookingCreated = async (opts) => {
        <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.landlordName}</strong>,</p>
        <p style="color:#475569;font-size:15px;line-height:1.7;"><strong>${opts.tenantName}</strong> has submitted a booking request for your property:</p>
        ${badge('Property', opts.propertyTitle)}
-       ${btn('Review Booking Request', 'http://localhost:3000/dashboard/landlord')}
+       ${btn('Review Booking Request', `${getFrontendUrl()}/dashboard/landlord`)}
        <p style="color:#94a3b8;font-size:13px;text-align:center;">Log in to your Landlord Dashboard to accept or reject this request.</p>`)
     });
 };
@@ -131,7 +140,7 @@ const notifyBookingStatusChanged = async (opts) => {
          <span style="color:${statusColor};font-size:20px;font-weight:800;">${opts.status}</span>
        </div>
        ${isApproved ? `<p style="color:#475569;font-size:14px;">Congratulations! Your accommodation has been confirmed. Please proceed to complete your move-in arrangements.</p>` : ''}
-       ${btn('View My Bookings', 'http://localhost:3000/dashboard/tenant')}`)
+       ${btn('View My Bookings', `${getFrontendUrl()}/dashboard/tenant`)}`)
     });
 };
 exports.notifyBookingStatusChanged = notifyBookingStatusChanged;
@@ -153,7 +162,7 @@ const notifySubscriptionExpirySoon = async (opts) => {
          ${badge('Days Remaining', String(opts.daysLeft), '#fef3c7', '#92400e')}
          <p style="color:#78350f;font-size:13px;margin:12px 0 0;">After expiry, your property listings will be hidden from tenant searches until your subscription is renewed.</p>
        </div>
-       ${btn('Renew Subscription', 'http://localhost:3000/dashboard/landlord/subscription', '#d97706')}`)
+       ${btn('Renew Subscription', `${getFrontendUrl()}/dashboard/landlord/subscription`, '#d97706')}`)
     });
 };
 exports.notifySubscriptionExpirySoon = notifySubscriptionExpirySoon;
@@ -175,7 +184,7 @@ const notifyPropertyApproval = async (opts) => {
          <strong style="color:${isApproved ? '#059669' : '#dc2626'};font-size:16px;">${isApproved ? '✓ Your listing is now live on Akwaaba Homes!' : '✗ Your listing requires changes before approval.'}</strong>
          ${opts.reason ? `<p style="color:#475569;font-size:13px;margin:8px 0 0;">${opts.reason}</p>` : ''}
        </div>
-       ${btn('View My Properties', 'http://localhost:3000/dashboard/landlord/properties', isApproved ? '#059669' : '#4F46E5')}`)
+       ${btn('View My Properties', `${getFrontendUrl()}/dashboard/landlord/properties`, isApproved ? '#059669' : '#4F46E5')}`)
     });
 };
 exports.notifyPropertyApproval = notifyPropertyApproval;
@@ -185,7 +194,7 @@ const notifyAdminAnnouncement = async (opts) => {
         data: { userId, type: 'ANNOUNCEMENT', title: opts.subject, message: opts.message }
     }).catch(() => { })));
     // Send emails to all recipients
-    const transporter = getTransporter();
+    const transporter = (0, exports.getTransporter)();
     if (transporter) {
         const emailHtml = emailTemplate(opts.subject, opts.subject, `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">📢 ${opts.subject}</h2>
        <p style="color:#475569;font-size:15px;line-height:1.8;white-space:pre-wrap;">${opts.message}</p>
