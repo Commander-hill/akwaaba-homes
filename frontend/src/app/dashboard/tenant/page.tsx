@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -340,10 +340,23 @@ export default function TenantDashboard() {
                               {booking.status === 'APPROVED' && (
                                 <button 
                                   onClick={() => payBookingMutation.mutate(booking.id)}
-                                  disabled={payBookingMutation.isPending}
-                                  className="text-xs font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors flex items-center gap-1"
+                                  disabled={payBookingMutation.isPending || booking.leaseAgreement?.status !== 'COMPLETED'}
+                                  title={booking.leaseAgreement?.status !== 'COMPLETED' ? "Tenancy Agreement must be signed by both parties first" : "Pay Rent"}
+                                  className={clsx(
+                                    "text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors",
+                                    booking.leaseAgreement?.status !== 'COMPLETED'
+                                      ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed"
+                                      : "text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
+                                  )}
                                 >
-                                  {payBookingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <CreditCard className="w-3 h-3" />} Pay Rent
+                                  {payBookingMutation.isPending ? (
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                  ) : booking.leaseAgreement?.status !== 'COMPLETED' ? (
+                                    <Lock className="w-3 h-3" />
+                                  ) : (
+                                    <CreditCard className="w-3 h-3" />
+                                  )}
+                                  Pay Rent
                                 </button>
                               )}
                               <button 

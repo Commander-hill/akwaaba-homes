@@ -81,7 +81,8 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
     const bookings = await prisma.booking.findMany({
       where: { tenantId },
       include: {
-        property: { select: { title: true, location: true, price: true, images: true } }
+        property: { select: { title: true, location: true, price: true, images: true } },
+        leaseAgreement: { select: { status: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -224,6 +225,11 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
 
     if (booking.status !== 'APPROVED') {
       res.status(400).json({ message: 'Booking must be approved before payment' });
+      return;
+    }
+
+    if (!booking.leaseAgreement || booking.leaseAgreement.status !== 'COMPLETED') {
+      res.status(400).json({ message: 'Both Tenant and Landlord must sign the Tenancy Agreement before payment can be processed.' });
       return;
     }
 

@@ -298,3 +298,63 @@ export const notifyAdminAnnouncement = async (opts: {
     console.log(`✉️  [Notifications] Broadcast sent to ${opts.emailList.length} user(s)`);
   }
 };
+
+export const notifyAgreementCompleted = async (opts: {
+  landlordEmail: string; landlordName: string;
+  tenantEmail: string; tenantName: string;
+  propertyTitle: string;
+  bookingId: string;
+  hash: string;
+}) => {
+  const subject = `Legally Binding: Tenancy Agreement Signed for ${opts.propertyTitle}`;
+  const headline = `Tenancy Agreement Secured`;
+  const htmlBody = `
+    <h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">Tenancy Agreement Completed</h2>
+    <p style="color:#475569;font-size:15px;line-height:1.7;">This email serves as official confirmation that the Tenancy Agreement for <strong>${opts.propertyTitle}</strong> has been digitally signed by both parties.</p>
+    
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:24px;margin:24px 0;">
+      <h3 style="margin:0 0 16px;color:#0f172a;font-size:16px;">Document Audit Trail</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="padding:8px 0;color:#64748b;font-size:13px;border-bottom:1px solid #e2e8f0;">Document ID:</td>
+          <td style="padding:8px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;border-bottom:1px solid #e2e8f0;">${opts.bookingId}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#64748b;font-size:13px;border-bottom:1px solid #e2e8f0;">Landlord:</td>
+          <td style="padding:8px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;border-bottom:1px solid #e2e8f0;">${opts.landlordName}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#64748b;font-size:13px;border-bottom:1px solid #e2e8f0;">Tenant:</td>
+          <td style="padding:8px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;border-bottom:1px solid #e2e8f0;">${opts.tenantName}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#64748b;font-size:13px;">Cryptographic Hash (SHA-256):</td>
+          <td style="padding:8px 0;color:#16a34a;font-size:11px;font-family:monospace;text-align:right;word-break:break-all;">${opts.hash}</td>
+        </tr>
+      </table>
+    </div>
+    
+    <p style="color:#475569;font-size:13px;line-height:1.6;font-style:italic;">The cryptographic hash above is a unique digital fingerprint of this agreement. It guarantees that the signatures and terms recorded on our secure servers have not been tampered with since the moment of signing.</p>
+  `;
+
+  const transporter = getTransporter();
+  if (transporter) {
+    try {
+      await transporter.sendMail({
+        from: `"Akwaaba Homes Legal" <${process.env.SMTP_USER}>`,
+        to: opts.landlordEmail,
+        subject: subject,
+        html: emailTemplate(headline, 'View your signed agreement online.', htmlBody + btn('View Agreement', `${getFrontendUrl()}/dashboard/landlord`))
+      });
+      await transporter.sendMail({
+        from: `"Akwaaba Homes Legal" <${process.env.SMTP_USER}>`,
+        to: opts.tenantEmail,
+        subject: subject,
+        html: emailTemplate(headline, 'View your signed agreement online.', htmlBody + btn('View Agreement', `${getFrontendUrl()}/dashboard/tenant`))
+      });
+      console.log(`✉️  [Notifications] Agreement completed emails sent to ${opts.landlordEmail} and ${opts.tenantEmail}`);
+    } catch (err) {
+      console.error(`[Notifications] Agreement email delivery failed:`, err);
+    }
+  }
+};

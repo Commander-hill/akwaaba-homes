@@ -9,78 +9,82 @@ datasource db {
 
 // --- MODELS ---
 model User {
-  id              String          @id @default(uuid())
-  email           String          @unique
-  passwordHash    String
-  role            String          @default("TENANT") // SQLite does not support enums
-  firstName       String
-  lastName        String
-  otherNames      String?
-  phoneNumber     String?
-  gender          String?
-  dateOfBirth     String?
-  nationality     String?
-  guardianName    String?
-  guardianPhone   String?
-  avatarUrl       String?
-  
-  // School Information
-  campus          String?
-  studentId       String?
-  dateOfAdmission String?
-  programmeOfStudy String?
-  yearOfStudy     String?
-  studentType     String?
+  id            String  @id @default(uuid())
+  email         String  @unique
+  passwordHash  String
+  role          String  @default("TENANT") // SQLite does not support enums
+  firstName     String
+  lastName      String
+  otherNames    String?
+  phoneNumber   String?
+  gender        String?
+  dateOfBirth   String?
+  nationality   String?
+  guardianName  String?
+  guardianPhone String?
+  avatarUrl     String?
 
-  ghanaCardNumber String?
-  ghanaCardFrontUrl String?
-  ghanaCardBackUrl  String?
-  ghanaCardStatus        String          @default("NOT_SUBMITTED") // SQLite does not support enums
-  reputationScore        Float           @default(5.0)
-  isEmailVerified        Boolean         @default(false)
+  // School Information
+  campus           String?
+  studentId        String?
+  dateOfAdmission  String?
+  programmeOfStudy String?
+  yearOfStudy      String?
+  studentType      String?
+
+  ghanaCardNumber        String?
+  ghanaCardFrontUrl      String?
+  ghanaCardBackUrl       String?
+  ghanaCardStatus        String    @default("NOT_SUBMITTED") // SQLite does not support enums
+  reputationScore        Float     @default(5.0)
+  isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
   resetPasswordToken     String?
   resetPasswordExpires   DateTime?
-  isSuspended            Boolean         @default(false)
-  createdAt              DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  isSuspended            Boolean   @default(false)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   properties      Property[]
-  bookings        Booking[]       // Bookings made (if tenant)
-  reviews         Review[]        // Reviews written
+  bookings        Booking[] // Bookings made (if tenant)
+  reviews         Review[] // Reviews written
   subscriptions   Subscription[]
-  notifications   Notification[]  // In-app notifications
-  sessions        Session[]       // Active device sessions
-  auditLogs       AuditLog[]      // Actions performed by this user
+  notifications   Notification[] // In-app notifications
+  sessions        Session[] // Active device sessions
+  auditLogs       AuditLog[] // Actions performed by this user
   tickets         MaintenanceTicket[] @relation("TenantTickets")
   roommateProfile RoommateProfile?
+
+  tenantBreaches   BreachReport[] @relation("TenantBreaches")
+  reportedBreaches BreachReport[] @relation("ReporterBreaches")
 
   @@index([role])
 }
 
 model Property {
-  id          String   @id @default(uuid())
-  landlordId  String
-  landlord    User     @relation(fields: [landlordId], references: [id])
-  title        String
-  type         String   @default("Hostel") // Hostel, Homestay, Apartment
-  roomType     String   @default("1 in a room") // 1 in a room, 2 in a room, etc
-  roomCapacity Int      @default(1)
-  description  String
-  price        Float    // Represented in GHS (Ghana Cedis)
-  location     String   // e.g., "Legon", "Ayeduase"
-  latitude     Float?
-  longitude    Float?
-  amenities    String   // SQLite does not support String[]. Store as JSON string.
-  images      String   // SQLite does not support String[]. Store as JSON string.
-  videoUrl    String?
-  isAvailable Boolean  @default(true)
-  approvalStatus String @default("PENDING") // PENDING, APPROVED, REJECTED
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  landlordId     String
+  landlord       User     @relation(fields: [landlordId], references: [id])
+  title          String
+  type           String   @default("Hostel") // Hostel, Homestay, Apartment
+  roomType       String   @default("1 in a room") // 1 in a room, 2 in a room, etc
+  roomCapacity   Int      @default(1)
+  description    String
+  price          Float // Represented in GHS (Ghana Cedis)
+  location       String // e.g., "Legon", "Ayeduase"
+  latitude       Float?
+  longitude      Float?
+  amenities      String // SQLite does not support String[]. Store as JSON string.
+  images         String // SQLite does not support String[]. Store as JSON string.
+  videoUrl       String?
+  isAvailable    Boolean  @default(true)
+  approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  bookings    Booking[]
-  tickets     MaintenanceTicket[] @relation("PropertyTickets")
+  bookings     Booking[]
+  tickets      MaintenanceTicket[] @relation("PropertyTickets")
+  BreachReport BreachReport[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -89,18 +93,18 @@ model Property {
 }
 
 model Booking {
-  id         String        @id @default(uuid())
+  id         String   @id @default(uuid())
   tenantId   String
-  tenant     User          @relation(fields: [tenantId], references: [id])
+  tenant     User     @relation(fields: [tenantId], references: [id])
   propertyId String
-  property   Property      @relation(fields: [propertyId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id])
   startDate  DateTime
   endDate    DateTime
-  status     String        @default("PENDING") // SQLite does not support enums
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  status     String   @default("PENDING") // SQLite does not support enums
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  review     Review?       // One-to-one relation, only allowed if COMPLETED
+  review         Review? // One-to-one relation, only allowed if COMPLETED
   leaseAgreement LeaseAgreement?
 
   @@index([tenantId])
@@ -108,30 +112,37 @@ model Booking {
 }
 
 model LeaseAgreement {
-  id                String   @id @default(uuid())
-  bookingId         String   @unique
-  booking           Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  tenantSignature   String?  // Base64 string
-  landlordSignature String?  // Base64 string
-  status            String   @default("PENDING_TENANT") // PENDING_TENANT, PENDING_LANDLORD, COMPLETED
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                String    @id @default(uuid())
+  bookingId         String    @unique
+  booking           Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tenantSignature   String? // Base64 string
+  landlordSignature String? // Base64 string
+  tenantSignedAt    DateTime?
+  tenantIpAddress   String?
+  tenantUserAgent   String?
+  landlordSignedAt  DateTime?
+  landlordIpAddress String?
+  landlordUserAgent String?
+  cryptographicHash String?
+  status            String    @default("PENDING_TENANT") // PENDING_TENANT, PENDING_LANDLORD, COMPLETED
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 model Review {
-  id              String   @id @default(uuid())
-  bookingId       String   @unique
-  booking         Booking  @relation(fields: [bookingId], references: [id])
-  authorId        String
-  author          User     @relation(fields: [authorId], references: [id])
-  rating          Int      // Constrained 1-5 in application logic
-  comment         String?
-  isFlagged       Boolean  @default(false)          // Flagged for moderation
-  isModerated     Boolean  @default(false)          // Admin has reviewed this
-  moderationNote  String?                           // Admin note on moderation decision
-  appealStatus    String   @default("NONE")        // NONE, PENDING, ACCEPTED, REJECTED
-  appealNote      String?                           // Tenant's appeal justification
-  createdAt       DateTime @default(now())
+  id             String   @id @default(uuid())
+  bookingId      String   @unique
+  booking        Booking  @relation(fields: [bookingId], references: [id])
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  rating         Int // Constrained 1-5 in application logic
+  comment        String?
+  isFlagged      Boolean  @default(false) // Flagged for moderation
+  isModerated    Boolean  @default(false) // Admin has reviewed this
+  moderationNote String? // Admin note on moderation decision
+  appealStatus   String   @default("NONE") // NONE, PENDING, ACCEPTED, REJECTED
+  appealNote     String? // Tenant's appeal justification
+  createdAt      DateTime @default(now())
 }
 
 model Subscription {
@@ -150,11 +161,11 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  type      String   // BOOKING, SUBSCRIPTION, PROPERTY, REVIEW, ANNOUNCEMENT
+  type      String // BOOKING, SUBSCRIPTION, PROPERTY, REVIEW, ANNOUNCEMENT
   title     String
   message   String
   isRead    Boolean  @default(false)
-  link      String?  // Optional deep-link (e.g., /dashboard/landlord)
+  link      String? // Optional deep-link (e.g., /dashboard/landlord)
   createdAt DateTime @default(now())
 }
 
@@ -177,24 +188,24 @@ model AuditLog {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  action    String   
-  entity    String   
+  action    String
+  entity    String
   entityId  String
-  oldData   String?  // JSON string
-  newData   String?  // JSON string
+  oldData   String? // JSON string
+  newData   String? // JSON string
   ipAddress String?
   createdAt DateTime @default(now())
 }
 
 model Notice {
   id          String   @id @default(uuid())
-  orderIndex  Int      @default(0) 
-  topLabel    String?  
-  title       String   
+  orderIndex  Int      @default(0)
+  topLabel    String?
+  title       String
   description String
-  buttonText  String?  
-  buttonLink  String?  
-  iconType    String?  
+  buttonText  String?
+  buttonLink  String?
+  iconType    String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
 }
@@ -208,35 +219,35 @@ model MaintenanceTicket {
   title       String
   description String
   status      String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
-  priority    String   @default("MEDIUM")  // LOW, MEDIUM, HIGH, URGENT
-  imageUrl    String?  // Optional photo link
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  imageUrl    String? // Optional photo link
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model RoommateProfile {
-  id            String   @id @default(uuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id])
-  isActive      Boolean  @default(true)
-  budget        Float
-  cleanliness   String   // NEAT, AVERAGE, MESSY
-  sleepHabits   String   // EARLY_BIRD, NIGHT_OWL
-  studyHabits   String   // QUIET, SOCIAL
-  bio           String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  isActive    Boolean  @default(true)
+  budget      Float
+  cleanliness String // NEAT, AVERAGE, MESSY
+  sleepHabits String // EARLY_BIRD, NIGHT_OWL
+  studyHabits String // QUIET, SOCIAL
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // --- CHAT MODELS ---
 model Conversation {
-  id          String   @id @default(uuid())
-  tenantId    String
-  landlordId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  tenantId   String
+  landlordId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  messages    Message[]
+  messages Message[]
 
   @@unique([tenantId, landlordId])
 }
@@ -249,4 +260,20 @@ model Message {
   content        String
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
+}
+
+model BreachReport {
+  id             String   @id @default(uuid())
+  tenantId       String
+  tenant         User     @relation("TenantBreaches", fields: [tenantId], references: [id], onDelete: Cascade)
+  reporterId     String
+  reporter       User     @relation("ReporterBreaches", fields: [reporterId], references: [id], onDelete: Cascade)
+  propertyId     String
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  status         String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  penaltyApplied Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

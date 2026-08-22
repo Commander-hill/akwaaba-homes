@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import crypto from 'crypto';
+import { notifyAgreementCompleted } from '../utils/notification.service';
 
 export const getAgreementByBooking = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -80,12 +82,20 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
 
     let updateData: any = {};
 
+    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'UNKNOWN';
+    const userAgent = req.headers['user-agent'] || 'UNKNOWN';
+    const timestamp = new Date();
+
     if (role === 'TENANT') {
       if (agreement.booking.tenantId !== userId) {
         res.status(403).json({ message: 'Forbidden' });
         return;
       }
       updateData.tenantSignature = signature;
+      updateData.tenantSignedAt = timestamp;
+      updateData.tenantIpAddress = ipAddress;
+      updateData.tenantUserAgent = userAgent;
+
       if (agreement.status === 'PENDING_TENANT') {
         updateData.status = 'PENDING_LANDLORD';
       } else if (agreement.landlordSignature) {
@@ -97,11 +107,28 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
         return;
       }
       updateData.landlordSignature = signature;
+      updateData.landlordSignedAt = timestamp;
+      updateData.landlordIpAddress = ipAddress;
+      updateData.landlordUserAgent = userAgent;
+
       if (agreement.status === 'PENDING_LANDLORD') {
-        updateData.status = 'COMPLETED'; // assuming tenant signs first typically, but flexible
+        updateData.status = 'COMPLETED';
       } else if (agreement.tenantSignature) {
         updateData.status = 'COMPLETED';
       }
+    }
+
+    if (updateData.status === 'COMPLETED') {
+      const dataToHash = JSON.stringify({
+        bookingId,
+        tenantSignature: agreement.tenantSignature || updateData.tenantSignature,
+        tenantSignedAt: agreement.tenantSignedAt || updateData.tenantSignedAt,
+        tenantIpAddress: agreement.tenantIpAddress || updateData.tenantIpAddress,
+        landlordSignature: agreement.landlordSignature || updateData.landlordSignature,
+        landlordSignedAt: agreement.landlordSignedAt || updateData.landlordSignedAt,
+        landlordIpAddress: agreement.landlordIpAddress || updateData.landlordIpAddress,
+      });
+      updateData.cryptographicHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
     }
 
     const updatedAgreement = await prisma.leaseAgreement.update({
@@ -110,6 +137,24 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
     });
 
     res.status(200).json({ message: 'Signature submitted successfully', agreement: updatedAgreement });
+
+    // Send notifications if fully signed
+    if (updateData.status === 'COMPLETED') {
+      const landlord = await prisma.user.findUnique({ where: { id: agreement.booking.property.landlordId } });
+      const tenant = await prisma.user.findUnique({ where: { id: agreement.booking.tenantId } });
+      
+      if (landlord && tenant) {
+        await notifyAgreementCompleted({
+          landlordEmail: landlord.email,
+          landlordName: `${landlord.firstName} ${landlord.lastName}`,
+          tenantEmail: tenant.email,
+          tenantName: `${tenant.firstName} ${tenant.lastName}`,
+          propertyTitle: agreement.booking.property.title,
+          bookingId: bookingId,
+          hash: updateData.cryptographicHash
+        });
+      }
+    }
   } catch (error) {
     console.error('Error signing agreement:', error);
     res.status(500).json({ message: 'Internal server error' });
