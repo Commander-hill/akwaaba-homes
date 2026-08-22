@@ -120,3 +120,25 @@ export const getIO = () => {
   }
   return io;
 };
+
+// Safe helper to emit an event to a specific user room
+export const emitToUser = (userId: string, event: string, payload: any) => {
+  try {
+    if (io) {
+      io.to(userId).emit(event, payload);
+    }
+  } catch (err) {
+    console.error(`Failed to emit socket event ${event} to user ${userId}:`, err);
+  }
+};
+
+// Safe helper to broadcast an event to all connected sockets
+export const emitToAll = (event: string, payload: any) => {
+  try {
+    if (io) {
+      io.emit(event, payload);
+    }
+  } catch (err) {
+    console.error(`Failed to broadcast socket event ${event}:`, err);
+  }
+};

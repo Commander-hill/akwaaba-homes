@@ -68,11 +68,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     // Real-time notification to landlord
     try {
-      getIO().to(property.landlordId).emit('notification', {
+      const io = getIO();
+      io.to(property.landlordId).emit('notification', {
         title: 'New Booking Request',
         message: `${tenant?.firstName} ${tenant?.lastName} requested to book ${property.title}.`,
         type: 'booking'
       });
+      io.to(property.landlordId).emit('booking_created', { booking });
     } catch (e) {
       console.error('Socket notification failed', e);
     }
@@ -184,13 +186,16 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         status
       });
 
-      // Real-time notification to tenant
+      // Real-time notification to tenant & landlord status sync
       try {
-        getIO().to(booking.tenant.id).emit('notification', {
+        const io = getIO();
+        io.to(booking.tenant.id).emit('notification', {
           title: `Booking ${status}`,
           message: `Your booking for ${booking.property.title} was ${status.toLowerCase()}.`,
           type: 'booking'
         });
+        io.to(booking.tenant.id).emit('booking_updated', { booking: updatedBooking });
+        io.to(booking.property.landlordId).emit('booking_updated', { booking: updatedBooking });
       } catch (e) {
         console.error('Socket notification failed', e);
       }

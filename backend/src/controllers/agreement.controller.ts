@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
 import { notifyAgreementCompleted } from '../utils/notification.service';
+import { getIO } from '../socket';
 
 export const getAgreementByBooking = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -131,10 +132,14 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
       updateData.cryptographicHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
     }
 
-    const updatedAgreement = await prisma.leaseAgreement.update({
-      where: { id: agreement.id },
-      data: updateData
-    });
+    // Real-time socket sync for lease agreements
+    try {
+      const io = getIO();
+      io.to(agreement.booking.tenantId).emit('agreement_updated', { agreement: updatedAgreement });
+      io.to(agreement.booking.property.landlordId).emit('agreement_updated', { agreement: updatedAgreement });
+    } catch (e) {
+      console.error('Socket notification failed', e);
+    }
 
     res.status(200).json({ message: 'Signature submitted successfully', agreement: updatedAgreement });
 
