@@ -14,6 +14,9 @@ interface Property {
   type: string;
   roomType: string;
   roomCapacity: number;
+  numberOfRooms: number;
+  totalCapacity: number;
+  remainingCapacity: number;
   description: string;
   price: number;
   location: string;
@@ -268,10 +271,36 @@ export default function PropertiesPage() {
                         {property.location}
                       </div>
 
-                      <div className="flex flex-wrap gap-2 mb-4">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{property.type || 'Hostel'}</span>
                         <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{property.roomType || '1 in a room'}</span>
                       </div>
+
+                      {/* Availability Meter */}
+                      {property.totalCapacity > 0 && (
+                        <div className="mb-3">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-semibold text-[var(--muted-foreground)]">Availability</span>
+                            <span className={`text-xs font-bold ${
+                              property.remainingCapacity === 0 ? 'text-red-500' :
+                              property.remainingCapacity <= Math.ceil(property.totalCapacity * 0.25) ? 'text-amber-500' :
+                              'text-emerald-600'
+                            }`}>
+                              {property.remainingCapacity === 0 ? 'Fully Booked' : `${property.remainingCapacity} of ${property.totalCapacity} rooms left`}
+                            </span>
+                          </div>
+                          <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                property.remainingCapacity === 0 ? 'bg-red-400' :
+                                property.remainingCapacity <= Math.ceil(property.totalCapacity * 0.25) ? 'bg-amber-400' :
+                                'bg-emerald-400'
+                              }`}
+                              style={{ width: `${Math.round((property.remainingCapacity / property.totalCapacity) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="mt-auto pt-4 border-t border-[var(--border)] flex items-center justify-between">
                         <div>

@@ -187,7 +187,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-8 border-y border-[var(--border)]">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-[var(--border)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <Home className="w-5 h-5 text-[var(--primary)]" />
@@ -211,8 +211,44 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <Users className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Capacity</div>
-                <div className="font-bold">{property.roomCapacity || 1} Person(s)</div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Total Rooms</div>
+                <div className="font-bold">{property.totalCapacity || property.roomCapacity} beds</div>
+              </div>
+            </div>
+            {/* Live Availability Block */}
+            <div className="col-span-2 md:col-span-1">
+              <div className={`rounded-2xl p-4 border ${
+                property.remainingCapacity === 0
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  : property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25)
+                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                  : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+              }`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Availability</span>
+                  <span className={`text-xs font-extrabold ${
+                    property.remainingCapacity === 0 ? 'text-red-600' :
+                    property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'text-amber-600' :
+                    'text-emerald-600'
+                  }`}>
+                    {property.remainingCapacity === 0 ? 'FULL' :
+                     property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'ALMOST FULL' : 'AVAILABLE'}
+                  </span>
+                </div>
+                <div className="text-2xl font-extrabold mb-2">
+                  {property.remainingCapacity ?? '–'}
+                  <span className="text-sm font-medium text-[var(--muted-foreground)]"> / {property.totalCapacity} rooms left</span>
+                </div>
+                <div className="h-2 bg-white/60 dark:bg-slate-900/40 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ${
+                      property.remainingCapacity === 0 ? 'bg-red-400' :
+                      property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'bg-amber-400' :
+                      'bg-emerald-400'
+                    }`}
+                    style={{ width: property.totalCapacity > 0 ? `${Math.round((property.remainingCapacity / property.totalCapacity) * 100)}%` : '100%' }}
+                  />
+                </div>
               </div>
             </div>
           </div>

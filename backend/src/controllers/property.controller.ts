@@ -129,8 +129,27 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
       prisma.property.count({ where: queryOptions.where }),
     ]);
 
+    // Compute remaining capacity for each property
+    const propertyIds = properties.map((p: any) => p.id);
+    const completedBookingCounts = await prisma.booking.groupBy({
+      by: ['propertyId'],
+      where: { propertyId: { in: propertyIds }, status: 'COMPLETED' },
+      _count: { id: true }
+    });
+    const bookingCountMap: Record<string, number> = {};
+    completedBookingCounts.forEach((b: any) => { bookingCountMap[b.propertyId] = b._count.id; });
+
     const responseData = {
-      data: properties.map(parseProperty),
+      data: properties.map((p: any) => {
+        const parsed = parseProperty(p);
+        const totalCapacity = p.numberOfRooms * p.roomCapacity;
+        const completedCount = bookingCountMap[p.id] || 0;
+        return {
+          ...parsed,
+          totalCapacity,
+          remainingCapacity: Math.max(0, totalCapacity - completedCount),
+        };
+      }),
       pagination: {
         total: totalCount,
         page: Number(page),
@@ -171,7 +190,14 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    res.status(200).json({ property: parseProperty(property) });
+    // Compute real-time remaining capacity
+    const completedCount = await prisma.booking.count({
+      where: { propertyId: property.id, status: 'COMPLETED' }
+    });
+    const totalCapacity = property.numberOfRooms * property.roomCapacity;
+    const remainingCapacity = Math.max(0, totalCapacity - completedCount);
+
+    res.status(200).json({ property: { ...parseProperty(property), totalCapacity, remainingCapacity } });
   } catch (error) {
     console.error('Error fetching property by ID:', error);
     res.status(500).json({ message: 'Internal server error' });
