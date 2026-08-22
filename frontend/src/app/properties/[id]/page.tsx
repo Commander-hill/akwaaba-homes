@@ -19,6 +19,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const [endDate, setEndDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [bookingMessage, setBookingMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -103,8 +104,18 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
     setIsBooking(true);
     setBookingMessage(null);
+    setShowPaymentModal(true);
+    setIsBooking(false);
+  };
+
+  const handleConfirmPayment = async () => {
+    setIsBooking(true);
+    setBookingMessage(null);
+    setShowPaymentModal(false);
 
     try {
+      // Simulate Payment Processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
       await api.post('/bookings', {
         propertyId,
         startDate: new Date(startDate).toISOString(),
@@ -427,6 +438,48 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         </div>
 
       </div>
+
+      {/* Payment Confirmation Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95">
+            <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <h3 className="text-2xl font-black text-center mb-6">Complete Booking</h3>
+            
+            <div className="space-y-4 mb-8 text-sm">
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-[var(--muted-foreground)]">Property</span>
+                <span className="font-bold text-right truncate w-48">{property.title}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-[var(--muted-foreground)]">Check In</span>
+                <span className="font-bold">{new Date(startDate).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between border-b pb-2">
+                <span className="text-[var(--muted-foreground)]">Check Out</span>
+                <span className="font-bold">{new Date(endDate).toLocaleDateString()}</span>
+              </div>
+              <div className="flex justify-between items-end pt-2">
+                <span className="font-bold text-lg">Total Due</span>
+                <span className="text-2xl font-black text-[var(--primary)]">GHS {property.price}</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-xl mb-6 text-xs text-center font-medium">
+              Your payment will be held securely. If the landlord rejects your request, you will receive an automatic full refund.
+            </div>
+
+            <button
+              onClick={handleConfirmPayment}
+              className="w-full flex justify-center items-center gap-2 py-4 rounded-xl text-white font-bold text-lg bg-gradient-to-r from-[var(--primary)] to-indigo-600 hover:opacity-90 transition-all shadow-xl shadow-[var(--primary)]/25"
+            >
+              Pay & Request Booking
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

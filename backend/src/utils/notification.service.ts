@@ -139,6 +139,68 @@ export const notifyBookingCreated = async (opts: {
   });
 };
 
+};
+
+export const notifyPaymentReceipt = async (opts: {
+  tenantId: string; tenantEmail: string; tenantName: string;
+  propertyTitle: string; amount: number; bookingId: string;
+}) => {
+  await notify({
+    userId: opts.tenantId,
+    recipientEmail: opts.tenantEmail,
+    recipientName: opts.tenantName,
+    type: 'BOOKING',
+    title: 'Booking Payment Receipt',
+    message: `Your payment of GHS ${opts.amount} for "${opts.propertyTitle}" has been received.`,
+    link: '/dashboard/tenant',
+    emailSubject: `Payment Receipt — ${opts.propertyTitle}`,
+    emailBodyHtml: emailTemplate(
+      'Payment Receipt',
+      `We have securely received your payment of GHS ${opts.amount}`,
+      `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">Authentic Payment Receipt</h2>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.tenantName}</strong>,</p>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">This is a confirmation that your payment for the booking request has been successfully processed.</p>
+       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:12px;margin:20px 0;">
+         <p style="margin:0 0 8px;"><strong>Property:</strong> ${opts.propertyTitle}</p>
+         <p style="margin:0 0 8px;"><strong>Amount Paid:</strong> GHS ${opts.amount}</p>
+         <p style="margin:0;"><strong>Booking ID:</strong> ${opts.bookingId}</p>
+       </div>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Your request has been forwarded to the Landlord for approval. If the Landlord rejects your request, your payment will be <strong>automatically refunded in full</strong>.</p>
+       ${btn('View My Bookings', \`\${getFrontendUrl()}/dashboard/tenant\`)}`
+    )
+  });
+};
+
+export const notifyPaymentReceipt = async (opts: {
+  tenantId: string; tenantEmail: string; tenantName: string;
+  propertyTitle: string; amount: number; bookingId: string;
+}) => {
+  await notify({
+    userId: opts.tenantId,
+    recipientEmail: opts.tenantEmail,
+    recipientName: opts.tenantName,
+    type: 'BOOKING',
+    title: 'Booking Payment Receipt',
+    message: `Your payment of GHS ${opts.amount} for "${opts.propertyTitle}" has been received.`,
+    link: '/dashboard/tenant',
+    emailSubject: `Payment Receipt — ${opts.propertyTitle}`,
+    emailBodyHtml: emailTemplate(
+      'Payment Receipt',
+      `We have securely received your payment of GHS ${opts.amount}`,
+      `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">Authentic Payment Receipt</h2>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.tenantName}</strong>,</p>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">This is a confirmation that your payment for the booking request has been successfully processed.</p>
+       <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:16px;border-radius:12px;margin:20px 0;">
+         <p style="margin:0 0 8px;"><strong>Property:</strong> ${opts.propertyTitle}</p>
+         <p style="margin:0 0 8px;"><strong>Amount Paid:</strong> GHS ${opts.amount}</p>
+         <p style="margin:0;"><strong>Booking ID:</strong> ${opts.bookingId}</p>
+       </div>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Your request has been forwarded to the Landlord for approval. If the Landlord rejects your request, your payment will be <strong>automatically refunded in full</strong>.</p>
+       ${btn('View My Bookings', \`\${getFrontendUrl()}/dashboard/tenant\`)}`
+    )
+  });
+};
+
 export const notifyBookingStatusChanged = async (opts: {
   tenantId: string; tenantEmail: string; tenantName: string;
   propertyTitle: string; status: string;
@@ -154,7 +216,7 @@ export const notifyBookingStatusChanged = async (opts: {
     recipientName: opts.tenantName,
     type: 'BOOKING',
     title,
-    message: `Your booking for "${opts.propertyTitle}" has been ${opts.status.toLowerCase()}.`,
+    message: `Your booking for "${opts.propertyTitle}" has been ${opts.status.toLowerCase()}.${opts.status === 'REJECTED' ? ' Your payment will be automatically refunded.' : ''}`,
     link: '/dashboard/tenant',
     emailSubject: `Booking Update — ${opts.propertyTitle}`,
     emailBodyHtml: emailTemplate(
@@ -166,8 +228,9 @@ export const notifyBookingStatusChanged = async (opts: {
        <div style="background:${statusBg};border:1px solid ${statusColor}33;border-radius:12px;padding:20px;margin:20px 0;text-align:center;">
          <span style="color:${statusColor};font-size:20px;font-weight:800;">${opts.status}</span>
        </div>
+       ${opts.status === 'REJECTED' ? '<p style="color:#dc2626;font-size:15px;line-height:1.7;font-weight:600;">Since your request was rejected by the Landlord, a full refund of your payment has been automatically initiated and will reflect in your account shortly.</p>' : ''}
        ${isApproved ? `<p style="color:#475569;font-size:14px;">Congratulations! Your accommodation has been confirmed. Please proceed to complete your move-in arrangements.</p>` : ''}
-       ${btn('View My Bookings', `${getFrontendUrl()}/dashboard/tenant`)}` 
+       ${btn('View My Bookings', \`\${getFrontendUrl()}/dashboard/tenant\`)}` 
     )
   });
 };
