@@ -168,7 +168,7 @@ export default function LandlordTenantsPage() {
                             className="w-10 h-10 rounded-full object-cover border border-[var(--border)]"
                           />
                           <div>
-                            <div className="font-bold text-[var(--foreground)] text-sm">{t.firstName} {t.lastName}</div>
+                            <div className="font-bold text-[var(--foreground)] text-sm">{t?.firstName || 'Unknown'} {t?.lastName || 'Tenant'}</div>
                             <div className="flex items-center gap-2 mt-0.5">
                               {t.gender && <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[var(--muted-foreground)]">{t.gender}</span>}
                               {t.studentId && (
@@ -179,14 +179,14 @@ export default function LandlordTenantsPage() {
                             </div>
                             <div className="flex items-center gap-1 mt-1">
                               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                              <span className="text-xs font-medium text-[var(--muted-foreground)]">{t.reputationScore.toFixed(1)}</span>
+                              <span className="text-xs font-medium text-[var(--muted-foreground)]">{(t?.reputationScore || 5.0).toFixed(1)}</span>
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-[var(--foreground)] text-sm">{booking.property.title}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">Booking Ref: {booking.id.substring(0,8)}</div>
+                        <div className="font-bold text-[var(--foreground)] text-sm">{booking.property?.title || 'Unknown Property'}</div>
+                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">Booking Ref: {String(booking.id || '').substring(0,8)}</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-[var(--foreground)]">{new Date(booking.startDate).toLocaleDateString()}</div>
