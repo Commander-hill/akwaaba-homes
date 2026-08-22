@@ -19,6 +19,7 @@ import uploadRoutes from './routes/upload.routes';
 import chatRoutes from './routes/chat.routes';
 import agreementRoutes from './routes/agreement.routes';
 import breachRoutes from './routes/breach.routes';
+import transactionRoutes from './routes/transaction.routes';
 import { apiRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
 import prisma from './utils/prisma';
@@ -83,6 +84,7 @@ app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/agreements', agreementRoutes);
 app.use('/api/v1/breaches', breachRoutes);
+app.use('/api/v1/transactions', transactionRoutes);
 
 httpServer.listen(port, () => {
   console.log(`Server is running on port ${port}`);

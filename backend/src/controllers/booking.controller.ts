@@ -291,10 +291,23 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const updatedBooking = await prisma.booking.update({
-      where: { id },
-      data: { status: 'COMPLETED' }
-    });
+    const [updatedBooking, transaction] = await prisma.$transaction([
+      prisma.booking.update({
+        where: { id },
+        data: { status: 'COMPLETED' }
+      }),
+      prisma.transaction.create({
+        data: {
+          bookingId: booking.id,
+          tenantId: booking.tenantId,
+          landlordId: booking.property.landlordId,
+          propertyId: booking.propertyId,
+          amount: booking.property.price,
+          reference: reference,
+          status: 'SUCCESS'
+        }
+      })
+    ]);
 
     await notifyBookingStatusChanged({
       tenantId: booking.tenantId,

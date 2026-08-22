@@ -57,6 +57,8 @@ model User {
 
   tenantBreaches   BreachReport[] @relation("TenantBreaches")
   reportedBreaches BreachReport[] @relation("ReporterBreaches")
+  transactionsAsTenant   Transaction[] @relation("TenantTransactions")
+  transactionsAsLandlord Transaction[] @relation("LandlordTransactions")
 
   @@index([role])
 }
@@ -85,6 +87,7 @@ model Property {
   bookings     Booking[]
   tickets      MaintenanceTicket[] @relation("PropertyTickets")
   BreachReport BreachReport[]
+  transactions Transaction[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -106,6 +109,7 @@ model Booking {
 
   review         Review? // One-to-one relation, only allowed if COMPLETED
   leaseAgreement LeaseAgreement?
+  transaction    Transaction?
 
   @@index([tenantId])
   @@index([status])
@@ -276,4 +280,26 @@ model BreachReport {
   penaltyApplied Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  bookingId   String   @unique
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tenantId    String
+  tenant      User     @relation("TenantTransactions", fields: [tenantId], references: [id])
+  landlordId  String
+  landlord    User     @relation("LandlordTransactions", fields: [landlordId], references: [id])
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  
+  amount      Float
+  reference   String   @unique // Paystack reference
+  status      String   @default("SUCCESS") // SUCCESS, FAILED
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([landlordId])
+  @@index([createdAt])
 }

@@ -10,7 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'financials'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isSubscribing, setIsSubscribing] = useState(false);
 
@@ -49,6 +49,15 @@ export default function LandlordDashboard() {
       return data;
     },
     enabled: !!subResponse?.isActive
+  });
+
+  // Fetch Cashflows & Transactions
+  const { data: cashflowsResponse, isLoading: isLoadingCashflows } = useQuery({
+    queryKey: ['transactions', 'landlord'],
+    queryFn: async () => {
+      const { data } = await api.get('/transactions/landlord');
+      return data;
+    }
   });
 
   // Status Mutation (Bookings)
@@ -113,7 +122,7 @@ export default function LandlordDashboard() {
     subscribeMutation.mutate();
   };
 
-  if (isLoadingBookings || isLoadingSub || isLoadingTickets || isLoadingStats) {
+  if (isLoadingBookings || isLoadingSub || isLoadingTickets || isLoadingStats || isLoadingCashflows) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
   }
 
@@ -123,6 +132,7 @@ export default function LandlordDashboard() {
 
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
+  const cashflows = cashflowsResponse || { totalRevenue: 0, chartData: [], transactions: [] };
   const hasActiveSub = subResponse?.isActive;
 
   return (
@@ -190,6 +200,17 @@ export default function LandlordDashboard() {
           Maintenance Tickets {tickets.filter((t:any) => t.status === 'PENDING').length > 0 && (
             <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">{tickets.filter((t:any) => t.status === 'PENDING').length}</span>
           )}
+        </button>
+        <button
+          onClick={() => setActiveTab('financials')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'financials' 
+              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          Financials
         </button>
       </div>
 
@@ -346,6 +367,97 @@ export default function LandlordDashboard() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'financials' && (
+        <div className="animate-in space-y-6">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-card p-6 rounded-2xl border flex items-center gap-4">
+              <div className="p-4 bg-emerald-100 text-emerald-600 rounded-xl">
+                <DollarSign className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--muted-foreground)]">Total Revenue</p>
+                <h3 className="text-2xl font-bold">GHS {cashflows.totalRevenue.toLocaleString()}</h3>
+              </div>
+            </div>
+            <div className="glass-card p-6 rounded-2xl border flex items-center gap-4">
+              <div className="p-4 bg-blue-100 text-blue-600 rounded-xl">
+                <Activity className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--muted-foreground)]">Total Transactions</p>
+                <h3 className="text-2xl font-bold">{cashflows.transactions.length}</h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue Chart */}
+          <div className="glass-card p-6 rounded-2xl border">
+            <h3 className="text-lg font-bold mb-6">Monthly Revenue</h3>
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={cashflows.chartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: '#64748b', fontSize: 12 }}
+                    tickFormatter={(value) => `GHS ${value}`}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: '#f1f5f9' }}
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
+                    formatter={(value: any) => [`GHS ${Number(value).toLocaleString()}`, 'Revenue']}
+                  />
+                  <Bar dataKey="total" fill="var(--primary)" radius={[6, 6, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Transaction Ledger */}
+          <div className="glass-card rounded-2xl overflow-hidden border">
+            <div className="p-6 border-b border-[var(--border)]">
+              <h3 className="text-lg font-bold">Transaction Ledger</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-900 border-b">
+                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Tenant</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Property</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Reference</th>
+                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider text-right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--border)]">
+                  {cashflows.transactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-[var(--muted-foreground)]">No transactions recorded yet.</td>
+                    </tr>
+                  ) : (
+                    cashflows.transactions.map((tx: any) => (
+                      <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                        <td className="p-4 text-sm font-medium">{new Date(tx.createdAt).toLocaleDateString()}</td>
+                        <td className="p-4">
+                          <div className="font-bold text-[var(--foreground)]">{tx.tenant.firstName} {tx.tenant.lastName}</div>
+                          <div className="text-xs text-[var(--muted-foreground)]">{tx.tenant.email}</div>
+                        </td>
+                        <td className="p-4 text-sm">{tx.property.title}</td>
+                        <td className="p-4 text-xs font-mono text-slate-500">{tx.reference}</td>
+                        <td className="p-4 text-right font-bold text-emerald-600">GHS {tx.amount.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
