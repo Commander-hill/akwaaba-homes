@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -14,7 +14,7 @@ import SkeletonTable from '@/components/SkeletonTable';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents'>('bookings');
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -71,6 +71,14 @@ export default function TenantDashboard() {
     queryKey: ['tickets', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/tickets/me');
+      return data;
+    }
+  });
+
+  const { data: agreementsResponse, isLoading: agreementsLoading } = useQuery({
+    queryKey: ['agreements', 'tenant'],
+    queryFn: async () => {
+      const { data } = await api.get('/agreements/tenant');
       return data;
     }
   });
@@ -210,8 +218,84 @@ export default function TenantDashboard() {
 
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
+  const agreements = agreementsResponse?.agreements || [];
   const matches = roommateMatchesResponse?.matches || [];
   const hasProfile = !!roommateProfileResponse?.profile;
+
+  const handlePrintAgreement = (agreement: any) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const b = agreement.booking;
+    const p = b?.property || {};
+    const l = p?.landlord || {};
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Lease Receipt - ${p.title || 'Property'}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo { font-size: 24px; font-weight: 900; color: #0284c7; letter-spacing: -0.5px; }
+            .badge { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+            .section { margin-bottom: 25px; }
+            .section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.5px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
+            .hash-box { background: #0f172a; color: #38bdf8; font-family: monospace; padding: 12px; border-radius: 8px; font-size: 11px; word-break: break-all; margin-top: 10px; }
+            .signature-img { max-height: 50px; margin-top: 5px; }
+            .footer { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">AKWAABA HOMES</div>
+              <div style="font-size: 12px; color: #64748b;">Official Tenancy Verification & Lease Receipt</div>
+            </div>
+            <div class="badge">Verified Legal Agreement</div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Property Details</div>
+            <div class="box">
+              <h2 style="margin: 0 0 5px 0; font-size: 18px;">${p.title || 'Property'}</h2>
+              <p style="margin: 0; font-size: 13px; color: #475569;">📍 ${p.location || 'Location'}</p>
+              <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: bold; color: #0284c7;">Room: ${b.room?.roomType || 'Standard Room'} - GHS ${b.room?.price || p.price}/yr</p>
+            </div>
+          </div>
+
+          <div class="section grid">
+            <div class="box">
+              <div class="section-title">Tenant (Occupant)</div>
+              Signed: ${agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString() : 'N/A'}<br/>
+              ${agreement.tenantSignature ? `<img class="signature-img" src="${agreement.tenantSignature}" />` : ''}
+            </div>
+            <div class="box">
+              <div class="section-title">Landlord / Property Manager</div>
+              <strong>${l?.firstName || 'Landlord'} ${l?.lastName || ''}</strong><br/>
+              Signed: ${agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString() : 'N/A'}<br/>
+              ${agreement.landlordSignature ? `<img class="signature-img" src="${agreement.landlordSignature}" />` : ''}
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">Cryptographic Integrity Hash (SHA-256)</div>
+            <div class="hash-box">${agreement.cryptographicHash || 'PENDING_COMPLETION'}</div>
+            <p style="font-size: 11px; color: #64748b; margin-top: 5px;">This cryptographic hash guarantees that neither party can alter the terms or signatures of this lease post-signing.</p>
+          </div>
+
+          <div class="footer">
+            Akwaaba Homes Legal Verification Service • Generated on ${new Date().toLocaleDateString()}
+          </div>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   // Helpers
   const getStatusBadge = (status: string) => {
@@ -284,6 +368,15 @@ export default function TenantDashboard() {
           )}
         >
           <HeartHandshake className="w-4 h-4" /> Roommate Finder
+        </button>
+        <button
+          onClick={() => setActiveTab('documents')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'documents' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <FileText className="w-4 h-4" /> Lease Vault
         </button>
       </div>
 
@@ -673,6 +766,133 @@ export default function TenantDashboard() {
                 </div>
               )}
             </>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'documents' && (
+        <div className="animate-in space-y-6">
+          <div className="glass-card p-6 rounded-2xl border border-[var(--border)] bg-gradient-to-r from-sky-500/5 via-indigo-500/5 to-purple-500/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <ShieldCheck className="w-6 h-6 text-sky-500" /> Digital Lease & Document Vault
+              </h2>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                Access your legally binding lease agreements, SHA-256 cryptographic verification seals, and official tenancy receipts.
+              </p>
+            </div>
+            <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold flex items-center gap-2 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="w-4 h-4" /> Tamper-Proof Cryptography Active
+            </div>
+          </div>
+
+          {agreementsLoading ? (
+            <SkeletonTable rows={3} columns={4} />
+          ) : agreements.length === 0 ? (
+            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                <FileText className="w-8 h-8 text-[var(--muted-foreground)]" />
+              </div>
+              <h3 className="text-lg font-bold">No Lease Agreements Found</h3>
+              <p className="text-[var(--muted-foreground)] max-w-sm mt-1 mb-6 text-sm">
+                Once a landlord approves your booking request, your digital lease agreement will be securely stored here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {agreements.map((agreement: any) => {
+                const b = agreement.booking;
+                const p = b?.property || {};
+                const l = p?.landlord || {};
+                const isCompleted = agreement.status === 'COMPLETED';
+
+                return (
+                  <div key={agreement.id} className="glass-card p-6 rounded-2xl border border-[var(--border)] hover:border-sky-500/30 transition-all space-y-5">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-extrabold text-[var(--foreground)]">{p.title || 'Property Lease'}</h3>
+                          <span className={clsx(
+                            "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
+                            isCompleted ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                          )}>
+                            {agreement.status}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[var(--muted-foreground)] mt-1 flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5" /> {p.location || 'N/A'} • Room: {b?.room?.roomType || 'Standard'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        {!isCompleted && (
+                          <Link 
+                            href={`/lease-agreement/${b.id}`}
+                            className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                          >
+                            Sign Agreement Now
+                          </Link>
+                        )}
+                        {isCompleted && (
+                          <button
+                            onClick={() => handlePrintAgreement(agreement)}
+                            className="px-4 py-2 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                          >
+                            <Printer className="w-4 h-4" /> Print / Receipt
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Signatures & Execution Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1.5">
+                        <div className="font-bold text-[var(--muted-foreground)] uppercase text-[10px]">Tenant Signature</div>
+                        <div className="font-semibold text-sm flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="w-4 h-4" /> Signed by Tenant
+                        </div>
+                        <div className="text-[var(--muted-foreground)]">
+                          {agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString() : 'N/A'}
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1.5">
+                        <div className="font-bold text-[var(--muted-foreground)] uppercase text-[10px]">Landlord Signature</div>
+                        <div className="font-semibold text-sm flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
+                          <CheckCircle2 className="w-4 h-4" /> Signed by {l.firstName || 'Landlord'} {l.lastName || ''}
+                        </div>
+                        <div className="text-[var(--muted-foreground)]">
+                          {agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString() : 'Pending Landlord Counter-Signature'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cryptographic SHA-256 Verification Seal */}
+                    {agreement.cryptographicHash && (
+                      <div className="p-4 rounded-xl bg-slate-950 text-slate-200 border border-slate-800 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5" /> SHA-256 Cryptographic Hash Seal
+                          </span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(agreement.cryptographicHash);
+                              toast.success('SHA-256 Hash copied to clipboard!');
+                            }}
+                            className="text-xs font-semibold text-sky-400 hover:text-white flex items-center gap-1 transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" /> Copy Hash
+                          </button>
+                        </div>
+                        <div className="font-mono text-[11px] text-sky-200/90 break-all select-all bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
+                          {agreement.cryptographicHash}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
