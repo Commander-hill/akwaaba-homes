@@ -116,7 +116,7 @@ model Booking {
   tenantId   String
   tenant     User     @relation(fields: [tenantId], references: [id])
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id])
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   roomId     String?  // Which specific room type was booked
   room       Room?    @relation(fields: [roomId], references: [id])
   startDate  DateTime
@@ -238,7 +238,7 @@ model MaintenanceTicket {
   tenantId    String
   tenant      User     @relation("TenantTickets", fields: [tenantId], references: [id])
   propertyId  String
-  property    Property @relation("PropertyTickets", fields: [propertyId], references: [id])
+  property    Property @relation("PropertyTickets", fields: [propertyId], references: [id], onDelete: Cascade)
   title       String
   description String
   status      String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
@@ -310,7 +310,7 @@ model Transaction {
   landlordId  String
   landlord    User     @relation("LandlordTransactions", fields: [landlordId], references: [id])
   propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id])
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   roomId      String?  // Which room type was involved
   room        Room?    @relation(fields: [roomId], references: [id])
   
