@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { createOrUpdateProfile, getProfile, findMatches } from '../controllers/roommate.controller';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// All routes require authentication
-router.use(authenticate);
+// All routes require authentication and TENANT role
+router.use(authenticate, authorizeRole(['TENANT']));
 
 router.post('/profile', createOrUpdateProfile);
 router.get('/profile', getProfile);

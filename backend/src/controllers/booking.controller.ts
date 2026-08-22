@@ -233,6 +233,29 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Capacity Check Loophole Fix
+    if (!booking.property.isAvailable) {
+      res.status(400).json({ message: 'This property is no longer available.' });
+      return;
+    }
+
+    const completedBookingsCount = await prisma.booking.count({
+      where: {
+        propertyId: booking.propertyId,
+        status: 'COMPLETED'
+      }
+    });
+
+    if (completedBookingsCount >= booking.property.roomCapacity) {
+      // Auto-update to false if it slipped through
+      await prisma.property.update({
+        where: { id: booking.propertyId },
+        data: { isAvailable: false }
+      });
+      res.status(400).json({ message: 'This property has reached its maximum capacity and is no longer available for payment.' });
+      return;
+    }
+
     const paystackRes = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
@@ -308,6 +331,31 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
         }
       })
     ]);
+
+    // Recalibrate Capacity and Close Loophole
+    const completedBookings = await prisma.booking.count({
+      where: {
+        propertyId: booking.propertyId,
+        status: 'COMPLETED'
+      }
+    });
+
+    if (completedBookings >= booking.property.roomCapacity) {
+      await prisma.property.update({
+        where: { id: booking.propertyId },
+        data: { isAvailable: false }
+      });
+      
+      // Auto-reject any remaining pending or approved bookings since it's full
+      await prisma.booking.updateMany({
+        where: {
+          propertyId: booking.propertyId,
+          id: { not: booking.id },
+          status: { in: ['PENDING', 'APPROVED'] }
+        },
+        data: { status: 'REJECTED' }
+      });
+    }
 
     await notifyBookingStatusChanged({
       tenantId: booking.tenantId,

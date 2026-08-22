@@ -34,9 +34,12 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
     const totalProperties = await prisma.property.count();
     const totalBookings = await prisma.booking.count();
     
-    // Sum all successful subscriptions (assuming GHS 50 each for now, or you could sum a price field if it existed)
-    const totalSubscriptions = await prisma.subscription.count({ where: { isActive: true } });
-    const totalRevenue = totalSubscriptions * 50;
+    // Sum all successful transaction amounts (total platform transaction volume)
+    const transactionSum = await prisma.transaction.aggregate({
+      _sum: { amount: true },
+      where: { status: 'SUCCESS' }
+    });
+    const totalRevenue = transactionSum._sum.amount || 0;
 
     // Generate 6 months of historical data based on current totals for the chart
     const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
