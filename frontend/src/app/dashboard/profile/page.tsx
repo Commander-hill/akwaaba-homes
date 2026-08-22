@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'basic' | 'school'>('basic');
+  const [isStudent, setIsStudent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -64,6 +65,7 @@ export default function ProfilePage() {
         yearOfStudy: session.yearOfStudy || '',
         studentType: session.studentType || ''
       });
+      setIsStudent(!!session.campus || !!session.studentId || !!session.studentType);
     }
   }, [session]);
 
@@ -89,7 +91,18 @@ export default function ProfilePage() {
     e.preventDefault();
     setIsSaving(true);
     setMessage(null);
-    updateMutation.mutate(formData);
+    
+    const payload = { ...formData };
+    if (!isStudent) {
+      payload.campus = '';
+      payload.studentId = '';
+      payload.dateOfAdmission = '';
+      payload.programmeOfStudy = '';
+      payload.yearOfStudy = '';
+      payload.studentType = '';
+    }
+    
+    updateMutation.mutate(payload);
   };
 
   const handleSimulateAvatarUpload = () => {
@@ -188,16 +201,40 @@ export default function ProfilePage() {
         >
           Basic Information
         </button>
-        <button
-          onClick={() => setActiveTab('school')}
-          className={clsx(
-            "flex-1 py-4 text-center font-bold text-sm transition-colors",
-            activeTab === 'school' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-          )}
-        >
-          School Information
-        </button>
+        {isStudent && (
+          <button
+            onClick={() => setActiveTab('school')}
+            className={clsx(
+              "flex-1 py-4 text-center font-bold text-sm transition-colors",
+              activeTab === 'school' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+            )}
+          >
+            School Information
+          </button>
+        )}
       </div>
+
+      {/* Student Toggle for Tenants */}
+      {session?.role === 'TENANT' && activeTab === 'basic' && (
+        <div className="mb-6 flex items-center justify-between bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+          <div>
+            <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300">University Student?</h3>
+            <p className="text-xs text-indigo-700/70 dark:text-indigo-400/70">Enable this to add your school information</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer"
+              checked={isStudent}
+              onChange={(e) => {
+                setIsStudent(e.target.checked);
+                if (!e.target.checked && activeTab === 'school') setActiveTab('basic');
+              }}
+            />
+            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+          </label>
+        </div>
+      )}
 
       {/* Grids */}
       <form onSubmit={handleSubmit}>
