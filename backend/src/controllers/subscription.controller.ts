@@ -243,6 +243,15 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
 
 export const checkExpirations = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Security Check: Require Admin role or matching CRON_SECRET header
+    const cronSecretHeader = req.headers['x-cron-secret'];
+    const validCronSecret = process.env.CRON_SECRET && cronSecretHeader === process.env.CRON_SECRET;
+    const isAdmin = req.user?.role === 'ADMIN';
+
+    if (!isAdmin && !validCronSecret) {
+      res.status(403).json({ message: 'Forbidden: Admin access or valid CRON secret required' });
+      return;
+    }
     // In a real app, this would be triggered by a daily cron job
     const activeSubscriptions = await prisma.propertySubscription.findMany({
       where: { isActive: true },
