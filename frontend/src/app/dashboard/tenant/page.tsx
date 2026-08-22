@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -14,7 +14,7 @@ import SkeletonTable from '@/components/SkeletonTable';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments'>('bookings');
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -79,6 +79,14 @@ export default function TenantDashboard() {
     queryKey: ['agreements', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/agreements/tenant');
+      return data;
+    }
+  });
+
+  const { data: transactionsResponse, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', 'tenant'],
+    queryFn: async () => {
+      const { data } = await api.get('/transactions/tenant');
       return data;
     }
   });
@@ -219,8 +227,84 @@ export default function TenantDashboard() {
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
   const agreements = agreementsResponse?.agreements || [];
+  const transactions = transactionsResponse?.transactions || [];
   const matches = roommateMatchesResponse?.matches || [];
   const hasProfile = !!roommateProfileResponse?.profile;
+
+  const totalPaidGhs = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
+
+  const handlePrintReceipt = (tx: any) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const p = tx.property || {};
+    const l = tx.landlord || {};
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Payment Receipt - ${tx.reference}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo { font-size: 24px; font-weight: 900; color: #0284c7; letter-spacing: -0.5px; }
+            .badge { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+            .amount-card { background: #0f172a; color: #ffffff; padding: 25px; border-radius: 16px; margin-bottom: 30px; text-align: center; }
+            .amount-val { font-size: 36px; font-weight: 900; color: #38bdf8; margin-top: 5px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+            .box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
+            .label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+            .value { font-size: 14px; font-weight: 700; color: #1e293b; }
+            .footer { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="logo">AKWAABA HOMES</div>
+              <div style="font-size: 12px; color: #64748b;">Official Financial Rent Payment Receipt</div>
+            </div>
+            <div class="badge">Paystack Verified</div>
+          </div>
+
+          <div class="amount-card">
+            <div class="label" style="color: #94a3b8;">Total Amount Received</div>
+            <div class="amount-val">GHS ${tx.amount?.toLocaleString()}</div>
+            <div style="font-size: 12px; color: #cbd5e1; margin-top: 5px;">Ref: ${tx.reference}</div>
+          </div>
+
+          <div class="grid">
+            <div class="box">
+              <div class="label">Property & Accommodation</div>
+              <div class="value">${p.title || 'Property'}</div>
+              <div style="font-size: 12px; color: #64748b;">${p.location || ''}</div>
+              <div style="font-size: 12px; font-weight: bold; color: #0284c7; margin-top: 4px;">Room: ${tx.room?.roomType || 'Standard Room'}</div>
+            </div>
+
+            <div class="box">
+              <div class="label">Payment Metadata</div>
+              <div class="value">Status: ${tx.status}</div>
+              <div style="font-size: 12px; color: #64748b;">Date: ${new Date(tx.createdAt).toLocaleString()}</div>
+              <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Channel: Paystack Secured Gateway</div>
+            </div>
+          </div>
+
+          <div class="box" style="margin-bottom: 30px;">
+            <div class="label">Landlord / Recipient</div>
+            <div class="value">${l.firstName || 'Landlord'} ${l.lastName || ''}</div>
+            <div style="font-size: 12px; color: #64748b;">Contact: ${l.email || 'N/A'} • ${l.phoneNumber || 'N/A'}</div>
+          </div>
+
+          <div class="footer">
+            Akwaaba Homes Financial Services • Automated Receipt Issued ${new Date().toLocaleDateString()}
+          </div>
+          <script>window.print();</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   const handlePrintAgreement = (agreement: any) => {
     const printWindow = window.open('', '_blank');
@@ -377,6 +461,15 @@ export default function TenantDashboard() {
           )}
         >
           <FileText className="w-4 h-4" /> Lease Vault
+        </button>
+        <button
+          onClick={() => setActiveTab('payments')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'payments' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <Receipt className="w-4 h-4" /> Payments & Receipts
         </button>
       </div>
 
@@ -894,6 +987,121 @@ export default function TenantDashboard() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'payments' && (
+        <div className="animate-in space-y-6">
+          {/* Summary Financial Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Total Paid Rent</p>
+                <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalPaidGhs.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-600 flex items-center justify-center">
+                <CreditCard className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Verified Receipts</p>
+                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{transactions.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Payment Gateway</p>
+                <p className="text-sm font-extrabold text-[var(--foreground)] mt-1">Paystack Encrypted</p>
+                <p className="text-xs text-[var(--muted-foreground)]">MoMo & Card Supported</p>
+              </div>
+              <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 flex items-center justify-center">
+                <Lock className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions Table */}
+          <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
+            <div className="p-5 border-b border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-[var(--foreground)]">Financial Payment Ledger</h3>
+                <p className="text-xs text-[var(--muted-foreground)]">Download official payment receipts for proof of tenancy.</p>
+              </div>
+            </div>
+
+            {transactionsLoading ? (
+              <SkeletonTable rows={4} columns={5} />
+            ) : transactions.length === 0 ? (
+              <div className="p-12 text-center flex flex-col items-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <Receipt className="w-8 h-8 text-[var(--muted-foreground)]" />
+                </div>
+                <h4 className="text-lg font-bold text-[var(--foreground)]">No Payment History Yet</h4>
+                <p className="text-xs text-[var(--muted-foreground)] max-w-sm mt-1 mb-4">
+                  When you complete rental payments on Paystack, your receipts and transaction histories will populate here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-[var(--border)]">
+                    <tr>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Transaction Ref</th>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Property & Room</th>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Amount</th>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Date</th>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Status</th>
+                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase text-right">Receipt</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)]">
+                    {transactions.map((tx: any) => {
+                      const p = tx.property || {};
+
+                      return (
+                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="font-mono font-bold text-[var(--foreground)] text-xs">{tx.reference}</div>
+                            <div className="text-[10px] text-[var(--muted-foreground)]">Paystack Direct</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-[var(--foreground)] text-sm">{p.title || 'Property'}</div>
+                            <div className="text-[11px] text-[var(--muted-foreground)]">Room: {tx.room?.roomType || 'Standard Room'}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-extrabold text-sm text-sky-600 dark:text-sky-400">GHS {tx.amount?.toLocaleString()}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-[var(--foreground)]">{new Date(tx.createdAt).toLocaleDateString()}</div>
+                            <div className="text-[10px] text-[var(--muted-foreground)]">{new Date(tx.createdAt).toLocaleTimeString()}</div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                              {tx.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={() => handlePrintReceipt(tx)}
+                              className="px-3 py-1.5 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg text-xs font-bold shadow hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
+                            >
+                              <Printer className="w-3.5 h-3.5" /> Receipt
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

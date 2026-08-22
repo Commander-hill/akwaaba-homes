@@ -58,6 +58,28 @@ export const getLandlordCashflows = async (req: Request, res: Response): Promise
   }
 };
 
+export const getTenantTransactions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user.id;
+
+    const transactions = await prisma.transaction.findMany({
+      where: { tenantId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        property: { select: { title: true, location: true, images: true } },
+        landlord: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
+        booking: { select: { startDate: true, endDate: true, status: true } },
+        room: { select: { roomType: true, price: true } }
+      }
+    });
+
+    res.status(200).json({ transactions });
+  } catch (error) {
+    console.error('Error fetching tenant transactions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const getTransactionById = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
