@@ -41,11 +41,12 @@ export const loginValidation = [
 export const createPropertyValidation = [
   body('title').notEmpty().withMessage('Title is required').trim().escape(),
   body('type').notEmpty().withMessage('Property type is required').trim().escape(),
-  body('roomType').notEmpty().withMessage('Room type is required').trim().escape(),
-  body('roomCapacity').isInt({ min: 1 }).withMessage('Room capacity must be at least 1'),
   body('description').notEmpty().withMessage('Description is required').trim().escape(),
-  body('price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
   body('location').notEmpty().withMessage('Location is required').trim().escape(),
+  body('rooms').isArray({ min: 1 }).withMessage('At least one room configuration is required'),
+  body('rooms.*.roomType').notEmpty().withMessage('Room type is required for all rooms'),
+  body('rooms.*.numberOfRooms').isInt({ min: 1 }).withMessage('Number of rooms must be at least 1'),
+  body('rooms.*.price').isFloat({ min: 0 }).withMessage('Price must be a positive number'),
   body('amenities').optional().isArray().withMessage('Amenities must be an array'),
   body('images').optional().isArray().withMessage('Images must be an array'),
 ];
@@ -53,10 +54,7 @@ export const createPropertyValidation = [
 export const updatePropertyValidation = [
   body('title').optional().notEmpty().withMessage('Title is required').trim().escape(),
   body('type').optional().notEmpty().withMessage('Property type is required').trim().escape(),
-  body('roomType').optional().notEmpty().withMessage('Room type is required').trim().escape(),
-  body('roomCapacity').optional().isInt({ min: 1 }).withMessage('Room capacity must be at least 1'),
   body('description').optional().notEmpty().withMessage('Description is required').trim().escape(),
-  body('price').optional().isFloat({ min: 0 }).withMessage('Price must be a positive number'),
   body('location').optional().notEmpty().withMessage('Location is required').trim().escape(),
   body('amenities').optional().isArray().withMessage('Amenities must be an array'),
   body('images').optional().isArray().withMessage('Images must be an array'),
