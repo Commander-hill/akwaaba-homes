@@ -119,6 +119,17 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
             </div>
           ))}
         </div>
+        
+        {/* Prominent Logout Button in Menu */}
+        <div className="mt-8 px-3">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all font-bold text-sm"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
 
       {/* Footer User Profile & Storage Card */}
@@ -146,13 +157,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
               <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.firstName}</div>
             </div>
           </div>
-          <button 
-            onClick={onLogout}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
-            title="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          {/* We removed the small logout icon from here since we added a prominent one in the menu above */}
         </div>
 
       </div>
