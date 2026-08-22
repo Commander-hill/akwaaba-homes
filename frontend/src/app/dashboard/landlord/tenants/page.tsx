@@ -34,9 +34,9 @@ export default function LandlordTenantsPage() {
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       result = result.filter((b: any) => {
-        const tenant = b.tenant;
-        const nameMatch = `${tenant.firstName} ${tenant.lastName}`.toLowerCase().includes(term);
-        const emailMatch = tenant.email.toLowerCase().includes(term);
+        const tenant = b.tenant || {};
+        const nameMatch = `${tenant.firstName || ''} ${tenant.lastName || ''}`.toLowerCase().includes(term);
+        const emailMatch = (tenant.email || '').toLowerCase().includes(term);
         const phoneMatch = tenant.phoneNumber?.toLowerCase().includes(term);
         const studentIdMatch = tenant.studentId?.toLowerCase().includes(term);
         return nameMatch || emailMatch || phoneMatch || studentIdMatch;
@@ -163,15 +163,15 @@ export default function LandlordTenantsPage() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <img 
-                            src={getImageUrl(t.avatarUrl) || 'https://via.placeholder.com/150'} 
-                            alt={t.firstName} 
+                            src={getImageUrl(t?.avatarUrl) || 'https://via.placeholder.com/150'} 
+                            alt={t?.firstName || 'Tenant'} 
                             className="w-10 h-10 rounded-full object-cover border border-[var(--border)]"
                           />
                           <div>
                             <div className="font-bold text-[var(--foreground)] text-sm">{t?.firstName || 'Unknown'} {t?.lastName || 'Tenant'}</div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              {t.gender && <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[var(--muted-foreground)]">{t.gender}</span>}
-                              {t.studentId && (
+                              {t?.gender && <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[var(--muted-foreground)]">{t.gender}</span>}
+                              {t?.studentId && (
                                 <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
                                   <GraduationCap className="w-3 h-3" /> {t.studentId}
                                 </span>
@@ -196,11 +196,11 @@ export default function LandlordTenantsPage() {
                         <div className="flex flex-col gap-1.5">
                           {isApproved ? (
                             <>
-                              <a href={`mailto:${t.email}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
-                                <Mail className="w-3.5 h-3.5" /> {t.email}
+                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
+                                <Mail className="w-3.5 h-3.5" /> {t?.email || 'N/A'}
                               </a>
-                              {t.phoneNumber && (
-                                <a href={`tel:${t.phoneNumber}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
+                              {t?.phoneNumber && (
+                                <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
                                   <Phone className="w-3.5 h-3.5" /> {t.phoneNumber}
                                 </a>
                               )}
