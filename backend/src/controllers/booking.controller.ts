@@ -246,7 +246,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       }
     });
 
-    if (completedBookingsCount >= booking.property.roomCapacity) {
+    if (completedBookingsCount >= booking.property.numberOfRooms * booking.property.roomCapacity) {
       // Auto-update to false if it slipped through
       await prisma.property.update({
         where: { id: booking.propertyId },
@@ -340,7 +340,7 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       }
     });
 
-    if (completedBookings >= booking.property.roomCapacity) {
+    if (completedBookings >= booking.property.numberOfRooms * booking.property.roomCapacity) {
       await prisma.property.update({
         where: { id: booking.propertyId },
         data: { isAvailable: false }

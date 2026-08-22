@@ -16,10 +16,16 @@ const parseProperty = (property: any) => {
 export const createProperty = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
-    const { title, type, roomType, roomCapacity, description, price, location, latitude, longitude, amenities, images, videoUrl } = req.body;
+    const { title, type, roomType, numberOfRooms, roomCapacity, description, price, location, latitude, longitude, amenities, images, videoUrl } = req.body;
 
-    if (!title || !type || !roomType || !roomCapacity || !description || !price || !location) {
-      res.status(400).json({ message: 'Missing required fields' });
+    if (!title || !type || !roomType || !numberOfRooms || !roomCapacity || !description || !price || !location) {
+      res.status(400).json({ message: 'Missing required fields. Please ensure you specify the number of rooms and beds per room.' });
+      return;
+    }
+
+    const parsedNumberOfRooms = parseInt(numberOfRooms, 10);
+    if (isNaN(parsedNumberOfRooms) || parsedNumberOfRooms < 1) {
+      res.status(400).json({ message: 'Number of rooms must be a positive integer.' });
       return;
     }
 
@@ -43,6 +49,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
         title,
         type,
         roomType,
+        numberOfRooms: parsedNumberOfRooms,
         roomCapacity: parseInt(roomCapacity, 10),
         description,
         price: parseFloat(price),

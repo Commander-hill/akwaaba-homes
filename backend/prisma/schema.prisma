@@ -70,7 +70,8 @@ model Property {
   title          String
   type           String   @default("Hostel") // Hostel, Homestay, Apartment
   roomType       String   @default("1 in a room") // 1 in a room, 2 in a room, etc
-  roomCapacity   Int      @default(1)
+  numberOfRooms  Int      @default(1) // How many physical rooms does the property have
+  roomCapacity   Int      @default(1) // How many beds/tenants per room
   description    String
   price          Float // Represented in GHS (Ghana Cedis)
   location       String // e.g., "Legon", "Ayeduase"

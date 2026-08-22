@@ -24,6 +24,7 @@ export default function NewPropertyPage() {
     title: '',
     type: 'Hostel',
     roomType: '1 in a room',
+    numberOfRooms: 1,
     roomCapacity: 1,
     description: '',
     price: '',
@@ -142,8 +143,8 @@ export default function NewPropertyPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!formData.title || !formData.type || !formData.roomType || !formData.roomCapacity || !formData.description || !formData.price || !formData.location) {
-      setError('Please fill in all required fields');
+    if (!formData.title || !formData.type || !formData.roomType || !formData.numberOfRooms || !formData.roomCapacity || !formData.description || !formData.price || !formData.location) {
+      setError('Please fill in all required fields, including the number of rooms.');
       return;
     }
     if (videoUploading || imagesUploading) {
@@ -210,7 +211,7 @@ export default function NewPropertyPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Room Capacity *</label>
+              <label className="text-sm font-bold text-[var(--foreground)]">Beds per Room *</label>
               <input 
                 type="number" 
                 min="1"
@@ -218,6 +219,29 @@ export default function NewPropertyPage() {
                 onChange={e => setFormData({...formData, roomCapacity: parseInt(e.target.value, 10)})}
                 className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
               />
+            </div>
+          </div>
+
+          {/* Number of Rooms - separate prominent row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[var(--foreground)]">Number of Rooms *</label>
+              <p className="text-xs text-[var(--muted-foreground)]">How many physical rooms does this property contain?</p>
+              <input 
+                type="number" 
+                min="1"
+                value={formData.numberOfRooms}
+                onChange={e => setFormData({...formData, numberOfRooms: parseInt(e.target.value, 10)})}
+                placeholder="e.g. 10"
+                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              />
+            </div>
+            <div className="space-y-2 flex flex-col justify-end">
+              <div className="bg-slate-50 dark:bg-slate-800/50 border border-[var(--border)] rounded-xl p-4">
+                <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Total Capacity</p>
+                <p className="text-2xl font-extrabold text-[var(--primary)]">{formData.numberOfRooms * formData.roomCapacity}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Max tenants this property can accommodate</p>
+              </div>
             </div>
           </div>
 
