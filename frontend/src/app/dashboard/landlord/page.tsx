@@ -100,9 +100,17 @@ export default function LandlordDashboard() {
 
   return (
     <div className="space-y-8 animate-in">
-      <div>
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Landlord Dashboard</h1>
-        <p className="text-[var(--muted-foreground)]">Manage incoming tenant requests and property maintenance tickets.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Landlord Dashboard</h1>
+          <p className="text-[var(--muted-foreground)]">Manage incoming tenant requests and property maintenance tickets.</p>
+        </div>
+        <Link 
+          href="/dashboard/landlord/subscription" 
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-50 dark:bg-indigo-500/10 text-[var(--primary)] rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors border border-[var(--primary)]/20 shadow-sm"
+        >
+          <CreditCard className="w-5 h-5" /> Manage Subscriptions
+        </Link>
       </div>
 
       {/* Tabs */}
