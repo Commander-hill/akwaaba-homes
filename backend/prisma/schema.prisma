@@ -48,7 +48,6 @@ model User {
   properties      Property[]
   bookings        Booking[] // Bookings made (if tenant)
   reviews         Review[] // Reviews written
-  subscriptions   Subscription[]
   notifications   Notification[] // In-app notifications
   sessions        Session[] // Active device sessions
   auditLogs       AuditLog[] // Actions performed by this user
@@ -87,6 +86,7 @@ model Property {
   tickets      MaintenanceTicket[] @relation("PropertyTickets")
   BreachReport BreachReport[]
   transactions Transaction[]
+  subscription PropertySubscription?
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -167,16 +167,17 @@ model Review {
   createdAt      DateTime @default(now())
 }
 
-model Subscription {
+model PropertySubscription {
   id               String   @id @default(uuid())
-  landlordId       String
-  landlord         User     @relation(fields: [landlordId], references: [id])
+  propertyId       String   @unique
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   paymentReference String   @unique // Paystack/Hubtel reference ID
   paymentStatus    String   @default("PENDING") // PENDING, COMPLETED, FAILED
   startDate        DateTime
   endDate          DateTime
   isActive         Boolean  @default(false)
   createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model Notification {

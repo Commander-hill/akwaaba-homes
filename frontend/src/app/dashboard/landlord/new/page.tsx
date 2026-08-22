@@ -18,15 +18,6 @@ interface RoomInput {
 
 export default function NewPropertyPage() {
   const router = useRouter();
-  
-  // Subscription Check
-  const { data: subResponse, isLoading: isLoadingSub } = useQuery({
-    queryKey: ['subscriptions', 'status'],
-    queryFn: async () => {
-      const { data } = await api.get('/subscriptions/status');
-      return data;
-    }
-  });
 
   const [formData, setFormData] = useState({
     title: '',
@@ -66,32 +57,14 @@ export default function NewPropertyPage() {
       return response.data;
     },
     onSuccess: () => {
-      router.push('/properties');
+      router.push('/dashboard/landlord/properties');
     },
     onError: (err: any) => {
       setError(err.response?.data?.message || 'Failed to list property');
     }
   });
 
-  if (isLoadingSub) {
-    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
-  }
 
-  // SUBSCRIPTION WALL
-  if (!subResponse?.isActive) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center max-w-md mx-auto">
-        <div className="w-20 h-20 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-6">
-          <Lock className="w-10 h-10 text-red-500" />
-        </div>
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">Feature Locked</h1>
-        <p className="text-[var(--muted-foreground)] mb-8">You need an active Premium subscription to list properties on Akwaaba Homes.</p>
-        <Link href="/dashboard/landlord/subscription" className="bg-[var(--primary)] text-white px-8 py-3 rounded-xl font-bold shadow-md hover:opacity-90 transition-opacity">
-          Upgrade to Premium
-        </Link>
-      </div>
-    );
-  }
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

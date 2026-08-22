@@ -23,19 +23,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // ENFORCE SUBSCRIPTION WALL
-    const activeSub = await prisma.subscription.findFirst({
-      where: {
-        landlordId,
-        isActive: true,
-        endDate: { gt: new Date() }
-      }
-    });
-
-    if (!activeSub) {
-      res.status(403).json({ message: 'Active subscription required to list properties' });
-      return;
-    }
+    // ENFORCE SUBSCRIPTION WALL IS REMOVED
+    // Properties are now created as isAvailable = false until a listing fee is paid.
 
     // Find the minimum price among the provided rooms to set as the property floor price
     const minPrice = Math.min(...rooms.map((r: any) => parseFloat(r.price)));
@@ -54,6 +43,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
         amenities: JSON.stringify(amenities || []),
         images: JSON.stringify(images || []),
         videoUrl: videoUrl || null,
+        isAvailable: false, // Property is hidden until the listing fee is paid
         rooms: {
           create: rooms.map((r: any) => ({
             roomType: r.roomType,

@@ -217,6 +217,7 @@ const login = async (req, res) => {
         res.status(200).json({
             message: 'Logged in successfully',
             accessToken,
+            refreshToken,
             user: {
                 id: user.id,
                 email: user.email,
@@ -235,7 +236,11 @@ const login = async (req, res) => {
 exports.login = login;
 const refresh = async (req, res) => {
     try {
-        const { refreshToken } = req.cookies;
+        let { refreshToken } = req.cookies;
+        // Fallback to request body for environments where 3rd-party cookies are blocked
+        if (!refreshToken && req.body.refreshToken) {
+            refreshToken = req.body.refreshToken;
+        }
         if (!refreshToken) {
             res.status(401).json({ message: 'No refresh token provided' });
             return;
@@ -270,7 +275,8 @@ const refresh = async (req, res) => {
         });
         res.status(200).json({
             message: 'Token refreshed successfully',
-            accessToken
+            accessToken,
+            refreshToken // Return the same refresh token so frontend can keep it if needed
         });
     }
     catch (error) {

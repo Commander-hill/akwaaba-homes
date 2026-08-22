@@ -58,7 +58,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       { name: 'Booking Requests', href: '/dashboard/landlord', icon: ListTodo },
       { name: 'My Properties', href: '/dashboard/landlord/properties', icon: Building },
       { name: 'List Property', href: '/dashboard/landlord/new', icon: Plus },
-      { name: 'Subscription', href: '/dashboard/landlord/subscription', icon: CreditCard },
       { name: 'My Profile', href: '/dashboard/profile', icon: User },
       { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
       { name: 'ID Verification', href: '/dashboard/verification', icon: ShieldCheck },

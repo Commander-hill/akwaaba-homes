@@ -12,16 +12,6 @@ export default function LandlordDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'financials'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [isSubscribing, setIsSubscribing] = useState(false);
-
-  // Fetch Subscriptions
-  const { data: subResponse, isLoading: isLoadingSub } = useQuery({
-    queryKey: ['subscriptions', 'status'],
-    queryFn: async () => {
-      const { data } = await api.get('/subscriptions/status');
-      return data;
-    }
-  });
 
   // Fetch Bookings
   const { data: bookingsResponse, isLoading: isLoadingBookings, error } = useQuery({
@@ -47,8 +37,7 @@ export default function LandlordDashboard() {
     queryFn: async () => {
       const { data } = await api.get('/properties/landlord/stats');
       return data;
-    },
-    enabled: !!subResponse?.isActive
+    }
   });
 
   // Fetch Cashflows & Transactions
@@ -87,26 +76,6 @@ export default function LandlordDashboard() {
       setProcessingId(null);
     }
   });
-
-  // Real Paystack Payment Mutation
-  const subscribeMutation = useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post('/subscriptions/initialize');
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data.authorization_url) {
-        window.location.href = data.authorization_url;
-      }
-    },
-    onError: (err: any) => {
-      alert(err.response?.data?.message || 'Failed to initialize payment');
-    },
-    onSettled: () => {
-      setIsSubscribing(false);
-    }
-  });
-
   const handleStatusUpdate = (id: string, status: string) => {
     setProcessingId(id);
     updateStatusMutation.mutate({ id, status });
@@ -117,12 +86,7 @@ export default function LandlordDashboard() {
     updateTicketMutation.mutate({ id, status });
   };
 
-  const handlePayment = () => {
-    setIsSubscribing(true);
-    subscribeMutation.mutate();
-  };
-
-  if (isLoadingBookings || isLoadingSub || isLoadingTickets || isLoadingStats || isLoadingCashflows) {
+  if (isLoadingBookings || isLoadingTickets || isLoadingStats || isLoadingCashflows) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
   }
 
@@ -133,43 +97,9 @@ export default function LandlordDashboard() {
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
   const cashflows = cashflowsResponse || { totalRevenue: 0, chartData: [], transactions: [] };
-  const hasActiveSub = subResponse?.isActive;
 
   return (
     <div className="space-y-8 animate-in">
-      {/* SUBSCRIPTION BANNER */}
-      {!hasActiveSub ? (
-        <div className="bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl p-6 sm:p-8 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-full shrink-0">
-              <ShieldAlert className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Subscription Inactive</h2>
-              <p className="text-red-100 text-sm mt-1">You must have an active subscription to list properties and accept new tenants.</p>
-            </div>
-          </div>
-          <button 
-            onClick={handlePayment}
-            disabled={isSubscribing}
-            className="shrink-0 flex items-center justify-center gap-2 bg-white text-red-600 px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-red-50 transition-colors w-full sm:w-auto disabled:opacity-70"
-          >
-            {isSubscribing ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-            {isSubscribing ? 'Initializing...' : 'Subscribe Now (GHS 500)'}
-          </button>
-        </div>
-      ) : (
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-6 text-white shadow-lg flex items-center gap-4">
-          <div className="p-3 bg-white/20 rounded-full shrink-0">
-            <ShieldCheck className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold flex items-center gap-2">Premium Active <span className="bg-white/20 text-xs px-2 py-0.5 rounded-full">PRO</span></h2>
-            <p className="text-emerald-100 text-sm mt-0.5">Your subscription is active until {new Date(subResponse.endDate).toLocaleDateString()}.</p>
-          </div>
-        </div>
-      )}
-
       <div>
         <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Landlord Dashboard</h1>
         <p className="text-[var(--muted-foreground)]">Manage incoming tenant requests and property maintenance tickets.</p>

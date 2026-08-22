@@ -7,9 +7,10 @@ import axios from 'axios';
 export const getSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
+    const { propertyId } = req.query;
 
-    if (!landlordId) {
-      res.status(401).json({ message: 'Unauthorized' });
+    if (!landlordId || !propertyId) {
+      res.status(401).json({ message: 'Unauthorized or missing propertyId' });
       return;
     }
 
@@ -18,13 +19,13 @@ export const getSubscriptionStatus = async (req: Request, res: Response): Promis
       select: { isSuspended: true }
     });
 
-    const subscription = await prisma.subscription.findFirst({
-      where: { landlordId },
+    const subscription = await prisma.propertySubscription.findFirst({
+      where: { propertyId: propertyId as string, property: { landlordId } },
       orderBy: { createdAt: 'desc' }
     });
 
     if (!subscription) {
-      res.status(200).json({ isActive: false, message: 'No active subscription found.' });
+      res.status(200).json({ isActive: false, message: 'No active subscription found for this property.' });
       return;
     }
 
@@ -32,11 +33,16 @@ export const getSubscriptionStatus = async (req: Request, res: Response): Promis
     const isExpired = new Date() > new Date(subscription.endDate);
     
     if (isExpired && subscription.isActive) {
-      await prisma.subscription.update({
+      await prisma.propertySubscription.update({
         where: { id: subscription.id },
         data: { isActive: false }
       });
       subscription.isActive = false;
+      // Mark property unavailable
+      await prisma.property.update({
+        where: { id: propertyId as string },
+        data: { isAvailable: false }
+      });
     }
 
     res.status(200).json({ 
@@ -57,9 +63,10 @@ export const getSubscriptionStatus = async (req: Request, res: Response): Promis
 export const initializePayment = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
+    const { propertyId } = req.body;
 
-    if (!landlordId) {
-      res.status(401).json({ message: 'Unauthorized' });
+    if (!landlordId || !propertyId) {
+      res.status(400).json({ message: 'Missing landlord ID or property ID' });
       return;
     }
 
@@ -69,17 +76,23 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Prevent re-subscribing if already active
-    const existingActiveSub = await prisma.subscription.findFirst({
-      where: { landlordId, isActive: true }
-    });
-    if (existingActiveSub && new Date() < new Date(existingActiveSub.endDate)) {
-      res.status(400).json({ message: 'You already have an active subscription. No payment needed.' });
+    const property = await prisma.property.findUnique({ where: { id: propertyId, landlordId } });
+    if (!property) {
+      res.status(404).json({ message: 'Property not found or does not belong to you' });
       return;
     }
 
-    // Amount for annual subscription: GHS 500.00 = 50000 pesewas
-    const amountInPesewas = 50000;
+    // Prevent re-subscribing if already active
+    const existingActiveSub = await prisma.propertySubscription.findFirst({
+      where: { propertyId, isActive: true }
+    });
+    if (existingActiveSub && new Date() < new Date(existingActiveSub.endDate)) {
+      res.status(400).json({ message: 'This property already has an active subscription.' });
+      return;
+    }
+
+    // Amount for annual property listing: GHS 100.00 = 10000 pesewas
+    const amountInPesewas = 10000;
 
     // Check if user provided dummy Paystack key or if it's not set
     if (!process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
@@ -88,23 +101,31 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
     }
 
     const callbackUrl = process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL}/dashboard/landlord/subscription?verify=true`
-      : 'http://localhost:3000/dashboard/landlord/subscription?verify=true';
+      ? `${process.env.FRONTEND_URL}/dashboard/landlord/properties?verify=true`
+      : 'http://localhost:3000/dashboard/landlord/properties?verify=true';
 
     // === MOCK PAYMENT FLOW FOR TESTING ===
     if (process.env.PAYSTACK_SECRET_KEY === 'sk_test_akwaaba_mock_key') {
       const mockReference = `mock_tx_${Date.now()}`;
       
-      await prisma.subscription.create({
-        data: {
-          landlordId,
-          paymentReference: mockReference,
-          paymentStatus: 'PENDING',
-          startDate: new Date(),
-          endDate: new Date(),
-          isActive: false
-        }
-      });
+      const existingSub = await prisma.propertySubscription.findUnique({ where: { propertyId } });
+      if (existingSub) {
+        await prisma.propertySubscription.update({
+          where: { propertyId },
+          data: { paymentReference: mockReference, paymentStatus: 'PENDING', isActive: false }
+        });
+      } else {
+        await prisma.propertySubscription.create({
+          data: {
+            propertyId,
+            paymentReference: mockReference,
+            paymentStatus: 'PENDING',
+            startDate: new Date(),
+            endDate: new Date(),
+            isActive: false
+          }
+        });
+      }
 
       // Directly return the callback url as the auth url to simulate instant payment completion
       res.status(200).json({
@@ -124,10 +145,11 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
         callback_url: callbackUrl,
         metadata: {
           landlordId,
-          purpose: 'AkwaabaHomes Annual Subscription',
+          propertyId,
+          purpose: `Listing Fee for ${property.title}`,
           custom_fields: [
             { display_name: 'Landlord Name', variable_name: 'landlord_name', value: `${landlord.firstName} ${landlord.lastName}` },
-            { display_name: 'Platform', variable_name: 'platform', value: 'Akwaaba Homes' }
+            { display_name: 'Property', variable_name: 'property_title', value: property.title }
           ]
         }
       },
@@ -139,17 +161,24 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       }
     );
 
-    // Create a pending subscription record to track it
-    await prisma.subscription.create({
-      data: {
-        landlordId,
-        paymentReference: response.data.data.reference,
-        paymentStatus: 'PENDING',
-        startDate: new Date(),
-        endDate: new Date(),
-        isActive: false
-      }
-    });
+    const existingSub = await prisma.propertySubscription.findUnique({ where: { propertyId } });
+    if (existingSub) {
+      await prisma.propertySubscription.update({
+        where: { propertyId },
+        data: { paymentReference: response.data.data.reference, paymentStatus: 'PENDING', isActive: false }
+      });
+    } else {
+      await prisma.propertySubscription.create({
+        data: {
+          propertyId,
+          paymentReference: response.data.data.reference,
+          paymentStatus: 'PENDING',
+          startDate: new Date(),
+          endDate: new Date(),
+          isActive: false
+        }
+      });
+    }
 
     res.status(200).json({
       authorization_url: response.data.data.authorization_url,
@@ -205,11 +234,16 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     // =====================================
 
     // Check if this reference was already processed as active
-    const existingSub = await prisma.subscription.findUnique({
+    const existingSub = await prisma.propertySubscription.findUnique({
       where: { paymentReference }
     });
 
-    if (existingSub && existingSub.isActive) {
+    if (!existingSub) {
+      res.status(404).json({ message: 'Subscription record not found for this reference' });
+      return;
+    }
+
+    if (existingSub.isActive) {
       res.status(400).json({ message: 'Payment reference already processed' });
       return;
     }
@@ -219,33 +253,23 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     const endDate = new Date();
     endDate.setFullYear(endDate.getFullYear() + 1);
 
-    let subscription;
-    
-    if (existingSub) {
-      subscription = await prisma.subscription.update({
-        where: { id: existingSub.id },
-        data: {
-          paymentStatus: 'COMPLETED',
-          startDate,
-          endDate,
-          isActive: true
-        }
-      });
-    } else {
-      // Fallback if somehow it wasn't tracked
-      subscription = await prisma.subscription.create({
-        data: {
-          landlordId,
-          paymentReference,
-          paymentStatus: 'COMPLETED',
-          startDate,
-          endDate,
-          isActive: true
-        }
-      });
-    }
+    const subscription = await prisma.propertySubscription.update({
+      where: { id: existingSub.id },
+      data: {
+        paymentStatus: 'COMPLETED',
+        startDate,
+        endDate,
+        isActive: true
+      }
+    });
 
-    res.status(200).json({ message: 'Subscription activated successfully', subscription });
+    // Automatically make property available when subscription is paid
+    await prisma.property.update({
+      where: { id: existingSub.propertyId },
+      data: { isAvailable: true }
+    });
+
+    res.status(200).json({ message: 'Property listed successfully', subscription });
 
   } catch (error: any) {
     console.error('Verify payment error:', error.response?.data || error.message);
@@ -256,9 +280,9 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
 export const checkExpirations = async (req: Request, res: Response): Promise<void> => {
   try {
     // In a real app, this would be triggered by a daily cron job
-    const activeSubscriptions = await prisma.subscription.findMany({
+    const activeSubscriptions = await prisma.propertySubscription.findMany({
       where: { isActive: true },
-      include: { landlord: { select: { id: true, email: true, firstName: true } } }
+      include: { property: { include: { landlord: { select: { id: true, email: true, firstName: true } } } } }
     });
 
     const now = new Date();
@@ -272,17 +296,21 @@ export const checkExpirations = async (req: Request, res: Response): Promise<voi
 
       if (diffDays <= 0) {
         // Expired!
-        await prisma.subscription.update({
+        await prisma.propertySubscription.update({
           where: { id: sub.id },
           data: { isActive: false }
+        });
+        await prisma.property.update({
+          where: { id: sub.propertyId },
+          data: { isAvailable: false }
         });
         expiredCount++;
       } else if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
         // Notify at 7, 3, and 1 days before expiry
         await notifySubscriptionExpirySoon({
-          landlordId: sub.landlord.id,
-          landlordEmail: sub.landlord.email,
-          landlordName: sub.landlord.firstName,
+          landlordId: sub.property.landlord.id,
+          landlordEmail: sub.property.landlord.email,
+          landlordName: sub.property.landlord.firstName,
           expiryDate: sub.endDate,
           daysLeft: diffDays
         });

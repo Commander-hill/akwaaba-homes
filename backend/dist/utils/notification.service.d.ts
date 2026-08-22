@@ -20,6 +20,14 @@ export declare const notifyBookingCreated: (opts: {
     propertyTitle: string;
     bookingId: string;
 }) => Promise<void>;
+export declare const notifyPaymentReceipt: (opts: {
+    tenantId: string;
+    tenantEmail: string;
+    tenantName: string;
+    propertyTitle: string;
+    amount: number;
+    bookingId: string;
+}) => Promise<void>;
 export declare const notifyBookingStatusChanged: (opts: {
     tenantId: string;
     tenantEmail: string;
@@ -50,6 +58,15 @@ export declare const notifyAdminAnnouncement: (opts: {
     }[];
     subject: string;
     message: string;
+}) => Promise<void>;
+export declare const notifyAgreementCompleted: (opts: {
+    landlordEmail: string;
+    landlordName: string;
+    tenantEmail: string;
+    tenantName: string;
+    propertyTitle: string;
+    bookingId: string;
+    hash: string;
 }) => Promise<void>;
 export {};
 //# sourceMappingURL=notification.service.d.ts.map

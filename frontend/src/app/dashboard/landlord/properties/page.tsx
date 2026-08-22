@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, CreditCard, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getImageUrl } from '@/lib/utils';
 
 export default function LandlordPropertiesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [verifyingPropId, setVerifyingPropId] = useState<string | null>(null);
+  const [paymentMsg, setPaymentMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -44,6 +47,47 @@ export default function LandlordPropertiesPage() {
     }
   };
 
+  const initPaymentMutation = useMutation({
+    mutationFn: async (propertyId: string) => {
+      const { data } = await api.post('/subscriptions/initialize', { propertyId });
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.authorization_url) {
+        window.location.href = data.authorization_url;
+      }
+    },
+    onError: (error: any) => {
+      setPaymentMsg({ text: error.response?.data?.message || 'Failed to start payment.', type: 'error' });
+    }
+  });
+
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async (reference: string) => {
+      const { data } = await api.post('/subscriptions/verify', { paymentReference: reference });
+      return data;
+    },
+    onSuccess: (data) => {
+      setPaymentMsg({ text: 'Listing published successfully!', type: 'success' });
+      refetch();
+      router.replace('/dashboard/landlord/properties');
+    },
+    onError: (error: any) => {
+      setPaymentMsg({ text: error.response?.data?.message || 'Verification failed.', type: 'error' });
+      router.replace('/dashboard/landlord/properties');
+    }
+  });
+
+  // Check URL params for verification
+  if (typeof window !== 'undefined') {
+    const verify = searchParams.get('verify');
+    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    
+    if (verify === 'true' && reference && !verifyPaymentMutation.isPending && !paymentMsg) {
+      verifyPaymentMutation.mutate(reference);
+    }
+  }
+
   if (isLoading) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
   }
@@ -62,6 +106,20 @@ export default function LandlordPropertiesPage() {
           <Plus className="w-4 h-4" /> Add Property
         </Link>
       </div>
+
+      {paymentMsg && (
+        <div className={`p-4 rounded-xl flex items-center gap-3 ${paymentMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+          {paymentMsg.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <span className="font-medium">{paymentMsg.text}</span>
+        </div>
+      )}
+
+      {verifyPaymentMutation.isPending && (
+        <div className="p-8 glass-card rounded-2xl flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+          <p className="text-[var(--foreground)] font-bold">Verifying your payment...</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {properties?.length === 0 ? (
@@ -106,7 +164,26 @@ export default function LandlordPropertiesPage() {
                   <div className="font-bold text-[var(--primary)]">
                     GH₵{property.price.toLocaleString()} <span className="text-xs text-[var(--muted-foreground)] font-normal">/yr</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    {!property.isAvailable && (
+                      <button
+                        onClick={() => {
+                          setVerifyingPropId(property.id);
+                          initPaymentMutation.mutate(property.id);
+                        }}
+                        disabled={initPaymentMutation.isPending && verifyingPropId === property.id}
+                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1 shadow-sm mr-1"
+                        title="Pay GHS 100/yr to list this property"
+                      >
+                        {initPaymentMutation.isPending && verifyingPropId === property.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <>
+                            <CreditCard className="w-3 h-3" /> Publish
+                          </>
+                        )}
+                      </button>
+                    )}
                     <Link 
                       href={`/dashboard/landlord/properties/${property.id}/edit`}
                       className="p-2 text-slate-500 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 rounded-lg transition-colors"
