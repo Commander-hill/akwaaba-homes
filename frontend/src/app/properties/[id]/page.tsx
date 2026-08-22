@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, Star, Info, Flag, Send } from 'lucide-react';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
 import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
@@ -129,7 +130,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   const parsedImages = JSON.parse(property.images);
   const parsedAmenities = JSON.parse(property.amenities);
-  const mainImage = parsedImages.length > 0 ? parsedImages[0] : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
+  const mainImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-h-[calc(100vh-4rem)]">
@@ -143,13 +144,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         <div className="lg:col-span-2 space-y-8">
           <div className="flex gap-4 h-[400px]">
             <div className="flex-1 rounded-3xl overflow-hidden shadow-md">
-              <img src={parsedImages[0] || mainImage} alt={property.title} className="w-full h-full object-cover" />
+              <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
             </div>
             {parsedImages.length > 1 && (
               <div className="w-[30%] hidden md:flex flex-col gap-4">
                 {parsedImages.slice(1, 3).map((img: string, idx: number) => (
                   <div key={idx} className="flex-1 rounded-2xl overflow-hidden shadow-md relative">
-                    <img src={img} alt={`${property.title} ${idx + 2}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(img)} alt={`${property.title} ${idx + 2}`} className="w-full h-full object-cover" />
                     {idx === 1 && parsedImages.length > 3 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer hover:bg-black/40 transition-colors">
                         <span className="text-white font-bold text-xl">+{parsedImages.length - 3}</span>

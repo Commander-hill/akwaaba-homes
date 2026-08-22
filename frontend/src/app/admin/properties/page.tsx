@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
 import { Loader2, Building, CheckCircle, XCircle, MapPin, DollarSign, Clock } from 'lucide-react';
 
 export default function AdminPropertiesPage() {
@@ -66,7 +67,7 @@ export default function AdminPropertiesPage() {
 
             <div className="h-48 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
               {property.images && property.images.length > 0 ? (
-                <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                <img src={getImageUrl(property.images[0])} alt={property.title} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-400">No Image</div>
               )}

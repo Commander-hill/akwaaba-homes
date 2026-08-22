@@ -5,6 +5,7 @@ import { Search, MapPin, Filter, Loader2, BedDouble, X, Map as MapIcon, Grid2X2 
 import { useState } from 'react';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
 
 interface Property {
@@ -241,7 +242,7 @@ export default function PropertiesPage() {
                     <div className="h-48 bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
                       {property.images && property.images.length > 0 ? (
                         <img 
-                          src={property.images[0]} 
+                          src={getImageUrl(property.images[0])} 
                           alt={property.title} 
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />

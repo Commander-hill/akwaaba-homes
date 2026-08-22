@@ -6,6 +6,7 @@ import api from '@/lib/axios';
 import { Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getImageUrl } from '@/lib/utils';
 
 export default function LandlordPropertiesPage() {
   const router = useRouter();
@@ -87,7 +88,7 @@ export default function LandlordPropertiesPage() {
 
               <div className="h-48 overflow-hidden relative">
                 <img 
-                  src={property.images[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
+                  src={property.images[0] ? getImageUrl(property.images[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
                   alt={property.title} 
                   className={`w-full h-full object-cover transition-transform group-hover:scale-105 ${!property.isAvailable ? 'grayscale opacity-70' : ''}`}
                 />
