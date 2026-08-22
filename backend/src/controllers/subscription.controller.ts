@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { notifySubscriptionExpirySoon } from '../utils/notification.service';
 import axios from 'axios';
+import crypto from 'crypto';
+import { getIO } from '../socket';
 
 export const getSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -238,6 +240,80 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
   } catch (error: any) {
     console.error('Verify payment error:', error.response?.data || error.message);
     res.status(500).json({ message: 'Failed to verify payment with Paystack' });
+  }
+};
+
+export const handlePaystackWebhook = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+    if (!secret || secret.includes('replace_with_your_actual')) {
+      res.status(400).send('Paystack secret not configured');
+      return;
+    }
+
+    // Verify Paystack HMAC SHA512 signature
+    const signature = req.headers['x-paystack-signature'];
+    const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+
+    if (hash !== signature) {
+      res.status(401).send('Invalid signature');
+      return;
+    }
+
+    const event = req.body;
+
+    // Handle charge.success event
+    if (event.event === 'charge.success') {
+      const data = event.data;
+      const paymentReference = data.reference;
+
+      const existingSub = await prisma.propertySubscription.findUnique({
+        where: { paymentReference }
+      });
+
+      if (existingSub && !existingSub.isActive) {
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+
+        const subscription = await prisma.propertySubscription.update({
+          where: { id: existingSub.id },
+          data: {
+            paymentStatus: 'COMPLETED',
+            startDate,
+            endDate,
+            isActive: true
+          }
+        });
+
+        // Automatically make property available when subscription is paid
+        await prisma.property.update({
+          where: { id: existingSub.propertyId },
+          data: { isAvailable: true }
+        });
+
+        // Emit real-time notification to landlord via Socket.io
+        try {
+          const property = await prisma.property.findUnique({ where: { id: existingSub.propertyId } });
+          if (property) {
+            getIO().to(property.landlordId).emit('notification', {
+              title: 'Property Listing Activated',
+              message: `Payment received! Your listing for "${property.title}" is now active.`,
+              type: 'subscription'
+            });
+            getIO().to(property.landlordId).emit('property_updated', { propertyId: property.id });
+          }
+        } catch (e) {
+          console.error('Socket emission failed in webhook:', e);
+        }
+      }
+    }
+
+    // Paystack requires a 200 OK response to confirm receipt
+    res.status(200).send('Webhook processed');
+  } catch (error) {
+    console.error('Paystack webhook error:', error);
+    res.status(500).send('Internal server error');
   }
 };
 
