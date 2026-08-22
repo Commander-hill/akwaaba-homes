@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -14,7 +14,7 @@ import SkeletonTable from '@/components/SkeletonTable';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety'>('bookings');
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -470,6 +470,15 @@ export default function TenantDashboard() {
           )}
         >
           <Receipt className="w-4 h-4" /> Payments & Receipts
+        </button>
+        <button
+          onClick={() => setActiveTab('safety')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'safety' ? "bg-red-600 text-white shadow-sm" : "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+          )}
+        >
+          <Siren className="w-4 h-4 animate-pulse text-red-400" /> 24/7 Emergency
         </button>
       </div>
 
@@ -1101,6 +1110,136 @@ export default function TenantDashboard() {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'safety' && (
+        <div className="animate-in space-y-6">
+          <div className="glass-card p-6 rounded-2xl border border-red-200 dark:border-red-900/40 bg-gradient-to-r from-red-500/10 via-amber-500/5 to-red-500/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h2 className="text-xl font-black text-red-600 dark:text-red-400 flex items-center gap-2">
+                <Siren className="w-6 h-6 animate-bounce" /> 24/7 Emergency & Tenant Safety Center
+              </h2>
+              <p className="text-sm text-[var(--muted-foreground)] mt-1">
+                One-tap quick dials for Ghana national emergency hotlines, campus security desks, and your active property manager.
+              </p>
+            </div>
+            <div className="px-4 py-2 bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 rounded-xl text-xs font-bold flex items-center gap-2 border border-red-300 dark:border-red-800">
+              <ShieldAlert className="w-4 h-4" /> Priority Emergency Services Active
+            </div>
+          </div>
+
+          {/* Landlord Direct Emergency Card */}
+          {bookings.find((b: any) => b.status === 'COMPLETED' || b.status === 'APPROVED') ? (() => {
+            const activeBooking = bookings.find((b: any) => b.status === 'COMPLETED' || b.status === 'APPROVED');
+            const p = activeBooking.property;
+            const phone = p?.landlord?.phoneNumber || '+233200000000';
+            const cleanPhone = phone.replace(/[^0-9+]/g, '');
+
+            return (
+              <div className="glass-card p-6 rounded-2xl border border-amber-300 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/20 space-y-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">My Active Property Manager</span>
+                    <h3 className="text-lg font-bold text-[var(--foreground)]">{p?.title || 'Active Hostel'}</h3>
+                    <p className="text-xs text-[var(--muted-foreground)] flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" /> {p?.location}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-[var(--foreground)]">{p?.landlord?.firstName} {p?.landlord?.lastName}</p>
+                    <p className="text-xs font-mono text-[var(--muted-foreground)]">{phone}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  <a
+                    href={`tel:${cleanPhone}`}
+                    className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                  >
+                    <PhoneCall className="w-4 h-4" /> Call Landlord Now
+                  </a>
+                  <a
+                    href={`https://wa.me/${cleanPhone.replace('+', '')}?text=URGENT%20SAFETY%20ALERT:%20I%20am%20a%20tenant%20at%20${encodeURIComponent(p?.title)}%20and%20require%20immediate%20assistance.`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                  >
+                    <MessageSquare className="w-4 h-4" /> WhatsApp Emergency
+                  </a>
+                </div>
+              </div>
+            );
+          })() : null}
+
+          {/* National & Campus Hotlines Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Police */}
+            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-blue-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-[var(--foreground)]">Ghana Police Service</h4>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">National Security & Patrol Hotline</p>
+              </div>
+              <a
+                href="tel:191"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" /> Dial 191 / 112
+              </a>
+            </div>
+
+            {/* Ambulance */}
+            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-red-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center">
+                <Siren className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-[var(--foreground)]">National Ambulance</h4>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Medical Emergencies & Dispatch</p>
+              </div>
+              <a
+                href="tel:192"
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" /> Dial 192
+              </a>
+            </div>
+
+            {/* Fire */}
+            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-orange-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-[var(--foreground)]">National Fire Service</h4>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Fire Hazard & Outbreak Emergency</p>
+              </div>
+              <a
+                href="tel:190"
+                className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" /> Dial 190
+              </a>
+            </div>
+
+            {/* Campus Security */}
+            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-emerald-500/40 transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-extrabold text-sm text-[var(--foreground)]">Campus Security Desk</h4>
+                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">On-Campus Guard Dispatch</p>
+              </div>
+              <a
+                href="tel:+233332132440"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Phone className="w-3.5 h-3.5" /> Dial Campus Desk
+              </a>
+            </div>
           </div>
         </div>
       )}
