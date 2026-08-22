@@ -269,6 +269,20 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
   }
 };
 
+export const getLandlordProperties = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user.id;
+    const properties = await prisma.property.findMany({
+      where: { landlordId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json({ data: properties.map(parseProperty) });
+  } catch (error) {
+    console.error('Error fetching landlord properties:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const getLandlordStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;

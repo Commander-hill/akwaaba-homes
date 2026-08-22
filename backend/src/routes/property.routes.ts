@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createProperty, getProperties, getPropertyById, updateProperty, deleteProperty, getLandlordStats } from '../controllers/property.controller';
+import { createProperty, getProperties, getPropertyById, updateProperty, deleteProperty, getLandlordStats, getLandlordProperties } from '../controllers/property.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 import { validate, createPropertyValidation, updatePropertyValidation } from '../middleware/validation.middleware';
 
@@ -7,6 +7,7 @@ const router = Router();
 
 // Protected route for Landlord Stats (Must come BEFORE /:id to avoid ID conflict)
 router.get('/landlord/stats', authenticate, authorizeRole(['LANDLORD']), getLandlordStats);
+router.get('/landlord/mine', authenticate, authorizeRole(['LANDLORD']), getLandlordProperties);
 
 // Public routes (Tenants & Guests)
 router.get('/', getProperties);

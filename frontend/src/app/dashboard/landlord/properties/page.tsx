@@ -23,10 +23,8 @@ export default function LandlordPropertiesPage() {
   const { data: properties, isLoading, refetch } = useQuery({
     queryKey: ['landlord-properties'],
     queryFn: async () => {
-      // For now, we fetch all properties and filter locally since there is no landlord-specific GET endpoint yet. 
-      // In a real production app, we would add GET /api/v1/properties/landlord/me
-      const res = await api.get('/properties?limit=100');
-      return res.data.data.filter((p: any) => p.landlordId === session?.id);
+      const res = await api.get('/properties/landlord/mine');
+      return res.data.data;
     },
     enabled: !!session
   });
