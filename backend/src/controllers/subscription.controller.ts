@@ -76,7 +76,7 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const property = await prisma.property.findUnique({ where: { id: propertyId, landlordId } });
+    const property = await prisma.property.findFirst({ where: { id: propertyId, landlordId } });
     if (!property) {
       res.status(404).json({ message: 'Property not found or does not belong to you' });
       return;

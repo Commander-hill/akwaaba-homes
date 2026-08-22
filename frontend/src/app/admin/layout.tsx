@@ -7,6 +7,7 @@ import { LogOut, Loader2, ShieldCheck, Users, Building, CalendarCheck, CreditCar
 import Link from 'next/link';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
+import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -57,73 +58,44 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     window.location.href = '/admin/login';
   };
 
-  const adminLinks = [
-    { name: 'System Overview', href: '/admin/dashboard', icon: ShieldCheck },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Properties', href: '/admin/properties', icon: Building },
-    { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
-    { name: 'Subscriptions', href: '/admin/transactions', icon: CreditCard },
-    { name: 'Reviews', href: '/admin/reviews', icon: Star },
-    { name: 'System Activity', href: '/admin/activity', icon: Activity },
-    { name: 'Dynamic Notices', href: '/admin/notices', icon: Megaphone },
+  const adminSidebarGroups: SidebarGroup[] = [
+    {
+      title: 'SYSTEM CONTROLS',
+      links: [
+        { name: 'System Overview', href: '/admin/dashboard', icon: ShieldCheck },
+        { name: 'Users', href: '/admin/users', icon: Users },
+        { name: 'Properties', href: '/admin/properties', icon: Building },
+        { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
+      ]
+    },
+    {
+      title: 'MANAGEMENT',
+      links: [
+        { name: 'Subscriptions', href: '/admin/transactions', icon: CreditCard },
+        { name: 'Reviews', href: '/admin/reviews', icon: Star },
+        { name: 'System Activity', href: '/admin/activity', icon: Activity },
+        { name: 'Dynamic Notices', href: '/admin/notices', icon: Megaphone },
+      ]
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0a]">
-      {/* Top Navbar */}
-      <nav className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111] sticky top-0 z-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Admin<span className="text-purple-600">Portal</span></span>
-            </div>
-            <div className="flex items-center gap-6">
-              <NotificationBell />
-              <div className="text-right hidden sm:block">
-                <div className="text-sm font-bold text-slate-900 dark:text-white">{user.firstName} {user.lastName}</div>
-                <div className="text-xs text-purple-600 font-mono">SUPERADMIN</div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
-                title="Secure Logout"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
+      <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
-        {/* Isolated Admin Sidebar */}
-        <div className="w-full md:w-64 shrink-0 relative z-20">
-          <div className="bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 rounded-xl p-4 sticky top-24 shadow-sm">
-            <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 px-3">System Controls</div>
-            <nav className="space-y-1">
-              {adminLinks.map((link) => {
-                const Icon = link.icon;
-                const isActive = pathname === link.href;
-                return (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all font-medium text-sm ${isActive ? 'bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'}`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </nav>
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] flex flex-col">
+        {/* Admin Header with Notification Bell */}
+        <div className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 bg-white/50 dark:bg-[#111111]/50 backdrop-blur-sm sticky top-0 z-10">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-white capitalize">
+            {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
+          </h2>
+          <div className="flex items-center gap-4">
+            <NotificationBell />
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1">
+        <div className="p-8">
           {children}
         </div>
       </div>
