@@ -91,6 +91,30 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       ? `${process.env.FRONTEND_URL}/dashboard/landlord/subscription?verify=true`
       : 'http://localhost:3000/dashboard/landlord/subscription?verify=true';
 
+    // === MOCK PAYMENT FLOW FOR TESTING ===
+    if (process.env.PAYSTACK_SECRET_KEY === 'sk_test_akwaaba_mock_key') {
+      const mockReference = `mock_tx_${Date.now()}`;
+      
+      await prisma.subscription.create({
+        data: {
+          landlordId,
+          paymentReference: mockReference,
+          paymentStatus: 'PENDING',
+          startDate: new Date(),
+          endDate: new Date(),
+          isActive: false
+        }
+      });
+
+      // Directly return the callback url as the auth url to simulate instant payment completion
+      res.status(200).json({
+        authorization_url: `${callbackUrl}&reference=${mockReference}`,
+        reference: mockReference
+      });
+      return;
+    }
+    // =====================================
+
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
@@ -157,22 +181,28 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Call Paystack to verify the transaction
-    const response = await axios.get(
-      `https://api.paystack.co/transaction/verify/${paymentReference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+    // === MOCK PAYMENT FLOW FOR TESTING ===
+    if (process.env.PAYSTACK_SECRET_KEY === 'sk_test_akwaaba_mock_key' && paymentReference.startsWith('mock_tx_')) {
+      // Skip the real Paystack API call and pretend it succeeded!
+    } else {
+      // Call Paystack to verify the transaction
+      const response = await axios.get(
+        `https://api.paystack.co/transaction/verify/${paymentReference}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+          }
         }
+      );
+
+      const data = response.data.data;
+
+      if (data.status !== 'success') {
+        res.status(400).json({ message: 'Payment verification failed: Transaction not successful' });
+        return;
       }
-    );
-
-    const data = response.data.data;
-
-    if (data.status !== 'success') {
-      res.status(400).json({ message: 'Payment verification failed: Transaction not successful' });
-      return;
     }
+    // =====================================
 
     // Check if this reference was already processed as active
     const existingSub = await prisma.subscription.findUnique({
