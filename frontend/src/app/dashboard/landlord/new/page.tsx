@@ -194,7 +194,7 @@ export default function NewPropertyPage() {
   };
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-4xl">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">List New Property</h1>
         <p className="text-[var(--muted-foreground)]">Create a stunning listing to attract the best tenants.</p>
