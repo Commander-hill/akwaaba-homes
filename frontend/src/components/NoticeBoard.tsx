@@ -55,10 +55,26 @@ export default function NoticeBoard() {
 
   const getIcon = (type: string | null) => {
     switch (type) {
-      case 'CAUTION': return <AlertTriangle className="w-10 h-10 text-white fill-white" />;
-      case 'PAYMENT': return <CreditCard className="w-10 h-10 text-white fill-white" />;
-      case 'INFO': return <Info className="w-10 h-10 text-white fill-white" />;
-      default: return null;
+      case 'CAUTION':
+        return (
+          <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+        );
+      case 'PAYMENT':
+        return (
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+            <CreditCard className="w-6 h-6" />
+          </div>
+        );
+      case 'INFO':
+        return (
+          <div className="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-lg shadow-sky-500/10">
+            <Info className="w-6 h-6" />
+          </div>
+        );
+      default:
+        return null;
     }
   };
 
