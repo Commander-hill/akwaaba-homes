@@ -451,12 +451,13 @@ export const requestProfileUnlock = async (req: Request, res: Response): Promise
       }
     });
 
-    await logAudit(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, req.ip || req.socket.remoteAddress);
+    const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
+    await logAudit(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, ipAddress);
 
     res.status(200).json({ message: 'Edit request submitted successfully. An administrator will review your request.' });
-  } catch (error) {
-    console.error('Request profile unlock error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+  } catch (error: any) {
+    console.error('Request profile unlock error:', error?.message || error);
+    res.status(500).json({ message: error?.message || 'Internal server error' });
   }
 };
 

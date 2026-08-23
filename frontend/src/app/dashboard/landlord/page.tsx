@@ -108,14 +108,6 @@ export default function LandlordDashboard() {
     }
   });
 
-  if (isLoadingBookings || isLoadingTickets || isLoadingSubs || isLoadingEarnings) {
-    return (
-      <div className="flex justify-center p-12">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100">
@@ -123,6 +115,8 @@ export default function LandlordDashboard() {
       </div>
     );
   }
+
+  const isLoading = isLoadingBookings && isLoadingTickets && isLoadingSubs && isLoadingEarnings;
 
   const bookings = bookingsResponse?.bookings || [];
   const tickets = ticketsResponse?.tickets || [];
@@ -220,7 +214,20 @@ export default function LandlordDashboard() {
       {/* ─── TAB 1: BOOKING REQUESTS ──────────────────────────────────────────────── */}
       {activeTab === 'bookings' && (
         <div className="animate-in space-y-4">
-          {bookings.length === 0 ? (
+          {isLoadingBookings ? (
+            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+              {[1,2,3].map(i => (
+                <div key={i} className="flex gap-4 items-center animate-pulse">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
+                  </div>
+                  <div className="h-7 w-24 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : bookings.length === 0 ? (
             <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
@@ -303,7 +310,20 @@ export default function LandlordDashboard() {
       {/* ─── TAB 2: MAINTENANCE TICKETS ───────────────────────────────────────────── */}
       {activeTab === 'tickets' && (
         <div className="animate-in space-y-4">
-          {tickets.length === 0 ? (
+          {isLoadingTickets ? (
+            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+              {[1,2,3].map(i => (
+                <div key={i} className="flex gap-4 items-center animate-pulse">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-2/3" />
+                  </div>
+                  <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : tickets.length === 0 ? (
             <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
               <CheckCircle className="w-12 h-12 text-emerald-500 mb-3" />
               <h3 className="text-lg font-bold">No maintenance tickets</h3>
@@ -351,7 +371,26 @@ export default function LandlordDashboard() {
       {/* ─── TAB 3: LISTING SUBSCRIPTIONS & RENEWAL REMINDERS ─────────────────────── */}
       {activeTab === 'subscriptions' && (
         <div className="animate-in space-y-6">
-          
+          {isLoadingSubs ? (
+            <div className="glass-card rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="h-20 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+              {[1,2,3].map(i => (
+                <div key={i} className="flex gap-4 items-center animate-pulse">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
+                  </div>
+                  <div className="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+                </div>
+              ))}
+            </div>
+          ) : (
+          <>
           {/* Subscription Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
@@ -467,13 +506,28 @@ export default function LandlordDashboard() {
               </table>
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
 
       {/* ─── TAB 4: FINANCIAL EARNINGS & REVENUE REPORT ───────────────────────────── */}
       {activeTab === 'financials' && (
         <div className="animate-in space-y-6">
-          
+          {isLoadingEarnings ? (
+            <div className="glass-card rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+              <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />
+              {[1,2,3].map(i => (
+                <div key={i} className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse w-full" />
+              ))}
+            </div>
+          ) : (
+          <>
           {/* Action Header */}
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Landlord Financial Earnings Statement</h3>
@@ -623,7 +677,8 @@ export default function LandlordDashboard() {
               </table>
             </div>
           </div>
-
+          </>
+          )}
         </div>
       )}
 
