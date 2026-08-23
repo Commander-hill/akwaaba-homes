@@ -71,8 +71,8 @@ export default function LoginPage() {
                 priority
               />
             </div>
-            <span className="font-extrabold text-xl tracking-tight">
-              <span style={{ background: 'linear-gradient(90deg, #4F46E5, #7C3AED, #E06D53)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Akwaaba</span><span className="text-[#7C6BFF]">Homes</span>
+            <span style={{ background: 'linear-gradient(90deg, #4F46E5, #7C3AED, #E06D53)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} className="font-extrabold text-xl tracking-tight">
+              AkwaabaHomes
             </span>
           </div>
 
