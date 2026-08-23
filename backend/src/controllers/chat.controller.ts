@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { sendPushToUser } from '../services/push.service';
 
 export const getConversations = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -52,7 +52,7 @@ export const getConversations = async (req: Request, res: Response): Promise<voi
 
 export const getMessages = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { conversationId } = req.params;
+    const conversationId = String(req.params.conversationId);
     const userId = req.user?.id;
 
     if (!userId) {
@@ -127,6 +127,66 @@ export const createConversation = async (req: Request, res: Response): Promise<v
     res.status(200).json(conversation);
   } catch (error) {
     console.error('Error creating conversation:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const sendMessage = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const conversationId = String(req.params.conversationId);
+    const { content } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId || !content) {
+      res.status(400).json({ message: 'Missing user ID or content' });
+      return;
+    }
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId }
+    });
+
+    if (!conversation) {
+      res.status(404).json({ message: 'Conversation not found' });
+      return;
+    }
+
+    if (conversation.tenantId !== userId && conversation.landlordId !== userId) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: userId,
+        content
+      }
+    });
+
+    // Update conversation timestamp
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { updatedAt: new Date() }
+    });
+
+    // Trigger Web Push to recipient
+    const recipientId = conversation.tenantId === userId ? conversation.landlordId : conversation.tenantId;
+    const sender = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true }
+    });
+    const senderName = sender ? `${sender.firstName} ${sender.lastName}` : 'Direct Message';
+
+    sendPushToUser(recipientId, {
+      title: `Message from ${senderName}`,
+      body: content.length > 70 ? `${content.substring(0, 67)}...` : content,
+      url: `/dashboard/${req.user?.role === 'TENANT' ? 'landlord' : 'tenant'}`
+    }).catch(() => {});
+
+    res.status(201).json(message);
+  } catch (error) {
+    console.error('Error sending message:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

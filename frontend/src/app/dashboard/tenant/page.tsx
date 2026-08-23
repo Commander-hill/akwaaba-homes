@@ -10,13 +10,14 @@ import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
+import MessagingTab from '@/components/MessagingTab';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety' | 'messages'>('bookings');
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -494,7 +495,23 @@ export default function TenantDashboard() {
         >
           <Siren className="w-4 h-4 animate-pulse text-red-400" /> 24/7 Emergency
         </button>
+
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={clsx(
+            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'messages' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <MessageSquare className="w-4 h-4 text-indigo-500" /> Messages
+        </button>
       </div>
+
+      {activeTab === 'messages' && (
+        <div className="animate-in">
+          <MessagingTab />
+        </div>
+      )}
 
       {activeTab === 'bookings' && (
         <div className="animate-in">

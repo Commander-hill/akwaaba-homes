@@ -43,6 +43,7 @@ import chatRoutes from './routes/chat.routes';
 import agreementRoutes from './routes/agreement.routes';
 import breachRoutes from './routes/breach.routes';
 import transactionRoutes from './routes/transaction.routes';
+import pushRoutes from './routes/push.routes';
 
 import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
@@ -183,6 +184,7 @@ app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/agreements', agreementRoutes);
 app.use('/api/v1/breaches', breachRoutes);
 app.use('/api/v1/transactions', transactionRoutes);
+app.use('/api/v1/push', pushRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(notFoundHandler);

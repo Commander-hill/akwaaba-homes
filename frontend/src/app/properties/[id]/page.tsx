@@ -569,7 +569,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 </div>
               </div>
 
-              <div className="pt-4">
+              <div className="pt-4 space-y-3">
                 <button
                   type="submit"
                   disabled={isBooking || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
@@ -577,6 +577,27 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 >
                   {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : !selectedRoomId ? 'Select a Room' : (selectedRoom && selectedRoom.remainingCapacity === 0) ? 'Room Unavailable' : 'Request to Book'}
                 </button>
+
+                {property.landlordId && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!session) {
+                        router.push('/login');
+                        return;
+                      }
+                      try {
+                        await api.post('/chat/conversations', { partnerId: property.landlordId });
+                        router.push('/dashboard/tenant');
+                      } catch (e) {
+                        router.push('/dashboard/tenant');
+                      }
+                    }}
+                    className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-all text-xs"
+                  >
+                    <Send className="w-4 h-4" /> Chat with Landlord
+                  </button>
+                )}
               </div>
             </form>
           </div>

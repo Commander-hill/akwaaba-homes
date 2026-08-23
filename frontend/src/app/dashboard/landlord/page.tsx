@@ -5,7 +5,7 @@ import api from '@/lib/axios';
 import { 
   Loader2, Users, Mail, Phone, Calendar, Check, X, ShieldAlert, ShieldCheck, 
   CreditCard, Star, PenTool, CheckCircle, Clock, FileSignature, Building, 
-  Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers
+  Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -13,11 +13,12 @@ import clsx from 'clsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
+import MessagingTab from '@/components/MessagingTab';
 import toast from 'react-hot-toast';
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Session Query
@@ -213,7 +214,26 @@ export default function LandlordDashboard() {
           <DollarSign className="w-4 h-4" />
           Earnings & Revenue
         </button>
+
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={clsx(
+            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'messages' 
+              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <MessageSquare className="w-4 h-4 text-indigo-500" />
+          Direct Messages
+        </button>
       </div>
+
+      {activeTab === 'messages' && (
+        <div className="animate-in">
+          <MessagingTab />
+        </div>
+      )}
 
       {/* ─── TAB 1: BOOKING REQUESTS ──────────────────────────────────────────────── */}
       {activeTab === 'bookings' && (

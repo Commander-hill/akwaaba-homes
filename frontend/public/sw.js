@@ -66,3 +66,53 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Push Event - Receive and display native Web Push notifications
+self.addEventListener('push', (event) => {
+  let payload = { title: 'Akwaaba Homes Alert', body: 'You have a new update!', icon: '/logo.png', data: { url: '/' } };
+
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (e) {
+      payload.body = event.data.text();
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon || '/logo.png',
+    badge: '/logo.png',
+    vibrate: [100, 50, 100],
+    data: payload.data || { url: '/' },
+    actions: [
+      { action: 'open', title: 'Open App' },
+      { action: 'close', title: 'Dismiss' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, options)
+  );
+});
+
+// Notification Click Event - Navigate user to relevant page when clicking push notification
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  if (event.action === 'close') return;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
