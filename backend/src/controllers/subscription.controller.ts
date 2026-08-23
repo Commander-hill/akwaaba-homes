@@ -379,3 +379,65 @@ export const checkExpirations = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const getLandlordSubscriptionsOverview = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user.id;
+
+    // Fetch all properties belonging to landlord with their latest subscription
+    const properties = await prisma.property.findMany({
+      where: { landlordId },
+      include: {
+        subscriptions: {
+          orderBy: { createdAt: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    const now = new Date();
+    const overview = properties.map(property => {
+      const sub = property.subscriptions[0] || null;
+      let daysLeft = 0;
+      let isActive = false;
+      let needsRenewalSoon = false;
+
+      if (sub) {
+        const endDate = new Date(sub.endDate);
+        const diffTime = endDate.getTime() - now.getTime();
+        daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        isActive = sub.isActive && endDate > now;
+        needsRenewalSoon = isActive && daysLeft <= 7;
+      }
+
+      return {
+        propertyId: property.id,
+        propertyTitle: property.title,
+        location: property.location,
+        isAvailable: property.isAvailable,
+        subscription: sub ? {
+          id: sub.id,
+          paymentReference: sub.paymentReference,
+          startDate: sub.startDate,
+          endDate: sub.endDate,
+          paymentStatus: sub.paymentStatus,
+          isActive,
+          daysLeft,
+          needsRenewalSoon
+        } : null
+      };
+    });
+
+    const stats = {
+      totalProperties: properties.length,
+      activeSubscriptions: overview.filter(p => p.subscription?.isActive).length,
+      expiringSoon: overview.filter(p => p.subscription?.needsRenewalSoon).length,
+      unsubscribedOrExpired: overview.filter(p => !p.subscription?.isActive).length
+    };
+
+    res.status(200).json({ stats, properties: overview });
+  } catch (error) {
+    console.error('Error fetching landlord subscriptions overview:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
