@@ -7,6 +7,7 @@ import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
 import { getSystemConfig, invalidateConfigCache } from '../utils/config.service';
+import { emitToAll } from '../socket';
 
 export const getAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -643,6 +644,12 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
     });
 
     invalidateConfigCache();
+
+    try {
+      emitToAll('config_updated', updatedConfig);
+    } catch (e) {
+      console.error('Failed to emit config_updated socket event', e);
+    }
 
     await logAudit(
       req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL',

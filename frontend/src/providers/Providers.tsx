@@ -3,8 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-
 import { ThemeProvider } from 'next-themes';
+import { SocketProvider } from './SocketProvider';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -24,13 +24,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Setup QueryClient inside useState to ensure it's not recreated on every render
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1 minute
+            staleTime: 60 * 1000,
             refetchOnWindowFocus: false,
           },
         },
@@ -40,8 +39,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
-        {children}
-        <Toaster />
+        <SocketProvider>
+          {children}
+          <Toaster />
+        </SocketProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

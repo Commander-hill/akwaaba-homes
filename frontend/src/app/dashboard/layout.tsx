@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, ShieldCheck, Building, CreditCard, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
-import { SocketProvider } from '@/providers/SocketProvider';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -103,9 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-full">
-          <SocketProvider>
-            {children}
-          </SocketProvider>
+          {children}
         </div>
       </div>
     </div>

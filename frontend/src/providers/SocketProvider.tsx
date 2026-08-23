@@ -116,6 +116,16 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     });
 
+    socketInstance.on('config_updated', (data: any) => {
+      console.log('⚡ Instant config update received via Socket:', data);
+      if (data) {
+        queryClient.setQueryData(['public-config'], data);
+        queryClient.setQueryData(['admin-config'], data);
+      }
+      queryClient.invalidateQueries({ queryKey: ['public-config'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-config'] });
+    });
+
     setSocket(socketInstance);
 
     return () => {
