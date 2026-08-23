@@ -38,23 +38,23 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
   const portalName = user.role === 'ADMIN' ? 'Admin Portal' : user.role === 'LANDLORD' ? 'Landlord Portal' : 'Tenant Portal';
 
   return (
-    <div className="w-64 h-screen shrink-0 bg-white dark:bg-[#111111] border-r border-slate-200 dark:border-slate-800 flex flex-col transition-colors z-20">
+    <div className="w-64 h-screen shrink-0 bg-gradient-to-b from-[#2E1065] via-[#4C1D95] to-[#701A75] text-white border-r border-white/10 flex flex-col transition-colors z-20 shadow-2xl">
       
       {/* Header / Logo */}
-      <div className="h-20 flex items-center px-6 shrink-0 border-b border-slate-100 dark:border-slate-800/50">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-[var(--primary)]/20 shrink-0">
+      <div className="h-20 flex items-center px-6 shrink-0 border-b border-white/10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg ring-2 ring-white/20 shrink-0">
             <Image
               src="/logo.png"
               alt="Akwaaba Homes"
-              width={36}
-              height={36}
+              width={40}
+              height={40}
               className="w-full h-full object-cover"
               priority
             />
           </div>
-          <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
-            Akwaaba<span className="text-[var(--primary)]">Homes</span>
+          <span className="font-extrabold text-xl tracking-tight text-white drop-shadow-sm">
+            Akwaaba<span className="text-amber-300">Homes</span>
           </span>
         </div>
       </div>
@@ -63,18 +63,18 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
       <div className="px-4 py-4 shrink-0">
         <button 
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md transition-all shadow-sm"
         >
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-500/20 rounded-full flex items-center justify-center text-[var(--primary)] font-bold text-sm shrink-0">
+            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white font-extrabold text-sm shrink-0 border border-white/20">
               {user.firstName[0]}{user.lastName[0]}
             </div>
             <div className="text-left overflow-hidden">
-              <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{portalName}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email || 'Personal Account'}</div>
+              <div className="text-sm font-bold text-white truncate">{portalName}</div>
+              <div className="text-xs text-white/70 truncate">{user.email || 'Personal Account'}</div>
             </div>
           </div>
-          <ChevronsUpDown className="w-4 h-4 text-slate-400 shrink-0" />
+          <ChevronsUpDown className="w-4 h-4 text-white/70 shrink-0" />
         </button>
       </div>
 
@@ -84,7 +84,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
           {groups.map((group, groupIdx) => (
             <div key={groupIdx}>
               {group.title && (
-                <h4 className="px-3 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+                <h4 className="px-3 text-xs font-bold text-white/50 uppercase tracking-wider mb-2">
                   {group.title}
                 </h4>
               )}
@@ -100,17 +100,17 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
                       className="relative block"
                     >
                       <div className={clsx(
-                        "flex items-center justify-between px-3 py-2.5 rounded-lg transition-all",
+                        "flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all",
                         isActive 
-                          ? "bg-indigo-50/80 dark:bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)] font-semibold" 
-                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
+                          ? "bg-white/20 text-white font-bold shadow-lg backdrop-blur-md border border-white/20" 
+                          : "text-white/75 hover:bg-white/10 hover:text-white font-medium"
                       )}>
                         <div className="flex items-center gap-3">
-                          <Icon className={clsx("w-5 h-5", isActive ? "text-[var(--primary)]" : "text-slate-400")} />
+                          <Icon className={clsx("w-5 h-5", isActive ? "text-amber-300" : "text-white/70")} />
                           <span className="text-sm">{link.name}</span>
                         </div>
                         {link.badge !== undefined && link.badge > 0 && (
-                          <div className="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
+                          <div className="w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-sm">
                             {link.badge}
                           </div>
                         )}
@@ -118,7 +118,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
                       
                       {/* Active Indicator Line */}
                       {isActive && (
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[var(--primary)] rounded-l-full shadow-[0_0_8px_var(--primary)] shadow-[var(--primary)]/50" />
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-amber-400 rounded-l-full shadow-[0_0_10px_#F59E0B]" />
                       )}
                     </Link>
                   );
@@ -132,25 +132,24 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
         <div className="mt-8 px-3">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all font-bold text-sm"
+            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/25 transition-all font-bold text-sm shadow-sm"
           >
-            <LogOut className="w-5 h-5" />
+            <LogOut className="w-5 h-5 text-rose-300" />
             <span>Sign Out</span>
           </button>
         </div>
       </div>
 
       {/* Footer User Profile & Storage Card */}
-      <div className="p-4 shrink-0 border-t border-slate-100 dark:border-slate-800/50">
+      <div className="p-4 shrink-0 border-t border-white/10">
         
-        {/* Optional Stats Card could go here */}
-        <div className="mb-4 p-4 rounded-xl bg-slate-900 dark:bg-slate-800/50 border border-slate-800 overflow-hidden relative group">
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-50" />
+        {/* Stats / Plan Card */}
+        <div className="mb-4 p-4 rounded-2xl bg-black/30 backdrop-blur-md border border-white/15 overflow-hidden relative group shadow-inner">
           <div className="relative z-10">
-            <h4 className="text-sm font-bold text-white mb-1">Premium Plan</h4>
-            <p className="text-xs text-slate-400 mb-3">{user.role} Access active</p>
-            <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 w-3/4" />
+            <h4 className="text-sm font-extrabold text-white mb-0.5">Premium Plan</h4>
+            <p className="text-xs text-white/70 mb-3">{user.role} Access active</p>
+            <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-400 via-rose-400 to-amber-300 w-3/4 rounded-full shadow-[0_0_8px_#F59E0B]" />
             </div>
           </div>
         </div>
@@ -158,14 +157,13 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
         {/* User Footer Action */}
         <div className="flex items-center justify-between px-2">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden shrink-0 border border-slate-300 dark:border-slate-600">
+            <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden shrink-0 border border-white/30">
                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.firstName}%20${user.lastName}&backgroundColor=6366f1`} alt="avatar" className="w-full h-full object-cover" />
             </div>
             <div className="text-left truncate">
-              <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.firstName}</div>
+              <div className="text-sm font-bold text-white truncate">{user.firstName} {user.lastName}</div>
             </div>
           </div>
-          {/* We removed the small logout icon from here since we added a prominent one in the menu above */}
         </div>
 
       </div>
