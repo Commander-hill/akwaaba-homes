@@ -73,7 +73,7 @@ export default function AdminUsersPage() {
   };
 
   const handleToggleLock = (user: any) => {
-    const nextState = !user.isProfileLocked;
+    const nextState = user.profileUnlockRequested ? false : !user.isProfileLocked;
     setProcessingId(user.id + 'lock');
     lockMutation.mutate({ id: user.id, isProfileLocked: nextState });
   };
