@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
-
-import { Loader2, ShieldCheck, User as UserIcon, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Loader2, ShieldCheck, User as UserIcon, CheckCircle, XCircle, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [suspensionTarget, setSuspensionTarget] = useState<{ user: any; action: 'suspend' | 'unsuspend' } | null>(null);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -44,6 +44,7 @@ export default function AdminUsersPage() {
     onSuccess: (data) => {
       toast.success(data?.message || 'User status updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setSuspensionTarget(null);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update user suspension state');
@@ -56,16 +57,18 @@ export default function AdminUsersPage() {
     verifyMutation.mutate({ id, status });
   };
 
-  const handleSuspend = (id: string, isSuspended: boolean) => {
-    if (isSuspended && !confirm('Are you sure you want to suspend this user? They will be logged out immediately and blocked from accessing the platform.')) return;
-    setProcessingId(id + 'suspend');
-    suspendMutation.mutate({ id, isSuspended });
+  const executeSuspensionToggle = () => {
+    if (!suspensionTarget) return;
+    const { user, action } = suspensionTarget;
+    const isSuspended = action === 'suspend';
+    setProcessingId(user.id + 'suspend');
+    suspendMutation.mutate({ id: user.id, isSuspended });
   };
 
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">User Management</h1>
@@ -104,7 +107,7 @@ export default function AdminUsersPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 font-medium">
-                    <span className={`px-2 py-1 rounded-md text-xs ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
                       {user.role}
                     </span>
                   </td>
@@ -135,20 +138,20 @@ export default function AdminUsersPage() {
                       {user.role !== 'ADMIN' && (
                         user.isSuspended ? (
                           <button 
-                            onClick={() => handleSuspend(user.id, false)} 
+                            onClick={() => setSuspensionTarget({ user, action: 'unsuspend' })} 
                             disabled={processingId === user.id + 'suspend'} 
-                            className="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md text-xs font-bold w-fit inline-flex items-center gap-1 hover:bg-emerald-200 transition-colors"
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                           >
-                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                             Unsuspend Account
                           </button>
                         ) : (
                           <button 
-                            onClick={() => handleSuspend(user.id, true)} 
+                            onClick={() => setSuspensionTarget({ user, action: 'suspend' })} 
                             disabled={processingId === user.id + 'suspend'} 
-                            className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md text-xs font-bold w-fit inline-flex items-center gap-1 hover:bg-red-200 transition-colors"
+                            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
                           >
-                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                             Suspend Account
                           </button>
                         )
@@ -162,6 +165,58 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
+      {/* ─── SUSPENSION CONFIRMATION MODAL ────────────────────────────────────────── */}
+      {suspensionTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 space-y-5 border border-[var(--border)] shadow-2xl">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-500">
+              <div className="p-3 bg-red-100 dark:bg-red-950/50 rounded-xl">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-lg text-[var(--foreground)]">
+                  {suspensionTarget.action === 'suspend' ? 'Confirm User Suspension' : 'Confirm Account Unsuspension'}
+                </h3>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  {suspensionTarget.user.firstName} {suspensionTarget.user.lastName} ({suspensionTarget.user.email})
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
+              {suspensionTarget.action === 'suspend' ? (
+                <>Are you sure you want to suspend this account? The user will be <strong>logged out immediately</strong> and blocked from logging in or booking properties.</>
+              ) : (
+                <>Are you sure you want to unsuspend this account? The user will regain full platform access.</>
+              )}
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-[var(--border)]">
+              <button
+                onClick={() => setSuspensionTarget(null)}
+                disabled={suspendMutation.isPending}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeSuspensionToggle}
+                disabled={suspendMutation.isPending}
+                className={`px-5 py-2 text-white text-xs font-bold rounded-xl inline-flex items-center gap-2 shadow-md transition-all ${
+                  suspensionTarget.action === 'suspend' 
+                    ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' 
+                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
+                }`}
+              >
+                {suspendMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {suspensionTarget.action === 'suspend' ? 'Yes, Suspend Account' : 'Yes, Unsuspend Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── REVIEW ID MODAL ────────────────────────────────────────────────────── */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl border border-[var(--border)] max-h-[90vh] flex flex-col">
