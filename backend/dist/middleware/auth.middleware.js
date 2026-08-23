@@ -18,7 +18,7 @@ const authenticate = async (req, res, next) => {
     }
     const decoded = (0, jwt_1.verifyAccessToken)(token);
     if (!decoded) {
-        res.status(403).json({ message: 'Invalid or expired token.' });
+        res.status(401).json({ message: 'Invalid or expired token.' });
         return;
     }
     // Check if user is suspended

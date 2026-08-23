@@ -43,11 +43,13 @@ const createTicket = async (req, res) => {
         const property = await prisma_1.default.property.findUnique({ where: { id: propertyId } });
         if (property) {
             try {
-                (0, socket_1.getIO)().to(property.landlordId).emit('notification', {
+                const io = (0, socket_1.getIO)();
+                io.to(property.landlordId).emit('notification', {
                     title: 'New Maintenance Ticket',
                     message: `A new ${priority || 'MEDIUM'} priority ticket was submitted for ${property.title}.`,
                     type: 'ticket'
                 });
+                io.to(property.landlordId).emit('ticket_created', { ticket, propertyTitle: property.title });
             }
             catch (e) {
                 console.error('Socket emission failed', e);
@@ -143,13 +145,16 @@ const updateTicketStatus = async (req, res) => {
             where: { id },
             data: { status }
         });
-        // Notify tenant
+        // Notify tenant and landlord real-time sync
         try {
-            (0, socket_1.getIO)().to(ticket.tenantId).emit('notification', {
+            const io = (0, socket_1.getIO)();
+            io.to(ticket.tenantId).emit('notification', {
                 title: `Ticket ${status}`,
                 message: `Your maintenance ticket "${ticket.title}" is now ${status.toLowerCase()}.`,
                 type: 'ticket'
             });
+            io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
+            io.to(ticket.property.landlordId).emit('ticket_updated', { ticket: updatedTicket });
         }
         catch (e) {
             console.error('Socket emission failed', e);

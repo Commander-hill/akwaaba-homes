@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIO = exports.initializeSocket = void 0;
+exports.emitToAll = exports.emitToUser = exports.getIO = exports.initializeSocket = void 0;
 const socket_io_1 = require("socket.io");
 const prisma_1 = __importDefault(require("./utils/prisma"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -12,7 +12,7 @@ let io;
 const initializeSocket = (server) => {
     io = new socket_io_1.Server(server, {
         cors: {
-            origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+            origin: true, // Allow any origin, reflecting it back (matches Express config)
             methods: ['GET', 'POST'],
             credentials: true,
         },
@@ -41,6 +41,20 @@ const initializeSocket = (server) => {
         console.log(`🔌 User connected: ${socket.user?.id}`);
         // Join a personal room for the user to receive private messages
         socket.join(socket.user.id);
+        // Schedule automatic disconnect when token expires
+        let expiryTimer = null;
+        if (socket.user?.exp) {
+            const timeUntilExpiry = (socket.user.exp * 1000) - Date.now();
+            if (timeUntilExpiry <= 0) {
+                socket.disconnect(true);
+                return;
+            }
+            expiryTimer = setTimeout(() => {
+                console.log(`🔌 Socket auto-disconnected due to token expiration for user: ${socket.user?.id}`);
+                socket.emit('auth_expired', { message: 'Session token expired. Please refresh your session.' });
+                socket.disconnect(true);
+            }, timeUntilExpiry);
+        }
         // Join a specific conversation room (optional, but good for keeping track of active chats)
         socket.on('join_conversation', (conversationId) => {
             socket.join(conversationId);
@@ -84,6 +98,8 @@ const initializeSocket = (server) => {
             socket.to(data.conversationId).emit('stop_typing', { senderId: socket.user.id });
         });
         socket.on('disconnect', () => {
+            if (expiryTimer)
+                clearTimeout(expiryTimer);
             console.log(`🔌 User disconnected: ${socket.user?.id}`);
         });
     });
@@ -98,4 +114,28 @@ const getIO = () => {
     return io;
 };
 exports.getIO = getIO;
+// Safe helper to emit an event to a specific user room
+const emitToUser = (userId, event, payload) => {
+    try {
+        if (io) {
+            io.to(userId).emit(event, payload);
+        }
+    }
+    catch (err) {
+        console.error(`Failed to emit socket event ${event} to user ${userId}:`, err);
+    }
+};
+exports.emitToUser = emitToUser;
+// Safe helper to broadcast an event to all connected sockets
+const emitToAll = (event, payload) => {
+    try {
+        if (io) {
+            io.emit(event, payload);
+        }
+    }
+    catch (err) {
+        console.error(`Failed to broadcast socket event ${event}:`, err);
+    }
+};
+exports.emitToAll = emitToAll;
 //# sourceMappingURL=socket.js.map

@@ -166,6 +166,14 @@ const login = async (req, res) => {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
+        // BLOCK SUSPENDED USERS
+        if (user.isSuspended) {
+            res.status(403).json({
+                message: 'Your account has been suspended by platform administration due to policy violations. Please contact support for assistance.',
+                isSuspended: true
+            });
+            return;
+        }
         // BLOCK UNVERIFIED USERS
         if (!user.isEmailVerified) {
             res.status(403).json({

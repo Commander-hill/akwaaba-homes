@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 export declare const getAuditLogs: (req: Request, res: Response) => Promise<void>;
 export declare const getSystemStats: (req: Request, res: Response) => Promise<void>;
+export declare const getPlatformAnalytics: (req: Request, res: Response) => Promise<void>;
 export declare const getAllUsers: (req: Request, res: Response) => Promise<void>;
 export declare const toggleUserSuspension: (req: Request, res: Response) => Promise<void>;
 export declare const getAllProperties: (req: Request, res: Response) => Promise<void>;
@@ -11,6 +12,12 @@ export declare const verifyUserCard: (req: Request, res: Response) => Promise<vo
 export declare const getAllReviews: (req: Request, res: Response) => Promise<void>;
 export declare const deleteReview: (req: Request, res: Response) => Promise<void>;
 export declare const activateSubscription: (req: Request, res: Response) => Promise<void>;
+export declare const revokeSubscription: (req: Request, res: Response) => Promise<void>;
 export declare const resolveAppeal: (req: Request, res: Response) => Promise<void>;
 export declare const getSystemActivity: (req: Request, res: Response) => Promise<void>;
+export declare const getConfig: (req: Request, res: Response) => Promise<void>;
+export declare const updateConfig: (req: Request, res: Response) => Promise<void>;
+export declare const getAllTickets: (req: Request, res: Response) => Promise<void>;
+export declare const adminUpdateTicketStatus: (req: Request, res: Response) => Promise<void>;
+export declare const broadcastNotification: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=admin.controller.d.ts.map

@@ -7,6 +7,8 @@ const router = (0, express_1.Router)();
 // Tenant routes
 router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.createBooking);
 router.get('/me', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getTenantBookings);
+router.post('/:id/pay', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT']), booking_controller_1.payBooking);
+router.post('/:id/verify-payment', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT']), booking_controller_1.verifyPayment);
 // Landlord routes
 router.get('/landlord', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD', 'ADMIN']), booking_controller_1.getLandlordBookings);
 router.put('/:id/status', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD', 'ADMIN']), booking_controller_1.updateBookingStatus);

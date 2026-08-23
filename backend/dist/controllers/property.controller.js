@@ -3,47 +3,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLandlordStats = exports.deleteProperty = exports.updateProperty = exports.getPropertyById = exports.getProperties = exports.createProperty = void 0;
+exports.getLandlordStats = exports.getLandlordProperties = exports.deleteProperty = exports.updateProperty = exports.getPropertyById = exports.getProperties = exports.createProperty = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
 const cache_1 = __importDefault(require("../utils/cache"));
-// Helper to safely parse JSON strings from SQLite
+const json_1 = require("../utils/json");
+// Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property) => {
+    if (!property)
+        return property;
     return {
         ...property,
-        amenities: property.amenities ? JSON.parse(property.amenities) : [],
-        images: property.images ? JSON.parse(property.images) : [],
+        amenities: (0, json_1.safeJsonParse)(property.amenities, []),
+        images: (0, json_1.safeJsonParse)(property.images, []),
     };
 };
 const createProperty = async (req, res) => {
     try {
         const landlordId = req.user.id;
-        const { title, type, roomType, roomCapacity, description, price, location, latitude, longitude, amenities, images, videoUrl } = req.body;
-        if (!title || !type || !roomType || !roomCapacity || !description || !price || !location) {
-            res.status(400).json({ message: 'Missing required fields' });
+        const { title, type, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
+        if (!title || !type || !description || !location || !rooms || !Array.isArray(rooms) || rooms.length === 0) {
+            res.status(400).json({ message: 'Missing required fields or no rooms provided.' });
             return;
         }
-        // ENFORCE SUBSCRIPTION WALL
-        const activeSub = await prisma_1.default.subscription.findFirst({
-            where: {
-                landlordId,
-                isActive: true,
-                endDate: { gt: new Date() }
-            }
-        });
-        if (!activeSub) {
-            res.status(403).json({ message: 'Active subscription required to list properties' });
-            return;
-        }
+        // ENFORCE SUBSCRIPTION WALL IS REMOVED
+        // Properties are now created as isAvailable = false until a listing fee is paid.
+        // Find the minimum price among the provided rooms to set as the property floor price
+        const minPrice = Math.min(...rooms.map((r) => parseFloat(r.price)));
         const newProperty = await prisma_1.default.property.create({
             data: {
                 landlordId,
                 title,
                 type,
-                roomType,
-                roomCapacity: parseInt(roomCapacity, 10),
                 description,
-                price: parseFloat(price),
+                price: minPrice,
                 location,
                 latitude: latitude ? parseFloat(latitude) : null,
                 longitude: longitude ? parseFloat(longitude) : null,
@@ -51,7 +44,17 @@ const createProperty = async (req, res) => {
                 amenities: JSON.stringify(amenities || []),
                 images: JSON.stringify(images || []),
                 videoUrl: videoUrl || null,
+                isAvailable: false, // Property is hidden until the listing fee is paid
+                rooms: {
+                    create: rooms.map((r) => ({
+                        roomType: r.roomType,
+                        bedsPerRoom: parseInt(r.roomType.split(' ')[0], 10) || 1,
+                        numberOfRooms: parseInt(r.numberOfRooms, 10),
+                        price: parseFloat(r.price)
+                    }))
+                }
             },
+            include: { rooms: true }
         });
         // Invalidate properties cache
         const keys = cache_1.default.keys();
@@ -92,7 +95,7 @@ const getProperties = async (req, res) => {
             queryOptions.where.type = String(type);
         }
         if (roomType) {
-            queryOptions.where.roomType = String(roomType);
+            queryOptions.where.rooms = { some: { roomType: String(roomType) } };
         }
         if (amenity) {
             queryOptions.where.amenities = { contains: String(amenity) };
@@ -108,11 +111,35 @@ const getProperties = async (req, res) => {
                 queryOptions.where.price.lte = parseFloat(String(maxPrice));
         }
         const [properties, totalCount] = await Promise.all([
-            prisma_1.default.property.findMany(queryOptions),
+            prisma_1.default.property.findMany({
+                ...queryOptions,
+                include: { rooms: true }
+            }),
             prisma_1.default.property.count({ where: queryOptions.where }),
         ]);
+        // Compute remaining capacity for each property
+        const propertyIds = properties.map((p) => p.id);
+        const completedBookingCounts = await prisma_1.default.booking.groupBy({
+            by: ['propertyId'],
+            where: { propertyId: { in: propertyIds }, status: 'COMPLETED' },
+            _count: { id: true }
+        });
+        const bookingCountMap = {};
+        completedBookingCounts.forEach((b) => { bookingCountMap[b.propertyId] = b._count.id; });
         const responseData = {
-            data: properties.map(parseProperty),
+            data: properties.map((p) => {
+                const parsed = parseProperty(p);
+                let totalCapacity = 0;
+                if (p.rooms && Array.isArray(p.rooms)) {
+                    totalCapacity = p.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
+                }
+                const completedCount = bookingCountMap[p.id] || 0;
+                return {
+                    ...parsed,
+                    totalCapacity,
+                    remainingCapacity: Math.max(0, totalCapacity - completedCount),
+                };
+            }),
             pagination: {
                 total: totalCount,
                 page: Number(page),
@@ -142,14 +169,48 @@ const getPropertyById = async (req, res) => {
                         lastName: true,
                         reputationScore: true,
                     }
-                }
+                },
+                rooms: true
             }
         });
         if (!property) {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        res.status(200).json({ property: parseProperty(property) });
+        // Compute real-time remaining capacity for the whole property
+        const completedCount = await prisma_1.default.booking.count({
+            where: { propertyId: property.id, status: 'COMPLETED' }
+        });
+        let totalCapacity = 0;
+        if (property.rooms && Array.isArray(property.rooms)) {
+            totalCapacity = property.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
+        }
+        const remainingCapacity = Math.max(0, totalCapacity - completedCount);
+        // Compute remaining capacity for EACH room individually
+        const roomBookingCounts = await prisma_1.default.booking.groupBy({
+            by: ['roomId'],
+            where: { propertyId: property.id, status: 'COMPLETED', roomId: { not: null } },
+            _count: { id: true }
+        });
+        const roomBookingMap = {};
+        roomBookingCounts.forEach((b) => { if (b.roomId)
+            roomBookingMap[b.roomId] = b._count.id; });
+        const enrichedRooms = (property.rooms || []).map((room) => {
+            const roomTotalCapacity = room.numberOfRooms * room.bedsPerRoom;
+            const roomCompletedCount = roomBookingMap[room.id] || 0;
+            return {
+                ...room,
+                totalCapacity: roomTotalCapacity,
+                remainingCapacity: Math.max(0, roomTotalCapacity - roomCompletedCount)
+            };
+        });
+        const enrichedProperty = {
+            ...parseProperty(property),
+            rooms: enrichedRooms,
+            totalCapacity,
+            remainingCapacity
+        };
+        res.status(200).json({ property: enrichedProperty });
     }
     catch (error) {
         console.error('Error fetching property by ID:', error);
@@ -161,7 +222,7 @@ const updateProperty = async (req, res) => {
     try {
         const landlordId = req.user.id;
         const { id } = req.params;
-        const { title, type, roomType, roomCapacity, description, price, location, amenities, images, videoUrl, isAvailable } = req.body;
+        const { title, type, description, location, amenities, images, videoUrl, isAvailable } = req.body;
         const property = await prisma_1.default.property.findUnique({ where: { id } });
         if (!property) {
             res.status(404).json({ message: 'Property not found' });
@@ -176,10 +237,7 @@ const updateProperty = async (req, res) => {
             data: {
                 title: title || property.title,
                 type: type || property.type,
-                roomType: roomType || property.roomType,
-                roomCapacity: roomCapacity ? parseInt(roomCapacity, 10) : property.roomCapacity,
                 description: description || property.description,
-                price: price ? parseFloat(price) : property.price,
                 location: location || property.location,
                 amenities: amenities ? JSON.stringify(amenities) : property.amenities,
                 images: images ? JSON.stringify(images) : property.images,
@@ -227,6 +285,22 @@ const deleteProperty = async (req, res) => {
     }
 };
 exports.deleteProperty = deleteProperty;
+const getLandlordProperties = async (req, res) => {
+    try {
+        const landlordId = req.user.id;
+        const properties = await prisma_1.default.property.findMany({
+            where: { landlordId },
+            include: { rooms: true },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ data: properties.map(parseProperty) });
+    }
+    catch (error) {
+        console.error('Error fetching landlord properties:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getLandlordProperties = getLandlordProperties;
 const getLandlordStats = async (req, res) => {
     try {
         const landlordId = req.user.id;

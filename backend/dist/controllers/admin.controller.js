@@ -3,12 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSystemActivity = exports.resolveAppeal = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserSuspension = exports.getAllUsers = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
 const auditLogger_1 = require("../utils/auditLogger");
 const cache_1 = __importDefault(require("../utils/cache"));
+const json_1 = require("../utils/json");
+const config_service_1 = require("../utils/config.service");
+const socket_1 = require("../socket");
 const getAuditLogs = async (req, res) => {
     try {
         const logs = await prisma_1.default.auditLog.findMany({
@@ -36,9 +39,12 @@ const getSystemStats = async (req, res) => {
         const totalLandlords = await prisma_1.default.user.count({ where: { role: 'LANDLORD' } });
         const totalProperties = await prisma_1.default.property.count();
         const totalBookings = await prisma_1.default.booking.count();
-        // Sum all successful subscriptions (assuming GHS 50 each for now, or you could sum a price field if it existed)
-        const totalSubscriptions = await prisma_1.default.subscription.count({ where: { isActive: true } });
-        const totalRevenue = totalSubscriptions * 50;
+        // Sum all successful transaction amounts (total platform transaction volume)
+        const transactionSum = await prisma_1.default.transaction.aggregate({
+            _sum: { amount: true },
+            where: { status: 'SUCCESS' }
+        });
+        const totalRevenue = transactionSum._sum.amount || 0;
         // Generate 6 months of historical data based on current totals for the chart
         const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
         const monthlyGrowth = months.map((month, index) => {
@@ -68,6 +74,106 @@ const getSystemStats = async (req, res) => {
     }
 };
 exports.getSystemStats = getSystemStats;
+const getPlatformAnalytics = async (req, res) => {
+    try {
+        const cachedAnalytics = cache_1.default.get('admin_analytics');
+        if (cachedAnalytics) {
+            res.status(200).json(cachedAnalytics);
+            return;
+        }
+        // 1. Conversion Metrics
+        const totalBookings = await prisma_1.default.booking.count();
+        const approvedBookings = await prisma_1.default.booking.count({ where: { status: 'APPROVED' } });
+        const paidBookings = await prisma_1.default.booking.count({ where: { status: 'COMPLETED' } });
+        const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
+        // 2. Revenue Metrics
+        const totalTransactions = await prisma_1.default.transaction.aggregate({
+            _sum: { amount: true },
+            where: { status: 'SUCCESS' }
+        });
+        const totalRevenueGhs = totalTransactions._sum.amount || 0;
+        // 3. Top 5 Landlords by Revenue
+        const landlordGroup = await prisma_1.default.transaction.groupBy({
+            by: ['landlordId'],
+            _sum: { amount: true },
+            where: { status: 'SUCCESS' },
+            orderBy: { _sum: { amount: 'desc' } },
+            take: 5
+        });
+        const landlordIds = landlordGroup.map(g => g.landlordId);
+        const landlords = await prisma_1.default.user.findMany({
+            where: { id: { in: landlordIds } },
+            select: { id: true, firstName: true, lastName: true, email: true }
+        });
+        const topLandlords = landlordGroup.map((g, index) => {
+            const l = landlords.find(u => u.id === g.landlordId);
+            return {
+                rank: index + 1,
+                landlordId: g.landlordId,
+                name: l ? `${l.firstName} ${l.lastName}` : 'Landlord',
+                email: l ? l.email : 'N/A',
+                totalEarningsGhs: g._sum.amount || 0
+            };
+        });
+        // 4. Geographical Density (Properties by Location / Region)
+        const properties = await prisma_1.default.property.findMany({
+            select: { location: true }
+        });
+        const locationCounts = {};
+        properties.forEach(p => {
+            let loc = p.location || 'Other Region';
+            const lower = loc.toLowerCase();
+            if (lower.includes('ucc') || lower.includes('cape coast'))
+                loc = 'UCC / Cape Coast';
+            else if (lower.includes('legon') || lower.includes('accra'))
+                loc = 'UG Legon / Accra';
+            else if (lower.includes('knust') || lower.includes('kumasi'))
+                loc = 'KNUST / Kumasi';
+            else if (lower.includes('uew') || lower.includes('winneba'))
+                loc = 'UEW / Winneba';
+            else if (lower.includes('uenr') || lower.includes('sunyani'))
+                loc = 'UENR / Sunyani';
+            locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+        });
+        const geographicalDensity = Object.keys(locationCounts).map(region => ({
+            region,
+            propertyCount: locationCounts[region]
+        }));
+        // 5. Monthly Signup & Growth Trends (6 months)
+        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+        const totalUsers = await prisma_1.default.user.count();
+        const totalProperties = await prisma_1.default.property.count();
+        const monthlyTrends = months.map((month, index) => {
+            const factor = (index + 1) / 6;
+            return {
+                month,
+                tenants: Math.round(totalUsers * 0.75 * factor),
+                landlords: Math.round(totalUsers * 0.25 * factor),
+                approvedProperties: Math.round(totalProperties * factor),
+                revenueGhs: Math.round(totalRevenueGhs * factor)
+            };
+        });
+        const analyticsData = {
+            funnel: {
+                totalBookings,
+                approvedBookings,
+                paidBookings,
+                conversionRate: parseFloat(conversionRate)
+            },
+            totalRevenueGhs,
+            topLandlords,
+            geographicalDensity,
+            monthlyTrends
+        };
+        cache_1.default.set('admin_analytics', analyticsData, 60);
+        res.status(200).json(analyticsData);
+    }
+    catch (error) {
+        console.error('Error fetching platform analytics:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPlatformAnalytics = getPlatformAnalytics;
 const getAllUsers = async (req, res) => {
     try {
         const users = await prisma_1.default.user.findMany({
@@ -102,6 +208,7 @@ const toggleUserSuspension = async (req, res) => {
     try {
         const { id } = req.params;
         const { isSuspended } = req.body;
+        const targetSuspensionState = Boolean(isSuspended);
         // Prevent suspending self or other admins
         const targetUser = await prisma_1.default.user.findUnique({ where: { id } });
         if (!targetUser) {
@@ -109,18 +216,32 @@ const toggleUserSuspension = async (req, res) => {
             return;
         }
         if (targetUser.role === 'ADMIN') {
-            res.status(403).json({ message: 'Cannot suspend an administrator' });
+            res.status(403).json({ message: 'Cannot suspend an administrator account' });
             return;
         }
-        const user = await prisma_1.default.user.update({
+        const updatedUser = await prisma_1.default.user.update({
             where: { id },
-            data: { isSuspended },
-            select: { id: true, isSuspended: true }
+            data: { isSuspended: targetSuspensionState },
+            select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true }
         });
-        await (0, auditLogger_1.logAudit)(req.user.id, isSuspended ? 'SUSPEND_USER' : 'UNSUSPEND_USER', 'User', id, { isSuspended: targetUser.isSuspended }, { isSuspended }, req.ip || req.socket.remoteAddress);
-        res.status(200).json({ message: `User ${isSuspended ? 'suspended' : 'unsuspended'} successfully`, user });
+        if (targetSuspensionState) {
+            // Invalidate all active sessions for suspended user immediately
+            await prisma_1.default.session.deleteMany({ where: { userId: id } });
+        }
+        try {
+            (0, socket_1.emitToAll)('user_updated', { userId: id, isSuspended: targetSuspensionState });
+        }
+        catch (e) {
+            console.warn('Socket notification for user suspension failed:', e);
+        }
+        await (0, auditLogger_1.logAudit)(req.user.id, targetSuspensionState ? 'SUSPEND_USER' : 'UNSUSPEND_USER', 'User', id, { isSuspended: targetUser.isSuspended }, { isSuspended: targetSuspensionState }, req.ip || req.socket.remoteAddress);
+        res.status(200).json({
+            message: `User ${updatedUser.firstName} ${updatedUser.lastName} has been ${targetSuspensionState ? 'suspended' : 'unsuspended'} successfully.`,
+            user: updatedUser
+        });
     }
     catch (error) {
+        console.error('Error toggling user suspension:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -135,8 +256,8 @@ const getAllProperties = async (req, res) => {
         });
         const parsedProperties = properties.map(p => ({
             ...p,
-            images: p.images ? JSON.parse(p.images) : [],
-            amenities: p.amenities ? JSON.parse(p.amenities) : []
+            images: (0, json_1.safeJsonParse)(p.images, []),
+            amenities: (0, json_1.safeJsonParse)(p.amenities, [])
         }));
         res.status(200).json(parsedProperties);
     }
@@ -204,15 +325,28 @@ const getAllBookings = async (req, res) => {
 exports.getAllBookings = getAllBookings;
 const getAllSubscriptions = async (req, res) => {
     try {
-        const subscriptions = await prisma_1.default.subscription.findMany({
+        const subscriptions = await prisma_1.default.propertySubscription.findMany({
             include: {
-                landlord: { select: { firstName: true, lastName: true, email: true } }
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
-        res.status(200).json(subscriptions);
+        // Enrich each subscription with days remaining
+        const now = new Date();
+        const enriched = subscriptions.map(sub => {
+            const endDate = new Date(sub.endDate);
+            const diffMs = endDate.getTime() - now.getTime();
+            const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+            return { ...sub, daysRemaining };
+        });
+        res.status(200).json(enriched);
     }
     catch (error) {
+        console.error('Error fetching subscriptions:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -274,15 +408,35 @@ exports.deleteReview = deleteReview;
 const activateSubscription = async (req, res) => {
     try {
         const { id } = req.params;
-        const subscription = await prisma_1.default.subscription.findUnique({ where: { id } });
+        const subscription = await prisma_1.default.propertySubscription.findUnique({
+            where: { id },
+            include: { property: { include: { landlord: { select: { id: true, firstName: true } } } } }
+        });
         if (!subscription) {
             res.status(404).json({ message: 'Subscription not found' });
             return;
         }
-        const updated = await prisma_1.default.subscription.update({
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1);
+        const updated = await prisma_1.default.propertySubscription.update({
             where: { id },
-            data: { isActive: true, paymentStatus: 'COMPLETED' }
+            data: { isActive: true, paymentStatus: 'COMPLETED', startDate, endDate }
         });
+        await prisma_1.default.property.update({
+            where: { id: subscription.propertyId },
+            data: { isAvailable: true }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ACTIVATE_SUBSCRIPTION', 'PropertySubscription', id, { isActive: false }, { isActive: true }, req.ip || req.socket.remoteAddress);
+        try {
+            const { getIO } = await import('../socket');
+            getIO().to(subscription.property.landlord.id).emit('notification', {
+                title: 'Subscription Activated',
+                message: `Your listing for "${subscription.property.title}" has been manually activated by an admin.`,
+                type: 'subscription'
+            });
+        }
+        catch (e) { /* socket optional */ }
         res.status(200).json({ message: 'Subscription activated successfully', subscription: updated });
     }
     catch (error) {
@@ -291,6 +445,44 @@ const activateSubscription = async (req, res) => {
     }
 };
 exports.activateSubscription = activateSubscription;
+const revokeSubscription = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+        const subscription = await prisma_1.default.propertySubscription.findUnique({
+            where: { id },
+            include: { property: { include: { landlord: { select: { id: true, firstName: true } } } } }
+        });
+        if (!subscription) {
+            res.status(404).json({ message: 'Subscription not found' });
+            return;
+        }
+        const updated = await prisma_1.default.propertySubscription.update({
+            where: { id },
+            data: { isActive: false, paymentStatus: 'FAILED' }
+        });
+        await prisma_1.default.property.update({
+            where: { id: subscription.propertyId },
+            data: { isAvailable: false }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, 'REVOKE_SUBSCRIPTION', 'PropertySubscription', id, { isActive: true }, { isActive: false, reason: reason || 'Admin revocation' }, req.ip || req.socket.remoteAddress);
+        try {
+            const { getIO } = await import('../socket');
+            getIO().to(subscription.property.landlord.id).emit('notification', {
+                title: 'Listing Subscription Revoked',
+                message: `Your listing for "${subscription.property.title}" has been suspended by an admin. Reason: ${reason || 'Terms of Service violation'}.`,
+                type: 'subscription'
+            });
+        }
+        catch (e) { /* socket optional */ }
+        res.status(200).json({ message: 'Subscription revoked successfully', subscription: updated });
+    }
+    catch (error) {
+        console.error('Error revoking subscription:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.revokeSubscription = revokeSubscription;
 const resolveAppeal = async (req, res) => {
     try {
         const { id } = req.params;
@@ -361,4 +553,170 @@ const getSystemActivity = async (req, res) => {
     }
 };
 exports.getSystemActivity = getSystemActivity;
+const getConfig = async (req, res) => {
+    try {
+        const config = await (0, config_service_1.getSystemConfig)();
+        res.status(200).json(config);
+    }
+    catch (error) {
+        console.error('Error fetching config:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getConfig = getConfig;
+const updateConfig = async (req, res) => {
+    try {
+        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode } = req.body;
+        const updatedConfig = await prisma_1.default.systemConfig.upsert({
+            where: { id: 'GLOBAL' },
+            update: {
+                ...(ghanaCardVerificationEnabled !== undefined && { ghanaCardVerificationEnabled }),
+                ...(bookingGracePeriodHours !== undefined && { bookingGracePeriodHours }),
+                ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
+                ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
+                ...(maintenanceMode !== undefined && { maintenanceMode }),
+            },
+            create: {
+                id: 'GLOBAL',
+                ghanaCardVerificationEnabled: ghanaCardVerificationEnabled ?? true,
+                bookingGracePeriodHours: bookingGracePeriodHours ?? 48,
+                platformCommissionPercent: platformCommissionPercent ?? 5.0,
+                roommateFinderEnabled: roommateFinderEnabled ?? true,
+                maintenanceMode: maintenanceMode ?? false,
+            }
+        });
+        (0, config_service_1.invalidateConfigCache)();
+        try {
+            (0, socket_1.emitToAll)('config_updated', updatedConfig);
+        }
+        catch (e) {
+            console.error('Failed to emit config_updated socket event', e);
+        }
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL', null, updatedConfig, req.ip || req.socket.remoteAddress);
+        res.status(200).json({ message: 'Configuration updated successfully', config: updatedConfig });
+    }
+    catch (error) {
+        console.error('Error updating config:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.updateConfig = updateConfig;
+const getAllTickets = async (req, res) => {
+    try {
+        const tickets = await prisma_1.default.maintenanceTicket.findMany({
+            include: {
+                tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
+                property: {
+                    include: {
+                        landlord: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json(tickets);
+    }
+    catch (error) {
+        console.error('Error fetching all tickets:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllTickets = getAllTickets;
+const adminUpdateTicketStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        if (!['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'].includes(status)) {
+            res.status(400).json({ message: 'Invalid status' });
+            return;
+        }
+        const ticket = await prisma_1.default.maintenanceTicket.findUnique({
+            where: { id },
+            include: { property: true }
+        });
+        if (!ticket) {
+            res.status(404).json({ message: 'Ticket not found' });
+            return;
+        }
+        const updatedTicket = await prisma_1.default.maintenanceTicket.update({
+            where: { id },
+            data: { status }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_UPDATE_TICKET', 'MaintenanceTicket', id, { status: ticket.status }, { status }, req.ip || req.socket.remoteAddress);
+        try {
+            const { getIO } = await import('../socket');
+            const io = getIO();
+            // Notify both tenant and landlord
+            io.to(ticket.tenantId).emit('notification', {
+                title: `Ticket Escalate/Update`,
+                message: `Your maintenance ticket "${ticket.title}" has been set to ${status.toLowerCase()} by an admin.`,
+                type: 'ticket'
+            });
+            io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
+            io.to(ticket.property.landlordId).emit('notification', {
+                title: `Ticket Escalation`,
+                message: `Admin has updated the status of ticket "${ticket.title}" to ${status.toLowerCase()}.`,
+                type: 'ticket'
+            });
+            io.to(ticket.property.landlordId).emit('ticket_updated', { ticket: updatedTicket });
+        }
+        catch (e) { /* ignore */ }
+        res.status(200).json({ message: 'Ticket updated successfully', ticket: updatedTicket });
+    }
+    catch (error) {
+        console.error('Error admin updating ticket:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.adminUpdateTicketStatus = adminUpdateTicketStatus;
+const broadcastNotification = async (req, res) => {
+    try {
+        const { target, title, message } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
+        if (!['ALL_TENANTS', 'ALL_LANDLORDS', 'ALL_USERS'].includes(target)) {
+            res.status(400).json({ message: 'Invalid target group' });
+            return;
+        }
+        let users = [];
+        if (target === 'ALL_TENANTS') {
+            users = await prisma_1.default.user.findMany({ where: { role: 'TENANT' }, select: { id: true } });
+        }
+        else if (target === 'ALL_LANDLORDS') {
+            users = await prisma_1.default.user.findMany({ where: { role: 'LANDLORD' }, select: { id: true } });
+        }
+        else {
+            users = await prisma_1.default.user.findMany({ select: { id: true } });
+        }
+        if (users.length === 0) {
+            res.status(200).json({ message: 'No users found for the target group', count: 0 });
+            return;
+        }
+        // Create DB notifications
+        const notificationsData = users.map(u => ({
+            userId: u.id,
+            title,
+            message,
+            type: 'ANNOUNCEMENT'
+        }));
+        await prisma_1.default.notification.createMany({
+            data: notificationsData
+        });
+        // Broadcast via socket
+        try {
+            const { emitToUser } = await import('../socket');
+            users.forEach(u => {
+                emitToUser(u.id, 'notification', { title, message, type: 'ANNOUNCEMENT' });
+            });
+        }
+        catch (e) {
+            console.error('Socket emission failed for broadcast', e);
+        }
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS', null, { target, count: users.length, title }, req.ip || req.socket.remoteAddress);
+        res.status(200).json({ message: 'Broadcast successful', count: users.length });
+    }
+    catch (error) {
+        console.error('Error broadcasting notification:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.broadcastNotification = broadcastNotification;
 //# sourceMappingURL=admin.controller.js.map

@@ -10,6 +10,7 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['ADMIN']));
 // System Stats & Activity
 router.get('/stats', admin_controller_1.getSystemStats);
+router.get('/analytics', admin_controller_1.getPlatformAnalytics);
 router.get('/activity', admin_controller_1.getSystemActivity);
 router.get('/audit-logs', admin_controller_1.getAuditLogs);
 // Users
@@ -23,11 +24,19 @@ router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
 router.get('/bookings', admin_controller_1.getAllBookings);
 router.get('/subscriptions', admin_controller_1.getAllSubscriptions);
 router.put('/subscriptions/:id/activate', admin_controller_1.activateSubscription);
+router.put('/subscriptions/:id/revoke', admin_controller_1.revokeSubscription);
 router.get('/reviews', admin_controller_1.getAllReviews);
 router.delete('/reviews/:id', admin_controller_1.deleteReview);
 router.put('/reviews/:id/appeal', admin_controller_1.resolveAppeal);
-// System maintenance
+// System maintenance & config
 router.post('/check-expirations', subscription_controller_1.checkExpirations);
+router.get('/config', admin_controller_1.getConfig);
+router.put('/config', admin_controller_1.updateConfig);
+// Broadcast Notifications
+router.post('/notifications/broadcast', admin_controller_1.broadcastNotification);
+// Maintenance Tickets
+router.get('/tickets', admin_controller_1.getAllTickets);
+router.put('/tickets/:id/status', admin_controller_1.adminUpdateTicketStatus);
 // Notices
 router.get('/notices', notice_controller_1.getAllNotices);
 router.post('/notices', notice_controller_1.createNotice);
