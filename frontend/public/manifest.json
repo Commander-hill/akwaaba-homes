@@ -22,5 +22,31 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Admin Portal",
+      "short_name": "Admin",
+      "description": "Access Akwaaba Homes Admin Command Center",
+      "url": "/admin/login",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Browse Hostels & Properties",
+      "short_name": "Properties",
+      "description": "Search student hostels and rental listings",
+      "url": "/properties",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "categories": ["lifestyle", "real estate", "education"]
 }

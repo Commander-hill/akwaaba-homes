@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search, MapPin, Building, Star, ShieldCheck } from 'lucide-react';
+import { Search, MapPin, Building, Star, ShieldCheck, Shield } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -102,6 +102,27 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <footer className="relative z-10 bg-slate-950 text-slate-400 py-10 border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-white text-sm">AKWAABA Homes</span>
+            <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
+          </div>
+
+          <div className="flex items-center gap-6 flex-wrap font-medium">
+            <Link href="/properties" className="hover:text-white transition-colors">Browse Properties</Link>
+            <Link href="/login" className="hover:text-white transition-colors">Sign In</Link>
+            <Link 
+              href="/admin/login" 
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 transition-colors font-bold"
+            >
+              <Shield className="w-3.5 h-3.5" /> Admin Portal
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
