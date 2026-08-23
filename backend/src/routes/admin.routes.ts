@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { 
   getSystemStats, 
+  getPlatformAnalytics,
   getAllUsers, 
   toggleUserSuspension, 
   getAllProperties, 
@@ -32,6 +33,7 @@ router.use(authenticate, authorizeRole(['ADMIN']));
 
 // System Stats & Activity
 router.get('/stats', getSystemStats);
+router.get('/analytics', getPlatformAnalytics);
 router.get('/activity', getSystemActivity);
 router.get('/audit-logs', getAuditLogs);
 
