@@ -1,0 +1,26 @@
+{
+  "name": "Akwaaba Homes - Hostels & Rentals",
+  "short_name": "Akwaaba Homes",
+  "description": "Secure student hostel booking & property rental platform in Ghana.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A1136",
+  "theme_color": "#4F46E5",
+  "orientation": "portrait",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "real estate", "education"]
+}

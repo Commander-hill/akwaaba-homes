@@ -1,14 +1,32 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
+import PwaRegister from '../components/PwaRegister';
+import PwaInstallPrompt from '../components/PwaInstallPrompt';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+
+export const viewport: Viewport = {
+  themeColor: '#4F46E5',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'AkwaabaHomes | Secure Hostel & Property Rentals',
   description: 'The premium platform for students and landlords to connect for secure housing in Ghana.',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'Akwaaba Homes',
+    statusBarStyle: 'black-translucent',
+  },
+  formatDetection: {
+    telephone: true,
+  },
 };
 
 export default function RootLayout({
@@ -20,10 +38,12 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
       <body className="font-sans" suppressHydrationWarning>
         <Providers>
+          <PwaRegister />
           <Navbar />
           <main className="pt-20 min-h-screen">
             {children}
           </main>
+          <PwaInstallPrompt />
         </Providers>
       </body>
     </html>
