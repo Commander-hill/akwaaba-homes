@@ -186,6 +186,8 @@ const getAllUsers = async (req, res) => {
                 role: true,
                 isSuspended: true,
                 isProfileLocked: true,
+                profileUnlockRequested: true,
+                profileUnlockReason: true,
                 ghanaCardStatus: true,
                 ghanaCardNumber: true,
                 ghanaCardFrontUrl: true,
@@ -259,7 +261,11 @@ const toggleUserProfileLock = async (req, res) => {
         }
         const updatedUser = await prisma_1.default.user.update({
             where: { id },
-            data: { isProfileLocked: targetLockState },
+            data: {
+                isProfileLocked: targetLockState,
+                profileUnlockRequested: false,
+                profileUnlockReason: null
+            },
             select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, targetLockState ? 'LOCK_USER_PROFILE' : 'UNLOCK_USER_PROFILE', 'User', id, { isProfileLocked: targetUser.isProfileLocked }, { isProfileLocked: targetLockState }, req.ip || req.socket.remoteAddress);

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitGhanaCard = exports.getMe = exports.logout = exports.refresh = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login = exports.verifyEmail = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -354,7 +354,9 @@ const getMe = async (req, res) => {
                 yearOfStudy: true,
                 studentType: true,
                 reputationScore: true,
-                isProfileLocked: true
+                isProfileLocked: true,
+                profileUnlockRequested: true,
+                profileUnlockReason: true
             }
         });
         if (!user) {
@@ -371,6 +373,42 @@ const getMe = async (req, res) => {
     }
 };
 exports.getMe = getMe;
+const requestProfileUnlock = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        if (!req.user?.id) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (!reason || !reason.trim()) {
+            res.status(400).json({ message: 'Please state a reason for requesting profile edit access.' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: req.user.id } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        if (!user.isProfileLocked) {
+            res.status(400).json({ message: 'Your profile is currently unlocked and editable.' });
+            return;
+        }
+        await prisma_1.default.user.update({
+            where: { id: req.user.id },
+            data: {
+                profileUnlockRequested: true,
+                profileUnlockReason: reason.trim()
+            }
+        });
+        await logAudit(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, req.ip || req.socket.remoteAddress);
+        res.status(200).json({ message: 'Edit request submitted successfully. An administrator will review your request.' });
+    }
+    catch (error) {
+        console.error('Request profile unlock error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.requestProfileUnlock = requestProfileUnlock;
 const submitGhanaCard = async (req, res) => {
     try {
         const { ghanaCardNumber, ghanaCardFrontUrl, ghanaCardBackUrl } = req.body;

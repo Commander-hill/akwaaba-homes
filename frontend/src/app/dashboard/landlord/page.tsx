@@ -11,12 +11,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import toast from 'react-hot-toast';
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Session Query
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.user;
+    }
+  });
 
   // Fetch Bookings
   const { data: bookingsResponse, isLoading: isLoadingBookings, error } = useQuery({
@@ -124,6 +134,7 @@ export default function LandlordDashboard() {
 
   return (
     <div className="space-y-8 animate-in pb-12">
+      <OnboardingProgressWidget user={session} hasProperty={subStats.totalProperties > 0} />
       
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

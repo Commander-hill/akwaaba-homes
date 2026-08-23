@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
+import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
@@ -15,6 +16,14 @@ import SkeletonTable from '@/components/SkeletonTable';
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety'>('bookings');
+
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.user;
+    }
+  });
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -409,6 +418,7 @@ export default function TenantDashboard() {
   return (
     <div className="space-y-6 animate-in">
       <NoticeBoard />
+      <OnboardingProgressWidget user={session} />
       
       <div>
         <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>

@@ -18,6 +18,7 @@ router.post('/reset-password', rateLimiter_middleware_1.passwordResetRateLimiter
 // Protected routes
 router.get('/me', auth_middleware_1.authenticate, auth_controller_1.getMe);
 router.put('/profile', auth_middleware_1.authenticate, auth_controller_1.updateProfile);
+router.post('/request-unlock', auth_middleware_1.authenticate, auth_controller_1.requestProfileUnlock);
 // Session routes
 router.get('/sessions', auth_middleware_1.authenticate, session_controller_1.getSessions);
 router.delete('/sessions/:id', auth_middleware_1.authenticate, session_controller_1.revokeSession);

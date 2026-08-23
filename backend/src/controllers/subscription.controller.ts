@@ -78,6 +78,13 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
       return;
     }
 
+    if (landlord.ghanaCardStatus !== 'VERIFIED') {
+      res.status(403).json({
+        message: 'Publishing Blocked: Your Ghana Card verification is currently pending admin review. You will be able to publish your listing as soon as an administrator approves your identity verification.'
+      });
+      return;
+    }
+
     const property = await prisma.property.findFirst({ where: { id: propertyId, landlordId } });
     if (!property) {
       res.status(404).json({ message: 'Property not found or does not belong to you' });

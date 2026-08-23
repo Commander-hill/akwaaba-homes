@@ -195,6 +195,8 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         role: true,
         isSuspended: true,
         isProfileLocked: true,
+        profileUnlockRequested: true,
+        profileUnlockReason: true,
         ghanaCardStatus: true,
         ghanaCardNumber: true,
         ghanaCardFrontUrl: true,
@@ -283,7 +285,11 @@ export const toggleUserProfileLock = async (req: Request, res: Response): Promis
 
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { isProfileLocked: targetLockState },
+      data: { 
+        isProfileLocked: targetLockState,
+        profileUnlockRequested: false,
+        profileUnlockReason: null
+      },
       select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
     });
 

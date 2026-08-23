@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, updateProfile, forgotPassword, resetPassword } from '../controllers/auth.controller';
+import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, updateProfile, requestProfileUnlock, forgotPassword, resetPassword } from '../controllers/auth.controller';
 import { getSessions, revokeSession } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
@@ -19,6 +19,7 @@ router.post('/reset-password', passwordResetRateLimiter, resetPassword);
 // Protected routes
 router.get('/me', authenticate, getMe);
 router.put('/profile', authenticate, updateProfile);
+router.post('/request-unlock', authenticate, requestProfileUnlock);
 
 // Session routes
 router.get('/sessions', authenticate, getSessions);

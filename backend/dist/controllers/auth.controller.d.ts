@@ -5,6 +5,7 @@ export declare const login: (req: Request, res: Response) => Promise<void>;
 export declare const refresh: (req: Request, res: Response) => Promise<void>;
 export declare const logout: (req: Request, res: Response) => Promise<void>;
 export declare const getMe: (req: Request, res: Response) => Promise<void>;
+export declare const requestProfileUnlock: (req: Request, res: Response) => Promise<void>;
 export declare const submitGhanaCard: (req: Request, res: Response) => Promise<void>;
 export declare const updateProfile: (req: Request, res: Response) => Promise<void>;
 export declare const forgotPassword: (req: Request, res: Response) => Promise<void>;

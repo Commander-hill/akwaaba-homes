@@ -146,7 +146,18 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {user.isProfileLocked ? (
+                    {user.profileUnlockRequested ? (
+                      <div className="space-y-1">
+                        <span className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-md text-[11px] font-black flex items-center gap-1 w-fit animate-pulse">
+                          ⚠️ Edit Requested
+                        </span>
+                        {user.profileUnlockReason && (
+                          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 max-w-[180px] italic truncate" title={user.profileUnlockReason}>
+                            "{user.profileUnlockReason}"
+                          </div>
+                        )}
+                      </div>
+                    ) : user.isProfileLocked ? (
                       <span className="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-lg text-xs font-extrabold flex items-center gap-1 w-fit">
                         🔒 Locked (Read-Only)
                       </span>
@@ -174,13 +185,19 @@ export default function AdminUsersPage() {
                           onClick={() => handleToggleLock(user)}
                           disabled={processingId === user.id + 'lock'}
                           className={`px-3 py-1 rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer ${
-                            user.isProfileLocked 
-                              ? 'bg-amber-600 hover:bg-amber-700 text-white' 
-                              : 'bg-slate-700 hover:bg-slate-800 text-white'
+                            user.profileUnlockRequested
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-bounce'
+                              : user.isProfileLocked 
+                                ? 'bg-amber-600 hover:bg-amber-700 text-white' 
+                                : 'bg-slate-700 hover:bg-slate-800 text-white'
                           }`}
                         >
                           {processingId === user.id + 'lock' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                          {user.isProfileLocked ? '🔓 Grant Edit Access' : '🔒 Lock Profile'}
+                          {user.profileUnlockRequested 
+                            ? '✅ Approve Edit Access Request' 
+                            : user.isProfileLocked 
+                              ? '🔓 Grant Edit Access' 
+                              : '🔒 Lock Profile'}
                         </button>
                       )}
 

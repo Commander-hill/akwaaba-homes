@@ -7,6 +7,7 @@ import { Loader2, ArrowLeft, Upload, Star, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -42,6 +43,25 @@ export default function ProfilePage() {
       const res = await api.get('/auth/me');
       return res.data.user;
     },
+  });
+
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestReason, setRequestReason] = useState('');
+
+  const requestUnlockMutation = useMutation({
+    mutationFn: async (reason: string) => {
+      const res = await api.post('/auth/request-unlock', { reason });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Unlock request submitted!');
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+      setRequestModalOpen(false);
+      setRequestReason('');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to submit request');
+    }
   });
 
   useEffect(() => {
@@ -147,8 +167,22 @@ export default function ProfilePage() {
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Profile
           </button>
         ) : (
-          <div className="flex items-center gap-2 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800">
-            <span>🔒 Locked (Read-Only)</span>
+          <div className="flex items-center gap-2">
+            {session?.profileUnlockRequested ? (
+              <span className="bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 flex items-center gap-1.5 shadow-sm">
+                ⏳ Edit Request Pending
+              </span>
+            ) : (
+              <button
+                onClick={() => setRequestModalOpen(true)}
+                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+              >
+                🔓 Request Edit Access
+              </button>
+            )}
+            <div className="flex items-center gap-2 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+              <span>🔒 Locked (Read-Only)</span>
+            </div>
           </div>
         )}
       </div>
@@ -165,13 +199,21 @@ export default function ProfilePage() {
           </p>
         </div>
       ) : (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs sm:text-sm space-y-1">
-          <div className="font-extrabold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
-            <span>🔒</span> Profile Status: Locked & Immutably Verified
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs sm:text-sm space-y-2">
+          <div className="font-extrabold flex items-center justify-between gap-1.5 text-amber-800 dark:text-amber-300 text-sm">
+            <span className="flex items-center gap-1.5">🔒 Profile Status: Locked & Immutably Verified</span>
+            {session?.profileUnlockRequested && (
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-black">
+                Request Under Review
+              </span>
+            )}
           </div>
           <p className="leading-relaxed">
-            Your profile details have been saved and locked. The Save button is hidden and all fields are read-only. 
-            If you need to make corrections to your credentials, please contact an <strong>Administrator</strong> to grant access to apply changes.
+            {session?.profileUnlockRequested ? (
+              <>Your edit access request has been submitted to the system administrator: <em>"{session.profileUnlockReason}"</em>. You will receive edit permissions as soon as an admin approves your request.</>
+            ) : (
+              <>Your profile details have been saved and locked. If you need to correct any field, click <strong>"Request Edit Access"</strong> above to send an edit approval request to platform admins.</>
+            )}
           </p>
         </div>
       )}
@@ -367,6 +409,59 @@ export default function ProfilePage() {
           </div>
         )}
       </form>
+
+      {/* Request Unlock Modal */}
+      {requestModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5">
+            <div className="flex justify-between items-center">
+              <h3 className="font-extrabold text-lg text-[var(--foreground)] flex items-center gap-2">
+                🔓 Request Profile Edit Access
+              </h3>
+              <button
+                onClick={() => setRequestModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+              Your profile is currently locked to prevent unverified modifications. Please state the specific reason for your edit request (e.g. <em>"Corrected emergency guardian phone number"</em>).
+            </p>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[var(--foreground)]">Reason for Request *</label>
+              <textarea
+                rows={3}
+                value={requestReason}
+                onChange={(e) => setRequestReason(e.target.value)}
+                placeholder="State your reason for modifying locked profile fields..."
+                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setRequestModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!requestReason.trim() || requestUnlockMutation.isPending}
+                onClick={() => requestUnlockMutation.mutate(requestReason)}
+                className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition-colors disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {requestUnlockMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Submit Edit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
