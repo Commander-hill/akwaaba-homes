@@ -15,7 +15,9 @@ import {
   getSystemActivity,
   verifyUserCard,
   activateSubscription,
-  revokeSubscription
+  revokeSubscription,
+  getAllTickets,
+  adminUpdateTicketStatus
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -57,6 +59,10 @@ router.put('/reviews/:id/appeal', resolveAppeal);
 
 // System maintenance
 router.post('/check-expirations', checkExpirations);
+
+// Maintenance Tickets
+router.get('/tickets', getAllTickets);
+router.put('/tickets/:id/status', adminUpdateTicketStatus);
 
 // Notices
 router.get('/notices', getAllNotices);
