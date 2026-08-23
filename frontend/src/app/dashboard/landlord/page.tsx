@@ -144,7 +144,7 @@ export default function LandlordDashboard() {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <OnboardingTour role={session?.role} />
+          <OnboardingTour role={session?.role} user={session} />
           {/* Expiring Soon Alert Badge */}
           {subStats.expiringSoon > 0 && (
             <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold animate-pulse">

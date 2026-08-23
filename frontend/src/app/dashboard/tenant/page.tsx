@@ -427,7 +427,7 @@ export default function TenantDashboard() {
           <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
           <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
         </div>
-        <OnboardingTour role={session?.role} />
+        <OnboardingTour role={session?.role} user={session} />
       </div>
 
       {/* Tabs */}

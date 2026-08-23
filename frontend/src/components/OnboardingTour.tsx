@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, Compass, HelpCircle, Building, ShieldCheck, MapPin, Search } from 'lucide-react';
 
 interface TourStep {
@@ -13,11 +13,15 @@ interface TourStep {
 
 interface OnboardingTourProps {
   role?: string;
+  user?: any;
 }
 
-export default function OnboardingTour({ role }: OnboardingTourProps) {
+export default function OnboardingTour({ role, user }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [targetRect, setTargetRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; placement: 'top' | 'bottom' | 'center' }>({ top: 0, left: 0, placement: 'center' });
+
   const isTenant = role === 'TENANT';
 
   const tenantSteps: TourStep[] = [
@@ -81,33 +85,82 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
   ];
 
   const steps = isTenant ? tenantSteps : landlordSteps;
-  const tourStorageKey = `akwaaba_tour_completed_${role || 'user'}`;
+  const tourStorageKey = user?.id ? `akwaaba_tour_completed_${user.id}` : `akwaaba_tour_completed_${role || 'user'}`;
 
+  // Auto-start for NEW users only
   useEffect(() => {
-    if (typeof window !== 'undefined' && role) {
+    if (typeof window !== 'undefined' && user?.id) {
       const isCompleted = localStorage.getItem(tourStorageKey);
-      if (!isCompleted) {
-        // Delay 1 second to let dashboard components mount cleanly
+      
+      // Determine if user is new (account created within 14 days or no completion record)
+      const isNewUser = user.createdAt 
+        ? (new Date().getTime() - new Date(user.createdAt).getTime()) < 14 * 24 * 60 * 60 * 1000 
+        : true;
+
+      if (!isCompleted && isNewUser) {
         const timer = setTimeout(() => {
           setIsOpen(true);
         }, 1000);
         return () => clearTimeout(timer);
       }
     }
-  }, [role, tourStorageKey]);
+  }, [user?.id, user?.createdAt, tourStorageKey]);
 
-  useEffect(() => {
-    if (isOpen && steps[currentStep]?.targetSelector) {
-      const target = document.querySelector(steps[currentStep].targetSelector!);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        target.classList.add('ring-4', 'ring-indigo-500/50', 'transition-all', 'duration-500');
-        return () => {
-          target.classList.remove('ring-4', 'ring-indigo-500/50');
-        };
-      }
+  // Recalculate target position & popover coordinates
+  const updatePosition = useCallback(() => {
+    if (!isOpen) return;
+
+    const currentSelector = steps[currentStep]?.targetSelector;
+    if (!currentSelector) {
+      setTargetRect(null);
+      setPopoverPos({ top: 0, left: 0, placement: 'center' });
+      return;
+    }
+
+    const el = document.querySelector(currentSelector);
+    if (!el) {
+      setTargetRect(null);
+      setPopoverPos({ top: 0, left: 0, placement: 'center' });
+      return;
+    }
+
+    // Scroll into view
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const rect = el.getBoundingClientRect();
+    setTargetRect({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    });
+
+    const cardWidth = Math.min(window.innerWidth - 32, 420);
+    const cardHeight = 260;
+
+    let left = rect.left + rect.width / 2 - cardWidth / 2;
+    left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
+
+    if (rect.bottom + cardHeight + 24 < window.innerHeight) {
+      setPopoverPos({ top: rect.bottom + 16, left, placement: 'bottom' });
+    } else if (rect.top - cardHeight - 24 > 0) {
+      setPopoverPos({ top: rect.top - cardHeight - 16, left, placement: 'top' });
+    } else {
+      setPopoverPos({ top: 0, left: 0, placement: 'center' });
     }
   }, [isOpen, currentStep, steps]);
+
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition, true);
+      };
+    }
+  }, [isOpen, currentStep, updatePosition]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -125,7 +178,9 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
 
   const handleComplete = () => {
     setIsOpen(false);
-    localStorage.setItem(tourStorageKey, 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(tourStorageKey, 'true');
+    }
   };
 
   const handleReplay = () => {
@@ -138,20 +193,48 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
 
   return (
     <>
-      {/* Replay Tour Trigger Button (Pinned in header/dashboard) */}
+      {/* Replay Tour Trigger Button */}
       <button
         onClick={handleReplay}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm cursor-pointer"
         title="Replay Onboarding Tour"
       >
         <HelpCircle className="w-3.5 h-3.5 text-indigo-500" />
         <span>Take Tour</span>
       </button>
 
-      {/* Tour Modal Overlay */}
+      {/* Tour Overlay & Dynamic Positioning */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#0A1136] border border-indigo-200 dark:border-indigo-900/60 rounded-3xl p-6 max-w-md w-full shadow-2xl relative overflow-hidden space-y-5 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 overflow-hidden pointer-events-auto">
+          {/* Dark Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity duration-300" onClick={handleComplete} />
+
+          {/* Targeted Spotlight Ring around Component */}
+          {targetRect && (
+            <div
+              className="fixed rounded-2xl border-4 border-indigo-500 shadow-[0_0_35px_rgba(99,102,241,0.85)] pointer-events-none z-[52] transition-all duration-300 animate-pulse"
+              style={{
+                top: `${targetRect.top - 8}px`,
+                left: `${targetRect.left - 8}px`,
+                width: `${targetRect.width + 16}px`,
+                height: `${targetRect.height + 16}px`,
+              }}
+            />
+          )}
+
+          {/* Tour Card Popover */}
+          <div
+            className={`bg-white dark:bg-[#0A1136] border-2 border-indigo-400 dark:border-indigo-700 rounded-3xl p-6 max-w-md w-[calc(100vw-32px)] sm:w-[420px] shadow-2xl z-[55] space-y-4 transition-all duration-300 ${
+              popoverPos.placement === 'center'
+                ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+                : 'fixed'
+            }`}
+            style={
+              popoverPos.placement !== 'center'
+                ? { top: `${popoverPos.top}px`, left: `${popoverPos.left}px` }
+                : undefined
+            }
+          >
             {/* Background Glow */}
             <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-2xl pointer-events-none" />
 
@@ -163,7 +246,7 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
               </span>
               <button
                 onClick={handleComplete}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Skip Tour"
               >
                 <X className="w-4 h-4" />
@@ -172,11 +255,11 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
 
             {/* Step Icon & Title */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
-                <StepIcon className="w-6 h-6" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
+                <StepIcon className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-extrabold text-[var(--foreground)] leading-tight">
+                <h3 className="text-lg font-extrabold text-[var(--foreground)] leading-tight">
                   {current.title}
                 </h3>
                 <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
@@ -186,7 +269,7 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
             </div>
 
             {/* Progress Bar Dots */}
-            <div className="flex items-center justify-center gap-1.5 pt-2">
+            <div className="flex items-center justify-center gap-1.5 pt-1">
               {steps.map((_, idx) => (
                 <div
                   key={idx}
@@ -219,7 +302,7 @@ export default function OnboardingTour({ role }: OnboardingTourProps) {
 
               <button
                 onClick={handleNext}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer"
+                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer"
               >
                 {currentStep === steps.length - 1 ? (
                   <>
