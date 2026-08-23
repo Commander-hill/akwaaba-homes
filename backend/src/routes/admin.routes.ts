@@ -17,7 +17,9 @@ import {
   activateSubscription,
   revokeSubscription,
   getAllTickets,
-  adminUpdateTicketStatus
+  adminUpdateTicketStatus,
+  getConfig,
+  updateConfig
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -57,8 +59,10 @@ router.get('/reviews', getAllReviews);
 router.delete('/reviews/:id', deleteReview);
 router.put('/reviews/:id/appeal', resolveAppeal);
 
-// System maintenance
+// System maintenance & config
 router.post('/check-expirations', checkExpirations);
+router.get('/config', getConfig);
+router.put('/config', updateConfig);
 
 // Maintenance Tickets
 router.get('/tickets', getAllTickets);

@@ -324,3 +324,13 @@ model Transaction {
   @@index([landlordId])
   @@index([createdAt])
 }
+
+model SystemConfig {
+  id                           String   @id @default("GLOBAL")
+  ghanaCardVerificationEnabled Boolean  @default(true)
+  bookingGracePeriodHours      Int      @default(48)
+  platformCommissionPercent    Float    @default(5.0)
+  roommateFinderEnabled        Boolean  @default(true)
+  maintenanceMode              Boolean  @default(false)
+  updatedAt                    DateTime @updatedAt
+}

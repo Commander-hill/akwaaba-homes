@@ -607,3 +607,129 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const getConfig = async (req: Request, res: Response): Promise<void> => {
+  try {
+    let config = await prisma.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
+    if (!config) {
+      config = await prisma.systemConfig.create({ data: { id: 'GLOBAL' } });
+    }
+    res.status(200).json(config);
+  } catch (error) {
+    console.error('Error fetching config:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateConfig = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode } = req.body;
+    
+    const updatedConfig = await prisma.systemConfig.upsert({
+      where: { id: 'GLOBAL' },
+      update: {
+        ...(ghanaCardVerificationEnabled !== undefined && { ghanaCardVerificationEnabled }),
+        ...(bookingGracePeriodHours !== undefined && { bookingGracePeriodHours }),
+        ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
+        ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
+        ...(maintenanceMode !== undefined && { maintenanceMode }),
+      },
+      create: {
+        id: 'GLOBAL',
+        ghanaCardVerificationEnabled: ghanaCardVerificationEnabled ?? true,
+        bookingGracePeriodHours: bookingGracePeriodHours ?? 48,
+        platformCommissionPercent: platformCommissionPercent ?? 5.0,
+        roommateFinderEnabled: roommateFinderEnabled ?? true,
+        maintenanceMode: maintenanceMode ?? false,
+      }
+    });
+
+    await logAudit(
+      req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL',
+      null, updatedConfig,
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({ message: 'Configuration updated successfully', config: updatedConfig });
+  } catch (error) {
+    console.error('Error updating config:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getAllTickets = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tickets = await prisma.maintenanceTicket.findMany({
+      include: {
+        tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } },
+        property: { 
+          include: { 
+            landlord: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } } 
+          } 
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(tickets);
+  } catch (error) {
+    console.error('Error fetching all tickets:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const adminUpdateTicketStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'].includes(status)) {
+      res.status(400).json({ message: 'Invalid status' });
+      return;
+    }
+
+    const ticket = await prisma.maintenanceTicket.findUnique({
+      where: { id },
+      include: { property: true }
+    });
+
+    if (!ticket) {
+      res.status(404).json({ message: 'Ticket not found' });
+      return;
+    }
+
+    const updatedTicket = await prisma.maintenanceTicket.update({
+      where: { id },
+      data: { status }
+    });
+
+    await logAudit(
+      req.user.id, 'ADMIN_UPDATE_TICKET', 'MaintenanceTicket', id,
+      { status: ticket.status }, { status },
+      req.ip || req.socket.remoteAddress
+    );
+
+    try {
+      const { getIO } = await import('../socket');
+      const io = getIO();
+      // Notify both tenant and landlord
+      io.to(ticket.tenantId).emit('notification', {
+        title: `Ticket Escalate/Update`,
+        message: `Your maintenance ticket "${ticket.title}" has been set to ${status.toLowerCase()} by an admin.`,
+        type: 'ticket'
+      });
+      io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
+      
+      io.to(ticket.property.landlordId).emit('notification', {
+        title: `Ticket Escalation`,
+        message: `Admin has updated the status of ticket "${ticket.title}" to ${status.toLowerCase()}.`,
+        type: 'ticket'
+      });
+      io.to(ticket.property.landlordId).emit('ticket_updated', { ticket: updatedTicket });
+    } catch (e) { /* ignore */ }
+
+    res.status(200).json({ message: 'Ticket updated successfully', ticket: updatedTicket });
+  } catch (error) {
+    console.error('Error admin updating ticket:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
