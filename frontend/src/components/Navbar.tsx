@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Search, UserCircle, LogIn, Menu, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import api from '@/lib/axios';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
@@ -73,8 +74,15 @@ export default function Navbar() {
           
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg shadow-[var(--primary)]/20 group-hover:shadow-[var(--primary)]/40 transition-all">
-              <span className="text-white font-black text-xl tracking-tighter">A</span>
+            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-[var(--primary)]/20 group-hover:shadow-[var(--primary)]/40 group-hover:scale-105 transition-all shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Akwaaba Homes Logo"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             <span className={clsx(
               "font-bold text-2xl tracking-tight transition-colors", 

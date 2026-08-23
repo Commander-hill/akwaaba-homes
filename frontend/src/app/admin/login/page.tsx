@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShieldCheck, Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import api from '@/lib/axios';
 
 export default function AdminLoginPage() {
@@ -50,8 +51,8 @@ export default function AdminLoginPage() {
 
       <div className="max-w-md w-full p-8 relative z-10">
         <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center text-white shadow-[0_0_40px_rgba(147,51,234,0.4)] mb-6">
-            <ShieldCheck className="w-8 h-8" />
+          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(91,70,229,0.5)] mb-6">
+            <Image src="/logo.png" alt="Akwaaba Homes" width={64} height={64} className="w-full h-full object-cover" priority />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin<span className="text-purple-500">Portal</span></h1>
           <p className="text-slate-400 mt-2 font-mono text-sm tracking-widest uppercase">Restricted Access</p>

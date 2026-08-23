@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import api from '@/lib/axios';
 
 export default function LoginPage() {
@@ -153,9 +154,12 @@ export default function LoginPage() {
         </div>
       </div>
       
-      {/* Brand logo simple text bottom left */}
-      <div className="absolute bottom-6 left-6 z-10 flex items-center justify-center w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
-        <span className="text-white font-bold text-sm">A</span>
+      {/* Brand logo bottom left */}
+      <div className="absolute bottom-6 left-6 z-10 flex items-center gap-2">
+        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-white/10">
+          <Image src="/logo.png" alt="Akwaaba Homes" width={40} height={40} className="w-full h-full object-cover" />
+        </div>
+        <span className="text-white font-bold text-sm drop-shadow">Akwaaba Homes</span>
       </div>
     </div>
   );

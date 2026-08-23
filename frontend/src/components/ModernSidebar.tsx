@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Check, ChevronsUpDown, ShieldCheck } from 'lucide-react';
+import { LogOut, Check, ChevronsUpDown } from 'lucide-react';
 import clsx from 'clsx';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export interface SidebarLink {
   name: string;
@@ -42,8 +43,15 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
       {/* Header / Logo */}
       <div className="h-20 flex items-center px-6 shrink-0 border-b border-slate-100 dark:border-slate-800/50">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[var(--primary)] flex items-center justify-center text-white shadow-lg shadow-[var(--primary)]/20">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-[var(--primary)]/20 shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Akwaaba Homes"
+              width={36}
+              height={36}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
           <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">
             Akwaaba<span className="text-[var(--primary)]">Homes</span>
