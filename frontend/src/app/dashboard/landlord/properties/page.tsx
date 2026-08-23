@@ -16,13 +16,18 @@ export default function LandlordPropertiesPage() {
   const [verifyingPropId, setVerifyingPropId] = useState<string | null>(null);
   const [paymentMsg, setPaymentMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
-  const { data: session } = useQuery({
+  const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
       return res.data.user;
     },
   });
+
+  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
+  const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
+  const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
+  const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
 
   const { data: properties, isLoading, refetch } = useQuery({
     queryKey: ['landlord-properties'],
@@ -88,7 +93,7 @@ export default function LandlordPropertiesPage() {
     }
   }
 
-  if (isLoading) {
+  if (isLoading || sessionLoading) {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
   }
 
@@ -101,11 +106,36 @@ export default function LandlordPropertiesPage() {
         </div>
         <Link 
           href="/dashboard/landlord/new" 
-          className="flex items-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-xl font-bold hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
+          className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl font-bold transition-colors shadow-sm ${
+            isListingBlocked ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
+          }`}
         >
-          <Plus className="w-4 h-4" /> Add Property
+          <Plus className="w-4 h-4" /> {isListingBlocked ? '🔒 Add Property (Locked)' : 'Add Property'}
         </Link>
       </div>
+
+      {isListingBlocked && (
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 text-xs sm:text-sm space-y-2">
+          <div className="font-extrabold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 text-sm">
+            <span>🔒</span> Property Listing Creation Locked
+          </div>
+          <p className="leading-relaxed">
+            You must complete all your required details on your <strong>Profile page</strong> and submit your <strong>Ghana Card</strong> on the Verification page before you can list new properties.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {isProfileIncomplete && (
+              <Link href="/dashboard/profile" className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 transition-colors">
+                👤 Complete Profile
+              </Link>
+            )}
+            {isVerificationIncomplete && (
+              <Link href="/dashboard/verification" className="px-3 py-1.5 bg-pink-600 text-white rounded-lg font-bold hover:bg-pink-700 transition-colors">
+                🆔 Submit Verification
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {paymentMsg && (
         <div className={`p-4 rounded-xl flex items-center gap-3 ${paymentMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>

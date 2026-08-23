@@ -26,6 +26,46 @@ const createProperty = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields or no rooms provided.' });
             return;
         }
+        // ── STRICT LANDLORD PROFILE & VERIFICATION ENFORCEMENT ──
+        const landlord = await prisma_1.default.user.findUnique({
+            where: { id: landlordId },
+            select: {
+                firstName: true, lastName: true, phoneNumber: true, gender: true,
+                dateOfBirth: true, nationality: true, guardianName: true, guardianPhone: true,
+                ghanaCardStatus: true
+            }
+        });
+        const missingFields = [];
+        if (!landlord?.firstName?.trim())
+            missingFields.push('First Name');
+        if (!landlord?.lastName?.trim())
+            missingFields.push('Last Name');
+        if (!landlord?.phoneNumber?.trim())
+            missingFields.push('Phone Number');
+        if (!landlord?.gender?.trim())
+            missingFields.push('Gender');
+        if (!landlord?.dateOfBirth?.trim())
+            missingFields.push('Date of Birth');
+        if (!landlord?.nationality?.trim())
+            missingFields.push('Country / Nationality');
+        if (!landlord?.guardianName?.trim())
+            missingFields.push('Emergency Contact / Guardian Name');
+        if (!landlord?.guardianPhone?.trim())
+            missingFields.push('Emergency Contact / Guardian Phone');
+        if (missingFields.length > 0) {
+            res.status(403).json({
+                message: `Property Listing Blocked: You must complete all required profile details before listing properties. Missing: ${missingFields.join(', ')}.`,
+                redirectTo: '/dashboard/profile'
+            });
+            return;
+        }
+        if (!landlord?.ghanaCardStatus || landlord.ghanaCardStatus === 'NOT_SUBMITTED') {
+            res.status(403).json({
+                message: 'Property Listing Blocked: You must submit your Ghana Card details on the Verification page before listing properties.',
+                redirectTo: '/dashboard/verification'
+            });
+            return;
+        }
         // ENFORCE SUBSCRIPTION WALL IS REMOVED
         // Properties are now created as isAvailable = false until a listing fee is paid.
         // Find the minimum price among the provided rooms to set as the property floor price

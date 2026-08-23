@@ -43,6 +43,19 @@ export default function NewPropertyPage() {
 
   const [error, setError] = useState('');
 
+  const { data: session, isLoading: sessionLoading } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.user;
+    }
+  });
+
+  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
+  const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
+  const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
+  const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       const formattedData = {
@@ -170,6 +183,60 @@ export default function NewPropertyPage() {
     }
     createMutation.mutate(formData);
   };
+
+  if (sessionLoading) {
+    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
+  }
+
+  if (isListingBlocked) {
+    return (
+      <div className="max-w-2xl mx-auto my-12 p-8 glass-card rounded-3xl border border-red-200 dark:border-red-900/50 shadow-2xl text-center space-y-6 animate-in">
+        <div className="w-20 h-20 bg-red-100 dark:bg-red-950/50 text-red-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+          <Lock className="w-10 h-10" />
+        </div>
+        
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-[var(--foreground)] tracking-tight">🔒 Property Listing Page Locked</h2>
+          <p className="text-sm text-[var(--muted-foreground)] leading-relaxed max-w-xl mx-auto">
+            Under Akwaaba Homes platform security and verification policy, landlords must fill in all details on their profile page and submit their Ghana Card for identity verification before creating property listings.
+          </p>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-left text-xs space-y-2">
+          <div className="font-extrabold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+            <Info className="w-4 h-4 text-amber-600" /> Action Required Before Listing Properties:
+          </div>
+          <ul className="list-disc list-inside space-y-1 font-medium text-amber-900 dark:text-amber-200">
+            {isProfileIncomplete && (
+              <li>Complete all required profile details (First & Last Name, Phone, Gender, DOB, Nationality, Emergency Contact).</li>
+            )}
+            {isVerificationIncomplete && (
+              <li>Submit your Ghana Card details on the Verification page for KYC validation.</li>
+            )}
+          </ul>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          {isProfileIncomplete && (
+            <Link
+              href="/dashboard/profile"
+              className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              👤 Complete Profile First
+            </Link>
+          )}
+          {isVerificationIncomplete && (
+            <Link
+              href="/dashboard/verification"
+              className="w-full sm:w-auto px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              🆔 Submit Ghana Card Verification
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
