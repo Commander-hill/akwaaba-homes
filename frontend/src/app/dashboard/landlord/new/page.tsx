@@ -40,8 +40,57 @@ export default function NewPropertyPage() {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
   const [imagesUploading, setImagesUploading] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
 
   const [error, setError] = useState('');
+
+  const handleLocationPin = async (lat: number, lng: number) => {
+    setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
+    setIsGeocoding(true);
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const data = await res.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const area =
+          addr.suburb ||
+          addr.neighbourhood ||
+          addr.residential ||
+          addr.quarter ||
+          addr.village ||
+          addr.town ||
+          addr.city_district ||
+          addr.city ||
+          addr.county ||
+          '';
+
+        const city = addr.city || addr.town || addr.state || '';
+
+        let locationName = area;
+        if (area && city && area.toLowerCase() !== city.toLowerCase()) {
+          locationName = `${area}, ${city}`;
+        } else if (!area && city) {
+          locationName = city;
+        }
+
+        if (locationName) {
+          setFormData(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng,
+            location: locationName
+          }));
+        }
+      }
+    } catch (err) {
+      console.error('Reverse geocoding error:', err);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session'],
@@ -282,7 +331,14 @@ export default function NewPropertyPage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Location Name *</label>
+              <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
+                <span>Location Name *</span>
+                {isGeocoding && (
+                  <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting area...
+                  </span>
+                )}
+              </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input 
@@ -419,18 +475,24 @@ export default function NewPropertyPage() {
 
           {/* Interactive Map Picker */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between">
+            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
               <span>Pinpoint on Map *</span>
-              {formData.latitude && formData.longitude && (
-                <span className="text-emerald-500 font-medium text-xs">Location Selected</span>
-              )}
+              {isGeocoding ? (
+                <span className="text-indigo-600 dark:text-indigo-400 font-medium text-xs flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Resolving area name...
+                </span>
+              ) : formData.latitude && formData.longitude ? (
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs flex items-center gap-1">
+                  ✓ Location Selected ({formData.location || `${formData.latitude.toFixed(4)}, ${formData.longitude.toFixed(4)}`})
+                </span>
+              ) : null}
             </label>
-            <p className="text-xs text-[var(--muted-foreground)] mb-2">Click on the map to set the exact GPS coordinates for this property.</p>
+            <p className="text-xs text-[var(--muted-foreground)] mb-2">Click on the map to set exact GPS coordinates. The area name will auto-fill above.</p>
             <div className="h-64 rounded-xl overflow-hidden border border-[var(--border)] relative z-0">
               <Map 
                 mode="picker" 
                 selectedLocation={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null}
-                onLocationSelect={(lat, lng) => setFormData({...formData, latitude: lat, longitude: lng})}
+                onLocationSelect={handleLocationPin}
               />
             </div>
           </div>
