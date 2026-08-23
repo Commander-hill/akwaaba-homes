@@ -13,6 +13,12 @@ import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const pathname = usePathname();
+
+  // Do not render public Navbar on Admin portal routes
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const isHome = pathname === '/';

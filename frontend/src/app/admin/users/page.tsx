@@ -259,7 +259,7 @@ export default function AdminUsersPage() {
 
       {/* ─── CONFIRM SUSPENSION MODAL ─────────────────────────────────────────────── */}
       {suspensionTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-[var(--border)] space-y-4">
             <div className="flex items-center gap-3">
               <div className={`p-3 rounded-full ${suspensionTarget.action === 'suspend' ? 'bg-red-100 text-red-600 dark:bg-red-950/50' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50'}`}>
@@ -281,7 +281,7 @@ export default function AdminUsersPage() {
 
       {/* ─── REVIEW ID MODAL (PREMIUM ULTRA DESIGN) ───────────────────────────────── */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-indigo-100 dark:border-indigo-900/50 max-h-[92vh] flex flex-col">
             {/* Gradient Header */}
             <div className="px-6 py-5 bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white flex justify-between items-center relative overflow-hidden shadow-md">
@@ -463,7 +463,7 @@ export default function AdminUsersPage() {
 
       {/* ─── FULLSCREEN LIGHTBOX ZOOM MODAL ───────────────────────────────────────── */}
       {zoomedImage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md animate-in">
           <div className="relative max-w-5xl w-full flex flex-col items-center">
             <div className="flex justify-between items-center w-full mb-3 text-white">
               <h3 className="font-extrabold text-lg">{zoomedImage.title}</h3>

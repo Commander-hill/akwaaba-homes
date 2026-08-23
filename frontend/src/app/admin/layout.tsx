@@ -85,13 +85,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden -mt-20">
       <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] flex flex-col">
         {/* Admin Header with Notification Bell */}
-        <div className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 bg-white/50 dark:bg-[#111111]/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 bg-white/80 dark:bg-[#111111]/80 backdrop-blur-md sticky top-0 z-10">
           <h2 className="text-xl font-bold text-slate-800 dark:text-white capitalize">
             {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
           </h2>
