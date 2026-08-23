@@ -13,7 +13,8 @@ import {
   getAuditLogs,
   getSystemActivity,
   verifyUserCard,
-  activateSubscription
+  activateSubscription,
+  revokeSubscription
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -47,6 +48,7 @@ router.put('/properties/:id/status', updatePropertyApproval);
 router.get('/bookings', getAllBookings);
 router.get('/subscriptions', getAllSubscriptions);
 router.put('/subscriptions/:id/activate', activateSubscription);
+router.put('/subscriptions/:id/revoke', revokeSubscription);
 router.get('/reviews', getAllReviews);
 router.delete('/reviews/:id', deleteReview);
 router.put('/reviews/:id/appeal', resolveAppeal);

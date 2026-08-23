@@ -235,14 +235,29 @@ export const getAllBookings = async (req: Request, res: Response): Promise<void>
 
 export const getAllSubscriptions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const subscriptions = await prisma.subscription.findMany({
+    const subscriptions = await prisma.propertySubscription.findMany({
       include: {
-        landlord: { select: { firstName: true, lastName: true, email: true } }
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
-    res.status(200).json(subscriptions);
+
+    // Enrich each subscription with days remaining
+    const now = new Date();
+    const enriched = subscriptions.map(sub => {
+      const endDate = new Date(sub.endDate);
+      const diffMs = endDate.getTime() - now.getTime();
+      const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return { ...sub, daysRemaining };
+    });
+
+    res.status(200).json(enriched);
   } catch (error) {
+    console.error('Error fetching subscriptions:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -314,21 +329,95 @@ export const deleteReview = async (req: Request, res: Response): Promise<void> =
 export const activateSubscription = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const subscription = await prisma.subscription.findUnique({ where: { id } });
+    const subscription = await prisma.propertySubscription.findUnique({
+      where: { id },
+      include: { property: { include: { landlord: { select: { id: true, firstName: true } } } } }
+    });
 
     if (!subscription) {
       res.status(404).json({ message: 'Subscription not found' });
       return;
     }
 
-    const updated = await prisma.subscription.update({
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1);
+
+    const updated = await prisma.propertySubscription.update({
       where: { id },
-      data: { isActive: true, paymentStatus: 'COMPLETED' }
+      data: { isActive: true, paymentStatus: 'COMPLETED', startDate, endDate }
     });
+
+    await prisma.property.update({
+      where: { id: subscription.propertyId },
+      data: { isAvailable: true }
+    });
+
+    await logAudit(
+      req.user.id, 'ACTIVATE_SUBSCRIPTION', 'PropertySubscription', id,
+      { isActive: false }, { isActive: true },
+      req.ip || req.socket.remoteAddress
+    );
+
+    try {
+      const { getIO } = await import('../socket');
+      getIO().to(subscription.property.landlord.id).emit('notification', {
+        title: 'Subscription Activated',
+        message: `Your listing for "${subscription.property.title}" has been manually activated by an admin.`,
+        type: 'subscription'
+      });
+    } catch (e) { /* socket optional */ }
 
     res.status(200).json({ message: 'Subscription activated successfully', subscription: updated });
   } catch (error) {
     console.error('Error activating subscription:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const revokeSubscription = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const subscription = await prisma.propertySubscription.findUnique({
+      where: { id },
+      include: { property: { include: { landlord: { select: { id: true, firstName: true } } } } }
+    });
+
+    if (!subscription) {
+      res.status(404).json({ message: 'Subscription not found' });
+      return;
+    }
+
+    const updated = await prisma.propertySubscription.update({
+      where: { id },
+      data: { isActive: false, paymentStatus: 'FAILED' }
+    });
+
+    await prisma.property.update({
+      where: { id: subscription.propertyId },
+      data: { isAvailable: false }
+    });
+
+    await logAudit(
+      req.user.id, 'REVOKE_SUBSCRIPTION', 'PropertySubscription', id,
+      { isActive: true }, { isActive: false, reason: reason || 'Admin revocation' },
+      req.ip || req.socket.remoteAddress
+    );
+
+    try {
+      const { getIO } = await import('../socket');
+      getIO().to(subscription.property.landlord.id).emit('notification', {
+        title: 'Listing Subscription Revoked',
+        message: `Your listing for "${subscription.property.title}" has been suspended by an admin. Reason: ${reason || 'Terms of Service violation'}.`,
+        type: 'subscription'
+      });
+    } catch (e) { /* socket optional */ }
+
+    res.status(200).json({ message: 'Subscription revoked successfully', subscription: updated });
+  } catch (error) {
+    console.error('Error revoking subscription:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
