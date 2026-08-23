@@ -98,6 +98,8 @@ model Room {
   id            String   @id @default(uuid())
   propertyId    String
   property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  blockName     String?  // e.g. "Dakar Block A", "Female Wing"
+  gender        String   @default("MIXED") // MALE, FEMALE, MIXED
   roomType      String   // "1 in a room", "2 in a room", etc.
   bedsPerRoom   Int      @default(1) // Derived from roomType and stored explicitly
   numberOfRooms Int      @default(1) // How many rooms of this type exist
@@ -109,6 +111,7 @@ model Room {
   transactions Transaction[]
 
   @@index([propertyId])
+  @@index([gender])
 }
 
 model Booking {

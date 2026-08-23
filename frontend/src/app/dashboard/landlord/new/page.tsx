@@ -11,6 +11,8 @@ import { getImageUrl } from '@/lib/utils';
 
 interface RoomInput {
   id: string;
+  blockName: string;
+  gender: 'MALE' | 'FEMALE' | 'MIXED';
   roomType: string;
   numberOfRooms: number;
   price: string;
@@ -32,7 +34,7 @@ export default function NewPropertyPage() {
   });
 
   const [rooms, setRooms] = useState<RoomInput[]>([
-    { id: Date.now().toString(), roomType: '1 in a room', numberOfRooms: 1, price: '' }
+    { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }
   ]);
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -46,6 +48,8 @@ export default function NewPropertyPage() {
       const formattedData = {
         ...data,
         rooms: rooms.map(r => ({
+          blockName: r.blockName || null,
+          gender: r.gender,
           roomType: r.roomType,
           numberOfRooms: r.numberOfRooms,
           price: r.price
@@ -127,7 +131,7 @@ export default function NewPropertyPage() {
   };
 
   const handleAddRoom = () => {
-    setRooms(prev => [...prev, { id: Date.now().toString(), roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
+    setRooms(prev => [...prev, { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
   };
 
   const handleRemoveRoom = (id: string) => {
@@ -253,6 +257,42 @@ export default function NewPropertyPage() {
                     </button>
                   )}
                   
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    {/* Block Name */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                        <span>🏢</span> Block / Wing Name
+                      </label>
+                      <input
+                        type="text"
+                        value={room.blockName}
+                        onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
+                        placeholder="e.g. Dakar Block A / Female Wing"
+                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                      />
+                    </div>
+                    {/* Gender Designation */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                        <span>⚧</span> Gender Designation *
+                      </label>
+                      <select
+                        value={room.gender}
+                        onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
+                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                      >
+                        <option value="MIXED">🔀 Mixed (Open to All)</option>
+                        <option value="MALE">♂ Male Only</option>
+                        <option value="FEMALE">♀ Female Only</option>
+                      </select>
+                      {room.gender !== 'MIXED' && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                          ⚠ Only {room.gender === 'MALE' ? 'male' : 'female'} students can book this block.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mr-8">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-[var(--foreground)]">Room Type</label>

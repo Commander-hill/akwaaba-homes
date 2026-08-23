@@ -4,13 +4,17 @@ import prisma from '../utils/prisma';
 
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { propertyId, roomType, numberOfRooms, price } = req.body;
+    const { propertyId, roomType, numberOfRooms, price, blockName, gender } = req.body;
     const landlordId = req.user.id;
 
     if (!propertyId || !roomType || !numberOfRooms || !price) {
       res.status(400).json({ message: 'Missing required fields' });
       return;
     }
+
+    // Validate gender if provided
+    const validGenders = ['MALE', 'FEMALE', 'MIXED'];
+    const roomGender = gender && validGenders.includes(gender.toUpperCase()) ? gender.toUpperCase() : 'MIXED';
 
     const property = await prisma.property.findUnique({
       where: { id: propertyId }
@@ -31,6 +35,8 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
     const room = await prisma.room.create({
       data: {
         propertyId,
+        blockName: blockName || null,
+        gender: roomGender,
         roomType,
         bedsPerRoom,
         numberOfRooms: parseInt(numberOfRooms, 10),
@@ -61,7 +67,7 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
 export const updateRoom = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { roomType, numberOfRooms, price } = req.body;
+    const { roomType, numberOfRooms, price, blockName, gender } = req.body;
     const landlordId = req.user.id;
 
     const room = await prisma.room.findUnique({
@@ -79,6 +85,7 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    const validGenders = ['MALE', 'FEMALE', 'MIXED'];
     const dataToUpdate: any = {};
     if (roomType) {
       dataToUpdate.roomType = roomType;
@@ -89,6 +96,12 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
     }
     if (price !== undefined) {
       dataToUpdate.price = parseFloat(price);
+    }
+    if (blockName !== undefined) {
+      dataToUpdate.blockName = blockName || null;
+    }
+    if (gender && validGenders.includes(gender.toUpperCase())) {
+      dataToUpdate.gender = gender.toUpperCase();
     }
 
     const updatedRoom = await prisma.room.update({

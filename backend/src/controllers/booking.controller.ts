@@ -42,7 +42,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     
     const tenant = await prisma.user.findUnique({ 
       where: { id: tenantId }, 
-      select: { firstName: true, lastName: true, email: true, ghanaCardStatus: true } 
+      select: { firstName: true, lastName: true, email: true, ghanaCardStatus: true, gender: true } 
     });
 
     // Enforce Ghana Card KYC if enabled in Platform Configuration
@@ -52,6 +52,25 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         message: 'Ghana Card identity verification is required by platform policy before placing hostel bookings. Please verify your Ghana Card in your profile settings.' 
       });
       return;
+    }
+
+    // ── GENDER BLOCK VALIDATION (Model 1: Block/Wing Level Segregation) ──
+    // Only enforce if the room has a strict gender designation (MALE or FEMALE)
+    if (room.gender !== 'MIXED') {
+      const tenantGender = tenant?.gender?.toUpperCase(); // e.g. "MALE" or "FEMALE"
+      if (!tenantGender) {
+        res.status(403).json({ 
+          message: 'Your gender is not set on your profile. Please update your profile before booking a gender-designated block.' 
+        });
+        return;
+      }
+      if (tenantGender !== room.gender) {
+        const blockLabel = room.blockName ? `"${room.blockName}"` : 'this block';
+        res.status(403).json({ 
+          message: `Booking Rejected: ${blockLabel} is designated for ${room.gender === 'MALE' ? 'Male' : 'Female'} students only. Please select an appropriate block for your gender.`
+        });
+        return;
+      }
     }
 
     const booking = await prisma.booking.create({

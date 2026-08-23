@@ -460,40 +460,58 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               
               <div className="space-y-3 mb-6">
                 <label className="block text-sm font-bold text-[var(--foreground)]">Select Room Type</label>
-                {property.rooms?.map((room: any) => (
-                  <label 
-                    key={room.id}
-                    className={`block relative p-4 border rounded-xl cursor-pointer transition-all ${
-                      selectedRoomId === room.id 
-                        ? 'border-[var(--primary)] bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md ring-1 ring-[var(--primary)]' 
-                        : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                    } ${room.remainingCapacity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <input 
-                          type="radio" 
-                          name="roomSelection" 
-                          value={room.id}
-                          disabled={room.remainingCapacity === 0}
-                          checked={selectedRoomId === room.id}
-                          onChange={(e) => setSelectedRoomId(e.target.value)}
-                          className="w-4 h-4 text-[var(--primary)] focus:ring-[var(--primary)]"
-                        />
-                        <div>
-                          <div className="font-bold text-[var(--foreground)]">{room.roomType}</div>
-                          <div className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                            {room.remainingCapacity === 0 
-                              ? <span className="text-red-500 font-semibold">Fully Booked</span> 
-                              : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
-                            }
+                {property.rooms?.map((room: any) => {
+                  const genderBadge = room.gender === 'MALE'
+                    ? { label: '♂ Male Only', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }
+                    : room.gender === 'FEMALE'
+                    ? { label: '♀ Female Only', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' }
+                    : { label: '🔀 Mixed', cls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' };
+
+                  return (
+                    <label 
+                      key={room.id}
+                      className={`block relative p-4 border rounded-xl cursor-pointer transition-all ${
+                        selectedRoomId === room.id 
+                          ? 'border-[var(--primary)] bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md ring-1 ring-[var(--primary)]' 
+                          : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      } ${room.remainingCapacity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-start gap-3">
+                          <input 
+                            type="radio" 
+                            name="roomSelection" 
+                            value={room.id}
+                            disabled={room.remainingCapacity === 0}
+                            checked={selectedRoomId === room.id}
+                            onChange={(e) => setSelectedRoomId(e.target.value)}
+                            className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)]"
+                          />
+                          <div>
+                            {room.blockName && (
+                              <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-0.5">
+                                🏢 {room.blockName}
+                              </div>
+                            )}
+                            <div className="font-bold text-[var(--foreground)]">{room.roomType}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${genderBadge.cls}`}>
+                                {genderBadge.label}
+                              </span>
+                              <span className="text-xs text-[var(--muted-foreground)]">
+                                {room.remainingCapacity === 0 
+                                  ? <span className="text-red-500 font-semibold">Fully Booked</span> 
+                                  : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
+                                }
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        <div className="font-extrabold text-[var(--foreground)] shrink-0 ml-2">GH₵{room.price}</div>
                       </div>
-                      <div className="font-extrabold text-[var(--foreground)]">GH₵{room.price}</div>
-                    </div>
-                  </label>
-                ))}
+                    </label>
+                  );
+                })}
               </div>
 
               <div>
