@@ -19,7 +19,8 @@ import {
   getAllTickets,
   adminUpdateTicketStatus,
   getConfig,
-  updateConfig
+  updateConfig,
+  broadcastNotification
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -63,6 +64,9 @@ router.put('/reviews/:id/appeal', resolveAppeal);
 router.post('/check-expirations', checkExpirations);
 router.get('/config', getConfig);
 router.put('/config', updateConfig);
+
+// Broadcast Notifications
+router.post('/notifications/broadcast', broadcastNotification);
 
 // Maintenance Tickets
 router.get('/tickets', getAllTickets);

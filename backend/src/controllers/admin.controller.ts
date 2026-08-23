@@ -733,3 +733,61 @@ export const adminUpdateTicketStatus = async (req: Request, res: Response): Prom
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const broadcastNotification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { target, title, message } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
+    
+    if (!['ALL_TENANTS', 'ALL_LANDLORDS', 'ALL_USERS'].includes(target)) {
+      res.status(400).json({ message: 'Invalid target group' });
+      return;
+    }
+
+    let users = [];
+    if (target === 'ALL_TENANTS') {
+      users = await prisma.user.findMany({ where: { role: 'TENANT' }, select: { id: true } });
+    } else if (target === 'ALL_LANDLORDS') {
+      users = await prisma.user.findMany({ where: { role: 'LANDLORD' }, select: { id: true } });
+    } else {
+      users = await prisma.user.findMany({ select: { id: true } });
+    }
+
+    if (users.length === 0) {
+      res.status(200).json({ message: 'No users found for the target group', count: 0 });
+      return;
+    }
+
+    // Create DB notifications
+    const notificationsData = users.map(u => ({
+      userId: u.id,
+      title,
+      message,
+      type: 'ANNOUNCEMENT'
+    }));
+
+    await prisma.notification.createMany({
+      data: notificationsData
+    });
+
+    // Broadcast via socket
+    try {
+      const { emitToUser } = await import('../socket');
+      users.forEach(u => {
+        emitToUser(u.id, 'notification', { title, message, type: 'ANNOUNCEMENT' });
+      });
+    } catch (e) {
+      console.error('Socket emission failed for broadcast', e);
+    }
+
+    await logAudit(
+      req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS',
+      null, { target, count: users.length, title },
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({ message: 'Broadcast successful', count: users.length });
+  } catch (error) {
+    console.error('Error broadcasting notification:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
