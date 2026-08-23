@@ -47,6 +47,8 @@ import transactionRoutes from './routes/transaction.routes';
 import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
+import { checkMaintenanceMode } from './middleware/config.middleware';
+import { getSystemConfig } from './utils/config.service';
 
 import { createServer } from 'http';
 import { initializeSocket } from './socket';
@@ -143,6 +145,25 @@ app.get('/api/health', (req: Request, res: Response) => {
 // ─── Global Rate Limiting + Speed Limiter ────────────────────────────────────
 app.use('/api', speedLimiter);
 app.use('/api', apiRateLimiter);
+
+// ─── Global Maintenance Mode Check ──────────────────────────────────────────
+app.use('/api', checkMaintenanceMode);
+
+// ─── Public Config Route ──────────────────────────────────────────────────────
+app.get('/api/v1/config/public', async (req: Request, res: Response) => {
+  try {
+    const config = await getSystemConfig();
+    res.status(200).json({
+      ghanaCardVerificationEnabled: config.ghanaCardVerificationEnabled,
+      bookingGracePeriodHours: config.bookingGracePeriodHours,
+      platformCommissionPercent: config.platformCommissionPercent,
+      roommateFinderEnabled: config.roommateFinderEnabled,
+      maintenanceMode: config.maintenanceMode
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error reading config' });
+  }
+});
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
 app.use('/api/v1/auth', authRoutes);

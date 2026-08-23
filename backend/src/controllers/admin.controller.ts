@@ -6,6 +6,7 @@ import { decryptData } from '../utils/crypto';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
+import { getSystemConfig, invalidateConfigCache } from '../utils/config.service';
 
 export const getAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -610,10 +611,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
 
 export const getConfig = async (req: Request, res: Response): Promise<void> => {
   try {
-    let config = await prisma.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
-    if (!config) {
-      config = await prisma.systemConfig.create({ data: { id: 'GLOBAL' } });
-    }
+    const config = await getSystemConfig();
     res.status(200).json(config);
   } catch (error) {
     console.error('Error fetching config:', error);
@@ -643,6 +641,8 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         maintenanceMode: maintenanceMode ?? false,
       }
     });
+
+    invalidateConfigCache();
 
     await logAudit(
       req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL',

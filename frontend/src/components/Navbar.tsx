@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, UserCircle, LogIn, Menu, X } from 'lucide-react';
+import { Home, Search, UserCircle, LogIn, Menu, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import api from '@/lib/axios';
@@ -34,6 +34,15 @@ export default function Navbar() {
     retry: false,
   });
 
+  const { data: publicConfig } = useQuery({
+    queryKey: ['public-config'],
+    queryFn: async () => {
+      const { data } = await api.get('/config/public');
+      return data;
+    },
+    refetchInterval: 10000 // Poll every 10 seconds to react to admin config changes instantly
+  });
+
   const isAuthenticated = !!userResponse?.user;
   const role = userResponse?.user?.role;
   const dashboardHref = role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
@@ -44,12 +53,21 @@ export default function Navbar() {
   ];
   
   return (
-    <nav className={clsx(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-      isScrolled 
-        ? "bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl" 
-        : "bg-transparent border-b border-transparent"
-    )}>
+    <header className="fixed top-0 left-0 right-0 z-50">
+      {/* Maintenance Mode Top Banner */}
+      {publicConfig?.maintenanceMode && (
+        <div className="bg-red-600 text-white px-4 py-1.5 text-center text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-md animate-pulse">
+          <ShieldAlert className="w-4 h-4" />
+          <span>Global Maintenance Mode Active — Standard operations are currently restricted.</span>
+        </div>
+      )}
+
+      <nav className={clsx(
+        "transition-all duration-300",
+        isScrolled 
+          ? "bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl" 
+          : "bg-transparent border-b border-transparent"
+      )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           
@@ -185,5 +203,6 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+  </header>
   );
 }

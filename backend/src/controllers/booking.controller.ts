@@ -6,6 +6,7 @@ import { logAudit } from '../utils/auditLogger';
 import { notifyBookingCreated, notifyBookingStatusChanged, notifyPaymentReceipt } from '../utils/notification.service';
 import { getIO } from '../socket';
 import { safeJsonParse } from '../utils/json';
+import { getSystemConfig } from '../utils/config.service';
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -39,7 +40,19 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
     
-    const tenant = await prisma.user.findUnique({ where: { id: tenantId }, select: { firstName: true, lastName: true, email: true } });
+    const tenant = await prisma.user.findUnique({ 
+      where: { id: tenantId }, 
+      select: { firstName: true, lastName: true, email: true, ghanaCardStatus: true } 
+    });
+
+    // Enforce Ghana Card KYC if enabled in Platform Configuration
+    const sysConfig = await getSystemConfig();
+    if (sysConfig.ghanaCardVerificationEnabled && tenant?.ghanaCardStatus !== 'VERIFIED') {
+      res.status(403).json({ 
+        message: 'Ghana Card identity verification is required by platform policy before placing hostel bookings. Please verify your Ghana Card in your profile settings.' 
+      });
+      return;
+    }
 
     const booking = await prisma.booking.create({
       data: { tenantId, propertyId, roomId, startDate: new Date(startDate), endDate: new Date(endDate), status: 'PENDING' },
