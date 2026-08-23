@@ -221,13 +221,13 @@ export default function LandlordDashboard() {
             <div className="glass-card rounded-2xl overflow-hidden border">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-900 border-b">
-                      <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Tenant</th>
-                      <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Property</th>
-                      <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Dates</th>
-                      <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Status</th>
-                      <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider text-right">Actions</th>
+                  <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                    <tr>
+                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
+                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
+                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Dates</th>
+                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Status</th>
+                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
@@ -397,14 +397,14 @@ export default function LandlordDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-900 border-b">
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Property</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Location</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Status</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Days Left</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Expiry Date</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase text-right">Action</th>
+                <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                  <tr>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Property</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Location</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Status</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Days Left</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Expiry Date</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">
@@ -565,14 +565,14 @@ export default function LandlordDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-900 border-b">
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Date</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Tenant</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Property & Room</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Gross Paid</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase">Commission ({earningsSummary.platformCommissionPercent}%)</th>
-                    <th className="p-4 text-xs font-semibold text-[var(--muted-foreground)] uppercase text-right">Net Payout</th>
+                <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                  <tr>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Date</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Tenant</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Property &amp; Room</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Gross Paid</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase">Commission ({earningsSummary.platformCommissionPercent}%)</th>
+                    <th className="p-4 text-xs font-extrabold text-white uppercase text-right">Net Payout</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border)]">

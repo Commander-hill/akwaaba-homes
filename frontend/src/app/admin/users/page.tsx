@@ -82,13 +82,13 @@ export default function AdminUsersPage() {
       <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-[var(--muted-foreground)] uppercase bg-slate-50 dark:bg-slate-900/80 border-b border-[var(--border)]">
+            <thead className="text-xs text-white uppercase bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] shadow-md">
               <tr>
-                <th className="px-6 py-4 font-medium">User</th>
-                <th className="px-6 py-4 font-medium">Role</th>
-                <th className="px-6 py-4 font-medium">Ghana Card (KYC)</th>
-                <th className="px-6 py-4 font-medium">Account Status</th>
-                <th className="px-6 py-4 font-medium">Actions</th>
+                <th className="px-6 py-4 font-extrabold text-white">User</th>
+                <th className="px-6 py-4 font-extrabold text-white">Role</th>
+                <th className="px-6 py-4 font-extrabold text-white">Ghana Card (KYC)</th>
+                <th className="px-6 py-4 font-extrabold text-white">Account Status</th>
+                <th className="px-6 py-4 font-extrabold text-white">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">

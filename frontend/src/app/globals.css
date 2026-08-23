@@ -89,6 +89,22 @@
     color: transparent;
     background-image: linear-gradient(to right, var(--primary), var(--secondary));
   }
+  .bg-akwaaba-gradient,
+  thead, 
+  thead tr,
+  .thead-akwaaba {
+    background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 50%, #E06D53 100%) !important;
+    color: #FFFFFF !important;
+  }
+  thead th, 
+  thead tr th,
+  .thead-akwaaba th {
+    background-color: transparent !important;
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
   .animate-in {
     animation: fadeIn 0.5s ease-out forwards;
   }

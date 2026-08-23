@@ -130,15 +130,15 @@ export default function AdminReviewsPage() {
         <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-[var(--muted-foreground)] uppercase bg-slate-50 dark:bg-slate-900/80 border-b border-[var(--border)]">
+              <thead className="text-xs text-white uppercase bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] shadow-md">
                 <tr>
-                  <th className="px-6 py-4 font-medium">Reviewer</th>
-                  <th className="px-6 py-4 font-medium">Property</th>
-                  <th className="px-6 py-4 font-medium">Rating</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium">Comment</th>
-                  <th className="px-6 py-4 font-medium">Date</th>
-                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Reviewer</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Property</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Rating</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Status</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Comment</th>
+                  <th className="px-6 py-4 font-extrabold text-white">Date</th>
+                  <th className="px-6 py-4 font-extrabold text-white text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">

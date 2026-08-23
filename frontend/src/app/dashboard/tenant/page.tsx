@@ -1059,14 +1059,14 @@ export default function TenantDashboard() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-slate-50 dark:bg-slate-900 border-b border-[var(--border)]">
+                  <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
                     <tr>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Transaction Ref</th>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Property & Room</th>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Amount</th>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Date</th>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase">Status</th>
-                      <th className="px-6 py-4 font-bold text-[var(--muted-foreground)] uppercase text-right">Receipt</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase">Transaction Ref</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase">Property &amp; Room</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase">Amount</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase">Date</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase">Status</th>
+                      <th className="px-6 py-4 font-extrabold text-white uppercase text-right">Receipt</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">

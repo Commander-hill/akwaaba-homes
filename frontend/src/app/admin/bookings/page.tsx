@@ -30,12 +30,12 @@ export default function AdminBookingsPage() {
       <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-[var(--muted-foreground)] uppercase bg-slate-50 dark:bg-slate-900/80 border-b border-[var(--border)]">
+            <thead className="text-xs text-white uppercase bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] shadow-md">
               <tr>
-                <th className="px-6 py-4 font-medium">Property & Landlord</th>
-                <th className="px-6 py-4 font-medium">Tenant</th>
-                <th className="px-6 py-4 font-medium">Dates</th>
-                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-extrabold text-white">Property &amp; Landlord</th>
+                <th className="px-6 py-4 font-extrabold text-white">Tenant</th>
+                <th className="px-6 py-4 font-extrabold text-white">Dates</th>
+                <th className="px-6 py-4 font-extrabold text-white">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">

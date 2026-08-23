@@ -64,14 +64,14 @@ export default function AuditLogsPage() {
       <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-[var(--border)] uppercase text-[10px] tracking-wider font-bold text-slate-500">
+            <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] uppercase text-[10px] tracking-wider font-extrabold text-white shadow-md">
               <tr>
-                <th className="px-6 py-4">Timestamp</th>
-                <th className="px-6 py-4">Actor</th>
-                <th className="px-6 py-4">Action</th>
-                <th className="px-6 py-4">Target Entity</th>
-                <th className="px-6 py-4">IP Address</th>
-                <th className="px-6 py-4 text-right">Details</th>
+                <th className="px-6 py-4 text-white font-extrabold">Timestamp</th>
+                <th className="px-6 py-4 text-white font-extrabold">Actor</th>
+                <th className="px-6 py-4 text-white font-extrabold">Action</th>
+                <th className="px-6 py-4 text-white font-extrabold">Target Entity</th>
+                <th className="px-6 py-4 text-white font-extrabold">IP Address</th>
+                <th className="px-6 py-4 text-right text-white font-extrabold">Details</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">

@@ -105,13 +105,13 @@ export default function AdminNoticesPage() {
 
       <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-[var(--border)] uppercase text-[10px] tracking-wider font-bold text-slate-500">
+          <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] uppercase text-[10px] tracking-wider font-extrabold text-white shadow-md">
             <tr>
-              <th className="px-6 py-4 w-16 text-center">Order</th>
-              <th className="px-6 py-4">Title</th>
-              <th className="px-6 py-4">Icon</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-6 py-4 w-16 text-center text-white font-extrabold">Order</th>
+              <th className="px-6 py-4 text-white font-extrabold">Title</th>
+              <th className="px-6 py-4 text-white font-extrabold">Icon</th>
+              <th className="px-6 py-4 text-white font-extrabold">Status</th>
+              <th className="px-6 py-4 text-right text-white font-extrabold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border)]">

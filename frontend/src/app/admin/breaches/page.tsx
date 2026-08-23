@@ -173,14 +173,14 @@ export default function AdminBreachesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-900 border-b border-[var(--border)] text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+              <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
                 <tr>
-                  <th className="px-6 py-4">Offense Title &amp; Date</th>
-                  <th className="px-6 py-4">Tenant (Accused)</th>
-                  <th className="px-6 py-4">Reporter (Landlord)</th>
-                  <th className="px-6 py-4">Property</th>
-                  <th className="px-6 py-4">Status &amp; Impact</th>
-                  <th className="px-6 py-4 text-right">Adjudication</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Offense Title &amp; Date</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Tenant (Accused)</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Reporter (Landlord)</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Property</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Status &amp; Impact</th>
+                  <th className="px-6 py-4 text-right text-white font-extrabold">Adjudication</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">

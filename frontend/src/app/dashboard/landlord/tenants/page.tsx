@@ -143,13 +143,13 @@ export default function LandlordTenantsPage() {
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900 border-b border-[var(--border)] z-10">
+              <thead className="sticky top-0 bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white z-10 shadow-md">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">Tenant</th>
-                  <th className="px-6 py-4 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">Property</th>
-                  <th className="px-6 py-4 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">Dates</th>
-                  <th className="px-6 py-4 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-4 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
+                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
+                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Dates</th>
+                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">

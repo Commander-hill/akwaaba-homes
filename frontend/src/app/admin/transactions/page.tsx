@@ -200,14 +200,14 @@ export default function AdminSubscriptionsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-900 border-b border-[var(--border)] text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+              <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
                 <tr>
-                  <th className="px-6 py-4">Paystack Reference</th>
-                  <th className="px-6 py-4">Landlord</th>
-                  <th className="px-6 py-4">Property</th>
-                  <th className="px-6 py-4">Status &amp; License Countdown</th>
-                  <th className="px-6 py-4">Validity Range</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Paystack Reference</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Landlord</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Property</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Status &amp; License Countdown</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Validity Range</th>
+                  <th className="px-6 py-4 text-right text-white font-extrabold">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">

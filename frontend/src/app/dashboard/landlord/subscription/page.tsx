@@ -74,12 +74,12 @@ export default function LandlordSubscriptionPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 dark:bg-slate-900/20 text-slate-500 dark:text-slate-400 font-bold border-b border-[var(--border)]">
+              <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white font-extrabold shadow-md">
                 <tr>
-                  <th className="px-6 py-4">Property</th>
-                  <th className="px-6 py-4">Visibility</th>
-                  <th className="px-6 py-4">Subscription</th>
-                  <th className="px-6 py-4 text-right">Action</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Property</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Visibility</th>
+                  <th className="px-6 py-4 text-white font-extrabold">Subscription</th>
+                  <th className="px-6 py-4 text-right text-white font-extrabold">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--border)]">
