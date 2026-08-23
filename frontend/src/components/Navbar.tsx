@@ -93,7 +93,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-10">
+          <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -115,6 +115,21 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Dashboard placed right after Properties */}
+            {isAuthenticated && (
+              <Link href={dashboardHref} className={clsx(
+                "flex items-center gap-2 px-5 py-2 rounded-full border text-sm font-bold transition-colors shadow-sm",
+                pathname.startsWith('/dashboard')
+                  ? "border-[#5B4CFF] bg-[#5B4CFF]/10 text-[#5B4CFF]"
+                  : isScrolled 
+                    ? "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10" 
+                    : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+              )}>
+                <UserCircle className="w-5 h-5 text-[#5B4CFF]" />
+                Dashboard
+              </Link>
+            )}
           </div>
 
           {/* Actions */}
@@ -122,17 +137,8 @@ export default function Navbar() {
             <ThemeToggle isScrolled={isScrolled} />
             
             {isAuthenticated ? (
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4">
                 <NotificationBell />
-                <Link href={dashboardHref} className={clsx(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-full border text-sm font-bold transition-colors",
-                  isScrolled 
-                    ? "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10" 
-                    : "border-white/20 bg-white/10 text-white hover:bg-white/20"
-                )}>
-                  <UserCircle className="w-5 h-5 text-[#5B4CFF]" />
-                  Dashboard
-                </Link>
               </div>
             ) : (
               <div className="flex items-center gap-4">
