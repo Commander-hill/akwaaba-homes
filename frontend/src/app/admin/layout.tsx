@@ -8,6 +8,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
+import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -39,9 +40,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
   }, [user, isLoading, error, router, pathname]);
 
-  // If on login page, just render children without sidebar
+  // If on login page, render children with admin manifest and install prompt
   if (pathname === '/admin/login') {
-    return <>{children}</>;
+    return (
+      <>
+        <head>
+          <link rel="manifest" href="/admin-manifest.json" />
+          <meta name="theme-color" content="#0A0F1D" />
+          <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
+        </head>
+        {children}
+        <AdminPwaInstallPrompt />
+      </>
+    );
   }
 
   if (isLoading || !user || user.role !== 'ADMIN') {
@@ -86,6 +97,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden -mt-20">
+      <head>
+        <link rel="manifest" href="/admin-manifest.json" />
+        <meta name="theme-color" content="#0A0F1D" />
+        <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
+      </head>
+
       <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
 
       {/* Main Content Area */}
@@ -104,6 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {children}
         </div>
       </div>
+      <AdminPwaInstallPrompt />
     </div>
   );
 }

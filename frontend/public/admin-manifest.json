@@ -1,0 +1,26 @@
+{
+  "name": "Akwaaba Admin Command Center",
+  "short_name": "Akwaaba Admin",
+  "description": "Enterprise Administration & Management Portal for Akwaaba Homes.",
+  "start_url": "/admin/login",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#0A0F1D",
+  "theme_color": "#4F46E5",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "utilities"]
+}
