@@ -9,6 +9,7 @@ import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
 import CommuteWidget from '@/components/CommuteWidget';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
+import OnboardingTour from '@/components/OnboardingTour';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
@@ -420,9 +421,12 @@ export default function TenantDashboard() {
       <NoticeBoard />
       <OnboardingProgressWidget user={session} />
       
-      <div>
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
-        <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
+          <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
+        </div>
+        <OnboardingTour role={session?.role} />
       </div>
 
       {/* Tabs */}

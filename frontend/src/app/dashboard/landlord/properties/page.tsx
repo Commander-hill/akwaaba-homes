@@ -106,6 +106,7 @@ export default function LandlordPropertiesPage() {
         </div>
         <Link 
           href="/dashboard/landlord/new" 
+          id="tour-add-property"
           className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl font-bold transition-colors shadow-sm ${
             isListingBlocked ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
           }`}

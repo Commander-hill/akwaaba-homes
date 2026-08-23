@@ -81,7 +81,7 @@ export default function NoticeBoard() {
   const formattedOrderIndex = notice.orderIndex.toString().padStart(2, '0');
 
   return (
-    <div className="mb-8">
+    <div id="tour-notice-board" className="mb-8">
       <h2 className="text-xl font-bold text-[var(--foreground)] mb-4">Notice</h2>
       
       <div className="relative w-full bg-[#0A1136] rounded-2xl p-8 sm:p-10 overflow-hidden shadow-xl transition-all duration-500 ease-in-out">

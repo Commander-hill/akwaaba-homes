@@ -107,6 +107,7 @@ export default function Navbar() {
                 <Link
                   key={link.name}
                   href={link.href}
+                  id={link.name === 'Properties' ? 'tour-nav-properties' : undefined}
                   className={clsx(
                     "flex items-center gap-2 text-[15px] font-bold transition-colors",
                     isActive 

@@ -55,7 +55,7 @@ export default function OnboardingProgressWidget({ user, hasProperty = false }: 
   if (percentage === 100) return null; // Hide widget once 100% complete!
 
   return (
-    <div className="glass-card rounded-2xl p-5 border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-amber-50/20 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-amber-950/10 shadow-sm space-y-4 mb-6 animate-in">
+    <div id="tour-progress-widget" className="glass-card rounded-2xl p-5 border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-amber-50/20 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-amber-950/10 shadow-sm space-y-4 mb-6 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md">

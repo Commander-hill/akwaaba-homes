@@ -12,6 +12,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
+import OnboardingTour from '@/components/OnboardingTour';
 import toast from 'react-hot-toast';
 
 export default function LandlordDashboard() {
@@ -133,25 +134,28 @@ export default function LandlordDashboard() {
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">
-            Landlord CRM Command Center
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight flex items-center gap-3 flex-wrap">
+            <span>Landlord CRM Command Center</span>
           </h1>
           <p className="text-xs text-[var(--muted-foreground)]">
             Manage booking requests, tenant support tickets, listing subscriptions, and earnings reports.
           </p>
         </div>
 
-        {/* Expiring Soon Alert Badge */}
-        {subStats.expiringSoon > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold animate-pulse">
-            <AlertTriangle className="w-4 h-4" />
-            <span>{subStats.expiringSoon} property subscription(s) expiring within 7 days!</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          <OnboardingTour role={session?.role} />
+          {/* Expiring Soon Alert Badge */}
+          {subStats.expiringSoon > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold animate-pulse">
+              <AlertTriangle className="w-4 h-4" />
+              <span>{subStats.expiringSoon} property subscription(s) expiring within 7 days!</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit flex-wrap gap-1">
+      <div id="tour-landlord-tabs" className="flex space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit flex-wrap gap-1">
         <button
           onClick={() => setActiveTab('bookings')}
           className={clsx(
