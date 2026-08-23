@@ -218,6 +218,7 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
   try {
     const { id } = req.params;
     const { isSuspended } = req.body;
+    const targetSuspensionState = Boolean(isSuspended);
 
     // Prevent suspending self or other admins
     const targetUser = await prisma.user.findUnique({ where: { id } });
@@ -226,28 +227,43 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
       return;
     }
     if (targetUser.role === 'ADMIN') {
-      res.status(403).json({ message: 'Cannot suspend an administrator' });
+      res.status(403).json({ message: 'Cannot suspend an administrator account' });
       return;
     }
 
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id },
-      data: { isSuspended },
-      select: { id: true, isSuspended: true }
+      data: { isSuspended: targetSuspensionState },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true }
     });
+
+    if (targetSuspensionState) {
+      // Invalidate all active sessions for suspended user immediately
+      await prisma.session.deleteMany({ where: { userId: id } });
+    }
+
+    try {
+      emitToAll('user_updated', { userId: id, isSuspended: targetSuspensionState });
+    } catch (e) {
+      console.warn('Socket notification for user suspension failed:', e);
+    }
 
     await logAudit(
       req.user.id,
-      isSuspended ? 'SUSPEND_USER' : 'UNSUSPEND_USER',
+      targetSuspensionState ? 'SUSPEND_USER' : 'UNSUSPEND_USER',
       'User',
       id,
       { isSuspended: targetUser.isSuspended },
-      { isSuspended },
+      { isSuspended: targetSuspensionState },
       req.ip || req.socket.remoteAddress
     );
 
-    res.status(200).json({ message: `User ${isSuspended ? 'suspended' : 'unsuspended'} successfully`, user });
+    res.status(200).json({ 
+      message: `User ${updatedUser.firstName} ${updatedUser.lastName} has been ${targetSuspensionState ? 'suspended' : 'unsuspended'} successfully.`, 
+      user: updatedUser 
+    });
   } catch (error) {
+    console.error('Error toggling user suspension:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

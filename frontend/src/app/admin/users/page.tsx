@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import toast from 'react-hot-toast';
+
 import { Loader2, ShieldCheck, User as UserIcon, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 export default function AdminUsersPage() {
@@ -20,29 +22,42 @@ export default function AdminUsersPage() {
 
   const verifyMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string, status: string }) => {
-      await api.put(`/admin/verify-user/${id}`, { status });
+      const res = await api.put(`/admin/verify-user/${id}`, { status });
+      return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+    onSuccess: (data) => {
+      toast.success(data?.message || 'KYC status updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setSelectedUser(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update KYC status');
+    },
     onSettled: () => setProcessingId(null)
   });
 
   const suspendMutation = useMutation({
     mutationFn: async ({ id, isSuspended }: { id: string, isSuspended: boolean }) => {
-      await api.put(`/admin/users/${id}/suspend`, { isSuspended });
+      const res = await api.put(`/admin/users/${id}/suspend`, { isSuspended });
+      return res.data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-users'] }),
+    onSuccess: (data) => {
+      toast.success(data?.message || 'User status updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update user suspension state');
+    },
     onSettled: () => setProcessingId(null)
   });
 
   const handleVerify = (id: string, status: string) => {
     setProcessingId(id + 'verify');
-    verifyMutation.mutate({ id, status }, {
-      onSuccess: () => setSelectedUser(null)
-    });
+    verifyMutation.mutate({ id, status });
   };
 
   const handleSuspend = (id: string, isSuspended: boolean) => {
-    if (isSuspended && !confirm('Are you sure you want to suspend this user? They will not be able to log in.')) return;
+    if (isSuspended && !confirm('Are you sure you want to suspend this user? They will be logged out immediately and blocked from accessing the platform.')) return;
     setProcessingId(id + 'suspend');
     suspendMutation.mutate({ id, isSuspended });
   };
@@ -119,9 +134,23 @@ export default function AdminUsersPage() {
                       )}
                       {user.role !== 'ADMIN' && (
                         user.isSuspended ? (
-                          <button onClick={() => handleSuspend(user.id, false)} disabled={processingId === user.id+'suspend'} className="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md text-xs font-bold w-fit">Unsuspend Account</button>
+                          <button 
+                            onClick={() => handleSuspend(user.id, false)} 
+                            disabled={processingId === user.id + 'suspend'} 
+                            className="px-3 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-md text-xs font-bold w-fit inline-flex items-center gap-1 hover:bg-emerald-200 transition-colors"
+                          >
+                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                            Unsuspend Account
+                          </button>
                         ) : (
-                          <button onClick={() => handleSuspend(user.id, true)} disabled={processingId === user.id+'suspend'} className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md text-xs font-bold w-fit">Suspend Account</button>
+                          <button 
+                            onClick={() => handleSuspend(user.id, true)} 
+                            disabled={processingId === user.id + 'suspend'} 
+                            className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-md text-xs font-bold w-fit inline-flex items-center gap-1 hover:bg-red-200 transition-colors"
+                          >
+                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                            Suspend Account
+                          </button>
                         )
                       )}
                     </div>

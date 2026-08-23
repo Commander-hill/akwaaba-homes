@@ -189,6 +189,15 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // BLOCK SUSPENDED USERS
+    if (user.isSuspended) {
+      res.status(403).json({ 
+        message: 'Your account has been suspended by platform administration due to policy violations. Please contact support for assistance.',
+        isSuspended: true
+      });
+      return;
+    }
+
     // BLOCK UNVERIFIED USERS
     if (!user.isEmailVerified) {
       res.status(403).json({ 
