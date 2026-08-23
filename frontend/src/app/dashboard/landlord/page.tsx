@@ -393,43 +393,43 @@ export default function LandlordDashboard() {
           <>
           {/* Subscription Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl dark:bg-indigo-950/50">
+            <div className="p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#E0E7FF] dark:bg-[#312E81] text-[#4338CA] dark:text-[#A5B4FC] rounded-2xl shadow-inner">
                 <Building className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Total Properties</p>
-                <h3 className="text-2xl font-black">{subStats.totalProperties}</h3>
+                <p className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider">Total Properties</p>
+                <h3 className="text-2xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{subStats.totalProperties}</h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl dark:bg-emerald-950/50">
+            <div className="p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#6EE7B7] rounded-2xl shadow-inner">
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Active Listings</p>
-                <h3 className="text-2xl font-black">{subStats.activeSubscriptions}</h3>
+                <p className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider">Active Listings</p>
+                <h3 className="text-2xl font-black text-[#047857] dark:text-[#6EE7B7]">{subStats.activeSubscriptions}</h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-amber-100 text-amber-600 rounded-xl dark:bg-amber-950/50">
+            <div className="p-5 rounded-2xl border bg-[#FFFBEB] dark:bg-[#451A03]/60 border-[#FDE68A] dark:border-[#78350F] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#FEF3C7] dark:bg-[#92400E] text-[#B45309] dark:text-[#FDE68A] rounded-2xl shadow-inner">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Expiring Soon (&lt;7d)</p>
-                <h3 className="text-2xl font-black text-amber-600">{subStats.expiringSoon}</h3>
+                <p className="text-xs font-extrabold text-[#78350F] dark:text-[#FDE68A] uppercase tracking-wider">Expiring Soon (&lt;7d)</p>
+                <h3 className="text-2xl font-black text-[#B45309] dark:text-[#FEF3C7]">{subStats.expiringSoon}</h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-red-100 text-red-600 rounded-xl dark:bg-red-950/50">
+            <div className="p-5 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#FECDD3] dark:bg-[#9F1239] text-[#BE123C] dark:text-[#FECDD3] rounded-2xl shadow-inner">
                 <Clock className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Expired / Inactive</p>
-                <h3 className="text-2xl font-black text-red-600">{subStats.unsubscribedOrExpired}</h3>
+                <p className="text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider">Expired / Inactive</p>
+                <h3 className="text-2xl font-black text-[#BE123C] dark:text-[#FFE4E6]">{subStats.unsubscribedOrExpired}</h3>
               </div>
             </div>
           </div>
@@ -541,51 +541,51 @@ export default function LandlordDashboard() {
 
           {/* Earnings Breakdown Stat Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl dark:bg-emerald-950/50">
+            <div className="p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#6EE7B7] rounded-2xl shadow-inner">
                 <DollarSign className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Gross Tenant Revenue</p>
-                <h3 className="text-2xl font-black text-emerald-600">
+                <p className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider">Gross Tenant Revenue</p>
+                <h3 className="text-2xl font-black text-[#047857] dark:text-[#6EE7B7]">
                   GHS {earningsSummary.totalGrossEarnings.toLocaleString()}
                 </h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl dark:bg-indigo-950/50">
+            <div className="p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#E0E7FF] dark:bg-[#312E81] text-[#4338CA] dark:text-[#A5B4FC] rounded-2xl shadow-inner">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">
+                <p className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider">
                   Platform Commission ({earningsSummary.platformCommissionPercent}%)
                 </p>
-                <h3 className="text-2xl font-black text-indigo-600">
+                <h3 className="text-2xl font-black text-[#4338CA] dark:text-[#E0E7FF]">
                   - GHS {earningsSummary.totalCommissionDeducted.toLocaleString()}
                 </h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border-emerald-500/20">
-              <div className="p-3 bg-emerald-600 text-white rounded-xl shadow-md shadow-emerald-500/20">
+            <div className="p-5 rounded-2xl border bg-[#CCFBF1] dark:bg-[#134E4A]/70 border-[#5EEAD4] dark:border-[#115E59] flex items-center gap-4 shadow-md transition-all">
+              <div className="p-3 bg-[#0D9488] text-white rounded-2xl shadow-md shadow-[#0D9488]/30">
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">Net Landlord Earnings</p>
-                <h3 className="text-2xl font-black text-emerald-500">
+                <p className="text-xs font-extrabold text-[#115E59] dark:text-[#99F6E4] uppercase tracking-wider">Net Landlord Earnings</p>
+                <h3 className="text-2xl font-black text-[#0F766E] dark:text-[#CCFBF1]">
                   GHS {earningsSummary.totalNetEarnings.toLocaleString()}
                 </h3>
               </div>
             </div>
 
-            <div className="glass-card p-5 rounded-2xl border flex items-center gap-4">
-              <div className="p-3 bg-sky-100 text-sky-600 rounded-xl dark:bg-sky-950/50">
+            <div className="p-5 rounded-2xl border bg-[#E0F2FE] dark:bg-[#0C4A6E]/60 border-[#BAE6FD] dark:border-[#075985] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
+              <div className="p-3 bg-[#BAE6FD] dark:bg-[#0284C7] text-[#0369A1] dark:text-[#BAE6FD] rounded-2xl shadow-inner">
                 <Calendar className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--muted-foreground)]">This Month Net Payout</p>
-                <h3 className="text-2xl font-black text-sky-600">
+                <p className="text-xs font-extrabold text-[#075985] dark:text-[#BAE6FD] uppercase tracking-wider">This Month Net Payout</p>
+                <h3 className="text-2xl font-black text-[#0369A1] dark:text-[#E0F2FE]">
                   GHS {earningsSummary.thisMonthNetEarnings.toLocaleString()}
                 </h3>
               </div>

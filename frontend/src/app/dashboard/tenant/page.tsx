@@ -1013,33 +1013,33 @@ export default function TenantDashboard() {
         <div className="animate-in space-y-6">
           {/* Summary Financial Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div className="p-6 rounded-2xl border bg-sky-50/80 dark:bg-sky-950/30 border-sky-100 dark:border-sky-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Total Paid Rent</p>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-sky-900/70 dark:text-sky-300/80 mb-1">Total Paid Rent</p>
                 <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalPaidGhs.toLocaleString()}</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-300 flex items-center justify-center shadow-inner">
                 <CreditCard className="w-6 h-6" />
               </div>
             </div>
 
-            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div className="p-6 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Verified Receipts</p>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80 mb-1">Verified Receipts</p>
                 <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{transactions.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
                 <ShieldCheck className="w-6 h-6" />
               </div>
             </div>
 
-            <div className="glass-card p-6 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div className="p-6 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Payment Gateway</p>
-                <p className="text-sm font-extrabold text-[var(--foreground)] mt-1">Paystack Encrypted</p>
-                <p className="text-xs text-[var(--muted-foreground)]">MoMo & Card Supported</p>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-900/70 dark:text-indigo-300/80 mb-1">Payment Gateway</p>
+                <p className="text-sm font-extrabold text-indigo-950 dark:text-indigo-200 mt-1">Paystack Encrypted</p>
+                <p className="text-xs text-indigo-700/70 dark:text-indigo-300/70">MoMo & Card Supported</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
                 <Lock className="w-6 h-6" />
               </div>
             </div>
@@ -1184,68 +1184,68 @@ export default function TenantDashboard() {
           {/* National & Campus Hotlines Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Police */}
-            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-blue-500/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+            <div className="p-5 rounded-2xl border bg-blue-50/80 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-inner">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-[var(--foreground)]">Ghana Police Service</h4>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">National Security & Patrol Hotline</p>
+                <h4 className="font-extrabold text-sm text-blue-950 dark:text-blue-200">Ghana Police Service</h4>
+                <p className="text-xs text-blue-800/70 dark:text-blue-300/70 mt-0.5">National Security & Patrol Hotline</p>
               </div>
               <a
                 href="tel:191"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5" /> Dial 191 / 112
               </a>
             </div>
 
             {/* Ambulance */}
-            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-red-500/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 flex items-center justify-center">
+            <div className="p-5 rounded-2xl border bg-red-50/80 dark:bg-red-950/30 border-red-100 dark:border-red-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-300 flex items-center justify-center shadow-inner">
                 <Siren className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-[var(--foreground)]">National Ambulance</h4>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Medical Emergencies & Dispatch</p>
+                <h4 className="font-extrabold text-sm text-red-950 dark:text-red-200">National Ambulance</h4>
+                <p className="text-xs text-red-800/70 dark:text-red-300/70 mt-0.5">Medical Emergencies & Dispatch</p>
               </div>
               <a
                 href="tel:192"
-                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5" /> Dial 192
               </a>
             </div>
 
             {/* Fire */}
-            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-orange-500/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+            <div className="p-5 rounded-2xl border bg-orange-50/80 dark:bg-orange-950/30 border-orange-100 dark:border-orange-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-300 flex items-center justify-center shadow-inner">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-[var(--foreground)]">National Fire Service</h4>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Fire Hazard & Outbreak Emergency</p>
+                <h4 className="font-extrabold text-sm text-orange-950 dark:text-orange-200">National Fire Service</h4>
+                <p className="text-xs text-orange-800/70 dark:text-orange-300/70 mt-0.5">Fire Hazard & Outbreak Emergency</p>
               </div>
               <a
                 href="tel:190"
-                className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5" /> Dial 190
               </a>
             </div>
 
             {/* Campus Security */}
-            <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3 hover:border-emerald-500/40 transition-all">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
                 <Lock className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-[var(--foreground)]">Campus Security Desk</h4>
-                <p className="text-xs text-[var(--muted-foreground)] mt-0.5">On-Campus Guard Dispatch</p>
+                <h4 className="font-extrabold text-sm text-emerald-950 dark:text-emerald-200">Campus Security Desk</h4>
+                <p className="text-xs text-emerald-800/70 dark:text-emerald-300/70 mt-0.5">On-Campus Guard Dispatch</p>
               </div>
               <a
                 href="tel:+233332132440"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5" /> Dial Campus Desk
               </a>

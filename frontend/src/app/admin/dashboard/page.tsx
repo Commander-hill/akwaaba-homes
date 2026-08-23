@@ -76,60 +76,60 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        <div className="glass-card p-6 rounded-2xl border border-[var(--border)] relative overflow-hidden group">
+        <div className="p-6 rounded-2xl border bg-[#EFF6FF] dark:bg-[#1E3A8A]/60 border-[#BFDBFE] dark:border-[#1E40AF] relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <Users className="w-16 h-16 text-[var(--primary)]" />
+            <Users className="w-16 h-16 text-[#2563EB] dark:text-[#93C5FD]" />
           </div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
+            <div className="p-3 bg-[#DBEAFE] dark:bg-[#1D4ED8] text-[#1D4ED8] dark:text-[#BFDBFE] rounded-2xl shadow-inner">
               <Users className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-[var(--muted-foreground)] uppercase text-xs tracking-wider">Total Users</h3>
+            <h3 className="font-extrabold text-[#1E40AF] dark:text-[#BFDBFE] uppercase text-xs tracking-wider">Total Users</h3>
           </div>
-          <div className="text-4xl font-extrabold text-[var(--foreground)]">{stats?.totalUsers || 0}</div>
-          <div className="mt-2 text-sm text-[var(--muted-foreground)]">Including {stats?.totalLandlords || 0} Landlords</div>
+          <div className="text-4xl font-black text-[#1D4ED8] dark:text-[#EFF6FF]">{stats?.totalUsers || 0}</div>
+          <div className="mt-2 text-xs font-semibold text-[#1E40AF] dark:text-[#93C5FD]">Including {stats?.totalLandlords || 0} Landlords</div>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl border border-[var(--border)] relative overflow-hidden group">
+        <div className="p-6 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <Building className="w-16 h-16 text-[var(--primary)]" />
+            <Building className="w-16 h-16 text-[#059669] dark:text-[#6EE7B7]" />
           </div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl">
+            <div className="p-3 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#A7F3D0] rounded-2xl shadow-inner">
               <Building className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-[var(--muted-foreground)] uppercase text-xs tracking-wider">Properties</h3>
+            <h3 className="font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase text-xs tracking-wider">Properties</h3>
           </div>
-          <div className="text-4xl font-extrabold text-[var(--foreground)]">{stats?.totalProperties || 0}</div>
-          <div className="mt-2 text-sm text-[var(--muted-foreground)]">Listed on platform</div>
+          <div className="text-4xl font-black text-[#047857] dark:text-[#6EE7B7]">{stats?.totalProperties || 0}</div>
+          <div className="mt-2 text-xs font-semibold text-[#065F46] dark:text-[#6EE7B7]">Listed on platform</div>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl border border-[var(--border)] relative overflow-hidden group">
+        <div className="p-6 rounded-2xl border bg-[#FFFBEB] dark:bg-[#451A03]/60 border-[#FDE68A] dark:border-[#78350F] relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <CalendarCheck className="w-16 h-16 text-[var(--primary)]" />
+            <CalendarCheck className="w-16 h-16 text-[#D97706] dark:text-[#FDE68A]" />
           </div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl">
+            <div className="p-3 bg-[#FEF3C7] dark:bg-[#92400E] text-[#B45309] dark:text-[#FDE68A] rounded-2xl shadow-inner">
               <CalendarCheck className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-[var(--muted-foreground)] uppercase text-xs tracking-wider">Bookings</h3>
+            <h3 className="font-extrabold text-[#78350F] dark:text-[#FDE68A] uppercase text-xs tracking-wider">Bookings</h3>
           </div>
-          <div className="text-4xl font-extrabold text-[var(--foreground)]">{stats?.totalBookings || 0}</div>
-          <div className="mt-2 text-sm text-[var(--muted-foreground)]">All time system bookings</div>
+          <div className="text-4xl font-black text-[#B45309] dark:text-[#FEF3C7]">{stats?.totalBookings || 0}</div>
+          <div className="mt-2 text-xs font-semibold text-[#78350F] dark:text-[#FDE68A]">All time system bookings</div>
         </div>
 
-        <div className="glass-card p-6 rounded-2xl border border-[var(--border)] relative overflow-hidden group">
+        <div className="p-6 rounded-2xl border bg-[#F3E8FF] dark:bg-[#3B0764]/60 border-[#E9D5FF] dark:border-[#581C87] relative overflow-hidden group shadow-sm hover:shadow-md transition-all">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <CreditCard className="w-16 h-16 text-[var(--primary)]" />
+            <CreditCard className="w-16 h-16 text-[#9333EA] dark:text-[#E9D5FF]" />
           </div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-xl">
+            <div className="p-3 bg-[#E9D5FF] dark:bg-[#6B21A8] text-[#7E22CE] dark:text-[#E9D5FF] rounded-2xl shadow-inner">
               <CreditCard className="w-6 h-6" />
             </div>
-            <h3 className="font-bold text-[var(--muted-foreground)] uppercase text-xs tracking-wider">Revenue (GHS)</h3>
+            <h3 className="font-extrabold text-[#581C87] dark:text-[#E9D5FF] uppercase text-xs tracking-wider">Revenue (GHS)</h3>
           </div>
-          <div className="text-4xl font-extrabold text-[var(--foreground)]">GH₵ {stats?.totalRevenue?.toLocaleString() || 0}</div>
-          <div className="mt-2 text-sm text-[var(--muted-foreground)]">From landlord subscriptions</div>
+          <div className="text-4xl font-black text-[#7E22CE] dark:text-[#F3E8FF]">GH₵ {stats?.totalRevenue?.toLocaleString() || 0}</div>
+          <div className="mt-2 text-xs font-semibold text-[#581C87] dark:text-[#E9D5FF]">From landlord subscriptions</div>
         </div>
 
       </div>

@@ -109,42 +109,42 @@ export default function AdminSubscriptionsPage() {
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+        <div className="p-5 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Total Subscriptions</p>
-            <p className="text-3xl font-black text-[var(--foreground)]">{totalCount}</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-900/70 dark:text-indigo-300/80 mb-1">Total Subscriptions</p>
+            <p className="text-3xl font-black text-indigo-950 dark:text-indigo-200">{totalCount}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
             <CreditCard className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+        <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Active Licenses</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80 mb-1">Active Licenses</p>
             <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
             <CheckCircle className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+        <div className="p-5 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Pending Processing</p>
-            <p className="text-3xl font-black text-amber-500">{pendingCount}</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900/70 dark:text-amber-300/80 mb-1">Pending Processing</p>
+            <p className="text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner">
             <Clock className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+        <div className="p-5 rounded-2xl border bg-sky-50/80 dark:bg-sky-950/30 border-sky-100 dark:border-sky-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Estimated Listing Revenue</p>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-sky-900/70 dark:text-sky-300/80 mb-1">Estimated Listing Revenue</p>
             <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalRevenueGhs.toLocaleString()}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-sky-50 dark:bg-sky-950/50 text-sky-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-300 flex items-center justify-center shadow-inner">
             <Sparkles className="w-6 h-6" />
           </div>
         </div>

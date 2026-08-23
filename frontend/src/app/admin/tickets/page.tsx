@@ -77,22 +77,22 @@ export default function AdminTicketsPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col gap-1">
-          <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Pending</span>
-          <span className="text-2xl font-black text-amber-500">{pendingCount}</span>
+        <div className="p-4 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex flex-col gap-1 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900/70 dark:text-amber-300/80">Pending</span>
+          <span className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendingCount}</span>
         </div>
-        <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col gap-1">
-          <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">In Progress</span>
-          <span className="text-2xl font-black text-blue-500">{inProgressCount}</span>
+        <div className="p-4 rounded-2xl border bg-blue-50/80 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/50 flex flex-col gap-1 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-900/70 dark:text-blue-300/80">In Progress</span>
+          <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{inProgressCount}</span>
         </div>
-        <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col gap-1">
-          <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Resolved</span>
-          <span className="text-2xl font-black text-emerald-500">{resolvedCount}</span>
+        <div className="p-4 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex flex-col gap-1 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80">Resolved</span>
+          <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{resolvedCount}</span>
         </div>
-        <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col gap-1 bg-red-50 dark:bg-red-950/20">
-          <span className="text-[10px] font-black uppercase tracking-wider text-red-600">Urgent & Unresolved</span>
-          <span className="text-2xl font-black text-red-600 flex items-center gap-2">
-            {urgentCount} {urgentCount > 0 && <ShieldAlert className="w-5 h-5 animate-pulse" />}
+        <div className="p-4 rounded-2xl border bg-red-50/80 dark:bg-red-950/30 border-red-100 dark:border-red-900/50 flex flex-col gap-1 shadow-sm hover:shadow-md transition-all">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-900/70 dark:text-red-300/80">Urgent & Unresolved</span>
+          <span className="text-2xl font-black text-red-600 dark:text-red-400 flex items-center gap-2">
+            {urgentCount} {urgentCount > 0 && <ShieldAlert className="w-5 h-5 animate-pulse text-red-600" />}
           </span>
         </div>
       </div>

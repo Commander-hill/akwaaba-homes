@@ -31,30 +31,32 @@ export default function LandlordSubscriptionPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-full flex items-center justify-center text-[var(--primary)] mb-3">
+        <div className="p-6 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
+          <div className="w-12 h-12 bg-[#E0E7FF] dark:bg-[#312E81] rounded-2xl flex items-center justify-center text-[#4338CA] dark:text-[#A5B4FC] mb-3 shadow-inner">
             <Building className="w-6 h-6" />
           </div>
-          <div className="text-3xl font-black text-[var(--foreground)]">{properties?.length || 0}</div>
-          <div className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Total Properties</div>
+          <div className="text-3xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{properties?.length || 0}</div>
+          <div className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider mt-1">Total Properties</div>
         </div>
-        <div className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-600 mb-3">
+
+        <div className="p-6 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
+          <div className="w-12 h-12 bg-[#D1FAE5] dark:bg-[#047857] rounded-2xl flex items-center justify-center text-[#047857] dark:text-[#6EE7B7] mb-3 shadow-inner">
             <CheckCircle className="w-6 h-6" />
           </div>
-          <div className="text-3xl font-black text-emerald-600">
+          <div className="text-3xl font-black text-[#047857] dark:text-[#6EE7B7]">
             {properties?.filter((p: any) => p.isAvailable).length || 0}
           </div>
-          <div className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Active Listings</div>
+          <div className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider mt-1">Active Listings</div>
         </div>
-        <div className="glass-card p-6 rounded-2xl flex flex-col items-center justify-center text-center">
-          <div className="w-12 h-12 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 mb-3">
+
+        <div className="p-6 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
+          <div className="w-12 h-12 bg-[#FECDD3] dark:bg-[#9F1239] rounded-2xl flex items-center justify-center text-[#BE123C] dark:text-[#FECDD3] mb-3 shadow-inner">
             <AlertCircle className="w-6 h-6" />
           </div>
-          <div className="text-3xl font-black text-rose-500">
+          <div className="text-3xl font-black text-[#BE123C] dark:text-[#FFE4E6]">
             {properties?.filter((p: any) => !p.isAvailable).length || 0}
           </div>
-          <div className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Unpaid / Hidden</div>
+          <div className="text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider mt-1">Unpaid / Hidden</div>
         </div>
       </div>
 
