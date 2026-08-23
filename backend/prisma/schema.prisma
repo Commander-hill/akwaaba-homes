@@ -42,6 +42,7 @@ model User {
   resetPasswordToken     String?
   resetPasswordExpires   DateTime?
   isSuspended            Boolean   @default(false)
+  isProfileLocked        Boolean   @default(false)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 

@@ -4,6 +4,7 @@ import {
   getPlatformAnalytics,
   getAllUsers, 
   toggleUserSuspension, 
+  toggleUserProfileLock,
   getAllProperties, 
   updatePropertyApproval, 
   getAllBookings, 
@@ -45,6 +46,7 @@ router.get('/audit-logs', getAuditLogs);
 // Users
 router.get('/users', getAllUsers);
 router.put('/users/:id/suspend', toggleUserSuspension);
+router.put('/users/:id/lock', toggleUserProfileLock);
 router.put('/verify-user/:id', verifyUserCard);
 
 // Properties

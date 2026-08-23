@@ -4,6 +4,7 @@ export declare const getSystemStats: (req: Request, res: Response) => Promise<vo
 export declare const getPlatformAnalytics: (req: Request, res: Response) => Promise<void>;
 export declare const getAllUsers: (req: Request, res: Response) => Promise<void>;
 export declare const toggleUserSuspension: (req: Request, res: Response) => Promise<void>;
+export declare const toggleUserProfileLock: (req: Request, res: Response) => Promise<void>;
 export declare const getAllProperties: (req: Request, res: Response) => Promise<void>;
 export declare const updatePropertyApproval: (req: Request, res: Response) => Promise<void>;
 export declare const getAllBookings: (req: Request, res: Response) => Promise<void>;

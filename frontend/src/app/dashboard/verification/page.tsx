@@ -112,6 +112,16 @@ export default function VerificationPage() {
 
           {(session.ghanaCardStatus === 'NOT_SUBMITTED' || session.ghanaCardStatus === 'REJECTED') ? (
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs sm:text-sm space-y-1">
+                <div className="font-extrabold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+                  <span>🛡️</span> Security & Credentials Safety Warning
+                </div>
+                <p className="leading-relaxed">
+                  Your identity documents are stored safely using bank-grade encryption.
+                  <strong className="text-pink-600 dark:text-pink-400"> Warning:</strong> Please double-check your Ghana Card PIN and uploaded images before submitting. Once submitted, your verification submission will be locked and cannot be edited. Only an administrator can grant access to resubmit.
+                </p>
+              </div>
+
               {message && (
                 <div className={`p-4 rounded-xl text-sm font-medium border ${message.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-900/50 dark:text-emerald-400' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:border-red-900/50 dark:text-red-400'}`}>
                   {message.text}

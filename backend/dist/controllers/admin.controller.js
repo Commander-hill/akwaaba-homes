@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
@@ -185,6 +185,7 @@ const getAllUsers = async (req, res) => {
                 email: true,
                 role: true,
                 isSuspended: true,
+                isProfileLocked: true,
                 ghanaCardStatus: true,
                 ghanaCardNumber: true,
                 ghanaCardFrontUrl: true,
@@ -246,6 +247,33 @@ const toggleUserSuspension = async (req, res) => {
     }
 };
 exports.toggleUserSuspension = toggleUserSuspension;
+const toggleUserProfileLock = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isProfileLocked } = req.body;
+        const targetLockState = Boolean(isProfileLocked);
+        const targetUser = await prisma_1.default.user.findUnique({ where: { id } });
+        if (!targetUser) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        const updatedUser = await prisma_1.default.user.update({
+            where: { id },
+            data: { isProfileLocked: targetLockState },
+            select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, targetLockState ? 'LOCK_USER_PROFILE' : 'UNLOCK_USER_PROFILE', 'User', id, { isProfileLocked: targetUser.isProfileLocked }, { isProfileLocked: targetLockState }, req.ip || req.socket.remoteAddress);
+        res.status(200).json({
+            message: `User ${updatedUser.firstName} ${updatedUser.lastName}'s profile lock status has been updated to ${targetLockState ? 'Locked' : 'Unlocked (Edit Access Granted)'}.`,
+            user: updatedUser
+        });
+    }
+    catch (error) {
+        console.error('Error toggling user profile lock:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.toggleUserProfileLock = toggleUserProfileLock;
 const getAllProperties = async (req, res) => {
     try {
         const properties = await prisma_1.default.property.findMany({

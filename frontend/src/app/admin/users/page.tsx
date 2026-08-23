@@ -52,9 +52,30 @@ export default function AdminUsersPage() {
     onSettled: () => setProcessingId(null)
   });
 
+  const lockMutation = useMutation({
+    mutationFn: async ({ id, isProfileLocked }: { id: string, isProfileLocked: boolean }) => {
+      const res = await api.put(`/admin/users/${id}/lock`, { isProfileLocked });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Profile lock state updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update profile lock state');
+    },
+    onSettled: () => setProcessingId(null)
+  });
+
   const handleVerify = (id: string, status: string) => {
     setProcessingId(id + 'verify');
     verifyMutation.mutate({ id, status });
+  };
+
+  const handleToggleLock = (user: any) => {
+    const nextState = !user.isProfileLocked;
+    setProcessingId(user.id + 'lock');
+    lockMutation.mutate({ id: user.id, isProfileLocked: nextState });
   };
 
   const executeSuspensionToggle = () => {
@@ -72,7 +93,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">User Management</h1>
-          <p className="mt-2 text-[var(--muted-foreground)]">Manage accounts, verify IDs, and suspend fraudulent users.</p>
+          <p className="mt-2 text-[var(--muted-foreground)]">Manage accounts, verify IDs, grant edit permissions, and suspend fraudulent users.</p>
         </div>
         <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full">
           <UserIcon className="w-8 h-8" />
@@ -87,6 +108,7 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4 font-extrabold text-white">User</th>
                 <th className="px-6 py-4 font-extrabold text-white">Role</th>
                 <th className="px-6 py-4 font-extrabold text-white">Ghana Card (KYC)</th>
+                <th className="px-6 py-4 font-extrabold text-white">Profile Access</th>
                 <th className="px-6 py-4 font-extrabold text-white">Account Status</th>
                 <th className="px-6 py-4 font-extrabold text-white">Actions</th>
               </tr>
@@ -124,6 +146,17 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
+                    {user.isProfileLocked ? (
+                      <span className="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-lg text-xs font-extrabold flex items-center gap-1 w-fit">
+                        🔒 Locked (Read-Only)
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-lg text-xs font-extrabold flex items-center gap-1 w-fit">
+                        🔓 Editable
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
                     {user.isSuspended ? (
                        <span className="flex items-center gap-1 text-red-500 font-bold text-xs"><AlertTriangle className="w-4 h-4"/> SUSPENDED</span>
                     ) : (
@@ -131,28 +164,44 @@ export default function AdminUsersPage() {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1.5">
                       {user.ghanaCardStatus === 'PENDING' && (
                         <button onClick={() => setSelectedUser(user)} className="px-3 py-1 bg-[var(--primary)] text-white rounded-md text-xs font-bold hover:opacity-90 transition-opacity w-fit">Review ID</button>
                       )}
+                      
+                      {user.role !== 'ADMIN' && (
+                        <button
+                          onClick={() => handleToggleLock(user)}
+                          disabled={processingId === user.id + 'lock'}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer ${
+                            user.isProfileLocked 
+                              ? 'bg-amber-600 hover:bg-amber-700 text-white' 
+                              : 'bg-slate-700 hover:bg-slate-800 text-white'
+                          }`}
+                        >
+                          {processingId === user.id + 'lock' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                          {user.isProfileLocked ? '🔓 Grant Edit Access' : '🔒 Lock Profile'}
+                        </button>
+                      )}
+
                       {user.role !== 'ADMIN' && (
                         user.isSuspended ? (
                           <button 
                             onClick={() => setSuspensionTarget({ user, action: 'unsuspend' })} 
                             disabled={processingId === user.id + 'suspend'} 
-                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                           >
                             {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                            Unsuspend Account
+                            Unsuspend
                           </button>
                         ) : (
                           <button 
                             onClick={() => setSuspensionTarget({ user, action: 'suspend' })} 
                             disabled={processingId === user.id + 'suspend'} 
-                            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer"
                           >
                             {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                            Suspend Account
+                            Suspend
                           </button>
                         )
                       )}

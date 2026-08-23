@@ -396,7 +396,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         programmeOfStudy: true,
         yearOfStudy: true,
         studentType: true,
-        reputationScore: true
+        reputationScore: true,
+        isProfileLocked: true
       }
     });
 
@@ -461,17 +462,32 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    const existingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!existingUser) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // Strict Immutability Check: If profile is locked and user is not ADMIN, block edits
+    if (existingUser.isProfileLocked && req.user.role !== 'ADMIN') {
+      res.status(403).json({ 
+        message: 'Your profile is locked and read-only. Only an administrator can grant access to modify your credentials.' 
+      });
+      return;
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: req.user.id },
       data: {
-        firstName, lastName, otherNames, phoneNumber, gender, 
+        firstName, lastName, otherNames, phoneNumber, gender: gender ? gender.toUpperCase() : null, 
         dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl,
-        campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType
+        campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
+        isProfileLocked: true // Lock profile upon hitting Save button
       }
     });
 
     res.status(200).json({ 
-      message: 'Profile updated successfully',
+      message: 'Profile updated and locked successfully',
       user: updatedUser
     });
   } catch (error) {

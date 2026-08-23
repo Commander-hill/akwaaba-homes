@@ -10,7 +10,6 @@ const auditLogger_1 = require("../utils/auditLogger");
 const notification_service_1 = require("../utils/notification.service");
 const socket_1 = require("../socket");
 const json_1 = require("../utils/json");
-const config_service_1 = require("../utils/config.service");
 const createBooking = async (req, res) => {
     try {
         const tenantId = req.user.id;
@@ -40,13 +39,56 @@ const createBooking = async (req, res) => {
         }
         const tenant = await prisma_1.default.user.findUnique({
             where: { id: tenantId },
-            select: { firstName: true, lastName: true, email: true, ghanaCardStatus: true, gender: true }
+            select: {
+                firstName: true, lastName: true, email: true, phoneNumber: true,
+                gender: true, dateOfBirth: true, nationality: true, guardianName: true,
+                guardianPhone: true, campus: true, studentId: true, dateOfAdmission: true,
+                programmeOfStudy: true, yearOfStudy: true, studentType: true,
+                ghanaCardStatus: true, ghanaCardNumber: true
+            }
         });
-        // Enforce Ghana Card KYC if enabled in Platform Configuration
-        const sysConfig = await (0, config_service_1.getSystemConfig)();
-        if (sysConfig.ghanaCardVerificationEnabled && tenant?.ghanaCardStatus !== 'VERIFIED') {
+        // ── STRICT PROFILE COMPLETENESS VALIDATION ──
+        const missingFields = [];
+        if (!tenant?.firstName?.trim())
+            missingFields.push('First Name');
+        if (!tenant?.lastName?.trim())
+            missingFields.push('Last Name');
+        if (!tenant?.phoneNumber?.trim())
+            missingFields.push('Phone Number');
+        if (!tenant?.gender?.trim())
+            missingFields.push('Gender');
+        if (!tenant?.dateOfBirth?.trim())
+            missingFields.push('Date of Birth');
+        if (!tenant?.nationality?.trim())
+            missingFields.push('Country / Nationality');
+        if (!tenant?.guardianName?.trim())
+            missingFields.push('Guardian Name');
+        if (!tenant?.guardianPhone?.trim())
+            missingFields.push('Guardian Phone');
+        if (!tenant?.campus?.trim())
+            missingFields.push('Campus');
+        if (!tenant?.studentId?.trim())
+            missingFields.push('Student ID');
+        if (!tenant?.dateOfAdmission?.trim())
+            missingFields.push('Date of Admission');
+        if (!tenant?.programmeOfStudy?.trim())
+            missingFields.push('Programme of Study');
+        if (!tenant?.yearOfStudy?.trim())
+            missingFields.push('Year of Study');
+        if (!tenant?.studentType?.trim())
+            missingFields.push('Student Type');
+        if (missingFields.length > 0) {
             res.status(403).json({
-                message: 'Ghana Card identity verification is required by platform policy before placing hostel bookings. Please verify your Ghana Card in your profile settings.'
+                message: `Profile Incomplete: You must complete all required profile details before requesting a booking. Missing: ${missingFields.join(', ')}.`,
+                redirectTo: '/dashboard/profile'
+            });
+            return;
+        }
+        // ── STRICT IDENTITY VERIFICATION VALIDATION ──
+        if (!tenant?.ghanaCardStatus || tenant.ghanaCardStatus === 'NOT_SUBMITTED') {
+            res.status(403).json({
+                message: 'Identity Verification Required: You must submit your Ghana Card details on the Verification page before requesting a booking.',
+                redirectTo: '/dashboard/verification'
             });
             return;
         }
@@ -56,7 +98,8 @@ const createBooking = async (req, res) => {
             const tenantGender = tenant?.gender?.toUpperCase(); // e.g. "MALE" or "FEMALE"
             if (!tenantGender) {
                 res.status(403).json({
-                    message: 'Your gender is not set on your profile. Please update your profile before booking a gender-designated block.'
+                    message: 'Your gender is not set on your profile. Please update your profile before booking a gender-designated block.',
+                    redirectTo: '/dashboard/profile'
                 });
                 return;
             }

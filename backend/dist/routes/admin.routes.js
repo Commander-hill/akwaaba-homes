@@ -16,6 +16,7 @@ router.get('/audit-logs', admin_controller_1.getAuditLogs);
 // Users
 router.get('/users', admin_controller_1.getAllUsers);
 router.put('/users/:id/suspend', admin_controller_1.toggleUserSuspension);
+router.put('/users/:id/lock', admin_controller_1.toggleUserProfileLock);
 router.put('/verify-user/:id', admin_controller_1.verifyUserCard);
 // Properties
 router.get('/properties', admin_controller_1.getAllProperties);

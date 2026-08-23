@@ -194,6 +194,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         email: true,
         role: true,
         isSuspended: true,
+        isProfileLocked: true,
         ghanaCardStatus: true,
         ghanaCardNumber: true,
         ghanaCardFrontUrl: true,
@@ -264,6 +265,44 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
     });
   } catch (error) {
     console.error('Error toggling user suspension:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const toggleUserProfileLock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { isProfileLocked } = req.body;
+    const targetLockState = Boolean(isProfileLocked);
+
+    const targetUser = await prisma.user.findUnique({ where: { id } });
+    if (!targetUser) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { isProfileLocked: targetLockState },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
+    });
+
+    await logAudit(
+      req.user.id,
+      targetLockState ? 'LOCK_USER_PROFILE' : 'UNLOCK_USER_PROFILE',
+      'User',
+      id,
+      { isProfileLocked: targetUser.isProfileLocked },
+      { isProfileLocked: targetLockState },
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({
+      message: `User ${updatedUser.firstName} ${updatedUser.lastName}'s profile lock status has been updated to ${targetLockState ? 'Locked' : 'Unlocked (Edit Access Granted)'}.`,
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Error toggling user profile lock:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

@@ -128,22 +128,53 @@ export default function ProfilePage() {
     return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
   }
 
+  const isLocked = !!session?.isProfileLocked && session?.role !== 'ADMIN';
+
   return (
     <div className="max-w-4xl mx-auto min-h-screen pb-12 animate-in text-slate-800 dark:text-slate-200">
       
       {/* Header / Nav */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <Link href="/dashboard/tenant" className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
           <ArrowLeft className="w-6 h-6" /> Profile
         </Link>
-        <button 
-          onClick={handleSubmit} 
-          disabled={isSaving}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-70 shadow-md"
-        >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
-        </button>
+        {!isLocked ? (
+          <button 
+            onClick={handleSubmit} 
+            disabled={isSaving}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-70 shadow-md"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Profile
+          </button>
+        ) : (
+          <div className="flex items-center gap-2 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800">
+            <span>🔒 Locked (Read-Only)</span>
+          </div>
+        )}
       </div>
+
+      {/* Safety & Immutability Warning Banner */}
+      {!isLocked ? (
+        <div className="mb-6 p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs sm:text-sm space-y-1">
+          <div className="font-extrabold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
+            <span>🛡️</span> Security & Data Accuracy Warning
+          </div>
+          <p className="leading-relaxed">
+            Your information is stored safely and handled with strict confidentiality. 
+            <strong className="text-pink-600 dark:text-pink-400"> Warning:</strong> Once you fill out your credentials and click <strong>Save Profile</strong>, your details will become <strong>permanently locked and read-only</strong> to prevent identity fraud and ensure institutional compliance. You will not be able to edit them afterwards. Only an administrator can grant access to apply changes.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs sm:text-sm space-y-1">
+          <div className="font-extrabold flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+            <span>🔒</span> Profile Status: Locked & Immutably Verified
+          </div>
+          <p className="leading-relaxed">
+            Your profile details have been saved and locked. The Save button is hidden and all fields are read-only. 
+            If you need to make corrections to your credentials, please contact an <strong>Administrator</strong> to grant access to apply changes.
+          </p>
+        </div>
+      )}
 
       {message && (
         <div className={`mb-6 p-4 rounded-xl text-sm font-bold shadow-sm ${message.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
@@ -163,13 +194,15 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-          <button 
-            onClick={handleSimulateAvatarUpload}
-            className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2.5 rounded-full shadow-lg hover:bg-pink-600 transition-transform hover:scale-105"
-            title="Upload Photo (Simulated)"
-          >
-            <Upload className="w-4 h-4" />
-          </button>
+          {!isLocked && (
+            <button 
+              onClick={handleSimulateAvatarUpload}
+              className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2.5 rounded-full shadow-lg hover:bg-pink-600 transition-transform hover:scale-105"
+              title="Upload Photo (Simulated)"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -225,9 +258,10 @@ export default function ProfilePage() {
             <input 
               type="checkbox" 
               className="sr-only peer"
+              disabled={isLocked}
               checked={isStudent}
               onChange={(e) => {
-                setIsStudent(e.target.checked);
+                if (!isLocked) setIsStudent(e.target.checked);
               }}
             />
             <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
@@ -241,33 +275,33 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in">
             
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">First Name</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="FIRST NAME" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">First Name *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="FIRST NAME" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
               <label className="block text-xs font-medium text-slate-500 mb-1">Other Name(S)</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.otherNames} onChange={(e) => setFormData({...formData, otherNames: e.target.value})} placeholder="OTHER NAMES" />
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.otherNames} onChange={(e) => setFormData({...formData, otherNames: e.target.value})} placeholder="OTHER NAMES" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Last Name</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="LAST NAME" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Last Name *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="LAST NAME" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Mobile Number</label>
-              <input type="tel" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="MOBILE NUMBER" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Mobile Number *</label>
+              <input type="tel" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="MOBILE NUMBER" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
               <label className="block text-xs font-medium text-slate-500 mb-1">Email</label>
-              <input type="email" disabled className="w-full font-bold text-sm bg-transparent outline-none uppercase text-slate-500 truncate" value={formData.email} placeholder="EMAIL" />
+              <input type="email" disabled className="w-full font-bold text-sm bg-transparent outline-none uppercase text-slate-500 truncate disabled:opacity-60 disabled:cursor-not-allowed" value={formData.email} placeholder="EMAIL" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Gender</label>
-              <select className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase appearance-none cursor-pointer" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
+              <label className="block text-xs font-medium text-slate-500 mb-1">Gender *</label>
+              <select disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
                 <option value="">SELECT GENDER</option>
                 <option value="MALE">MALE</option>
                 <option value="FEMALE">FEMALE</option>
@@ -275,23 +309,23 @@ export default function ProfilePage() {
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Birth</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} placeholder="FEB 03, 2003" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Birth *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} placeholder="FEB 03, 2003" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Country</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="GHANA" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Country *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="GHANA" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Name</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="GUARDIAN NAME" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Name *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="GUARDIAN NAME" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Phone Number</label>
-              <input type="tel" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="GUARDIAN PHONE" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Phone Number *</label>
+              <input type="tel" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="GUARDIAN PHONE" />
             </div>
             
           </div>
@@ -301,33 +335,33 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in">
             
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Student ID</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="NRIT/CR/..." />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Student ID *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="NRIT/CR/..." />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Admission</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} placeholder="JAN 14, 2022" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Admission *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} placeholder="JAN 14, 2022" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Programme Of Study</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase truncate" value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="BACHELOR OF SCIENCE..." />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Programme Of Study *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase truncate disabled:opacity-60 disabled:cursor-not-allowed" value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="BACHELOR OF SCIENCE..." />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Year Of Study</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})} placeholder="300" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Year Of Study *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})} placeholder="300" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Student Type</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})} placeholder="UNDERGRADUATE" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Student Type *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})} placeholder="UNDERGRADUATE" />
             </div>
 
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Campus</label>
-              <input type="text" className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase" value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})} placeholder="UNIVERSITY OF CAPE COAST" />
+              <label className="block text-xs font-medium text-slate-500 mb-1">Campus *</label>
+              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})} placeholder="UNIVERSITY OF CAPE COAST" />
             </div>
             
           </div>

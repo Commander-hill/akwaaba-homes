@@ -109,6 +109,39 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       return;
     }
 
+    // ── STRICT PROFILE COMPLETENESS & VERIFICATION CHECK FOR TENANTS ──
+    if (session.role === 'TENANT') {
+      const requiredProfileFields = [
+        'firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth',
+        'nationality', 'guardianName', 'guardianPhone', 'campus', 'studentId',
+        'dateOfAdmission', 'programmeOfStudy', 'yearOfStudy', 'studentType'
+      ];
+
+      const isProfileIncomplete = requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
+
+      if (isProfileIncomplete) {
+        setBookingMessage({ 
+          text: '📋 Profile Incomplete: Please complete ALL mandatory details on your Profile page (including Gender & Student credentials) before booking. Redirecting to Profile page...', 
+          type: 'error' 
+        });
+        setTimeout(() => {
+          router.push('/dashboard/profile');
+        }, 2200);
+        return;
+      }
+
+      if (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED') {
+        setBookingMessage({ 
+          text: '🆔 Identity Verification Required: Please submit your Ghana Card details on the Verification page before booking. Redirecting to Verification page...', 
+          type: 'error' 
+        });
+        setTimeout(() => {
+          router.push('/dashboard/verification');
+        }, 2200);
+        return;
+      }
+    }
+
     setIsBooking(true);
     setBookingMessage(null);
     setShowPaymentModal(true);
@@ -134,7 +167,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       setEndDate('');
       setSelectedRoomId('');
     } catch (error: any) {
-      setBookingMessage({ text: error.response?.data?.message || 'Failed to request booking', type: 'error' });
+      const errorMsg = error.response?.data?.message || 'Failed to request booking';
+      setBookingMessage({ text: errorMsg, type: 'error' });
+      if (error.response?.data?.redirectTo) {
+        setTimeout(() => {
+          router.push(error.response.data.redirectTo);
+        }, 2200);
+      }
     } finally {
       setIsBooking(false);
     }
