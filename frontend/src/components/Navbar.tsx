@@ -164,8 +164,9 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center gap-4">
+          <div className="md:hidden flex items-center gap-3">
             <ThemeToggle isScrolled={isScrolled} />
+            {isAuthenticated && <NotificationBell />}
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={clsx(
               "p-2 transition-colors", 
               isScrolled ? "text-slate-900 dark:text-white" : "text-white"
