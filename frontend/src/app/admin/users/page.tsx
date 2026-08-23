@@ -6,11 +6,22 @@ import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { Loader2, ShieldCheck, User as UserIcon, CheckCircle, XCircle, AlertTriangle, ShieldAlert } from 'lucide-react';
 
+// Helper to safely format image URLs (Cloudinary, S3, data URIs, or local backend paths)
+const getImageUrl = (url: string | null | undefined) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  return `${baseUrl.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
+};
+
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [suspensionTarget, setSuspensionTarget] = useState<{ user: any; action: 'suspend' | 'unsuspend' } | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<{ url: string; title: string } | null>(null);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ['admin-users'],
@@ -47,7 +58,7 @@ export default function AdminUsersPage() {
       setSuspensionTarget(null);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to update user suspension state');
+      toast.error(err.response?.data?.message || 'Failed to update user status');
     },
     onSettled: () => setProcessingId(null)
   });
@@ -108,121 +119,136 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4 font-extrabold text-white">User</th>
                 <th className="px-6 py-4 font-extrabold text-white">Role</th>
                 <th className="px-6 py-4 font-extrabold text-white">Ghana Card (KYC)</th>
-                <th className="px-6 py-4 font-extrabold text-white">Profile Access</th>
+                <th className="px-6 py-4 font-extrabold text-white">Profile Lock & Edit Requests</th>
                 <th className="px-6 py-4 font-extrabold text-white">Account Status</th>
-                <th className="px-6 py-4 font-extrabold text-white">Actions</th>
+                <th className="px-6 py-4 font-extrabold text-white text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {users?.map((user: any) => (
-                <tr key={user.id} className={`hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors ${user.isSuspended ? 'opacity-70 grayscale bg-red-50/10' : ''}`}>
-                  <td className="px-6 py-4">
+                <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
+                  <td className="px-6 py-4 font-medium">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                        <UserIcon className="w-4 h-4 text-slate-500" />
+                      <div className="w-10 h-10 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center font-bold">
+                        {user.firstName[0]}{user.lastName[0]}
                       </div>
                       <div>
                         <div className="font-bold text-[var(--foreground)]">{user.firstName} {user.lastName}</div>
                         <div className="text-xs text-[var(--muted-foreground)]">{user.email}</div>
-                        {user.role === 'TENANT' && <div className="text-[10px] mt-1 font-bold text-amber-500">Rep: {(user.reputationScore / 10).toFixed(1)}/5.0</div>}
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 font-medium">
-                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'}`}>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300' :
+                      user.role === 'LANDLORD' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300' :
+                      'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
+                    }`}>
                       {user.role}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-mono text-[var(--muted-foreground)] text-xs mb-1">{user.ghanaCardNumber || 'No ID'}</div>
-                    <span className={`px-2 py-1 flex items-center gap-1 w-fit rounded-full text-[10px] font-bold ${
-                      user.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                      user.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                      user.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                      'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
-                    }`}>
-                      {user.ghanaCardStatus === 'VERIFIED' && <CheckCircle className="w-3 h-3" />}
-                      {user.ghanaCardStatus ? user.ghanaCardStatus.replace('_', ' ') : 'NOT SUBMITTED'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {user.profileUnlockRequested ? (
-                      <div className="space-y-1">
-                        <span className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 rounded-md text-[11px] font-black flex items-center gap-1 w-fit animate-pulse">
-                          ⚠️ Edit Requested
-                        </span>
-                        {user.profileUnlockReason && (
-                          <div className="text-[11px] font-medium text-amber-700 dark:text-amber-300 max-w-[180px] italic truncate" title={user.profileUnlockReason}>
-                            "{user.profileUnlockReason}"
-                          </div>
-                        )}
-                      </div>
-                    ) : user.isProfileLocked ? (
-                      <span className="px-2.5 py-1 bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded-lg text-xs font-extrabold flex items-center gap-1 w-fit">
-                        🔒 Locked (Read-Only)
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        user.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                        user.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300' :
+                        user.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                      }`}>
+                        {user.ghanaCardStatus}
                       </span>
-                    ) : (
-                      <span className="px-2.5 py-1 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-lg text-xs font-extrabold flex items-center gap-1 w-fit">
-                        🔓 Editable
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {user.isSuspended ? (
-                       <span className="flex items-center gap-1 text-red-500 font-bold text-xs"><AlertTriangle className="w-4 h-4"/> SUSPENDED</span>
-                    ) : (
-                       <span className="flex items-center gap-1 text-emerald-500 font-bold text-xs"><CheckCircle className="w-4 h-4"/> ACTIVE</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1.5">
                       {user.ghanaCardStatus === 'PENDING' && (
-                        <button onClick={() => setSelectedUser(user)} className="px-3 py-1 bg-[var(--primary)] text-white rounded-md text-xs font-bold hover:opacity-90 transition-opacity w-fit">Review ID</button>
-                      )}
-                      
-                      {user.role !== 'ADMIN' && (
                         <button
-                          onClick={() => handleToggleLock(user)}
-                          disabled={processingId === user.id + 'lock'}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer ${
-                            user.profileUnlockRequested
-                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-bounce'
-                              : user.isProfileLocked 
-                                ? 'bg-amber-600 hover:bg-amber-700 text-white' 
-                                : 'bg-slate-700 hover:bg-slate-800 text-white'
-                          }`}
+                          onClick={() => setSelectedUser(user)}
+                          className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center gap-1"
                         >
-                          {processingId === user.id + 'lock' ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                          {user.profileUnlockRequested 
-                            ? '✅ Approve Edit Access Request' 
-                            : user.isProfileLocked 
-                              ? '🔓 Grant Edit Access' 
-                              : '🔒 Lock Profile'}
+                          Review ID
                         </button>
                       )}
-
-                      {user.role !== 'ADMIN' && (
-                        user.isSuspended ? (
-                          <button 
-                            onClick={() => setSuspensionTarget({ user, action: 'unsuspend' })} 
-                            disabled={processingId === user.id + 'suspend'} 
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer"
-                          >
-                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                            Unsuspend
-                          </button>
-                        ) : (
-                          <button 
-                            onClick={() => setSuspensionTarget({ user, action: 'suspend' })} 
-                            disabled={processingId === user.id + 'suspend'} 
-                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold w-fit inline-flex items-center gap-1 shadow-sm transition-all cursor-pointer"
-                          >
-                            {processingId === user.id + 'suspend' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                            Suspend
-                          </button>
-                        )
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          user.isProfileLocked
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300'
+                            : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300'
+                        }`}>
+                          {user.isProfileLocked ? '🔒 Locked' : '🔓 Editable'}
+                        </span>
+                        
+                        {user.profileUnlockRequested && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-extrabold bg-red-500 text-white animate-pulse shadow-sm">
+                            ⚠️ Edit Requested
+                          </span>
+                        )}
+                      </div>
+                      
+                      {user.profileUnlockRequested && user.profileUnlockReason && (
+                        <p className="text-xs italic text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded-lg border border-amber-200 dark:border-amber-900/50">
+                          &quot;{user.profileUnlockReason}&quot;
+                        </p>
                       )}
                     </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      user.isSuspended ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300'
+                    }`}>
+                      {user.isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    {/* Grant / Revoke Profile Edit Access */}
+                    <button
+                      onClick={() => handleToggleLock(user)}
+                      disabled={processingId === user.id + 'lock'}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                        user.profileUnlockRequested
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white animate-bounce'
+                          : user.isProfileLocked
+                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
+                          : 'bg-slate-200 hover:bg-slate-300 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200'
+                      }`}
+                    >
+                      {processingId === user.id + 'lock' ? (
+                        <Loader2 className="w-3 h-3 animate-spin inline" />
+                      ) : user.profileUnlockRequested ? (
+                        '✅ Approve Edit Access Request'
+                      ) : user.isProfileLocked ? (
+                        'Unlock Profile'
+                      ) : (
+                        'Lock Profile'
+                      )}
+                    </button>
+
+                    {/* Verify Ghana Card Action */}
+                    {user.ghanaCardStatus === 'PENDING' && (
+                      <button
+                        onClick={() => setSelectedUser(user)}
+                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors"
+                      >
+                        Verify ID
+                      </button>
+                    )}
+
+                    {/* Suspend / Unsuspend Action */}
+                    <button
+                      onClick={() => setSuspensionTarget({ user, action: user.isSuspended ? 'unsuspend' : 'suspend' })}
+                      disabled={processingId === user.id + 'suspend'}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${
+                        user.isSuspended ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'
+                      }`}
+                    >
+                      {processingId === user.id + 'suspend' ? (
+                        <Loader2 className="w-3 h-3 animate-spin inline" />
+                      ) : user.isSuspended ? (
+                        'Unsuspend'
+                      ) : (
+                        'Suspend'
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -231,106 +257,225 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* ─── SUSPENSION CONFIRMATION MODAL ────────────────────────────────────────── */}
+      {/* ─── CONFIRM SUSPENSION MODAL ─────────────────────────────────────────────── */}
       {suspensionTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 space-y-5 border border-[var(--border)] shadow-2xl">
-            <div className="flex items-center gap-3 text-red-600 dark:text-red-500">
-              <div className="p-3 bg-red-100 dark:bg-red-950/50 rounded-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-[var(--border)] space-y-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-full ${suspensionTarget.action === 'suspend' ? 'bg-red-100 text-red-600 dark:bg-red-950/50' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50'}`}>
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-extrabold text-lg text-[var(--foreground)]">
                   {suspensionTarget.action === 'suspend' ? 'Confirm User Suspension' : 'Confirm Account Unsuspension'}
                 </h3>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  {suspensionTarget.user.firstName} {suspensionTarget.user.lastName} ({suspensionTarget.user.email})
-                </p>
               </div>
             </div>
-
-            <p className="text-sm text-[var(--muted-foreground)] leading-relaxed">
-              {suspensionTarget.action === 'suspend' ? (
-                <>Are you sure you want to suspend this account? The user will be <strong>logged out immediately</strong> and blocked from logging in or booking properties.</>
-              ) : (
-                <>Are you sure you want to unsuspend this account? The user will regain full platform access.</>
-              )}
-            </p>
-
-            <div className="flex justify-end gap-3 pt-2 border-t border-[var(--border)]">
-              <button
-                onClick={() => setSuspensionTarget(null)}
-                disabled={suspendMutation.isPending}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={executeSuspensionToggle}
-                disabled={suspendMutation.isPending}
-                className={`px-5 py-2 text-white text-xs font-bold rounded-xl inline-flex items-center gap-2 shadow-md transition-all ${
-                  suspensionTarget.action === 'suspend' 
-                    ? 'bg-red-600 hover:bg-red-700 shadow-red-500/20' 
-                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20'
-                }`}
-              >
-                {suspendMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {suspensionTarget.action === 'suspend' ? 'Yes, Suspend Account' : 'Yes, Unsuspend Account'}
-              </button>
+            <div className="flex justify-end gap-3 mt-4">
+               <button onClick={() => setSuspensionTarget(null)} className="px-4 py-2 text-xs font-bold text-slate-600">Cancel</button>
+               <button onClick={executeSuspensionToggle} className="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold">Confirm</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── REVIEW ID MODAL ────────────────────────────────────────────────────── */}
+      {/* ─── REVIEW ID MODAL (PREMIUM ULTRA DESIGN) ───────────────────────────────── */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl border border-[var(--border)] max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-slate-50 dark:bg-slate-900">
-              <h2 className="text-xl font-bold flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-[var(--primary)]"/> Review ID: {selectedUser.firstName} {selectedUser.lastName}</h2>
-              <button onClick={() => setSelectedUser(null)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
-                <XCircle className="w-6 h-6 text-slate-500" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-indigo-100 dark:border-indigo-900/50 max-h-[92vh] flex flex-col">
+            {/* Gradient Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 text-white flex justify-between items-center relative overflow-hidden shadow-md">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+              
+              <div className="flex items-center gap-3.5 z-10">
+                <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-indigo-300 border border-white/10 shadow-inner">
+                  <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      Ghana Card Verification Audit
+                    </span>
+                  </div>
+                  <h2 className="text-xl font-extrabold text-white tracking-tight mt-0.5">
+                    Review Identity: {selectedUser.firstName} {selectedUser.lastName}
+                  </h2>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all backdrop-blur-sm z-10"
+              >
+                <XCircle className="w-6 h-6" />
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto space-y-6 flex-1">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center">
-                <span className="text-sm font-semibold text-[var(--muted-foreground)]">Submitted PIN:</span>
-                <span className="font-mono font-bold text-lg">{selectedUser.ghanaCardNumber}</span>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-950/50">
+              {/* User Metadata Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-[var(--border)] shadow-sm">
+                <div>
+                  <span className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider block mb-1">
+                    Full Name & Role
+                  </span>
+                  <p className="font-extrabold text-base text-[var(--foreground)]">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </p>
+                  <span className="inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                    {selectedUser.role}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider block mb-1">
+                    Contact & Gender
+                  </span>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">
+                    {selectedUser.email}
+                  </p>
+                  <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                    Phone: {selectedUser.phoneNumber || 'N/A'} • Gender: {selectedUser.gender || 'Not specified'}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider block mb-1">
+                    Submitted Ghana Card PIN
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <code className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-sm border border-indigo-200 dark:border-indigo-900/50">
+                      {selectedUser.ghanaCardNumber || 'NOT PROVIDED'}
+                    </code>
+                  </div>
+                </div>
               </div>
-              
+
+              {/* ID Document Images */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Front of ID */}
                 <div className="space-y-2">
-                  <h3 className="font-bold text-sm text-[var(--foreground)]">Front of ID</h3>
-                  <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center aspect-[1.6]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm text-[var(--foreground)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                      Document 01: Front Side
+                    </h3>
+                    {selectedUser.ghanaCardFrontUrl && (
+                      <button
+                        onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.ghanaCardFrontUrl), title: 'Front of Ghana Card' })}
+                        className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      >
+                        Enlarge / Fullscreen
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative group border-2 border-dashed border-indigo-200 dark:border-indigo-900/50 rounded-2xl overflow-hidden bg-slate-900/5 dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-inner">
                     {selectedUser.ghanaCardFrontUrl ? (
-                      <img src={`http://localhost:5000${selectedUser.ghanaCardFrontUrl}`} alt="Front ID" className="w-full h-full object-contain" />
+                      <img
+                        src={getImageUrl(selectedUser.ghanaCardFrontUrl)}
+                        alt="Front side of Ghana Card"
+                        className="w-full max-h-[280px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
                     ) : (
-                      <span className="text-[var(--muted-foreground)] text-sm font-bold">No Image Provided</span>
+                      <div className="text-center p-6 text-[var(--muted-foreground)]">
+                        <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                        <p className="text-xs font-bold">No Front ID Image Uploaded</p>
+                      </div>
                     )}
                   </div>
                 </div>
+
+                {/* Back of ID */}
                 <div className="space-y-2">
-                  <h3 className="font-bold text-sm text-[var(--foreground)]">Back of ID</h3>
-                  <div className="border border-[var(--border)] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center aspect-[1.6]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm text-[var(--foreground)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-purple-500" />
+                      Document 02: Back Side
+                    </h3>
+                    {selectedUser.ghanaCardBackUrl && (
+                      <button
+                        onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.ghanaCardBackUrl), title: 'Back of Ghana Card' })}
+                        className="text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline"
+                      >
+                        Enlarge / Fullscreen
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative group border-2 border-dashed border-purple-200 dark:border-purple-900/50 rounded-2xl overflow-hidden bg-slate-900/5 dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-inner">
                     {selectedUser.ghanaCardBackUrl ? (
-                      <img src={`http://localhost:5000${selectedUser.ghanaCardBackUrl}`} alt="Back ID" className="w-full h-full object-contain" />
+                      <img
+                        src={getImageUrl(selectedUser.ghanaCardBackUrl)}
+                        alt="Back side of Ghana Card"
+                        className="w-full max-h-[280px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
                     ) : (
-                      <span className="text-[var(--muted-foreground)] text-sm font-bold">No Image Provided</span>
+                      <div className="text-center p-6 text-[var(--muted-foreground)]">
+                        <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                        <p className="text-xs font-bold">No Back ID Image Uploaded</p>
+                      </div>
                     )}
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t border-[var(--border)] bg-slate-50 dark:bg-slate-900 flex justify-end gap-3">
-              <button onClick={() => handleVerify(selectedUser.id, 'REJECTED')} disabled={processingId === selectedUser.id+'verify'} className="px-6 py-3 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-xl font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
-                {processingId === selectedUser.id+'verify' ? 'Processing...' : 'Reject Application'}
+            {/* Modal Footer Actions */}
+            <div className="p-5 bg-white dark:bg-slate-900 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-3">
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Approving this verification will grant the user official <strong className="text-emerald-600">VERIFIED</strong> status.
+              </p>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => handleVerify(selectedUser.id, 'REJECTED')}
+                  disabled={processingId === selectedUser.id + 'verify'}
+                  className="flex-1 sm:flex-none px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-2"
+                >
+                  <XCircle className="w-4 h-4" />
+                  {processingId === selectedUser.id + 'verify' ? 'Processing...' : 'Reject Application'}
+                </button>
+
+                <button
+                  onClick={() => handleVerify(selectedUser.id, 'VERIFIED')}
+                  disabled={processingId === selectedUser.id + 'verify'}
+                  className="flex-1 sm:flex-none px-7 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                >
+                  {processingId === selectedUser.id + 'verify' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
+                  Approve & Verify Identity
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── FULLSCREEN LIGHTBOX ZOOM MODAL ───────────────────────────────────────── */}
+      {zoomedImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in">
+          <div className="relative max-w-5xl w-full flex flex-col items-center">
+            <div className="flex justify-between items-center w-full mb-3 text-white">
+              <h3 className="font-extrabold text-lg">{zoomedImage.title}</h3>
+              <button
+                onClick={() => setZoomedImage(null)}
+                className="px-4 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold backdrop-blur-md"
+              >
+                Close Lightbox (Esc)
               </button>
-              <button onClick={() => handleVerify(selectedUser.id, 'VERIFIED')} disabled={processingId === selectedUser.id+'verify'} className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-colors flex items-center gap-2 shadow-md">
-                {processingId === selectedUser.id+'verify' ? <Loader2 className="w-5 h-5 animate-spin"/> : <CheckCircle className="w-5 h-5"/>}
-                Approve & Verify
-              </button>
+            </div>
+            <div className="border border-white/20 rounded-2xl overflow-hidden max-h-[85vh] bg-black">
+              <img src={zoomedImage.url} alt={zoomedImage.title} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>
