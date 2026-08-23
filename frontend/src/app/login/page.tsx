@@ -58,9 +58,26 @@ export default function LoginPage() {
       <div className="w-full max-w-md z-10 mx-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         <div className="bg-[#1C1A1B]/80 backdrop-blur-xl rounded-[28px] p-8 sm:p-10 shadow-2xl border border-white/10">
-          
+
+          {/* Logo Header */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_32px_rgba(91,70,229,0.45)] mb-3 ring-2 ring-white/10">
+              <Image
+                src="/logo.png"
+                alt="Akwaaba Homes"
+                width={64}
+                height={64}
+                className="w-full h-full object-cover"
+                priority
+              />
+            </div>
+            <span className="text-white font-extrabold text-xl tracking-tight">
+              Akwaaba<span className="text-[#7C6BFF]">Homes</span>
+            </span>
+          </div>
+
           <div className="text-center mb-8">
-            <h1 className="text-[32px] font-extrabold tracking-tight text-white mb-2">
+            <h1 className="text-[28px] font-extrabold tracking-tight text-white mb-2">
               Welcome back
             </h1>
             <p className="text-[#A1A1AA] text-sm">
