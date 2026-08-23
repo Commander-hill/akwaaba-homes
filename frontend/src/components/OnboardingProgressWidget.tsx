@@ -84,7 +84,7 @@ export default function OnboardingProgressWidget({ user, hasProperty = false }: 
       </div>
 
       {/* Checklist items */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 border-t border-[var(--border)]">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${!isTenant ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-3 pt-2 border-t border-[var(--border)]`}>
         {/* Step 1: Account Created */}
         <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -127,6 +127,27 @@ export default function OnboardingProgressWidget({ user, hasProperty = false }: 
             </div>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </Link>
+        )}
+
+        {/* Step 4: Publish First Listing (Landlords only) */}
+        {!isTenant && (
+          hasProperty ? (
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/80 dark:bg-emerald-950/30 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>First Listing Published</span>
+            </div>
+          ) : (
+            <Link
+              href="/dashboard/landlord/new"
+              className="flex items-center justify-between gap-2 text-xs font-bold text-indigo-800 dark:text-indigo-300 bg-indigo-50/90 dark:bg-indigo-950/40 p-2.5 rounded-xl border border-indigo-200 dark:border-indigo-900/50 hover:bg-indigo-100 transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <Circle className="w-4 h-4 text-indigo-500 shrink-0" />
+                <span>Publish First Listing</span>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          )
         )}
       </div>
     </div>
