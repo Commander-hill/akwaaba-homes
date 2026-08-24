@@ -59,38 +59,52 @@ const httpServer = createServer(app);
 const port = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
+// ─── Disable X-Powered-By Header ─────────────────────────────────────────────
+app.disable('x-powered-by');
+
 // ─── Initialize Socket.io ────────────────────────────────────────────────────
 initializeSocket(httpServer);
 
 // ─── Trust proxy (Render / Vercel / Railway) ────────────────────────────────
 app.set('trust proxy', 1);
 
-// ─── HTTP Security Headers (Helmet) ─────────────────────────────────────────
+// ─── HTTP Security Headers (Helmet + OWASP Standards) ─────────────────────────
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin images
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin images & assets
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Paystack popup support
-    contentSecurityPolicy: isProduction
-      ? {
-          directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", 'https://js.paystack.co'],
-            frameSrc: ["'self'", 'https://checkout.paystack.com'],
-            imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
-            connectSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-          },
-        }
-      : false, // Disable CSP in dev to avoid breaking hot-reload
-    hsts: isProduction
-      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
-      : false,
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    xssFilter: true,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.paystack.co'],
+        frameSrc: ["'self'", 'https://checkout.paystack.com', 'https://*.paystack.co'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://*.tile.openstreetmap.org', 'https://*.openstreetmap.org'],
+        connectSrc: ["'self'", 'wss:', 'ws:', 'https://checkout.paystack.com', 'https://api.paystack.co'],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"], // Anti-clickjacking
+      },
+    },
+    hsts: {
+      maxAge: 31536000, // 1 Year HSTS
+      includeSubDomains: true,
+      preload: true,
+    },
+    frameguard: { action: 'deny' }, // Anti-clickjacking
+    noSniff: true, // Prevent MIME sniffing
+    xssFilter: true, // XSS filter protection
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   })
 );
+
+// ─── Custom Security Headers (Permissions-Policy) ───────────────────────────
+app.use((req: Request, res: Response, next) => {
+  res.setHeader('Permissions-Policy', 'geolocation=(self), camera=(), microphone=(), payment=(self)');
+  next();
+});
 
 // ─── CORS (allowlist-based) ──────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
