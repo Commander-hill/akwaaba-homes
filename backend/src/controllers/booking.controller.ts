@@ -200,7 +200,8 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
   try {
     const landlordId = req.user.id;
     const { id } = req.params;
-    const { status } = req.body;
+    let { status } = req.body;
+    if (status === 'CONFIRMED') status = 'APPROVED';
 
     const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {

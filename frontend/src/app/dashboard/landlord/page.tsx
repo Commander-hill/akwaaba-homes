@@ -294,8 +294,8 @@ export default function LandlordDashboard() {
                         </td>
                         <td className="p-4">
                           <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${
-                            booking.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                            booking.status === 'CONFIRMED' || booking.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' :
+                            booking.status === 'PENDING' ? 'bg-amber-100 text-amber-700 font-bold' :
+                            booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
                             'bg-red-100 text-red-700'
                           }`}>
                             {booking.status}
@@ -305,7 +305,7 @@ export default function LandlordDashboard() {
                           {booking.status === 'PENDING' && (
                             <>
                               <button
-                                onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'CONFIRMED' }); }}
+                                onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'APPROVED' }); }}
                                 disabled={processingId === booking.id}
                                 className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all"
                               >
