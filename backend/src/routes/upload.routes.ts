@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadAvatar, uploadVideo, uploadDocument, uploadPropertyImages } from '../controllers/upload.controller';
+import { uploadAvatar, uploadVideo, uploadDocument, uploadPropertyImages, serveSecureDocument } from '../controllers/upload.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -60,8 +60,11 @@ const uploadVideoConfig = multer({
   },
 });
 
-// Routes
-router.use(authenticate); // Protect all upload routes
+// Public signed-document proxy route (validated via HMAC signature & 15-min expiration timestamp)
+router.get('/secure-document', serveSecureDocument);
+
+// Protected upload routes
+router.use(authenticate);
 router.post('/avatar', uploadAvatarConfig.single('avatar'), uploadAvatar);
 router.post('/document', uploadDocumentConfig.single('document'), uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), uploadVideo);

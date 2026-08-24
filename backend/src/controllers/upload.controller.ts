@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
 import dotenv from 'dotenv';
+import { verifySignedDocumentUrl } from '../utils/security.service';
 
 dotenv.config(); // Ensure env is loaded even if imported early
 
@@ -122,11 +123,33 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
       return;
     }
 
+    const user = req.user;
+    const landlordIdSnippet = user?.id ? user.id.substring(0, 8).toUpperCase() : 'VERIFIED';
+    const watermarkText = `Akwaaba Homes Verified - ID #${landlordIdSnippet}`;
+
+    const watermarkSvg = `
+      <svg width="1200" height="800">
+        <style>
+          .watermark-bg { fill: rgba(15, 23, 42, 0.45); rx: 10px; }
+          .watermark-text { fill: rgba(255, 255, 255, 0.85); font-size: 19px; font-family: Arial, sans-serif; font-weight: 800; letter-spacing: 1px; }
+        </style>
+        <rect x="710" y="745" width="460" height="38" class="watermark-bg" />
+        <text x="730" y="771" class="watermark-text">${watermarkText}</text>
+      </svg>
+    `;
+
     const urls: string[] = [];
 
     for (const file of files) {
       const processedBuffer = await sharp(file.buffer)
         .resize(1200, 800, { fit: 'cover' })
+        .composite([
+          {
+            input: Buffer.from(watermarkSvg),
+            top: 0,
+            left: 0
+          }
+        ])
         .webp({ quality: 85 })
         .toBuffer();
 
@@ -140,3 +163,26 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
     res.status(500).json({ error: `Internal server error during property images upload: ${error?.message || String(error)}` });
   }
 };
+
+export const serveSecureDocument = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { url, expires, signature } = req.query;
+
+    const verification = verifySignedDocumentUrl(
+      String(url || ''),
+      String(expires || ''),
+      String(signature || '')
+    );
+
+    if (!verification.valid) {
+      res.status(403).json({ error: verification.error || 'Access denied' });
+      return;
+    }
+
+    res.redirect(String(url));
+  } catch (error) {
+    console.error('Error serving secure document:', error);
+    res.status(500).json({ error: 'Internal server error serving secure document' });
+  }
+};
+

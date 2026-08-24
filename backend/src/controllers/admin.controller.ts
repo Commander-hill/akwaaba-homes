@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { notifyPropertyApproval } from '../utils/notification.service';
 import { decryptData } from '../utils/crypto';
+import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
@@ -208,7 +209,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 
     const decryptedUsers = users.map(user => ({
       ...user,
-      ghanaCardNumber: user.ghanaCardNumber ? decryptData(user.ghanaCardNumber) : null
+      ghanaCardNumber: user.ghanaCardNumber ? decryptData(user.ghanaCardNumber) : null,
+      ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
+      ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl)
     }));
 
     res.status(200).json(decryptedUsers);

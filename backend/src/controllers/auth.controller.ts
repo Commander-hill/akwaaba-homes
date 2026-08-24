@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { encryptData, decryptData } from '../utils/crypto';
+import { generateSignedDocumentUrl } from '../utils/security.service';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { UAParser } from 'ua-parser-js';
@@ -446,6 +447,12 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
 
     if (user.ghanaCardNumber) {
       user.ghanaCardNumber = decryptData(user.ghanaCardNumber);
+    }
+    if (user.ghanaCardFrontUrl) {
+      user.ghanaCardFrontUrl = generateSignedDocumentUrl(user.ghanaCardFrontUrl);
+    }
+    if (user.ghanaCardBackUrl) {
+      user.ghanaCardBackUrl = generateSignedDocumentUrl(user.ghanaCardBackUrl);
     }
 
     const hasProperty = (user._count?.properties || 0) > 0;
