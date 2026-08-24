@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, updateProfile, requestProfileUnlock, forgotPassword, resetPassword } from '../controllers/auth.controller';
-import { getSessions, revokeSession } from '../controllers/session.controller';
+import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
 import { validate, registerValidation, loginValidation } from '../middleware/validation.middleware';
@@ -23,6 +23,7 @@ router.post('/request-unlock', authenticate, requestProfileUnlock);
 
 // Session routes
 router.get('/sessions', authenticate, getSessions);
+router.delete('/sessions/others', authenticate, revokeAllOtherSessions);
 router.delete('/sessions/:id', authenticate, revokeSession);
 
 export default router;

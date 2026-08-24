@@ -220,6 +220,39 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
     const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
 
+    // Check if this device/IP is new (Anomaly / New Device Detection)
+    const existingSessionCount = await prisma.session.count({
+      where: {
+        userId: user.id,
+        userAgent: userAgentStr,
+        ipAddress: ipAddress
+      }
+    });
+
+    if (existingSessionCount === 0) {
+      // 🚨 Suspicious / New Device Sign-In Alert
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: user.id,
+            type: 'SECURITY',
+            title: '🚨 New Device Sign-In Detected',
+            message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
+            link: '/dashboard/profile'
+          }
+        });
+
+        const { getIO } = await import('../socket');
+        getIO().to(user.id).emit('notification', {
+          title: '🚨 New Device Sign-In Detected',
+          message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
+          type: 'security'
+        });
+      } catch (e) { /* non-blocking */ }
+
+      await logAudit(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, JSON.stringify({ userAgent: userAgentStr, ipAddress }), ipAddress);
+    }
+
     // Save session in DB
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 days

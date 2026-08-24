@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, ArrowLeft, Upload, Star, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, Globe, LogOut, CheckCircle2, AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import Link from 'next/link';
@@ -12,7 +13,7 @@ import toast from 'react-hot-toast';
 export default function ProfilePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'basic' | 'school'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'school' | 'security'>('basic');
   const [isStudent, setIsStudent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -61,6 +62,44 @@ export default function ProfilePage() {
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to submit request');
+    }
+  });
+
+  // Active Sessions Query & Mutations
+  const { data: sessions, isLoading: isLoadingSessions, refetch: refetchSessions } = useQuery({
+    queryKey: ['active-sessions'],
+    queryFn: async () => {
+      const res = await api.get('/auth/sessions');
+      return res.data.sessions;
+    },
+    enabled: activeTab === 'security'
+  });
+
+  const revokeSessionMutation = useMutation({
+    mutationFn: async (sessionId: string) => {
+      const res = await api.delete(`/auth/sessions/${sessionId}`);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Session revoked successfully');
+      refetchSessions();
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to revoke session');
+    }
+  });
+
+  const revokeAllOthersMutation = useMutation({
+    mutationFn: async () => {
+      const res = await api.delete('/auth/sessions/others');
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Logged out all other devices!');
+      refetchSessions();
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to revoke other sessions');
     }
   });
 
@@ -287,6 +326,15 @@ export default function ProfilePage() {
             School Information
           </button>
         )}
+        <button
+          onClick={() => setActiveTab('security')}
+          className={clsx(
+            "flex-1 py-4 text-center font-bold text-sm transition-colors flex items-center justify-center gap-2",
+            activeTab === 'security' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+          )}
+        >
+          <Shield className="w-4 h-4 text-emerald-500" /> Security & Active Devices
+        </button>
       </div>
 
       {/* Student Toggle for Tenants */}
@@ -409,6 +457,130 @@ export default function ProfilePage() {
           </div>
         )}
       </form>
+
+      {/* Security & Active Devices Tab Panel */}
+      {activeTab === 'security' && (
+        <div className="space-y-6 animate-in">
+          
+          {/* Header Action Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h3 className="font-extrabold text-lg text-[var(--foreground)] flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-indigo-500" /> Active Logged-in Devices & Remote Sessions
+              </h3>
+              <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+                Review all browsers and mobile devices currently signed into your account. If you spot an unrecognized device, click <strong>"Log Out All Other Devices"</strong> to immediately revoke its session token.
+              </p>
+            </div>
+            
+            <button
+              onClick={() => {
+                if (confirm('Are you sure you want to log out all other active devices? You will remain logged in on this browser.')) {
+                  revokeAllOthersMutation.mutate();
+                }
+              }}
+              disabled={revokeAllOthersMutation.isPending || !sessions || sessions.filter((s: any) => !s.isCurrentSession).length === 0}
+              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {revokeAllOthersMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <LogOut className="w-4 h-4" />
+              )}
+              Log Out All Other Devices
+            </button>
+          </div>
+
+          {/* Device Sessions List */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[var(--border)] space-y-4">
+            <h4 className="font-extrabold text-sm text-[var(--foreground)] uppercase tracking-wider text-xs text-slate-500">
+              Active Sessions ({sessions?.length || 0})
+            </h4>
+
+            {isLoadingSessions ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--primary)]" />
+              </div>
+            ) : !sessions || sessions.length === 0 ? (
+              <div className="p-8 text-center text-xs text-[var(--muted-foreground)]">
+                No active sessions found.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map((s: any) => {
+                  const isMobile = s.deviceFamily?.toLowerCase().includes('phone') || s.deviceFamily?.toLowerCase().includes('mobile');
+
+                  return (
+                    <div
+                      key={s.id}
+                      className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                        s.isCurrentSession 
+                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
+                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3.5">
+                        <div className={`p-3 rounded-2xl shrink-0 ${s.isCurrentSession ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+                          {isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+                        </div>
+                        
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h5 className="font-extrabold text-sm text-[var(--foreground)] truncate">
+                              {s.userAgent || 'Unknown Device'}
+                            </h5>
+                            {s.isCurrentSession ? (
+                              <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3" /> Current Device
+                              </span>
+                            ) : (
+                              <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                Remote Session
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)] flex-wrap">
+                            <span className="flex items-center gap-1 font-mono">
+                              <Globe className="w-3.5 h-3.5 text-indigo-400" /> {s.ipAddress || 'Unknown IP'}
+                            </span>
+                            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" /> Last active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {!s.isCurrentSession && (
+                        <button
+                          onClick={() => revokeSessionMutation.mutate(s.id)}
+                          disabled={revokeSessionMutation.isPending}
+                          className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-white border border-red-200 dark:border-red-800 hover:bg-red-600 rounded-xl transition-all self-start sm:self-center shrink-0 flex items-center gap-1.5"
+                        >
+                          {revokeSessionMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
+                          Revoke Session
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Security Recommendations Banner */}
+          <div className="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs space-y-1">
+            <div className="font-extrabold flex items-center gap-1.5 text-indigo-800 dark:text-indigo-300 text-sm">
+              <Shield className="w-4 h-4 text-indigo-600" /> Security Tip
+            </div>
+            <p className="leading-relaxed text-slate-600 dark:text-slate-300">
+              Akwaaba Homes automatically logs anomaly alerts if a new device or IP address accesses your account. If you ever receive an anomaly alert you don't recognize, log out all other devices immediately and reset your account password.
+            </p>
+          </div>
+
+        </div>
+      )}
 
       {/* Request Unlock Modal */}
       {requestModalOpen && (
