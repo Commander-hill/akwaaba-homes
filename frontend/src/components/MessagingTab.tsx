@@ -105,7 +105,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
       
       {/* LEFT COLUMN: Conversations List */}
       <div className="w-full md:w-80 border-r border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/50 flex flex-col shrink-0">
-        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between shrink-0">
           <h3 className="font-extrabold text-sm text-[var(--foreground)] flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-[var(--primary)]" /> Messages
           </h3>
@@ -171,7 +171,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
         {activeConv ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-[var(--border)] flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/30">
+            <div className="p-4 border-b border-[var(--border)] flex items-center gap-3 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
               <div className="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center overflow-hidden shrink-0 border border-indigo-500/20">
                 {activeConv.partner?.avatarUrl ? (
                   <img src={getImageUrl(activeConv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
@@ -229,7 +229,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
             </div>
 
             {/* Input Bar */}
-            <form onSubmit={handleSend} className="p-3 border-t border-[var(--border)] flex gap-2 bg-slate-50/50 dark:bg-slate-900/30">
+            <form onSubmit={handleSend} className="p-3 border-t border-[var(--border)] flex gap-2 bg-slate-50/50 dark:bg-slate-900/30 shrink-0">
               <input
                 type="text"
                 value={newMessageText}

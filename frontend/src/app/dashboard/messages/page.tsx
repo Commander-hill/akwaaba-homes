@@ -129,11 +129,11 @@ export default function MessagesPage() {
   const activeConversation = conversations?.find(c => c.id === activeConversationId);
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] max-h-[800px] glass-card rounded-2xl overflow-hidden border border-[var(--border)]">
+    <div className="flex h-[calc(100vh-12rem)] min-h-[550px] max-h-[750px] glass-card rounded-2xl overflow-hidden border border-[var(--border)]">
       
       {/* Sidebar: Conversations List */}
-      <div className="w-1/3 border-r border-[var(--border)] flex flex-col bg-white/5 dark:bg-slate-900/50">
-        <div className="p-4 border-b border-[var(--border)]">
+      <div className="w-1/3 border-r border-[var(--border)] flex flex-col bg-white/5 dark:bg-slate-900/50 min-w-[260px]">
+        <div className="p-4 border-b border-[var(--border)] shrink-0 bg-white/50 dark:bg-slate-900/50">
           <h2 className="text-xl font-bold text-[var(--foreground)]">Messages</h2>
           <div className="flex items-center gap-2 mt-2">
             <span className={`w-2.5 h-2.5 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
@@ -198,11 +198,11 @@ export default function MessagesPage() {
         {activeConversationId && activeConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-[var(--border)] bg-white dark:bg-[#2A2A2B] flex items-center gap-4 shadow-sm">
+            <div className="p-4 border-b border-[var(--border)] bg-white dark:bg-[#2A2A2B] flex items-center gap-4 shadow-sm shrink-0">
               {activeConversation.partner.avatarUrl ? (
-                <img src={activeConversation.partner.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover" />
+                <img src={activeConversation.partner.avatarUrl} alt="Avatar" className="w-10 h-10 rounded-full object-cover shrink-0" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
                   <User className="w-5 h-5 text-slate-500" />
                 </div>
               )}
@@ -241,7 +241,7 @@ export default function MessagesPage() {
             </div>
 
             {/* Chat Input */}
-            <div className="p-4 bg-white dark:bg-[#2A2A2B] border-t border-[var(--border)]">
+            <div className="p-4 bg-white dark:bg-[#2A2A2B] border-t border-[var(--border)] shrink-0">
               <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
                 <input
                   type="text"

@@ -309,8 +309,8 @@ export default function PropertiesPage() {
                           <span className="text-xs text-[var(--muted-foreground)] font-semibold block mb-0.5">Starting from</span>
                           <span className="text-xl font-extrabold text-[var(--foreground)]">GHS {property.price.toLocaleString()}</span>
                         </div>
-                        <span className="text-[var(--primary)] text-sm font-bold bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-lg group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
-                          View
+                        <span className="text-[var(--primary)] text-sm font-bold bg-indigo-50 dark:bg-indigo-900/30 px-3.5 py-1.5 rounded-lg group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                          Book Now
                         </span>
                       </div>
                     </div>
