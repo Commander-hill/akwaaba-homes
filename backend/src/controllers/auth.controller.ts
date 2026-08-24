@@ -399,7 +399,10 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         reputationScore: true,
         isProfileLocked: true,
         profileUnlockRequested: true,
-        profileUnlockReason: true
+        profileUnlockReason: true,
+        _count: {
+          select: { properties: true }
+        }
       }
     });
 
@@ -412,7 +415,9 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
       user.ghanaCardNumber = decryptData(user.ghanaCardNumber);
     }
 
-    res.status(200).json({ user });
+    const hasProperty = (user._count?.properties || 0) > 0;
+
+    res.status(200).json({ user: { ...user, hasProperty } });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }

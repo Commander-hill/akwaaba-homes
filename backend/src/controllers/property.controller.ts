@@ -4,6 +4,7 @@ import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
+import { getIO } from '../socket';
 
 // Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property: any) => {
@@ -98,6 +99,14 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
     const keys = appCache.keys();
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
+
+    // Emit real-time Socket.io events
+    try {
+      getIO().to(landlordId).emit('property_created', { propertyId: newProperty.id });
+      getIO().emit('property_updated', { propertyId: newProperty.id });
+    } catch (e) {
+      console.error('Socket emission failed in createProperty:', e);
+    }
 
     res.status(201).json({ message: 'Property created successfully', property: parseProperty(newProperty) });
   } catch (error) {
@@ -319,6 +328,13 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
 
+    try {
+      getIO().to(landlordId).emit('property_updated', { propertyId: updatedProperty.id });
+      getIO().emit('property_updated', { propertyId: updatedProperty.id });
+    } catch (e) {
+      console.error('Socket emission failed in updateProperty:', e);
+    }
+
     res.status(200).json({ message: 'Property updated successfully', property: parseProperty(updatedProperty) });
   } catch (error) {
     console.error('Error updating property:', error);
@@ -359,6 +375,13 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
     const keys = appCache.keys();
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
+
+    try {
+      getIO().to(landlordId).emit('property_updated', { propertyId: id });
+      getIO().emit('property_updated', { propertyId: id });
+    } catch (e) {
+      console.error('Socket emission failed in deleteProperty:', e);
+    }
 
     res.status(200).json({ message: 'Property deleted successfully' });
   } catch (error) {

@@ -140,7 +140,10 @@ export default function LandlordDashboard() {
 
   return (
     <div className="space-y-8 animate-in pb-12">
-      <OnboardingProgressWidget user={session} hasProperty={subStats.totalProperties > 0} />
+      <OnboardingProgressWidget 
+        user={session} 
+        hasProperty={Boolean(session?.hasProperty || session?._count?.properties > 0 || subStats.totalProperties > 0 || subProperties.length > 0)} 
+      />
       
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

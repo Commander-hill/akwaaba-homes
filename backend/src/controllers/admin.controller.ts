@@ -303,6 +303,19 @@ export const toggleUserProfileLock = async (req: Request, res: Response): Promis
       req.ip || req.socket.remoteAddress
     );
 
+    // Notify user in real-time so their profile page updates without refresh
+    try {
+      const { getIO } = await import('../socket');
+      getIO().to(id).emit('user_updated', { isProfileLocked: targetLockState });
+      if (!targetLockState) {
+        getIO().to(id).emit('notification', {
+          title: '🔓 Profile Edit Access Granted',
+          message: 'An administrator has unlocked your profile. You can now update your information.',
+          type: 'profile'
+        });
+      }
+    } catch (e) { /* socket optional */ }
+
     res.status(200).json({
       message: `User ${updatedUser.firstName} ${updatedUser.lastName}'s profile lock status has been updated to ${targetLockState ? 'Locked' : 'Unlocked (Edit Access Granted)'}.`,
       user: updatedUser
@@ -382,6 +395,19 @@ export const updatePropertyApproval = async (req: Request, res: Response): Promi
     const keys = appCache.keys();
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
+
+    // Emit real-time property update to the landlord so their dashboard refreshes instantly
+    try {
+      const { getIO } = await import('../socket');
+      getIO().to(property.landlord.id).emit('property_updated', { propertyId: id, approvalStatus });
+      getIO().to(property.landlord.id).emit('notification', {
+        title: approvalStatus === 'APPROVED' ? '🎉 Property Listing Approved!' : '❌ Property Listing Rejected',
+        message: approvalStatus === 'APPROVED'
+          ? `Your listing "${property.title}" has been approved. Pay the listing fee to go live!`
+          : `Your listing "${property.title}" was rejected. Please review the guidelines and resubmit.`,
+        type: 'property'
+      });
+    } catch (e) { /* socket optional */ }
 
     res.status(200).json({ message: `Property status updated to ${approvalStatus}`, property });
   } catch (error) {
@@ -464,6 +490,19 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       { ghanaCardStatus: status },
       req.ip || req.socket.remoteAddress
     );
+
+    // Notify the user in real-time so the onboarding widget refreshes instantly
+    try {
+      const { getIO } = await import('../socket');
+      getIO().to(id).emit('notification', {
+        title: status === 'VERIFIED' ? '✅ Identity Verified!' : '❌ Verification Rejected',
+        message: status === 'VERIFIED'
+          ? 'Your Ghana Card has been verified. You can now list properties and make bookings.'
+          : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
+        type: 'verification'
+      });
+      getIO().to(id).emit('user_updated', { ghanaCardStatus: status });
+    } catch (e) { /* socket optional */ }
 
     res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
   } catch (error) {

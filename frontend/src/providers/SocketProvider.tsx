@@ -78,26 +78,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     // --- REAL-TIME PLATFORM DATA SYNC & ZERO-REFRESH CACHE INVALIDATION ---
     socketInstance.on('booking_created', () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['landlord-bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
     });
 
     socketInstance.on('booking_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['landlord-bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['agreements'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
     });
 
     socketInstance.on('ticket_created', () => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['landlord-tickets'] });
     });
 
     socketInstance.on('ticket_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['tenant-tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['landlord-tickets'] });
     });
 
     socketInstance.on('receive_message', () => {
@@ -105,14 +100,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });
     });
 
+    socketInstance.on('property_created', () => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+    });
+
     socketInstance.on('property_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
-      queryClient.invalidateQueries({ queryKey: ['landlord-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+    });
+
+    socketInstance.on('user_updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+    });
+
+    socketInstance.on('profile_updated', () => {
+      queryClient.invalidateQueries({ queryKey: ['session'] });
     });
 
     socketInstance.on('agreement_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['agreements'] });
-      queryClient.invalidateQueries({ queryKey: ['lease-agreements'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     });
 
