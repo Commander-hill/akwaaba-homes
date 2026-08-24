@@ -104,6 +104,10 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
     const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
     const amountInPesewas = Math.round(feeInGhs * 100);
 
+    const callbackUrl = process.env.FRONTEND_URL
+      ? `${process.env.FRONTEND_URL}/dashboard/landlord/properties?verify=true`
+      : 'http://localhost:3000/dashboard/landlord/properties?verify=true';
+
     const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
 
     let authUrl = '';
