@@ -110,11 +110,13 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
 
     const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
 
+    const hasPaystackKey = !!process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+
     let authUrl = '';
     let reference = `SUB_TEST_${Date.now()}`;
 
-    try {
-      if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
+    if (hasPaystackKey) {
+      try {
         const response = await axios.post(
           'https://api.paystack.co/transaction/initialize',
           {
@@ -141,17 +143,14 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
         );
         authUrl = response.data.data.authorization_url;
         reference = response.data.data.reference;
-      } else {
-        authUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
-      }
-    } catch (paystackErr: any) {
-      if (isTestMode) {
-        console.warn('Paystack API call failed in test mode, using simulated test url:', paystackErr.message);
-        authUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
-      } else {
+      } catch (paystackErr: any) {
+        console.error('Paystack Initialization Error:', paystackErr.response?.data || paystackErr.message);
         res.status(400).json({ message: paystackErr.response?.data?.message || 'Paystack initialization failed' });
         return;
       }
+    } else {
+      // Offline fallback only when no Paystack key is configured at all
+      authUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
     }
 
     const existingSub = await prisma.propertySubscription.findUnique({ where: { propertyId } });

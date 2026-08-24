@@ -331,12 +331,12 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+    const hasPaystackKey = !!process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
     let authorizationUrl = '';
     let reference = `BOOKING_TEST_${Date.now()}`;
 
-    try {
-      if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
+    if (hasPaystackKey) {
+      try {
         const paystackRes = await axios.post(
           'https://api.paystack.co/transaction/initialize',
           {
@@ -354,17 +354,13 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
         );
         authorizationUrl = paystackRes.data.data.authorization_url;
         reference = paystackRes.data.data.reference;
-      } else {
-        authorizationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}&reference=${reference}&test_mode=true`;
-      }
-    } catch (paystackErr: any) {
-      if (isTestMode) {
-        console.warn('Paystack API call failed in test mode, using simulated test url:', paystackErr.message);
-        authorizationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}&reference=${reference}&test_mode=true`;
-      } else {
+      } catch (paystackErr: any) {
+        console.error('Paystack Booking Initialization Error:', paystackErr.response?.data || paystackErr.message);
         res.status(500).json({ message: paystackErr.response?.data?.message || 'Internal server error during Paystack initialization' });
         return;
       }
+    } else {
+      authorizationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}&reference=${reference}&test_mode=true`;
     }
 
     res.status(200).json({ authorization_url: authorizationUrl, reference, isTestMode });
