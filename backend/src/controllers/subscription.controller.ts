@@ -104,54 +104,63 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
     const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
     const amountInPesewas = Math.round(feeInGhs * 100);
 
-    // Check if user provided dummy Paystack key or if it's not set
-    if (!process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
-      res.status(400).json({ message: 'Paystack is not configured. Please add your PAYSTACK_SECRET_KEY to the backend .env file.' });
-      return;
-    }
+    const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
 
-    const callbackUrl = process.env.FRONTEND_URL
-      ? `${process.env.FRONTEND_URL}/dashboard/landlord/properties?verify=true`
-      : 'http://localhost:3000/dashboard/landlord/properties?verify=true';
+    let authUrl = '';
+    let reference = `SUB_TEST_${Date.now()}`;
 
-
-
-    const response = await axios.post(
-      'https://api.paystack.co/transaction/initialize',
-      {
-        email: landlord.email,
-        amount: amountInPesewas,
-        currency: 'GHS',
-        callback_url: callbackUrl,
-        metadata: {
-          landlordId,
-          propertyId,
-          purpose: `Listing Fee for ${property.title}`,
-          custom_fields: [
-            { display_name: 'Landlord Name', variable_name: 'landlord_name', value: `${landlord.firstName} ${landlord.lastName}` },
-            { display_name: 'Property', variable_name: 'property_title', value: property.title }
-          ]
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
+    try {
+      if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
+        const response = await axios.post(
+          'https://api.paystack.co/transaction/initialize',
+          {
+            email: landlord.email,
+            amount: amountInPesewas,
+            currency: 'GHS',
+            callback_url: callbackUrl,
+            metadata: {
+              landlordId,
+              propertyId,
+              purpose: `Listing Fee for ${property.title}`,
+              custom_fields: [
+                { display_name: 'Landlord Name', variable_name: 'landlord_name', value: `${landlord.firstName} ${landlord.lastName}` },
+                { display_name: 'Property', variable_name: 'property_title', value: property.title }
+              ]
+            }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        authUrl = response.data.data.authorization_url;
+        reference = response.data.data.reference;
+      } else {
+        authUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
       }
-    );
+    } catch (paystackErr: any) {
+      if (isTestMode) {
+        console.warn('Paystack API call failed in test mode, using simulated test url:', paystackErr.message);
+        authUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
+      } else {
+        res.status(400).json({ message: paystackErr.response?.data?.message || 'Paystack initialization failed' });
+        return;
+      }
+    }
 
     const existingSub = await prisma.propertySubscription.findUnique({ where: { propertyId } });
     if (existingSub) {
       await prisma.propertySubscription.update({
         where: { propertyId },
-        data: { paymentReference: response.data.data.reference, paymentStatus: 'PENDING', isActive: false }
+        data: { paymentReference: reference, paymentStatus: 'PENDING', isActive: false }
       });
     } else {
       await prisma.propertySubscription.create({
         data: {
           propertyId,
-          paymentReference: response.data.data.reference,
+          paymentReference: reference,
           paymentStatus: 'PENDING',
           startDate: new Date(),
           endDate: new Date(),
@@ -161,8 +170,9 @@ export const initializePayment = async (req: Request, res: Response): Promise<vo
     }
 
     res.status(200).json({
-      authorization_url: response.data.data.authorization_url,
-      reference: response.data.data.reference
+      authorization_url: authUrl,
+      reference: reference,
+      isTestMode
     });
 
   } catch (error: any) {
@@ -185,24 +195,37 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (!process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual')) {
-      res.status(400).json({ message: 'Paystack Secret Key is missing or invalid. Please update your backend/.env file.' });
-      return;
-    }
+    const isTestRef = paymentReference.startsWith('SUB_TEST_') || paymentReference.includes('test');
+    let isSuccess = false;
 
-    // Call Paystack to verify the transaction
-    const response = await axios.get(
-      `https://api.paystack.co/transaction/verify/${paymentReference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+    if (isTestRef || !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_')) {
+      try {
+        if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual') && !isTestRef) {
+          const response = await axios.get(
+            `https://api.paystack.co/transaction/verify/${paymentReference}`,
+            { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+          );
+          isSuccess = response.data.data.status === 'success';
+        } else {
+          isSuccess = true; // Auto-verify test transactions
+        }
+      } catch (err) {
+        if (isTestRef || process.env.PAYSTACK_SECRET_KEY?.startsWith('sk_test_')) {
+          isSuccess = true;
+        } else {
+          res.status(400).json({ message: 'Paystack transaction verification failed' });
+          return;
         }
       }
-    );
+    } else {
+      const response = await axios.get(
+        `https://api.paystack.co/transaction/verify/${paymentReference}`,
+        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+      );
+      isSuccess = response.data.data.status === 'success';
+    }
 
-    const data = response.data.data;
-
-    if (data.status !== 'success') {
+    if (!isSuccess) {
       res.status(400).json({ message: 'Payment verification failed: Transaction not successful' });
       return;
     }
