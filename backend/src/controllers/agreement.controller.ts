@@ -126,6 +126,39 @@ export const getTenantAgreements = async (req: Request, res: Response): Promise<
   }
 };
 
+export const getLandlordAgreements = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user?.id;
+    if (!landlordId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const agreements = await prisma.leaseAgreement.findMany({
+      where: {
+        booking: {
+          property: { landlordId }
+        }
+      },
+      include: {
+        booking: {
+          include: {
+            property: true,
+            tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+            room: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ agreements });
+  } catch (error) {
+    console.error('Error fetching landlord agreements:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const signAgreement = async (req: Request, res: Response): Promise<void> => {
   try {
     console.log('--- signAgreement HIT! ---');

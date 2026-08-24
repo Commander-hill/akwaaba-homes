@@ -18,7 +18,7 @@ import toast from 'react-hot-toast';
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Session Query
@@ -35,6 +35,15 @@ export default function LandlordDashboard() {
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
       const { data } = await api.get('/bookings/landlord');
+      return data;
+    }
+  });
+
+  // Fetch Landlord Agreements (Lease Vault)
+  const { data: agreementsResponse, isLoading: isLoadingAgreements } = useQuery({
+    queryKey: ['agreements', 'landlord'],
+    queryFn: async () => {
+      const { data } = await api.get('/agreements/landlord');
       return data;
     }
   });
@@ -121,6 +130,7 @@ export default function LandlordDashboard() {
   const isLoading = isLoadingBookings && isLoadingTickets && isLoadingSubs && isLoadingEarnings;
 
   const bookings = bookingsResponse?.bookings || [];
+  const agreements = agreementsResponse?.agreements || [];
   const tickets = ticketsResponse?.tickets || [];
   const subStats = subOverviewResponse?.stats || { totalProperties: 0, activeSubscriptions: 0, expiringSoon: 0, unsubscribedOrExpired: 0 };
   const subProperties = subOverviewResponse?.properties || [];
@@ -167,6 +177,19 @@ export default function LandlordDashboard() {
           )}
         >
           Booking Requests ({bookings.length})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('agreements')}
+          className={clsx(
+            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+            activeTab === 'agreements' 
+              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          )}
+        >
+          <FileSignature className="w-4 h-4 text-purple-500" />
+          Lease Vault ({agreements.length})
         </button>
 
         <button
@@ -320,12 +343,108 @@ export default function LandlordDashboard() {
                               </button>
                             </>
                           )}
+                          {(booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' || booking.status === 'PAID') && (
+                            <Link
+                              href={`/dashboard/agreements/${booking.id}`}
+                              className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20"
+                            >
+                              <FileSignature className="w-3.5 h-3.5" /> View & Sign Agreement
+                            </Link>
+                          )}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ─── TAB: LEASE VAULT (DIGITAL LEASE AGREEMENTS) ─────────────────────────── */}
+      {activeTab === 'agreements' && (
+        <div className="animate-in space-y-4">
+          <div className="flex justify-between items-center bg-purple-50 dark:bg-purple-950/30 p-4 rounded-2xl border border-purple-100 dark:border-purple-900/50">
+            <div>
+              <h3 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
+                <FileSignature className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                Digital Tenancy Lease Vault
+              </h3>
+              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                Review, digitally sign, and manage binding SHA-256 encrypted tenancy contracts for your properties.
+              </p>
+            </div>
+          </div>
+
+          {isLoadingAgreements ? (
+            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+              {[1,2,3].map(i => (
+                <div key={i} className="flex gap-4 items-center animate-pulse">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
+                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
+                  </div>
+                  <div className="h-7 w-24 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                </div>
+              ))}
+            </div>
+          ) : agreements.length === 0 ? (
+            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center mb-4">
+                <FileSignature className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold">No Lease Agreements Found</h3>
+              <p className="text-[var(--muted-foreground)] text-xs mt-1 max-w-sm">
+                When you accept tenant booking requests, official digital tenancy agreements will automatically be generated here for signature.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {agreements.map((item: any) => {
+                const isFullySigned = item.status === 'COMPLETED';
+                const needsLandlordSig = !item.landlordSignature;
+
+                return (
+                  <div key={item.id} className="glass-card p-6 rounded-2xl border border-[var(--border)] hover:border-purple-500/50 transition-all flex flex-col justify-between space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          isFullySigned ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' :
+                          needsLandlordSig ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 animate-pulse' :
+                          'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400'
+                        }`}>
+                          {isFullySigned ? 'Verified & Binding' : needsLandlordSig ? 'Landlord Signature Needed' : 'Tenant Signature Needed'}
+                        </span>
+                        <h4 className="font-extrabold text-base text-[var(--foreground)] mt-3">
+                          {item.booking?.property?.title}
+                        </h4>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          Tenant: <span className="font-bold text-[var(--foreground)]">{item.booking?.tenant?.firstName} {item.booking?.tenant?.lastName}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs text-[var(--muted-foreground)] pt-3 border-t border-[var(--border)]">
+                      <div>
+                        Created: {new Date(item.createdAt).toLocaleDateString()}
+                      </div>
+                      <Link
+                        href={`/dashboard/agreements/${item.bookingId}`}
+                        className={`px-4 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-md ${
+                          needsLandlordSig 
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-amber-500/20' 
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
+                        }`}
+                      >
+                        <FileSignature className="w-3.5 h-3.5" />
+                        {needsLandlordSig ? 'Sign Agreement' : 'View Agreement'}
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
