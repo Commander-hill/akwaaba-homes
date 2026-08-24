@@ -144,7 +144,49 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       console.error('Socket notification failed', e);
     }
 
-    res.status(201).json({ message: 'Booking request created successfully', booking });
+    // ── INITIALIZE PAYSTACK PAYMENT FOR EXACT ROOM PRICE ──
+    const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}`;
+    const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+    const hasPaystackKey = !!process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+    let authorizationUrl = '';
+    let reference = `BOOKING_REF_${Date.now()}`;
+
+    if (hasPaystackKey) {
+      try {
+        const paystackRes = await axios.post(
+          'https://api.paystack.co/transaction/initialize',
+          {
+            email: tenant.email,
+            amount: Math.round(room.price * 100), // GHS to pesewas (exact room amount)
+            callback_url: callbackUrl,
+            metadata: { bookingId: booking.id, tenantId }
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        authorizationUrl = paystackRes.data.data.authorization_url;
+        reference = paystackRes.data.data.reference;
+      } catch (paystackErr: any) {
+        console.error('Paystack Booking Initialization Error:', paystackErr.response?.data || paystackErr.message);
+        if (isTestMode || paystackErr.response?.data?.message === 'Invalid key') {
+          console.warn('Paystack key error or test key, using simulated test url for booking:', paystackErr.message);
+          authorizationUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
+        }
+      }
+    } else {
+      authorizationUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
+    }
+
+    res.status(201).json({ 
+      message: 'Booking request created successfully', 
+      booking, 
+      authorization_url: authorizationUrl, 
+      reference 
+    });
   } catch (error) {
     console.error('Error creating booking:', error);
     res.status(500).json({ message: 'Internal server error' });

@@ -154,18 +154,22 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     setShowPaymentModal(false);
 
     try {
-      // Simulate Payment Processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await api.post('/bookings', {
+      const { data } = await api.post('/bookings', {
         propertyId,
         roomId: selectedRoomId,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString()
       });
-      setBookingMessage({ text: 'Booking request sent successfully!', type: 'success' });
-      setStartDate('');
-      setEndDate('');
-      setSelectedRoomId('');
+
+      if (data.authorization_url) {
+        // Redirect directly to Paystack payment checkout page
+        window.location.href = data.authorization_url;
+      } else {
+        setBookingMessage({ text: 'Booking request sent successfully!', type: 'success' });
+        setStartDate('');
+        setEndDate('');
+        setSelectedRoomId('');
+      }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Failed to request booking';
       setBookingMessage({ text: errorMsg, type: 'error' });
