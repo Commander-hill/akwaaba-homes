@@ -16,8 +16,13 @@ export const getAgreementByBooking = async (req: Request, res: Response): Promis
       return;
     }
 
-    const agreement = await prisma.leaseAgreement.findUnique({
-      where: { bookingId },
+    let agreement = await prisma.leaseAgreement.findFirst({
+      where: {
+        OR: [
+          { bookingId },
+          { id: bookingId }
+        ]
+      },
       include: {
         booking: {
           include: {
@@ -27,6 +32,34 @@ export const getAgreementByBooking = async (req: Request, res: Response): Promis
         }
       }
     });
+
+    // Auto-generate Lease Agreement if booking exists but agreement was not created yet
+    if (!agreement) {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          property: true,
+          tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+        }
+      });
+
+      if (booking) {
+        agreement = await prisma.leaseAgreement.create({
+          data: {
+            bookingId: booking.id,
+            status: 'PENDING_TENANT'
+          },
+          include: {
+            booking: {
+              include: {
+                property: true,
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+              }
+            }
+          }
+        });
+      }
+    }
 
     if (!agreement) {
       res.status(404).json({ message: 'Lease agreement not found for this booking' });
@@ -167,6 +200,19 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
       });
       updateData.cryptographicHash = crypto.createHash('sha256').update(dataToHash).digest('hex');
     }
+
+    const updatedAgreement = await prisma.leaseAgreement.update({
+      where: { id: agreement.id },
+      data: updateData,
+      include: {
+        booking: {
+          include: {
+            property: true,
+            tenant: { select: { id: true, firstName: true, lastName: true, email: true } }
+          }
+        }
+      }
+    });
 
     // Real-time socket sync for lease agreements
     try {
