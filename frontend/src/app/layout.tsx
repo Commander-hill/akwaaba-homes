@@ -5,6 +5,7 @@ import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
 import PwaRegister from '../components/PwaRegister';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
+import MaintenanceGuard from '../components/MaintenanceGuard';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -39,10 +40,12 @@ export default function RootLayout({
       <body className="font-sans" suppressHydrationWarning>
         <Providers>
           <PwaRegister />
-          <Navbar />
-          <main className="pt-20 min-h-screen">
-            {children}
-          </main>
+          <MaintenanceGuard>
+            <Navbar />
+            <main className="pt-20 min-h-screen">
+              {children}
+            </main>
+          </MaintenanceGuard>
           <PwaInstallPrompt />
         </Providers>
       </body>
