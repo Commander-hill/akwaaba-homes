@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getSystemConfig } from '../utils/config.service';
+import { verifyAccessToken } from '../utils/jwt';
 
 /**
  * Middleware to enforce global maintenance mode.
@@ -29,7 +30,21 @@ export const checkMaintenanceMode = async (req: Request, res: Response, next: Ne
       }
 
       // Allow authenticated ADMIN users to bypass maintenance mode
-      const user = (req as any).user;
+      let user = (req as any).user;
+      if (!user) {
+        let token = req.cookies?.accessToken;
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+          token = req.headers.authorization.split(' ')[1];
+        }
+        if (token) {
+          const decoded = verifyAccessToken(token) as any;
+          if (decoded) {
+            user = decoded;
+            (req as any).user = decoded;
+          }
+        }
+      }
+
       if (user && user.role === 'ADMIN') {
         return next();
       }
