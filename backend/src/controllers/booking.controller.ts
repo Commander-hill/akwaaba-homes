@@ -358,7 +358,13 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
           type: 'booking'
         });
         io.to(booking.tenant.id).emit('booking_updated', { booking: updatedBooking });
-        io.to(booking.property.landlordId).emit('booking_updated', { booking: updatedBooking });
+        io.emit('booking_updated', { booking: updatedBooking });
+        io.emit('activity:new', {
+          type: 'BOOKING',
+          status,
+          message: `Booking for "${booking.property.title}" updated to ${status}`,
+          createdAt: new Date(),
+        });
       } catch (e) {
         console.error('Socket notification failed', e);
       }

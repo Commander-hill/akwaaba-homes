@@ -23,22 +23,23 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Only connect if we have a token
-    // Extract token from cookie (assuming the server set an HTTP-only cookie, 
-    // we can't easily read it from JS. We need to pass it, or let the socket use withCredentials: true)
+    // Extract token from localStorage as fallback if HTTP-only cookie is not accessible
+    const token = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_access_token') : null;
     
-    // Connect to the root domain, stripping /api or /api/v1 if it exists in the NEXT_PUBLIC_API_URL
+    // Connect to the root domain, stripping /api or /api/v1 if it exists in NEXT_PUBLIC_API_URL
     const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const socketUrl = rawUrl.replace(/\/api(\/v1)?\/?$/, '');
 
-    // With credentials allows the socket connection to send the HTTP-only cookies automatically
     const socketInstance = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
+      auth: {
+        token: token ? `Bearer ${token}` : undefined,
+      },
     });
 
     socketInstance.on('connect', () => {
-      console.log('🔌 Socket connected:', socketInstance.id);
+      console.log('🔌 Socket connected cleanly:', socketInstance.id);
       setIsConnected(true);
     });
 
@@ -48,9 +49,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socketInstance.on('connect_error', (err) => {
-      // Changed to console.warn to prevent Next.js Dev Overlay from crashing the UI
-      // when the socket fails to connect due to an expired or missing accessToken.
-      console.warn('Socket connection error:', err.message);
+      console.warn('Socket connection retry status:', err.message);
     });
 
     socketInstance.on('notification', (data: { title: string, message: string, type: string }) => {
@@ -76,13 +75,22 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     // --- REAL-TIME PLATFORM DATA SYNC & ZERO-REFRESH CACHE INVALIDATION ---
-    socketInstance.on('booking_created', () => {
+    const invalidateAllPlatformViews = () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+    };
+
+    socketInstance.on('booking_created', () => {
+      invalidateAllPlatformViews();
       queryClient.invalidateQueries({ queryKey: ['session'] });
     });
 
     socketInstance.on('booking_updated', () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      invalidateAllPlatformViews();
       queryClient.invalidateQueries({ queryKey: ['agreements'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
     });
@@ -101,7 +109,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socketInstance.on('property_created', () => {
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      invalidateAllPlatformViews();
       queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
@@ -109,7 +117,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socketInstance.on('property_updated', () => {
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      invalidateAllPlatformViews();
       queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
@@ -117,6 +125,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socketInstance.on('user_updated', () => {
+      invalidateAllPlatformViews();
       queryClient.invalidateQueries({ queryKey: ['session'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     });
@@ -129,6 +138,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     socketInstance.on('agreement_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['agreements'] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    });
+
+    socketInstance.on('activity:new', () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     });
 
     socketInstance.on('config_updated', (data: any) => {
