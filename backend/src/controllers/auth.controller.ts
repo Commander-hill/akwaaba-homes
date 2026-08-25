@@ -5,6 +5,7 @@ import prisma from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { encryptData, decryptData } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
+import { logAudit } from '../utils/auditLogger';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { UAParser } from 'ua-parser-js';
@@ -251,7 +252,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         });
       } catch (e) { /* non-blocking */ }
 
-      await logAudit(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, JSON.stringify({ userAgent: userAgentStr, ipAddress }), ipAddress);
+      try {
+        await logAudit(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
+      } catch (e) { /* non-blocking */ }
     }
 
     // Save session in DB
@@ -416,6 +419,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         isEmailVerified: true,
         ghanaCardNumber: true,
         ghanaCardStatus: true,
+        ghanaCardFrontUrl: true,
+        ghanaCardBackUrl: true,
         otherNames: true,
         phoneNumber: true,
         gender: true,
