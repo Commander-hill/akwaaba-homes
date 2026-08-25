@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, Star, Info, Flag, Send } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, Star, Info, Flag, Send, X, ShieldCheck, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
@@ -791,50 +791,161 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       </div>
 
       {/* Payment Confirmation Modal */}
-      {showPaymentModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md p-8 shadow-2xl relative animate-in zoom-in-95">
-            <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <h3 className="text-2xl font-black text-center mb-6">Complete Booking</h3>
-            
-            <div className="space-y-4 mb-8 text-sm">
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-[var(--muted-foreground)]">Property</span>
-                <span className="font-bold text-right truncate w-48">{property.title}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-[var(--muted-foreground)]">Room</span>
-                <span className="font-bold text-right truncate w-48">{selectedRoom?.roomType}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-[var(--muted-foreground)]">Check In</span>
-                <span className="font-bold">{new Date(startDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-[var(--muted-foreground)]">Check Out</span>
-                <span className="font-bold">{new Date(endDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between items-end pt-2">
-                <span className="font-bold text-lg">Total Due</span>
-                <span className="text-2xl font-black text-[var(--primary)]">GHS {displayPrice}</span>
-              </div>
-            </div>
+      {showPaymentModal && (() => {
+        const selectedUnit = selectedRoom?.roomUnits?.find((u: any) => u.id === selectedRoomUnitId);
+        const selectedBed = selectedUnit?.beds?.find((b: any) => b.id === selectedBedId);
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+        const durationDays = start && end ? Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))) : 365;
 
-            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded-xl mb-6 text-xs text-center font-medium">
-              Your payment will be held securely. If the landlord rejects your request, you will receive an automatic full refund.
-            </div>
+        return (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 border border-[var(--border)] rounded-3xl w-full max-w-xl p-6 sm:p-8 shadow-2xl relative animate-in zoom-in-95 my-8 max-h-[92vh] overflow-y-auto">
+              
+              {/* Close Button */}
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
 
-            <button
-              onClick={handleConfirmPayment}
-              className="w-full flex justify-center items-center gap-2 py-4 rounded-xl text-white font-bold text-lg bg-gradient-to-r from-[var(--primary)] to-indigo-600 hover:opacity-90 transition-all shadow-xl shadow-[var(--primary)]/25"
-            >
-              Pay & Request Booking
-            </button>
+              {/* Modal Header */}
+              <div className="mb-6">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 mb-2">
+                  <span>📋</span> Final Booking Verification
+                </div>
+                <h3 className="text-2xl font-black text-[var(--foreground)]">Booking Summary</h3>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                  Please review your detailed accommodation breakdown before completing payment.
+                </p>
+              </div>
+
+              {/* Property Hero Banner */}
+              <div className="flex items-center gap-4 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-[var(--border)] mb-6">
+                <img src={mainImage} alt={property.title} className="w-16 h-16 rounded-xl object-cover shrink-0 shadow-sm" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-extrabold text-base text-[var(--foreground)] truncate">{property.title}</h4>
+                  <p className="text-xs text-[var(--muted-foreground)] truncate flex items-center gap-1 mt-0.5">
+                    <MapPin className="w-3.5 h-3.5 text-[var(--primary)] shrink-0" /> {property.address || property.location || 'Accra, Ghana'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Itemized Details Grid */}
+              <div className="space-y-3 mb-6">
+                <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider">Accommodation Details</h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  {/* Block / Room Type */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Block / Type</span>
+                    <span className="font-bold text-[var(--foreground)] text-right">{selectedRoom?.blockName || selectedRoom?.name || selectedRoom?.roomType}</span>
+                  </div>
+
+                  {/* Gender Designation */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Gender Lock</span>
+                    <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                      selectedRoom?.gender === 'MALE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' :
+                      selectedRoom?.gender === 'FEMALE' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' :
+                      'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                    }`}>
+                      {selectedRoom?.gender === 'MALE' ? '♂ Male Only' : selectedRoom?.gender === 'FEMALE' ? '♀ Female Only' : '⚧ Mixed Gender'}
+                    </span>
+                  </div>
+
+                  {/* Room Unit Number */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Physical Unit</span>
+                    <span className="font-extrabold text-[var(--primary)] text-right">
+                      {selectedUnit ? `${selectedUnit.unitNumber} (Floor ${selectedUnit.floor})` : 'Auto Assigned'}
+                    </span>
+                  </div>
+
+                  {/* Bed Assignment */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Bed Slot</span>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-right">
+                      {selectedBed ? `🛏️ ${selectedBed.bedNumber}` : 'Standard Slot'}
+                    </span>
+                  </div>
+
+                  {/* Primary Tenant */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Tenant Name</span>
+                    <span className="font-bold text-[var(--foreground)] text-right truncate max-w-[130px]">
+                      {session ? `${session.firstName} ${session.lastName}` : 'Verified Student'}
+                    </span>
+                  </div>
+
+                  {/* Tenancy Tenure */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                    <span className="text-[var(--muted-foreground)] font-medium">Tenure Duration</span>
+                    <span className="font-bold text-[var(--foreground)] text-right">
+                      {durationDays >= 300 ? '1 Academic Year' : `${durationDays} Days`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Check-In / Check-Out Dates Card */}
+              <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-[var(--border)] mb-6 flex justify-around text-center text-xs">
+                <div>
+                  <span className="text-[var(--muted-foreground)] block font-medium">Check-In Date</span>
+                  <span className="font-extrabold text-sm text-[var(--foreground)] mt-0.5 block">
+                    {start ? start.toLocaleDateString(undefined, { dateStyle: 'medium' }) : startDate}
+                  </span>
+                </div>
+                <div className="border-r border-[var(--border)] my-1"></div>
+                <div>
+                  <span className="text-[var(--muted-foreground)] block font-medium">Check-Out Date</span>
+                  <span className="font-extrabold text-sm text-[var(--foreground)] mt-0.5 block">
+                    {end ? end.toLocaleDateString(undefined, { dateStyle: 'medium' }) : endDate}
+                  </span>
+                </div>
+              </div>
+
+              {/* Financial Breakdown Table */}
+              <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 mb-6 space-y-2 text-xs">
+                <div className="flex justify-between text-[var(--muted-foreground)]">
+                  <span>Annual Room Rent</span>
+                  <span className="font-semibold text-[var(--foreground)]">GHS {displayPrice?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-[var(--muted-foreground)]">
+                  <span>Escrow Security Deposit</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">GHS 0.00 (Included)</span>
+                </div>
+                <div className="flex justify-between text-[var(--muted-foreground)]">
+                  <span>Service & Processing Fee</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">GHS 0.00 (Waived)</span>
+                </div>
+                <div className="border-t border-indigo-200 dark:border-indigo-800/60 pt-2 flex justify-between items-center text-sm font-black">
+                  <span className="text-[var(--foreground)]">Total Due Today</span>
+                  <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">GHS {displayPrice?.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Escrow Guarantee Shield */}
+              <div className="p-3.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-xl mb-6 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="block font-bold">100% Akwaaba Escrow Protection</strong>
+                  Your payment will be held securely in escrow. Funds are only transferred to the landlord after your booking is confirmed. If rejected, an instant 100% full refund is issued.
+                </div>
+              </div>
+
+              {/* Pay Button */}
+              <button
+                onClick={handleConfirmPayment}
+                className="w-full flex justify-center items-center gap-2 py-4 rounded-2xl text-white font-black text-lg bg-gradient-to-r from-[var(--primary)] via-indigo-600 to-purple-600 hover:opacity-95 transition-all shadow-xl shadow-[var(--primary)]/25 active:scale-[0.99]"
+              >
+                <Lock className="w-5 h-5" /> Pay GHS {displayPrice?.toLocaleString()} & Request Booking
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
