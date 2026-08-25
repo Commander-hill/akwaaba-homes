@@ -10,6 +10,7 @@ import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { UAParser } from 'ua-parser-js';
 import { getTransporter } from '../utils/notification.service';
+import { emitToAll, emitToUser, getIO } from '../socket';
 
 
 
@@ -539,6 +540,11 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
       }
     });
 
+    try {
+      emitToUser(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
+      emitToAll('user_updated', { userId: req.user.id });
+    } catch (e) { /* non-blocking */ }
+
     res.status(200).json({ message: 'Ghana Card submitted successfully for verification' });
   } catch (error) {
     console.error('Submit Ghana Card error:', error);
@@ -582,6 +588,11 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         isProfileLocked: true // Lock profile upon hitting Save button
       }
     });
+
+    try {
+      emitToUser(req.user.id, 'profile_updated', updatedUser);
+      emitToAll('user_updated', { userId: req.user.id });
+    } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ 
       message: 'Profile updated and locked successfully',
