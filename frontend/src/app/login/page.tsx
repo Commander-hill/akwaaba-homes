@@ -57,11 +57,11 @@ export default function LoginPage() {
       {/* Login Card */}
       <div className="w-full max-w-md z-10 mx-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
-        <div className="bg-[#1C1A1B]/80 backdrop-blur-xl rounded-[28px] p-8 sm:p-10 shadow-2xl border border-white/10">
+        <div className="bg-white/85 backdrop-blur-2xl rounded-[28px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/60 ring-1 ring-black/5">
 
           {/* Logo Header */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_32px_rgba(91,70,229,0.45)] mb-3 ring-2 ring-white/10">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(91,70,229,0.3)] mb-3 ring-2 ring-white">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
@@ -77,17 +77,17 @@ export default function LoginPage() {
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-[28px] font-extrabold tracking-tight text-white mb-2">
+            <h1 className="text-[28px] font-extrabold tracking-tight text-slate-900 mb-2">
               Welcome back
             </h1>
-            <p className="text-[#A1A1AA] text-sm">
-              Don&apos;t have an account? <Link href="/register" className="text-white font-bold hover:underline transition-all">Sign up today</Link>
+            <p className="text-slate-600 text-sm">
+              Don&apos;t have an account? <Link href="/register" className="text-[#5B4CFF] font-bold hover:underline transition-all">Sign up today</Link>
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium flex items-start gap-3">
-              <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
+            <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200/80 rounded-xl text-sm font-medium flex items-start gap-3">
+              <div className="mt-0.5"><Lock className="w-4 h-4 text-red-500" /></div>
               {error}
             </div>
           )}
@@ -96,15 +96,15 @@ export default function LoginPage() {
             
             {/* Email Address */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-white">Email Address</label>
+              <label className="block text-sm font-bold text-slate-800">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-[#71717A]" />
+                  <Mail className="h-5 w-5 text-slate-400" />
                 </div>
                 <input 
                   type="email" 
                   required 
-                  className="block w-full pl-12 pr-4 py-3.5 bg-[#2A2A2B]/60 border border-white/5 rounded-2xl text-white placeholder-[#71717A] focus:bg-[#2A2A2B] focus:border-[#5B4CFF] focus:ring-1 focus:ring-[#5B4CFF] outline-none transition-all" 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B4CFF] focus:ring-2 focus:ring-[#5B4CFF]/20 outline-none transition-all" 
                   placeholder="john@example.com" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
@@ -114,15 +114,15 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-white">Password</label>
+              <label className="block text-sm font-bold text-slate-800">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-[#71717A]" />
+                  <Lock className="h-5 w-5 text-slate-400" />
                 </div>
                 <input 
                   type="password" 
                   required 
-                  className="block w-full pl-12 pr-4 py-3.5 bg-[#2A2A2B]/60 border border-white/5 rounded-2xl text-white placeholder-[#71717A] focus:bg-[#2A2A2B] focus:border-[#5B4CFF] focus:ring-1 focus:ring-[#5B4CFF] outline-none transition-all" 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B4CFF] focus:ring-2 focus:ring-[#5B4CFF]/20 outline-none transition-all" 
                   placeholder="••••••••" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
@@ -139,15 +139,15 @@ export default function LoginPage() {
                   type="checkbox" 
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded bg-[#2A2A2B] border-white/10 text-[#5B4CFF] focus:ring-[#5B4CFF]" 
+                  className="h-4 w-4 rounded bg-slate-100 border-slate-300 text-[#5B4CFF] focus:ring-[#5B4CFF]" 
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-[#A1A1AA]">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 font-medium">
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <Link href="/forgot-password" className="font-bold text-white hover:text-white/80 transition-colors">
+                <Link href="/forgot-password" className="font-bold text-[#5B4CFF] hover:text-[#4B3DEE] transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -157,7 +157,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-white bg-[#5B4CFF] hover:bg-[#4B3DEE] font-bold text-[15px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B4CFF] focus:ring-offset-[#1C1A1B] transition-all shadow-[0_0_20px_rgba(91,76,255,0.3)] disabled:opacity-70"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-white bg-[#5B4CFF] hover:bg-[#4B3DEE] font-bold text-[15px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B4CFF] transition-all shadow-[0_8px_25px_rgba(91,76,255,0.35)] active:scale-[0.99] disabled:opacity-70"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
