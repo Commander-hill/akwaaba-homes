@@ -14,6 +14,7 @@ import MessagingTab from '@/components/MessagingTab';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
+import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTemplates';
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
@@ -245,151 +246,11 @@ export default function TenantDashboard() {
   const totalPaidGhs = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
 
   const handlePrintReceipt = (tx: any) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const p = tx.property || {};
-    const l = tx.landlord || {};
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Payment Receipt - ${tx.reference}</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: 900; color: #0284c7; letter-spacing: -0.5px; }
-            .badge { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; text-transform: uppercase; }
-            .amount-card { background: #0f172a; color: #ffffff; padding: 25px; border-radius: 16px; margin-bottom: 30px; text-align: center; }
-            .amount-val { font-size: 36px; font-weight: 900; color: #38bdf8; margin-top: 5px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-            .box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
-            .label { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
-            .value { font-size: 14px; font-weight: 700; color: #1e293b; }
-            .footer { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <div class="logo">AKWAABA HOMES</div>
-              <div style="font-size: 12px; color: #64748b;">Official Financial Rent Payment Receipt</div>
-            </div>
-            <div class="badge">Paystack Verified</div>
-          </div>
-
-          <div class="amount-card">
-            <div class="label" style="color: #94a3b8;">Total Amount Received</div>
-            <div class="amount-val">GHS ${tx.amount?.toLocaleString()}</div>
-            <div style="font-size: 12px; color: #cbd5e1; margin-top: 5px;">Ref: ${tx.reference}</div>
-          </div>
-
-          <div class="grid">
-            <div class="box">
-              <div class="label">Property & Accommodation</div>
-              <div class="value">${p.title || 'Property'}</div>
-              <div style="font-size: 12px; color: #64748b;">${p.location || ''}</div>
-              <div style="font-size: 12px; font-weight: bold; color: #0284c7; margin-top: 4px;">Room: ${tx.room?.roomType || 'Standard Room'}</div>
-            </div>
-
-            <div class="box">
-              <div class="label">Payment Metadata</div>
-              <div class="value">Status: ${tx.status}</div>
-              <div style="font-size: 12px; color: #64748b;">Date: ${new Date(tx.createdAt).toLocaleString()}</div>
-              <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Channel: Paystack Secured Gateway</div>
-            </div>
-          </div>
-
-          <div class="box" style="margin-bottom: 30px;">
-            <div class="label">Landlord / Recipient</div>
-            <div class="value">${l.firstName || 'Landlord'} ${l.lastName || ''}</div>
-            <div style="font-size: 12px; color: #64748b;">Contact: ${l.email || 'N/A'} • ${l.phoneNumber || 'N/A'}</div>
-          </div>
-
-          <div class="footer">
-            Akwaaba Homes Financial Services • Automated Receipt Issued ${new Date().toLocaleDateString()}
-          </div>
-          <script>window.print();</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    printPaymentReceipt(tx);
   };
 
   const handlePrintAgreement = (agreement: any) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const b = agreement.booking;
-    const p = b?.property || {};
-    const l = p?.landlord || {};
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Lease Receipt - ${p.title || 'Property'}</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
-            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-            .logo { font-size: 24px; font-weight: 900; color: #0284c7; letter-spacing: -0.5px; }
-            .badge { background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; text-transform: uppercase; }
-            .section { margin-bottom: 25px; }
-            .section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; letter-spacing: 0.5px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-            .box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; }
-            .hash-box { background: #0f172a; color: #38bdf8; font-family: monospace; padding: 12px; border-radius: 8px; font-size: 11px; word-break: break-all; margin-top: 10px; }
-            .signature-img { max-height: 50px; margin-top: 5px; }
-            .footer { text-align: center; font-size: 11px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <div class="logo">AKWAABA HOMES</div>
-              <div style="font-size: 12px; color: #64748b;">Official Tenancy Verification & Lease Receipt</div>
-            </div>
-            <div class="badge">Verified Legal Agreement</div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">Property Details</div>
-            <div class="box">
-              <h2 style="margin: 0 0 5px 0; font-size: 18px;">${p.title || 'Property'}</h2>
-              <p style="margin: 0; font-size: 13px; color: #475569;">📍 ${p.location || 'Location'}</p>
-              <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: bold; color: #0284c7;">Room: ${b.room?.roomType || 'Standard Room'} - GHS ${b.room?.price || p.price}/yr</p>
-            </div>
-          </div>
-
-          <div class="section grid">
-            <div class="box">
-              <div class="section-title">Tenant (Occupant)</div>
-              Signed: ${agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString() : 'N/A'}<br/>
-              ${agreement.tenantSignature ? `<img class="signature-img" src="${agreement.tenantSignature}" />` : ''}
-            </div>
-            <div class="box">
-              <div class="section-title">Landlord / Property Manager</div>
-              <strong>${l?.firstName || 'Landlord'} ${l?.lastName || ''}</strong><br/>
-              Signed: ${agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString() : 'N/A'}<br/>
-              ${agreement.landlordSignature ? `<img class="signature-img" src="${agreement.landlordSignature}" />` : ''}
-            </div>
-          </div>
-
-          <div class="section">
-            <div class="section-title">Cryptographic Integrity Hash (SHA-256)</div>
-            <div class="hash-box">${agreement.cryptographicHash || 'PENDING_COMPLETION'}</div>
-            <p style="font-size: 11px; color: #64748b; margin-top: 5px;">This cryptographic hash guarantees that neither party can alter the terms or signatures of this lease post-signing.</p>
-          </div>
-
-          <div class="footer">
-            Akwaaba Homes Legal Verification Service • Generated on ${new Date().toLocaleDateString()}
-          </div>
-          <script>window.print();</script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    printLeaseAgreementReceipt(agreement);
   };
 
   // Helpers
