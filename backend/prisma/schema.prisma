@@ -111,6 +111,7 @@ model Room {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  roomUnits    RoomUnit[]
   bookings     Booking[]
   transactions Transaction[]
 
@@ -118,19 +119,56 @@ model Room {
   @@index([gender])
 }
 
+model RoomUnit {
+  id          String   @id @default(uuid())
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  unitNumber  String   // e.g. "RM 101", "RM 102", "A-101"
+  floor       Int      @default(1)
+  genderLock  String   @default("UNASSIGNED") // UNASSIGNED, MALE, FEMALE
+  bedsPerRoom Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  beds     Bed[]
+  bookings Booking[]
+
+  @@index([roomId])
+  @@index([genderLock])
+}
+
+model Bed {
+  id          String   @id @default(uuid())
+  roomUnitId  String
+  roomUnit    RoomUnit @relation(fields: [roomUnitId], references: [id], onDelete: Cascade)
+  bedNumber   String   // e.g. "Bed 1", "Bed 2"
+  status      String   @default("AVAILABLE") // AVAILABLE, RESERVED, BOOKED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@index([roomUnitId])
+  @@index([status])
+}
+
 model Booking {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   tenantId   String
-  tenant     User     @relation(fields: [tenantId], references: [id])
+  tenant     User      @relation(fields: [tenantId], references: [id])
   propertyId String
-  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  roomId     String?  // Which specific room type was booked
-  room       Room?    @relation(fields: [roomId], references: [id])
+  property   Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomId     String?   // Which specific room type was booked
+  room       Room?     @relation(fields: [roomId], references: [id])
+  roomUnitId String?   // Specific physical room unit (e.g. RM 101)
+  roomUnit   RoomUnit? @relation(fields: [roomUnitId], references: [id])
+  bedId      String?   // Specific bed slot (e.g. Bed 1)
+  bed        Bed?      @relation(fields: [bedId], references: [id])
   startDate  DateTime
   endDate    DateTime
-  status     String   @default("PENDING")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  status     String    @default("PENDING")
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   review         Review?
   leaseAgreement LeaseAgreement?

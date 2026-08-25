@@ -16,6 +16,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const propertyId = unwrappedParams.id;
   
   const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  const [selectedRoomUnitId, setSelectedRoomUnitId] = useState<string>('');
+  const [selectedBedId, setSelectedBedId] = useState<string>('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isBooking, setIsBooking] = useState(false);
@@ -109,6 +111,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       return;
     }
 
+    // Check if room requires Room Unit and Bed selection
+    const currentRoom = property?.rooms?.find((r: any) => r.id === selectedRoomId);
+    if (currentRoom && currentRoom.roomUnits && currentRoom.roomUnits.length > 0) {
+      if (!selectedRoomUnitId || !selectedBedId) {
+        setBookingMessage({ text: '⚠️ Please select your Room Unit Number and Bed Slot before proceeding.', type: 'error' });
+        return;
+      }
+    }
+
     // ── STRICT PROFILE COMPLETENESS & VERIFICATION CHECK FOR TENANTS ──
     if (session.role === 'TENANT') {
       const requiredProfileFields = [
@@ -157,6 +168,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       const { data } = await api.post('/bookings', {
         propertyId,
         roomId: selectedRoomId,
+        roomUnitId: selectedRoomUnitId || null,
+        bedId: selectedBedId || null,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString()
       });
@@ -169,6 +182,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         setStartDate('');
         setEndDate('');
         setSelectedRoomId('');
+        setSelectedRoomUnitId('');
+        setSelectedBedId('');
       }
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || 'Failed to request booking';
@@ -552,8 +567,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                             value={room.id}
                             disabled={isDisabled}
                             checked={selectedRoomId === room.id}
-                            onChange={(e) => {
-                              if (!isDisabled) setSelectedRoomId(e.target.value);
+                            onChange={() => {
+                              if (!isDisabled) {
+                                setSelectedRoomId(room.id);
+                                setSelectedRoomUnitId('');
+                                setSelectedBedId('');
+                              }
                             }}
                             className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)] disabled:cursor-not-allowed"
                           />
@@ -601,6 +620,130 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           <div className="text-[10px] text-[var(--muted-foreground)]">per year</div>
                         </div>
                       </div>
+
+                      {/* ── INTERACTIVE ROOM UNIT & BED SELECTOR ── */}
+                      {selectedRoomId === room.id && room.roomUnits && room.roomUnits.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-4 cursor-default" onClick={(e) => e.stopPropagation()}>
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1.5">
+                                <span>🏢</span> Choose Room Unit Number
+                              </h4>
+                              <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Step 1 of 2</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                              {room.roomUnits.map((unit: any) => {
+                                const userGender = session?.gender?.toUpperCase();
+                                const isUnitGenderRestricted = Boolean(userGender && unit.genderLock !== 'UNASSIGNED' && unit.genderLock !== userGender);
+                                const availableBeds = unit.beds ? unit.beds.filter((b: any) => b.status === 'AVAILABLE') : [];
+                                const isUnitFull = unit.beds && unit.beds.length > 0 && availableBeds.length === 0;
+                                const isUnitDisabled = isUnitFull || isUnitGenderRestricted;
+
+                                const isSelectedUnit = selectedRoomUnitId === unit.id;
+
+                                return (
+                                  <button
+                                    key={unit.id}
+                                    type="button"
+                                    disabled={isUnitDisabled}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSelectedRoomUnitId(unit.id);
+                                      setSelectedBedId('');
+                                    }}
+                                    className={`p-2.5 rounded-xl border text-left text-xs font-semibold transition-all relative ${
+                                      isUnitDisabled
+                                        ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                                        : isSelectedUnit
+                                        ? 'border-[var(--primary)] bg-indigo-100/80 dark:bg-indigo-900/60 text-[var(--foreground)] ring-2 ring-[var(--primary)]/50 shadow-sm'
+                                        : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 text-[var(--foreground)]'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-extrabold">{unit.unitNumber}</span>
+                                      {unit.genderLock !== 'UNASSIGNED' && (
+                                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
+                                          unit.genderLock === 'MALE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300'
+                                        }`}>
+                                          {unit.genderLock === 'MALE' ? '♂ Male' : '♀ Female'}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-[10px] text-[var(--muted-foreground)] mt-1 flex items-center justify-between">
+                                      <span>Floor {unit.floor}</span>
+                                      <span>
+                                        {isUnitFull ? (
+                                          <span className="text-red-500 font-bold">Full</span>
+                                        ) : isUnitGenderRestricted ? (
+                                          <span className="text-red-500 font-bold">Locked</span>
+                                        ) : (
+                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{availableBeds.length} bed(s)</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* ── BED SLOT PICKER ── */}
+                          {selectedRoomUnitId && (
+                            <div className="pt-3 border-t border-dashed border-[var(--border)]">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1.5">
+                                  <span>🛏️</span> Choose Bed Slot
+                                </h4>
+                                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Step 2 of 2</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                {(() => {
+                                  const currentUnit = room.roomUnits.find((u: any) => u.id === selectedRoomUnitId);
+                                  if (!currentUnit || !currentUnit.beds) return null;
+
+                                  return currentUnit.beds.map((bed: any) => {
+                                    const isBedAvailable = bed.status === 'AVAILABLE';
+                                    const isSelectedBed = selectedBedId === bed.id;
+
+                                    return (
+                                      <button
+                                        key={bed.id}
+                                        type="button"
+                                        disabled={!isBedAvailable}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedBedId(bed.id);
+                                        }}
+                                        className={`p-3 rounded-xl border text-left text-xs transition-all ${
+                                          !isBedAvailable
+                                            ? 'opacity-40 cursor-not-allowed bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900 text-red-600'
+                                            : isSelectedBed
+                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/50 shadow-sm font-bold'
+                                            : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 cursor-pointer'
+                                        }`}
+                                      >
+                                        <div className="flex items-center justify-between font-bold">
+                                          <span>🛏️ {bed.bedNumber}</span>
+                                          {isSelectedBed && <span className="text-emerald-600 dark:text-emerald-400 text-sm">✓ Selected</span>}
+                                        </div>
+                                        <div className="text-[10px] mt-1">
+                                          {isBedAvailable ? (
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">🟢 Available</span>
+                                          ) : (
+                                            <span className="text-red-500 font-bold">🔴 Occupied</span>
+                                          )}
+                                        </div>
+                                      </button>
+                                    );
+                                  });
+                                })()}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </label>
                   );
                 })}

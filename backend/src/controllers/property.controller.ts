@@ -78,22 +78,58 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
         location,
         latitude: latitude ? parseFloat(latitude) : null,
         longitude: longitude ? parseFloat(longitude) : null,
-        // Stringify arrays for SQLite compatibility
         amenities: JSON.stringify(amenities || []),
         images: JSON.stringify(images || []),
         videoUrl: videoUrl || null,
         isAvailable: false, // Property is hidden until the listing fee is paid
-        rooms: {
-          create: rooms.map((r: any) => ({
-            roomType: r.roomType,
-            bedsPerRoom: parseInt(r.roomType.split(' ')[0], 10) || 1,
-            numberOfRooms: parseInt(r.numberOfRooms, 10),
-            price: parseFloat(r.price)
-          }))
-        }
-      },
-      include: { rooms: true }
+      }
     });
+
+    // Auto-generate Rooms, physical Room Units, and Beds
+    for (const r of rooms) {
+      const bedsPerRoom = parseInt(r.roomType.split(' ')[0], 10) || 1;
+      const numRooms = parseInt(r.numberOfRooms, 10);
+      const blockName = r.blockName || null;
+      const gender = r.gender || 'MIXED';
+
+      const createdRoom = await prisma.room.create({
+        data: {
+          propertyId: newProperty.id,
+          blockName,
+          gender,
+          roomType: r.roomType,
+          bedsPerRoom,
+          numberOfRooms: numRooms,
+          price: parseFloat(r.price)
+        }
+      });
+
+      // Auto-generate physical Room Units and Beds (e.g. RM 101, RM 102, Bed 1, Bed 2)
+      const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+      for (let i = 1; i <= numRooms; i++) {
+        const unitNumber = `${prefix}${100 + i}`;
+        const roomUnit = await prisma.roomUnit.create({
+          data: {
+            roomId: createdRoom.id,
+            unitNumber,
+            floor: Math.ceil(i / 10),
+            genderLock: gender !== 'MIXED' ? gender : 'UNASSIGNED',
+            bedsPerRoom,
+          }
+        });
+
+        // Create Beds for this Room Unit
+        for (let b = 1; b <= bedsPerRoom; b++) {
+          await prisma.bed.create({
+            data: {
+              roomUnitId: roomUnit.id,
+              bedNumber: `Bed ${b}`,
+              status: 'AVAILABLE'
+            }
+          });
+        }
+      }
+    }
 
     // Invalidate properties cache
     const keys = appCache.keys();
@@ -228,7 +264,21 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
             reputationScore: true,
           }
         },
-        rooms: true
+        rooms: {
+          include: {
+            roomUnits: {
+              include: {
+                beds: {
+                  include: {
+                    bookings: {
+                      select: { id: true, status: true, tenantId: true }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     });
 

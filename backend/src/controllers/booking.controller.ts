@@ -11,7 +11,7 @@ import { getSystemConfig } from '../utils/config.service';
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
-    const { propertyId, roomId, startDate, endDate } = req.body;
+    const { propertyId, roomId, roomUnitId, bedId, startDate, endDate } = req.body;
 
     if (!propertyId || !roomId || !startDate || !endDate) {
       res.status(400).json({ message: 'Missing required fields' });
@@ -31,6 +31,28 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     if (!room || room.propertyId !== propertyId) {
       res.status(400).json({ message: 'Invalid room selected' });
       return;
+    }
+
+    let targetRoomUnit: any = null;
+    let targetBed: any = null;
+
+    if (roomUnitId && bedId) {
+      targetRoomUnit = await prisma.roomUnit.findUnique({ where: { id: roomUnitId } });
+      if (!targetRoomUnit || targetRoomUnit.roomId !== roomId) {
+        res.status(400).json({ message: 'Invalid room unit selected' });
+        return;
+      }
+
+      targetBed = await prisma.bed.findUnique({ where: { id: bedId } });
+      if (!targetBed || targetBed.roomUnitId !== roomUnitId) {
+        res.status(400).json({ message: 'Invalid bed selected' });
+        return;
+      }
+
+      if (targetBed.status !== 'AVAILABLE') {
+        res.status(400).json({ message: `Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit.unitNumber}" is already booked or reserved.` });
+        return;
+      }
     }
     
     // We do not check property.isAvailable as strictly here, we'll rely on room availability during payment,
@@ -85,28 +107,61 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // ── GENDER BLOCK VALIDATION (Model 1: Block/Wing Level Segregation) ──
-    // Only enforce if the room has a strict gender designation (MALE or FEMALE)
-    if (room.gender !== 'MIXED') {
-      const tenantGender = tenant?.gender?.toUpperCase(); // e.g. "MALE" or "FEMALE"
-      if (!tenantGender) {
-        res.status(403).json({ 
-          message: 'Your gender is not set on your profile. Please update your profile before booking a gender-designated block.',
-          redirectTo: '/dashboard/profile'
+    const tenantGender = tenant?.gender?.toUpperCase(); // "MALE" or "FEMALE"
+    if (!tenantGender) {
+      res.status(403).json({ 
+        message: 'Your gender is not set on your profile. Please update your profile before booking.',
+        redirectTo: '/dashboard/profile'
+      });
+      return;
+    }
+
+    // ── GENDER BLOCK VALIDATION (Model 1: Block Level) ──
+    if (room.gender !== 'MIXED' && tenantGender !== room.gender) {
+      const blockLabel = room.blockName ? `"${room.blockName}"` : 'this block';
+      res.status(403).json({ 
+        message: `Booking Rejected: ${blockLabel} is designated for ${room.gender === 'MALE' ? 'Male' : 'Female'} students only. Please select an appropriate block for your gender.`
+      });
+      return;
+    }
+
+    // ── DYNAMIC GENDER LOCKING (Model 2: Room Unit Level for Mixed Blocks) ──
+    if (targetRoomUnit) {
+      if (targetRoomUnit.genderLock !== 'UNASSIGNED' && targetRoomUnit.genderLock !== tenantGender) {
+        res.status(403).json({
+          message: `Booking Rejected: Room Unit "${targetRoomUnit.unitNumber}" is reserved for ${targetRoomUnit.genderLock === 'MALE' ? 'Male' : 'Female'} occupants.`
         });
         return;
       }
-      if (tenantGender !== room.gender) {
-        const blockLabel = room.blockName ? `"${room.blockName}"` : 'this block';
-        res.status(403).json({ 
-          message: `Booking Rejected: ${blockLabel} is designated for ${room.gender === 'MALE' ? 'Male' : 'Female'} students only. Please select an appropriate block for your gender.`
+
+      // Lock room unit gender to tenant's gender if currently unassigned
+      if (targetRoomUnit.genderLock === 'UNASSIGNED') {
+        await prisma.roomUnit.update({
+          where: { id: targetRoomUnit.id },
+          data: { genderLock: tenantGender }
         });
-        return;
       }
     }
 
+    // Reserve selected bed slot
+    if (targetBed) {
+      await prisma.bed.update({
+        where: { id: targetBed.id },
+        data: { status: 'RESERVED' }
+      });
+    }
+
     const booking = await prisma.booking.create({
-      data: { tenantId, propertyId, roomId, startDate: new Date(startDate), endDate: new Date(endDate), status: 'PENDING' },
+      data: {
+        tenantId,
+        propertyId,
+        roomId,
+        roomUnitId: roomUnitId || null,
+        bedId: bedId || null,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        status: 'PENDING'
+      },
     });
 
     // Notify landlord via email + in-app
@@ -478,6 +533,13 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     if (!isSuccess) {
       res.status(400).json({ message: 'Payment verification failed' });
       return;
+    }
+
+    if (booking.bedId) {
+      await prisma.bed.update({
+        where: { id: booking.bedId },
+        data: { status: 'BOOKED' }
+      });
     }
 
     const [updatedBooking, transaction] = await prisma.$transaction([
