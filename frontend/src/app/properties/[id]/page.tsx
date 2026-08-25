@@ -214,15 +214,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const displayPrice = selectedRoom ? selectedRoom.price : property.price;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 space-y-8 min-h-[calc(100vh-4rem)]">
+    <div className="w-full px-3 sm:px-6 lg:px-8 py-6 space-y-8 min-h-[calc(100vh-4rem)]">
       <Link href="/properties" className="flex items-center gap-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors w-fit font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to Catalog
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_480px] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_540px] gap-8">
         
         {/* Left Col: Details */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8">
           <div className="flex gap-4 h-[480px]">
             <div className="flex-1 rounded-3xl overflow-hidden shadow-md">
               <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
@@ -631,7 +631,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                               </h4>
                               <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Step 1 of 2</span>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                               {room.roomUnits.map((unit: any) => {
                                 const userGender = session?.gender?.toUpperCase();
                                 const isUnitGenderRestricted = Boolean(userGender && unit.genderLock !== 'UNASSIGNED' && unit.genderLock !== userGender);
