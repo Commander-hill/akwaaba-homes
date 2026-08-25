@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Mail, Clock, ShieldCheck, ArrowRight, CheckCircle2, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 interface MaintenanceScreenProps {
   estimatedEndTime?: Date;
   onAdminBypass?: () => void;
@@ -14,6 +16,7 @@ interface MaintenanceScreenProps {
 export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScreenProps) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const queryClient = useQueryClient();
 
   // Default estimated maintenance duration (e.g. 2 hours from now if no date provided)
   const targetTime = estimatedEndTime || new Date(Date.now() + 2 * 60 * 60 * 1000 + 45 * 60 * 1000);
@@ -30,9 +33,11 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
       const now = new Date().getTime();
       const distance = targetTime.getTime() - now;
 
-      if (distance < 0) {
+      if (distance <= 0) {
         clearInterval(timer);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // Auto-refresh platform config and unblock users immediately
+        queryClient.invalidateQueries({ queryKey: ['public-config'] });
       } else {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -44,7 +49,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetTime]);
+  }, [targetTime, queryClient]);
 
   const handleNotifySubmit = (e: React.FormEvent) => {
     e.preventDefault();

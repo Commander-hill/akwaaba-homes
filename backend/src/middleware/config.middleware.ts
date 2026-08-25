@@ -21,7 +21,13 @@ export const checkMaintenanceMode = async (req: Request, res: Response, next: Ne
     }
 
     const config = await getSystemConfig();
+
     if (config.maintenanceMode) {
+      // Auto-expire maintenance mode if current time has surpassed maintenanceEndTime
+      if (config.maintenanceEndTime && new Date() >= new Date(config.maintenanceEndTime)) {
+        return next();
+      }
+
       // Allow authenticated ADMIN users to bypass maintenance mode
       const user = (req as any).user;
       if (user && user.role === 'ADMIN') {
@@ -30,7 +36,8 @@ export const checkMaintenanceMode = async (req: Request, res: Response, next: Ne
 
       res.status(503).json({
         message: 'Platform is currently undergoing scheduled maintenance. Please try again shortly.',
-        maintenanceMode: true
+        maintenanceMode: true,
+        maintenanceEndTime: config.maintenanceEndTime
       });
       return;
     }
