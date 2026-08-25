@@ -140,6 +140,7 @@ export default function ProfilePage() {
     onSuccess: () => {
       setMessage({ text: 'Profile updated successfully!', type: 'success' });
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     },
     onError: (error: any) => {
       setMessage({ text: error.response?.data?.message || 'Failed to update profile', type: 'error' });

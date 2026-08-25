@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { ShieldCheck, Loader2, ArrowRight } from 'lucide-react';
 import api from '@/lib/axios';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function VerificationPage() {
+  const queryClient = useQueryClient();
   const [ghanaCardNumber, setGhanaCardNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -66,6 +67,8 @@ export default function VerificationPage() {
       
       setMessage({ text: 'Ghana Card submitted successfully! Awaiting admin approval.', type: 'success' });
       refetch(); // Refresh session to get updated ghanaCardStatus
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     } catch (error: any) {
       setMessage({ text: error.response?.data?.message || 'Failed to submit Ghana Card', type: 'error' });
     } finally {

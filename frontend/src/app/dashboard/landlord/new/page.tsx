@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign } from 'lucide-react';
@@ -20,6 +20,7 @@ interface RoomInput {
 
 export default function NewPropertyPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -123,6 +124,10 @@ export default function NewPropertyPage() {
       return response.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
       router.push('/dashboard/landlord/properties');
     },
     onError: (err: any) => {

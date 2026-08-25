@@ -102,22 +102,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     socketInstance.on('property_created', () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     });
 
     socketInstance.on('property_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     });
 
     socketInstance.on('user_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     });
 
     socketInstance.on('profile_updated', () => {
       queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     });
 
     socketInstance.on('agreement_updated', () => {
