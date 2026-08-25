@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
-import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign } from 'lucide-react';
+import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
 import { getImageUrl } from '@/lib/utils';
@@ -14,7 +14,7 @@ interface RoomInput {
   blockName: string;
   gender: 'MALE' | 'FEMALE' | 'MIXED';
   roomType: string;
-  numberOfRooms: number;
+  numberOfRooms: number | string;
   price: string;
 }
 
@@ -37,6 +37,9 @@ export default function NewPropertyPage() {
   const [rooms, setRooms] = useState<RoomInput[]>([
     { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }
   ]);
+
+  const [fieldErrors, setFieldErrors] = useState<{ title?: boolean; location?: boolean; description?: boolean }>({});
+  const [roomErrors, setRoomErrors] = useState<{ [roomId: string]: { numberOfRooms?: boolean; price?: boolean } }>({});
 
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoUploading, setVideoUploading] = useState(false);
@@ -84,6 +87,7 @@ export default function NewPropertyPage() {
             longitude: lng,
             location: locationName
           }));
+          setFieldErrors(prev => ({ ...prev, location: false }));
         }
       }
     } catch (err) {
@@ -114,11 +118,11 @@ export default function NewPropertyPage() {
           blockName: r.blockName || null,
           gender: r.gender,
           roomType: r.roomType,
-          numberOfRooms: r.numberOfRooms,
+          numberOfRooms: Number(r.numberOfRooms),
           price: r.price
         })),
         amenities: data.amenities.split(',').map((a: string) => a.trim()).filter(Boolean),
-        images: data.images.length > 0 ? data.images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop'] // Default image for demo
+        images: data.images.length > 0 ? data.images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop']
       };
       const response = await api.post('/properties', formattedData);
       return response.data;
@@ -134,8 +138,6 @@ export default function NewPropertyPage() {
       setError(err.response?.data?.message || 'Failed to list property');
     }
   });
-
-
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -203,38 +205,105 @@ export default function NewPropertyPage() {
 
   const handleRemoveRoom = (id: string) => {
     setRooms(prev => prev.filter(r => r.id !== id));
+    if (roomErrors[id]) {
+      setRoomErrors(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   };
 
   const handleRoomChange = (id: string, field: keyof RoomInput, value: any) => {
     setRooms(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+    if (roomErrors[id]) {
+      setRoomErrors(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   };
 
   const totalCapacity = rooms.reduce((acc, r) => {
     const beds = parseInt(r.roomType.split(' ')[0], 10) || 1;
-    return acc + (r.numberOfRooms * beds);
+    const qty = Number(r.numberOfRooms) || 0;
+    return acc + (qty * beds);
   }, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!formData.title || !formData.type || !formData.description || !formData.location) {
-      setError('Please fill in all required property fields.');
+    setFieldErrors({});
+    setRoomErrors({});
+
+    // 1. Top-Level Field Validation
+    const newFieldErrors: { title?: boolean; location?: boolean; description?: boolean } = {};
+    if (!formData.title?.trim()) newFieldErrors.title = true;
+    if (!formData.location?.trim()) newFieldErrors.location = true;
+    if (!formData.description?.trim()) newFieldErrors.description = true;
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      const missingLabels = [];
+      if (newFieldErrors.title) missingLabels.push('Property Title');
+      if (newFieldErrors.location) missingLabels.push('Location Name');
+      if (newFieldErrors.description) missingLabels.push('Description');
+      setError(`Please fill in all required property fields: ${missingLabels.join(', ')}.`);
+      window.scrollTo({ top: 150, behavior: 'smooth' });
       return;
     }
+
     if (rooms.length === 0) {
       setError('You must add at least one room configuration.');
       return;
     }
-    for (const room of rooms) {
-      if (!room.roomType || !room.numberOfRooms || !room.price) {
-        setError('Please fill in all fields for every room configuration.');
-        return;
+
+    // 2. Precise Per-Room Configuration Validation
+    const newRoomErrors: { [roomId: string]: { numberOfRooms?: boolean; price?: boolean } } = {};
+    let firstInvalidRoomId: string | null = null;
+    let firstInvalidSummary = '';
+
+    rooms.forEach((room, index) => {
+      const isMissingRooms = !room.numberOfRooms || Number(room.numberOfRooms) <= 0;
+      const isMissingPrice = !room.price || String(room.price).trim() === '' || Number(room.price) <= 0;
+
+      if (isMissingRooms || isMissingPrice) {
+        newRoomErrors[room.id] = {
+          numberOfRooms: isMissingRooms,
+          price: isMissingPrice,
+        };
+
+        if (!firstInvalidRoomId) {
+          firstInvalidRoomId = room.id;
+          const blockLabel = room.blockName?.trim() ? `"${room.blockName}"` : `Configuration #${index + 1}`;
+          const missingItems = [];
+          if (isMissingRooms) missingItems.push('Number of Rooms');
+          if (isMissingPrice) missingItems.push('Price/Year');
+          firstInvalidSummary = `Room ${blockLabel} is incomplete: Please enter ${missingItems.join(' and ')}.`;
+        }
       }
+    });
+
+    if (firstInvalidRoomId) {
+      setRoomErrors(newRoomErrors);
+      setError(`⚠️ Incomplete Room Configuration: ${firstInvalidSummary}`);
+
+      // Smooth scroll to the specific incomplete room block
+      setTimeout(() => {
+        const targetEl = document.getElementById(`room-config-${firstInvalidRoomId}`);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+      return;
     }
+
     if (videoUploading || imagesUploading) {
       setError('Please wait for media to finish uploading');
       return;
     }
+
     createMutation.mutate(formData);
   };
 
@@ -302,27 +371,39 @@ export default function NewPropertyPage() {
       <div className="glass-card rounded-2xl p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 flex items-start gap-2">
-              <Info className="w-4 h-4 mt-0.5 shrink-0" />
-              {error}
+            <div className="bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300 p-4 rounded-xl text-sm font-bold border border-red-200 dark:border-red-900/50 flex items-start gap-3 shadow-md animate-in fade-in">
+              <AlertCircle className="w-5 h-5 mt-0.5 shrink-0 text-red-500" />
+              <div>{error}</div>
             </div>
           )}
 
+          {/* Property Title */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)]">Property Title *</label>
+            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
+              <span>Property Title *</span>
+              {fieldErrors.title && <span className="text-xs font-bold text-red-500">⚠ Title is required</span>}
+            </label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Building2 className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.title ? 'text-red-500' : 'text-slate-400'}`} />
               <input 
                 type="text" 
                 value={formData.title}
-                onChange={e => setFormData({...formData, title: e.target.value})}
+                onChange={e => {
+                  setFormData({...formData, title: e.target.value});
+                  if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: false }));
+                }}
                 placeholder="e.g. Luxury Single Room at Evandy"
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:border-transparent transition-all"
+                className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
+                  fieldErrors.title 
+                    ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
+                    : 'border-[var(--input)] focus:ring-[var(--ring)]'
+                }`}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Property Type */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)]">Property Type *</label>
               <select 
@@ -335,28 +416,40 @@ export default function NewPropertyPage() {
                 <option value="Apartment">Apartment</option>
               </select>
             </div>
+
+            {/* Location Name */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
                 <span>Location Name *</span>
-                {isGeocoding && (
+                {fieldErrors.location ? (
+                  <span className="text-xs font-bold text-red-500">⚠ Location is required</span>
+                ) : isGeocoding ? (
                   <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse flex items-center gap-1">
                     <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting area...
                   </span>
-                )}
+                ) : null}
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.location ? 'text-red-500' : 'text-slate-400'}`} />
                 <input 
                   type="text" 
                   value={formData.location}
-                  onChange={e => setFormData({...formData, location: e.target.value})}
+                  onChange={e => {
+                    setFormData({...formData, location: e.target.value});
+                    if (fieldErrors.location) setFieldErrors(prev => ({ ...prev, location: false }));
+                  }}
                   placeholder="e.g. Ayeduase"
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                  className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
+                    fieldErrors.location 
+                      ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
+                      : 'border-[var(--input)] focus:ring-[var(--ring)]'
+                  }`}
                 />
               </div>
             </div>
           </div>
 
+          {/* Room Configurations Section */}
           <div className="space-y-4 pt-4 border-t border-[var(--border)]">
             <div className="flex items-center justify-between">
               <div>
@@ -373,98 +466,142 @@ export default function NewPropertyPage() {
             </div>
 
             <div className="space-y-4">
-              {rooms.map((room, index) => (
-                <div key={room.id} className="p-5 border border-[var(--border)] rounded-xl bg-slate-50/50 dark:bg-slate-800/20 relative">
-                  {rooms.length > 1 && (
-                    <button 
-                      type="button" 
-                      onClick={() => handleRemoveRoom(room.id)}
-                      className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  )}
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    {/* Block Name */}
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                        <span>🏢</span> Block / Wing Name
-                      </label>
-                      <input
-                        type="text"
-                        value={room.blockName}
-                        onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
-                        placeholder="e.g. Dakar Block A / Female Wing"
-                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                      />
-                    </div>
-                    {/* Gender Designation */}
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                        <span>⚧</span> Gender Designation *
-                      </label>
-                      <select
-                        value={room.gender}
-                        onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
-                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                      >
-                        <option value="MIXED">🔀 Mixed (Open to All)</option>
-                        <option value="MALE">♂ Male Only</option>
-                        <option value="FEMALE">♀ Female Only</option>
-                      </select>
-                      {room.gender !== 'MIXED' && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                          ⚠ Only {room.gender === 'MALE' ? 'male' : 'female'} students can book this block.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+              {rooms.map((room, index) => {
+                const hasRoomError = Boolean(roomErrors[room.id]);
+                const numRoomsErr = roomErrors[room.id]?.numberOfRooms;
+                const priceErr = roomErrors[room.id]?.price;
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mr-8">
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--foreground)]">Room Type</label>
-                      <select 
-                        value={room.roomType}
-                        onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
-                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                const missingFieldNames = [];
+                if (numRoomsErr) missingFieldNames.push('Number of Rooms');
+                if (priceErr) missingFieldNames.push('Price/Year');
+
+                return (
+                  <div 
+                    key={room.id} 
+                    id={`room-config-${room.id}`}
+                    className={`p-5 rounded-xl transition-all duration-300 relative ${
+                      hasRoomError 
+                        ? 'border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20 shadow-lg shadow-red-500/10 ring-2 ring-red-500/20' 
+                        : 'border border-[var(--border)] bg-slate-50/50 dark:bg-slate-800/20'
+                    }`}
+                  >
+                    {hasRoomError && (
+                      <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 text-xs font-black flex items-center gap-2 animate-in fade-in">
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                        <span>Incomplete Configuration #{index + 1} ({room.blockName || 'Untitled Block'}): Please fill in {missingFieldNames.join(' and ')}.</span>
+                      </div>
+                    )}
+
+                    {rooms.length > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => handleRemoveRoom(room.id)}
+                        className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
                       >
-                        <option value="1 in a room">1 in a room</option>
-                        <option value="2 in a room">2 in a room</option>
-                        <option value="3 in a room">3 in a room</option>
-                        <option value="4 in a room">4 in a room</option>
-                      </select>
-                    </div>
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
                     
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--foreground)]">Number of Rooms</label>
-                      <input 
-                        type="number" 
-                        min="1"
-                        value={room.numberOfRooms}
-                        onChange={e => handleRoomChange(room.id, 'numberOfRooms', parseInt(e.target.value) || '')}
-                        placeholder="Qty"
-                        className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                      {/* Block Name */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                          <span>🏢</span> Block / Wing Name
+                        </label>
+                        <input
+                          type="text"
+                          value={room.blockName}
+                          onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
+                          placeholder="e.g. Dakar Block A / Female Wing"
+                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                        />
+                      </div>
+                      {/* Gender Designation */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                          <span>⚧</span> Gender Designation *
+                        </label>
+                        <select
+                          value={room.gender}
+                          onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
+                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                        >
+                          <option value="MIXED">🔀 Mixed (Open to All)</option>
+                          <option value="MALE">♂ Male Only</option>
+                          <option value="FEMALE">♀ Female Only</option>
+                        </select>
+                        {room.gender !== 'MIXED' && (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                            ⚠ Only {room.gender === 'MALE' ? 'male' : 'female'} students can book this block.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <label className="text-xs font-bold text-[var(--foreground)]">Price/Year (GHS)</label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mr-8">
+                      {/* Room Type */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-[var(--foreground)]">Room Type *</label>
+                        <select 
+                          value={room.roomType}
+                          onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
+                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                        >
+                          <option value="1 in a room">1 in a room</option>
+                          <option value="2 in a room">2 in a room</option>
+                          <option value="3 in a room">3 in a room</option>
+                          <option value="4 in a room">4 in a room</option>
+                        </select>
+                      </div>
+                      
+                      {/* Number of Rooms */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-[var(--foreground)] flex justify-between items-center">
+                          <span>Number of Rooms *</span>
+                          {numRoomsErr && <span className="text-[10px] font-bold text-red-500">⚠ Required</span>}
+                        </label>
                         <input 
                           type="number" 
                           min="1"
-                          value={room.price}
-                          onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
-                          placeholder="Amount"
-                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 pl-8 pr-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                          value={room.numberOfRooms}
+                          onChange={e => handleRoomChange(room.id, 'numberOfRooms', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
+                          placeholder="Qty"
+                          className={`w-full bg-transparent border rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 transition-all ${
+                            numRoomsErr 
+                              ? 'border-red-500 focus:ring-red-500/30 bg-red-50/50 dark:bg-red-900/20' 
+                              : 'border-[var(--input)] focus:ring-[var(--ring)]'
+                          }`}
                         />
+                        {numRoomsErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter room quantity</p>}
+                      </div>
+                      
+                      {/* Price/Year (GHS) */}
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-[var(--foreground)] flex justify-between items-center">
+                          <span>Price/Year (GHS) *</span>
+                          {priceErr && <span className="text-[10px] font-bold text-red-500">⚠ Required</span>}
+                        </label>
+                        <div className="relative">
+                          <DollarSign className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${priceErr ? 'text-red-500' : 'text-slate-400'}`} />
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={room.price}
+                            onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
+                            placeholder="Amount"
+                            className={`w-full bg-transparent border rounded-lg py-2 pl-8 pr-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 transition-all ${
+                              priceErr 
+                                ? 'border-red-500 focus:ring-red-500/30 bg-red-50/50 dark:bg-red-900/20' 
+                                : 'border-[var(--input)] focus:ring-[var(--ring)]'
+                            }`}
+                          />
+                        </div>
+                        {priceErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter price per year</p>}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <div className="bg-slate-50 dark:bg-slate-800/50 border border-[var(--border)] rounded-xl p-4 mt-2">
@@ -502,6 +639,7 @@ export default function NewPropertyPage() {
             </div>
           </div>
 
+          {/* Amenities */}
           <div className="space-y-2">
             <label className="text-sm font-bold text-[var(--foreground)]">Amenities</label>
             <input 
@@ -513,16 +651,25 @@ export default function NewPropertyPage() {
             />
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between">
+            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
               <span>Description *</span>
+              {fieldErrors.description && <span className="text-xs font-bold text-red-500">⚠ Description is required</span>}
             </label>
             <textarea 
               value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
+              onChange={e => {
+                setFormData({...formData, description: e.target.value});
+                if (fieldErrors.description) setFieldErrors(prev => ({ ...prev, description: false }));
+              }}
               placeholder="Describe the property, rules, and nearby facilities..."
               rows={4}
-              className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all resize-none"
+              className={`w-full bg-transparent border rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all resize-none ${
+                fieldErrors.description 
+                  ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
+                  : 'border-[var(--input)] focus:ring-[var(--ring)]'
+              }`}
             />
           </div>
 
