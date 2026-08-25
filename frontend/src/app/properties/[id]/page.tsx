@@ -214,16 +214,16 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const displayPrice = selectedRoom ? selectedRoom.price : property.price;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 min-h-[calc(100vh-4rem)]">
+    <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-16 py-8 space-y-8 min-h-[calc(100vh-4rem)]">
       <Link href="/properties" className="flex items-center gap-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors w-fit font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to Catalog
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_480px] gap-8">
         
         {/* Left Col: Details */}
         <div className="lg:col-span-2 space-y-8">
-          <div className="flex gap-4 h-[400px]">
+          <div className="flex gap-4 h-[480px]">
             <div className="flex-1 rounded-3xl overflow-hidden shadow-md">
               <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
             </div>
