@@ -214,16 +214,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const displayPrice = selectedRoom ? selectedRoom.price : property.price;
 
   return (
-    <div className="w-full px-3 sm:px-6 lg:px-8 py-6 space-y-8 min-h-[calc(100vh-4rem)]">
+    <div className="w-full px-4 sm:px-8 lg:px-12 py-8 space-y-12 min-h-[calc(100vh-4rem)]">
       <Link href="/properties" className="flex items-center gap-2 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors w-fit font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to Catalog
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_540px] gap-8">
-        
-        {/* Left Col: Details */}
-        <div className="space-y-8">
-          <div className="flex gap-4 h-[480px]">
+      {/* ── TOP HERO SECTION: GALLERY & PROPERTY HEADER (FULL WIDTH) ── */}
+      <div className="space-y-8">
+        <div className="flex gap-4 h-[480px]">
             <div className="flex-1 rounded-3xl overflow-hidden shadow-md">
               <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
             </div>
@@ -324,433 +322,248 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
-            <h2 className="text-2xl font-bold mb-4">Description</h2>
-            <p className="text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">{property.description}</p>
+      </div>
+
+      {/* ── SECTION 2: REQUEST BOOKING (FULL WIDTH EDGE-TO-EDGE) ── */}
+      <div className="glass-card p-6 sm:p-10 rounded-3xl border border-[var(--border)] shadow-xl w-full">
+        <h2 className="text-3xl font-extrabold mb-2 text-[var(--foreground)]">Request Booking</h2>
+        <p className="text-sm text-[var(--muted-foreground)] mb-6">Select your dates and preferred room unit to request this accommodation.</p>
+
+        {bookingMessage && (
+          <div className={`p-4 rounded-xl text-sm font-medium mb-6 border ${bookingMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-900/50' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:border-red-900/50'}`}>
+            {bookingMessage.text}
           </div>
+        )}
 
-          {property.videoUrl && (
-            <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-4">
-              <h2 className="text-2xl font-bold">360° / Video Walkthrough</h2>
-              <p className="text-[var(--muted-foreground)] text-sm mb-4">Take a virtual tour of this property to see every detail before you book.</p>
-              <div className="rounded-2xl overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-xl bg-black relative w-full" style={{ paddingTop: '56.25%' }}>
-                <video 
-                  controls 
-                  controlsList="nodownload"
-                  className="absolute top-0 left-0 w-full h-full object-cover"
-                  src={`http://localhost:5000${property.videoUrl}`}
-                  poster={property.images?.[0] ? `http://localhost:5000${property.images[0]}` : undefined}
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-          )}
-
-          <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
-            <h2 className="text-2xl font-bold mb-4">Amenities</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {parsedAmenities.map((amenity: string, idx: number) => (
-                <div key={idx} className="flex items-center gap-2 text-[var(--foreground)] font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-[var(--border)]">
-                  <CheckCircle className="w-5 h-5 text-[var(--primary)]" /> {amenity}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Location & Neighborhood Map */}
-          {property.latitude && property.longitude && (
-            <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
-              <div className="flex justify-between items-end">
-                <div>
-                  <h2 className="text-2xl font-bold">Location & Neighborhood</h2>
-                  <p className="text-[var(--muted-foreground)] text-sm mt-1">Explore nearby amenities, campuses, and transport links.</p>
-                </div>
-              </div>
-              <div className="h-[400px] rounded-2xl overflow-hidden border border-[var(--border)] relative z-0">
-                <Map 
-                  mode="view" 
-                  property={property}
-                  pois={[
-                    { name: "University of Ghana", lat: 5.6508, lng: -0.1869 },
-                    { name: "KNUST", lat: 6.6731, lng: -1.5674 },
-                    { name: "Accra Mall", lat: 5.6226, lng: -0.1736 },
-                    { name: "Legon Hospital", lat: 5.6457, lng: -0.1834 },
-                  ]}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Reviews & Reputation Section */}
-          <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">Verified Reviews</h2>
-                {reviewsData?.totalReviews > 0 && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex text-amber-500">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-5 h-5 ${i < Math.round(reviewsData.avgRating) ? 'fill-amber-500' : 'text-slate-300 dark:text-slate-700'}`} />
-                      ))}
-                    </div>
-                    <span className="font-bold">{reviewsData.avgRating?.toFixed(1)}</span>
-                    <span className="text-[var(--muted-foreground)] text-sm">({reviewsData.totalReviews} verified {reviewsData.totalReviews === 1 ? 'review' : 'reviews'})</span>
-                  </div>
-                )}
-              </div>
+        <form onSubmit={handleBooking} className="space-y-6">
+          <div className="space-y-4 mb-6">
+            <div className="flex items-center justify-between">
+              <label className="block text-base font-bold text-[var(--foreground)]">Select Block & Room Type</label>
+              {session?.gender && (
+                <span className="text-xs font-bold px-3 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                  Logged in as {session.gender === 'MALE' ? '♂ Male' : '♀ Female'}
+                </span>
+              )}
             </div>
 
-            {/* Reputation Methodology transparency note */}
-            <div className="flex gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-[var(--border)]">
-              <Info className="w-5 h-5 text-[var(--primary)] shrink-0 mt-0.5" />
-              <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-                <strong>How reviews work:</strong> Only tenants who have <strong>completed a verified stay</strong> at this property can submit a review. 
-                One review is permitted per booking. Ratings are averaged from all eligible reviews to ensure fairness. 
-                Disputed or flagged reviews are reviewed by administrators before they affect scores.
-              </p>
-            </div>
-
-            {/* Review list */}
-            {reviewsData?.reviews?.length === 0 ? (
-              <p className="text-[var(--muted-foreground)] text-center py-8">No reviews yet. Be the first verified tenant to share your experience!</p>
-            ) : (
-              <div className="space-y-5">
-                {reviewsData?.reviews?.map((review: any) => (
-                  <div key={review.id} className="pb-5 border-b border-[var(--border)] last:border-0">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <div className="font-bold">{review.author.firstName} {review.author.lastName}</div>
-                        <div className="flex text-amber-500 mt-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-amber-500' : 'text-slate-300 dark:text-slate-700'}`} />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[var(--muted-foreground)]">{new Date(review.createdAt).toLocaleDateString()}</span>
-                        {session && session.role === 'TENANT' && (
-                          <button
-                            onClick={() => { if (confirm('Report this review to admins for moderation?')) flagMutation.mutate(review.id); }}
-                            className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                            title="Report review"
-                          >
-                            <Flag className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {review.comment && <p className="text-[var(--muted-foreground)] text-sm leading-relaxed">{review.comment}</p>}
-                  </div>
-                ))}
+            {session?.gender && (
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-[var(--border)] text-xs text-[var(--muted-foreground)] flex items-center justify-between">
+                <span className="font-semibold">
+                  Showing blocks for {session.gender === 'MALE' ? 'Male & Mixed' : 'Female & Mixed'} occupants
+                </span>
               </div>
             )}
 
-            {/* Write a Review — inline for eligible tenants */}
-            {completedBookingForProperty && (
-              <div className="mt-6 pt-6 border-t border-[var(--border)]">
-                <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Write a Review
-                </h3>
-                <p className="text-sm text-[var(--muted-foreground)] mb-4">You stayed here &mdash; share your experience to help other students.</p>
+            <div className="space-y-4">
+              {property.rooms?.map((room: any, index: number) => {
+                const userGender = session?.gender?.toUpperCase();
+                const isGenderRestricted = Boolean(userGender && room.gender !== 'MIXED' && room.gender !== userGender);
+                const isFullyBooked = room.remainingCapacity === 0;
+                const isDisabled = isFullyBooked || isGenderRestricted;
 
-                {reviewMsg && (
-                  <div className={`p-4 rounded-xl text-sm font-medium mb-4 border ${reviewMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:border-red-800'}`}>
-                    {reviewMsg.text}
-                  </div>
-                )}
+                const genderBadge = room.gender === 'MALE'
+                  ? { label: '♂ Male Only Block', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800' }
+                  : room.gender === 'FEMALE'
+                  ? { label: '♀ Female Only Block', cls: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 border-pink-200 dark:border-pink-800' }
+                  : { label: '🔀 Mixed Block (Open to All)', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' };
 
-                {reviewMsg?.type !== 'success' && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Your Rating</label>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <button key={star} type="button" onClick={() => setReviewRating(star)} className="p-1 transition-transform hover:scale-125">
-                            <Star className={`w-8 h-8 transition-colors ${reviewRating >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
-                          </button>
-                        ))}
-                        <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{['','Poor','Fair','Good','Great','Excellent'][reviewRating]}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Your Comment</label>
-                      <textarea
-                        rows={4}
-                        value={reviewComment}
-                        onChange={(e) => setReviewComment(e.target.value)}
-                        placeholder="Cleanliness, landlord responsiveness, location, value for money..."
-                        className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none resize-none text-sm"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!reviewComment.trim()) { setReviewMsg({ text: 'Please write a comment.', type: 'error' }); return; }
-                        reviewMutation.mutate({ bookingId: completedBookingForProperty.id, rating: reviewRating, comment: reviewComment });
-                      }}
-                      disabled={reviewMutation.isPending}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 transition-all shadow-md disabled:opacity-50"
-                    >
-                      {reviewMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                      {reviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+                const blockTitle = room.blockName?.trim() ? room.blockName : `Block Configuration ${index + 1}`;
 
-        {/* Right Col: Booking */}
-        <div className="lg:col-span-1">
-          <div className="glass-card p-8 rounded-3xl border border-[var(--border)] sticky top-24 shadow-lg">
-            <h2 className="text-2xl font-bold mb-2">Request Booking</h2>
-            <p className="text-sm text-[var(--muted-foreground)] mb-6">Select your dates to request this accommodation.</p>
-            
-            {bookingMessage && (
-              <div className={`p-4 rounded-xl text-sm font-medium mb-6 border ${bookingMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-900/50' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:border-red-900/50'}`}>
-                {bookingMessage.text}
-              </div>
-            )}
+                return (
+                  <label 
+                    key={room.id}
+                    className={`block relative p-5 border rounded-2xl transition-all ${
+                      isDisabled
+                        ? 'opacity-60 cursor-not-allowed bg-slate-100/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800'
+                        : selectedRoomId === room.id 
+                        ? 'border-[var(--primary)] bg-indigo-50/60 dark:bg-indigo-900/30 shadow-md ring-2 ring-[var(--primary)]/30' 
+                        : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start gap-3 flex-1">
+                        <input 
+                          type="radio" 
+                          name="roomSelection" 
+                          value={room.id}
+                          disabled={isDisabled}
+                          checked={selectedRoomId === room.id}
+                          onChange={() => {
+                            if (!isDisabled) {
+                              setSelectedRoomId(room.id);
+                              setSelectedRoomUnitId('');
+                              setSelectedBedId('');
+                            }
+                          }}
+                          className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)] disabled:cursor-not-allowed"
+                        />
+                        <div className="space-y-1 flex-1">
+                          <div className="font-extrabold text-lg text-[var(--foreground)] flex items-center gap-1.5 leading-snug">
+                            <span>🏢</span> {blockTitle}
+                          </div>
+                          
+                          <div className="text-xs font-semibold text-[var(--muted-foreground)] flex items-center gap-1">
+                            <span>🛏️</span> {room.roomType}
+                          </div>
 
-            <form onSubmit={handleBooking} className="space-y-4">
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-bold text-[var(--foreground)]">Select Block & Room Type</label>
-                  {session?.gender && (
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                      Logged in as {session.gender === 'MALE' ? '♂ Male' : '♀ Female'}
-                    </span>
-                  )}
-                </div>
-
-                {session?.gender && (
-                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-[var(--border)] text-xs text-[var(--muted-foreground)] flex items-center justify-between">
-                    <span className="font-semibold">
-                      Showing blocks for {session.gender === 'MALE' ? 'Male & Mixed' : 'Female & Mixed'} occupants
-                    </span>
-                  </div>
-                )}
-
-                {property.rooms?.map((room: any, index: number) => {
-                  const userGender = session?.gender?.toUpperCase();
-                  const isGenderRestricted = Boolean(userGender && room.gender !== 'MIXED' && room.gender !== userGender);
-                  const isFullyBooked = room.remainingCapacity === 0;
-                  const isDisabled = isFullyBooked || isGenderRestricted;
-
-                  const genderBadge = room.gender === 'MALE'
-                    ? { label: '♂ Male Only Block', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800' }
-                    : room.gender === 'FEMALE'
-                    ? { label: '♀ Female Only Block', cls: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 border-pink-200 dark:border-pink-800' }
-                    : { label: '🔀 Mixed Block (Open to All)', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' };
-
-                  const blockTitle = room.blockName?.trim() ? room.blockName : `Block Configuration ${index + 1}`;
-
-                  return (
-                    <label 
-                      key={room.id}
-                      className={`block relative p-4 border rounded-2xl transition-all ${
-                        isDisabled
-                          ? 'opacity-60 cursor-not-allowed bg-slate-100/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800'
-                          : selectedRoomId === room.id 
-                          ? 'border-[var(--primary)] bg-indigo-50/60 dark:bg-indigo-900/30 shadow-md ring-2 ring-[var(--primary)]/30' 
-                          : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-start gap-3 flex-1">
-                          <input 
-                            type="radio" 
-                            name="roomSelection" 
-                            value={room.id}
-                            disabled={isDisabled}
-                            checked={selectedRoomId === room.id}
-                            onChange={() => {
-                              if (!isDisabled) {
-                                setSelectedRoomId(room.id);
-                                setSelectedRoomUnitId('');
-                                setSelectedBedId('');
-                              }
-                            }}
-                            className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)] disabled:cursor-not-allowed"
-                          />
-                          <div className="space-y-1 flex-1">
-                            {/* Block Title */}
-                            <div className="font-extrabold text-base text-[var(--foreground)] flex items-center gap-1.5 leading-snug">
-                              <span>🏢</span> {blockTitle}
-                            </div>
-                            
-                            {/* Room Type */}
-                            <div className="text-xs font-semibold text-[var(--muted-foreground)] flex items-center gap-1">
-                              <span>🛏️</span> {room.roomType}
-                            </div>
-
-                            {/* Badges */}
-                            <div className="flex flex-wrap items-center gap-2 pt-1">
-                              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${genderBadge.cls}`}>
-                                {genderBadge.label}
-                              </span>
-
-                              {isGenderRestricted && (
-                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800 flex items-center gap-1">
-                                  🔒 Restricted to {room.gender === 'MALE' ? 'Male' : 'Female'} Students
-                                </span>
-                              )}
-
-                              <span className="text-xs font-medium text-[var(--muted-foreground)]">
-                                {isFullyBooked 
-                                  ? <span className="text-red-500 font-bold">Fully Booked</span> 
-                                  : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
-                                }
-                              </span>
-                            </div>
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${genderBadge.cls}`}>
+                              {genderBadge.label}
+                            </span>
 
                             {isGenderRestricted && (
-                              <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">
-                                ⚠ You cannot book this room because your profile gender is {session.gender === 'MALE' ? 'Male' : 'Female'}.
-                              </p>
+                              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800 flex items-center gap-1">
+                                🔒 Restricted to {room.gender === 'MALE' ? 'Male' : 'Female'} Students
+                              </span>
                             )}
-                          </div>
-                        </div>
 
-                        <div className="text-right shrink-0 ml-3">
-                          <div className="font-black text-lg text-[var(--foreground)]">GH₵{room.price}</div>
-                          <div className="text-[10px] text-[var(--muted-foreground)]">per year</div>
+                            <span className="text-xs font-medium text-[var(--muted-foreground)]">
+                              {isFullyBooked 
+                                ? <span className="text-red-500 font-bold">Fully Booked</span> 
+                                : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
+                              }
+                            </span>
+                          </div>
+
+                          {isGenderRestricted && (
+                            <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">
+                              ⚠ You cannot book this room because your profile gender is {session?.gender === 'MALE' ? 'Male' : 'Female'}.
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      {/* ── INTERACTIVE ROOM UNIT & BED SELECTOR ── */}
-                      {selectedRoomId === room.id && room.roomUnits && room.roomUnits.length > 0 && (
-                        <div className="mt-4 pt-4 border-t border-[var(--border)] space-y-4 cursor-default" onClick={(e) => e.stopPropagation()}>
-                          <div>
+                      <div className="text-right shrink-0 ml-3">
+                        <div className="font-black text-xl text-[var(--foreground)]">GH₵{room.price}</div>
+                        <div className="text-[10px] text-[var(--muted-foreground)]">per year</div>
+                      </div>
+                    </div>
+
+                    {/* ── INTERACTIVE ROOM UNIT & BED SELECTOR (EDGE TO EDGE FULL WIDTH GRID) ── */}
+                    {selectedRoomId === room.id && room.roomUnits && room.roomUnits.length > 0 && (
+                      <div className="mt-5 pt-5 border-t border-[var(--border)] space-y-5 cursor-default" onClick={(e) => e.stopPropagation()}>
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1.5">
+                              <span>🏢</span> CHOOSE ROOM UNIT NUMBER
+                            </h4>
+                            <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">Step 1 of 2</span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                            {room.roomUnits.map((unit: any) => {
+                              const userGender = session?.gender?.toUpperCase();
+                              const isUnitGenderRestricted = Boolean(userGender && unit.genderLock !== 'UNASSIGNED' && unit.genderLock !== userGender);
+                              const availableBeds = unit.beds ? unit.beds.filter((b: any) => b.status === 'AVAILABLE') : [];
+                              const isUnitFull = unit.beds && unit.beds.length > 0 && availableBeds.length === 0;
+                              const isUnitDisabled = isUnitFull || isUnitGenderRestricted;
+
+                              const isSelectedUnit = selectedRoomUnitId === unit.id;
+
+                              return (
+                                <button
+                                  key={unit.id}
+                                  type="button"
+                                  disabled={isUnitDisabled}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSelectedRoomUnitId(unit.id);
+                                    setSelectedBedId('');
+                                  }}
+                                  className={`p-3 rounded-2xl border text-left text-xs font-semibold transition-all relative ${
+                                    isUnitDisabled
+                                      ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                                      : isSelectedUnit
+                                      ? 'border-[var(--primary)] bg-indigo-100/80 dark:bg-indigo-900/60 text-[var(--foreground)] ring-2 ring-[var(--primary)]/50 shadow-sm'
+                                      : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 text-[var(--foreground)]'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-black text-sm">{unit.unitNumber}</span>
+                                    {unit.genderLock !== 'UNASSIGNED' && (
+                                      <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
+                                        unit.genderLock === 'MALE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300'
+                                      }`}>
+                                        {unit.genderLock === 'MALE' ? '♂ Male' : '♀ Female'}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex justify-between items-center text-[11px] text-[var(--muted-foreground)]">
+                                    <span>Floor {unit.floor}</span>
+                                    <span className={availableBeds.length > 0 ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-red-500 font-bold'}>
+                                      {availableBeds.length} bed(s)
+                                    </span>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* ── STEP 2: BED SELECTION GRID ── */}
+                        {selectedRoomUnitId && (
+                          <div className="mt-4 pt-4 border-t border-dashed border-[var(--border)] space-y-3">
                             <div className="flex items-center justify-between mb-2">
                               <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1.5">
-                                <span>🏢</span> Choose Room Unit Number
+                                <span>🛏️</span> SELECT YOUR BED SLOT
                               </h4>
-                              <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">Step 1 of 2</span>
+                              <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">Step 2 of 2</span>
                             </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
-                              {room.roomUnits.map((unit: any) => {
-                                const userGender = session?.gender?.toUpperCase();
-                                const isUnitGenderRestricted = Boolean(userGender && unit.genderLock !== 'UNASSIGNED' && unit.genderLock !== userGender);
-                                const availableBeds = unit.beds ? unit.beds.filter((b: any) => b.status === 'AVAILABLE') : [];
-                                const isUnitFull = unit.beds && unit.beds.length > 0 && availableBeds.length === 0;
-                                const isUnitDisabled = isUnitFull || isUnitGenderRestricted;
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                              {(() => {
+                                const currentUnit = room.roomUnits.find((u: any) => u.id === selectedRoomUnitId);
+                                if (!currentUnit || !currentUnit.beds) return null;
 
-                                const isSelectedUnit = selectedRoomUnitId === unit.id;
+                                return currentUnit.beds.map((bed: any) => {
+                                  const isBedAvailable = bed.status === 'AVAILABLE';
+                                  const isSelectedBed = selectedBedId === bed.id;
 
-                                return (
-                                  <button
-                                    key={unit.id}
-                                    type="button"
-                                    disabled={isUnitDisabled}
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedRoomUnitId(unit.id);
-                                      setSelectedBedId('');
-                                    }}
-                                    className={`p-2.5 rounded-xl border text-left text-xs font-semibold transition-all relative ${
-                                      isUnitDisabled
-                                        ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800'
-                                        : isSelectedUnit
-                                        ? 'border-[var(--primary)] bg-indigo-100/80 dark:bg-indigo-900/60 text-[var(--foreground)] ring-2 ring-[var(--primary)]/50 shadow-sm'
-                                        : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 text-[var(--foreground)]'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-extrabold">{unit.unitNumber}</span>
-                                      {unit.genderLock !== 'UNASSIGNED' && (
-                                        <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${
-                                          unit.genderLock === 'MALE' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300'
-                                        }`}>
-                                          {unit.genderLock === 'MALE' ? '♂ Male' : '♀ Female'}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-[10px] text-[var(--muted-foreground)] mt-1 flex items-center justify-between">
-                                      <span>Floor {unit.floor}</span>
-                                      <span>
-                                        {isUnitFull ? (
-                                          <span className="text-red-500 font-bold">Full</span>
-                                        ) : isUnitGenderRestricted ? (
-                                          <span className="text-red-500 font-bold">Locked</span>
+                                  return (
+                                    <button
+                                      key={bed.id}
+                                      type="button"
+                                      disabled={!isBedAvailable}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setSelectedBedId(bed.id);
+                                      }}
+                                      className={`p-3 rounded-2xl border text-left text-xs transition-all ${
+                                        !isBedAvailable
+                                          ? 'opacity-40 cursor-not-allowed bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900 text-red-600'
+                                          : isSelectedBed
+                                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/50 shadow-sm font-bold'
+                                          : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 cursor-pointer'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between font-extrabold">
+                                        <span>🛏️ {bed.bedNumber}</span>
+                                        {isSelectedBed && <span className="text-emerald-600 dark:text-emerald-400 text-xs">✓ Selected</span>}
+                                      </div>
+                                      <div className="text-[11px] mt-1">
+                                        {isBedAvailable ? (
+                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">🟢 Available</span>
                                         ) : (
-                                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{availableBeds.length} bed(s)</span>
+                                          <span className="text-red-500 font-bold">🔴 Occupied</span>
                                         )}
-                                      </span>
-                                    </div>
-                                  </button>
-                                );
-                              })}
+                                      </div>
+                                    </button>
+                                  );
+                                });
+                              })()}
                             </div>
                           </div>
+                        )}
+                      </div>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
 
-                          {/* ── BED SLOT PICKER ── */}
-                          {selectedRoomUnitId && (
-                            <div className="pt-3 border-t border-dashed border-[var(--border)]">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="text-xs font-extrabold text-[var(--foreground)] uppercase tracking-wider flex items-center gap-1.5">
-                                  <span>🛏️</span> Choose Bed Slot
-                                </h4>
-                                <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">Step 2 of 2</span>
-                              </div>
-                              <div className="grid grid-cols-2 gap-2">
-                                {(() => {
-                                  const currentUnit = room.roomUnits.find((u: any) => u.id === selectedRoomUnitId);
-                                  if (!currentUnit || !currentUnit.beds) return null;
-
-                                  return currentUnit.beds.map((bed: any) => {
-                                    const isBedAvailable = bed.status === 'AVAILABLE';
-                                    const isSelectedBed = selectedBedId === bed.id;
-
-                                    return (
-                                      <button
-                                        key={bed.id}
-                                        type="button"
-                                        disabled={!isBedAvailable}
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setSelectedBedId(bed.id);
-                                        }}
-                                        className={`p-3 rounded-xl border text-left text-xs transition-all ${
-                                          !isBedAvailable
-                                            ? 'opacity-40 cursor-not-allowed bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900 text-red-600'
-                                            : isSelectedBed
-                                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-100 ring-2 ring-emerald-500/50 shadow-sm font-bold'
-                                            : 'border-[var(--border)] bg-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/40 cursor-pointer'
-                                        }`}
-                                      >
-                                        <div className="flex items-center justify-between font-bold">
-                                          <span>🛏️ {bed.bedNumber}</span>
-                                          {isSelectedBed && <span className="text-emerald-600 dark:text-emerald-400 text-sm">✓ Selected</span>}
-                                        </div>
-                                        <div className="text-[10px] mt-1">
-                                          {isBedAvailable ? (
-                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">🟢 Available</span>
-                                          ) : (
-                                            <span className="text-red-500 font-bold">🔴 Occupied</span>
-                                          )}
-                                        </div>
-                                      </button>
-                                    );
-                                  });
-                                })()}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
               <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Start Date</label>
+                <label className="block text-sm font-semibold text-[var(--foreground)] mb-1">Start Date</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-[var(--muted-foreground)]" /></div>
                   <input type="date" required min={new Date().toISOString().split('T')[0]} className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -758,47 +571,223 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">End Date</label>
+                <label className="block text-sm font-semibold text-[var(--foreground)] mb-1">End Date</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-[var(--muted-foreground)]" /></div>
                   <input type="date" required min={startDate || new Date().toISOString().split('T')[0]} className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                 </div>
               </div>
+            </div>
 
-              <div className="pt-4 space-y-3">
+            <div className="pt-4 flex flex-col sm:flex-row gap-4">
+              <button
+                type="submit"
+                disabled={isBooking || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
+                className="flex-1 flex justify-center items-center gap-2 py-4 px-6 rounded-2xl text-white font-bold text-base bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : !selectedRoomId ? 'Select a Room' : (selectedRoom && selectedRoom.remainingCapacity === 0) ? 'Room Unavailable' : 'Request to Book'}
+              </button>
+
+              {property.landlordId && (
                 <button
-                  type="submit"
-                  disabled={isBooking || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
-                  className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  onClick={async () => {
+                    if (!session) {
+                      router.push('/login');
+                      return;
+                    }
+                    try {
+                      await api.post('/chat/conversations', { partnerId: property.landlordId });
+                      router.push('/dashboard/tenant');
+                    } catch (e) {
+                      router.push('/dashboard/tenant');
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 py-4 px-6 rounded-2xl text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-all text-sm"
                 >
-                  {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : !selectedRoomId ? 'Select a Room' : (selectedRoom && selectedRoom.remainingCapacity === 0) ? 'Room Unavailable' : 'Request to Book'}
+                  <Send className="w-4 h-4" /> Chat with Landlord
                 </button>
+              )}
+            </div>
+          </div>
+        </form>
+      </div>
 
-                {property.landlordId && (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!session) {
-                        router.push('/login');
-                        return;
-                      }
-                      try {
-                        await api.post('/chat/conversations', { partnerId: property.landlordId });
-                        router.push('/dashboard/tenant');
-                      } catch (e) {
-                        router.push('/dashboard/tenant');
-                      }
-                    }}
-                    className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 transition-all text-xs"
-                  >
-                    <Send className="w-4 h-4" /> Chat with Landlord
-                  </button>
-                )}
+      {/* ── SECTION 3: PROPERTY DETAILS (DESCRIPTION, AMENITIES, MAP, REVIEWS) ── */}
+      <div className="space-y-8">
+        <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
+          <h2 className="text-2xl font-bold mb-4">Description</h2>
+          <p className="text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">{property.description}</p>
+        </div>
+
+        {property.videoUrl && (
+          <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-4">
+            <h2 className="text-2xl font-bold">360° / Video Walkthrough</h2>
+            <p className="text-[var(--muted-foreground)] text-sm mb-4">Take a virtual tour of this property to see every detail before you book.</p>
+            <div className="rounded-2xl overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-xl bg-black relative w-full" style={{ paddingTop: '56.25%' }}>
+              <video 
+                controls 
+                controlsList="nodownload"
+                className="absolute top-0 left-0 w-full h-full object-cover"
+                src={`http://localhost:5000${property.videoUrl}`}
+                poster={property.images?.[0] ? `http://localhost:5000${property.images[0]}` : undefined}
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+          </div>
+        )}
+
+        <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
+          <h2 className="text-2xl font-bold mb-4">Amenities</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {parsedAmenities.map((amenity: string, idx: number) => (
+              <div key={idx} className="flex items-center gap-2 text-[var(--foreground)] font-medium bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-[var(--border)]">
+                <CheckCircle className="w-5 h-5 text-[var(--primary)]" /> {amenity}
               </div>
-            </form>
+            ))}
           </div>
         </div>
 
+        {/* Location & Neighborhood Map */}
+        {property.latitude && property.longitude && (
+          <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
+            <div className="flex justify-between items-end">
+              <div>
+                <h2 className="text-2xl font-bold">Location & Neighborhood</h2>
+                <p className="text-[var(--muted-foreground)] text-sm mt-1">Explore nearby amenities, campuses, and transport links.</p>
+              </div>
+            </div>
+            <div className="h-[400px] rounded-2xl overflow-hidden border border-[var(--border)] relative z-0">
+              <Map 
+                mode="view" 
+                property={property}
+                pois={[
+                  { name: "University of Ghana", lat: 5.6508, lng: -0.1869 },
+                  { name: "KNUST", lat: 6.6731, lng: -1.5674 },
+                  { name: "Accra Mall", lat: 5.6226, lng: -0.1736 },
+                  { name: "Legon Hospital", lat: 5.6457, lng: -0.1834 },
+                ]}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Reviews & Reputation Section */}
+        <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Verified Reviews</h2>
+              {reviewsData?.totalReviews > 0 && (
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex text-amber-500">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-5 h-5 ${i < Math.round(reviewsData.avgRating) ? 'fill-amber-500' : 'text-slate-300 dark:text-slate-700'}`} />
+                    ))}
+                  </div>
+                  <span className="font-bold">{reviewsData.avgRating?.toFixed(1)}</span>
+                  <span className="text-[var(--muted-foreground)] text-sm">({reviewsData.totalReviews} verified {reviewsData.totalReviews === 1 ? 'review' : 'reviews'})</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-[var(--border)]">
+            <Info className="w-5 h-5 text-[var(--primary)] shrink-0 mt-0.5" />
+            <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+              <strong>How reviews work:</strong> Only tenants who have <strong>completed a verified stay</strong> at this property can submit a review. 
+              One review is permitted per booking. Ratings are averaged from all eligible reviews to ensure fairness. 
+              Disputed or flagged reviews are reviewed by administrators before they affect scores.
+            </p>
+          </div>
+
+          {reviewsData?.reviews?.length === 0 ? (
+            <p className="text-[var(--muted-foreground)] text-center py-8">No reviews yet. Be the first verified tenant to share your experience!</p>
+          ) : (
+            <div className="space-y-5">
+              {reviewsData?.reviews?.map((review: any) => (
+                <div key={review.id} className="pb-5 border-b border-[var(--border)] last:border-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <div className="font-bold">{review.author.firstName} {review.author.lastName}</div>
+                      <div className="flex text-amber-500 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-amber-500' : 'text-slate-300 dark:text-slate-700'}`} />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[var(--muted-foreground)]">{new Date(review.createdAt).toLocaleDateString()}</span>
+                      {session && session.role === 'TENANT' && (
+                        <button
+                          onClick={() => { if (confirm('Report this review to admins for moderation?')) flagMutation.mutate(review.id); }}
+                          className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                          title="Report review"
+                        >
+                          <Flag className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {review.comment && <p className="text-[var(--muted-foreground)] text-sm leading-relaxed">{review.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {completedBookingForProperty && (
+            <div className="mt-6 pt-6 border-t border-[var(--border)]">
+              <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Write a Review
+              </h3>
+              <p className="text-sm text-[var(--muted-foreground)] mb-4">You stayed here &mdash; share your experience to help other students.</p>
+
+              {reviewMsg && (
+                <div className={`p-4 rounded-xl text-sm font-medium mb-4 border ${reviewMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/20 dark:border-red-800'}`}>
+                  {reviewMsg.text}
+                </div>
+              )}
+
+              {reviewMsg?.type !== 'success' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Your Rating</label>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button key={star} type="button" onClick={() => setReviewRating(star)} className="p-1 transition-transform hover:scale-125">
+                          <Star className={`w-8 h-8 transition-colors ${reviewRating >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
+                        </button>
+                      ))}
+                      <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{['','Poor','Fair','Good','Great','Excellent'][reviewRating]}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2">Your Comment</label>
+                    <textarea
+                      rows={4}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Cleanliness, landlord responsiveness, location, value for money..."
+                      className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none resize-none text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!reviewComment.trim()) { setReviewMsg({ text: 'Please write a comment.', type: 'error' }); return; }
+                      reviewMutation.mutate({ bookingId: completedBookingForProperty.id, rating: reviewRating, comment: reviewComment });
+                    }}
+                    disabled={reviewMutation.isPending}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-white font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 transition-all shadow-md disabled:opacity-50"
+                  >
+                    {reviewMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    {reviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Payment Confirmation Modal */}
