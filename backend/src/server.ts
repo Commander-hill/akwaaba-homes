@@ -50,6 +50,7 @@ import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { checkMaintenanceMode } from './middleware/config.middleware';
 import { getSystemConfig } from './utils/config.service';
+import prisma from './utils/prisma';
 
 import { createServer } from 'http';
 import { initializeSocket } from './socket';
@@ -178,6 +179,26 @@ app.get('/api/v1/config/public', async (req: Request, res: Response) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Error reading config' });
+  }
+});
+
+// ─── Maintenance Mode Email Subscription ─────────────────────────────────────
+app.post('/api/v1/config/subscribe-maintenance', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      res.status(400).json({ message: 'A valid email address is required.' });
+      return;
+    }
+    await prisma.maintenanceSubscriber.upsert({
+      where: { email: email.trim().toLowerCase() },
+      update: { notified: false },
+      create: { email: email.trim().toLowerCase() }
+    });
+    res.status(200).json({ message: 'Subscribed successfully! You will be emailed the moment maintenance completes.' });
+  } catch (err) {
+    console.error('Error subscribing to maintenance notification:', err);
+    res.status(500).json({ message: 'Failed to subscribe.' });
   }
 });
 

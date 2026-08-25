@@ -358,3 +358,48 @@ export const notifyAgreementCompleted = async (opts: {
     }
   }
 };
+
+export const notifyMaintenanceEnded = async () => {
+  try {
+    const subscribers = await prisma.maintenanceSubscriber.findMany({
+      where: { notified: false }
+    });
+
+    if (subscribers.length === 0) return;
+
+    const transporter = getTransporter();
+    const frontendUrl = getFrontendUrl();
+    const emailHtml = emailTemplate(
+      'Akwaaba Homes is Back Online!',
+      'Scheduled maintenance is complete. Access your account now.',
+      `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">We are Back Online! 🎉</h2>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Scheduled platform maintenance has successfully finished and full access has been restored.</p>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Thank you for your patience while we upgraded system stability and features!</p>
+       ${btn('Return to Akwaaba Homes', frontendUrl)}`
+    );
+
+    for (const sub of subscribers) {
+      if (transporter) {
+        try {
+          await transporter.sendMail({
+            from: `"Akwaaba Homes Status" <${process.env.SMTP_USER}>`,
+            to: sub.email,
+            subject: '🎉 Akwaaba Homes is Back Online — Maintenance Complete',
+            html: emailHtml
+          });
+        } catch (err) {
+          console.error(`Failed to send maintenance end email to ${sub.email}:`, err);
+        }
+      } else {
+        console.log(`[Maintenance Email Mock] → ${sub.email}: Akwaaba Homes is Back Online!`);
+      }
+    }
+
+    await prisma.maintenanceSubscriber.updateMany({
+      where: { id: { in: subscribers.map(s => s.id) } },
+      data: { notified: true }
+    });
+  } catch (err) {
+    console.error('Error notifying maintenance subscribers:', err);
+  }
+};

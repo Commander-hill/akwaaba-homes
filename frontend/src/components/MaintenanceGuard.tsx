@@ -8,64 +8,74 @@ import MaintenanceScreen from './MaintenanceScreen';
 export default function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // 1. Fetch public system config to check maintenance mode status
+  const isAdminRoute = pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard/admin');
+  const isLoginRoute = pathname === '/login' || pathname === '/register';
+
+  // ── 1. Fetch public system config (source of truth for maintenance state) ──
   const { data: config, isLoading: isConfigLoading } = useQuery({
     queryKey: ['public-config'],
     queryFn: async () => {
       try {
         const res = await api.get('/config/public');
         return res.data;
-      } catch (err) {
+      } catch {
         return { maintenanceMode: false };
       }
     },
-    refetchInterval: 15000,
+    // Poll every 5s as a safety fallback if socket drops.
+    // Socket broadcasts (config_updated) will update the cache instantly.
+    refetchInterval: 5000,
     staleTime: 0,
+    // Always fetch fresh data even if the window regains focus
+    refetchOnWindowFocus: true,
   });
 
-  // 2. Fetch current logged-in user profile to check if user is an ADMIN
+  // ── 2. Fetch session to determine if the user is an ADMIN ────────────────
   const { data: currentUser, isLoading: isUserLoading } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       try {
         const res = await api.get('/auth/me');
         return res.data.user;
-      } catch (err) {
+      } catch {
         return null;
       }
     },
-    staleTime: 60000,
+    // Keep session reasonably fresh — 30s staleTime balances performance + accuracy
+    staleTime: 30000,
+    refetchOnWindowFocus: true,
   });
 
-  // 3. Exempt Admin routes and Login page from maintenance screen block
-  const isAdminRoute = pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard/admin');
-  const isLoginRoute = pathname === '/login' || pathname === '/register';
   const isAdminUser = currentUser?.role === 'ADMIN';
 
-  // Prevent Flash of Unmaintained Content (FOUC) while checking system status on non-admin routes
+  // ── 3. FOUC prevention: block UI render until we know the maintenance state.
+  //       Only block non-admin, non-login routes to avoid a flash of the dark
+  //       loading screen for administrators.
   if (isConfigLoading && !isAdminRoute && !isLoginRoute) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#09090B] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      <div className="fixed inset-0 z-[9999] bg-[#09090B] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-zinc-500 text-xs font-medium tracking-wide">Checking system status…</p>
+        </div>
       </div>
     );
   }
 
-  // Check if maintenance mode is active AND has not passed its target completion time
-  const hasEndTimePassed = config?.maintenanceEndTime && new Date() >= new Date(config.maintenanceEndTime);
-  const isMaintenanceActive = config?.maintenanceMode && !hasEndTimePassed;
+  // ── 4. Admin users and admin/login routes are ALWAYS exempt ──────────────
+  if (isAdminUser || isAdminRoute || isLoginRoute) {
+    return <>{children}</>;
+  }
+
+  // ── 5. Maintenance state is the single source of truth from the backend ──
+  //       The backend auto-deactivates when maintenanceEndTime passes and
+  //       broadcasts via Socket.io. We trust config.maintenanceMode directly.
+  const isMaintenanceActive = Boolean(config?.maintenanceMode);
 
   if (isMaintenanceActive) {
-    // Only authenticated ADMIN users or users on Admin/Login routes can bypass
-    if (isAdminUser || isAdminRoute || isLoginRoute) {
-      return <>{children}</>;
-    }
-    
-    // Render Maintenance Mode Screen for all standard users
-    const endTime = config.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
+    const endTime = config?.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
     return <MaintenanceScreen estimatedEndTime={endTime} />;
   }
 
-  // Normal operation
   return <>{children}</>;
 }

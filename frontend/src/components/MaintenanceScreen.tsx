@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mail, Clock, ShieldCheck, ArrowRight, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Mail, Clock, ShieldCheck, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
+import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface MaintenanceScreenProps {
@@ -28,16 +28,28 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
     seconds: 0,
   });
 
+  const [countdownExpired, setCountdownExpired] = useState(false);
+
   useEffect(() => {
-    const timer = setInterval(() => {
+    const computeDistance = () => {
       const now = new Date().getTime();
-      const distance = targetTime.getTime() - now;
+      return targetTime.getTime() - now;
+    };
+
+    // Already past the target time on first render
+    if (computeDistance() <= 0) {
+      setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      setCountdownExpired(true);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      const distance = computeDistance();
 
       if (distance <= 0) {
         clearInterval(timer);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        // Auto-refresh platform config and unblock users immediately
-        queryClient.invalidateQueries({ queryKey: ['public-config'] });
+        setCountdownExpired(true);
       } else {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -49,13 +61,42 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetTime, queryClient]);
+  }, [targetTime]);
 
-  const handleNotifySubmit = (e: React.FormEvent) => {
+  // Once the countdown expires, aggressively poll the backend every 2s
+  // until it confirms maintenanceMode: false (server-driven unblock)
+  useEffect(() => {
+    if (!countdownExpired) return;
+
+    const pollTimer = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ['public-config'] });
+    }, 2000);
+
+    // Stop polling after 3 minutes (server should have deactivated by then)
+    const killTimer = setTimeout(() => clearInterval(pollTimer), 3 * 60 * 1000);
+
+    return () => {
+      clearInterval(pollTimer);
+      clearTimeout(killTimer);
+    };
+  }, [countdownExpired, queryClient]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleNotifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
-    toast.success('Thank you! We will email you the moment the platform is back online.');
+    if (!email.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await api.post('/config/subscribe-maintenance', { email: email.trim() });
+      setSubscribed(true);
+      toast.success(res.data.message || 'Subscribed! We will email you once maintenance completes.');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to register email notification.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -124,14 +165,16 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
                   placeholder="Enter email to get notified when live..."
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-2.5 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 outline-none"
+                  disabled={isSubmitting}
+                  className="w-full pl-10 pr-3 py-2.5 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 outline-none disabled:opacity-60"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-[#5B4CFF] hover:bg-[#4B3DEE] text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all shrink-0 active:scale-95"
+                disabled={isSubmitting}
+                className="bg-[#5B4CFF] hover:bg-[#4B3DEE] disabled:opacity-70 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg transition-all shrink-0 active:scale-95"
               >
-                Notify Me <ArrowRight className="w-3.5 h-3.5" />
+                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <>Notify Me <ArrowRight className="w-3.5 h-3.5" /></>}
               </button>
             </form>
           ) : (

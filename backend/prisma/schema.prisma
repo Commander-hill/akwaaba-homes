@@ -354,3 +354,10 @@ model PushSubscription {
 
   @@index([userId])
 }
+
+model MaintenanceSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  notified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
