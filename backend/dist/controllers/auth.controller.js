@@ -14,6 +14,7 @@ const crypto_2 = __importDefault(require("crypto"));
 const ua_parser_js_1 = require("ua-parser-js");
 const notification_service_1 = require("../utils/notification.service");
 const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 const register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
@@ -362,8 +363,16 @@ const logout = async (req, res) => {
 exports.logout = logout;
 const getMe = async (req, res) => {
     try {
+        const userId = req.user?.id;
+        const cacheKey = `user:me:${userId}`;
+        // Serve from cache if available (60-second TTL)
+        const cached = cache_1.default.get(cacheKey);
+        if (cached) {
+            res.status(200).json(cached);
+            return;
+        }
         const user = await prisma_1.default.user.findUnique({
-            where: { id: req.user?.id },
+            where: { id: userId },
             select: {
                 id: true,
                 email: true,
@@ -412,7 +421,10 @@ const getMe = async (req, res) => {
             user.ghanaCardBackUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl);
         }
         const hasProperty = (user._count?.properties || 0) > 0;
-        res.status(200).json({ user: { ...user, hasProperty } });
+        const responsePayload = { user: { ...user, hasProperty } };
+        // Cache for 60 seconds
+        cache_1.default.set(cacheKey, responsePayload, 60);
+        res.status(200).json(responsePayload);
     }
     catch (error) {
         res.status(500).json({ message: 'Internal server error' });
@@ -477,6 +489,8 @@ const submitGhanaCard = async (req, res) => {
                 ghanaCardStatus: 'PENDING'
             }
         });
+        // Bust user cache so next /auth/me returns fresh Ghana Card data
+        cache_1.default.del(`user:me:${req.user.id}`);
         try {
             (0, socket_1.emitToUser)(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
@@ -518,6 +532,8 @@ const updateProfile = async (req, res) => {
                 isProfileLocked: true // Lock profile upon hitting Save button
             }
         });
+        // Bust user cache so next /auth/me returns fresh data
+        cache_1.default.del(`user:me:${req.user.id}`);
         try {
             (0, socket_1.emitToUser)(req.user.id, 'profile_updated', updatedUser);
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });

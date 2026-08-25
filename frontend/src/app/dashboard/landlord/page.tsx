@@ -21,16 +21,17 @@ export default function LandlordDashboard() {
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
 
-  // Session Query
+  // Session Query — uses shared cache key so it's instant on re-nav
   const { data: session } = useQuery({
-    queryKey: ['session'],
+    queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
       return res.data.user;
-    }
+    },
+    staleTime: 5 * 60 * 1000
   });
 
-  // Fetch Bookings
+  // Fetch Bookings — loads eagerly as the primary tab
   const { data: bookingsResponse, isLoading: isLoadingBookings, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
@@ -44,7 +45,7 @@ export default function LandlordDashboard() {
     }
   });
 
-  // Fetch Landlord Agreements (Lease Vault)
+  // Fetch Landlord Agreements (Lease Vault) — only loads when agreements tab is open
   const { data: agreementsResponse, isLoading: isLoadingAgreements, refetch: refetchAgreements } = useQuery({
     queryKey: ['agreements', 'landlord'],
     queryFn: async () => {
@@ -55,10 +56,11 @@ export default function LandlordDashboard() {
         console.warn('Could not fetch agreements:', err);
         return { agreements: [] };
       }
-    }
+    },
+    enabled: activeTab === 'agreements'
   });
 
-  // Fetch Tickets
+  // Fetch Tickets — only loads when tickets tab is open
   const { data: ticketsResponse, isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery({
     queryKey: ['tickets', 'landlord'],
     queryFn: async () => {
@@ -69,10 +71,11 @@ export default function LandlordDashboard() {
         console.warn('Could not fetch tickets:', err);
         return { tickets: [] };
       }
-    }
+    },
+    enabled: activeTab === 'tickets'
   });
 
-  // Fetch Subscriptions Overview
+  // Fetch Subscriptions Overview — only loads when subscriptions tab is open
   const { data: subOverviewResponse, isLoading: isLoadingSubs, refetch: refetchSubs } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
@@ -83,10 +86,11 @@ export default function LandlordDashboard() {
         console.warn('Could not fetch subscriptions overview:', err);
         return { stats: { totalProperties: 0, activeSubscriptions: 0, expiringSoon: 0, unsubscribedOrExpired: 0 }, properties: [] };
       }
-    }
+    },
+    enabled: activeTab === 'subscriptions'
   });
 
-  // Fetch Detailed Earnings Report
+  // Fetch Detailed Earnings Report — only loads when financials tab is open
   const { data: earningsReport, isLoading: isLoadingEarnings, refetch: refetchEarnings } = useQuery({
     queryKey: ['transactions', 'landlord', 'report'],
     queryFn: async () => {
@@ -97,15 +101,16 @@ export default function LandlordDashboard() {
         console.warn('Could not fetch earnings report:', err);
         return { summary: { totalGrossEarnings: 0, totalCommissionDeducted: 0, totalNetEarnings: 0, thisMonthNetEarnings: 0, platformCommissionPercent: 5 }, monthlyTrends: [], recentCashflows: [] };
       }
-    }
+    },
+    enabled: activeTab === 'financials'
   });
 
   const handleRefreshAll = () => {
     refetchBookings();
-    refetchAgreements();
-    refetchTickets();
-    refetchSubs();
-    refetchEarnings();
+    if (activeTab === 'agreements') refetchAgreements();
+    if (activeTab === 'tickets') refetchTickets();
+    if (activeTab === 'subscriptions') refetchSubs();
+    if (activeTab === 'financials') refetchEarnings();
     toast.success('Refreshing dashboard data...');
   };
 

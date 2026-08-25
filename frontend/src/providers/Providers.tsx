@@ -29,8 +29,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            // Data stays fresh for 5 minutes — no background refetches within that window
+            staleTime: 5 * 60 * 1000,
+            // Keep unused data in memory for 10 minutes before GC — instant cache hit on nav
+            gcTime: 10 * 60 * 1000,
             refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            // Only retry once on failure to avoid long stall on a bad request
+            retry: 1,
+            retryDelay: 1000,
           },
         },
       })

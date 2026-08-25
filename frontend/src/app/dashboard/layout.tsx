@@ -19,6 +19,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       return data;
     },
     retry: false,
+    // Use cached data instantly if available, even if stale — avoids white screen on nav
+    staleTime: 5 * 60 * 1000,
   });
 
   const user = userResponse?.user;
@@ -38,10 +40,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, isLoading, error, router, pathname]);
 
-  if (isLoading || !user) {
+  // While loading, show a slim top-bar progress pulse instead of a full-screen block
+  if (isLoading && !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+      <div className="min-h-screen flex flex-col">
+        <div className="h-1 w-full bg-[var(--primary)] animate-pulse" />
+        <div className="flex flex-1 items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)] opacity-50" />
+        </div>
       </div>
     );
   }

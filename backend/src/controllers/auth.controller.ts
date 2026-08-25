@@ -11,6 +11,8 @@ import nodemailer from 'nodemailer';
 import { UAParser } from 'ua-parser-js';
 import { getTransporter } from '../utils/notification.service';
 import { emitToAll, emitToUser, getIO } from '../socket';
+import appCache from '../utils/cache';
+
 
 
 
@@ -407,8 +409,18 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const cacheKey = `user:me:${userId}`;
+
+    // Serve from cache if available (60-second TTL)
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      res.status(200).json(cached);
+      return;
+    }
+
     const user = await prisma.user.findUnique({
-      where: { id: req.user?.id },
+      where: { id: userId },
       select: {
         id: true,
         email: true,
@@ -460,8 +472,12 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     }
 
     const hasProperty = (user._count?.properties || 0) > 0;
+    const responsePayload = { user: { ...user, hasProperty } };
 
-    res.status(200).json({ user: { ...user, hasProperty } });
+    // Cache for 60 seconds
+    appCache.set(cacheKey, responsePayload, 60);
+
+    res.status(200).json(responsePayload);
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -536,6 +552,9 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
       }
     });
 
+    // Bust user cache so next /auth/me returns fresh Ghana Card data
+    appCache.del(`user:me:${req.user.id}`);
+
     try {
       emitToUser(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
       emitToAll('user_updated', { userId: req.user.id });
@@ -584,6 +603,9 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         isProfileLocked: true // Lock profile upon hitting Save button
       }
     });
+
+    // Bust user cache so next /auth/me returns fresh data
+    appCache.del(`user:me:${req.user.id}`);
 
     try {
       emitToUser(req.user.id, 'profile_updated', updatedUser);

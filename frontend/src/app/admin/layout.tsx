@@ -21,6 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return data;
     },
     retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   const user = userResponse?.user;
@@ -55,14 +56,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (isLoading || !user || user.role !== 'ADMIN') {
+  if (isLoading && !user) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-950 text-white">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
-        <p className="text-slate-400 font-mono text-sm uppercase tracking-widest">Verifying Security Clearance...</p>
+      <div className="min-h-screen flex flex-col bg-slate-950">
+        <div className="h-1 w-full bg-purple-500 animate-pulse" />
+        <div className="flex flex-1 flex-col items-center justify-center text-white">
+          <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
+          <p className="text-slate-400 font-mono text-sm uppercase tracking-widest">Verifying Security Clearance...</p>
+        </div>
       </div>
     );
   }
+
+  if (!user || user.role !== 'ADMIN') return null;
 
   const handleLogout = async () => {
     await api.post('/auth/logout');

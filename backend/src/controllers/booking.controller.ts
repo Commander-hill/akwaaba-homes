@@ -7,6 +7,8 @@ import { notifyBookingCreated, notifyBookingStatusChanged, notifyPaymentReceipt 
 import { getIO } from '../socket';
 import { safeJsonParse } from '../utils/json';
 import { getSystemConfig } from '../utils/config.service';
+import appCache from '../utils/cache';
+
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -236,6 +238,9 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       authorizationUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
     }
 
+    // Bust booking caches so tenant sees new booking and landlord sees new request immediately
+    appCache.del(`bookings:tenant:${tenantId}`);
+
     res.status(201).json({ 
       message: 'Booking request created successfully', 
       booking, 
@@ -251,6 +256,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 export const getTenantBookings = async (req: Request, res: Response): Promise<void> => {
   try {
     const tenantId = req.user.id;
+    const cacheKey = `bookings:tenant:${tenantId}`;
+
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      res.status(200).json(cached);
+      return;
+    }
     
     const bookings = await prisma.booking.findMany({
       where: { tenantId },
@@ -266,7 +278,9 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
       property: { ...b.property, images: safeJsonParse(b.property.images, []) }
     }));
 
-    res.status(200).json({ bookings: parsedBookings });
+    const payload = { bookings: parsedBookings };
+    appCache.set(cacheKey, payload, 30);
+    res.status(200).json(payload);
   } catch (error) {
     console.error('Error fetching tenant bookings:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -276,6 +290,13 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
 export const getLandlordBookings = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
+    const cacheKey = `bookings:landlord:${landlordId}`;
+
+    const cached = appCache.get(cacheKey);
+    if (cached) {
+      res.status(200).json(cached);
+      return;
+    }
     
     const bookings = await prisma.booking.findMany({
       where: { property: { landlordId } },
@@ -286,7 +307,9 @@ export const getLandlordBookings = async (req: Request, res: Response): Promise<
       orderBy: { createdAt: 'desc' }
     });
 
-    res.status(200).json({ bookings });
+    const payload = { bookings };
+    appCache.set(cacheKey, payload, 30);
+    res.status(200).json(payload);
   } catch (error) {
     console.error('Error fetching landlord bookings:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -379,6 +402,10 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       { status },
       req.ip || req.socket.remoteAddress
     );
+
+    // Bust booking caches so landlord and tenant see fresh state
+    appCache.del(`bookings:landlord:${landlordId}`);
+    appCache.del(`bookings:tenant:${booking.tenantId}`);
 
     res.status(200).json({ message: `Booking status updated to ${status}`, booking: updatedBooking });
   } catch (error) {
