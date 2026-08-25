@@ -48,7 +48,8 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
       return <>{children}</>;
     }
     // Render Maintenance Mode Screen for non-admin users
-    return <MaintenanceScreen />;
+    const endTime = config.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
+    return <MaintenanceScreen estimatedEndTime={endTime} />;
   }
 
   // Normal operation

@@ -24,6 +24,7 @@ export default function AdminConfigPage() {
     platformCommissionPercent: 5.0,
     roommateFinderEnabled: true,
     maintenanceMode: false,
+    maintenanceEndTime: '',
   });
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function AdminConfigPage() {
         platformCommissionPercent: configData.platformCommissionPercent,
         roommateFinderEnabled: configData.roommateFinderEnabled,
         maintenanceMode: configData.maintenanceMode,
+        maintenanceEndTime: configData.maintenanceEndTime ? new Date(configData.maintenanceEndTime).toISOString().slice(0, 16) : '',
       });
     }
   }, [configData]);
@@ -193,25 +195,44 @@ export default function AdminConfigPage() {
             <h2 className="text-lg font-bold text-red-600 dark:text-red-500">Danger Zone</h2>
           </div>
 
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <label className="text-sm font-bold text-red-700 dark:text-red-400 block flex items-center gap-1">
-                <Power className="w-4 h-4" /> Global Maintenance Mode
-              </label>
-              <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-0.5">Disables access for all non-admin users. Displays maintenance splash screen.</p>
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <label className="text-sm font-bold text-red-700 dark:text-red-400 block flex items-center gap-1">
+                  <Power className="w-4 h-4" /> Global Maintenance Mode
+                </label>
+                <p className="text-xs text-red-600/70 dark:text-red-400/70 mt-0.5">Disables access for all non-admin users. Displays maintenance splash screen.</p>
+              </div>
+              <button
+                onClick={() => handleToggle('maintenanceMode')}
+                className={clsx(
+                  "w-12 h-6 rounded-full transition-colors relative shadow-inner",
+                  formData.maintenanceMode ? "bg-red-600" : "bg-red-200 dark:bg-red-900/50"
+                )}
+              >
+                <span className={clsx(
+                  "absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform shadow",
+                  formData.maintenanceMode ? "translate-x-6" : "translate-x-0"
+                )} />
+              </button>
             </div>
-            <button
-              onClick={() => handleToggle('maintenanceMode')}
-              className={clsx(
-                "w-12 h-6 rounded-full transition-colors relative shadow-inner",
-                formData.maintenanceMode ? "bg-red-600" : "bg-red-200 dark:bg-red-900/50"
-              )}
-            >
-              <span className={clsx(
-                "absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform shadow",
-                formData.maintenanceMode ? "translate-x-6" : "translate-x-0"
-              )} />
-            </button>
+
+            {formData.maintenanceMode && (
+              <div className="pt-2 border-t border-red-200 dark:border-red-900/40 animate-in fade-in">
+                <label className="text-xs font-extrabold text-red-800 dark:text-red-300 block mb-1">
+                  📅 Estimated Maintenance Completion Time
+                </label>
+                <p className="text-[10px] text-red-600/80 dark:text-red-400/80 mb-2">
+                  Set the expected date and time for maintenance completion to drive the public countdown timer.
+                </p>
+                <input
+                  type="datetime-local"
+                  value={formData.maintenanceEndTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maintenanceEndTime: e.target.value }))}
+                  className="w-full p-2.5 bg-white dark:bg-slate-900 border border-red-300 dark:border-red-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-red-500/40 text-slate-800 dark:text-slate-200"
+                />
+              </div>
+            )}
           </div>
         </div>
 

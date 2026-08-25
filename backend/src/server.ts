@@ -173,7 +173,8 @@ app.get('/api/v1/config/public', async (req: Request, res: Response) => {
       bookingGracePeriodHours: config.bookingGracePeriodHours,
       platformCommissionPercent: config.platformCommissionPercent,
       roommateFinderEnabled: config.roommateFinderEnabled,
-      maintenanceMode: config.maintenanceMode
+      maintenanceMode: config.maintenanceMode,
+      maintenanceEndTime: config.maintenanceEndTime
     });
   } catch (err) {
     res.status(500).json({ message: 'Error reading config' });

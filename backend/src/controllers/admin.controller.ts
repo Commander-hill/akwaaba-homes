@@ -725,7 +725,7 @@ export const getConfig = async (req: Request, res: Response): Promise<void> => {
 
 export const updateConfig = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode } = req.body;
+    const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime } = req.body;
     
     const updatedConfig = await prisma.systemConfig.upsert({
       where: { id: 'GLOBAL' },
@@ -735,6 +735,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
         ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
         ...(maintenanceMode !== undefined && { maintenanceMode }),
+        ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
       },
       create: {
         id: 'GLOBAL',
@@ -743,6 +744,7 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         platformCommissionPercent: platformCommissionPercent ?? 5.0,
         roommateFinderEnabled: roommateFinderEnabled ?? true,
         maintenanceMode: maintenanceMode ?? false,
+        maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,
       }
     });
 

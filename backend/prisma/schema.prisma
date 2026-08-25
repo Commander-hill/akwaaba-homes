@@ -333,13 +333,14 @@ model Transaction {
 }
 
 model SystemConfig {
-  id                           String   @id @default("GLOBAL")
-  ghanaCardVerificationEnabled Boolean  @default(true)
-  bookingGracePeriodHours      Int      @default(48)
-  platformCommissionPercent    Float    @default(5.0)
-  roommateFinderEnabled        Boolean  @default(true)
-  maintenanceMode              Boolean  @default(false)
-  updatedAt                    DateTime @updatedAt
+  id                           String    @id @default("GLOBAL")
+  ghanaCardVerificationEnabled Boolean   @default(true)
+  bookingGracePeriodHours      Int       @default(48)
+  platformCommissionPercent    Float     @default(5.0)
+  roommateFinderEnabled        Boolean   @default(true)
+  maintenanceMode              Boolean   @default(false)
+  maintenanceEndTime           DateTime?
+  updatedAt                    DateTime  @updatedAt
 }
 
 model PushSubscription {
