@@ -76,73 +76,40 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     // --- REAL-TIME PLATFORM DATA SYNC & ZERO-REFRESH CACHE INVALIDATION ---
     const invalidateAllPlatformViews = () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      // Invalidate ALL queries across the active React Query cache globally
+      queryClient.invalidateQueries();
     };
 
-    socketInstance.on('booking_created', () => {
-      invalidateAllPlatformViews();
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-    });
+    const syncEvents = [
+      'booking_created',
+      'booking_updated',
+      'room_updated',
+      'property_created',
+      'property_updated',
+      'ticket_created',
+      'ticket_updated',
+      'review_created',
+      'review_updated',
+      'notice_created',
+      'notice_updated',
+      'breach_updated',
+      'agreement_updated',
+      'user_updated',
+      'profile_updated',
+      'subscription_updated',
+      'activity:new'
+    ];
 
-    socketInstance.on('booking_updated', () => {
-      invalidateAllPlatformViews();
-      queryClient.invalidateQueries({ queryKey: ['agreements'] });
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-    });
-
-    socketInstance.on('ticket_created', () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
-    });
-
-    socketInstance.on('ticket_updated', () => {
-      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    syncEvents.forEach(event => {
+      socketInstance.on(event, (data?: any) => {
+        console.log(`⚡ Real-time global sync event triggered: [${event}]`, data || '');
+        invalidateAllPlatformViews();
+      });
     });
 
     socketInstance.on('receive_message', () => {
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['messages'] });
-    });
-
-    socketInstance.on('property_created', () => {
-      invalidateAllPlatformViews();
-      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    });
-
-    socketInstance.on('property_updated', () => {
-      invalidateAllPlatformViews();
-      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    });
-
-    socketInstance.on('user_updated', () => {
-      invalidateAllPlatformViews();
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    });
-
-    socketInstance.on('profile_updated', () => {
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    });
-
-    socketInstance.on('agreement_updated', () => {
-      queryClient.invalidateQueries({ queryKey: ['agreements'] });
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    });
-
-    socketInstance.on('activity:new', () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
     });
 
     socketInstance.on('config_updated', (data: any) => {
@@ -151,8 +118,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         queryClient.setQueryData(['public-config'], data);
         queryClient.setQueryData(['admin-config'], data);
       }
-      queryClient.invalidateQueries({ queryKey: ['public-config'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-config'] });
+      queryClient.invalidateQueries();
     });
 
     setSocket(socketInstance);

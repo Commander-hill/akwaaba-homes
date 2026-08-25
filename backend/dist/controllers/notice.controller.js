@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.getAllNotices = exports.getActiveNotices = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
+const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 const getActiveNotices = async (req, res) => {
     try {
         const notices = await prisma_1.default.notice.findMany({
@@ -49,6 +51,11 @@ const createNotice = async (req, res) => {
             }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, 'CREATE_NOTICE', 'Notice', notice.id, null, notice, req.ip || req.socket.remoteAddress);
+        try {
+            (0, socket_1.getIO)().emit('notice_updated', notice);
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(201).json({ message: 'Notice created successfully', notice });
     }
     catch (error) {
@@ -80,6 +87,11 @@ const updateNotice = async (req, res) => {
             }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, 'UPDATE_NOTICE', 'Notice', id, oldNotice, notice, req.ip || req.socket.remoteAddress);
+        try {
+            (0, socket_1.getIO)().emit('notice_updated', notice);
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Notice updated successfully', notice });
     }
     catch (error) {
@@ -98,6 +110,11 @@ const deleteNotice = async (req, res) => {
         }
         await prisma_1.default.notice.delete({ where: { id } });
         await (0, auditLogger_1.logAudit)(req.user.id, 'DELETE_NOTICE', 'Notice', id, notice, null, req.ip || req.socket.remoteAddress);
+        try {
+            (0, socket_1.getIO)().emit('notice_updated', { id });
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Notice deleted successfully' });
     }
     catch (error) {

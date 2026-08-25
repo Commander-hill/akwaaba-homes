@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 export const reportBreach = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -15,6 +17,11 @@ export const reportBreach = async (req: Request, res: Response): Promise<void> =
         description
       }
     });
+
+    try {
+      getIO().emit('breach_updated', report);
+      appCache.flushAll();
+    } catch (e) {}
 
     res.status(201).json({ message: 'Breach reported successfully, pending verification.', report });
   } catch (error) {
@@ -84,6 +91,12 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
         })
       ]);
       
+      try {
+        getIO().emit('breach_updated', { id, status: 'VERIFIED' });
+        getIO().emit('user_updated', { userId: report.tenantId });
+        appCache.flushAll();
+      } catch (e) {}
+
       res.status(200).json({ message: 'Breach verified and penalty applied.', newScore, isSuspended });
       return;
     } else {
@@ -91,6 +104,12 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
         where: { id: id as string },
         data: { status: 'REJECTED' }
       });
+
+      try {
+        getIO().emit('breach_updated', { id, status: 'REJECTED' });
+        appCache.flushAll();
+      } catch (e) {}
+
       res.status(200).json({ message: 'Breach rejected.', report: updatedReport });
       return;
     }

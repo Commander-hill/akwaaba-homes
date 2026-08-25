@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -55,6 +57,14 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
         where: { id: propertyId },
         data: { price: minRoom.price }
       });
+    }
+
+    try {
+      getIO().emit('room_updated', { roomId: room.id, propertyId });
+      getIO().emit('property_updated', { propertyId });
+      appCache.flushAll();
+    } catch (e) {
+      /* non-blocking */
     }
 
     res.status(201).json({ message: 'Room created successfully', room });
@@ -123,6 +133,14 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
+    try {
+      getIO().emit('room_updated', { roomId: id, propertyId: room.propertyId });
+      getIO().emit('property_updated', { propertyId: room.propertyId });
+      appCache.flushAll();
+    } catch (e) {
+      /* non-blocking */
+    }
+
     res.status(200).json({ message: 'Room updated successfully', room: updatedRoom });
   } catch (error) {
     console.error('Error updating room:', error);
@@ -175,6 +193,14 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
       where: { id: room.propertyId },
       data: { price: minRoom ? minRoom.price : 0 }
     });
+
+    try {
+      getIO().emit('room_updated', { roomId: id, propertyId: room.propertyId });
+      getIO().emit('property_updated', { propertyId: room.propertyId });
+      appCache.flushAll();
+    } catch (e) {
+      /* non-blocking */
+    }
 
     res.status(200).json({ message: 'Room deleted successfully' });
   } catch (error) {

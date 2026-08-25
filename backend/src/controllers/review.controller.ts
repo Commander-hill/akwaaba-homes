@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 // Helper: recalculate a tenant's reputation score from all their reviews
 const recalculateReputation = async (tenantId: string) => {
@@ -70,6 +72,12 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
     // Auto-recalculate tenant reputation score after new review
     await recalculateReputation(booking.tenantId);
 
+    try {
+      getIO().emit('review_created', review);
+      getIO().emit('property_updated', { propertyId: booking.propertyId });
+      appCache.flushAll();
+    } catch (e) {}
+
     res.status(201).json({ message: 'Review submitted successfully', review });
   } catch (error) {
     console.error('Error creating review:', error);
@@ -121,6 +129,11 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
       data: { isFlagged: true, moderationNote: reason || 'Flagged for review' }
     });
 
+    try {
+      getIO().emit('review_updated', { id });
+      appCache.flushAll();
+    } catch (e) {}
+
     res.status(200).json({ message: 'Review flagged for admin moderation' });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
@@ -159,6 +172,11 @@ export const submitAppeal = async (req: Request, res: Response): Promise<void> =
       where: { id },
       data: { appealNote, appealStatus: 'PENDING' }
     });
+
+    try {
+      getIO().emit('review_updated', { id });
+      appCache.flushAll();
+    } catch (e) {}
 
     res.status(200).json({ message: 'Appeal submitted successfully. An admin will review it shortly.' });
   } catch (error) {

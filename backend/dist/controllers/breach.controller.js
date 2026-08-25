@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyBreach = exports.getBreachReports = exports.reportBreach = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 const reportBreach = async (req, res) => {
     try {
         const reporterId = req.user.id;
@@ -18,6 +20,11 @@ const reportBreach = async (req, res) => {
                 description
             }
         });
+        try {
+            (0, socket_1.getIO)().emit('breach_updated', report);
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(201).json({ message: 'Breach reported successfully, pending verification.', report });
     }
     catch (error) {
@@ -83,6 +90,12 @@ const verifyBreach = async (req, res) => {
                     data: { reputationScore: newScore, isSuspended }
                 })
             ]);
+            try {
+                (0, socket_1.getIO)().emit('breach_updated', { id, status: 'VERIFIED' });
+                (0, socket_1.getIO)().emit('user_updated', { userId: report.tenantId });
+                cache_1.default.flushAll();
+            }
+            catch (e) { }
             res.status(200).json({ message: 'Breach verified and penalty applied.', newScore, isSuspended });
             return;
         }
@@ -91,6 +104,11 @@ const verifyBreach = async (req, res) => {
                 where: { id: id },
                 data: { status: 'REJECTED' }
             });
+            try {
+                (0, socket_1.getIO)().emit('breach_updated', { id, status: 'REJECTED' });
+                cache_1.default.flushAll();
+            }
+            catch (e) { }
             res.status(200).json({ message: 'Breach rejected.', report: updatedReport });
             return;
         }

@@ -182,7 +182,7 @@ const createBooking = async (req, res) => {
                 bookingId: booking.id
             });
         }
-        // Real-time notification to landlord
+        // Real-time broadcast to landlord & all public clients browsing properties/rooms
         try {
             const io = (0, socket_1.getIO)();
             io.to(property.landlordId).emit('notification', {
@@ -190,7 +190,10 @@ const createBooking = async (req, res) => {
                 message: `${tenant?.firstName} ${tenant?.lastName} requested to book ${property.title}.`,
                 type: 'booking'
             });
-            io.to(property.landlordId).emit('booking_created', { booking });
+            io.emit('booking_created', { booking, propertyId: property.id, roomId: room?.id });
+            io.emit('property_updated', { propertyId: property.id });
+            io.emit('room_updated', { roomId: room?.id, propertyId: property.id });
+            cache_1.default.flushAll(); // Flush memory cache so fresh data is returned to next query
         }
         catch (e) {
             console.error('Socket notification failed', e);
@@ -360,12 +363,15 @@ const updateBookingStatus = async (req, res) => {
                 });
                 io.to(booking.tenant.id).emit('booking_updated', { booking: updatedBooking });
                 io.emit('booking_updated', { booking: updatedBooking });
+                io.emit('property_updated', { propertyId: booking.propertyId });
+                io.emit('room_updated', { roomId: booking.roomId, propertyId: booking.propertyId });
                 io.emit('activity:new', {
                     type: 'BOOKING',
                     status,
                     message: `Booking for "${booking.property.title}" updated to ${status}`,
                     createdAt: new Date(),
                 });
+                cache_1.default.flushAll();
             }
             catch (e) {
                 console.error('Socket notification failed', e);

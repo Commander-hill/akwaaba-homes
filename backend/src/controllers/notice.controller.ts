@@ -2,6 +2,8 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { logAudit } from '../utils/auditLogger';
+import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 export const getActiveNotices = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -55,6 +57,11 @@ export const createNotice = async (req: Request, res: Response): Promise<void> =
       req.ip || req.socket.remoteAddress
     );
 
+    try {
+      getIO().emit('notice_updated', notice);
+      appCache.flushAll();
+    } catch (e) {}
+
     res.status(201).json({ message: 'Notice created successfully', notice });
   } catch (error) {
     console.error('Error creating notice:', error);
@@ -97,6 +104,11 @@ export const updateNotice = async (req: Request, res: Response): Promise<void> =
       req.ip || req.socket.remoteAddress
     );
 
+    try {
+      getIO().emit('notice_updated', notice);
+      appCache.flushAll();
+    } catch (e) {}
+
     res.status(200).json({ message: 'Notice updated successfully', notice });
   } catch (error) {
     console.error('Error updating notice:', error);
@@ -125,6 +137,11 @@ export const deleteNotice = async (req: Request, res: Response): Promise<void> =
       null,
       req.ip || req.socket.remoteAddress
     );
+
+    try {
+      getIO().emit('notice_updated', { id });
+      appCache.flushAll();
+    } catch (e) {}
 
     res.status(200).json({ message: 'Notice deleted successfully' });
   } catch (error) {

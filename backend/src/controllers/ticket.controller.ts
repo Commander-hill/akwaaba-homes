@@ -53,6 +53,7 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
           type: 'ticket'
         });
         io.to(property.landlordId).emit('ticket_created', { ticket, propertyTitle: property.title });
+        io.emit('ticket_created', { ticket, propertyTitle: property.title });
       } catch (e) {
         console.error('Socket emission failed', e);
       }
@@ -166,6 +167,7 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
       });
       io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
       io.to(ticket.property.landlordId).emit('ticket_updated', { ticket: updatedTicket });
+      io.emit('ticket_updated', { ticket: updatedTicket });
     } catch (e) {
       console.error('Socket emission failed', e);
     }

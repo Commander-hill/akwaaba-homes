@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRoomsByProperty = exports.deleteRoom = exports.updateRoom = exports.createRoom = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 const createRoom = async (req, res) => {
     try {
         const { propertyId, roomType, numberOfRooms, price, blockName, gender } = req.body;
@@ -49,6 +51,14 @@ const createRoom = async (req, res) => {
                 where: { id: propertyId },
                 data: { price: minRoom.price }
             });
+        }
+        try {
+            (0, socket_1.getIO)().emit('room_updated', { roomId: room.id, propertyId });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId });
+            cache_1.default.flushAll();
+        }
+        catch (e) {
+            /* non-blocking */
         }
         res.status(201).json({ message: 'Room created successfully', room });
     }
@@ -110,6 +120,14 @@ const updateRoom = async (req, res) => {
                 });
             }
         }
+        try {
+            (0, socket_1.getIO)().emit('room_updated', { roomId: id, propertyId: room.propertyId });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: room.propertyId });
+            cache_1.default.flushAll();
+        }
+        catch (e) {
+            /* non-blocking */
+        }
         res.status(200).json({ message: 'Room updated successfully', room: updatedRoom });
     }
     catch (error) {
@@ -155,6 +173,14 @@ const deleteRoom = async (req, res) => {
             where: { id: room.propertyId },
             data: { price: minRoom ? minRoom.price : 0 }
         });
+        try {
+            (0, socket_1.getIO)().emit('room_updated', { roomId: id, propertyId: room.propertyId });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: room.propertyId });
+            cache_1.default.flushAll();
+        }
+        catch (e) {
+            /* non-blocking */
+        }
         res.status(200).json({ message: 'Room deleted successfully' });
     }
     catch (error) {

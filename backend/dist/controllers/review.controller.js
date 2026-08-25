@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMyReviews = exports.submitAppeal = exports.flagReview = exports.getPropertyReviews = exports.createReview = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 // Helper: recalculate a tenant's reputation score from all their reviews
 const recalculateReputation = async (tenantId) => {
     // Get all reviews for completed bookings by this tenant
@@ -62,6 +64,12 @@ const createReview = async (req, res) => {
         });
         // Auto-recalculate tenant reputation score after new review
         await recalculateReputation(booking.tenantId);
+        try {
+            (0, socket_1.getIO)().emit('review_created', review);
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: booking.propertyId });
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(201).json({ message: 'Review submitted successfully', review });
     }
     catch (error) {
@@ -109,6 +117,11 @@ const flagReview = async (req, res) => {
             where: { id },
             data: { isFlagged: true, moderationNote: reason || 'Flagged for review' }
         });
+        try {
+            (0, socket_1.getIO)().emit('review_updated', { id });
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Review flagged for admin moderation' });
     }
     catch (error) {
@@ -143,6 +156,11 @@ const submitAppeal = async (req, res) => {
             where: { id },
             data: { appealNote, appealStatus: 'PENDING' }
         });
+        try {
+            (0, socket_1.getIO)().emit('review_updated', { id });
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Appeal submitted successfully. An admin will review it shortly.' });
     }
     catch (error) {
