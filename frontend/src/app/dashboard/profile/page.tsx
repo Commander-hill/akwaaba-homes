@@ -5,15 +5,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, Globe, LogOut, CheckCircle2, AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'basic' | 'school' | 'security'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'school' | 'security'>(
+    tabParam === 'security' ? 'security' : 'basic'
+  );
   const [isStudent, setIsStudent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);

@@ -25,7 +25,17 @@ export const authRateLimiter = rateLimit({
 export const passwordResetRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  message: { error: 'Too many password reset requests. Please try again after 15 minutes.' },
+  message: { message: 'Too many password reset requests. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+});
+
+// ─── OTP & Email Verification Rate Limiter (5 attempts / 15 mins) ─────────────
+export const otpRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many verification code requests. Please wait 15 minutes before trying again.' },
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
