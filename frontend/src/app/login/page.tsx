@@ -57,11 +57,11 @@ export default function LoginPage() {
       {/* Login Card */}
       <div className="w-full max-w-md z-10 mx-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
-        <div className="bg-white/85 backdrop-blur-2xl rounded-[28px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/60 ring-1 ring-black/5">
+        <div className="bg-white/10 backdrop-blur-2xl rounded-[28px] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/20 ring-1 ring-white/10">
 
           {/* Logo Header */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(91,70,229,0.3)] mb-3 ring-2 ring-white">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_30px_rgba(91,70,229,0.5)] mb-3 ring-2 ring-white/30">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
@@ -71,23 +71,23 @@ export default function LoginPage() {
                 priority
               />
             </div>
-            <span style={{ background: 'linear-gradient(90deg, #4F46E5, #7C3AED, #E06D53)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} className="font-extrabold text-xl tracking-tight">
+            <span style={{ background: 'linear-gradient(90deg, #6366F1, #A855F7, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }} className="font-extrabold text-xl tracking-tight">
               AkwaabaHomes
             </span>
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-[28px] font-extrabold tracking-tight text-slate-900 mb-2">
+            <h1 className="text-[28px] font-extrabold tracking-tight text-white mb-2 drop-shadow-sm">
               Welcome back
             </h1>
-            <p className="text-slate-600 text-sm">
-              Don&apos;t have an account? <Link href="/register" className="text-[#5B4CFF] font-bold hover:underline transition-all">Sign up today</Link>
+            <p className="text-white/80 text-sm font-medium">
+              Don&apos;t have an account? <Link href="/register" className="text-white font-bold hover:underline transition-all">Sign up today</Link>
             </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 text-red-600 border border-red-200/80 rounded-xl text-sm font-medium flex items-start gap-3">
-              <div className="mt-0.5"><Lock className="w-4 h-4 text-red-500" /></div>
+            <div className="mb-6 p-4 bg-red-500/20 text-red-200 border border-red-500/30 rounded-xl text-sm font-medium flex items-start gap-3 backdrop-blur-md">
+              <div className="mt-0.5"><Lock className="w-4 h-4 text-red-300" /></div>
               {error}
             </div>
           )}
@@ -96,15 +96,15 @@ export default function LoginPage() {
             
             {/* Email Address */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-800">Email Address</label>
+              <label className="block text-sm font-bold text-white/90">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-slate-400" />
+                  <Mail className="h-5 w-5 text-white/60" />
                 </div>
                 <input 
                   type="email" 
                   required 
-                  className="block w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B4CFF] focus:ring-2 focus:ring-[#5B4CFF]/20 outline-none transition-all" 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:bg-white/15 focus:border-white/50 focus:ring-2 focus:ring-white/20 outline-none transition-all" 
                   placeholder="john@example.com" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
@@ -114,15 +114,15 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-800">Password</label>
+              <label className="block text-sm font-bold text-white/90">Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
+                  <Lock className="h-5 w-5 text-white/60" />
                 </div>
                 <input 
                   type="password" 
                   required 
-                  className="block w-full pl-12 pr-4 py-3.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl text-slate-900 placeholder-slate-400 focus:bg-white focus:border-[#5B4CFF] focus:ring-2 focus:ring-[#5B4CFF]/20 outline-none transition-all" 
+                  className="block w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/50 focus:bg-white/15 focus:border-white/50 focus:ring-2 focus:ring-white/20 outline-none transition-all" 
                   placeholder="••••••••" 
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)} 
@@ -139,15 +139,15 @@ export default function LoginPage() {
                   type="checkbox" 
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded bg-slate-100 border-slate-300 text-[#5B4CFF] focus:ring-[#5B4CFF]" 
+                  className="h-4 w-4 rounded bg-white/10 border-white/30 text-[#5B4CFF] focus:ring-[#5B4CFF]" 
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-600 font-medium">
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-white/80 font-medium">
                   Remember me
                 </label>
               </div>
 
               <div className="text-sm">
-                <Link href="/forgot-password" className="font-bold text-[#5B4CFF] hover:text-[#4B3DEE] transition-colors">
+                <Link href="/forgot-password" className="font-bold text-white hover:text-white/80 transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -157,7 +157,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-white bg-[#5B4CFF] hover:bg-[#4B3DEE] font-bold text-[15px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B4CFF] transition-all shadow-[0_8px_25px_rgba(91,76,255,0.35)] active:scale-[0.99] disabled:opacity-70"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 rounded-2xl text-white bg-[#5B4CFF] hover:bg-[#4B3DEE] font-bold text-[15px] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B4CFF] transition-all shadow-[0_8px_30px_rgba(91,76,255,0.4)] border border-white/10 active:scale-[0.99] disabled:opacity-70"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
