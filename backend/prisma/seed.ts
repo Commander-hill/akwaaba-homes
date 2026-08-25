@@ -4,28 +4,23 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding default Admin account...');
+  console.log('Seeding default accounts...');
   
-  const adminEmail = process.env.ADMIN_EMAIL || 'israelboateng5@gmail.com';
+  const adminEmail = (process.env.ADMIN_EMAIL || 'israelboateng5@gmail.com').toLowerCase().trim();
   const adminPassword = process.env.ADMIN_PASSWORD || 'Israel@40';
-  
-  // Check if admin already exists
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: adminEmail }
-  });
+  const hashedPasswordAdmin = await bcrypt.hash(adminPassword, 10);
 
-  if (existingAdmin) {
-    console.log(`Admin account (${adminEmail}) already exists. Skipping.`);
-    return;
-  }
-
-  // Create admin
-  const hashedPassword = await bcrypt.hash(adminPassword, 10);
-  
-  await prisma.user.create({
-    data: {
+  // Upsert Admin account
+  await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      passwordHash: hashedPasswordAdmin,
+      isEmailVerified: true,
+      role: 'ADMIN'
+    },
+    create: {
       email: adminEmail,
-      passwordHash: hashedPassword,
+      passwordHash: hashedPasswordAdmin,
       firstName: 'System',
       lastName: 'Administrator',
       role: 'ADMIN',
@@ -33,10 +28,30 @@ async function main() {
     }
   });
 
-  console.log(`✅ Admin account created successfully!`);
-  console.log(`Email: ${adminEmail}`);
-  console.log(`Password: ${adminPassword}`);
-  console.log(`⚠️ Please change this password immediately after logging in.`);
+  console.log(`✅ Admin account ready! Email: ${adminEmail} | Password: ${adminPassword}`);
+
+  // Upsert Demo Landlord account (carefreechelsea5@gmail.com)
+  const userEmail = 'carefreechelsea5@gmail.com';
+  const userPassword = 'Password123!';
+  const hashedPasswordUser = await bcrypt.hash(userPassword, 10);
+
+  await prisma.user.upsert({
+    where: { email: userEmail },
+    update: {
+      passwordHash: hashedPasswordUser,
+      isEmailVerified: true,
+    },
+    create: {
+      email: userEmail,
+      passwordHash: hashedPasswordUser,
+      firstName: 'Carefree',
+      lastName: 'Chelsea',
+      role: 'LANDLORD',
+      isEmailVerified: true
+    }
+  });
+
+  console.log(`✅ Landlord account ready! Email: ${userEmail} | Password: ${userPassword}`);
 }
 
 main()

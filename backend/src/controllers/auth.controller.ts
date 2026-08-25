@@ -43,7 +43,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
       res.status(409).json({ message: 'User with this email already exists' });
       return;
@@ -57,7 +58,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         avatarUrl,
         passwordHash,
         role: role || 'TENANT',
@@ -179,7 +180,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
       return;
