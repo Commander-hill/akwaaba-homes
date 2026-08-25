@@ -23,24 +23,25 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       isStudent, avatarUrl
     } = req.body;
 
-    if (!email || !password || !firstName || !lastName) {
-      res.status(400).json({ message: 'Missing required basic fields' });
+    if (!email || !password || !firstName || !lastName || !role) {
+      res.status(400).json({ message: 'Missing required basic registration fields' });
       return;
     }
 
-    // Basic Tenant Validation
-    if (role === 'TENANT') {
-      if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
-        res.status(400).json({ message: 'Missing required tenant details' });
+    if (!avatarUrl || !String(avatarUrl).trim()) {
+      res.status(400).json({ message: 'Passport picture is required during registration' });
+      return;
+    }
+
+    if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
+      res.status(400).json({ message: 'Missing mandatory personal & emergency contact details (Phone, Gender, DOB, Nationality, Guardian Name & Phone are required)' });
+      return;
+    }
+
+    if (role === 'TENANT' && isStudent) {
+      if (!campus || !studentId || !dateOfAdmission || !programmeOfStudy || !yearOfStudy || !studentType) {
+        res.status(400).json({ message: 'Missing mandatory school information for student tenant (Campus, Student ID, Admission Date, Programme, Year, and Student Type are required)' });
         return;
-      }
-      
-      // School Information Validation for Students
-      if (isStudent) {
-        if (!campus || !studentId || !programmeOfStudy || !yearOfStudy || !studentType) {
-          res.status(400).json({ message: 'Missing required school information for student tenant' });
-          return;
-        }
       }
     }
 

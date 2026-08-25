@@ -502,55 +502,104 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <form onSubmit={handleBooking} className="space-y-4">
               
               <div className="space-y-3 mb-6">
-                <label className="block text-sm font-bold text-[var(--foreground)]">Select Room Type</label>
-                {property.rooms?.map((room: any) => {
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-bold text-[var(--foreground)]">Select Block & Room Type</label>
+                  {session?.gender && (
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                      Logged in as {session.gender === 'MALE' ? '♂ Male' : '♀ Female'}
+                    </span>
+                  )}
+                </div>
+
+                {session?.gender && (
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-[var(--border)] text-xs text-[var(--muted-foreground)] flex items-center justify-between">
+                    <span className="font-semibold">
+                      Showing blocks for {session.gender === 'MALE' ? 'Male & Mixed' : 'Female & Mixed'} occupants
+                    </span>
+                  </div>
+                )}
+
+                {property.rooms?.map((room: any, index: number) => {
+                  const userGender = session?.gender?.toUpperCase();
+                  const isGenderRestricted = Boolean(userGender && room.gender !== 'MIXED' && room.gender !== userGender);
+                  const isFullyBooked = room.remainingCapacity === 0;
+                  const isDisabled = isFullyBooked || isGenderRestricted;
+
                   const genderBadge = room.gender === 'MALE'
-                    ? { label: '♂ Male Only', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }
+                    ? { label: '♂ Male Only Block', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200 dark:border-blue-800' }
                     : room.gender === 'FEMALE'
-                    ? { label: '♀ Female Only', cls: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300' }
-                    : { label: '🔀 Mixed', cls: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' };
+                    ? { label: '♀ Female Only Block', cls: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300 border-pink-200 dark:border-pink-800' }
+                    : { label: '🔀 Mixed Block (Open to All)', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' };
+
+                  const blockTitle = room.blockName?.trim() ? room.blockName : `Block Configuration ${index + 1}`;
 
                   return (
                     <label 
                       key={room.id}
-                      className={`block relative p-4 border rounded-xl cursor-pointer transition-all ${
-                        selectedRoomId === room.id 
-                          ? 'border-[var(--primary)] bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md ring-1 ring-[var(--primary)]' 
-                          : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                      } ${room.remainingCapacity === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`block relative p-4 border rounded-2xl transition-all ${
+                        isDisabled
+                          ? 'opacity-60 cursor-not-allowed bg-slate-100/50 dark:bg-slate-900/30 border-slate-200 dark:border-slate-800'
+                          : selectedRoomId === room.id 
+                          ? 'border-[var(--primary)] bg-indigo-50/60 dark:bg-indigo-900/30 shadow-md ring-2 ring-[var(--primary)]/30' 
+                          : 'border-[var(--border)] bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer'
+                      }`}
                     >
                       <div className="flex justify-between items-start">
-                        <div className="flex items-start gap-3">
+                        <div className="flex items-start gap-3 flex-1">
                           <input 
                             type="radio" 
                             name="roomSelection" 
                             value={room.id}
-                            disabled={room.remainingCapacity === 0}
+                            disabled={isDisabled}
                             checked={selectedRoomId === room.id}
-                            onChange={(e) => setSelectedRoomId(e.target.value)}
-                            className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)]"
+                            onChange={(e) => {
+                              if (!isDisabled) setSelectedRoomId(e.target.value);
+                            }}
+                            className="w-4 h-4 mt-1 text-[var(--primary)] focus:ring-[var(--primary)] disabled:cursor-not-allowed"
                           />
-                          <div>
-                            {room.blockName && (
-                              <div className="text-xs font-semibold text-[var(--muted-foreground)] mb-0.5">
-                                🏢 {room.blockName}
-                              </div>
-                            )}
-                            <div className="font-bold text-[var(--foreground)]">{room.roomType}</div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${genderBadge.cls}`}>
+                          <div className="space-y-1 flex-1">
+                            {/* Block Title */}
+                            <div className="font-extrabold text-base text-[var(--foreground)] flex items-center gap-1.5 leading-snug">
+                              <span>🏢</span> {blockTitle}
+                            </div>
+                            
+                            {/* Room Type */}
+                            <div className="text-xs font-semibold text-[var(--muted-foreground)] flex items-center gap-1">
+                              <span>🛏️</span> {room.roomType}
+                            </div>
+
+                            {/* Badges */}
+                            <div className="flex flex-wrap items-center gap-2 pt-1">
+                              <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${genderBadge.cls}`}>
                                 {genderBadge.label}
                               </span>
-                              <span className="text-xs text-[var(--muted-foreground)]">
-                                {room.remainingCapacity === 0 
-                                  ? <span className="text-red-500 font-semibold">Fully Booked</span> 
+
+                              {isGenderRestricted && (
+                                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800 flex items-center gap-1">
+                                  🔒 Restricted to {room.gender === 'MALE' ? 'Male' : 'Female'} Students
+                                </span>
+                              )}
+
+                              <span className="text-xs font-medium text-[var(--muted-foreground)]">
+                                {isFullyBooked 
+                                  ? <span className="text-red-500 font-bold">Fully Booked</span> 
                                   : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
                                 }
                               </span>
                             </div>
+
+                            {isGenderRestricted && (
+                              <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">
+                                ⚠ You cannot book this room because your profile gender is {session.gender === 'MALE' ? 'Male' : 'Female'}.
+                              </p>
+                            )}
                           </div>
                         </div>
-                        <div className="font-extrabold text-[var(--foreground)] shrink-0 ml-2">GH₵{room.price}</div>
+
+                        <div className="text-right shrink-0 ml-3">
+                          <div className="font-black text-lg text-[var(--foreground)]">GH₵{room.price}</div>
+                          <div className="text-[10px] text-[var(--muted-foreground)]">per year</div>
+                        </div>
                       </div>
                     </label>
                   );

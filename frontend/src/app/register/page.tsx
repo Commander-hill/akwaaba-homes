@@ -53,19 +53,23 @@ export default function RegisterPage() {
     }
     
     if (currentStep === 2) {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
-        setError('Please fill in your core personal details.');
+      if (!formData.avatarUrl) {
+        setError('Please upload your passport picture before proceeding.');
         return;
       }
-      if (formData.role === 'TENANT' && (!formData.phoneNumber || !formData.dateOfBirth || !formData.nationality)) {
-        setError('Please complete all basic tenant fields.');
+      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
+        setError('Please fill in your name and email address.');
+        return;
+      }
+      if (!formData.phoneNumber.trim() || !formData.gender || !formData.dateOfBirth || !formData.nationality.trim() || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
+        setError('Please fill in all mandatory personal details (Phone, Gender, Date of Birth, Country, and Emergency Contact).');
         return;
       }
     }
 
     if (currentStep === 3 && formData.isStudent) {
-      if (!formData.campus || !formData.studentId || !formData.programmeOfStudy) {
-        setError('Please fill in the primary school information.');
+      if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim() || !formData.yearOfStudy || !formData.studentType) {
+        setError('Please fill in all mandatory school information fields.');
         return;
       }
     }
@@ -222,54 +226,50 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className={labelClass}>First Name</label>
-                  <input type="text" className={inputClass} value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="John" />
+                  <label className={labelClass}>First Name *</label>
+                  <input type="text" required className={inputClass} value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="John" />
                 </div>
                 <div>
-                  <label className={labelClass}>Last Name</label>
-                  <input type="text" className={inputClass} value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="Doe" />
+                  <label className={labelClass}>Last Name *</label>
+                  <input type="text" required className={inputClass} value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="Doe" />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Other Name(s) (Optional)</label>
                   <input type="text" className={inputClass} value={formData.otherNames} onChange={(e) => setFormData({...formData, otherNames: e.target.value})} placeholder="Middle name" />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Email Address</label>
-                  <input type="email" className={inputClass} value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" />
+                  <label className={labelClass}>Email Address *</label>
+                  <input type="email" required className={inputClass} value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" />
                 </div>
                 
-                {formData.role === 'TENANT' && (
-                  <>
-                    <div>
-                      <label className={labelClass}>Mobile Number</label>
-                      <input type="tel" className={inputClass} value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="054..." />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Gender</label>
-                      <select className={`${inputClass} appearance-none`} value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                        <option value="" className="bg-[#1C1A1B]">Select Gender</option>
-                        <option value="MALE" className="bg-[#1C1A1B]">Male</option>
-                        <option value="FEMALE" className="bg-[#1C1A1B]">Female</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className={labelClass}>Date of Birth</label>
-                      <input type="date" className={inputClass} value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} style={{ colorScheme: 'dark' }} />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Country</label>
-                      <input type="text" className={inputClass} value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="Ghana" />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Guardian Name</label>
-                      <input type="text" className={inputClass} value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="Jane Doe" />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Guardian Phone</label>
-                      <input type="tel" className={inputClass} value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="054..." />
-                    </div>
-                  </>
-                )}
+                <div>
+                  <label className={labelClass}>Mobile Number *</label>
+                  <input type="tel" required className={inputClass} value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="054..." />
+                </div>
+                <div>
+                  <label className={labelClass}>Gender *</label>
+                  <select required className={`${inputClass} appearance-none`} value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
+                    <option value="" className="bg-[#1C1A1B]">Select Gender</option>
+                    <option value="MALE" className="bg-[#1C1A1B]">Male</option>
+                    <option value="FEMALE" className="bg-[#1C1A1B]">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>Date of Birth *</label>
+                  <input type="date" required className={inputClass} value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} style={{ colorScheme: 'dark' }} />
+                </div>
+                <div>
+                  <label className={labelClass}>Country / Nationality *</label>
+                  <input type="text" required className={inputClass} value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="Ghana" />
+                </div>
+                <div>
+                  <label className={labelClass}>{formData.role === 'LANDLORD' ? 'Emergency Contact Name *' : 'Guardian Name *'}</label>
+                  <input type="text" required className={inputClass} value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="Jane Doe" />
+                </div>
+                <div>
+                  <label className={labelClass}>{formData.role === 'LANDLORD' ? 'Emergency Contact Phone *' : 'Guardian Phone *'}</label>
+                  <input type="tel" required className={inputClass} value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="054..." />
+                </div>
               </div>
             </div>
           )}
@@ -277,13 +277,13 @@ export default function RegisterPage() {
           {/* STEP 3: SCHOOL INFO (Only for Students) */}
           {currentStep === 3 && (
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-[28px] font-extrabold text-white tracking-tight flex items-center gap-2"><GraduationCap className="text-[#5B4CFF]"/> School Information</h2>
-              <p className="text-[#A1A1AA] text-sm mb-6">This helps us match you with properties near your campus.</p>
+              <h2 className="text-[28px] font-extrabold text-white tracking-tight flex items-center gap-2"><GraduationCap className="text-[#5B4CFF]"/> School Information *</h2>
+              <p className="text-[#A1A1AA] text-sm mb-6">All student credentials are mandatory for room allocation and verification.</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Campus / University</label>
-                  <select className={`${inputClass} appearance-none`} value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})}>
+                  <label className={labelClass}>Campus / University *</label>
+                  <select required className={`${inputClass} appearance-none`} value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})}>
                     <option value="" className="bg-[#1C1A1B]">Select Campus</option>
                     <option value="UCC" className="bg-[#1C1A1B]">University of Cape Coast (UCC)</option>
                     <option value="KNUST" className="bg-[#1C1A1B]">KNUST</option>
@@ -293,20 +293,20 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Student ID</label>
-                  <input type="text" className={`${inputClass} uppercase`} value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="Index Number" />
+                  <label className={labelClass}>Student ID / Index Number *</label>
+                  <input type="text" required className={`${inputClass} uppercase`} value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="Index Number" />
                 </div>
                 <div>
-                  <label className={labelClass}>Date of Admission</label>
-                  <input type="date" className={inputClass} value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} style={{ colorScheme: 'dark' }} />
+                  <label className={labelClass}>Date of Admission *</label>
+                  <input type="date" required className={inputClass} value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} style={{ colorScheme: 'dark' }} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Programme of Study</label>
-                  <input type="text" className={inputClass} value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="e.g. BSc Computer Science" />
+                  <label className={labelClass}>Programme of Study *</label>
+                  <input type="text" required className={inputClass} value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="e.g. BSc Computer Science" />
                 </div>
                 <div>
-                  <label className={labelClass}>Year of Study</label>
-                  <select className={`${inputClass} appearance-none`} value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})}>
+                  <label className={labelClass}>Year of Study *</label>
+                  <select required className={`${inputClass} appearance-none`} value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})}>
                     <option value="" className="bg-[#1C1A1B]">Select Level</option>
                     <option value="100" className="bg-[#1C1A1B]">Level 100</option>
                     <option value="200" className="bg-[#1C1A1B]">Level 200</option>
@@ -316,8 +316,8 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Student Type</label>
-                  <select className={`${inputClass} appearance-none`} value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})}>
+                  <label className={labelClass}>Student Type *</label>
+                  <select required className={`${inputClass} appearance-none`} value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})}>
                     <option value="" className="bg-[#1C1A1B]">Select Type</option>
                     <option value="UNDERGRADUATE" className="bg-[#1C1A1B]">Undergraduate</option>
                     <option value="POSTGRADUATE" className="bg-[#1C1A1B]">Postgraduate</option>
