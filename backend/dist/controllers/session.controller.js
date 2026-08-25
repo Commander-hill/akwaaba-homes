@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.revokeSession = exports.getSessions = void 0;
+exports.revokeAllOtherSessions = exports.revokeSession = exports.getSessions = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const getSessions = async (req, res) => {
     try {
@@ -71,4 +71,31 @@ const revokeSession = async (req, res) => {
     }
 };
 exports.revokeSession = revokeSession;
+const revokeAllOtherSessions = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { refreshToken: currentRefreshToken } = req.cookies;
+        if (!currentRefreshToken) {
+            res.status(400).json({ message: 'Current session token not found' });
+            return;
+        }
+        const result = await prisma_1.default.session.updateMany({
+            where: {
+                userId,
+                isValid: true,
+                refreshToken: { not: currentRefreshToken }
+            },
+            data: { isValid: false }
+        });
+        res.status(200).json({
+            message: `Successfully logged out ${result.count} other active device(s).`,
+            count: result.count
+        });
+    }
+    catch (error) {
+        console.error('Revoke all other sessions error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.revokeAllOtherSessions = revokeAllOtherSessions;
 //# sourceMappingURL=session.controller.js.map

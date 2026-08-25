@@ -28,11 +28,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (!avatarUrl || !String(avatarUrl).trim()) {
-      res.status(400).json({ message: 'Passport picture is required during registration' });
-      return;
-    }
-
     if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
       res.status(400).json({ message: 'Missing mandatory personal & emergency contact details (Phone, Gender, DOB, Nationality, Guardian Name & Phone are required)' });
       return;
@@ -61,7 +56,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
-        avatarUrl,
+        avatarUrl: avatarUrl ? String(avatarUrl).trim() : null,
         passwordHash,
         role: role || 'TENANT',
         firstName,

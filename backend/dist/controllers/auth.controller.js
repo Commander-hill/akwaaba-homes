@@ -8,31 +8,31 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
 const crypto_1 = require("../utils/crypto");
+const security_service_1 = require("../utils/security.service");
+const auditLogger_1 = require("../utils/auditLogger");
 const crypto_2 = __importDefault(require("crypto"));
 const ua_parser_js_1 = require("ua-parser-js");
 const notification_service_1 = require("../utils/notification.service");
+const socket_1 = require("../socket");
 const register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
-        if (!email || !password || !firstName || !lastName) {
-            res.status(400).json({ message: 'Missing required basic fields' });
+        if (!email || !password || !firstName || !lastName || !role) {
+            res.status(400).json({ message: 'Missing required basic registration fields' });
             return;
         }
-        // Basic Tenant Validation
-        if (role === 'TENANT') {
-            if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
-                res.status(400).json({ message: 'Missing required tenant details' });
+        if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
+            res.status(400).json({ message: 'Missing mandatory personal & emergency contact details (Phone, Gender, DOB, Nationality, Guardian Name & Phone are required)' });
+            return;
+        }
+        if (role === 'TENANT' && isStudent) {
+            if (!campus || !studentId || !dateOfAdmission || !programmeOfStudy || !yearOfStudy || !studentType) {
+                res.status(400).json({ message: 'Missing mandatory school information for student tenant (Campus, Student ID, Admission Date, Programme, Year, and Student Type are required)' });
                 return;
             }
-            // School Information Validation for Students
-            if (isStudent) {
-                if (!campus || !studentId || !programmeOfStudy || !yearOfStudy || !studentType) {
-                    res.status(400).json({ message: 'Missing required school information for student tenant' });
-                    return;
-                }
-            }
         }
-        const existingUser = await prisma_1.default.user.findUnique({ where: { email } });
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const existingUser = await prisma_1.default.user.findUnique({ where: { email: normalizedEmail } });
         if (existingUser) {
             res.status(409).json({ message: 'User with this email already exists' });
             return;
@@ -43,8 +43,8 @@ const register = async (req, res) => {
         const verificationToken = crypto_2.default.randomBytes(32).toString('hex');
         const user = await prisma_1.default.user.create({
             data: {
-                email,
-                avatarUrl,
+                email: normalizedEmail,
+                avatarUrl: avatarUrl ? String(avatarUrl).trim() : null,
                 passwordHash,
                 role: role || 'TENANT',
                 firstName,
@@ -156,7 +156,8 @@ const login = async (req, res) => {
             res.status(400).json({ message: 'Missing email or password' });
             return;
         }
-        const user = await prisma_1.default.user.findUnique({ where: { email } });
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const user = await prisma_1.default.user.findUnique({ where: { email: normalizedEmail } });
         if (!user) {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
@@ -193,6 +194,39 @@ const login = async (req, res) => {
         const deviceFamilyStr = device.type ? `${device.vendor || ''} ${device.type}`.trim() : 'Desktop';
         const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
         const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
+        // Check if this device/IP is new (Anomaly / New Device Detection)
+        const existingSessionCount = await prisma_1.default.session.count({
+            where: {
+                userId: user.id,
+                userAgent: userAgentStr,
+                ipAddress: ipAddress
+            }
+        });
+        if (existingSessionCount === 0) {
+            // 🚨 Suspicious / New Device Sign-In Alert
+            try {
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: user.id,
+                        type: 'SECURITY',
+                        title: '🚨 New Device Sign-In Detected',
+                        message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
+                        link: '/dashboard/profile'
+                    }
+                });
+                const { getIO } = await import('../socket');
+                getIO().to(user.id).emit('notification', {
+                    title: '🚨 New Device Sign-In Detected',
+                    message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
+                    type: 'security'
+                });
+            }
+            catch (e) { /* non-blocking */ }
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
+            }
+            catch (e) { /* non-blocking */ }
+        }
         // Save session in DB
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
@@ -339,6 +373,8 @@ const getMe = async (req, res) => {
                 isEmailVerified: true,
                 ghanaCardNumber: true,
                 ghanaCardStatus: true,
+                ghanaCardFrontUrl: true,
+                ghanaCardBackUrl: true,
                 otherNames: true,
                 phoneNumber: true,
                 gender: true,
@@ -356,7 +392,10 @@ const getMe = async (req, res) => {
                 reputationScore: true,
                 isProfileLocked: true,
                 profileUnlockRequested: true,
-                profileUnlockReason: true
+                profileUnlockReason: true,
+                _count: {
+                    select: { properties: true }
+                }
             }
         });
         if (!user) {
@@ -366,7 +405,14 @@ const getMe = async (req, res) => {
         if (user.ghanaCardNumber) {
             user.ghanaCardNumber = (0, crypto_1.decryptData)(user.ghanaCardNumber);
         }
-        res.status(200).json({ user });
+        if (user.ghanaCardFrontUrl) {
+            user.ghanaCardFrontUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl);
+        }
+        if (user.ghanaCardBackUrl) {
+            user.ghanaCardBackUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl);
+        }
+        const hasProperty = (user._count?.properties || 0) > 0;
+        res.status(200).json({ user: { ...user, hasProperty } });
     }
     catch (error) {
         res.status(500).json({ message: 'Internal server error' });
@@ -401,7 +447,7 @@ const requestProfileUnlock = async (req, res) => {
             }
         });
         const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
-        await logAudit(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, ipAddress);
+        await (0, auditLogger_1.logAudit)(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, ipAddress);
         res.status(200).json({ message: 'Edit request submitted successfully. An administrator will review your request.' });
     }
     catch (error) {
@@ -431,6 +477,11 @@ const submitGhanaCard = async (req, res) => {
                 ghanaCardStatus: 'PENDING'
             }
         });
+        try {
+            (0, socket_1.emitToUser)(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
+            (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({ message: 'Ghana Card submitted successfully for verification' });
     }
     catch (error) {
@@ -467,6 +518,11 @@ const updateProfile = async (req, res) => {
                 isProfileLocked: true // Lock profile upon hitting Save button
             }
         });
+        try {
+            (0, socket_1.emitToUser)(req.user.id, 'profile_updated', updatedUser);
+            (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({
             message: 'Profile updated and locked successfully',
             user: updatedUser

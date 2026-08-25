@@ -53,10 +53,6 @@ export default function RegisterPage() {
     }
     
     if (currentStep === 2) {
-      if (!formData.avatarUrl) {
-        setError('Please upload your passport picture before proceeding.');
-        return;
-      }
       if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
         setError('Please fill in your name and email address.');
         return;
@@ -213,7 +209,7 @@ export default function RegisterPage() {
           {currentStep === 2 && (
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
               <h2 className="text-[28px] font-extrabold text-white tracking-tight">Basic Information</h2>
-              <p className="text-[#A1A1AA] text-sm mb-6">Tell us a bit about yourself and upload your passport picture.</p>
+              <p className="text-[#A1A1AA] text-sm mb-6">Tell us a bit about yourself (Passport picture is optional).</p>
               
               {/* Passport Upload */}
               <div className="mb-8">

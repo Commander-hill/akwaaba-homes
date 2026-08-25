@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.signAgreement = exports.getTenantAgreements = exports.getAgreementByBooking = void 0;
+exports.signAgreement = exports.getLandlordAgreements = exports.getTenantAgreements = exports.getAgreementByBooking = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const crypto_1 = __importDefault(require("crypto"));
 const notification_service_1 = require("../utils/notification.service");
@@ -17,8 +17,13 @@ const getAgreementByBooking = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized' });
             return;
         }
-        const agreement = await prisma_1.default.leaseAgreement.findUnique({
-            where: { bookingId },
+        let agreement = await prisma_1.default.leaseAgreement.findFirst({
+            where: {
+                OR: [
+                    { bookingId },
+                    { id: bookingId }
+                ]
+            },
             include: {
                 booking: {
                     include: {
@@ -28,6 +33,32 @@ const getAgreementByBooking = async (req, res) => {
                 }
             }
         });
+        // Auto-generate Lease Agreement if booking exists but agreement was not created yet
+        if (!agreement) {
+            const booking = await prisma_1.default.booking.findUnique({
+                where: { id: bookingId },
+                include: {
+                    property: true,
+                    tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                }
+            });
+            if (booking) {
+                agreement = await prisma_1.default.leaseAgreement.create({
+                    data: {
+                        bookingId: booking.id,
+                        status: 'PENDING_TENANT'
+                    },
+                    include: {
+                        booking: {
+                            include: {
+                                property: true,
+                                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                            }
+                        }
+                    }
+                });
+            }
+        }
         if (!agreement) {
             res.status(404).json({ message: 'Lease agreement not found for this booking' });
             return;
@@ -89,6 +120,38 @@ const getTenantAgreements = async (req, res) => {
     }
 };
 exports.getTenantAgreements = getTenantAgreements;
+const getLandlordAgreements = async (req, res) => {
+    try {
+        const landlordId = req.user?.id;
+        if (!landlordId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const agreements = await prisma_1.default.leaseAgreement.findMany({
+            where: {
+                booking: {
+                    property: { landlordId }
+                }
+            },
+            include: {
+                booking: {
+                    include: {
+                        property: true,
+                        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                        room: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ agreements });
+    }
+    catch (error) {
+        console.error('Error fetching landlord agreements:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getLandlordAgreements = getLandlordAgreements;
 const signAgreement = async (req, res) => {
     try {
         console.log('--- signAgreement HIT! ---');
@@ -157,6 +220,18 @@ const signAgreement = async (req, res) => {
             });
             updateData.cryptographicHash = crypto_1.default.createHash('sha256').update(dataToHash).digest('hex');
         }
+        const updatedAgreement = await prisma_1.default.leaseAgreement.update({
+            where: { id: agreement.id },
+            data: updateData,
+            include: {
+                booking: {
+                    include: {
+                        property: true,
+                        tenant: { select: { id: true, firstName: true, lastName: true, email: true } }
+                    }
+                }
+            }
+        });
         // Real-time socket sync for lease agreements
         try {
             const io = (0, socket_1.getIO)();

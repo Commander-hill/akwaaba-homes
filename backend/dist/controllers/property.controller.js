@@ -8,6 +8,7 @@ const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
 const cache_1 = __importDefault(require("../utils/cache"));
 const json_1 = require("../utils/json");
+const socket_1 = require("../socket");
 // Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property) => {
     if (!property)
@@ -80,26 +81,66 @@ const createProperty = async (req, res) => {
                 location,
                 latitude: latitude ? parseFloat(latitude) : null,
                 longitude: longitude ? parseFloat(longitude) : null,
-                // Stringify arrays for SQLite compatibility
                 amenities: JSON.stringify(amenities || []),
                 images: JSON.stringify(images || []),
                 videoUrl: videoUrl || null,
                 isAvailable: false, // Property is hidden until the listing fee is paid
-                rooms: {
-                    create: rooms.map((r) => ({
-                        roomType: r.roomType,
-                        bedsPerRoom: parseInt(r.roomType.split(' ')[0], 10) || 1,
-                        numberOfRooms: parseInt(r.numberOfRooms, 10),
-                        price: parseFloat(r.price)
-                    }))
-                }
-            },
-            include: { rooms: true }
+            }
         });
+        // Auto-generate Rooms, physical Room Units, and Beds
+        for (const r of rooms) {
+            const bedsPerRoom = parseInt(r.roomType.split(' ')[0], 10) || 1;
+            const numRooms = parseInt(r.numberOfRooms, 10);
+            const blockName = r.blockName || null;
+            const gender = r.gender || 'MIXED';
+            const createdRoom = await prisma_1.default.room.create({
+                data: {
+                    propertyId: newProperty.id,
+                    blockName,
+                    gender,
+                    roomType: r.roomType,
+                    bedsPerRoom,
+                    numberOfRooms: numRooms,
+                    price: parseFloat(r.price)
+                }
+            });
+            // Auto-generate physical Room Units and Beds (e.g. RM 101, RM 102, Bed 1, Bed 2)
+            const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+            for (let i = 1; i <= numRooms; i++) {
+                const unitNumber = `${prefix}${100 + i}`;
+                const roomUnit = await prisma_1.default.roomUnit.create({
+                    data: {
+                        roomId: createdRoom.id,
+                        unitNumber,
+                        floor: Math.ceil(i / 10),
+                        genderLock: gender !== 'MIXED' ? gender : 'UNASSIGNED',
+                        bedsPerRoom,
+                    }
+                });
+                // Create Beds for this Room Unit
+                for (let b = 1; b <= bedsPerRoom; b++) {
+                    await prisma_1.default.bed.create({
+                        data: {
+                            roomUnitId: roomUnit.id,
+                            bedNumber: `Bed ${b}`,
+                            status: 'AVAILABLE'
+                        }
+                    });
+                }
+            }
+        }
         // Invalidate properties cache
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
+        // Emit real-time Socket.io events
+        try {
+            (0, socket_1.getIO)().to(landlordId).emit('property_created', { propertyId: newProperty.id });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: newProperty.id });
+        }
+        catch (e) {
+            console.error('Socket emission failed in createProperty:', e);
+        }
         res.status(201).json({ message: 'Property created successfully', property: parseProperty(newProperty) });
     }
     catch (error) {
@@ -210,7 +251,21 @@ const getPropertyById = async (req, res) => {
                         reputationScore: true,
                     }
                 },
-                rooms: true
+                rooms: {
+                    include: {
+                        roomUnits: {
+                            include: {
+                                beds: {
+                                    include: {
+                                        bookings: {
+                                            select: { id: true, status: true, tenantId: true }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
         if (!property) {
@@ -290,6 +345,13 @@ const updateProperty = async (req, res) => {
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
+        try {
+            (0, socket_1.getIO)().to(landlordId).emit('property_updated', { propertyId: updatedProperty.id });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: updatedProperty.id });
+        }
+        catch (e) {
+            console.error('Socket emission failed in updateProperty:', e);
+        }
         res.status(200).json({ message: 'Property updated successfully', property: parseProperty(updatedProperty) });
     }
     catch (error) {
@@ -317,6 +379,13 @@ const deleteProperty = async (req, res) => {
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
+        try {
+            (0, socket_1.getIO)().to(landlordId).emit('property_updated', { propertyId: id });
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: id });
+        }
+        catch (e) {
+            console.error('Socket emission failed in deleteProperty:', e);
+        }
         res.status(200).json({ message: 'Property deleted successfully' });
     }
     catch (error) {

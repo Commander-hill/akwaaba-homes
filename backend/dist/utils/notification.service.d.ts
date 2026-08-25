@@ -68,5 +68,6 @@ export declare const notifyAgreementCompleted: (opts: {
     bookingId: string;
     hash: string;
 }) => Promise<void>;
+export declare const notifyMaintenanceEnded: () => Promise<void>;
 export {};
 //# sourceMappingURL=notification.service.d.ts.map

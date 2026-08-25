@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 import Image from 'next/image';
+import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
 
 interface PassportUploadProps {
   onUploadSuccess: (url: string) => void;
@@ -12,7 +14,7 @@ interface PassportUploadProps {
 
 export default function PassportUpload({ onUploadSuccess, onUploadError, currentUrl }: PassportUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [preview, setPreview] = useState<string | null>(currentUrl || null);
+  const [preview, setPreview] = useState<string | null>(currentUrl ? getImageUrl(currentUrl) : null);
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,28 +72,19 @@ export default function PassportUpload({ onUploadSuccess, onUploadError, current
         formData.append('avatar', file);
 
         try {
-          // Adjust URL depending on your API base URL structure.
-          // Assuming /api/v1/upload/avatar exists on backend running at localhost:5000
-          // Wait, the Next.js app might have an API rewrite or we use the base axios instance.
-          // We'll use absolute URL for simplicity or rely on the axios instance if imported.
-          // For this standalone component, let's just use fetch to the known backend URL or standard relative if proxied.
-          const response = await fetch('http://localhost:5000/api/v1/upload/avatar', {
-            method: 'POST',
-            body: formData,
+          const response = await api.post('/upload/avatar', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
           });
 
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.error || 'Upload failed');
-          }
-
-          // Convert relative /uploads/... URL to absolute for frontend usage if needed, 
-          // or just pass relative back to be saved in DB.
-          onUploadSuccess(`http://localhost:5000${data.url}`);
+          const data = response.data;
+          const uploadedUrl = data.url || data.avatarUrl;
+          const fullUrl = getImageUrl(uploadedUrl);
+          setPreview(fullUrl);
+          onUploadSuccess(uploadedUrl);
         } catch (err: any) {
-          setError(err.message || 'An error occurred during upload.');
-          onUploadError(err.message || 'An error occurred during upload.');
+          const msg = err.response?.data?.message || err.message || 'An error occurred during upload.';
+          setError(msg);
+          onUploadError(msg);
           setPreview(null);
         } finally {
           setIsUploading(false);
@@ -183,7 +176,7 @@ export default function PassportUpload({ onUploadSuccess, onUploadError, current
             }`}>
               <Camera className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Upload Passport Picture</h3>
+            <h3 className="text-lg font-bold text-white mb-2">Upload Passport Picture <span className="text-xs font-normal text-[#A1A1AA]">(Optional)</span></h3>
             <p className="text-sm text-[#A1A1AA] max-w-xs mb-4">
               Drag and drop your image here, or click to browse.
             </p>

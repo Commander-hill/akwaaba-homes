@@ -3,8 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createConversation = exports.getMessages = exports.getConversations = void 0;
+exports.sendMessage = exports.createConversation = exports.getMessages = exports.getConversations = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const push_service_1 = require("../services/push.service");
 const getConversations = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -48,7 +49,7 @@ const getConversations = async (req, res) => {
 exports.getConversations = getConversations;
 const getMessages = async (req, res) => {
     try {
-        const { conversationId } = req.params;
+        const conversationId = String(req.params.conversationId);
         const userId = req.user?.id;
         if (!userId) {
             res.status(401).json({ message: 'Unauthorized' });
@@ -117,4 +118,56 @@ const createConversation = async (req, res) => {
     }
 };
 exports.createConversation = createConversation;
+const sendMessage = async (req, res) => {
+    try {
+        const conversationId = String(req.params.conversationId);
+        const { content } = req.body;
+        const userId = req.user?.id;
+        if (!userId || !content) {
+            res.status(400).json({ message: 'Missing user ID or content' });
+            return;
+        }
+        const conversation = await prisma_1.default.conversation.findUnique({
+            where: { id: conversationId }
+        });
+        if (!conversation) {
+            res.status(404).json({ message: 'Conversation not found' });
+            return;
+        }
+        if (conversation.tenantId !== userId && conversation.landlordId !== userId) {
+            res.status(403).json({ message: 'Forbidden' });
+            return;
+        }
+        const message = await prisma_1.default.message.create({
+            data: {
+                conversationId,
+                senderId: userId,
+                content
+            }
+        });
+        // Update conversation timestamp
+        await prisma_1.default.conversation.update({
+            where: { id: conversationId },
+            data: { updatedAt: new Date() }
+        });
+        // Trigger Web Push to recipient
+        const recipientId = conversation.tenantId === userId ? conversation.landlordId : conversation.tenantId;
+        const sender = await prisma_1.default.user.findUnique({
+            where: { id: userId },
+            select: { firstName: true, lastName: true }
+        });
+        const senderName = sender ? `${sender.firstName} ${sender.lastName}` : 'Direct Message';
+        (0, push_service_1.sendPushToUser)(recipientId, {
+            title: `Message from ${senderName}`,
+            body: content.length > 70 ? `${content.substring(0, 67)}...` : content,
+            url: `/dashboard/${req.user?.role === 'TENANT' ? 'landlord' : 'tenant'}`
+        }).catch(() => { });
+        res.status(201).json(message);
+    }
+    catch (error) {
+        console.error('Error sending message:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.sendMessage = sendMessage;
 //# sourceMappingURL=chat.controller.js.map

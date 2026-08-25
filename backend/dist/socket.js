@@ -17,43 +17,61 @@ const initializeSocket = (server) => {
             credentials: true,
         },
     });
-    // ... (in the middleware)
     io.use((socket, next) => {
-        let token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
-        // If not found in headers, check cookies
+        let rawToken = socket.handshake.auth?.token || socket.handshake.headers?.authorization;
+        let token = '';
+        if (rawToken) {
+            token = rawToken.startsWith('Bearer ') ? rawToken.slice(7).trim() : rawToken.trim();
+        }
+        // If not found in auth object or authorization header, check cookies
         if (!token && socket.handshake.headers.cookie) {
-            const cookies = (0, cookie_1.parseCookie)(socket.handshake.headers.cookie);
-            token = cookies?.accessToken;
+            try {
+                const cookies = (0, cookie_1.parseCookie)(socket.handshake.headers.cookie);
+                token = cookies?.accessToken || '';
+            }
+            catch (e) {
+                // ignore cookie parse error
+            }
         }
-        if (!token) {
-            return next(new Error('Authentication error'));
+        if (token) {
+            try {
+                const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+                socket.user = decoded;
+            }
+            catch (err) {
+                console.warn(`🔌 Socket token verification failed for socket ${socket.id}: ${err.message}`);
+            }
         }
-        try {
-            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-            socket.user = decoded;
-            next();
-        }
-        catch (err) {
-            next(new Error('Authentication error'));
-        }
+        // Always allow connection so clients don't loop endlessly with reconnect errors
+        next();
     });
     io.on('connection', (socket) => {
-        console.log(`🔌 User connected: ${socket.user?.id}`);
-        // Join a personal room for the user to receive private messages
-        socket.join(socket.user.id);
+        if (socket.user?.id) {
+            console.log(`🔌 User connected: ${socket.user.id} (${socket.user.role})`);
+            socket.join(socket.user.id);
+            if (socket.user.role === 'ADMIN' || socket.user.role === 'SUPER_ADMIN') {
+                socket.join('admin_room');
+            }
+            if (socket.user.role === 'LANDLORD') {
+                socket.join('landlord_room');
+            }
+        }
+        else {
+            console.log(`🔌 Guest/Public Socket connected: ${socket.id}`);
+        }
+        // Join general broadcast room for platform-wide events
+        socket.join('public_room');
         // Schedule automatic disconnect when token expires
         let expiryTimer = null;
         if (socket.user?.exp) {
             const timeUntilExpiry = (socket.user.exp * 1000) - Date.now();
-            if (timeUntilExpiry <= 0) {
-                socket.disconnect(true);
-                return;
+            if (timeUntilExpiry > 0) {
+                expiryTimer = setTimeout(() => {
+                    console.log(`🔌 Socket auto-disconnected due to token expiration for user: ${socket.user?.id}`);
+                    socket.emit('auth_expired', { message: 'Session token expired. Please refresh your session.' });
+                    socket.disconnect(true);
+                }, timeUntilExpiry);
             }
-            expiryTimer = setTimeout(() => {
-                console.log(`🔌 Socket auto-disconnected due to token expiration for user: ${socket.user?.id}`);
-                socket.emit('auth_expired', { message: 'Session token expired. Please refresh your session.' });
-                socket.disconnect(true);
-            }, timeUntilExpiry);
         }
         // Join a specific conversation room (optional, but good for keeping track of active chats)
         socket.on('join_conversation', (conversationId) => {

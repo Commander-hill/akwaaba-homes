@@ -62,10 +62,11 @@ const uploadVideoConfig = multer({
 
 // Public signed-document proxy route (validated via HMAC signature & 15-min expiration timestamp)
 router.get('/secure-document', serveSecureDocument);
+// Public avatar upload (for user registration flow)
+router.post('/avatar', uploadAvatarConfig.single('avatar'), uploadAvatar);
 
 // Protected upload routes
 router.use(authenticate);
-router.post('/avatar', uploadAvatarConfig.single('avatar'), uploadAvatar);
 router.post('/document', uploadDocumentConfig.single('document'), uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), uploadVideo);
 router.post('/images', uploadPropertyConfig.array('images', 5), uploadPropertyImages);

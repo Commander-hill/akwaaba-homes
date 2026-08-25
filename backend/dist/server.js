@@ -41,45 +41,59 @@ const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 const agreement_routes_1 = __importDefault(require("./routes/agreement.routes"));
 const breach_routes_1 = __importDefault(require("./routes/breach.routes"));
 const transaction_routes_1 = __importDefault(require("./routes/transaction.routes"));
+const push_routes_1 = __importDefault(require("./routes/push.routes"));
 const rateLimiter_middleware_1 = require("./middleware/rateLimiter.middleware");
 const xss_middleware_1 = require("./middleware/xss.middleware");
 const errorHandler_middleware_1 = require("./middleware/errorHandler.middleware");
 const config_middleware_1 = require("./middleware/config.middleware");
 const config_service_1 = require("./utils/config.service");
+const prisma_1 = __importDefault(require("./utils/prisma"));
 const http_1 = require("http");
 const socket_1 = require("./socket");
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const port = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
+// ─── Disable X-Powered-By Header ─────────────────────────────────────────────
+app.disable('x-powered-by');
 // ─── Initialize Socket.io ────────────────────────────────────────────────────
 (0, socket_1.initializeSocket)(httpServer);
 // ─── Trust proxy (Render / Vercel / Railway) ────────────────────────────────
 app.set('trust proxy', 1);
-// ─── HTTP Security Headers (Helmet) ─────────────────────────────────────────
+// ─── HTTP Security Headers (Helmet + OWASP Standards) ─────────────────────────
 app.use((0, helmet_1.default)({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin images
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin images & assets
     crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Paystack popup support
-    contentSecurityPolicy: isProduction
-        ? {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'", 'https://js.paystack.co'],
-                frameSrc: ["'self'", 'https://checkout.paystack.com'],
-                imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
-                connectSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
-            },
-        }
-        : false, // Disable CSP in dev to avoid breaking hot-reload
-    hsts: isProduction
-        ? { maxAge: 31536000, includeSubDomains: true, preload: true }
-        : false,
-    frameguard: { action: 'deny' },
-    noSniff: true,
-    xssFilter: true,
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.paystack.co'],
+            frameSrc: ["'self'", 'https://checkout.paystack.com', 'https://*.paystack.co'],
+            imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://*.tile.openstreetmap.org', 'https://*.openstreetmap.org'],
+            connectSrc: ["'self'", 'wss:', 'ws:', 'https://checkout.paystack.com', 'https://api.paystack.co'],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            frameAncestors: ["'none'"], // Anti-clickjacking
+        },
+    },
+    hsts: {
+        maxAge: 31536000, // 1 Year HSTS
+        includeSubDomains: true,
+        preload: true,
+    },
+    frameguard: { action: 'deny' }, // Anti-clickjacking
+    noSniff: true, // Prevent MIME sniffing
+    xssFilter: true, // XSS filter protection
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+// ─── Custom Security Headers (Permissions-Policy) ───────────────────────────
+app.use((req, res, next) => {
+    res.setHeader('Permissions-Policy', 'geolocation=(self), camera=(), microphone=(), payment=(self)');
+    next();
+});
 // ─── CORS (allowlist-based) ──────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
     process.env.FRONTEND_URL,
@@ -136,11 +150,32 @@ app.get('/api/v1/config/public', async (req, res) => {
             bookingGracePeriodHours: config.bookingGracePeriodHours,
             platformCommissionPercent: config.platformCommissionPercent,
             roommateFinderEnabled: config.roommateFinderEnabled,
-            maintenanceMode: config.maintenanceMode
+            maintenanceMode: config.maintenanceMode,
+            maintenanceEndTime: config.maintenanceEndTime
         });
     }
     catch (err) {
         res.status(500).json({ message: 'Error reading config' });
+    }
+});
+// ─── Maintenance Mode Email Subscription ─────────────────────────────────────
+app.post('/api/v1/config/subscribe-maintenance', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || typeof email !== 'string' || !email.includes('@')) {
+            res.status(400).json({ message: 'A valid email address is required.' });
+            return;
+        }
+        await prisma_1.default.maintenanceSubscriber.upsert({
+            where: { email: email.trim().toLowerCase() },
+            update: { notified: false },
+            create: { email: email.trim().toLowerCase() }
+        });
+        res.status(200).json({ message: 'Subscribed successfully! You will be emailed the moment maintenance completes.' });
+    }
+    catch (err) {
+        console.error('Error subscribing to maintenance notification:', err);
+        res.status(500).json({ message: 'Failed to subscribe.' });
     }
 });
 // ─── API Routes ──────────────────────────────────────────────────────────────
@@ -161,6 +196,7 @@ app.use('/api/v1/chat', chat_routes_1.default);
 app.use('/api/v1/agreements', agreement_routes_1.default);
 app.use('/api/v1/breaches', breach_routes_1.default);
 app.use('/api/v1/transactions', transaction_routes_1.default);
+app.use('/api/v1/push', push_routes_1.default);
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(errorHandler_middleware_1.notFoundHandler);
 app.use(errorHandler_middleware_1.globalErrorHandler);

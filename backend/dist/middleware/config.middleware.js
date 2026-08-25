@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkRoommateFeatureEnabled = exports.checkMaintenanceMode = void 0;
 const config_service_1 = require("../utils/config.service");
+const jwt_1 = require("../utils/jwt");
 /**
  * Middleware to enforce global maintenance mode.
  * Blocks all requests for non-admin users if maintenanceMode is enabled.
@@ -20,14 +21,32 @@ const checkMaintenanceMode = async (req, res, next) => {
         }
         const config = await (0, config_service_1.getSystemConfig)();
         if (config.maintenanceMode) {
+            // Auto-expire maintenance mode if current time has surpassed maintenanceEndTime
+            if (config.maintenanceEndTime && new Date() >= new Date(config.maintenanceEndTime)) {
+                return next();
+            }
             // Allow authenticated ADMIN users to bypass maintenance mode
-            const user = req.user;
+            let user = req.user;
+            if (!user) {
+                let token = req.cookies?.accessToken;
+                if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+                    token = req.headers.authorization.split(' ')[1];
+                }
+                if (token) {
+                    const decoded = (0, jwt_1.verifyAccessToken)(token);
+                    if (decoded) {
+                        user = decoded;
+                        req.user = decoded;
+                    }
+                }
+            }
             if (user && user.role === 'ADMIN') {
                 return next();
             }
             res.status(503).json({
                 message: 'Platform is currently undergoing scheduled maintenance. Please try again shortly.',
-                maintenanceMode: true
+                maintenanceMode: true,
+                maintenanceEndTime: config.maintenanceEndTime
             });
             return;
         }

@@ -7,6 +7,7 @@ exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAll
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
+const security_service_1 = require("../utils/security.service");
 const auditLogger_1 = require("../utils/auditLogger");
 const cache_1 = __importDefault(require("../utils/cache"));
 const json_1 = require("../utils/json");
@@ -198,7 +199,9 @@ const getAllUsers = async (req, res) => {
         });
         const decryptedUsers = users.map(user => ({
             ...user,
-            ghanaCardNumber: user.ghanaCardNumber ? (0, crypto_1.decryptData)(user.ghanaCardNumber) : null
+            ghanaCardNumber: user.ghanaCardNumber ? (0, crypto_1.decryptData)(user.ghanaCardNumber) : null,
+            ghanaCardFrontUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl),
+            ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl)
         }));
         res.status(200).json(decryptedUsers);
     }
@@ -269,6 +272,19 @@ const toggleUserProfileLock = async (req, res) => {
             select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, targetLockState ? 'LOCK_USER_PROFILE' : 'UNLOCK_USER_PROFILE', 'User', id, { isProfileLocked: targetUser.isProfileLocked }, { isProfileLocked: targetLockState }, req.ip || req.socket.remoteAddress);
+        // Notify user in real-time so their profile page updates without refresh
+        try {
+            const { getIO } = await import('../socket');
+            getIO().to(id).emit('user_updated', { isProfileLocked: targetLockState });
+            if (!targetLockState) {
+                getIO().to(id).emit('notification', {
+                    title: '🔓 Profile Edit Access Granted',
+                    message: 'An administrator has unlocked your profile. You can now update your information.',
+                    type: 'profile'
+                });
+            }
+        }
+        catch (e) { /* socket optional */ }
         res.status(200).json({
             message: `User ${updatedUser.firstName} ${updatedUser.lastName}'s profile lock status has been updated to ${targetLockState ? 'Locked' : 'Unlocked (Edit Access Granted)'}.`,
             user: updatedUser
@@ -334,6 +350,19 @@ const updatePropertyApproval = async (req, res) => {
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
+        // Emit real-time property update to the landlord so their dashboard refreshes instantly
+        try {
+            const { getIO } = await import('../socket');
+            getIO().to(property.landlord.id).emit('property_updated', { propertyId: id, approvalStatus });
+            getIO().to(property.landlord.id).emit('notification', {
+                title: approvalStatus === 'APPROVED' ? '🎉 Property Listing Approved!' : '❌ Property Listing Rejected',
+                message: approvalStatus === 'APPROVED'
+                    ? `Your listing "${property.title}" has been approved. Pay the listing fee to go live!`
+                    : `Your listing "${property.title}" was rejected. Please review the guidelines and resubmit.`,
+                type: 'property'
+            });
+        }
+        catch (e) { /* socket optional */ }
         res.status(200).json({ message: `Property status updated to ${approvalStatus}`, property });
     }
     catch (error) {
@@ -404,6 +433,19 @@ const verifyUserCard = async (req, res) => {
             select: { id: true, ghanaCardStatus: true }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD', 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus }, { ghanaCardStatus: status }, req.ip || req.socket.remoteAddress);
+        // Notify the user in real-time so the onboarding widget refreshes instantly
+        try {
+            const { getIO } = await import('../socket');
+            getIO().to(id).emit('notification', {
+                title: status === 'VERIFIED' ? '✅ Identity Verified!' : '❌ Verification Rejected',
+                message: status === 'VERIFIED'
+                    ? 'Your Ghana Card has been verified. You can now list properties and make bookings.'
+                    : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
+                type: 'verification'
+            });
+            getIO().to(id).emit('user_updated', { ghanaCardStatus: status });
+        }
+        catch (e) { /* socket optional */ }
         res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
     }
     catch (error) {
@@ -600,7 +642,7 @@ const getConfig = async (req, res) => {
 exports.getConfig = getConfig;
 const updateConfig = async (req, res) => {
     try {
-        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode } = req.body;
+        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime } = req.body;
         const updatedConfig = await prisma_1.default.systemConfig.upsert({
             where: { id: 'GLOBAL' },
             update: {
@@ -609,6 +651,7 @@ const updateConfig = async (req, res) => {
                 ...(platformCommissionPercent !== undefined && { platformCommissionPercent }),
                 ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
                 ...(maintenanceMode !== undefined && { maintenanceMode }),
+                ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
             },
             create: {
                 id: 'GLOBAL',
@@ -617,6 +660,7 @@ const updateConfig = async (req, res) => {
                 platformCommissionPercent: platformCommissionPercent ?? 5.0,
                 roommateFinderEnabled: roommateFinderEnabled ?? true,
                 maintenanceMode: maintenanceMode ?? false,
+                maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,
             }
         });
         (0, config_service_1.invalidateConfigCache)();
