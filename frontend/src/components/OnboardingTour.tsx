@@ -87,24 +87,25 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
   const steps = isTenant ? tenantSteps : landlordSteps;
   const tourStorageKey = user?.id ? `akwaaba_tour_completed_${user.id}` : `akwaaba_tour_completed_${role || 'user'}`;
 
-  // Auto-start for NEW users only
+  // Auto-start ONCE per user account only
   useEffect(() => {
     if (typeof window !== 'undefined' && user?.id) {
-      const isCompleted = localStorage.getItem(tourStorageKey);
+      const isCompletedUser = localStorage.getItem(tourStorageKey);
+      const isCompletedGlobal = localStorage.getItem('akwaaba_tour_completed_global');
+      const isDismissed = localStorage.getItem(`akwaaba_tour_dismissed_${user.id}`);
       
-      // Determine if user is new (account created within 14 days or no completion record)
-      const isNewUser = user.createdAt 
-        ? (new Date().getTime() - new Date(user.createdAt).getTime()) < 14 * 24 * 60 * 60 * 1000 
-        : true;
-
-      if (!isCompleted && isNewUser) {
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 1000);
-        return () => clearTimeout(timer);
+      // If user has EVER completed or dismissed the tour, NEVER auto-open again
+      if (isCompletedUser === 'true' || isCompletedGlobal === 'true' || isDismissed === 'true') {
+        return;
       }
+
+      // First time login popup timer
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 1200);
+      return () => clearTimeout(timer);
     }
-  }, [user?.id, user?.createdAt, tourStorageKey]);
+  }, [user?.id, tourStorageKey]);
 
   // Recalculate target position & popover coordinates
   const updatePosition = useCallback(() => {
@@ -180,6 +181,10 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
     setIsOpen(false);
     if (typeof window !== 'undefined') {
       localStorage.setItem(tourStorageKey, 'true');
+      localStorage.setItem('akwaaba_tour_completed_global', 'true');
+      if (user?.id) {
+        localStorage.setItem(`akwaaba_tour_dismissed_${user.id}`, 'true');
+      }
     }
   };
 

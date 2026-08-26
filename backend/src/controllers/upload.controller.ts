@@ -186,3 +186,33 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
   }
 };
 
+export const uploadMedia = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ error: 'No media file provided' });
+      return;
+    }
+
+    const mime = req.file.mimetype;
+    let folder = 'chat';
+    let resourceType: 'image' | 'video' | 'auto' = 'auto';
+
+    if (mime.startsWith('image/')) {
+      folder = 'chat/images';
+      resourceType = 'image';
+    } else if (mime.startsWith('audio/')) {
+      folder = 'chat/audio';
+      resourceType = 'video'; // Cloudinary uses resource_type video for audio
+    } else if (mime.includes('pdf') || mime.includes('document')) {
+      folder = 'chat/documents';
+      resourceType = 'auto';
+    }
+
+    const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);
+    res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });
+  } catch (error: any) {
+    console.error('Error uploading chat media:', error);
+    res.status(500).json({ error: error?.message || 'Failed to upload chat media' });
+  }
+};
+

@@ -97,9 +97,9 @@ export const initializeSocket = (server: HttpServer) => {
     });
 
     // Handle sending messages
-    socket.on('send_message', async (data: { conversationId: string, receiverId: string, content: string }) => {
+    socket.on('send_message', async (data: { conversationId: string, receiverId: string, content?: string, mediaUrl?: string, mediaType?: string, fileName?: string, duration?: number }) => {
       try {
-        const { conversationId, receiverId, content } = data;
+        const { conversationId, receiverId, content, mediaUrl, mediaType, fileName, duration } = data;
         const senderId = socket.user!.id;
 
         // Save message to database
@@ -107,7 +107,11 @@ export const initializeSocket = (server: HttpServer) => {
           data: {
             conversationId,
             senderId,
-            content,
+            content: content || (mediaType === 'AUDIO' ? '🎤 Voice note' : mediaType === 'IMAGE' ? '📷 Photo' : '📄 Document'),
+            mediaUrl: mediaUrl || null,
+            mediaType: mediaType || 'TEXT',
+            fileName: fileName || null,
+            duration: duration || null,
             isRead: false,
           }
         });
@@ -119,10 +123,9 @@ export const initializeSocket = (server: HttpServer) => {
         });
 
         // Emit the message to the receiver's personal room and the conversation room
-        // We emit to the conversation room so the sender's other devices see it, 
-        // and to the receiver's personal room in case they haven't "joined" the conversation yet.
         io.to(conversationId).emit('receive_message', message);
         io.to(receiverId).emit('receive_message', message);
+        io.to(receiverId).emit('conversation_updated', { conversationId });
         
       } catch (error) {
         console.error('Error sending message via socket:', error);

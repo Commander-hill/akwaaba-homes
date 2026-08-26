@@ -134,11 +134,11 @@ export const createConversation = async (req: Request, res: Response): Promise<v
 export const sendMessage = async (req: Request, res: Response): Promise<void> => {
   try {
     const conversationId = String(req.params.conversationId);
-    const { content } = req.body;
+    const { content, mediaUrl, mediaType, fileName, duration } = req.body;
     const userId = req.user?.id;
 
-    if (!userId || !content) {
-      res.status(400).json({ message: 'Missing user ID or content' });
+    if (!userId || (!content && !mediaUrl)) {
+      res.status(400).json({ message: 'Missing message content or media file' });
       return;
     }
 
@@ -160,7 +160,11 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       data: {
         conversationId,
         senderId: userId,
-        content
+        content: content || (mediaType === 'AUDIO' ? '🎤 Voice note' : mediaType === 'IMAGE' ? '📷 Photo' : '📄 Document'),
+        mediaUrl: mediaUrl || null,
+        mediaType: mediaType || 'TEXT',
+        fileName: fileName || null,
+        duration: duration ? parseInt(duration, 10) : null
       }
     });
 
@@ -177,11 +181,12 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       select: { firstName: true, lastName: true }
     });
     const senderName = sender ? `${sender.firstName} ${sender.lastName}` : 'Direct Message';
+    const previewContent = message.content;
 
     sendPushToUser(recipientId, {
       title: `Message from ${senderName}`,
-      body: content.length > 70 ? `${content.substring(0, 67)}...` : content,
-      url: `/dashboard/${req.user?.role === 'TENANT' ? 'landlord' : 'tenant'}`
+      body: previewContent.length > 70 ? `${previewContent.substring(0, 67)}...` : previewContent,
+      url: `/dashboard/messages`
     }).catch(() => {});
 
     res.status(201).json(message);

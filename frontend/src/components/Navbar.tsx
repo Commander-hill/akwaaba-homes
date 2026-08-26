@@ -10,9 +10,12 @@ import Image from 'next/image';
 import api from '@/lib/axios';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
+import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '@/providers/LanguageContext';
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   // Do not render public Navbar on Admin portal routes
   if (pathname?.startsWith('/admin')) {
@@ -56,7 +59,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Properties', href: '/properties', icon: Search },
+    { name: t('findHostel'), href: '/properties', icon: Search },
   ];
   
   return (
@@ -141,6 +144,7 @@ export default function Navbar() {
 
           {/* Actions */}
           <div className="hidden md:flex items-center space-x-5">
+            <LanguageSelector />
             <ThemeToggle isScrolled={isScrolled} />
             
             {isAuthenticated ? (
@@ -166,6 +170,7 @@ export default function Navbar() {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center gap-3">
+            <LanguageSelector />
             <ThemeToggle isScrolled={isScrolled} />
             {isAuthenticated && <NotificationBell />}
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={clsx(

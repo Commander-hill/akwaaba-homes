@@ -6,6 +6,7 @@ import { Loader2, Users, Building, CalendarCheck, CreditCard, TrendingUp, XCircl
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import FraudDetectionTab from '@/components/FraudDetectionTab';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -187,6 +188,9 @@ export default function AdminDashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* AI Fraud & Scam Detection Engine */}
+      <FraudDetectionTab />
 
       {/* Admin Broadcast Component */}
       <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">

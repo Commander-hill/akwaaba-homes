@@ -1,12 +1,18 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { uploadAvatar, uploadVideo, uploadDocument, uploadPropertyImages, serveSecureDocument } from '../controllers/upload.controller';
+import { uploadAvatar, uploadVideo, uploadDocument, uploadPropertyImages, serveSecureDocument, uploadMedia } from '../controllers/upload.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // Storage configuration
 const storage = multer.memoryStorage();
+
+// General media upload (images, audio, PDF up to 25MB)
+const uploadMediaConfig = multer({
+  storage,
+  limits: { fileSize: 25 * 1024 * 1024 }
+});
 
 // Avatar upload (images up to 2MB)
 const uploadAvatarConfig = multer({
@@ -70,5 +76,6 @@ router.use(authenticate);
 router.post('/document', uploadDocumentConfig.single('document'), uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), uploadVideo);
 router.post('/images', uploadPropertyConfig.array('images', 5), uploadPropertyImages);
+router.post('/media', uploadMediaConfig.single('file'), uploadMedia);
 
 export default router;

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { ThemeProvider } from 'next-themes';
 import { SocketProvider } from './SocketProvider';
+import { LanguageProvider } from './LanguageContext';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -29,13 +30,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Data stays fresh for 5 minutes — no background refetches within that window
             staleTime: 5 * 60 * 1000,
-            // Keep unused data in memory for 10 minutes before GC — instant cache hit on nav
             gcTime: 10 * 60 * 1000,
             refetchOnWindowFocus: false,
             refetchOnReconnect: false,
-            // Only retry once on failure to avoid long stall on a bad request
             retry: 1,
             retryDelay: 1000,
           },
@@ -47,8 +45,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
-          {children}
-          <Toaster />
+          <LanguageProvider>
+            {children}
+            <Toaster />
+          </LanguageProvider>
         </SocketProvider>
       </QueryClientProvider>
     </ThemeProvider>

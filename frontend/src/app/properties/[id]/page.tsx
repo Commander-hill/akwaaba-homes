@@ -6,6 +6,7 @@ import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, St
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
+import CampusTransportMap from '@/components/CampusTransportMap';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -648,6 +649,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             ))}
           </div>
         </div>
+
+        {/* Campus Transport & Landmark Proximity Map */}
+        <CampusTransportMap 
+          title={property.title}
+          location={property.location}
+          latitude={property.latitude || 5.1053}
+          longitude={property.longitude || -1.2821}
+        />
 
         {/* Location & Neighborhood Map */}
         {property.latitude && property.longitude && (
