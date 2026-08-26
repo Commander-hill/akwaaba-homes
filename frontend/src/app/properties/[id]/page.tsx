@@ -80,6 +80,33 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     retry: false
   });
 
+  // Fetch single active/pending booking for the current user (Platform-wide)
+  const { data: myActiveBookingData, refetch: refetchActiveBooking } = useQuery({
+    queryKey: ['bookings', 'my-active'],
+    queryFn: async () => {
+      const { data } = await api.get('/bookings/my-active');
+      return data.booking;
+    },
+    enabled: !!session && session.role === 'TENANT',
+    retry: false
+  });
+
+  const cancelPendingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { data } = await api.post(`/bookings/${bookingId}/cancel`);
+      return data;
+    },
+    onSuccess: () => {
+      setBookingMessage({ text: 'Pending booking cancelled. You may now book a new room.', type: 'success' });
+      refetchActiveBooking();
+      queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    },
+    onError: (err: any) => {
+      setBookingMessage({ text: err.response?.data?.message || 'Failed to cancel pending booking', type: 'error' });
+    }
+  });
+
   const completedBookingForProperty = tenantBookingsData?.bookings?.find(
     (b: any) => b.propertyId === propertyId && b.status === 'COMPLETED'
   );
@@ -329,6 +356,113 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       <div className="glass-card p-6 sm:p-10 rounded-3xl border border-[var(--border)] shadow-xl w-full">
         <h2 className="text-3xl font-extrabold mb-2 text-[var(--foreground)]">Request Booking</h2>
         <p className="text-sm text-[var(--muted-foreground)] mb-6">Select your dates and preferred room unit to request this accommodation.</p>
+
+        {/* ── SINGLE ACTIVE BOOKING SCENARIO BANNERS & OWNERSHIP CARDS ── */}
+        {myActiveBookingData && (
+          <div className="mb-6 space-y-4">
+            {/* SCENARIO A: Tenant has an active/completed booking at THIS exact property */}
+            {myActiveBookingData.propertyId === propertyId && myActiveBookingData.status !== 'PENDING' && (
+              <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-500/50 text-emerald-900 dark:text-emerald-100 shadow-md">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">
+                      <span>🏠</span> YOUR ACTIVE BOOKING AT THIS HOSTEL
+                    </div>
+                    <h4 className="text-lg font-black text-emerald-950 dark:text-emerald-50">
+                      {myActiveBookingData.room?.roomType} {myActiveBookingData.room?.blockName ? `(${myActiveBookingData.room.blockName})` : ''}
+                    </h4>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                      {myActiveBookingData.roomUnit ? `Unit: ${myActiveBookingData.roomUnit.unitNumber}` : ''} 
+                      {myActiveBookingData.bed ? ` • Bed Slot: ${myActiveBookingData.bed.bedNumber}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Link
+                      href="/dashboard/tenant"
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>📑</span> View Booking & Receipt
+                    </Link>
+                    <Link
+                      href="/dashboard/messages"
+                      className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>💬</span> Chat Landlord
+                    </Link>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                  <span>🔒</span> You already hold an active room at this hostel. Multi-room bookings are locked to maintain student capacity fairness.
+                </div>
+              </div>
+            )}
+
+            {/* SCENARIO B: Tenant has an active/completed booking at ANOTHER property */}
+            {myActiveBookingData.propertyId !== propertyId && myActiveBookingData.status !== 'PENDING' && (
+              <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-500/50 text-amber-900 dark:text-amber-100 shadow-md">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 mb-1">
+                      <span>🛑</span> ACTIVE BOOKING LOCKED
+                    </div>
+                    <h4 className="text-lg font-black text-amber-950 dark:text-amber-50">
+                      You already hold a confirmed room at "{myActiveBookingData.property?.title || 'another hostel'}"
+                    </h4>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                      Akwaaba Homes policy enforces one active accommodation booking per student.
+                    </p>
+                  </div>
+                  <Link
+                    href={`/properties/${myActiveBookingData.propertyId}`}
+                    className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shrink-0 flex items-center gap-1.5"
+                  >
+                    <span>🏢</span> View My Active Hostel
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* SCENARIO C: Tenant has an UNPAID PENDING booking */}
+            {myActiveBookingData.status === 'PENDING' && (
+              <div className="p-6 rounded-2xl bg-sky-50 dark:bg-sky-950/40 border-2 border-sky-500/50 text-sky-900 dark:text-sky-100 shadow-md">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-sky-700 dark:text-sky-400 mb-1">
+                      <span>⏳</span> UNPAID PENDING BOOKING IN PROGRESS
+                    </div>
+                    <h4 className="text-lg font-black text-sky-950 dark:text-sky-50">
+                      You have an unpaid booking request at "{myActiveBookingData.property?.title}" ({myActiveBookingData.room?.roomType})
+                    </h4>
+                    <p className="text-xs text-sky-700 dark:text-sky-300 mt-1">
+                      Complete payment to lock your room, or cancel it if you wish to select a room at this hostel instead.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <Link
+                      href="/dashboard/tenant"
+                      className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5"
+                    >
+                      <span>💳</span> Complete Payment
+                    </Link>
+                    <button
+                      type="button"
+                      disabled={cancelPendingMutation.isPending}
+                      onClick={() => cancelPendingMutation.mutate(myActiveBookingData.id)}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {cancelPendingMutation.isPending ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <span>❌</span>
+                      )}
+                      Cancel Pending Booking
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {bookingMessage && (
           <div className={`p-4 rounded-xl text-sm font-medium mb-6 border ${bookingMessage.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-900/50' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:border-red-900/50'}`}>
@@ -583,10 +717,24 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
               <button
                 type="submit"
-                disabled={isBooking || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
-                className="flex-1 flex justify-center items-center gap-2 py-4 px-6 rounded-2xl text-white font-bold text-base bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isBooking || !!myActiveBookingData || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
+                className={`flex-1 flex justify-center items-center gap-2 py-4 px-6 rounded-2xl text-white font-bold text-base transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                  myActiveBookingData ? 'bg-slate-700 dark:bg-slate-800' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90'
+                }`}
               >
-                {isBooking ? <Loader2 className="w-5 h-5 animate-spin" /> : !selectedRoomId ? 'Select a Room' : (selectedRoom && selectedRoom.remainingCapacity === 0) ? 'Room Unavailable' : 'Request to Book'}
+                {isBooking ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : myActiveBookingData ? (
+                  myActiveBookingData.propertyId === propertyId ? '✓ Room Already Booked at this Property' :
+                  myActiveBookingData.status === 'PENDING' ? '⏳ Pending Booking Request in Progress' :
+                  '🔒 Booking Locked — Active Booking Elsewhere'
+                ) : !selectedRoomId ? (
+                  'Select a Room'
+                ) : (selectedRoom && selectedRoom.remainingCapacity === 0) ? (
+                  'Room Unavailable'
+                ) : (
+                  'Request to Book'
+                )}
               </button>
 
               {property.landlordId && (

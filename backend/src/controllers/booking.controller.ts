@@ -20,6 +20,35 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // ── STRICT SINGLE ACTIVE BOOKING GUARD ──
+    const existingActiveBooking = await prisma.booking.findFirst({
+      where: {
+        tenantId,
+        status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+      },
+      include: {
+        property: { select: { id: true, title: true } },
+        room: { select: { id: true, roomType: true } },
+        bed: { select: { id: true, bedNumber: true } }
+      }
+    });
+
+    if (existingActiveBooking) {
+      const isPending = existingActiveBooking.status === 'PENDING';
+      const statusText = isPending ? 'a pending (unpaid)' : 'an active/completed';
+      res.status(409).json({
+        message: `Booking Blocked: You already have ${statusText} booking at "${existingActiveBooking.property?.title || 'another property'}". You cannot hold multiple room bookings simultaneously.`,
+        existingBooking: {
+          id: existingActiveBooking.id,
+          propertyId: existingActiveBooking.propertyId,
+          propertyTitle: existingActiveBooking.property?.title,
+          status: existingActiveBooking.status,
+          isPending
+        }
+      });
+      return;
+    }
+
     const property = await prisma.property.findUnique({ 
       where: { id: propertyId },
       include: { landlord: true } 
@@ -643,5 +672,109 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
   } catch (error: any) {
     console.error('Error verifying payment:', error.response?.data || error);
     res.status(500).json({ message: 'Internal server error during payment verification' });
+  }
+};
+
+export const getMyActiveBooking = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user.id;
+
+    const activeBooking = await prisma.booking.findFirst({
+      where: {
+        tenantId,
+        status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+      },
+      include: {
+        property: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            images: true
+          }
+        },
+        room: {
+          select: {
+            id: true,
+            roomType: true,
+            price: true,
+            blockName: true,
+            gender: true
+          }
+        },
+        roomUnit: {
+          select: {
+            id: true,
+            unitNumber: true,
+            floor: true
+          }
+        },
+        bed: {
+          select: {
+            id: true,
+            bedNumber: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ booking: activeBooking || null });
+  } catch (error) {
+    console.error('Error fetching active booking:', error);
+    res.status(500).json({ message: 'Failed to fetch active booking status' });
+  }
+};
+
+export const cancelPendingBooking = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user.id;
+    const { id } = req.params;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: { bed: true }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking not found' });
+      return;
+    }
+
+    if (booking.tenantId !== tenantId && req.user.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (booking.status !== 'PENDING') {
+      res.status(400).json({ message: 'Only pending (unpaid) bookings can be cancelled by the student.' });
+      return;
+    }
+
+    // Release reserved bed if any
+    if (booking.bedId) {
+      await prisma.bed.update({
+        where: { id: booking.bedId },
+        data: { status: 'AVAILABLE' }
+      });
+    }
+
+    // Update booking status to CANCELLED
+    const updated = await prisma.booking.update({
+      where: { id },
+      data: { status: 'CANCELLED' }
+    });
+
+    try {
+      getIO().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+      appCache.flushAll();
+    } catch (e) {
+      /* non-blocking */
+    }
+
+    res.status(200).json({ message: 'Pending booking cancelled successfully', booking: updated });
+  } catch (error) {
+    console.error('Error cancelling pending booking:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

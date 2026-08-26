@@ -163,6 +163,21 @@ export default function TenantDashboard() {
     }
   });
 
+  const cancelPendingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { data } = await api.post(`/bookings/${bookingId}/cancel`);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Pending booking request cancelled.');
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'my-active'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to cancel pending booking');
+    }
+  });
+
   const { data: myReviewsData, isLoading: myReviewsLoading } = useQuery({
     queryKey: ['myReviews'],
     queryFn: async () => {
@@ -425,7 +440,16 @@ export default function TenantDashboard() {
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         {getStatusBadge(booking.status)}
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 justify-end">
+                          {booking.status === 'PENDING' && (
+                            <button 
+                              onClick={() => cancelPendingMutation.mutate(booking.id)}
+                              disabled={cancelPendingMutation.isPending}
+                              className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-3 py-1.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors flex items-center gap-1 disabled:opacity-50"
+                            >
+                              {cancelPendingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />} Cancel Request
+                            </button>
+                          )}
                           {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
                             <>
                               <Link 
