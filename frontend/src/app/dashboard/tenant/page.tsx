@@ -439,7 +439,18 @@ export default function TenantDashboard() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
-                        {getStatusBadge(booking.status)}
+                        <div className="flex items-center gap-2">
+                          {booking.status === 'PENDING' && booking.createdAt && (
+                            <span className="text-[11px] font-mono font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-sm">
+                              <Clock className="w-3 h-3 animate-pulse text-amber-600 dark:text-amber-400" /> 
+                              {(() => {
+                                const diffSec = Math.max(0, Math.floor((new Date(booking.createdAt).getTime() + 15 * 60 * 1000 - Date.now()) / 1000));
+                                return `${Math.floor(diffSec / 60)}m ${String(diffSec % 60).padStart(2, '0')}s left`;
+                              })()}
+                            </span>
+                          )}
+                          {getStatusBadge(booking.status)}
+                        </div>
                         <div className="flex flex-wrap gap-2 justify-end">
                           {booking.status === 'PENDING' && (
                             <button 

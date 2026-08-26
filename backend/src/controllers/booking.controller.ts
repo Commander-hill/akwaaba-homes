@@ -8,10 +8,14 @@ import { getIO } from '../socket';
 import { safeJsonParse } from '../utils/json';
 import { getSystemConfig } from '../utils/config.service';
 import appCache from '../utils/cache';
+import { cleanupExpiredBookings } from '../utils/bookingCleanup';
 
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Lazily purge expired pending bookings
+    await cleanupExpiredBookings();
+
     const tenantId = req.user.id;
     const { propertyId, roomId, roomUnitId, bedId, startDate, endDate } = req.body;
 
@@ -677,6 +681,9 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
 
 export const getMyActiveBooking = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Lazily clear any expired pending bookings first
+    await cleanupExpiredBookings();
+
     const tenantId = req.user.id;
 
     const activeBooking = await prisma.booking.findFirst({

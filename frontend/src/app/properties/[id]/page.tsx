@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, Star, Info, Flag, Send, X, ShieldCheck, Lock } from 'lucide-react';
+import { Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, Star, Info, Flag, Send, X, ShieldCheck, Lock, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
@@ -106,6 +106,32 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       setBookingMessage({ text: err.response?.data?.message || 'Failed to cancel pending booking', type: 'error' });
     }
   });
+
+  // 15-Minute Reservation Expiry Timer for Pending Bookings
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!myActiveBookingData || myActiveBookingData.status !== 'PENDING' || !myActiveBookingData.createdAt) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    const createdAtMs = new Date(myActiveBookingData.createdAt).getTime();
+    const expiresAtMs = createdAtMs + 15 * 60 * 1000;
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.floor((expiresAtMs - Date.now()) / 1000));
+      setSecondsRemaining(remaining);
+      if (remaining === 0) {
+        refetchActiveBooking();
+        queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [myActiveBookingData]);
 
   const completedBookingForProperty = tenantBookingsData?.bookings?.find(
     (b: any) => b.propertyId === propertyId && b.status === 'COMPLETED'
@@ -436,6 +462,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     <p className="text-xs text-sky-700 dark:text-sky-300 mt-1">
                       Complete payment to lock your room, or cancel it if you wish to select a room at this hostel instead.
                     </p>
+                    {secondsRemaining !== null && (
+                      <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 font-mono font-extrabold text-xs border border-amber-300 dark:border-amber-700 shadow-sm">
+                        <Clock className="w-3.5 h-3.5 animate-pulse text-amber-600 dark:text-amber-400" />
+                        <span>Hold Expires In: {Math.floor(secondsRemaining / 60)}m {String(secondsRemaining % 60).padStart(2, '0')}s</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2 shrink-0">
                     <Link
