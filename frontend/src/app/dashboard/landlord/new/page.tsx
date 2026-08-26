@@ -608,9 +608,15 @@ export default function NewPropertyPage() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Total Capacity</p>
-                  <p className="text-xs text-[var(--muted-foreground)]">Maximum tenants this property can accommodate</p>
+                  <p className="text-xs text-[var(--muted-foreground)]">Total individual beds this property can accommodate</p>
+                  <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
+                    <span className="font-semibold text-[var(--foreground)]">{rooms.reduce((a, r) => a + (Number(r.numberOfRooms) || 0), 0)}</span> physical rooms → <span className="font-semibold text-[var(--foreground)]">{totalCapacity}</span> beds
+                  </p>
                 </div>
-                <div className="text-2xl font-extrabold text-[var(--primary)]">{totalCapacity}</div>
+                <div className="text-right">
+                  <div className="text-2xl font-extrabold text-[var(--primary)]">{totalCapacity}</div>
+                  <div className="text-xs text-[var(--muted-foreground)]">beds</div>
+                </div>
               </div>
             </div>
           </div>

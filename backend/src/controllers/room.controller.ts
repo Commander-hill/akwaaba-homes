@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
+import { parseBedsPerRoom } from './property.controller';
 
 export const createRoom = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -32,7 +33,7 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
+    const bedsPerRoom = parseBedsPerRoom(roomType);
 
     const room = await prisma.room.create({
       data: {
@@ -99,7 +100,7 @@ export const updateRoom = async (req: Request, res: Response): Promise<void> => 
     const dataToUpdate: any = {};
     if (roomType) {
       dataToUpdate.roomType = roomType;
-      dataToUpdate.bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
+      dataToUpdate.bedsPerRoom = parseBedsPerRoom(roomType);
     }
     if (numberOfRooms !== undefined) {
       dataToUpdate.numberOfRooms = parseInt(numberOfRooms, 10);

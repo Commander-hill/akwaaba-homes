@@ -307,7 +307,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 </div>
                 <div className="text-2xl font-extrabold mb-2">
                   {property.remainingCapacity ?? '–'}
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]"> / {property.totalCapacity} rooms left</span>
+                  <span className="text-sm font-medium text-[var(--muted-foreground)]"> / {property.totalCapacity} beds left</span>
                 </div>
                 <div className="h-2 bg-white/60 dark:bg-slate-900/40 rounded-full overflow-hidden">
                   <div
@@ -421,7 +421,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                             <span className="text-xs font-medium text-[var(--muted-foreground)]">
                               {isFullyBooked 
                                 ? <span className="text-red-500 font-bold">Fully Booked</span> 
-                                : `${room.remainingCapacity} of ${room.totalCapacity} rooms left`
+                                : `${room.remainingCapacity} of ${room.totalCapacity} beds left`
                               }
                             </span>
                           </div>

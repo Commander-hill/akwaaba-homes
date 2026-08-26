@@ -6,6 +6,19 @@ import appCache from '../utils/cache';
 import { safeJsonParse } from '../utils/json';
 import { getIO } from '../socket';
 
+// Helper to safely parse beds per room from any room type string (e.g. "2 in a room" -> 2)
+export const parseBedsPerRoom = (roomType: string): number => {
+  if (!roomType) return 1;
+  const str = roomType.toLowerCase().trim();
+  if (str.includes('4') || str.includes('four')) return 4;
+  if (str.includes('3') || str.includes('three')) return 3;
+  if (str.includes('2') || str.includes('two') || str.includes('double') || str.includes('twin')) return 2;
+  if (str.includes('1') || str.includes('one') || str.includes('single')) return 1;
+  const match = str.match(/\d+/);
+  if (match) return parseInt(match[0], 10);
+  return 1;
+};
+
 // Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property: any) => {
   if (!property) return property;
@@ -87,7 +100,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
     // Auto-generate Rooms, physical Room Units, and Beds
     for (const r of rooms) {
-      const bedsPerRoom = parseInt(r.roomType.split(' ')[0], 10) || 1;
+      const bedsPerRoom = parseBedsPerRoom(r.roomType);
       const numRooms = parseInt(r.numberOfRooms, 10);
       const blockName = r.blockName || null;
       const gender = r.gender || 'MIXED';

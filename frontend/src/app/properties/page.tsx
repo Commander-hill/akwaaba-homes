@@ -288,7 +288,7 @@ export default function PropertiesPage() {
                               property.remainingCapacity <= Math.ceil(property.totalCapacity * 0.25) ? 'text-amber-500' :
                               'text-emerald-600'
                             }`}>
-                              {property.remainingCapacity === 0 ? 'Fully Booked' : `${property.remainingCapacity} of ${property.totalCapacity} rooms left`}
+                              {property.remainingCapacity === 0 ? 'Fully Booked' : `${property.remainingCapacity} of ${property.totalCapacity} beds available`}
                             </span>
                           </div>
                           <div className="h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
