@@ -39,4 +39,24 @@ export declare function generateReceiptPDF(data: {
     paymentStatus: string;
     paidAt: string;
 }): Promise<Buffer>;
+/**
+ * Generate official GRA Tax Statement PDF for Landlords
+ */
+export declare function generateGRATaxReportPDF(data: {
+    landlordName: string;
+    landlordEmail: string;
+    landlordPhone: string;
+    taxYear: number;
+    grossRevenue: number;
+    totalMaintenanceDeductions: number;
+    withholdingTax5Percent: number;
+    netTaxableIncome: number;
+    transactionCount: number;
+    propertyBreakdown: {
+        title: string;
+        gross: number;
+        maintenance: number;
+        net: number;
+    }[];
+}): Promise<Buffer>;
 //# sourceMappingURL=pdf.service.d.ts.map

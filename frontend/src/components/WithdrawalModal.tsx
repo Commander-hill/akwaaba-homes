@@ -206,9 +206,34 @@ export default function WithdrawalModal({ onClose }: { onClose: () => void }) {
 
               {/* Account Number */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
-                  {recipientType === 'MOMO' ? 'MoMo Phone Number' : 'Bank Account Number'}
-                </label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">
+                    {recipientType === 'MOMO' ? 'MoMo Phone Number' : 'Bank Account Number'}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!accountNumber) {
+                        toast.error('Enter account number first');
+                        return;
+                      }
+                      try {
+                        toast.loading('Verifying Payee Account Name...', { id: 'momo-ver' });
+                        const res = await api.post('/payouts/verify-account', {
+                          accountNumber,
+                          bankCode: bankOrNetwork === 'MTN' ? 'MTN' : bankOrNetwork === 'Vodafone' ? 'VOD' : 'ATL'
+                        });
+                        setAccountName(res.data.accountName);
+                        toast.success(`Verified: ${res.data.accountName}`, { id: 'momo-ver' });
+                      } catch (e) {
+                        toast.error('Account verification unavailable', { id: 'momo-ver' });
+                      }
+                    }}
+                    className="text-[10px] font-extrabold text-indigo-600 hover:text-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md transition-all cursor-pointer"
+                  >
+                    🔍 Verify Payee Name
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={accountNumber}

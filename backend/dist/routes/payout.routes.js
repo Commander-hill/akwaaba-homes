@@ -8,6 +8,7 @@ const router = (0, express_1.Router)();
 router.post('/webhook', payout_controller_1.handleTransferWebhook);
 // Landlord-only routes
 router.post('/request', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD']), payout_controller_1.requestPayout);
+router.post('/verify-account', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD']), payout_controller_1.verifyMoMoAccountName);
 router.get('/history', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD']), payout_controller_1.getPayoutHistory);
 exports.default = router;
 //# sourceMappingURL=payout.routes.js.map

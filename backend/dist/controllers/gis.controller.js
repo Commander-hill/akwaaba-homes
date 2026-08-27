@@ -3,73 +3,86 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCommuteInfo = void 0;
-const prisma_1 = __importDefault(require("../utils/prisma"));
+exports.getCommuteInfo = exports.getPropertyCampusLandmarks = void 0;
 const gis_1 = require("../utils/gis");
-const getCommuteInfo = async (req, res) => {
+const prisma_1 = __importDefault(require("../utils/prisma"));
+/**
+ * Get Campus Landmark Distances and Transport Fares for a Property
+ */
+const getPropertyCampusLandmarks = async (req, res) => {
     try {
-        if (!req.user || req.user.role !== 'TENANT') {
-            res.status(403).json({ message: 'Access denied' });
-            return;
-        }
-        const { propertyId } = req.params;
-        // Get the tenant's campus
-        const user = await prisma_1.default.user.findUnique({
-            where: { id: req.user.id },
-            select: { campus: true }
-        });
-        if (!user || !user.campus) {
-            res.status(400).json({ message: 'User campus not configured' });
-            return;
-        }
-        const campusCoords = gis_1.CAMPUS_COORDINATES[user.campus.toUpperCase()];
-        if (!campusCoords) {
-            // If we don't have exact coordinates for their campus, return a friendly message
-            res.status(200).json({
-                available: false,
-                message: 'Commute calculation not yet available for this campus.'
-            });
-            return;
-        }
-        // Get the property coordinates
+        const propertyId = req.params.id;
         const property = await prisma_1.default.property.findUnique({
             where: { id: propertyId },
-            select: { latitude: true, longitude: true }
+            select: {
+                id: true,
+                title: true,
+                latitude: true,
+                longitude: true,
+                location: true
+            }
         });
-        if (!property) {
-            res.status(404).json({ message: 'Property not found' });
+        if (!property || !property.latitude || !property.longitude) {
+            res.status(404).json({ message: 'Property coordinates not found' });
             return;
         }
-        // Since latitude/longitude might be null in our DB if not provided by landlord yet
-        if (property.latitude === null || property.longitude === null) {
-            // Mock some coordinates near the campus for demo purposes if null
-            const mockDistance = Math.random() * 5 + 0.5; // Random distance between 0.5km and 5.5km
-            const commute = (0, gis_1.estimateCommuteTimes)(mockDistance);
-            res.status(200).json({
-                available: true,
-                isMocked: true,
-                campus: user.campus,
+        // Determine nearest campus (default UCC or match by location string)
+        let selectedCampus = 'UCC';
+        const locLower = (property.location || '').toLowerCase();
+        if (locLower.includes('legon') || locLower.includes('accra') || locLower.includes('ug')) {
+            selectedCampus = 'UG';
+        }
+        else if (locLower.includes('kumasi') || locLower.includes('knust')) {
+            selectedCampus = 'KNUST';
+        }
+        else if (locLower.includes('tamale') || locLower.includes('uds')) {
+            selectedCampus = 'UDS';
+        }
+        const landmarks = gis_1.CAMPUS_LANDMARKS[selectedCampus] || gis_1.CAMPUS_LANDMARKS['UCC'];
+        const landmarkDistances = landmarks.map((landmark) => {
+            const dist = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, landmark.lat, landmark.lon);
+            const commute = (0, gis_1.estimateCommuteTimes)(dist);
+            return {
+                name: landmark.name,
+                type: landmark.type,
                 distanceKm: commute.distanceKm,
                 walkingTimeMins: commute.walkingTimeMins,
-                drivingTimeMins: commute.drivingTimeMins
-            });
-            return;
-        }
-        // Calculate real distance
-        const distance = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, campusCoords.lat, campusCoords.lon);
-        const commute = (0, gis_1.estimateCommuteTimes)(distance);
+                drivingTimeMins: commute.drivingTimeMins,
+                trotroFareGHS: commute.trotroFareGHS,
+                okadaFareGHS: commute.okadaFareGHS
+            };
+        });
         res.status(200).json({
-            available: true,
-            isMocked: false,
-            campus: user.campus,
-            distanceKm: commute.distanceKm,
-            walkingTimeMins: commute.walkingTimeMins,
-            drivingTimeMins: commute.drivingTimeMins
+            campus: selectedCampus,
+            landmarks: landmarkDistances
         });
     }
     catch (error) {
-        console.error('Error calculating commute info:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        console.error('Error fetching campus landmarks:', error);
+        res.status(500).json({ message: 'Failed to calculate campus landmarks' });
+    }
+};
+exports.getPropertyCampusLandmarks = getPropertyCampusLandmarks;
+/**
+ * Legacy/Compat: Get commute info for a property
+ */
+const getCommuteInfo = async (req, res) => {
+    try {
+        const propertyId = req.params.propertyId;
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property || !property.latitude || !property.longitude) {
+            res.status(404).json({ message: 'Property location coordinates not available' });
+            return;
+        }
+        const dist = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, 5.1054, -1.2825);
+        const commute = (0, gis_1.estimateCommuteTimes)(dist);
+        res.status(200).json(commute);
+    }
+    catch (error) {
+        console.error('Error in getCommuteInfo:', error);
+        res.status(500).json({ message: 'Error calculating commute info' });
     }
 };
 exports.getCommuteInfo = getCommuteInfo;

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
+import { generateGRATaxReportPDF } from '../utils/pdf.service';
 
 export const getLandlordCashflows = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -407,3 +408,203 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
     res.status(500).json({ message: 'Webhook execution error' });
   }
 };
+
+/**
+ * Fetch Landlord Financial Ledger (Gross Revenue, Maintenance Expense Deductions, 5% GRA Tax, Net Yield)
+ */
+export const getLandlordFinancialLedger = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user.id;
+    const year = req.query.year ? parseInt(req.query.year as string) : new Date().getFullYear();
+
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59);
+
+    // Fetch successful rental transactions
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        landlordId,
+        status: 'SUCCESS',
+        createdAt: { gte: startDate, lte: endDate }
+      },
+      include: {
+        property: { select: { id: true, title: true } }
+      }
+    });
+
+    // Fetch resolved maintenance tickets with cost for this landlord's properties
+    const properties = await prisma.property.findMany({
+      where: { landlordId },
+      select: { id: true, title: true }
+    });
+
+    const propertyIds = properties.map((p) => p.id);
+
+    const maintenanceTickets = await prisma.maintenanceTicket.findMany({
+      where: {
+        propertyId: { in: propertyIds },
+        status: 'RESOLVED',
+        repairCost: { not: null }
+      }
+    });
+
+    // Aggregates
+    const grossRevenue = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    const totalMaintenanceDeductions = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const withholdingTax5Percent = parseFloat(((grossRevenue - totalMaintenanceDeductions) * 0.05).toFixed(2));
+    const netTaxableIncome = Math.max(0, grossRevenue - totalMaintenanceDeductions - withholdingTax5Percent);
+
+    // Property Breakdown
+    const propertyBreakdown = properties.map((prop) => {
+      const propGross = transactions
+        .filter((tx) => tx.propertyId === prop.id)
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      
+      const propMaintenance = maintenanceTickets
+        .filter((t) => t.propertyId === prop.id)
+        .reduce((sum, t) => sum + (t.repairCost || 0), 0);
+
+      return {
+        id: prop.id,
+        title: prop.title,
+        gross: propGross,
+        maintenance: propMaintenance,
+        net: Math.max(0, propGross - propMaintenance)
+      };
+    });
+
+    res.status(200).json({
+      taxYear: year,
+      grossRevenue,
+      totalMaintenanceDeductions,
+      withholdingTax5Percent,
+      netTaxableIncome,
+      transactionCount: transactions.length,
+      propertyBreakdown
+    });
+  } catch (error) {
+    console.error('Error fetching landlord financial ledger:', error);
+    res.status(500).json({ message: 'Failed to generate financial ledger' });
+  }
+};
+
+/**
+ * Export GRA Tax Report (PDF or CSV)
+ */
+export const exportGRATaxReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user.id;
+    const format = (req.query.format as string) || 'pdf'; // pdf or csv
+    const year = req.query.year ? parseInt(req.query.year as string) : new Date().getFullYear();
+
+    const landlord = await prisma.user.findUnique({
+      where: { id: landlordId },
+      select: { firstName: true, lastName: true, email: true, phoneNumber: true }
+    });
+
+    if (!landlord) {
+      res.status(404).json({ message: 'Landlord profile not found' });
+      return;
+    }
+
+    const startDate = new Date(year, 0, 1);
+    const endDate = new Date(year, 11, 31, 23, 59, 59);
+
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        landlordId,
+        status: 'SUCCESS',
+        createdAt: { gte: startDate, lte: endDate }
+      },
+      include: {
+        property: { select: { id: true, title: true } }
+      }
+    });
+
+    const properties = await prisma.property.findMany({
+      where: { landlordId },
+      select: { id: true, title: true }
+    });
+
+    const propertyIds = properties.map((p) => p.id);
+
+    const maintenanceTickets = await prisma.maintenanceTicket.findMany({
+      where: {
+        propertyId: { in: propertyIds },
+        status: 'RESOLVED',
+        repairCost: { not: null }
+      }
+    });
+
+    const grossRevenue = transactions.reduce((sum, tx) => sum + tx.amount, 0);
+    const totalMaintenanceDeductions = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const withholdingTax5Percent = parseFloat(((grossRevenue - totalMaintenanceDeductions) * 0.05).toFixed(2));
+    const netTaxableIncome = Math.max(0, grossRevenue - totalMaintenanceDeductions - withholdingTax5Percent);
+
+    const propertyBreakdown = properties.map((prop) => {
+      const propGross = transactions
+        .filter((tx) => tx.propertyId === prop.id)
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      
+      const propMaintenance = maintenanceTickets
+        .filter((t) => t.propertyId === prop.id)
+        .reduce((sum, t) => sum + (t.repairCost || 0), 0);
+
+      return {
+        title: prop.title,
+        gross: propGross,
+        maintenance: propMaintenance,
+        net: Math.max(0, propGross - propMaintenance)
+      };
+    });
+
+    if (format.toLowerCase() === 'csv') {
+      // CSV Generation
+      let csvContent = 'GHANA REVENUE AUTHORITY (GRA) - ANNUAL RENTAL INCOME TAX STATEMENT\n';
+      csvContent += `Taxpayer Name,${landlord.firstName} ${landlord.lastName}\n`;
+      csvContent += `Email,${landlord.email}\n`;
+      csvContent += `Phone,${landlord.phoneNumber || 'N/A'}\n`;
+      csvContent += `Tax Year,${year}\n\n`;
+
+      csvContent += 'FINANCIAL SUMMARY\n';
+      csvContent += `Gross Rental Revenue (GHS),${grossRevenue.toFixed(2)}\n`;
+      csvContent += `Allowable Maintenance Deductions (GHS),${totalMaintenanceDeductions.toFixed(2)}\n`;
+      csvContent += `Withholding Tax @ 5% (GHS),${withholdingTax5Percent.toFixed(2)}\n`;
+      csvContent += `Net Taxable Income (GHS),${netTaxableIncome.toFixed(2)}\n\n`;
+
+      csvContent += 'PROPERTY BREAKDOWN\n';
+      csvContent += 'Property Title,Gross Revenue (GHS),Maintenance Expenses (GHS),Net Yield (GHS)\n';
+
+      propertyBreakdown.forEach((p) => {
+        csvContent += `"${p.title.replace(/"/g, '""')}",${p.gross.toFixed(2)},${p.maintenance.toFixed(2)},${p.net.toFixed(2)}\n`;
+      });
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=GRA_Tax_Statement_${year}_${landlord.lastName}.csv`);
+      res.status(200).send(csvContent);
+      return;
+    }
+
+    // PDF Generation
+    const pdfBuffer = await generateGRATaxReportPDF({
+      landlordName: `${landlord.firstName} ${landlord.lastName}`,
+      landlordEmail: landlord.email,
+      landlordPhone: landlord.phoneNumber || 'N/A',
+      taxYear: year,
+      grossRevenue,
+      totalMaintenanceDeductions,
+      withholdingTax5Percent,
+      netTaxableIncome,
+      transactionCount: transactions.length,
+      propertyBreakdown
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=GRA_Tax_Statement_${year}_${landlord.lastName}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error exporting GRA Tax Statement:', error);
+    res.status(500).json({ message: 'Failed to generate GRA Tax Statement' });
+  }
+};
+

@@ -6,7 +6,9 @@ import {
   getTenantTransactions, 
   getLandlordEarningsReport,
   handlePaystackWebhook,
-  downloadReceiptPDF
+  downloadReceiptPDF,
+  getLandlordFinancialLedger,
+  exportGRATaxReport
 } from '../controllers/transaction.controller';
 
 const router = Router();
@@ -17,6 +19,8 @@ router.post('/webhook', handlePaystackWebhook);
 router.get('/tenant', authenticate, getTenantTransactions);
 router.get('/landlord', authenticate, authorizeRole(['LANDLORD']), getLandlordCashflows);
 router.get('/landlord/report', authenticate, authorizeRole(['LANDLORD']), getLandlordEarningsReport);
+router.get('/landlord/financial-ledger', authenticate, authorizeRole(['LANDLORD']), getLandlordFinancialLedger);
+router.get('/landlord/tax-report', authenticate, authorizeRole(['LANDLORD']), exportGRATaxReport);
 router.get('/:id/pdf', authenticate, downloadReceiptPDF);
 router.get('/:id', authenticate, getTransactionById);
 

@@ -114,12 +114,67 @@ export default function LandlordDashboard() {
     enabled: activeTab === 'financials'
   });
 
+  // Fetch GRA Financial Ledger (Net Yields & Tax Deductions)
+  const { data: financialLedger, refetch: refetchLedger } = useQuery({
+    queryKey: ['transactions', 'landlord', 'financial-ledger'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/transactions/landlord/financial-ledger');
+        return data;
+      } catch (err) {
+        return null;
+      }
+    },
+    enabled: activeTab === 'financials'
+  });
+
+  const handleDownloadGRATaxPDF = async () => {
+    try {
+      toast.loading('Generating GRA Tax Statement PDF...', { id: 'gra-pdf' });
+      const response = await api.get('/transactions/landlord/tax-report?format=pdf', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `GRA_Tax_Statement_${new Date().getFullYear()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('GRA Tax Statement downloaded!', { id: 'gra-pdf' });
+    } catch (e) {
+      toast.error('Failed to download GRA Tax Statement PDF', { id: 'gra-pdf' });
+    }
+  };
+
+  const handleDownloadGRATaxCSV = async () => {
+    try {
+      toast.loading('Generating GRA Tax Statement CSV...', { id: 'gra-csv' });
+      const response = await api.get('/transactions/landlord/tax-report?format=csv', {
+        responseType: 'blob'
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `GRA_Tax_Statement_${new Date().getFullYear()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('GRA Tax Statement CSV exported!', { id: 'gra-csv' });
+    } catch (e) {
+      toast.error('Failed to export GRA Tax Statement CSV', { id: 'gra-csv' });
+    }
+  };
+
   const handleRefreshAll = () => {
     refetchBookings();
     if (activeTab === 'agreements') refetchAgreements();
     if (activeTab === 'tickets') refetchTickets();
     if (activeTab === 'subscriptions') refetchSubs();
-    if (activeTab === 'financials') refetchEarnings();
+    if (activeTab === 'financials') {
+      refetchEarnings();
+      refetchLedger();
+    }
     toast.success('Refreshing dashboard data...');
   };
 
@@ -823,20 +878,29 @@ export default function LandlordDashboard() {
           ) : (
           <>
           {/* Action Header */}
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold">Landlord Financial Earnings Statement</h3>
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h3 className="text-lg font-bold">Landlord Financial Earnings Statement</h3>
+              <p className="text-xs text-[var(--muted-foreground)]">Net yield tracking &amp; GRA official rental tax filing.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => setShowWithdrawalModal(true)}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+                onClick={handleDownloadGRATaxPDF}
+                className="px-3.5 py-2 bg-[#064E3B] hover:bg-[#047857] text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
               >
-                <DollarSign className="w-4 h-4" /> Request Withdrawal
+                <Printer className="w-4 h-4 text-amber-300" /> GRA Tax PDF
               </button>
               <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold rounded-xl flex items-center gap-2 transition-all"
+                onClick={handleDownloadGRATaxCSV}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                <Printer className="w-4 h-4" /> Print Statement
+                <Printer className="w-4 h-4 text-emerald-400" /> GRA Tax CSV
+              </button>
+              <button
+                onClick={() => setShowWithdrawalModal(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
+              >
+                <DollarSign className="w-4 h-4" /> Request Withdrawal
               </button>
             </div>
           </div>

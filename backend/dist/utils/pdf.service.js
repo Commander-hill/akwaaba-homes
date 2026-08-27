@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateTenancyAgreementPDF = generateTenancyAgreementPDF;
 exports.generateReceiptPDF = generateReceiptPDF;
+exports.generateGRATaxReportPDF = generateGRATaxReportPDF;
 const pdfkit_1 = __importDefault(require("pdfkit"));
 /**
  * Generate official signed Tenancy Agreement PDF
@@ -280,6 +281,126 @@ async function generateReceiptPDF(data) {
             .fillColor('#94A3B8')
             .text(`Transaction Reference: ${data.reference} • System ID: ${data.transactionId}`, 40, footerY + 20)
             .text('Need support? Contact support@akwaabahomes.com or visit www.akwaabahomes.com', 40, footerY + 35);
+        doc.end();
+    });
+}
+/**
+ * Generate official GRA Tax Statement PDF for Landlords
+ */
+async function generateGRATaxReportPDF(data) {
+    return new Promise((resolve, reject) => {
+        const doc = new pdfkit_1.default({ margin: 40, size: 'A4' });
+        const chunks = [];
+        doc.on('data', (chunk) => chunks.push(chunk));
+        doc.on('end', () => resolve(Buffer.concat(chunks)));
+        doc.on('error', (err) => reject(err));
+        // Header Banner (Ghana National Colors Theme)
+        doc
+            .rect(0, 0, 595.28, 100)
+            .fill('#064E3B'); // Emerald 900
+        doc
+            .fillColor('#FFFFFF')
+            .fontSize(20)
+            .font('Helvetica-Bold')
+            .text('GHANA REVENUE AUTHORITY (GRA)', 40, 25);
+        doc
+            .fontSize(10)
+            .font('Helvetica')
+            .fillColor('#FDE047') // Yellow accent
+            .text('OFFICIAL ANNUAL RENTAL INCOME TAX STATEMENT', 40, 52);
+        doc
+            .fontSize(9)
+            .fillColor('#D1FAE5')
+            .text(`Tax Year: ${data.taxYear}`, 400, 32, { align: 'right' })
+            .text(`Issued: ${new Date().toLocaleDateString('en-GB')}`, 400, 48, { align: 'right' });
+        doc.moveDown(4);
+        // Landlord Taxpayer Profile Box
+        const startY = 120;
+        doc
+            .rect(40, startY, 515, 75)
+            .fillAndStroke('#F8FAFC', '#CBD5E1');
+        doc
+            .fillColor('#334155')
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('TAXPAYER IDENTIFICATION & LANDLORD DETAILS', 50, startY + 10);
+        doc
+            .fontSize(9)
+            .font('Helvetica')
+            .fillColor('#0F172A')
+            .text(`Landlord Name: ${data.landlordName}`, 50, startY + 28)
+            .text(`Contact Email: ${data.landlordEmail} (${data.landlordPhone})`, 50, startY + 43)
+            .text(`Total Rental Transactions Processed: ${data.transactionCount}`, 50, startY + 58);
+        // Financial Summary Ribbon
+        const startY2 = 210;
+        doc
+            .rect(40, startY2, 515, 110)
+            .fillAndStroke('#EEF2FF', '#6366F1');
+        doc
+            .fillColor('#3730A3')
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('TAX COMPUTATION & REVENUE BREAKDOWN', 50, startY2 + 12);
+        doc
+            .fontSize(9)
+            .font('Helvetica')
+            .fillColor('#1E1B4B')
+            .text(`Gross Rental Revenue: GHS ${data.grossRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 32)
+            .text(`Less Allowable Maintenance Expenses: -GHS ${data.totalMaintenanceDeductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 50)
+            .text(`Estimated GRA Withholding Tax (5% Rate): GHS ${data.withholdingTax5Percent.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 68);
+        doc
+            .fontSize(11)
+            .font('Helvetica-Bold')
+            .fillColor('#047857')
+            .text(`NET TAXABLE LANDLORD INCOME: GHS ${data.netTaxableIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 88);
+        // Property Line-Item Table
+        const tableY = 335;
+        doc
+            .rect(40, tableY, 515, 22)
+            .fill('#1E293B');
+        doc
+            .fillColor('#FFFFFF')
+            .fontSize(8.5)
+            .font('Helvetica-Bold')
+            .text('PROPERTY TITLE', 50, tableY + 6)
+            .text('GROSS RENT', 280, tableY + 6)
+            .text('MAINTENANCE', 370, tableY + 6)
+            .text('NET YIELD (GHS)', 460, tableY + 6, { align: 'right' });
+        let currentY = tableY + 22;
+        data.propertyBreakdown.forEach((prop, idx) => {
+            doc
+                .rect(40, currentY, 515, 22)
+                .fillAndStroke(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', '#E2E8F0');
+            doc
+                .fillColor('#0F172A')
+                .fontSize(8.5)
+                .font('Helvetica')
+                .text(prop.title.slice(0, 32), 50, currentY + 6)
+                .text(`GHS ${prop.gross.toLocaleString()}`, 280, currentY + 6)
+                .text(`GHS ${prop.maintenance.toLocaleString()}`, 370, currentY + 6)
+                .font('Helvetica-Bold')
+                .text(`GHS ${prop.net.toLocaleString()}`, 460, currentY + 6, { align: 'right' });
+            currentY += 22;
+        });
+        // GRA Compliance Certification Footer
+        const footerY = Math.max(currentY + 25, 620);
+        doc
+            .rect(40, footerY, 515, 50)
+            .fill('#F0FDF4');
+        doc
+            .fillColor('#166534')
+            .fontSize(8.5)
+            .font('Helvetica-Bold')
+            .text('GRA CERTIFICATION & COMPLIANCE NOTICE', 50, footerY + 10);
+        doc
+            .fontSize(7.5)
+            .font('Helvetica')
+            .fillColor('#15803D')
+            .text('This statement reflects audited rental income and maintenance cost deductions logged on the Akwaaba Homes Housing Infrastructure. Generated for annual Ghana Revenue Authority (GRA) individual tax return filing.', 50, footerY + 25, { width: 495 });
+        doc
+            .fontSize(8)
+            .fillColor('#94A3B8')
+            .text('Page 1 of 1 • Generated by Akwaaba Homes Tax Engine • www.akwaabahomes.com', 40, 780, { align: 'center' });
         doc.end();
     });
 }
