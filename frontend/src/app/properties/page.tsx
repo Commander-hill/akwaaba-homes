@@ -138,8 +138,11 @@ export default function PropertiesPage() {
                   >
                     <option value="">Any Type</option>
                     <option value="Hostel">Hostel</option>
+                    <option value="Apartment">Apartment / Flat</option>
                     <option value="Homestay">Homestay</option>
-                    <option value="Apartment">Apartment</option>
+                    <option value="Residential House">Residential House</option>
+                    <option value="Townhouse">Townhouse</option>
+                    <option value="Studio">Studio Apartment</option>
                   </select>
                 </div>
 

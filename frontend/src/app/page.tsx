@@ -22,16 +22,16 @@ export default function Home() {
           
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8 font-medium text-sm text-white shadow-lg shadow-black/20">
             <span className="flex h-2 w-2 rounded-full bg-[#E06D53] animate-pulse"></span>
-            The #1 Platform for Students & Landlords in Ghana
+            Ghana's Premier Housing Platform for Students &amp; Working Residents
           </div>
           
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 text-white drop-shadow-xl">
             Find Your Perfect <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-[#5B4CFF]">Home Away From Home</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-[#5B4CFF]">Home &amp; Hostel in Ghana</span>
           </h1>
           
           <p className="text-lg md:text-xl text-[#A1A1AA] max-w-2xl mx-auto mb-12 drop-shadow-md">
-            Secure, verified hostels and apartments for students. No scams, no hidden fees. Just trusted premium properties ready for you to move in.
+            Secure, verified hostels, apartments, homestays, and family rentals for students and residents across Ghana. 100% escrow protected with no hidden fees.
           </p>
 
           {/* Quick Search Bar */}
@@ -40,7 +40,7 @@ export default function Home() {
               <MapPin className="text-[#5B4CFF] w-6 h-6" />
               <input 
                 type="text" 
-                placeholder="Where do you want to live? (e.g., Ayeduase)" 
+                placeholder="Where do you want to live? (e.g., Ayeduase, East Legon)" 
                 className="w-full bg-transparent border-none outline-none text-white placeholder:text-[#A1A1AA] text-lg"
               />
             </div>
@@ -61,7 +61,7 @@ export default function Home() {
           
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4 transition-colors">Why Choose AkwaabaHomes?</h2>
-            <p className="text-slate-600 dark:text-slate-400 text-lg transition-colors">We provide a premium, secure, and hassle-free experience for students looking for the perfect place to stay.</p>
+            <p className="text-slate-600 dark:text-slate-400 text-lg transition-colors">We provide a premium, secure, and hassle-free rental experience for both university students and residential tenants.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -73,7 +73,7 @@ export default function Home() {
                   <ShieldCheck className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white transition-colors">Verified Landlords</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">Every landlord is rigorously verified using their Ghana Card to ensure maximum security.</p>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">Every property owner is verified via Ghana Card and ownership deeds for fraud protection.</p>
               </div>
             </div>
 
@@ -83,8 +83,8 @@ export default function Home() {
                 <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-[var(--primary)]/30">
                   <Building className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white transition-colors">Premium Properties</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">From cozy single rooms to luxury apartments, find the perfect match for your budget.</p>
+                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white transition-colors">Hostels &amp; Residential Homes</h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">From campus student rooms to modern 2-bedroom residential apartments and family homes.</p>
               </div>
             </div>
 
@@ -94,8 +94,8 @@ export default function Home() {
                 <div className="w-16 h-16 bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-[var(--primary)]/30">
                   <Star className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white transition-colors">Authentic Reviews</h3>
-                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">Read reviews from actual students who have completed stays at the properties.</p>
+                <h3 className="text-xl font-bold mb-3 text-slate-900 dark:text-white transition-colors">Verified Tenant Reviews</h3>
+                <p className="text-slate-600 dark:text-slate-400 leading-relaxed transition-colors">Read authentic ratings from verified students and resident tenants who stayed at the property.</p>
               </div>
             </div>
 

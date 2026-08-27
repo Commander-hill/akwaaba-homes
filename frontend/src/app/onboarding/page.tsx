@@ -36,8 +36,8 @@ export default function OnboardingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.studentId || !formData.campus || !formData.dateOfBirth || !formData.guardianName || !formData.guardianContact) {
-      toast.error('Please fill in all required fields');
+    if (!formData.dateOfBirth || !formData.guardianName || !formData.guardianContact) {
+      toast.error('Please fill in Date of Birth and Emergency Contact details');
       return;
     }
     mutation.mutate(formData);
@@ -56,7 +56,7 @@ export default function OnboardingPage() {
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">Complete Your Profile</h1>
-          <p className="text-[var(--muted-foreground)]">Just a few more details before you can start booking properties.</p>
+          <p className="text-[var(--muted-foreground)]">A few more details for students and resident tenants before booking.</p>
         </div>
 
         <div className="glass-card rounded-[24px] p-8">
@@ -65,14 +65,14 @@ export default function OnboardingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Student ID */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)]">Student ID *</label>
+                <label className="text-sm font-bold text-[var(--foreground)]">Student ID <span className="text-xs font-normal text-slate-400">(Optional for residents)</span></label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input 
                     type="text" 
                     value={formData.studentId}
                     onChange={e => setFormData({...formData, studentId: e.target.value})}
-                    placeholder="e.g. 10293847"
+                    placeholder="e.g. 10293847 or N/A"
                     className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
@@ -80,14 +80,14 @@ export default function OnboardingPage() {
 
               {/* Campus */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)]">Campus *</label>
+                <label className="text-sm font-bold text-[var(--foreground)]">Campus / City Area <span className="text-xs font-normal text-slate-400">(Optional)</span></label>
                 <div className="relative">
                   <School className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input 
                     type="text" 
                     value={formData.campus}
                     onChange={e => setFormData({...formData, campus: e.target.value})}
-                    placeholder="e.g. Main Campus"
+                    placeholder="e.g. UCC / East Legon"
                     className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
