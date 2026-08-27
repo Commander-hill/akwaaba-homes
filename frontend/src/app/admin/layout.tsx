@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { LogOut, Loader2, ShieldCheck, Users, Building, CalendarCheck, CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, Settings, Radio } from 'lucide-react';
+import { LogOut, Loader2, ShieldCheck, Users, Building, CalendarCheck, CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, Settings, Radio, FileCheck } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
@@ -95,6 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Reviews', href: '/admin/reviews', icon: Star },
         { name: 'System Activity', href: '/admin/activity', icon: Activity },
         { name: 'Tenant Breaches', href: '/admin/breaches', icon: Scale },
+        { name: 'Deed Audits', href: '/admin/deeds', icon: FileCheck },
         { name: 'Dynamic Notices', href: '/admin/notices', icon: Megaphone },
         { name: 'Push Broadcasts', href: '/admin/broadcasts', icon: Radio },
       ]

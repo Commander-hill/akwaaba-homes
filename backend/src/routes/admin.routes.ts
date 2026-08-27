@@ -33,6 +33,13 @@ import {
 import { checkExpirations } from '../controllers/subscription.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
+import { 
+  getAdminBreachReports, 
+  resolveBreachReport, 
+  getLandlordDeedAudits, 
+  auditLandlordDeed 
+} from '../controllers/adminBreach.controller';
+
 const router = Router();
 
 // Secure all admin routes
@@ -50,6 +57,12 @@ router.put('/users/:id/suspend', toggleUserSuspension);
 router.put('/users/:id/lock', toggleUserProfileLock);
 router.put('/verify-user/:id', verifyUserCard);
 router.put('/verify-landlord/:id', verifyLandlord);
+
+// Breach Disputes & Deed Audits
+router.get('/breaches', getAdminBreachReports);
+router.put('/breaches/:id/resolve', resolveBreachReport);
+router.get('/landlord-deeds', getLandlordDeedAudits);
+router.put('/landlord-deeds/:id/audit', auditLandlordDeed);
 
 // Properties
 router.get('/properties', getAllProperties);

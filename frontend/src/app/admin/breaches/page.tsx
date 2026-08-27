@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Scale, Search, ShieldAlert, CheckCircle, XCircle, AlertTriangle, User, Building2, Star, Ban, Filter, ArrowDownRight } from 'lucide-react';
+import { Loader2, Scale, Search, ShieldAlert, XCircle, AlertTriangle, User, Building2, Star, ArrowDownRight, Ban } from 'lucide-react';
 import toast from 'react-hot-toast';
 import SkeletonTable from '@/components/SkeletonTable';
 import clsx from 'clsx';
@@ -13,34 +13,38 @@ export default function AdminBreachesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED'>('ALL');
   const [selectedBreach, setSelectedBreach] = useState<any | null>(null);
+  
+  const [penaltyDeduction, setPenaltyDeduction] = useState<number>(1.0);
+  const [suspendAccount, setSuspendAccount] = useState<boolean>(false);
+  const [adminNotes, setAdminNotes] = useState<string>('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-breaches'],
     queryFn: async () => {
-      const res = await api.get('/breaches');
+      const res = await api.get('/admin/breaches');
       return res.data;
     }
   });
 
-  const verifyMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: 'VERIFIED' | 'REJECTED' }) => {
-      await api.post(`/breaches/${id}/verify`, { status });
+  const resolveMutation = useMutation({
+    mutationFn: async ({ id, status, penaltyDeduction, suspendAccount, adminNotes }: { id: string; status: 'VERIFIED' | 'REJECTED' | 'DISMISSED'; penaltyDeduction?: number; suspendAccount?: boolean; adminNotes?: string }) => {
+      await api.put(`/admin/breaches/${id}/resolve`, { status, penaltyDeduction, suspendAccount, adminNotes });
     },
     onSuccess: (_, variables) => {
       if (variables.status === 'VERIFIED') {
-        toast.success('Breach verified! Penalty applied to tenant reputation.');
+        toast.success('Breach claim verified! Penalty deducted from reputation score.');
       } else {
-        toast.success('Breach report rejected and dismissed.');
+        toast.success('Breach claim dismissed.');
       }
       setSelectedBreach(null);
       queryClient.invalidateQueries({ queryKey: ['admin-breaches'] });
     },
-    onError: () => {
-      toast.error('Failed to process breach verification.');
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to process breach verdict.');
     }
   });
 
-  const reports = data?.reports || [];
+  const reports = data?.breaches || [];
 
   // Filtering logic
   const filteredReports = reports.filter((report: any) => {
@@ -62,7 +66,7 @@ export default function AdminBreachesPage() {
   const totalCount = reports.length;
   const pendingCount = reports.filter((r: any) => r.status === 'PENDING').length;
   const verifiedCount = reports.filter((r: any) => r.status === 'VERIFIED').length;
-  const rejectedCount = reports.filter((r: any) => r.status === 'REJECTED').length;
+  const rejectedCount = reports.filter((r: any) => r.status === 'REJECTED' || r.status === 'DISMISSED').length;
 
   return (
     <div className="space-y-6 pb-12 animate-in fade-in">
@@ -71,13 +75,13 @@ export default function AdminBreachesPage() {
       <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-red-900/20 via-orange-900/10 to-amber-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 mb-1">
-            <Scale className="w-4 h-4" /> Judicial Governance &amp; Compliance
+            <Scale className="w-4 h-4" /> Judicial Governance &amp; Moderation
           </div>
           <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
-            Tenant Breach Reports Manager
+            Tenant Breach &amp; Dispute Command Center
           </h1>
           <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            Review landlord-submitted breach reports, adjudicate claims, and enforce automatic reputation score penalties &amp; account suspensions.
+            Review landlord breach reports, apply automated reputation score penalties, and enforce account suspensions.
           </p>
         </div>
       </div>
@@ -96,7 +100,7 @@ export default function AdminBreachesPage() {
 
         <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Pending Investigation</p>
+            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Pending Adjudication</p>
             <p className="text-3xl font-black text-amber-500">{pendingCount}</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
@@ -127,7 +131,6 @@ export default function AdminBreachesPage() {
 
       {/* Filter Toolbar */}
       <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4">
-        {/* Search */}
         <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
           <input
@@ -139,7 +142,6 @@ export default function AdminBreachesPage() {
           />
         </div>
 
-        {/* Filter Tabs */}
         <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">
           {(['ALL', 'PENDING', 'VERIFIED', 'REJECTED'] as const).map((status) => (
             <button
@@ -191,7 +193,6 @@ export default function AdminBreachesPage() {
 
                   return (
                     <tr key={report.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
-                      {/* Offense & Date */}
                       <td className="px-6 py-4 max-w-[200px]">
                         <div className="font-bold text-[var(--foreground)] truncate" title={report.title}>{report.title}</div>
                         <div className="text-[10px] text-[var(--muted-foreground)] mt-0.5">
@@ -199,7 +200,6 @@ export default function AdminBreachesPage() {
                         </div>
                       </td>
 
-                      {/* Tenant */}
                       <td className="px-6 py-4">
                         <div className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
                           <User className="w-3.5 h-3.5 text-indigo-500" />
@@ -210,28 +210,25 @@ export default function AdminBreachesPage() {
                             <Star className="w-3 h-3 fill-amber-400" /> {(tenant.reputationScore || 5.0).toFixed(1)}
                           </span>
                           {tenant.isSuspended && (
-                            <span className="text-[9px] font-extrabold text-red-600 bg-red-100 dark:bg-red-950/50 px-1.5 py-0.5 rounded uppercase">
-                              SUSPENDED
+                            <span className="text-[9px] font-extrabold text-red-600 bg-red-100 dark:bg-red-950/50 px-1.5 py-0.5 rounded uppercase flex items-center gap-0.5">
+                              <Ban className="w-2.5 h-2.5" /> SUSPENDED
                             </span>
                           )}
                         </div>
                       </td>
 
-                      {/* Reporter */}
                       <td className="px-6 py-4">
                         <div className="font-bold text-[var(--foreground)]">{reporter.firstName} {reporter.lastName}</div>
                         <div className="text-[10px] text-[var(--muted-foreground)]">{reporter.email}</div>
                       </td>
 
-                      {/* Property */}
                       <td className="px-6 py-4">
                         <div className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
                           <Building2 className="w-3.5 h-3.5 text-sky-500" />
-                          {property.title || 'Untitled Property'}
+                          {property.title || 'Hostel Unit'}
                         </div>
                       </td>
 
-                      {/* Status & Impact */}
                       <td className="px-6 py-4">
                         {report.status === 'VERIFIED' ? (
                           <div className="space-y-1">
@@ -239,10 +236,10 @@ export default function AdminBreachesPage() {
                               <ShieldAlert className="w-3 h-3" /> VERIFIED
                             </span>
                             <div className="text-[10px] font-bold text-red-600 flex items-center gap-0.5">
-                              <ArrowDownRight className="w-3 h-3" /> -1.0 Penalty Applied
+                              <ArrowDownRight className="w-3 h-3" /> Score Penalized
                             </div>
                           </div>
-                        ) : report.status === 'REJECTED' ? (
+                        ) : report.status === 'REJECTED' || report.status === 'DISMISSED' ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400">
                             <XCircle className="w-3 h-3" /> DISMISSED
                           </span>
@@ -253,13 +250,17 @@ export default function AdminBreachesPage() {
                         )}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-6 py-4 text-right space-x-2">
                         <button
-                          onClick={() => setSelectedBreach(report)}
+                          onClick={() => {
+                            setSelectedBreach(report);
+                            setPenaltyDeduction(1.0);
+                            setSuspendAccount(false);
+                            setAdminNotes('');
+                          }}
                           className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-[var(--foreground)] rounded-lg text-xs font-bold transition-all cursor-pointer"
                         >
-                          Review Claim
+                          Adjudicate
                         </button>
                       </td>
                     </tr>
@@ -282,8 +283,8 @@ export default function AdminBreachesPage() {
                   <Scale className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-lg text-[var(--foreground)]">Adjudicate Breach Claim</h3>
-                  <p className="text-xs text-[var(--muted-foreground)]">Review evidence and take action.</p>
+                  <h3 className="font-extrabold text-lg text-[var(--foreground)]">Issue Dispute Verdict</h3>
+                  <p className="text-xs text-[var(--muted-foreground)]">Review evidence and assign reputation penalties.</p>
                 </div>
               </div>
               <button
@@ -301,7 +302,7 @@ export default function AdminBreachesPage() {
               </div>
 
               <div>
-                <span className="text-[10px] font-black uppercase text-slate-400 block mb-0.5">Landlord Description</span>
+                <span className="text-[10px] font-black uppercase text-slate-400 block mb-0.5">Landlord Claim Description</span>
                 <p className="text-[var(--muted-foreground)] bg-white dark:bg-slate-950 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   {selectedBreach.description}
                 </p>
@@ -311,7 +312,7 @@ export default function AdminBreachesPage() {
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400 block">Accused Tenant</span>
                   <span className="font-bold text-[var(--foreground)]">{selectedBreach.tenant?.firstName} {selectedBreach.tenant?.lastName}</span>
-                  <span className="block text-[10px] text-amber-500 font-bold">Reputation: ⭐ {(selectedBreach.tenant?.reputationScore || 5.0).toFixed(1)}</span>
+                  <span className="block text-[10px] text-amber-500 font-bold">Current Reputation: ⭐ {(selectedBreach.tenant?.reputationScore || 5.0).toFixed(1)}/5.0</span>
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase text-slate-400 block">Reporting Landlord</span>
@@ -321,33 +322,75 @@ export default function AdminBreachesPage() {
             </div>
 
             {selectedBreach.status === 'PENDING' ? (
-              <div className="space-y-3 pt-2">
-                <p className="text-[11px] text-[var(--muted-foreground)] text-center">
-                  Verifying will deduct <strong>-1.0 score penalty</strong> from tenant. If reputation falls below 2.0, tenant will be automatically suspended.
-                </p>
-                <div className="flex gap-3">
+              <div className="space-y-4 pt-1">
+                <div>
+                  <label className="block text-[11px] font-bold text-[var(--foreground)] mb-1.5">
+                    Reputation Score Penalty Deduction (-{penaltyDeduction} pts)
+                  </label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[0.5, 1.0, 1.5, 2.0].map((val) => (
+                      <button
+                        type="button"
+                        key={val}
+                        onClick={() => setPenaltyDeduction(val)}
+                        className={`py-2 rounded-xl text-xs font-bold border transition-all ${penaltyDeduction === val ? 'bg-red-600 text-white border-red-600 shadow-md' : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-[var(--foreground)]'}`}
+                      >
+                        -{val} Pts
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-red-50 dark:bg-red-950/30 p-3 rounded-xl border border-red-200 dark:border-red-900/50">
+                  <div className="flex items-center gap-2">
+                    <Ban className="w-4 h-4 text-red-600" />
+                    <div>
+                      <p className="text-xs font-bold text-red-900 dark:text-red-400">Suspend Account</p>
+                      <p className="text-[10px] text-red-700/80 dark:text-red-400/80">Freeze user access on platform</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={suspendAccount}
+                    onChange={(e) => setSuspendAccount(e.target.checked)}
+                    className="w-4 h-4 accent-red-600 rounded cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[var(--foreground)] mb-1">Administrative Note / Verdict Explanation</label>
+                  <input
+                    type="text"
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder="Enter reason for verdict..."
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-red-500/20 outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
                   <button
-                    disabled={verifyMutation.isPending}
-                    onClick={() => verifyMutation.mutate({ id: selectedBreach.id, status: 'REJECTED' })}
+                    disabled={resolveMutation.isPending}
+                    onClick={() => resolveMutation.mutate({ id: selectedBreach.id, status: 'REJECTED', adminNotes })}
                     className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    {verifyMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                    {resolveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
                     Dismiss Claim
                   </button>
 
                   <button
-                    disabled={verifyMutation.isPending}
-                    onClick={() => verifyMutation.mutate({ id: selectedBreach.id, status: 'VERIFIED' })}
+                    disabled={resolveMutation.isPending}
+                    onClick={() => resolveMutation.mutate({ id: selectedBreach.id, status: 'VERIFIED', penaltyDeduction, suspendAccount, adminNotes })}
                     className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-red-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                   >
-                    {verifyMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                    Verify &amp; Penalize
+                    {resolveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                    Verify &amp; Apply Penalty
                   </button>
                 </div>
               </div>
             ) : (
               <div className="p-3 bg-slate-100 dark:bg-slate-900 rounded-xl text-center text-xs font-bold text-[var(--muted-foreground)]">
-                This breach claim has already been processed as {selectedBreach.status}.
+                This breach dispute has been processed.
               </div>
             )}
 

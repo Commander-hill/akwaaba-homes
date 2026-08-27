@@ -5,6 +5,7 @@ const admin_controller_1 = require("../controllers/admin.controller");
 const notice_controller_1 = require("../controllers/notice.controller");
 const subscription_controller_1 = require("../controllers/subscription.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
+const adminBreach_controller_1 = require("../controllers/adminBreach.controller");
 const router = (0, express_1.Router)();
 // Secure all admin routes
 router.use(auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['ADMIN']));
@@ -19,6 +20,11 @@ router.put('/users/:id/suspend', admin_controller_1.toggleUserSuspension);
 router.put('/users/:id/lock', admin_controller_1.toggleUserProfileLock);
 router.put('/verify-user/:id', admin_controller_1.verifyUserCard);
 router.put('/verify-landlord/:id', admin_controller_1.verifyLandlord);
+// Breach Disputes & Deed Audits
+router.get('/breaches', adminBreach_controller_1.getAdminBreachReports);
+router.put('/breaches/:id/resolve', adminBreach_controller_1.resolveBreachReport);
+router.get('/landlord-deeds', adminBreach_controller_1.getLandlordDeedAudits);
+router.put('/landlord-deeds/:id/audit', adminBreach_controller_1.auditLandlordDeed);
 // Properties
 router.get('/properties', admin_controller_1.getAllProperties);
 router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
