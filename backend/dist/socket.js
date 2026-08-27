@@ -81,14 +81,18 @@ const initializeSocket = (server) => {
         // Handle sending messages
         socket.on('send_message', async (data) => {
             try {
-                const { conversationId, receiverId, content } = data;
+                const { conversationId, receiverId, content, mediaUrl, mediaType, fileName, duration } = data;
                 const senderId = socket.user.id;
                 // Save message to database
                 const message = await prisma_1.default.message.create({
                     data: {
                         conversationId,
                         senderId,
-                        content,
+                        content: content || (mediaType === 'AUDIO' ? '🎤 Voice note' : mediaType === 'IMAGE' ? '📷 Photo' : '📄 Document'),
+                        mediaUrl: mediaUrl || null,
+                        mediaType: mediaType || 'TEXT',
+                        fileName: fileName || null,
+                        duration: duration || null,
                         isRead: false,
                     }
                 });
@@ -98,10 +102,9 @@ const initializeSocket = (server) => {
                     data: { updatedAt: new Date() }
                 });
                 // Emit the message to the receiver's personal room and the conversation room
-                // We emit to the conversation room so the sender's other devices see it, 
-                // and to the receiver's personal room in case they haven't "joined" the conversation yet.
                 io.to(conversationId).emit('receive_message', message);
                 io.to(receiverId).emit('receive_message', message);
+                io.to(receiverId).emit('conversation_updated', { conversationId });
             }
             catch (error) {
                 console.error('Error sending message via socket:', error);

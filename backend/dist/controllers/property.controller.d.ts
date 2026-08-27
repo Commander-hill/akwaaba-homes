@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+export declare const parseBedsPerRoom: (roomType: string) => number;
 export declare const createProperty: (req: Request, res: Response) => Promise<void>;
 export declare const getProperties: (req: Request, res: Response) => Promise<void>;
 export declare const getPropertyById: (req: Request, res: Response) => Promise<void>;

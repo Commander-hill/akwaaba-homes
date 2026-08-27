@@ -42,6 +42,8 @@ const agreement_routes_1 = __importDefault(require("./routes/agreement.routes"))
 const breach_routes_1 = __importDefault(require("./routes/breach.routes"));
 const transaction_routes_1 = __importDefault(require("./routes/transaction.routes"));
 const push_routes_1 = __importDefault(require("./routes/push.routes"));
+const fraud_routes_1 = __importDefault(require("./routes/fraud.routes"));
+const payout_routes_1 = __importDefault(require("./routes/payout.routes"));
 const rateLimiter_middleware_1 = require("./middleware/rateLimiter.middleware");
 const xss_middleware_1 = require("./middleware/xss.middleware");
 const errorHandler_middleware_1 = require("./middleware/errorHandler.middleware");
@@ -197,6 +199,8 @@ app.use('/api/v1/agreements', agreement_routes_1.default);
 app.use('/api/v1/breaches', breach_routes_1.default);
 app.use('/api/v1/transactions', transaction_routes_1.default);
 app.use('/api/v1/push', push_routes_1.default);
+app.use('/api/v1/fraud', fraud_routes_1.default);
+app.use('/api/v1/payouts', payout_routes_1.default);
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(errorHandler_middleware_1.notFoundHandler);
 app.use(errorHandler_middleware_1.globalErrorHandler);
@@ -218,7 +222,14 @@ process.on('SIGTERM', () => {
         process.exit(0);
     });
 });
+const bookingCleanup_1 = require("./utils/bookingCleanup");
 httpServer.listen(port, () => {
     console.log(`✅ Server running on port ${port} [${process.env.NODE_ENV || 'development'}]`);
+    // Initial startup cleanup for expired bed reservations
+    (0, bookingCleanup_1.cleanupExpiredBookings)().catch(console.error);
+    // Periodic background cleanup every 2 minutes
+    setInterval(() => {
+        (0, bookingCleanup_1.cleanupExpiredBookings)().catch(console.error);
+    }, 2 * 60 * 1000);
 });
 //# sourceMappingURL=server.js.map

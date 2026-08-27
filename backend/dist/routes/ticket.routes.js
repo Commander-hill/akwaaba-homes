@@ -9,8 +9,11 @@ router.use(auth_middleware_1.authenticate);
 // Tenant routes
 router.post('/', ticket_controller_1.createTicket);
 router.get('/me', ticket_controller_1.getTenantTickets);
-// Landlord routes
+// Landlord & Multi-stage routes
 router.get('/landlord', ticket_controller_1.getLandlordTickets);
 router.patch('/:id/status', ticket_controller_1.updateTicketStatus);
+// Admin & Escalation routes
+router.post('/check-escalations', ticket_controller_1.checkAndEscalateTickets);
+router.get('/admin/escalated', ticket_controller_1.getAdminEscalatedTickets);
 exports.default = router;
 //# sourceMappingURL=ticket.routes.js.map

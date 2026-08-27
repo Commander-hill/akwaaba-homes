@@ -13,6 +13,7 @@ router.post('/logout', auth_controller_1.logout);
 router.post('/refresh', rateLimiter_middleware_1.authRateLimiter, auth_controller_1.refresh);
 router.post('/verify-email', rateLimiter_middleware_1.otpRateLimiter, auth_controller_1.verifyEmail);
 router.post('/ghana-card', auth_middleware_1.authenticate, auth_controller_1.submitGhanaCard);
+router.post('/landlord-verification', auth_middleware_1.authenticate, auth_controller_1.submitLandlordVerification);
 router.post('/forgot-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.forgotPassword);
 router.post('/reset-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.resetPassword);
 // Protected routes

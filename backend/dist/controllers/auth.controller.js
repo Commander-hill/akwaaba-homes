@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login = exports.verifyEmail = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -504,6 +504,46 @@ const submitGhanaCard = async (req, res) => {
     }
 };
 exports.submitGhanaCard = submitGhanaCard;
+const submitLandlordVerification = async (req, res) => {
+    try {
+        const { ghanaCardNumber, ghanaCardFrontUrl, ghanaCardBackUrl, landlordDocUrl } = req.body;
+        if (!req.user?.id) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Only landlords can submit landlord verification' });
+            return;
+        }
+        if (!ghanaCardNumber || !ghanaCardFrontUrl || !ghanaCardBackUrl || !landlordDocUrl) {
+            res.status(400).json({ message: 'Ghana Card details and Property Ownership Document are required' });
+            return;
+        }
+        const encryptedCardNumber = (0, crypto_1.encryptData)(ghanaCardNumber);
+        await prisma_1.default.user.update({
+            where: { id: req.user.id },
+            data: {
+                ghanaCardNumber: encryptedCardNumber,
+                ghanaCardFrontUrl,
+                ghanaCardBackUrl,
+                landlordDocUrl,
+                landlordVerificationStatus: 'PENDING'
+            }
+        });
+        cache_1.default.del(`user:me:${req.user.id}`);
+        try {
+            (0, socket_1.emitToUser)(req.user.id, 'user_updated', { landlordVerificationStatus: 'PENDING' });
+            (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'Landlord verification document submitted successfully for admin review' });
+    }
+    catch (error) {
+        console.error('Submit Landlord Verification error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.submitLandlordVerification = submitLandlordVerification;
 const updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType } = req.body;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateTicketStatus = exports.getLandlordTickets = exports.getTenantTickets = exports.createTicket = void 0;
+exports.getAdminEscalatedTickets = exports.checkAndEscalateTickets = exports.updateTicketStatus = exports.getLandlordTickets = exports.getTenantTickets = exports.createTicket = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const createTicket = async (req, res) => {
@@ -119,39 +119,55 @@ const getLandlordTickets = async (req, res) => {
 exports.getLandlordTickets = getLandlordTickets;
 const updateTicketStatus = async (req, res) => {
     try {
-        if (!req.user || req.user.role !== 'LANDLORD') {
-            res.status(403).json({ message: 'Only landlords can update ticket status' });
+        if (!req.user || (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN')) {
+            res.status(403).json({ message: 'Only landlords or admins can update ticket status' });
             return;
         }
         const { id } = req.params;
-        const { status } = req.body;
-        if (!['PENDING', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'].includes(status)) {
+        const { status, scheduledDate, repairCost, completionImageUrl, resolutionNotes } = req.body;
+        const validStatuses = ['PENDING', 'SCHEDULED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED', 'ESCALATED'];
+        if (status && !validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
             return;
         }
         // Verify ownership
         const ticket = await prisma_1.default.maintenanceTicket.findUnique({
             where: { id },
-            include: { property: true }
+            include: { property: true, tenant: true }
         });
         if (!ticket) {
             res.status(404).json({ message: 'Ticket not found' });
             return;
         }
-        if (ticket.property.landlordId !== req.user.id) {
+        if (req.user.role === 'LANDLORD' && ticket.property.landlordId !== req.user.id) {
             res.status(403).json({ message: 'You do not have permission to update this ticket' });
             return;
         }
+        const updateData = {};
+        if (status)
+            updateData.status = status;
+        if (scheduledDate)
+            updateData.scheduledDate = new Date(scheduledDate);
+        if (typeof repairCost === 'number')
+            updateData.repairCost = repairCost;
+        if (completionImageUrl)
+            updateData.completionImageUrl = completionImageUrl;
+        if (resolutionNotes)
+            updateData.resolutionNotes = resolutionNotes;
         const updatedTicket = await prisma_1.default.maintenanceTicket.update({
             where: { id },
-            data: { status }
+            data: updateData,
+            include: {
+                property: { select: { title: true, location: true } },
+                tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } }
+            }
         });
         // Notify tenant and landlord real-time sync
         try {
             const io = (0, socket_1.getIO)();
             io.to(ticket.tenantId).emit('notification', {
-                title: `Ticket ${status}`,
-                message: `Your maintenance ticket "${ticket.title}" is now ${status.toLowerCase()}.`,
+                title: `Ticket ${status || 'Updated'}`,
+                message: `Your maintenance ticket "${ticket.title}" is now ${status ? status.toLowerCase() : 'updated'}.`,
                 type: 'ticket'
             });
             io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
@@ -161,7 +177,7 @@ const updateTicketStatus = async (req, res) => {
         catch (e) {
             console.error('Socket emission failed', e);
         }
-        res.status(200).json({ message: 'Ticket status updated', ticket: updatedTicket });
+        res.status(200).json({ message: 'Ticket updated successfully', ticket: updatedTicket });
     }
     catch (error) {
         console.error('Error updating ticket status:', error);
@@ -169,4 +185,70 @@ const updateTicketStatus = async (req, res) => {
     }
 };
 exports.updateTicketStatus = updateTicketStatus;
+/**
+ * 48-Hour Urgency Escalation Guard:
+ * Auto-escalates HIGH or URGENT priority tickets older than 48h to ADMIN.
+ */
+const checkAndEscalateTickets = async (req, res) => {
+    try {
+        const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        const overdueTickets = await prisma_1.default.maintenanceTicket.findMany({
+            where: {
+                priority: { in: ['HIGH', 'URGENT'] },
+                status: { in: ['PENDING', 'SCHEDULED'] },
+                isEscalated: false,
+                createdAt: { lte: fortyEightHoursAgo }
+            },
+            include: { property: true }
+        });
+        if (overdueTickets.length > 0) {
+            await prisma_1.default.maintenanceTicket.updateMany({
+                where: { id: { in: overdueTickets.map(t => t.id) } },
+                data: {
+                    isEscalated: true,
+                    status: 'ESCALATED',
+                    escalatedAt: new Date()
+                }
+            });
+            console.log(`⚠️  [Ticket Escalation Guard] Escalated ${overdueTickets.length} unresolved high-priority ticket(s) to Admin.`);
+        }
+        res.status(200).json({
+            message: `Escalation check complete. ${overdueTickets.length} ticket(s) escalated.`,
+            escalatedCount: overdueTickets.length
+        });
+    }
+    catch (error) {
+        console.error('Error checking overdue tickets:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.checkAndEscalateTickets = checkAndEscalateTickets;
+const getAdminEscalatedTickets = async (req, res) => {
+    try {
+        if (!req.user || req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Admin access required' });
+            return;
+        }
+        const tickets = await prisma_1.default.maintenanceTicket.findMany({
+            where: {
+                OR: [
+                    { isEscalated: true },
+                    { priority: 'URGENT' },
+                    { status: 'ESCALATED' }
+                ]
+            },
+            include: {
+                property: { select: { title: true, location: true, landlord: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } } } },
+                tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ tickets });
+    }
+    catch (error) {
+        console.error('Error fetching admin escalated tickets:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAdminEscalatedTickets = getAdminEscalatedTickets;
 //# sourceMappingURL=ticket.controller.js.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLandlordEarningsReport = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
+exports.handlePaystackWebhook = exports.getLandlordEarningsReport = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const getLandlordCashflows = async (req, res) => {
@@ -197,4 +197,137 @@ const getLandlordEarningsReport = async (req, res) => {
     }
 };
 exports.getLandlordEarningsReport = getLandlordEarningsReport;
+const crypto_1 = __importDefault(require("crypto"));
+const notification_service_1 = require("../utils/notification.service");
+const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
+const handlePaystackWebhook = async (req, res) => {
+    try {
+        const paystackSignature = req.headers['x-paystack-signature'];
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+        if (!secretKey) {
+            console.warn('[Paystack Webhook] Missing PAYSTACK_SECRET_KEY on backend');
+            res.status(500).json({ message: 'Webhook handler misconfigured' });
+            return;
+        }
+        // Verify Paystack HMAC SHA512 Signature
+        if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
+            const hash = crypto_1.default
+                .createHmac('sha512', secretKey)
+                .update(JSON.stringify(req.body))
+                .digest('hex');
+            if (hash !== paystackSignature) {
+                console.error('[Paystack Webhook] Invalid HMAC SHA512 signature header');
+                res.status(401).json({ message: 'Invalid webhook signature' });
+                return;
+            }
+        }
+        const { event, data } = req.body;
+        if (event === 'charge.success') {
+            const reference = data?.reference;
+            const bookingId = data?.metadata?.bookingId;
+            let booking = null;
+            if (bookingId) {
+                booking = await prisma_1.default.booking.findUnique({
+                    where: { id: bookingId },
+                    include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
+                });
+            }
+            else if (reference) {
+                const tx = await prisma_1.default.transaction.findFirst({ where: { reference } });
+                if (tx) {
+                    booking = await prisma_1.default.booking.findUnique({
+                        where: { id: tx.bookingId },
+                        include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
+                    });
+                }
+            }
+            if (!booking) {
+                console.warn(`[Paystack Webhook] Booking not found for reference: ${reference}, bookingId: ${bookingId}`);
+                res.status(200).json({ message: 'Event acknowledged, booking not found' });
+                return;
+            }
+            // Idempotency: If already COMPLETED, simply respond 200 OK
+            if (booking.status === 'COMPLETED') {
+                res.status(200).json({ message: 'Booking already completed' });
+                return;
+            }
+            // Prepare atomic transaction operations
+            const operations = [
+                prisma_1.default.booking.update({
+                    where: { id: booking.id },
+                    data: { status: 'COMPLETED' }
+                }),
+                prisma_1.default.transaction.create({
+                    data: {
+                        bookingId: booking.id,
+                        tenantId: booking.tenantId,
+                        landlordId: booking.property.landlordId,
+                        propertyId: booking.propertyId,
+                        roomId: booking.roomId,
+                        amount: data.amount ? data.amount / 100 : booking.room.price,
+                        reference: reference || `WEBHOOK_${Date.now()}`,
+                        status: 'SUCCESS'
+                    }
+                })
+            ];
+            if (booking.bedId) {
+                operations.push(prisma_1.default.bed.update({
+                    where: { id: booking.bedId },
+                    data: { status: 'BOOKED' }
+                }));
+            }
+            await prisma_1.default.$transaction(operations);
+            // Auto-reject other pending bookings if capacity is full
+            if (booking.roomId && booking.room) {
+                const completedBookings = await prisma_1.default.booking.count({
+                    where: { roomId: booking.roomId, status: 'COMPLETED' }
+                });
+                if (completedBookings >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
+                    await prisma_1.default.booking.updateMany({
+                        where: {
+                            roomId: booking.roomId,
+                            id: { not: booking.id },
+                            status: { in: ['PENDING', 'APPROVED'] }
+                        },
+                        data: { status: 'REJECTED' }
+                    });
+                }
+            }
+            // Dispatch Notifications
+            if (booking.tenant?.email) {
+                await (0, notification_service_1.notifyBookingStatusChanged)({
+                    tenantId: booking.tenantId,
+                    tenantEmail: booking.tenant.email,
+                    tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
+                    propertyTitle: booking.property.title,
+                    status: 'COMPLETED'
+                });
+                await (0, notification_service_1.notifyPaymentReceipt)({
+                    tenantId: booking.tenantId,
+                    tenantEmail: booking.tenant.email,
+                    tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
+                    propertyTitle: booking.property.title,
+                    amount: data.amount ? data.amount / 100 : booking.room.price,
+                    bookingId: booking.id
+                });
+            }
+            // Real-time Sockets & Cache
+            try {
+                const io = (0, socket_1.getIO)();
+                io.emit('booking_updated', { bookingId: booking.id, propertyId: booking.propertyId });
+                io.emit('property_updated', { propertyId: booking.propertyId });
+                cache_1.default.flushAll();
+            }
+            catch (e) { }
+            console.log(`[Paystack Webhook] Successfully processed charge.success for booking: ${booking.id}`);
+        }
+        res.status(200).json({ status: 'success' });
+    }
+    catch (error) {
+        console.error('[Paystack Webhook] Error handling webhook:', error);
+        res.status(500).json({ message: 'Webhook execution error' });
+    }
+};
+exports.handlePaystackWebhook = handlePaystackWebhook;
 //# sourceMappingURL=transaction.controller.js.map

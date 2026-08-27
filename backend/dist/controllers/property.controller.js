@@ -3,12 +3,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLandlordStats = exports.getLandlordProperties = exports.deleteProperty = exports.updateProperty = exports.getPropertyById = exports.getProperties = exports.createProperty = void 0;
+exports.getLandlordStats = exports.getLandlordProperties = exports.deleteProperty = exports.updateProperty = exports.getPropertyById = exports.getProperties = exports.createProperty = exports.parseBedsPerRoom = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
 const cache_1 = __importDefault(require("../utils/cache"));
 const json_1 = require("../utils/json");
 const socket_1 = require("../socket");
+// Helper to safely parse beds per room from any room type string (e.g. "2 in a room" -> 2)
+const parseBedsPerRoom = (roomType) => {
+    if (!roomType)
+        return 1;
+    const str = roomType.toLowerCase().trim();
+    if (str.includes('4') || str.includes('four'))
+        return 4;
+    if (str.includes('3') || str.includes('three'))
+        return 3;
+    if (str.includes('2') || str.includes('two') || str.includes('double') || str.includes('twin'))
+        return 2;
+    if (str.includes('1') || str.includes('one') || str.includes('single'))
+        return 1;
+    const match = str.match(/\d+/);
+    if (match)
+        return parseInt(match[0], 10);
+    return 1;
+};
+exports.parseBedsPerRoom = parseBedsPerRoom;
 // Helper to safely parse JSON strings from SQLite / Postgres
 const parseProperty = (property) => {
     if (!property)
@@ -89,7 +108,7 @@ const createProperty = async (req, res) => {
         });
         // Auto-generate Rooms, physical Room Units, and Beds
         for (const r of rooms) {
-            const bedsPerRoom = parseInt(r.roomType.split(' ')[0], 10) || 1;
+            const bedsPerRoom = (0, exports.parseBedsPerRoom)(r.roomType);
             const numRooms = parseInt(r.numberOfRooms, 10);
             const blockName = r.blockName || null;
             const gender = r.gender || 'MIXED';
@@ -194,7 +213,12 @@ const getProperties = async (req, res) => {
         const [properties, totalCount] = await Promise.all([
             prisma_1.default.property.findMany({
                 ...queryOptions,
-                include: { rooms: true }
+                include: {
+                    rooms: true,
+                    landlord: {
+                        select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true }
+                    }
+                }
             }),
             prisma_1.default.property.count({ where: queryOptions.where }),
         ]);
@@ -249,6 +273,8 @@ const getPropertyById = async (req, res) => {
                         firstName: true,
                         lastName: true,
                         reputationScore: true,
+                        isVerifiedLandlord: true,
+                        landlordVerificationStatus: true,
                     }
                 },
                 rooms: {

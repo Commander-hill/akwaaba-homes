@@ -10,6 +10,7 @@ export declare const updatePropertyApproval: (req: Request, res: Response) => Pr
 export declare const getAllBookings: (req: Request, res: Response) => Promise<void>;
 export declare const getAllSubscriptions: (req: Request, res: Response) => Promise<void>;
 export declare const verifyUserCard: (req: Request, res: Response) => Promise<void>;
+export declare const verifyLandlord: (req: Request, res: Response) => Promise<void>;
 export declare const getAllReviews: (req: Request, res: Response) => Promise<void>;
 export declare const deleteReview: (req: Request, res: Response) => Promise<void>;
 export declare const activateSubscription: (req: Request, res: Response) => Promise<void>;

@@ -4,12 +4,14 @@ interface NotifyParams {
     userId: string;
     recipientEmail: string;
     recipientName: string;
+    recipientPhone?: string | null;
     type: 'BOOKING' | 'SUBSCRIPTION' | 'PROPERTY' | 'REVIEW' | 'ANNOUNCEMENT';
     title: string;
     message: string;
     link?: string;
     emailSubject: string;
     emailBodyHtml: string;
+    smsText?: string;
 }
 export declare const notify: (params: NotifyParams) => Promise<void>;
 export declare const notifyBookingCreated: (opts: {
@@ -69,5 +71,22 @@ export declare const notifyAgreementCompleted: (opts: {
     hash: string;
 }) => Promise<void>;
 export declare const notifyMaintenanceEnded: () => Promise<void>;
+export declare const notifyPayoutSent: (opts: {
+    landlordId: string;
+    landlordEmail: string;
+    landlordName: string;
+    landlordPhone?: string;
+    amount: number;
+    bankOrNetwork: string;
+    accountNumber: string;
+}) => Promise<void>;
+export declare const notifyLandlordVerification: (opts: {
+    landlordId: string;
+    landlordEmail: string;
+    landlordName: string;
+    landlordPhone?: string;
+    isVerified: boolean;
+    notes?: string;
+}) => Promise<void>;
 export {};
 //# sourceMappingURL=notification.service.d.ts.map

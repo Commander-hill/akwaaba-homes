@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getTenantBookings = exports.createBooking = void 0;
+exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getTenantBookings = exports.createBooking = void 0;
 const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
@@ -11,12 +11,42 @@ const notification_service_1 = require("../utils/notification.service");
 const socket_1 = require("../socket");
 const json_1 = require("../utils/json");
 const cache_1 = __importDefault(require("../utils/cache"));
+const bookingCleanup_1 = require("../utils/bookingCleanup");
 const createBooking = async (req, res) => {
     try {
+        // Lazily purge expired pending bookings
+        await (0, bookingCleanup_1.cleanupExpiredBookings)();
         const tenantId = req.user.id;
         const { propertyId, roomId, roomUnitId, bedId, startDate, endDate } = req.body;
         if (!propertyId || !roomId || !startDate || !endDate) {
             res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        // ── STRICT SINGLE ACTIVE BOOKING GUARD ──
+        const existingActiveBooking = await prisma_1.default.booking.findFirst({
+            where: {
+                tenantId,
+                status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+            },
+            include: {
+                property: { select: { id: true, title: true } },
+                room: { select: { id: true, roomType: true } },
+                bed: { select: { id: true, bedNumber: true } }
+            }
+        });
+        if (existingActiveBooking) {
+            const isPending = existingActiveBooking.status === 'PENDING';
+            const statusText = isPending ? 'a pending (unpaid)' : 'an active/completed';
+            res.status(409).json({
+                message: `Booking Blocked: You already have ${statusText} booking at "${existingActiveBooking.property?.title || 'another property'}". You cannot hold multiple room bookings simultaneously.`,
+                existingBooking: {
+                    id: existingActiveBooking.id,
+                    propertyId: existingActiveBooking.propertyId,
+                    propertyTitle: existingActiveBooking.property?.title,
+                    status: existingActiveBooking.status,
+                    isPending
+                }
+            });
             return;
         }
         const property = await prisma_1.default.property.findUnique({
@@ -127,41 +157,73 @@ const createBooking = async (req, res) => {
             });
             return;
         }
-        // ── DYNAMIC GENDER LOCKING (Model 2: Room Unit Level for Mixed Blocks) ──
-        if (targetRoomUnit) {
-            if (targetRoomUnit.genderLock !== 'UNASSIGNED' && targetRoomUnit.genderLock !== tenantGender) {
-                res.status(403).json({
-                    message: `Booking Rejected: Room Unit "${targetRoomUnit.unitNumber}" is reserved for ${targetRoomUnit.genderLock === 'MALE' ? 'Male' : 'Female'} occupants.`
+        // ── ATOMIC DATABASE TRANSACTION LOCK FOR BED RESERVATION & CREATION ──
+        let booking;
+        try {
+            booking = await prisma_1.default.$transaction(async (tx) => {
+                let targetRoomUnit = null;
+                let targetBed = null;
+                if (roomUnitId && bedId) {
+                    targetRoomUnit = await tx.roomUnit.findUnique({ where: { id: roomUnitId } });
+                    if (!targetRoomUnit || targetRoomUnit.roomId !== roomId) {
+                        throw { status: 400, message: 'Invalid room unit selected' };
+                    }
+                    targetBed = await tx.bed.findUnique({ where: { id: bedId } });
+                    if (!targetBed || targetBed.roomUnitId !== roomUnitId) {
+                        throw { status: 400, message: 'Invalid bed selected' };
+                    }
+                    // ATOMIC CHECK: Ensure bed slot is still AVAILABLE at the exact moment of transaction execution
+                    if (targetBed.status !== 'AVAILABLE') {
+                        throw {
+                            status: 409,
+                            message: `Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit.unitNumber}" was just reserved or booked by another student. Please select an available bed slot.`
+                        };
+                    }
+                }
+                // Dynamic Gender Locking on Room Unit
+                if (targetRoomUnit) {
+                    if (targetRoomUnit.genderLock !== 'UNASSIGNED' && targetRoomUnit.genderLock !== tenantGender) {
+                        throw {
+                            status: 403,
+                            message: `Booking Rejected: Room Unit "${targetRoomUnit.unitNumber}" is reserved for ${targetRoomUnit.genderLock === 'MALE' ? 'Male' : 'Female'} occupants.`
+                        };
+                    }
+                    if (targetRoomUnit.genderLock === 'UNASSIGNED') {
+                        await tx.roomUnit.update({
+                            where: { id: targetRoomUnit.id },
+                            data: { genderLock: tenantGender }
+                        });
+                    }
+                }
+                // Reserve selected bed slot atomically
+                if (targetBed) {
+                    await tx.bed.update({
+                        where: { id: targetBed.id },
+                        data: { status: 'RESERVED' }
+                    });
+                }
+                // Create booking record atomically
+                return await tx.booking.create({
+                    data: {
+                        tenantId,
+                        propertyId,
+                        roomId,
+                        roomUnitId: roomUnitId || null,
+                        bedId: bedId || null,
+                        startDate: new Date(startDate),
+                        endDate: new Date(endDate),
+                        status: 'PENDING'
+                    }
                 });
-                return;
-            }
-            // Lock room unit gender to tenant's gender if currently unassigned
-            if (targetRoomUnit.genderLock === 'UNASSIGNED') {
-                await prisma_1.default.roomUnit.update({
-                    where: { id: targetRoomUnit.id },
-                    data: { genderLock: tenantGender }
-                });
-            }
-        }
-        // Reserve selected bed slot
-        if (targetBed) {
-            await prisma_1.default.bed.update({
-                where: { id: targetBed.id },
-                data: { status: 'RESERVED' }
             });
         }
-        const booking = await prisma_1.default.booking.create({
-            data: {
-                tenantId,
-                propertyId,
-                roomId,
-                roomUnitId: roomUnitId || null,
-                bedId: bedId || null,
-                startDate: new Date(startDate),
-                endDate: new Date(endDate),
-                status: 'PENDING'
-            },
-        });
+        catch (txError) {
+            if (txError.status && txError.message) {
+                res.status(txError.status).json({ message: txError.message });
+                return;
+            }
+            throw txError;
+        }
         // Notify landlord via email + in-app
         await (0, notification_service_1.notifyBookingCreated)({
             landlordId: property.landlordId,
@@ -530,13 +592,7 @@ const verifyPayment = async (req, res) => {
             res.status(400).json({ message: 'Payment verification failed' });
             return;
         }
-        if (booking.bedId) {
-            await prisma_1.default.bed.update({
-                where: { id: booking.bedId },
-                data: { status: 'BOOKED' }
-            });
-        }
-        const [updatedBooking, transaction] = await prisma_1.default.$transaction([
+        const operations = [
             prisma_1.default.booking.update({
                 where: { id },
                 data: { status: 'COMPLETED' }
@@ -553,7 +609,14 @@ const verifyPayment = async (req, res) => {
                     status: 'SUCCESS'
                 }
             })
-        ]);
+        ];
+        if (booking.bedId) {
+            operations.push(prisma_1.default.bed.update({
+                where: { id: booking.bedId },
+                data: { status: 'BOOKED' }
+            }));
+        }
+        const [updatedBooking, transaction] = await prisma_1.default.$transaction(operations);
         // Recalibrate Capacity and Close Loophole
         if (booking.roomId && booking.room) {
             const completedBookings = await prisma_1.default.booking.count({
@@ -597,4 +660,103 @@ const verifyPayment = async (req, res) => {
     }
 };
 exports.verifyPayment = verifyPayment;
+const getMyActiveBooking = async (req, res) => {
+    try {
+        // Lazily clear any expired pending bookings first
+        await (0, bookingCleanup_1.cleanupExpiredBookings)();
+        const tenantId = req.user.id;
+        const activeBooking = await prisma_1.default.booking.findFirst({
+            where: {
+                tenantId,
+                status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+            },
+            include: {
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        images: true
+                    }
+                },
+                room: {
+                    select: {
+                        id: true,
+                        roomType: true,
+                        price: true,
+                        blockName: true,
+                        gender: true
+                    }
+                },
+                roomUnit: {
+                    select: {
+                        id: true,
+                        unitNumber: true,
+                        floor: true
+                    }
+                },
+                bed: {
+                    select: {
+                        id: true,
+                        bedNumber: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ booking: activeBooking || null });
+    }
+    catch (error) {
+        console.error('Error fetching active booking:', error);
+        res.status(500).json({ message: 'Failed to fetch active booking status' });
+    }
+};
+exports.getMyActiveBooking = getMyActiveBooking;
+const cancelPendingBooking = async (req, res) => {
+    try {
+        const tenantId = req.user.id;
+        const { id } = req.params;
+        const booking = await prisma_1.default.booking.findUnique({
+            where: { id },
+            include: { bed: true }
+        });
+        if (!booking) {
+            res.status(404).json({ message: 'Booking not found' });
+            return;
+        }
+        if (booking.tenantId !== tenantId && req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (booking.status !== 'PENDING') {
+            res.status(400).json({ message: 'Only pending (unpaid) bookings can be cancelled by the student.' });
+            return;
+        }
+        // Release reserved bed if any
+        if (booking.bedId) {
+            await prisma_1.default.bed.update({
+                where: { id: booking.bedId },
+                data: { status: 'AVAILABLE' }
+            });
+        }
+        // Update booking status to CANCELLED
+        const updated = await prisma_1.default.booking.update({
+            where: { id },
+            data: { status: 'CANCELLED' }
+        });
+        try {
+            (0, socket_1.getIO)().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+            cache_1.default.flushAll();
+        }
+        catch (e) {
+            /* non-blocking */
+        }
+        res.status(200).json({ message: 'Pending booking cancelled successfully', booking: updated });
+    }
+    catch (error) {
+        console.error('Error cancelling pending booking:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.cancelPendingBooking = cancelPendingBooking;
 //# sourceMappingURL=booking.controller.js.map

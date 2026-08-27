@@ -7,6 +7,7 @@ exports.getRoomsByProperty = exports.deleteRoom = exports.updateRoom = exports.c
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
+const property_controller_1 = require("./property.controller");
 const createRoom = async (req, res) => {
     try {
         const { propertyId, roomType, numberOfRooms, price, blockName, gender } = req.body;
@@ -29,7 +30,7 @@ const createRoom = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
-        const bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
+        const bedsPerRoom = (0, property_controller_1.parseBedsPerRoom)(roomType);
         const room = await prisma_1.default.room.create({
             data: {
                 propertyId,
@@ -89,7 +90,7 @@ const updateRoom = async (req, res) => {
         const dataToUpdate = {};
         if (roomType) {
             dataToUpdate.roomType = roomType;
-            dataToUpdate.bedsPerRoom = parseInt(roomType.split(' ')[0], 10) || 1;
+            dataToUpdate.bedsPerRoom = (0, property_controller_1.parseBedsPerRoom)(roomType);
         }
         if (numberOfRooms !== undefined) {
             dataToUpdate.numberOfRooms = parseInt(numberOfRooms, 10);

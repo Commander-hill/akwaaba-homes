@@ -10,6 +10,11 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 // Storage configuration
 const storage = multer_1.default.memoryStorage();
+// General media upload (images, audio, PDF up to 25MB)
+const uploadMediaConfig = (0, multer_1.default)({
+    storage,
+    limits: { fileSize: 25 * 1024 * 1024 }
+});
 // Avatar upload (images up to 2MB)
 const uploadAvatarConfig = (0, multer_1.default)({
     storage,
@@ -71,5 +76,6 @@ router.use(auth_middleware_1.authenticate);
 router.post('/document', uploadDocumentConfig.single('document'), upload_controller_1.uploadDocument);
 router.post('/video', uploadVideoConfig.single('video'), upload_controller_1.uploadVideo);
 router.post('/images', uploadPropertyConfig.array('images', 5), upload_controller_1.uploadPropertyImages);
+router.post('/media', uploadMediaConfig.single('file'), upload_controller_1.uploadMedia);
 exports.default = router;
 //# sourceMappingURL=upload.routes.js.map

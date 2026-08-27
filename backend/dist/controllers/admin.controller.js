@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
@@ -193,6 +193,9 @@ const getAllUsers = async (req, res) => {
                 ghanaCardNumber: true,
                 ghanaCardFrontUrl: true,
                 ghanaCardBackUrl: true,
+                landlordDocUrl: true,
+                isVerifiedLandlord: true,
+                landlordVerificationStatus: true,
                 reputationScore: true,
                 createdAt: true
             }
@@ -201,7 +204,8 @@ const getAllUsers = async (req, res) => {
             ...user,
             ghanaCardNumber: user.ghanaCardNumber ? (0, crypto_1.decryptData)(user.ghanaCardNumber) : null,
             ghanaCardFrontUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl),
-            ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl)
+            ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl),
+            landlordDocUrl: (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl)
         }));
         res.status(200).json(decryptedUsers);
     }
@@ -453,6 +457,49 @@ const verifyUserCard = async (req, res) => {
     }
 };
 exports.verifyUserCard = verifyUserCard;
+const verifyLandlord = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body; // VERIFIED, REJECTED
+        if (!['VERIFIED', 'REJECTED'].includes(status)) {
+            res.status(400).json({ message: 'Invalid status' });
+            return;
+        }
+        const isVerified = status === 'VERIFIED';
+        const user = await prisma_1.default.user.update({
+            where: { id },
+            data: {
+                landlordVerificationStatus: status,
+                isVerifiedLandlord: isVerified
+            }
+        });
+        cache_1.default.del(`user:me:${id}`);
+        cache_1.default.flushAll();
+        try {
+            const { emitToUser, emitToAll } = await import('../socket');
+            emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
+            emitToAll('user_updated', { userId: id });
+        }
+        catch (e) { }
+        // Dispatch SMS & Email Notification
+        (0, notification_service_1.notifyLandlordVerification)({
+            landlordId: user.id,
+            landlordEmail: user.email,
+            landlordName: `${user.firstName} ${user.lastName}`,
+            landlordPhone: user.phoneNumber,
+            isVerified
+        }).catch((e) => console.error('[Notification Error]', e));
+        res.status(200).json({
+            message: `Landlord verification ${isVerified ? 'approved with Verified Blue Badge 🛡️' : 'rejected'}.`,
+            user
+        });
+    }
+    catch (error) {
+        console.error('Error verifying landlord:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.verifyLandlord = verifyLandlord;
 const getAllReviews = async (req, res) => {
     try {
         const reviews = await prisma_1.default.review.findMany({

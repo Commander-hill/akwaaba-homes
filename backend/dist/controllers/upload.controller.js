@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = void 0;
+exports.uploadMedia = exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = void 0;
 const sharp_1 = __importDefault(require("sharp"));
 const cloudinary_1 = require("cloudinary");
 const streamifier_1 = __importDefault(require("streamifier"));
@@ -166,4 +166,34 @@ const serveSecureDocument = async (req, res) => {
     }
 };
 exports.serveSecureDocument = serveSecureDocument;
+const uploadMedia = async (req, res) => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ error: 'No media file provided' });
+            return;
+        }
+        const mime = req.file.mimetype;
+        let folder = 'chat';
+        let resourceType = 'auto';
+        if (mime.startsWith('image/')) {
+            folder = 'chat/images';
+            resourceType = 'image';
+        }
+        else if (mime.startsWith('audio/')) {
+            folder = 'chat/audio';
+            resourceType = 'video'; // Cloudinary uses resource_type video for audio
+        }
+        else if (mime.includes('pdf') || mime.includes('document')) {
+            folder = 'chat/documents';
+            resourceType = 'auto';
+        }
+        const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);
+        res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });
+    }
+    catch (error) {
+        console.error('Error uploading chat media:', error);
+        res.status(500).json({ error: error?.message || 'Failed to upload chat media' });
+    }
+};
+exports.uploadMedia = uploadMedia;
 //# sourceMappingURL=upload.controller.js.map

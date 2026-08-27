@@ -18,6 +18,7 @@ router.get('/users', admin_controller_1.getAllUsers);
 router.put('/users/:id/suspend', admin_controller_1.toggleUserSuspension);
 router.put('/users/:id/lock', admin_controller_1.toggleUserProfileLock);
 router.put('/verify-user/:id', admin_controller_1.verifyUserCard);
+router.put('/verify-landlord/:id', admin_controller_1.verifyLandlord);
 // Properties
 router.get('/properties', admin_controller_1.getAllProperties);
 router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
