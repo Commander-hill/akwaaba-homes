@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.handlePaystackWebhook = exports.getLandlordEarningsReport = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
+exports.handlePaystackWebhook = exports.getLandlordEarningsReport = exports.downloadReceiptPDF = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const getLandlordCashflows = async (req, res) => {
@@ -111,6 +111,47 @@ const getTransactionById = async (req, res) => {
     }
 };
 exports.getTransactionById = getTransactionById;
+const pdf_service_1 = require("../utils/pdf.service");
+const downloadReceiptPDF = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const transaction = await prisma_1.default.transaction.findUnique({
+            where: { id },
+            include: {
+                tenant: true,
+                property: true,
+                room: true
+            }
+        });
+        if (!transaction) {
+            res.status(404).json({ message: 'Transaction record not found' });
+            return;
+        }
+        const pdfBuffer = await (0, pdf_service_1.generateReceiptPDF)({
+            transactionId: transaction.id,
+            reference: transaction.reference,
+            studentName: `${transaction.tenant.firstName} ${transaction.tenant.lastName}`,
+            studentEmail: transaction.tenant.email,
+            studentPhone: transaction.tenant.phoneNumber,
+            propertyTitle: transaction.property.title,
+            roomType: transaction.room?.roomType || 'Hostel Room',
+            grossAmount: transaction.amount,
+            platformFee: (transaction.amount * 5.0) / 100,
+            netAmount: transaction.amount - ((transaction.amount * 5.0) / 100),
+            paymentMethod: 'Paystack MoMo / Card',
+            paymentStatus: transaction.status,
+            paidAt: transaction.createdAt.toISOString()
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Receipt_${transaction.reference}.pdf`);
+        res.send(pdfBuffer);
+    }
+    catch (error) {
+        console.error('Error generating PDF receipt:', error);
+        res.status(500).json({ message: 'Failed to generate PDF receipt document' });
+    }
+};
+exports.downloadReceiptPDF = downloadReceiptPDF;
 const getLandlordEarningsReport = async (req, res) => {
     try {
         const landlordId = req.user.id;

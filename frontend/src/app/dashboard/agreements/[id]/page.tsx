@@ -94,6 +94,23 @@ export default function AgreementPage() {
     signMutation.mutate(signatureData);
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      toast.loading('Generating Official PDF Agreement...', { id: 'pdf' });
+      const response = await api.get(`/bookings/${bookingId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Tenancy_Agreement_${(bookingId as string).slice(0, 8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Official PDF Downloaded!', { id: 'pdf' });
+    } catch (err) {
+      toast.error('Failed to download PDF document.', { id: 'pdf' });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in pb-12">
       
@@ -110,10 +127,10 @@ export default function AgreementPage() {
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => window.print()}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-[var(--foreground)] rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md"
           >
-            <Printer className="w-4 h-4" /> Print PDF
+            <Printer className="w-4 h-4" /> Download Official PDF
           </button>
           {!iHaveSigned && (
             <button 

@@ -5,10 +5,29 @@ import api from '@/lib/axios';
 import { Loader2, Printer, Building } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 
+import toast from 'react-hot-toast';
+
 export default function InvoicePage() {
   const params = useParams();
   const router = useRouter();
   const transactionId = params.id as string;
+
+  const handleDownloadPDF = async () => {
+    try {
+      toast.loading('Generating Official Receipt PDF...', { id: 'receipt-pdf' });
+      const response = await api.get(`/transactions/${transactionId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Receipt_${transactionId.slice(0, 8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('PDF Receipt Downloaded!', { id: 'receipt-pdf' });
+    } catch (err) {
+      toast.error('Failed to download PDF receipt.', { id: 'receipt-pdf' });
+    }
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['transaction', transactionId],
@@ -40,13 +59,19 @@ export default function InvoicePage() {
   return (
     <div className="max-w-4xl mx-auto my-8 relative">
       
-      {/* Floating Print Button - Hidden when printing */}
-      <div className="absolute -top-12 right-0 print:hidden">
+      {/* Floating Print & Download Buttons - Hidden when printing */}
+      <div className="absolute -top-12 right-0 print:hidden flex gap-3">
+        <button 
+          onClick={handleDownloadPDF}
+          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+        >
+          <Printer className="w-5 h-5" /> Download PDF Receipt
+        </button>
         <button 
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-[var(--primary)] text-white px-5 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
         >
-          <Printer className="w-5 h-5" /> Print Invoice
+          <Printer className="w-5 h-5" /> Print
         </button>
       </div>
 

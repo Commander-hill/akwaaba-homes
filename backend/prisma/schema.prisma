@@ -68,6 +68,8 @@ model User {
   transactionsAsLandlord Transaction[] @relation("LandlordTransactions")
   pushSubscriptions      PushSubscription[]
   payoutRequests         PayoutRequest[] @relation("LandlordPayouts")
+  sentRoommateInvites     RoommateInvitation[] @relation("SentRoommateInvites")
+  receivedRoommateInvites RoommateInvitation[] @relation("ReceivedRoommateInvites")
 
   @@index([role])
 }
@@ -97,6 +99,7 @@ model Property {
   BreachReport BreachReport[]
   transactions Transaction[]
   subscription PropertySubscription?
+  roommateInvitations RoommateInvitation[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -138,6 +141,7 @@ model RoomUnit {
 
   beds     Bed[]
   bookings Booking[]
+  roommateInvitations RoommateInvitation[]
 
   @@index([roomId])
   @@index([genderLock])
@@ -436,3 +440,25 @@ model MaintenanceSubscriber {
   notified  Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
+model RoommateInvitation {
+  id          String   @id @default(uuid())
+  senderId    String
+  sender      User     @relation("SentRoommateInvites", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User     @relation("ReceivedRoommateInvites", fields: [receiverId], references: [id], onDelete: Cascade)
+  propertyId  String?
+  property    Property? @relation(fields: [propertyId], references: [id])
+  roomUnitId  String?
+  roomUnit    RoomUnit? @relation(fields: [roomUnitId], references: [id])
+  matchScore  Int
+  status      String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  message     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+}
+

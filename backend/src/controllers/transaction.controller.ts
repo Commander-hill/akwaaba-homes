@@ -118,6 +118,50 @@ export const getTransactionById = async (req: Request, res: Response): Promise<v
   }
 };
 
+import { generateReceiptPDF } from '../utils/pdf.service';
+
+export const downloadReceiptPDF = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const transaction = await prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        tenant: true,
+        property: true,
+        room: true
+      }
+    });
+
+    if (!transaction) {
+      res.status(404).json({ message: 'Transaction record not found' });
+      return;
+    }
+
+    const pdfBuffer = await generateReceiptPDF({
+      transactionId: transaction.id,
+      reference: transaction.reference,
+      studentName: `${transaction.tenant.firstName} ${transaction.tenant.lastName}`,
+      studentEmail: transaction.tenant.email,
+      studentPhone: transaction.tenant.phoneNumber,
+      propertyTitle: transaction.property.title,
+      roomType: transaction.room?.roomType || 'Hostel Room',
+      grossAmount: transaction.amount,
+      platformFee: (transaction.amount * 5.0) / 100,
+      netAmount: transaction.amount - ((transaction.amount * 5.0) / 100),
+      paymentMethod: 'Paystack MoMo / Card',
+      paymentStatus: transaction.status,
+      paidAt: transaction.createdAt.toISOString()
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Receipt_${transaction.reference}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating PDF receipt:', error);
+    res.status(500).json({ message: 'Failed to generate PDF receipt document' });
+  }
+};
+
 export const getLandlordEarningsReport = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;

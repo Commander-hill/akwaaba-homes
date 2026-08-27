@@ -7,13 +7,15 @@ import {
   payBooking, 
   verifyPayment,
   getMyActiveBooking,
-  cancelPendingBooking
+  cancelPendingBooking,
+  downloadAgreementPDF
 } from '../controllers/booking.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Tenant routes
+// Tenant & Public pdf route
+router.get('/:id/pdf', authenticate, downloadAgreementPDF);
 router.get('/my-active', authenticate, authorizeRole(['TENANT', 'ADMIN']), getMyActiveBooking);
 router.post('/', authenticate, authorizeRole(['TENANT', 'ADMIN']), createBooking);
 router.get('/me', authenticate, authorizeRole(['TENANT', 'ADMIN']), getTenantBookings);

@@ -9,6 +9,7 @@ router.post('/webhook', transaction_controller_1.handlePaystackWebhook);
 router.get('/tenant', auth_middleware_1.authenticate, transaction_controller_1.getTenantTransactions);
 router.get('/landlord', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD']), transaction_controller_1.getLandlordCashflows);
 router.get('/landlord/report', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD']), transaction_controller_1.getLandlordEarningsReport);
+router.get('/:id/pdf', auth_middleware_1.authenticate, transaction_controller_1.downloadReceiptPDF);
 router.get('/:id', auth_middleware_1.authenticate, transaction_controller_1.getTransactionById);
 exports.default = router;
 //# sourceMappingURL=transaction.routes.js.map

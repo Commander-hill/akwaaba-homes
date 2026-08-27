@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getTenantBookings = exports.createBooking = void 0;
+exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getTenantBookings = exports.createBooking = exports.downloadAgreementPDF = void 0;
 const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
@@ -12,6 +12,51 @@ const socket_1 = require("../socket");
 const json_1 = require("../utils/json");
 const cache_1 = __importDefault(require("../utils/cache"));
 const bookingCleanup_1 = require("../utils/bookingCleanup");
+const pdf_service_1 = require("../utils/pdf.service");
+const downloadAgreementPDF = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await prisma_1.default.booking.findUnique({
+            where: { id },
+            include: {
+                property: { include: { landlord: true } },
+                room: true,
+                tenant: true,
+                leaseAgreement: true
+            }
+        });
+        if (!booking) {
+            res.status(404).json({ message: 'Booking record not found' });
+            return;
+        }
+        const pdfBuffer = await (0, pdf_service_1.generateTenancyAgreementPDF)({
+            agreementId: booking.leaseAgreement?.id || booking.id,
+            bookingId: booking.id,
+            propertyTitle: booking.property.title,
+            propertyAddress: booking.property.location,
+            roomType: booking.room.roomType,
+            landlordName: `${booking.property.landlord.firstName} ${booking.property.landlord.lastName}`,
+            landlordPhone: booking.property.landlord.phoneNumber || 'N/A',
+            tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
+            tenantPhone: booking.tenant.phoneNumber || 'N/A',
+            tenantEmail: booking.tenant.email,
+            startDate: new Date(booking.startDate).toLocaleDateString(),
+            endDate: new Date(booking.endDate).toLocaleDateString(),
+            rentAmount: booking.room.price,
+            cryptographicHash: booking.leaseAgreement?.cryptographicHash,
+            tenantSignedAt: booking.leaseAgreement?.tenantSignedAt ? new Date(booking.leaseAgreement.tenantSignedAt).toLocaleString() : null,
+            landlordSignedAt: booking.leaseAgreement?.landlordSignedAt ? new Date(booking.leaseAgreement.landlordSignedAt).toLocaleString() : null,
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Tenancy_Agreement_${booking.id.slice(0, 8)}.pdf`);
+        res.send(pdfBuffer);
+    }
+    catch (error) {
+        console.error('Error generating Agreement PDF:', error);
+        res.status(500).json({ message: 'Failed to generate PDF agreement document' });
+    }
+};
+exports.downloadAgreementPDF = downloadAgreementPDF;
 const createBooking = async (req, res) => {
     try {
         // Lazily purge expired pending bookings

@@ -1,15 +1,21 @@
 import { Router } from 'express';
-import { createOrUpdateProfile, getProfile, findMatches } from '../controllers/roommate.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
-import { checkRoommateFeatureEnabled } from '../middleware/config.middleware';
+import {
+  getRoommateMatches,
+  upsertRoommateProfile,
+  sendRoommateInvitation,
+  getMyRoommateInvitations,
+  respondToRoommateInvitation
+} from '../controllers/roommate.controller';
 
 const router = Router();
 
-// All routes require feature flag check, authentication and TENANT role
-router.use(checkRoommateFeatureEnabled, authenticate, authorizeRole(['TENANT']));
+router.use(authenticate);
 
-router.post('/profile', createOrUpdateProfile);
-router.get('/profile', getProfile);
-router.get('/matches', findMatches);
+router.get('/matches', getRoommateMatches);
+router.post('/profile', upsertRoommateProfile);
+router.post('/invite', sendRoommateInvitation);
+router.get('/invitations', getMyRoommateInvitations);
+router.put('/invitations/:id/respond', respondToRoommateInvitation);
 
 export default router;

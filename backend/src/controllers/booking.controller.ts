@@ -9,6 +9,53 @@ import { safeJsonParse } from '../utils/json';
 import { getSystemConfig } from '../utils/config.service';
 import appCache from '../utils/cache';
 import { cleanupExpiredBookings } from '../utils/bookingCleanup';
+import { generateTenancyAgreementPDF } from '../utils/pdf.service';
+
+export const downloadAgreementPDF = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        property: { include: { landlord: true } },
+        room: true,
+        tenant: true,
+        leaseAgreement: true
+      }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking record not found' });
+      return;
+    }
+
+    const pdfBuffer = await generateTenancyAgreementPDF({
+      agreementId: booking.leaseAgreement?.id || booking.id,
+      bookingId: booking.id,
+      propertyTitle: booking.property.title,
+      propertyAddress: booking.property.location,
+      roomType: booking.room.roomType,
+      landlordName: `${booking.property.landlord.firstName} ${booking.property.landlord.lastName}`,
+      landlordPhone: booking.property.landlord.phoneNumber || 'N/A',
+      tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
+      tenantPhone: booking.tenant.phoneNumber || 'N/A',
+      tenantEmail: booking.tenant.email,
+      startDate: new Date(booking.startDate).toLocaleDateString(),
+      endDate: new Date(booking.endDate).toLocaleDateString(),
+      rentAmount: booking.room.price,
+      cryptographicHash: booking.leaseAgreement?.cryptographicHash,
+      tenantSignedAt: booking.leaseAgreement?.tenantSignedAt ? new Date(booking.leaseAgreement.tenantSignedAt).toLocaleString() : null,
+      landlordSignedAt: booking.leaseAgreement?.landlordSignedAt ? new Date(booking.leaseAgreement.landlordSignedAt).toLocaleString() : null,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Tenancy_Agreement_${booking.id.slice(0, 8)}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating Agreement PDF:', error);
+    res.status(500).json({ message: 'Failed to generate PDF agreement document' });
+  }
+};
 
 
 export const createBooking = async (req: Request, res: Response): Promise<void> => {

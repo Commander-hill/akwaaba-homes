@@ -4,7 +4,8 @@ const express_1 = require("express");
 const booking_controller_1 = require("../controllers/booking.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
-// Tenant routes
+// Tenant & Public pdf route
+router.get('/:id/pdf', auth_middleware_1.authenticate, booking_controller_1.downloadAgreementPDF);
 router.get('/my-active', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getMyActiveBooking);
 router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.createBooking);
 router.get('/me', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT', 'ADMIN']), booking_controller_1.getTenantBookings);
