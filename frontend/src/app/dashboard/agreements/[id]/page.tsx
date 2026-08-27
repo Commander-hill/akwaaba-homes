@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, FileSignature, CheckCircle, Printer, AlertTriangle, XCircle, PenTool } from 'lucide-react';
 import SignaturePad from '@/components/SignaturePad';
+import toast from 'react-hot-toast';
 
 export default function AgreementPage() {
   const { id: bookingId } = useParams();

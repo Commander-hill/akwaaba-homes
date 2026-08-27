@@ -17,6 +17,13 @@ import MessagingTab from '@/components/MessagingTab';
 import WithdrawalModal from '@/components/WithdrawalModal';
 import toast from 'react-hot-toast';
 
+function getImageUrl(path?: string | null): string {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  return `${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements'>('bookings');
@@ -131,12 +138,13 @@ export default function LandlordDashboard() {
 
   // Ticket Status Mutation
   const updateTicketMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
-      const { data } = await api.patch(`/tickets/${id}/status`, { status });
-      return data;
+    mutationFn: async (payload: { id: string; status?: string; scheduledDate?: string; repairCost?: number; completionImageUrl?: string; resolutionNotes?: string }) => {
+      const { id, ...data } = payload;
+      const res = await api.patch(`/tickets/${id}/status`, data);
+      return res.data;
     },
     onSuccess: () => {
-      toast.success('Ticket updated!');
+      toast.success('Maintenance ticket updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['tickets', 'landlord'] });
     },
     onSettled: () => setProcessingId(null)
@@ -512,38 +520,143 @@ export default function LandlordDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tickets.map((t: any) => (
-                <div key={t.id} className="glass-card p-5 rounded-2xl border space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] font-black uppercase text-indigo-500">{t.property?.title}</span>
-                      <h4 className="font-bold text-base text-[var(--foreground)]">{t.title}</h4>
+              {tickets.map((t: any) => {
+                const isUrgent = t.priority === 'URGENT' || t.priority === 'HIGH';
+                return (
+                  <div key={t.id} className={clsx(
+                    "glass-card p-5 rounded-2xl border space-y-4 transition-all",
+                    t.isEscalated ? "border-red-500/60 bg-red-500/5 shadow-lg shadow-red-500/10" : "border-[var(--border)]"
+                  )}>
+                    {/* Header Badges */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider">{t.property?.title}</span>
+                        <h4 className="font-extrabold text-base text-[var(--foreground)]">{t.title}</h4>
+                        <p className="text-xs text-[var(--muted-foreground)]">
+                          Tenant: <strong>{t.tenant?.firstName} {t.tenant?.lastName}</strong> ({t.tenant?.phoneNumber || t.tenant?.email})
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={clsx(
+                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                          t.status === 'PENDING' ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300" :
+                          t.status === 'SCHEDULED' ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-300" :
+                          t.status === 'IN_PROGRESS' ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300" :
+                          t.status === 'ESCALATED' ? "bg-red-600 text-white animate-pulse" :
+                          "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300"
+                        )}>
+                          {t.status}
+                        </span>
+                        
+                        {isUrgent && (
+                          <span className="text-[9px] font-black text-red-500 uppercase flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" /> {t.priority} Priority
+                          </span>
+                        )}
+
+                        {t.isEscalated && (
+                          <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md animate-bounce">
+                            ⚠️ Admin Escalated (48h Unresolved)
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className={clsx(
-                      "px-2.5 py-1 rounded-full text-xs font-bold uppercase",
-                      t.status === 'PENDING' ? "bg-amber-100 text-amber-700" :
-                      t.status === 'IN_PROGRESS' ? "bg-blue-100 text-blue-700" :
-                      "bg-emerald-100 text-emerald-700"
-                    )}>
-                      {t.status}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{t.description}</p>
-                  <div className="flex justify-between items-center pt-2 border-t text-xs">
-                    <span className="text-slate-400">Filed: {new Date(t.createdAt).toLocaleDateString()}</span>
-                    <div className="flex gap-2">
-                      {t.status !== 'RESOLVED' && (
-                        <button
-                          onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'RESOLVED' })}
-                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold"
-                        >
-                          Mark Resolved
-                        </button>
-                      )}
+
+                    {/* Multi-Stage Repair Status Bar */}
+                    <div className="bg-slate-100 dark:bg-slate-800/60 p-2.5 rounded-xl flex items-center justify-between text-[11px] font-bold">
+                      <span className={t.status === 'PENDING' ? 'text-amber-500 font-extrabold' : 'text-slate-400'}>1. Pending</span>
+                      <span className="text-slate-400">→</span>
+                      <span className={t.status === 'SCHEDULED' ? 'text-indigo-500 font-extrabold' : 'text-slate-400'}>2. Scheduled</span>
+                      <span className="text-slate-400">→</span>
+                      <span className={t.status === 'IN_PROGRESS' ? 'text-blue-500 font-extrabold' : 'text-slate-400'}>3. In Repair</span>
+                      <span className="text-slate-400">→</span>
+                      <span className={t.status === 'RESOLVED' ? 'text-emerald-500 font-extrabold' : 'text-slate-400'}>4. Resolved</span>
+                    </div>
+
+                    <p className="text-xs text-[var(--muted-foreground)]">{t.description}</p>
+
+                    {/* Meta Data Details */}
+                    {t.scheduledDate && (
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" /> Scheduled Repair Date: <strong>{new Date(t.scheduledDate).toLocaleDateString()}</strong>
+                      </p>
+                    )}
+
+                    {t.repairCost && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">
+                        Logged Repair Cost: GHS {t.repairCost.toLocaleString()}
+                      </p>
+                    )}
+
+                    {/* Image Attachments */}
+                    {(t.imageUrl || t.completionImageUrl) && (
+                      <div className="flex gap-2 pt-1">
+                        {t.imageUrl && (
+                          <a href={getImageUrl(t.imageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-indigo-500 underline flex items-center gap-1">
+                            📷 Issue Photo
+                          </a>
+                        )}
+                        {t.completionImageUrl && (
+                          <a href={getImageUrl(t.completionImageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-500 underline flex items-center gap-1">
+                            ✅ Repair Completion Proof
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Action Controls */}
+                    <div className="flex flex-wrap justify-between items-center pt-3 border-t border-[var(--border)] text-xs gap-2">
+                      <span className="text-slate-400 font-mono text-[10px]">
+                        Filed: {new Date(t.createdAt).toLocaleDateString()}
+                      </span>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {t.status === 'PENDING' && (
+                          <button
+                            onClick={() => {
+                              const date = prompt('Enter estimated repair date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+                              if (date) updateTicketMutation.mutate({ id: t.id, status: 'SCHEDULED', scheduledDate: date });
+                            }}
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all"
+                          >
+                            Schedule Repair
+                          </button>
+                        )}
+
+                        {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
+                          <button
+                            onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
+                          >
+                            Start Repair
+                          </button>
+                        )}
+
+                        {t.status !== 'RESOLVED' && (
+                          <button
+                            onClick={() => {
+                              const costStr = prompt('Enter repair expenditure (GHS, optional):', '0');
+                              const notes = prompt('Enter resolution summary:', 'Repair completed successfully.');
+                              const proofUrl = prompt('Enter completion proof image URL (optional):', '');
+                              updateTicketMutation.mutate({
+                                id: t.id,
+                                status: 'RESOLVED',
+                                repairCost: costStr ? parseFloat(costStr) : 0,
+                                resolutionNotes: notes || '',
+                                completionImageUrl: proofUrl || undefined
+                              });
+                            }}
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/20"
+                          >
+                            Complete Repair & Resolve
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -871,11 +984,10 @@ export default function LandlordDashboard() {
         </div>
       )}
 
-    </div>
-
     {/* ── Withdrawal Modal ── */}
     {showWithdrawalModal && (
       <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
     )}
+    </div>
   );
 }

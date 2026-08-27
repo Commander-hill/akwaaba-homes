@@ -466,6 +466,9 @@ export default function AdminUsersPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+
               {/* Landlord Property Deed Section */}
               {selectedUser.role === 'LANDLORD' && selectedUser.landlordDocUrl && (
                 <div className="space-y-2 pt-4 border-t border-[var(--border)]">

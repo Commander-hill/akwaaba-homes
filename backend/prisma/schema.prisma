@@ -285,18 +285,24 @@ model Notice {
 }
 
 model MaintenanceTicket {
-  id          String   @id @default(uuid())
-  tenantId    String
-  tenant      User     @relation("TenantTickets", fields: [tenantId], references: [id])
-  propertyId  String
-  property    Property @relation("PropertyTickets", fields: [propertyId], references: [id], onDelete: Cascade)
-  title       String
-  description String
-  status      String   @default("PENDING") // PENDING, IN_PROGRESS, RESOLVED, REJECTED
-  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
-  imageUrl    String? // Optional photo link
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String    @id @default(uuid())
+  tenantId           String
+  tenant             User      @relation("TenantTickets", fields: [tenantId], references: [id])
+  propertyId         String
+  property           Property  @relation("PropertyTickets", fields: [propertyId], references: [id], onDelete: Cascade)
+  title              String
+  description        String
+  status             String    @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, RESOLVED, REJECTED, ESCALATED
+  priority           String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  imageUrl           String?   // Initial issue photo
+  completionImageUrl String?   // Landlord photo proof of completed repair
+  scheduledDate      DateTime? // Estimated repair schedule date
+  repairCost         Float?    // Landlord repair expenditure log
+  resolutionNotes    String?   // Repair description / resolution notes
+  isEscalated        Boolean   @default(false)
+  escalatedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model RoommateProfile {

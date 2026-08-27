@@ -1,5 +1,12 @@
 import { Router } from 'express';
-import { createTicket, getTenantTickets, getLandlordTickets, updateTicketStatus } from '../controllers/ticket.controller';
+import {
+  createTicket,
+  getTenantTickets,
+  getLandlordTickets,
+  updateTicketStatus,
+  checkAndEscalateTickets,
+  getAdminEscalatedTickets
+} from '../controllers/ticket.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -11,8 +18,12 @@ router.use(authenticate);
 router.post('/', createTicket);
 router.get('/me', getTenantTickets);
 
-// Landlord routes
+// Landlord & Multi-stage routes
 router.get('/landlord', getLandlordTickets);
 router.patch('/:id/status', updateTicketStatus);
+
+// Admin & Escalation routes
+router.post('/check-escalations', checkAndEscalateTickets);
+router.get('/admin/escalated', getAdminEscalatedTickets);
 
 export default router;
