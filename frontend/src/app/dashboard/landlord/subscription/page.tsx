@@ -24,39 +24,42 @@ export default function LandlordSubscriptionPage() {
   });
 
   return (
-    <div className="w-full">
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Billing & Subscriptions</h1>
-        <p className="text-[var(--muted-foreground)]">Manage listing fees and track the active status of your properties.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="p-6 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
-          <div className="w-12 h-12 bg-[#E0E7FF] dark:bg-[#312E81] rounded-2xl flex items-center justify-center text-[#4338CA] dark:text-[#A5B4FC] mb-3 shadow-inner">
-            <Building className="w-6 h-6" />
-          </div>
-          <div className="text-3xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{properties?.length || 0}</div>
-          <div className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider mt-1">Total Properties</div>
+    <div className="w-full space-y-6">
+      {/* Sticky Header & Stats Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Billing & Subscriptions</h1>
+          <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage listing fees and track the active status of your properties.</p>
         </div>
 
-        <div className="p-6 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
-          <div className="w-12 h-12 bg-[#D1FAE5] dark:bg-[#047857] rounded-2xl flex items-center justify-center text-[#047857] dark:text-[#6EE7B7] mb-3 shadow-inner">
-            <CheckCircle className="w-6 h-6" />
+        <div className="grid grid-cols-3 gap-3 sm:gap-6">
+          <div className="p-3 sm:p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#E0E7FF] dark:bg-[#312E81] rounded-xl flex items-center justify-center text-[#4338CA] dark:text-[#A5B4FC] mb-2 shadow-inner shrink-0">
+              <Building className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="text-xl sm:text-3xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{properties?.length || 0}</div>
+            <div className="text-[10px] sm:text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider mt-0.5">Total Properties</div>
           </div>
-          <div className="text-3xl font-black text-[#047857] dark:text-[#6EE7B7]">
-            {properties?.filter((p: any) => p.isAvailable).length || 0}
-          </div>
-          <div className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider mt-1">Active Listings</div>
-        </div>
 
-        <div className="p-6 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex flex-col items-center justify-center text-center shadow-sm transition-all hover:shadow-md">
-          <div className="w-12 h-12 bg-[#FECDD3] dark:bg-[#9F1239] rounded-2xl flex items-center justify-center text-[#BE123C] dark:text-[#FECDD3] mb-3 shadow-inner">
-            <AlertCircle className="w-6 h-6" />
+          <div className="p-3 sm:p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#D1FAE5] dark:bg-[#047857] rounded-xl flex items-center justify-center text-[#047857] dark:text-[#6EE7B7] mb-2 shadow-inner shrink-0">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="text-xl sm:text-3xl font-black text-[#047857] dark:text-[#6EE7B7]">
+              {properties?.filter((p: any) => p.isAvailable).length || 0}
+            </div>
+            <div className="text-[10px] sm:text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider mt-0.5">Active Listings</div>
           </div>
-          <div className="text-3xl font-black text-[#BE123C] dark:text-[#FFE4E6]">
-            {properties?.filter((p: any) => !p.isAvailable).length || 0}
+
+          <div className="p-3 sm:p-5 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#FECDD3] dark:bg-[#9F1239] rounded-xl flex items-center justify-center text-[#BE123C] dark:text-[#FECDD3] mb-2 shadow-inner shrink-0">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div className="text-xl sm:text-3xl font-black text-[#BE123C] dark:text-[#FFE4E6]">
+              {properties?.filter((p: any) => !p.isAvailable).length || 0}
+            </div>
+            <div className="text-[10px] sm:text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider mt-0.5">Unpaid / Hidden</div>
           </div>
-          <div className="text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider mt-1">Unpaid / Hidden</div>
         </div>
       </div>
 

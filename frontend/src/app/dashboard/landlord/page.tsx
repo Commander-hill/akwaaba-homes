@@ -243,42 +243,43 @@ export default function LandlordDashboard() {
         hasProperty={Boolean(session?.hasProperty || session?._count?.properties > 0 || subStats.totalProperties > 0 || subProperties.length > 0)} 
       />
       
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight flex items-center gap-3 flex-wrap">
-            <span>Landlord CRM Command Center</span>
-          </h1>
-          <p className="text-xs text-[var(--muted-foreground)]">
-            Manage booking requests, tenant support tickets, listing subscriptions, and earnings reports.
-          </p>
+      {/* Sticky Header Banner & Tabs Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight flex items-center gap-3 flex-wrap">
+              <span>Landlord CRM Command Center</span>
+            </h1>
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Manage booking requests, tenant support tickets, listing subscriptions, and earnings reports.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <OnboardingTour role={session?.role} user={session} />
+            {/* Expiring Soon Alert Badge */}
+            {subStats.expiringSoon > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold animate-pulse">
+                <AlertTriangle className="w-4 h-4" />
+                <span>{subStats.expiringSoon} property subscription(s) expiring within 7 days!</span>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          <OnboardingTour role={session?.role} user={session} />
-          {/* Expiring Soon Alert Badge */}
-          {subStats.expiringSoon > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold animate-pulse">
-              <AlertTriangle className="w-4 h-4" />
-              <span>{subStats.expiringSoon} property subscription(s) expiring within 7 days!</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div id="tour-landlord-tabs" className="flex space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit flex-wrap gap-1">
-        <button
-          onClick={() => setActiveTab('bookings')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all",
-            activeTab === 'bookings' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          Booking Requests ({bookings.length})
-        </button>
+        {/* Tabs */}
+        <div id="tour-landlord-tabs" className="flex space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit flex-wrap gap-1">
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={clsx(
+              "px-5 py-2.5 text-sm font-bold rounded-lg transition-all",
+              activeTab === 'bookings' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            Booking Requests ({bookings.length})
+          </button>
 
         <button
           onClick={() => setActiveTab('agreements')}
@@ -351,6 +352,7 @@ export default function LandlordDashboard() {
           <MessageSquare className="w-4 h-4 text-indigo-500" />
           Direct Messages
         </button>
+      </div>
       </div>
 
       {activeTab === 'messages' && (

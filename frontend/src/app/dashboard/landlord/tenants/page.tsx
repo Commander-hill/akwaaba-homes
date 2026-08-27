@@ -52,51 +52,54 @@ export default function LandlordTenantsPage() {
   const pastCount = bookings.filter((b: any) => b.status === 'COMPLETED' || b.status === 'CANCELLED').length;
 
   return (
-    <div className="w-full space-y-8 animate-in">
-      <div>
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenants & Guests</h1>
-        <p className="text-[var(--muted-foreground)]">Manage and view details for all people who have booked your properties.</p>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-          <div>
-            <p className="text-xs font-extrabold text-indigo-900/70 dark:text-indigo-300/80 uppercase tracking-wider mb-1">Total Bookings</p>
-            <p className="text-3xl font-black text-indigo-950 dark:text-indigo-200">{bookings.length}</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
-            <User className="w-6 h-6" />
-          </div>
+    <div className="w-full space-y-6 animate-in">
+      {/* Sticky Header & Stats Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenants & Guests</h1>
+          <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage and view details for all people who have booked your properties.</p>
         </div>
 
-        <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-          <div>
-            <p className="text-xs font-extrabold text-emerald-900/70 dark:text-emerald-300/80 uppercase tracking-wider mb-1">Active</p>
-            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-4 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
+            <div>
+              <p className="text-[10px] sm:text-xs font-extrabold text-indigo-900/70 dark:text-indigo-300/80 uppercase tracking-wider mb-0.5">Total Bookings</p>
+              <p className="text-2xl sm:text-3xl font-black text-indigo-950 dark:text-indigo-200">{bookings.length}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner shrink-0">
+              <User className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
-            <Building className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-          <div>
-            <p className="text-xs font-extrabold text-amber-900/70 dark:text-amber-300/80 uppercase tracking-wider mb-1">Pending</p>
-            <p className="text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
+          <div className="p-4 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
+            <div>
+              <p className="text-[10px] sm:text-xs font-extrabold text-emerald-900/70 dark:text-emerald-300/80 uppercase tracking-wider mb-0.5">Active</p>
+              <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner shrink-0">
+              <Building className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner">
-            <Filter className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border bg-slate-100/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-          <div>
-            <p className="text-xs font-extrabold text-slate-700/80 dark:text-slate-400 uppercase tracking-wider mb-1">Past</p>
-            <p className="text-3xl font-black text-slate-600 dark:text-slate-300">{pastCount}</p>
+          <div className="p-4 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
+            <div>
+              <p className="text-[10px] sm:text-xs font-extrabold text-amber-900/70 dark:text-amber-300/80 uppercase tracking-wider mb-0.5">Pending</p>
+              <p className="text-2xl sm:text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner shrink-0">
+              <Filter className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-inner">
-            <MapPin className="w-6 h-6" />
+
+          <div className="p-4 rounded-2xl border bg-slate-100/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
+            <div>
+              <p className="text-[10px] sm:text-xs font-extrabold text-slate-700/80 dark:text-slate-400 uppercase tracking-wider mb-0.5">Past</p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-600 dark:text-slate-300">{pastCount}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-inner shrink-0">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
           </div>
         </div>
       </div>

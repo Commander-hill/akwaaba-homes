@@ -306,98 +306,100 @@ export default function TenantDashboard() {
     <div className="space-y-6 animate-in">
       <NoticeBoard />
       <OnboardingProgressWidget user={session} />
-      
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
-          <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
+           {/* Sticky Header Banner & Tabs Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
+            <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage your stays, report issues, and find roommates.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/wishlist"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-200 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors shadow-sm"
+            >
+              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> My Wishlist
+            </Link>
+            <OnboardingTour role={session?.role} user={session} />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/wishlist"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-200 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors shadow-sm"
+
+        {/* Tabs */}
+        <div className="flex flex-wrap space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit">
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+              activeTab === 'bookings' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
           >
-            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> My Wishlist
-          </Link>
-          <OnboardingTour role={session?.role} user={session} />
+            My Bookings
+          </button>
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+              activeTab === 'tickets' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            Maintenance Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'reviews' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> My Reviews
+          </button>
+          <button
+            onClick={() => setActiveTab('documents')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'documents' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <FileText className="w-4 h-4" /> Lease Vault
+          </button>
+          <button
+            onClick={() => setActiveTab('roommates')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'roommates' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Users className="w-4 h-4" /> Roommate Finder
+          </button>
+          <button
+            onClick={() => setActiveTab('payments')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'payments' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Receipt className="w-4 h-4" /> Payments & Receipts
+          </button>
+          <button
+            onClick={() => setActiveTab('safety')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'safety' ? "bg-red-600 text-white shadow-sm" : "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+            )}
+          >
+            <Siren className="w-4 h-4 animate-pulse text-red-400" /> 24/7 Emergency
+          </button>
+
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'messages' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <MessageSquare className="w-4 h-4 text-indigo-500" /> Messages
+          </button>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-wrap space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit">
-        <button
-          onClick={() => setActiveTab('bookings')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
-            activeTab === 'bookings' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          My Bookings
-        </button>
-        <button
-          onClick={() => setActiveTab('tickets')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
-            activeTab === 'tickets' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          Maintenance Requests
-        </button>
-        <button
-          onClick={() => setActiveTab('reviews')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'reviews' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <Star className="w-4 h-4" /> My Reviews
-        </button>
-        <button
-          onClick={() => setActiveTab('roommates')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'roommates' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <HeartHandshake className="w-4 h-4" /> Roommate Finder
-        </button>
-        <button
-          onClick={() => setActiveTab('documents')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'documents' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <FileText className="w-4 h-4" /> Lease Vault
-        </button>
-        <button
-          onClick={() => setActiveTab('payments')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'payments' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <Receipt className="w-4 h-4" /> Payments & Receipts
-        </button>
-        <button
-          onClick={() => setActiveTab('safety')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'safety' ? "bg-red-600 text-white shadow-sm" : "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-          )}
-        >
-          <Siren className="w-4 h-4 animate-pulse text-red-400" /> 24/7 Emergency
-        </button>
-
-        <button
-          onClick={() => setActiveTab('messages')}
-          className={clsx(
-            "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'messages' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <MessageSquare className="w-4 h-4 text-indigo-500" /> Messages
-        </button>
       </div>
 
       {activeTab === 'messages' && (

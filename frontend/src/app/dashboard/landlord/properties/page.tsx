@@ -99,15 +99,16 @@ export default function LandlordPropertiesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 mb-6 shadow-xs flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">My Properties</h1>
-          <p className="mt-2 text-[var(--muted-foreground)]">Manage your listings, update details, or remove unavailable properties.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">My Properties</h1>
+          <p className="mt-1 text-xs sm:text-sm text-[var(--muted-foreground)]">Manage your listings, update details, or remove unavailable properties.</p>
         </div>
         <Link 
           href="/dashboard/landlord/new" 
           id="tour-add-property"
-          className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl font-bold transition-colors shadow-sm ${
+          className={`flex items-center gap-2 px-4 py-2 text-white rounded-xl font-bold transition-colors shadow-sm text-xs sm:text-sm shrink-0 ${
             isListingBlocked ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[var(--primary)] hover:bg-[var(--primary-hover)]'
           }`}
         >

@@ -363,9 +363,10 @@ export default function NewPropertyPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-8">
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 mb-6 shadow-xs">
         <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">List New Property</h1>
-        <p className="text-[var(--muted-foreground)]">Create a stunning listing to attract the best tenants.</p>
+        <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Create a stunning listing to attract the best tenants.</p>
       </div>
 
       <div className="glass-card rounded-2xl p-6 sm:p-8">
