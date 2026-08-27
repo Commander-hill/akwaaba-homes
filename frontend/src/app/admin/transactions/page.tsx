@@ -84,68 +84,71 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-6 pb-12 animate-in">
-      {/* Top Header Banner */}
-      <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-indigo-600/10 via-purple-600/5 to-sky-600/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">
-            <ShieldAlert className="w-4 h-4" /> Financial & Governance Control
+      {/* Sticky Header & Metrics Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        {/* Top Header Banner */}
+        <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-indigo-600/10 via-purple-600/5 to-sky-600/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">
+              <ShieldAlert className="w-4 h-4" /> Financial & Governance Control
+            </div>
+            <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">
+              Subscription &amp; Listing License Management
+            </h1>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              Monitor annual landlord listing fees, active license validity countdowns, and enforce manual activations or revocations.
+            </p>
           </div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">
-            Subscription &amp; Listing License Management
-          </h1>
-          <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            Monitor annual landlord listing fees, active license validity countdowns, and enforce manual activations or revocations.
-          </p>
+
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <RefreshCw className={clsx("w-3.5 h-3.5", isRefetching && "animate-spin")} /> Sync Licenses
+          </button>
         </div>
 
-        <button
-          onClick={() => refetch()}
-          disabled={isRefetching}
-          className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <RefreshCw className={clsx("w-3.5 h-3.5", isRefetching && "animate-spin")} /> Sync Licenses
-        </button>
-      </div>
+        {/* KPI Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-5 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-900/70 dark:text-indigo-300/80 mb-1">Total Subscriptions</p>
+              <p className="text-3xl font-black text-indigo-950 dark:text-indigo-200">{totalCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
+              <CreditCard className="w-6 h-6" />
+            </div>
+          </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-900/70 dark:text-indigo-300/80 mb-1">Total Subscriptions</p>
-            <p className="text-3xl font-black text-indigo-950 dark:text-indigo-200">{totalCount}</p>
+          <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80 mb-1">Active Licenses</p>
+              <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
+              <CheckCircle className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
-            <CreditCard className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80 mb-1">Active Licenses</p>
-            <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+          <div className="p-5 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900/70 dark:text-amber-300/80 mb-1">Pending Processing</p>
+              <p className="text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner">
+              <Clock className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="p-5 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-amber-900/70 dark:text-amber-300/80 mb-1">Pending Processing</p>
-            <p className="text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner">
-            <Clock className="w-6 h-6" />
-          </div>
-        </div>
-
-        <div className="p-5 rounded-2xl border bg-sky-50/80 dark:bg-sky-950/30 border-sky-100 dark:border-sky-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-sky-900/70 dark:text-sky-300/80 mb-1">Estimated Listing Revenue</p>
-            <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalRevenueGhs.toLocaleString()}</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-300 flex items-center justify-center shadow-inner">
-            <Sparkles className="w-6 h-6" />
+          <div className="p-5 rounded-2xl border bg-sky-50/80 dark:bg-sky-950/30 border-sky-100 dark:border-sky-900/50 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-sky-900/70 dark:text-sky-300/80 mb-1">Estimated Listing Revenue</p>
+              <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalRevenueGhs.toLocaleString()}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-300 flex items-center justify-center shadow-inner">
+              <Sparkles className="w-6 h-6" />
+            </div>
           </div>
         </div>
       </div>

@@ -71,60 +71,63 @@ export default function AdminBreachesPage() {
   return (
     <div className="space-y-6 pb-12 animate-in fade-in">
       
-      {/* Header Banner */}
-      <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-red-900/20 via-orange-900/10 to-amber-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 mb-1">
-            <Scale className="w-4 h-4" /> Judicial Governance &amp; Moderation
-          </div>
-          <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
-            Tenant Breach &amp; Dispute Command Center
-          </h1>
-          <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            Review landlord breach reports, apply automated reputation score penalties, and enforce account suspensions.
-          </p>
-        </div>
-      </div>
-
-      {/* KPI Stats Ribbon */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+      {/* Sticky Header & KPI Ribbon Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        {/* Header Banner */}
+        <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-red-900/20 via-orange-900/10 to-amber-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Total Reported</p>
-            <p className="text-3xl font-black text-[var(--foreground)]">{totalCount}</p>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
-            <Scale className="w-6 h-6" />
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-red-600 dark:text-red-400 mb-1">
+              <Scale className="w-4 h-4" /> Judicial Governance &amp; Moderation
+            </div>
+            <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
+              Tenant Breach &amp; Dispute Command Center
+            </h1>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              Review landlord breach reports, apply automated reputation score penalties, and enforce account suspensions.
+            </p>
           </div>
         </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Pending Adjudication</p>
-            <p className="text-3xl font-black text-amber-500">{pendingCount}</p>
+        {/* KPI Stats Ribbon */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Total Reported</p>
+              <p className="text-3xl font-black text-[var(--foreground)]">{totalCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 flex items-center justify-center">
+              <Scale className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Verified &amp; Penalized</p>
-            <p className="text-3xl font-black text-red-600 dark:text-red-400">{verifiedCount}</p>
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Pending Adjudication</p>
+              <p className="text-3xl font-black text-amber-500">{pendingCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
-        </div>
 
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Dismissed / Rejected</p>
-            <p className="text-3xl font-black text-slate-500">{rejectedCount}</p>
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Verified &amp; Penalized</p>
+              <p className="text-3xl font-black text-red-600 dark:text-red-400">{verifiedCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 flex items-center justify-center">
+              <ShieldAlert className="w-6 h-6" />
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
-            <XCircle className="w-6 h-6" />
+
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Dismissed / Rejected</p>
+              <p className="text-3xl font-black text-slate-500">{rejectedCount}</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center">
+              <XCircle className="w-6 h-6" />
+            </div>
           </div>
         </div>
       </div>

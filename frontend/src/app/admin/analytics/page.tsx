@@ -31,94 +31,97 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="space-y-8 pb-12 animate-in fade-in">
       
-      {/* ── Top Header Banner ── */}
-      <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/10 to-sky-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">
-            <BarChart3 className="w-4 h-4" /> Executive Intelligence &amp; Platform Metrics
+      {/* Sticky Header & Metrics Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        {/* ── Top Header Banner ── */}
+        <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/10 to-sky-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">
+              <BarChart3 className="w-4 h-4" /> Executive Intelligence &amp; Platform Metrics
+            </div>
+            <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
+              Platform Analytics &amp; Insights Hub
+            </h1>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              Data-driven performance metrics: user growth, regional hostel density, funnel conversion, and landlord revenue distribution.
+            </p>
           </div>
-          <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
-            Platform Analytics &amp; Insights Hub
-          </h1>
-          <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            Data-driven performance metrics: user growth, regional hostel density, funnel conversion, and landlord revenue distribution.
-          </p>
+
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} /> Refresh Metrics
+          </button>
         </div>
 
-        <button
-          onClick={() => refetch()}
-          disabled={isRefetching}
-          className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} /> Refresh Metrics
-        </button>
-      </div>
+        {/* ── Metric Cards Ribbon ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          
+          {/* Booking Conversion Rate */}
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
+            <div className="flex justify-between items-center text-[var(--muted-foreground)]">
+              <span className="text-[10px] font-black uppercase tracking-wider">Conversion Rate</span>
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div className="text-3xl font-black text-[var(--foreground)]">
+              {funnel.conversionRate}%
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, funnel.conversionRate)}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
+              {funnel.paidBookings} paid of {funnel.totalBookings} total booking requests
+            </p>
+          </div>
 
-      {/* ── Metric Cards Ribbon ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        
-        {/* Booking Conversion Rate */}
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
-          <div className="flex justify-between items-center text-[var(--muted-foreground)]">
-            <span className="text-[10px] font-black uppercase tracking-wider">Conversion Rate</span>
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
+          {/* Total Platform Volume */}
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
+            <div className="flex justify-between items-center text-[var(--muted-foreground)]">
+              <span className="text-[10px] font-black uppercase tracking-wider">Total Platform Volume</span>
+              <CreditCard className="w-4 h-4 text-sky-500" />
+            </div>
+            <div className="text-3xl font-black text-sky-600 dark:text-sky-400">
+              GHS {(analytics?.totalRevenueGhs || 0).toLocaleString()}
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
+              Verified payments via Paystack gateway
+            </p>
           </div>
-          <div className="text-3xl font-black text-[var(--foreground)]">
-            {funnel.conversionRate}%
+
+          {/* Total Approved Bookings */}
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
+            <div className="flex justify-between items-center text-[var(--muted-foreground)]">
+              <span className="text-[10px] font-black uppercase tracking-wider">Approved Bookings</span>
+              <ShieldCheck className="w-4 h-4 text-purple-500" />
+            </div>
+            <div className="text-3xl font-black text-purple-600 dark:text-purple-400">
+              {funnel.approvedBookings}
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
+              Hostel slots verified by landlords
+            </p>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(100, funnel.conversionRate)}%` }}
-            />
+
+          {/* Top Region Density */}
+          <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
+            <div className="flex justify-between items-center text-[var(--muted-foreground)]">
+              <span className="text-[10px] font-black uppercase tracking-wider">Top Property Hub</span>
+              <MapPin className="w-4 h-4 text-amber-500" />
+            </div>
+            <div className="text-xl font-black text-amber-600 dark:text-amber-400 truncate">
+              {geographicalDensity[0]?.region || 'UCC / Cape Coast'}
+            </div>
+            <p className="text-[10px] text-[var(--muted-foreground)]">
+              {geographicalDensity[0]?.propertyCount || 0} active listed properties
+            </p>
           </div>
-          <p className="text-[10px] text-[var(--muted-foreground)]">
-            {funnel.paidBookings} paid of {funnel.totalBookings} total booking requests
-          </p>
+
         </div>
-
-        {/* Total Platform Volume */}
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
-          <div className="flex justify-between items-center text-[var(--muted-foreground)]">
-            <span className="text-[10px] font-black uppercase tracking-wider">Total Platform Volume</span>
-            <CreditCard className="w-4 h-4 text-sky-500" />
-          </div>
-          <div className="text-3xl font-black text-sky-600 dark:text-sky-400">
-            GHS {(analytics?.totalRevenueGhs || 0).toLocaleString()}
-          </div>
-          <p className="text-[10px] text-[var(--muted-foreground)]">
-            Verified payments via Paystack gateway
-          </p>
-        </div>
-
-        {/* Total Approved Bookings */}
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
-          <div className="flex justify-between items-center text-[var(--muted-foreground)]">
-            <span className="text-[10px] font-black uppercase tracking-wider">Approved Bookings</span>
-            <ShieldCheck className="w-4 h-4 text-purple-500" />
-          </div>
-          <div className="text-3xl font-black text-purple-600 dark:text-purple-400">
-            {funnel.approvedBookings}
-          </div>
-          <p className="text-[10px] text-[var(--muted-foreground)]">
-            Hostel slots verified by landlords
-          </p>
-        </div>
-
-        {/* Top Region Density */}
-        <div className="glass-card p-5 rounded-2xl border border-[var(--border)] space-y-3">
-          <div className="flex justify-between items-center text-[var(--muted-foreground)]">
-            <span className="text-[10px] font-black uppercase tracking-wider">Top Property Hub</span>
-            <MapPin className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-xl font-black text-amber-600 dark:text-amber-400 truncate">
-            {geographicalDensity[0]?.region || 'UCC / Cape Coast'}
-          </div>
-          <p className="text-[10px] text-[var(--muted-foreground)]">
-            {geographicalDensity[0]?.propertyCount || 0} active listed properties
-          </p>
-        </div>
-
       </div>
 
       {/* ── Main Charts Section ── */}

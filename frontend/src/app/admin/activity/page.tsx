@@ -66,103 +66,106 @@ export default function AdminActivityPage() {
   return (
     <div className="space-y-8 pb-12 animate-in fade-in duration-300">
       
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl relative overflow-hidden border border-indigo-900/50">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 mb-3">
-            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
-            {isConnected ? 'Real-Time Sync Active' : 'Connecting to Event Stream...'}
+      {/* Sticky Header & Metrics Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        {/* Header Banner */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl relative overflow-hidden border border-indigo-900/50">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 mb-3">
+              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
+              {isConnected ? 'Real-Time Sync Active' : 'Connecting to Event Stream...'}
+            </div>
+            <h1 className="text-3xl font-black tracking-tight">System Activity & Audit Logs</h1>
+            <p className="mt-1 text-xs text-indigo-200/80 max-w-xl">
+              Live telemetry stream monitoring all tenant bookings, landlord property approvals, user registrations, and security triggers in real-time.
+            </p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight">System Activity & Audit Logs</h1>
-          <p className="mt-1 text-xs text-indigo-200/80 max-w-xl">
-            Live telemetry stream monitoring all tenant bookings, landlord property approvals, user registrations, and security triggers in real-time.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3 shrink-0 relative z-10">
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 rounded-xl transition-all shadow-md backdrop-blur-md"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
-            Refresh Stream
-          </button>
-          <div className="p-3.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg text-white">
-            <Zap className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* System Metric Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Total Users */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Total Users</span>
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">
-              <Users className="w-5 h-5" />
+          <div className="flex items-center gap-3 shrink-0 relative z-10">
+            <button
+              onClick={() => refetch()}
+              disabled={isRefetching}
+              className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 rounded-xl transition-all shadow-md backdrop-blur-md cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
+              Refresh Stream
+            </button>
+            <div className="p-3.5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg text-white">
+              <Zap className="w-6 h-6" />
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalUsers || 0}</span>
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-              Live <ArrowUpRight className="w-3 h-3" />
-            </span>
-          </div>
         </div>
 
-        {/* Properties */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Properties</span>
-            <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-100 dark:border-amber-900/40">
-              <Building className="w-5 h-5" />
+        {/* System Metric Dashboard Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Total Users */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Total Users</span>
+              <div className="p-2.5 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                <Users className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalUsers || 0}</span>
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                Live <ArrowUpRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalProperties || 0}</span>
-            <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
-              Verified <CheckCircle2 className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
 
-        {/* Total Bookings */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Bookings</span>
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
-              <CalendarCheck className="w-5 h-5" />
+          {/* Properties */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Properties</span>
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 rounded-xl border border-amber-100 dark:border-amber-900/40">
+                <Building className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalProperties || 0}</span>
+              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                Verified <CheckCircle2 className="w-3 h-3" />
+              </span>
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalBookings || 0}</span>
-            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-              Active <Zap className="w-3 h-3" />
-            </span>
-          </div>
-        </div>
 
-        {/* Landlords */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
-          <div className="flex justify-between items-start mb-3">
-            <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Registered Landlords</span>
-            <div className="p-2.5 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-100 dark:border-purple-900/40">
-              <CreditCard className="w-5 h-5" />
+          {/* Total Bookings */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Bookings</span>
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalBookings || 0}</span>
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                Active <Zap className="w-3 h-3" />
+              </span>
             </div>
           </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalLandlords || 0}</span>
-            <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
-              Hostel Owners
-            </span>
+
+          {/* Landlords */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-bl-full group-hover:scale-110 transition-transform"></div>
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wider">Registered Landlords</span>
+              <div className="p-2.5 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-100 dark:border-purple-900/40">
+                <CreditCard className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="flex items-baseline justify-between">
+              <span className="text-3xl font-black text-[var(--foreground)]">{stats?.totalLandlords || 0}</span>
+              <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-0.5">
+                Hostel Owners
+              </span>
+            </div>
           </div>
         </div>
       </div>
