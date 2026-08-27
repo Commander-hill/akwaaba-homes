@@ -297,7 +297,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           
           <div>
             <div className="flex justify-between items-start mb-4">
-              <h1 className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">{property.title}</h1>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">{property.title}</h1>
+                {property.landlord?.isVerifiedLandlord && (
+                  <span className="bg-blue-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4" /> Verified Landlord 🛡️
+                  </span>
+                )}
+              </div>
               <div className="text-right">
                 {!selectedRoomId && <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Starting from</div>}
                 <div className="text-3xl font-bold text-[var(--primary)]">GH₵{displayPrice}</div>

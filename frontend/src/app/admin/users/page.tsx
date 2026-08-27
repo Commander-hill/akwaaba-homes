@@ -47,6 +47,27 @@ export default function AdminUsersPage() {
     onSettled: () => setProcessingId(null)
   });
 
+  const verifyLandlordMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+      const res = await api.put(`/admin/verify-landlord/${id}`, { status });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || 'Landlord verification updated');
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      setSelectedUser(null);
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to verify landlord');
+    },
+    onSettled: () => setProcessingId(null)
+  });
+
+  const handleVerifyLandlord = (id: string, status: string) => {
+    setProcessingId(id + 'landlord');
+    verifyLandlordMutation.mutate({ id, status });
+  };
+
   const suspendMutation = useMutation({
     mutationFn: async ({ id, isSuspended }: { id: string, isSuspended: boolean }) => {
       const res = await api.put(`/admin/users/${id}/suspend`, { isSuspended });
@@ -148,22 +169,44 @@ export default function AdminUsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        user.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
-                        user.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300' :
-                        user.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
-                        'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
-                      }`}>
-                        {user.ghanaCardStatus}
-                      </span>
-                      {user.ghanaCardStatus === 'PENDING' && (
-                        <button
-                          onClick={() => setSelectedUser(user)}
-                          className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center gap-1"
-                        >
-                          Review ID
-                        </button>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          user.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' :
+                          user.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300' :
+                          user.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                        }`}>
+                          Card: {user.ghanaCardStatus}
+                        </span>
+                        {user.ghanaCardStatus === 'PENDING' && (
+                          <button
+                            onClick={() => setSelectedUser(user)}
+                            className="text-xs font-bold text-[var(--primary)] hover:underline flex items-center gap-1"
+                          >
+                            Review ID
+                          </button>
+                        )}
+                      </div>
+
+                      {user.role === 'LANDLORD' && (
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            user.isVerifiedLandlord ? 'bg-blue-600 text-white' :
+                            user.landlordVerificationStatus === 'PENDING' ? 'bg-amber-500 text-white' :
+                            'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                          }`}>
+                            Host: {user.isVerifiedLandlord ? 'VERIFIED 🛡️' : user.landlordVerificationStatus || 'UNVERIFIED'}
+                          </span>
+                          {user.landlordDocUrl && (
+                            <button
+                              onClick={() => setSelectedUser(user)}
+                              className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                            >
+                              Deed 📄
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </td>
@@ -423,37 +466,69 @@ export default function AdminUsersPage() {
                       </div>
                     )}
                   </div>
+              {/* Landlord Property Deed Section */}
+              {selectedUser.role === 'LANDLORD' && selectedUser.landlordDocUrl && (
+                <div className="space-y-2 pt-4 border-t border-[var(--border)]">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm text-[var(--foreground)] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500" />
+                      Landlord Document: Property Deed / Business Authorization 📄
+                    </h3>
+                    <button
+                      onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.landlordDocUrl), title: 'Property Ownership Deed' })}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Enlarge / Fullscreen
+                    </button>
+                  </div>
+
+                  <div className="relative group border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-2xl overflow-hidden bg-slate-900/5 dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-inner">
+                    <img
+                      src={getImageUrl(selectedUser.landlordDocUrl)}
+                      alt="Property Deed"
+                      className="w-full max-h-[280px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Modal Footer Actions */}
             <div className="p-5 bg-white dark:bg-slate-900 border-t border-[var(--border)] flex flex-col sm:flex-row justify-between items-center gap-3">
               <p className="text-xs text-[var(--muted-foreground)]">
-                Approving this verification will grant the user official <strong className="text-emerald-600">VERIFIED</strong> status.
+                Granting verification certifies student trust and assigns official platform badges.
               </p>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                {selectedUser.role === 'LANDLORD' && (
+                  <button
+                    onClick={() => handleVerifyLandlord(selectedUser.id, 'VERIFIED')}
+                    disabled={processingId === selectedUser.id + 'landlord'}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    {processingId === selectedUser.id + 'landlord' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    Grant Verified Host Badge 🛡️
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleVerify(selectedUser.id, 'REJECTED')}
                   disabled={processingId === selectedUser.id + 'verify'}
-                  className="flex-1 sm:flex-none px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center justify-center gap-2"
+                  className="px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5"
                 >
-                  <XCircle className="w-4 h-4" />
-                  {processingId === selectedUser.id + 'verify' ? 'Processing...' : 'Reject Application'}
+                  <XCircle className="w-4 h-4" /> Reject ID
                 </button>
 
                 <button
                   onClick={() => handleVerify(selectedUser.id, 'VERIFIED')}
                   disabled={processingId === selectedUser.id + 'verify'}
-                  className="flex-1 sm:flex-none px-7 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
                 >
-                  {processingId === selectedUser.id + 'verify' ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CheckCircle className="w-4 h-4" />
-                  )}
-                  Approve & Verify Identity
+                  {processingId === selectedUser.id + 'verify' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  Approve Ghana Card
                 </button>
               </div>
             </div>

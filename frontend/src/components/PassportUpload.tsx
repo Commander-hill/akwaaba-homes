@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
+import { Upload, X, CheckCircle2, AlertCircle, Camera, User } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
@@ -172,9 +172,9 @@ export default function PassportUpload({ onUploadSuccess, onUploadError, current
         ) : (
           <>
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors ${
-              error ? 'bg-red-500/20 text-red-400' : 'bg-[#5B4CFF]/20 text-[#5B4CFF]'
+              error ? 'bg-red-500/20 text-red-400' : 'bg-[#2A2A2B] text-slate-300 border border-slate-700/60 shadow-md'
             }`}>
-              <Camera className="w-8 h-8" />
+              <User className="w-8 h-8 text-slate-300" />
             </div>
             <h3 className="text-lg font-bold text-white mb-2">Upload Passport Picture <span className="text-xs font-normal text-[#A1A1AA]">(Optional)</span></h3>
             <p className="text-sm text-[#A1A1AA] max-w-xs mb-4">

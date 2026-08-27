@@ -14,12 +14,14 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
 import MessagingTab from '@/components/MessagingTab';
+import WithdrawalModal from '@/components/WithdrawalModal';
 import toast from 'react-hot-toast';
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
 
   // Session Query — uses shared cache key so it's instant on re-nav
   const { data: session } = useQuery({
@@ -710,12 +712,20 @@ export default function LandlordDashboard() {
           {/* Action Header */}
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold">Landlord Financial Earnings Statement</h3>
-            <button
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold rounded-xl flex items-center gap-2 transition-all"
-            >
-              <Printer className="w-4 h-4" /> Print / Export Statement
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowWithdrawalModal(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+              >
+                <DollarSign className="w-4 h-4" /> Request Withdrawal
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold rounded-xl flex items-center gap-2 transition-all"
+              >
+                <Printer className="w-4 h-4" /> Print Statement
+              </button>
+            </div>
           </div>
 
           {/* Earnings Breakdown Stat Cards */}
@@ -862,5 +872,10 @@ export default function LandlordDashboard() {
       )}
 
     </div>
+
+    {/* ── Withdrawal Modal ── */}
+    {showWithdrawalModal && (
+      <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
+    )}
   );
 }

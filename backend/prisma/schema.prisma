@@ -36,6 +36,11 @@ model User {
   ghanaCardFrontUrl      String?
   ghanaCardBackUrl       String?
   ghanaCardStatus        String    @default("NOT_SUBMITTED") // SQLite does not support enums
+  
+  // Landlord Ownership Verification
+  landlordDocUrl             String?   // Ownership Proof / Deed / Business Reg
+  isVerifiedLandlord         Boolean   @default(false)
+  landlordVerificationStatus String    @default("NOT_SUBMITTED") // NOT_SUBMITTED, PENDING, VERIFIED, REJECTED
   reputationScore        Float     @default(5.0)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
@@ -62,6 +67,7 @@ model User {
   transactionsAsTenant   Transaction[] @relation("TenantTransactions")
   transactionsAsLandlord Transaction[] @relation("LandlordTransactions")
   pushSubscriptions      PushSubscription[]
+  payoutRequests         PayoutRequest[] @relation("LandlordPayouts")
 
   @@index([role])
 }
@@ -372,6 +378,27 @@ model Transaction {
   
   @@index([landlordId])
   @@index([createdAt])
+}
+
+model PayoutRequest {
+  id                String   @id @default(uuid())
+  landlordId        String
+  landlord          User     @relation("LandlordPayouts", fields: [landlordId], references: [id])
+  amount            Float    // Amount requested (in GHS)
+  recipientType     String   // MOMO or BANK
+  recipientCode     String?  // Paystack recipient code after creation
+  transferReference String?  // Paystack transfer reference
+  accountName       String
+  accountNumber     String
+  bankOrNetwork     String   // e.g. MTN, Vodafone, AirtelTigo, GCB, Ecobank
+  status            String   @default("PENDING") // PENDING, PROCESSING, SUCCESS, FAILED
+  failureReason     String?
+  processedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([landlordId])
+  @@index([status])
 }
 
 model SystemConfig {

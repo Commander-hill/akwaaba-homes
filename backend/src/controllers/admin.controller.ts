@@ -202,6 +202,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         ghanaCardNumber: true,
         ghanaCardFrontUrl: true,
         ghanaCardBackUrl: true,
+        landlordDocUrl: true,
+        isVerifiedLandlord: true,
+        landlordVerificationStatus: true,
         reputationScore: true,
         createdAt: true
       }
@@ -211,7 +214,8 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
       ...user,
       ghanaCardNumber: user.ghanaCardNumber ? decryptData(user.ghanaCardNumber) : null,
       ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
-      ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl)
+      ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl),
+      landlordDocUrl: generateSignedDocumentUrl(user.landlordDocUrl)
     }));
 
     res.status(200).json(decryptedUsers);
@@ -509,6 +513,45 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
   } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const verifyLandlord = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // VERIFIED, REJECTED
+
+    if (!['VERIFIED', 'REJECTED'].includes(status)) {
+      res.status(400).json({ message: 'Invalid status' });
+      return;
+    }
+
+    const isVerified = status === 'VERIFIED';
+
+    const user = await prisma.user.update({
+      where: { id },
+      data: {
+        landlordVerificationStatus: status,
+        isVerifiedLandlord: isVerified
+      }
+    });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+
+    try {
+      const { emitToUser, emitToAll } = await import('../socket');
+      emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
+      emitToAll('user_updated', { userId: id });
+    } catch (e) {}
+
+    res.status(200).json({
+      message: `Landlord verification ${isVerified ? 'approved with Verified Blue Badge 🛡️' : 'rejected'}.`,
+      user
+    });
+  } catch (error) {
+    console.error('Error verifying landlord:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

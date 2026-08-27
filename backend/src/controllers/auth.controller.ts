@@ -567,6 +567,52 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
   }
 };
 
+export const submitLandlordVerification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { ghanaCardNumber, ghanaCardFrontUrl, ghanaCardBackUrl, landlordDocUrl } = req.body;
+
+    if (!req.user?.id) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Only landlords can submit landlord verification' });
+      return;
+    }
+
+    if (!ghanaCardNumber || !ghanaCardFrontUrl || !ghanaCardBackUrl || !landlordDocUrl) {
+      res.status(400).json({ message: 'Ghana Card details and Property Ownership Document are required' });
+      return;
+    }
+
+    const encryptedCardNumber = encryptData(ghanaCardNumber);
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        ghanaCardNumber: encryptedCardNumber,
+        ghanaCardFrontUrl,
+        ghanaCardBackUrl,
+        landlordDocUrl,
+        landlordVerificationStatus: 'PENDING'
+      }
+    });
+
+    appCache.del(`user:me:${req.user.id}`);
+
+    try {
+      emitToUser(req.user.id, 'user_updated', { landlordVerificationStatus: 'PENDING' });
+      emitToAll('user_updated', { userId: req.user.id });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Landlord verification document submitted successfully for admin review' });
+  } catch (error) {
+    console.error('Submit Landlord Verification error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const { 

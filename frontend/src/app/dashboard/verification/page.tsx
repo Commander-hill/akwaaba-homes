@@ -22,6 +22,53 @@ export default function VerificationPage() {
   const [frontImage, setFrontImage] = useState<File | null>(null);
   const [backImage, setBackImage] = useState<File | null>(null);
 
+  // Landlord verification state
+  const [landlordDoc, setLandlordDoc] = useState<File | null>(null);
+  const [isSubmittingLandlord, setIsSubmittingLandlord] = useState(false);
+  const [landlordMsg, setLandlordMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const uploadDoc = async (file: File) => {
+    const formData = new FormData();
+    formData.append('document', file);
+    const res = await api.post('/upload/document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return res.data.url;
+  };
+
+  const handleLandlordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingLandlord(true);
+    setLandlordMsg(null);
+
+    if (!landlordDoc) {
+      setLandlordMsg({ text: 'Please select a Property Ownership Deed or Business Reg Document', type: 'error' });
+      setIsSubmittingLandlord(false);
+      return;
+    }
+
+    try {
+      const landlordDocUrl = await uploadDoc(landlordDoc);
+      const frontUrl = frontImage ? await uploadDoc(frontImage) : session?.ghanaCardFrontUrl;
+      const backUrl = backImage ? await uploadDoc(backImage) : session?.ghanaCardBackUrl;
+
+      await api.post('/auth/landlord-verification', {
+        ghanaCardNumber: ghanaCardNumber || session?.ghanaCardNumber || 'GHA-000000000-0',
+        ghanaCardFrontUrl: frontUrl || 'N/A',
+        ghanaCardBackUrl: backUrl || 'N/A',
+        landlordDocUrl
+      });
+
+      setLandlordMsg({ text: 'Landlord Verification submitted! Admin review in progress.', type: 'success' });
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+    } catch (err: any) {
+      setLandlordMsg({ text: err.response?.data?.message || 'Failed to submit landlord verification', type: 'error' });
+    } finally {
+      setIsSubmittingLandlord(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -179,12 +226,81 @@ export default function VerificationPage() {
             <div className="bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] p-6 rounded-2xl">
               <h3 className="font-bold text-[var(--foreground)] mb-2">Thank you!</h3>
               <p className="text-[var(--muted-foreground)] text-sm">
-                Your Ghana Card has been submitted and is currently being reviewed by our administrative team. This process usually takes 24-48 hours.
+                Your Ghana Card has been submitted and is currently being reviewed by our administrative team.
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* LANDLORD VERIFIED BLUE BADGE SECTION */}
+      {session.role === 'LANDLORD' && (
+        <div className="glass-card rounded-3xl p-8 max-w-2xl border-2 border-blue-500/40 relative overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/40">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-blue-600 text-white shadow-md">
+                <ShieldCheck className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black text-[var(--foreground)] flex items-center gap-2">
+                  "Verified Landlord" Blue Badge 🛡️
+                </h2>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Upload your Property Deed / Business Reg to earn a verified host badge across all your listings.
+                </p>
+              </div>
+            </div>
+            <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+              session.isVerifiedLandlord ? 'bg-blue-600 text-white' :
+              session.landlordVerificationStatus === 'PENDING' ? 'bg-amber-500 text-white' :
+              'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+            }`}>
+              {session.isVerifiedLandlord ? 'VERIFIED HOST 🛡️' : session.landlordVerificationStatus || 'UNVERIFIED'}
+            </div>
+          </div>
+
+          {session.isVerifiedLandlord ? (
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-900 dark:text-blue-200 text-sm font-semibold flex items-center gap-3">
+              <span className="text-2xl">🎉</span>
+              <div>
+                Congratulations! You hold a Verified Landlord Blue Badge 🛡️. Students see your verified trust badge on all your properties.
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleLandlordSubmit} className="space-y-4">
+              {landlordMsg && (
+                <div className={`p-4 rounded-xl text-sm font-medium border ${landlordMsg.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:text-red-400'}`}>
+                  {landlordMsg.text}
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-bold text-[var(--foreground)] mb-2">
+                  Property Ownership Document / Business Deed
+                </label>
+                <input 
+                  type="file" 
+                  accept="image/*,.pdf"
+                  required 
+                  className="block w-full text-sm text-[var(--muted-foreground)] file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition-all cursor-pointer bg-white dark:bg-slate-900 p-2 rounded-xl border border-[var(--border)]" 
+                  onChange={(e) => setLandlordDoc(e.target.files?.[0] || null)} 
+                />
+                <p className="mt-1.5 text-xs text-[var(--muted-foreground)]">
+                  Accepted formats: Images or PDF documents proving ownership or authorization.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmittingLandlord}
+                className="flex items-center justify-center gap-2 px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-md disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isSubmittingLandlord ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Request Verified Host Badge 🛡️ <ArrowRight className="w-4 h-4" /></>}
+              </button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }

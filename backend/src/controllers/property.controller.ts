@@ -216,7 +216,12 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
     const [properties, totalCount] = await Promise.all([
       prisma.property.findMany({
         ...queryOptions,
-        include: { rooms: true }
+        include: { 
+          rooms: true,
+          landlord: {
+            select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true }
+          }
+        }
       }),
       prisma.property.count({ where: queryOptions.where }),
     ]);
@@ -275,6 +280,8 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
             firstName: true,
             lastName: true,
             reputationScore: true,
+            isVerifiedLandlord: true,
+            landlordVerificationStatus: true,
           }
         },
         rooms: {

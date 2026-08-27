@@ -15,6 +15,7 @@ import {
   getAuditLogs,
   getSystemActivity,
   verifyUserCard,
+  verifyLandlord,
   activateSubscription,
   revokeSubscription,
   getAllTickets,
@@ -48,6 +49,7 @@ router.get('/users', getAllUsers);
 router.put('/users/:id/suspend', toggleUserSuspension);
 router.put('/users/:id/lock', toggleUserProfileLock);
 router.put('/verify-user/:id', verifyUserCard);
+router.put('/verify-landlord/:id', verifyLandlord);
 
 // Properties
 router.get('/properties', getAllProperties);

@@ -264,6 +264,8 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
             conversations?.map((conv: any) => {
               const isSelected = conv.id === activeConvId;
               const lastMsg = conv.messages?.[0];
+              // Show unread dot if latest message is from the partner and not yet read
+              const hasUnread = lastMsg && lastMsg.senderId !== session?.id && !lastMsg.isRead;
 
               return (
                 <button
@@ -275,24 +277,27 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
                       : 'hover:bg-slate-100 dark:hover:bg-slate-800/50'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 border border-indigo-200 dark:border-slate-700">
+                  <div className="relative w-10 h-10 rounded-full bg-indigo-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 border border-indigo-200 dark:border-slate-700">
                     {conv.partner?.avatarUrl ? (
                       <img src={getImageUrl(conv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <UserIcon className="w-5 h-5 text-indigo-500" />
                     )}
+                    {hasUnread && (
+                      <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-indigo-600 border-2 border-white dark:border-slate-900" />
+                    )}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-0.5">
-                      <span className="font-bold text-xs text-[var(--foreground)] truncate">
+                      <span className={`text-xs truncate ${hasUnread ? 'font-extrabold text-[var(--foreground)]' : 'font-bold text-[var(--foreground)]'}`}>
                         {conv.partner?.firstName} {conv.partner?.lastName}
                       </span>
                       <span className="text-[10px] text-[var(--muted-foreground)] font-mono">
                         {lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[var(--muted-foreground)] truncate">
+                    <p className={`text-[11px] truncate ${hasUnread ? 'font-semibold text-[var(--foreground)]' : 'text-[var(--muted-foreground)]'}`}>
                       {lastMsg?.mediaType === 'AUDIO' ? '🎤 Voice note' : lastMsg?.mediaType === 'IMAGE' ? '📷 Photo attachment' : lastMsg?.mediaType === 'DOCUMENT' ? '📄 Document' : lastMsg?.content || 'Started conversation'}
                     </p>
                   </div>
@@ -400,7 +405,11 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
 
                       <div className="flex items-center gap-1 mt-1 text-[9px] text-[var(--muted-foreground)] px-1">
                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        {isMine && <CheckCheck className="w-3 h-3 text-indigo-400" />}
+                        {isMine && (
+                          <span title={msg.isRead ? 'Seen' : 'Delivered'}>
+                            <CheckCheck className={`w-3 h-3 transition-colors ${msg.isRead ? 'text-blue-400' : 'text-slate-400'}`} />
+                          </span>
+                        )}
                       </div>
                     </div>
                   );

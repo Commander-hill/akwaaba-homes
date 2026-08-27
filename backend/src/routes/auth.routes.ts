@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, updateProfile, requestProfileUnlock, forgotPassword, resetPassword } from '../controllers/auth.controller';
+import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, submitLandlordVerification, updateProfile, requestProfileUnlock, forgotPassword, resetPassword } from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter } from '../middleware/rateLimiter.middleware';
@@ -13,6 +13,7 @@ router.post('/logout', logout);
 router.post('/refresh', authRateLimiter, refresh);
 router.post('/verify-email', otpRateLimiter, verifyEmail);
 router.post('/ghana-card', authenticate, submitGhanaCard);
+router.post('/landlord-verification', authenticate, submitLandlordVerification);
 router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
 router.post('/reset-password', passwordResetRateLimiter, resetPassword);
 

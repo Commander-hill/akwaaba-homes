@@ -45,6 +45,7 @@ import breachRoutes from './routes/breach.routes';
 import transactionRoutes from './routes/transaction.routes';
 import pushRoutes from './routes/push.routes';
 import fraudRoutes from './routes/fraud.routes';
+import payoutRoutes from './routes/payout.routes';
 
 import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
@@ -223,6 +224,7 @@ app.use('/api/v1/breaches', breachRoutes);
 app.use('/api/v1/transactions', transactionRoutes);
 app.use('/api/v1/push', pushRoutes);
 app.use('/api/v1/fraud', fraudRoutes);
+app.use('/api/v1/payouts', payoutRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(notFoundHandler);
