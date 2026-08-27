@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
 import CampusTransportMap from '@/components/CampusTransportMap';
+import WishlistButton from '@/components/WishlistButton';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -319,10 +320,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   </span>
                 )}
               </div>
-              <div className="text-right">
-                {!selectedRoomId && <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Starting from</div>}
-                <div className="text-3xl font-bold text-[var(--primary)]">GH₵{displayPrice}</div>
-                <div className="text-sm text-[var(--muted-foreground)]">per academic year</div>
+              <div className="flex items-center gap-3 text-right">
+                <WishlistButton propertyId={property.id} showText={true} />
+                <div>
+                  {!selectedRoomId && <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Starting from</div>}
+                  <div className="text-3xl font-bold text-[var(--primary)]">GH₵{displayPrice}</div>
+                  <div className="text-sm text-[var(--muted-foreground)]">per academic year</div>
+                </div>
               </div>
             </div>
             <div className="flex items-center text-[var(--muted-foreground)] mb-6 gap-1">

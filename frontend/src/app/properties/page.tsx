@@ -7,6 +7,7 @@ import api from '@/lib/axios';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
 import Map from '@/components/Map';
+import WishlistButton from '@/components/WishlistButton';
 
 interface Property {
   id: string;
@@ -265,12 +266,9 @@ export default function PropertiesPage() {
                       <div className={`absolute top-4 left-4 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-[var(--foreground)] shadow-sm ${property.isAvailable ? 'bg-white/90 dark:bg-slate-900/90' : 'bg-red-500/90 text-white'}`}>
                         {property.isAvailable ? 'Available' : 'Booked'}
                       </div>
-                      {property.landlord?.isVerifiedLandlord && (
-                        <div className="absolute top-4 right-4 bg-blue-600 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          Verified Host
-                        </div>
-                      )}
+                      <div className="absolute top-4 right-4 z-10">
+                        <WishlistButton propertyId={property.id} />
+                      </div>
                     </div>
                     
                     <div className="p-5 flex flex-col flex-1">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -312,7 +312,15 @@ export default function TenantDashboard() {
           <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
           <p className="text-[var(--muted-foreground)]">Manage your stays, report issues, and find roommates.</p>
         </div>
-        <OnboardingTour role={session?.role} user={session} />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/wishlist"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-200 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors shadow-sm"
+          >
+            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> My Wishlist
+          </Link>
+          <OnboardingTour role={session?.role} user={session} />
+        </div>
       </div>
 
       {/* Tabs */}

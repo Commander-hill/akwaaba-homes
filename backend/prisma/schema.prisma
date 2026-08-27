@@ -70,6 +70,7 @@ model User {
   payoutRequests         PayoutRequest[] @relation("LandlordPayouts")
   sentRoommateInvites     RoommateInvitation[] @relation("SentRoommateInvites")
   receivedRoommateInvites RoommateInvitation[] @relation("ReceivedRoommateInvites")
+  wishlists               Wishlist[]
 
   @@index([role])
 }
@@ -100,6 +101,7 @@ model Property {
   transactions Transaction[]
   subscription PropertySubscription?
   roommateInvitations RoommateInvitation[]
+  wishlists            Wishlist[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -461,4 +463,17 @@ model RoommateInvitation {
   @@index([receiverId])
   @@index([status])
 }
+
+model Wishlist {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+}
+
 
