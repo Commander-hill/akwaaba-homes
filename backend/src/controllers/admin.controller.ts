@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
-import { notifyPropertyApproval } from '../utils/notification.service';
+import { notifyPropertyApproval, notifyLandlordVerification } from '../utils/notification.service';
 import { decryptData } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
@@ -545,6 +545,15 @@ export const verifyLandlord = async (req: Request, res: Response): Promise<void>
       emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
       emitToAll('user_updated', { userId: id });
     } catch (e) {}
+
+    // Dispatch SMS & Email Notification
+    notifyLandlordVerification({
+      landlordId: user.id,
+      landlordEmail: user.email,
+      landlordName: `${user.firstName} ${user.lastName}`,
+      landlordPhone: user.phoneNumber,
+      isVerified
+    }).catch((e) => console.error('[Notification Error]', e));
 
     res.status(200).json({
       message: `Landlord verification ${isVerified ? 'approved with Verified Blue Badge 🛡️' : 'rejected'}.`,

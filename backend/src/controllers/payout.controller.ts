@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import axios from 'axios';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
-import { notifyBookingStatusChanged } from '../utils/notification.service';
+import { notifyBookingStatusChanged, notifyPayoutSent } from '../utils/notification.service';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 
@@ -152,6 +152,23 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
             processedAt: status === 'SUCCESS' ? new Date() : null,
           },
         });
+
+        // Trigger SMS & Email notification to landlord
+        const landlord = await prisma.user.findUnique({
+          where: { id: landlordId },
+          select: { email: true, firstName: true, lastName: true, phoneNumber: true },
+        });
+        if (landlord) {
+          notifyPayoutSent({
+            landlordId,
+            landlordEmail: landlord.email,
+            landlordName: `${landlord.firstName} ${landlord.lastName}`,
+            landlordPhone: landlord.phoneNumber,
+            amount,
+            bankOrNetwork,
+            accountNumber,
+          }).catch((e) => console.error('[Payout Notification Error]', e));
+        }
 
         console.log(`[Payout] Transfer ${status} for landlord ${landlordId}, ref: ${transferRef}`);
       } catch (transferErr: any) {

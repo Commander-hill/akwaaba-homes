@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import prisma from './prisma';
+import { sendSMS } from './sms.service';
 
 // ─── Branded Email Template Builder ──────────────────────────────────────────
 const emailTemplate = (title: string, preheader: string, bodyHtml: string) => `
@@ -72,16 +73,18 @@ interface NotifyParams {
   userId: string;
   recipientEmail: string;
   recipientName: string;
+  recipientPhone?: string | null;
   type: 'BOOKING' | 'SUBSCRIPTION' | 'PROPERTY' | 'REVIEW' | 'ANNOUNCEMENT';
   title: string;
   message: string;
   link?: string;
   emailSubject: string;
   emailBodyHtml: string;
+  smsText?: string;
 }
 
 export const notify = async (params: NotifyParams): Promise<void> => {
-  const { userId, recipientEmail, recipientName, type, title, message, link, emailSubject, emailBodyHtml } = params;
+  const { userId, recipientEmail, recipientName, recipientPhone, type, title, message, link, emailSubject, emailBodyHtml, smsText } = params;
 
   // 1. Always persist in-app notification
   try {
@@ -107,7 +110,28 @@ export const notify = async (params: NotifyParams): Promise<void> => {
       console.error(`[Notifications] Email delivery failed to ${recipientEmail}:`, err);
     }
   } else {
-    console.log(`[Notifications] MOCK → ${recipientEmail}: ${emailSubject}`);
+    console.log(`[Notifications] MOCK EMAIL → ${recipientEmail}: ${emailSubject}`);
+  }
+
+  // 3. Send SMS if phone number is available
+  let phoneToUse = recipientPhone;
+  if (!phoneToUse && userId) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phoneNumber: true },
+      });
+      phoneToUse = user?.phoneNumber;
+    } catch (err) {
+      // Ignore
+    }
+  }
+
+  if (phoneToUse && (smsText || message)) {
+    const textToSend = smsText || `Akwaaba Homes: ${title} - ${message}`;
+    sendSMS(phoneToUse, textToSend).catch((err) =>
+      console.error(`[Notifications] SMS dispatch error:`, err)
+    );
   }
 };
 
@@ -402,4 +426,73 @@ export const notifyMaintenanceEnded = async () => {
   } catch (err) {
     console.error('Error notifying maintenance subscribers:', err);
   }
+};
+
+export const notifyPayoutSent = async (opts: {
+  landlordId: string;
+  landlordEmail: string;
+  landlordName: string;
+  landlordPhone?: string;
+  amount: number;
+  bankOrNetwork: string;
+  accountNumber: string;
+}) => {
+  await notify({
+    userId: opts.landlordId,
+    recipientEmail: opts.landlordEmail,
+    recipientName: opts.landlordName,
+    recipientPhone: opts.landlordPhone,
+    type: 'SUBSCRIPTION',
+    title: 'Payout Dispatched',
+    message: `Your withdrawal of GHS ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork} (${opts.accountNumber}) has been processed.`,
+    link: '/dashboard/landlord/financials',
+    emailSubject: `Payout Confirmed — GHS ${opts.amount.toFixed(2)} Sent`,
+    emailBodyHtml: emailTemplate(
+      'Payout Confirmed',
+      `GHS ${opts.amount.toFixed(2)} transferred to your ${opts.bankOrNetwork} account`,
+      `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">Withdrawal Complete 💸</h2>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.landlordName}</strong>,</p>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Your requested payout of <strong>GHS ${opts.amount.toFixed(2)}</strong> has been successfully dispatched via Paystack Transfers.</p>
+       <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;margin:20px 0;">
+         ${badge('Destination', `${opts.bankOrNetwork} (${opts.accountNumber})`, '#dcfce7', '#166534')}
+         ${badge('Amount Dispatched', `GHS ${opts.amount.toFixed(2)}`, '#dcfce7', '#166534')}
+       </div>
+       ${btn('View Earnings Statement', `${getFrontendUrl()}/dashboard/landlord`, '#16a34a')}`
+    ),
+    smsText: `Akwaaba Homes: GHS ${opts.amount.toFixed(2)} payout sent to your ${opts.bankOrNetwork} (${opts.accountNumber}). Funds will reflect shortly.`
+  });
+};
+
+export const notifyLandlordVerification = async (opts: {
+  landlordId: string;
+  landlordEmail: string;
+  landlordName: string;
+  landlordPhone?: string;
+  isVerified: boolean;
+  notes?: string;
+}) => {
+  const statusStr = opts.isVerified ? 'VERIFIED' : 'REJECTED';
+  await notify({
+    userId: opts.landlordId,
+    recipientEmail: opts.landlordEmail,
+    recipientName: opts.landlordName,
+    recipientPhone: opts.landlordPhone,
+    type: 'ANNOUNCEMENT',
+    title: `Landlord Verification ${opts.isVerified ? 'Approved 🛡️' : 'Updated'}`,
+    message: opts.isVerified
+      ? 'Congratulations! Your Landlord Property Deed verification was approved. You now hold the Verified Host 🛡️ badge.'
+      : `Your Landlord verification requires update. Note: ${opts.notes || 'Please resubmit valid ownership deeds.'}`,
+    link: '/dashboard/verification',
+    emailSubject: `Landlord Verification ${opts.isVerified ? 'Approved 🛡️' : 'Requires Action'}`,
+    emailBodyHtml: emailTemplate(
+      `Landlord Verification ${opts.isVerified ? 'Approved' : 'Update Required'}`,
+      opts.isVerified ? 'Your Verified Host badge is active' : 'Please check your submitted ownership documents',
+      `<h2 style="color:#1e293b;font-size:22px;margin:0 0 16px;">Verification ${opts.isVerified ? 'Approved 🛡️' : 'Update Required'}</h2>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Hello <strong>${opts.landlordName}</strong>,</p>
+       <p style="color:#475569;font-size:15px;line-height:1.7;">Your ownership deed verification status has been updated to <strong>${statusStr}</strong>.</p>
+       ${opts.isVerified ? `<p style="color:#059669;font-weight:600;">The Verified Host 🛡️ badge is now active on all your property listings, boosting student booking trust!</p>` : `<p style="color:#dc2626;">${opts.notes || 'Please upload clear property deed documentation.'}</p>`}
+       ${btn('Go to Verification Portal', `${getFrontendUrl()}/dashboard/verification`, opts.isVerified ? '#059669' : '#4F46E5')}`
+    ),
+    smsText: `Akwaaba Homes: Your Landlord Deed verification is ${statusStr}.${opts.isVerified ? ' Verified Host badge is active!' : ''}`
+  });
 };
