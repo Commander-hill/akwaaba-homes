@@ -304,10 +304,11 @@ export default function TenantDashboard() {
 
   return (
     <div className="space-y-6 animate-in">
-      <NoticeBoard />
       <OnboardingProgressWidget user={session} />
-           {/* Sticky Header Banner & Tabs Container */}
+      {/* Sticky Header Banner, Notice & Tabs Container */}
       <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        <NoticeBoard />
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
