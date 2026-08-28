@@ -6,6 +6,7 @@ import api from '@/lib/axios';
 import { Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, CreditCard, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
 
 export default function LandlordPropertiesPage() {
@@ -41,11 +42,12 @@ export default function LandlordPropertiesPage() {
   const handleDelete = async (id: string) => {
     setIsDeleting(true);
     try {
-      await api.delete(`/properties/${id}`);
+      const { data } = await api.delete(`/properties/${id}`);
+      toast.success(data?.message || 'Property deleted successfully');
       refetch();
     } catch (error: any) {
       console.error('Failed to delete property:', error);
-      alert(error.response?.data?.message || 'Failed to delete property');
+      toast.error(error.response?.data?.message || 'Failed to delete property');
     } finally {
       setIsDeleting(false);
       setDeleteId(null);

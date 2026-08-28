@@ -429,82 +429,76 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // 1. Gather all related entity IDs (rooms, room units, beds, bookings)
-    const rooms = await prisma.room.findMany({ where: { propertyId: id }, select: { id: true } });
-    const roomIds = rooms.map(r => r.id);
+    // Execute complete hierarchical cascade deletion in a single atomic database transaction
+    await prisma.$transaction(async (tx) => {
+      // 1. Gather all related room IDs
+      const rooms = await tx.room.findMany({ where: { propertyId: id }, select: { id: true } });
+      const roomIds = rooms.map(r => r.id);
 
-    const roomUnits = roomIds.length > 0 
-      ? await prisma.roomUnit.findMany({ where: { roomId: { in: roomIds } }, select: { id: true } })
-      : [];
-    const roomUnitIds = roomUnits.map(ru => ru.id);
+      // 2. Gather all related room unit IDs
+      const roomUnits = roomIds.length > 0 
+        ? await tx.roomUnit.findMany({ where: { roomId: { in: roomIds } }, select: { id: true } })
+        : [];
+      const roomUnitIds = roomUnits.map(ru => ru.id);
 
-    const beds = roomUnitIds.length > 0
-      ? await prisma.bed.findMany({ where: { roomUnitId: { in: roomUnitIds } }, select: { id: true } })
-      : [];
-    const bedIds = beds.map(b => b.id);
+      // 3. Gather all related bed IDs
+      const beds = roomUnitIds.length > 0
+        ? await tx.bed.findMany({ where: { roomUnitId: { in: roomUnitIds } }, select: { id: true } })
+        : [];
+      const bedIds = beds.map(b => b.id);
 
-    const bookings = await prisma.booking.findMany({ 
-      where: { 
-        OR: [
-          { propertyId: id },
-          ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : [])
-        ] 
-      }, 
-      select: { id: true } 
-    });
-    const bookingIds = bookings.map(b => b.id);
+      // 4. Gather all related booking IDs across all potential associations
+      const bookingOrConditions: any[] = [{ propertyId: id }];
+      if (roomIds.length > 0) bookingOrConditions.push({ roomId: { in: roomIds } });
+      if (roomUnitIds.length > 0) bookingOrConditions.push({ roomUnitId: { in: roomUnitIds } });
+      if (bedIds.length > 0) bookingOrConditions.push({ bedId: { in: bedIds } });
 
-    // 2. Perform sequential cascade deletion to handle all foreign key constraints
-    if (bookingIds.length > 0) {
-      await prisma.review.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => {});
-      await prisma.leaseAgreement.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => {});
-    }
+      const bookings = await tx.booking.findMany({ 
+        where: { OR: bookingOrConditions }, 
+        select: { id: true } 
+      });
+      const bookingIds = bookings.map(b => b.id);
 
-    // Delete transactions pointing to property, bookings, or rooms
-    const txOrConditions: any[] = [{ propertyId: id }];
-    if (bookingIds.length > 0) txOrConditions.push({ bookingId: { in: bookingIds } });
-    if (roomIds.length > 0) txOrConditions.push({ roomId: { in: roomIds } });
-    await prisma.transaction.deleteMany({ where: { OR: txOrConditions } }).catch(() => {});
-
-    // Delete bookings
-    await prisma.booking.deleteMany({ 
-      where: { 
-        OR: [
-          { propertyId: id },
-          ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : []),
-          ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : []),
-          ...(bedIds.length > 0 ? [{ bedId: { in: bedIds } }] : [])
-        ]
-      } 
-    }).catch(() => {});
-
-    // Delete roommate invitations
-    await prisma.roommateInvitation.deleteMany({ 
-      where: { 
-        OR: [
-          { propertyId: id },
-          ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : [])
-        ]
+      // 5. Delete lowest level leaf nodes (Reviews, LeaseAgreements)
+      if (bookingIds.length > 0) {
+        await tx.review.deleteMany({ where: { bookingId: { in: bookingIds } } });
+        await tx.leaseAgreement.deleteMany({ where: { bookingId: { in: bookingIds } } });
       }
-    }).catch(() => {});
 
-    // Delete beds, room units, and rooms
-    if (roomUnitIds.length > 0) {
-      await prisma.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }).catch(() => {});
-    }
-    if (roomIds.length > 0) {
-      await prisma.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }).catch(() => {});
-    }
-    await prisma.room.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      // 6. Delete Transactions (pointing to property, bookings, or rooms)
+      const txOrConditions: any[] = [{ propertyId: id }];
+      if (bookingIds.length > 0) txOrConditions.push({ bookingId: { in: bookingIds } });
+      if (roomIds.length > 0) txOrConditions.push({ roomId: { in: roomIds } });
+      await tx.transaction.deleteMany({ where: { OR: txOrConditions } });
 
-    // Delete property subscriptions, tickets, breaches, wishlist
-    await prisma.wishlist.deleteMany({ where: { propertyId: id } }).catch(() => {});
-    await prisma.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => {});
-    await prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => {});
-    await prisma.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      // 7. Delete Bookings
+      await tx.booking.deleteMany({ where: { OR: bookingOrConditions } });
 
-    // 3. Delete property record
-    await prisma.property.delete({ where: { id } });
+      // 8. Delete RoommateInvitations
+      const inviteOrConditions: any[] = [{ propertyId: id }];
+      if (roomUnitIds.length > 0) inviteOrConditions.push({ roomUnitId: { in: roomUnitIds } });
+      await tx.roommateInvitation.deleteMany({ where: { OR: inviteOrConditions } });
+
+      // 9. Delete Beds, RoomUnits, and Rooms
+      if (bedIds.length > 0) {
+        await tx.bed.deleteMany({ where: { id: { in: bedIds } } });
+      }
+      if (roomUnitIds.length > 0) {
+        await tx.roomUnit.deleteMany({ where: { id: { in: roomUnitIds } } });
+      }
+      if (roomIds.length > 0) {
+        await tx.room.deleteMany({ where: { id: { in: roomIds } } });
+      }
+
+      // 10. Delete Property-level metadata
+      await tx.wishlist.deleteMany({ where: { propertyId: id } });
+      await tx.propertySubscription.deleteMany({ where: { propertyId: id } });
+      await tx.maintenanceTicket.deleteMany({ where: { propertyId: id } });
+      await tx.breachReport.deleteMany({ where: { propertyId: id } });
+
+      // 11. Delete Property record
+      await tx.property.delete({ where: { id } });
+    });
 
     await logAudit(
       req.user.id,

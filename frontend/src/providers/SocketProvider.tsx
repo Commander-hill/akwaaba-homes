@@ -55,20 +55,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     socketInstance.on('notification', (data: { title: string, message: string, type: string }) => {
       toast(
         (t) => (
-          <div className="flex flex-col gap-1">
-            <span className="font-bold text-sm text-[var(--foreground)]">{data.title}</span>
-            <span className="text-xs text-[var(--muted-foreground)]">{data.message}</span>
+          <div className="flex flex-col gap-1 text-left">
+            <span className="font-semibold text-sm text-white leading-snug">{data.title}</span>
+            <span className="text-xs text-slate-300 leading-normal">{data.message}</span>
           </div>
         ),
         {
-          duration: 5000,
+          duration: 6000,
           position: 'top-right',
           style: {
-            background: 'rgba(28, 26, 27, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            backdropFilter: 'blur(10px)',
-            color: '#fff',
-            borderRadius: '12px'
+            background: '#0F172A',
+            border: '1px solid #334155',
+            color: '#FFFFFF',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
+            padding: '12px 16px',
           },
         }
       );

@@ -46,8 +46,34 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
           <LanguageProvider>
-            {children}
-            <Toaster />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 5000,
+                style: {
+                  background: '#0F172A',
+                  color: '#FFFFFF',
+                  border: '1px solid #334155',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  padding: '12px 16px',
+                },
+                success: {
+                  iconTheme: {
+                    primary: '#10B981',
+                    secondary: '#FFFFFF',
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#EF4444',
+                    secondary: '#FFFFFF',
+                  },
+                },
+              }}
+            />
           </LanguageProvider>
         </SocketProvider>
       </QueryClientProvider>
