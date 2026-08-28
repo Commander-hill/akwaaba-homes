@@ -46,6 +46,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
           <LanguageProvider>
+            {children}
             <Toaster
               position="top-right"
               toastOptions={{
