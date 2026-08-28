@@ -429,84 +429,8 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Execute complete hierarchical cascade deletion inside transaction with extended 30s timeout
+    // Step 1: Comprehensive bottom-up cleanup of all nested dependent entities
     try {
-      await prisma.$transaction(
-        async (tx) => {
-          // 1. Gather all related room IDs
-          const rooms = await tx.room.findMany({ where: { propertyId: id }, select: { id: true } });
-          const roomIds = rooms.map((r) => r.id);
-
-          // 2. Gather all related room unit IDs
-          const roomUnits = roomIds.length > 0
-            ? await tx.roomUnit.findMany({ where: { roomId: { in: roomIds } }, select: { id: true } })
-            : [];
-          const roomUnitIds = roomUnits.map((ru) => ru.id);
-
-          // 3. Gather all related bed IDs
-          const beds = roomUnitIds.length > 0
-            ? await tx.bed.findMany({ where: { roomUnitId: { in: roomUnitIds } }, select: { id: true } })
-            : [];
-          const bedIds = beds.map((b) => b.id);
-
-          // 4. Gather all related booking IDs across all potential associations
-          const bookingOrConditions: any[] = [{ propertyId: id }];
-          if (roomIds.length > 0) bookingOrConditions.push({ roomId: { in: roomIds } });
-          if (roomUnitIds.length > 0) bookingOrConditions.push({ roomUnitId: { in: roomUnitIds } });
-          if (bedIds.length > 0) bookingOrConditions.push({ bedId: { in: bedIds } });
-
-          const bookings = await tx.booking.findMany({
-            where: { OR: bookingOrConditions },
-            select: { id: true },
-          });
-          const bookingIds = bookings.map((b) => b.id);
-
-          // 5. Delete lowest level leaf nodes (Reviews, LeaseAgreements)
-          if (bookingIds.length > 0) {
-            await tx.review.deleteMany({ where: { bookingId: { in: bookingIds } } });
-            await tx.leaseAgreement.deleteMany({ where: { bookingId: { in: bookingIds } } });
-          }
-
-          // 6. Delete Transactions (pointing to property, bookings, or rooms)
-          const txOrConditions: any[] = [{ propertyId: id }];
-          if (bookingIds.length > 0) txOrConditions.push({ bookingId: { in: bookingIds } });
-          if (roomIds.length > 0) txOrConditions.push({ roomId: { in: roomIds } });
-          await tx.transaction.deleteMany({ where: { OR: txOrConditions } });
-
-          // 7. Delete Bookings
-          await tx.booking.deleteMany({ where: { OR: bookingOrConditions } });
-
-          // 8. Delete RoommateInvitations
-          const inviteOrConditions: any[] = [{ propertyId: id }];
-          if (roomUnitIds.length > 0) inviteOrConditions.push({ roomUnitId: { in: roomUnitIds } });
-          await tx.roommateInvitation.deleteMany({ where: { OR: inviteOrConditions } });
-
-          // 9. Delete Beds, RoomUnits, and Rooms
-          if (bedIds.length > 0) {
-            await tx.bed.deleteMany({ where: { id: { in: bedIds } } });
-          }
-          if (roomUnitIds.length > 0) {
-            await tx.roomUnit.deleteMany({ where: { id: { in: roomUnitIds } } });
-          }
-          if (roomIds.length > 0) {
-            await tx.room.deleteMany({ where: { id: { in: roomIds } } });
-          }
-
-          // 10. Delete Property-level metadata
-          await tx.wishlist.deleteMany({ where: { propertyId: id } });
-          await tx.propertySubscription.deleteMany({ where: { propertyId: id } });
-          await tx.maintenanceTicket.deleteMany({ where: { propertyId: id } });
-          await tx.breachReport.deleteMany({ where: { propertyId: id } });
-
-          // 11. Delete Property record
-          await tx.property.delete({ where: { id } });
-        },
-        { timeout: 30000, maxWait: 10000 }
-      );
-    } catch (txErr: any) {
-      console.warn('⚠️ Transactional property deletion timed out/failed. Executing sequential fallback:', txErr.message);
-
-      // Sequential fallback execution to ensure clean record removal under high network latency
       const rooms = await prisma.room.findMany({ where: { propertyId: id }, select: { id: true } }).catch(() => []);
       const roomIds = rooms.map((r) => r.id);
 
@@ -552,8 +476,24 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       await prisma.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => {});
       await prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => {});
       await prisma.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => {});
+    } catch (cleanupErr) {
+      console.warn('⚠️ Child cleanup note during property deletion:', cleanupErr);
+    }
 
+    // Step 2: Primary hard deletion with instant soft-delete failsafe
+    let isHardDeleted = false;
+    try {
       await prisma.property.delete({ where: { id } });
+      isHardDeleted = true;
+    } catch (deleteErr: any) {
+      console.warn('⚠️ Hard delete bypassed by database foreign key constraints; enforcing soft-delete failsafe:', deleteErr?.message || deleteErr);
+      await prisma.property.update({
+        where: { id },
+        data: {
+          isAvailable: false,
+          approvalStatus: 'DELETED',
+        },
+      });
     }
 
     await logAudit(
@@ -562,7 +502,7 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       'Property',
       id,
       { deleted: false, title: property.title },
-      { deleted: true },
+      { deleted: true, isHardDeleted },
       req.ip || req.socket.remoteAddress
     );
 
@@ -589,7 +529,10 @@ export const getLandlordProperties = async (req: Request, res: Response): Promis
   try {
     const landlordId = req.user.id;
     const properties = await prisma.property.findMany({
-      where: { landlordId },
+      where: { 
+        landlordId,
+        approvalStatus: { not: 'DELETED' }
+      },
       include: { rooms: true },
       orderBy: { createdAt: 'desc' }
     });
@@ -605,7 +548,12 @@ export const getLandlordStats = async (req: Request, res: Response): Promise<voi
     const landlordId = req.user.id;
     
     // Aggregations
-    const totalProperties = await prisma.property.count({ where: { landlordId } });
+    const totalProperties = await prisma.property.count({ 
+      where: { 
+        landlordId,
+        approvalStatus: { not: 'DELETED' }
+      } 
+    });
     
     const bookings = await prisma.booking.findMany({
       where: { property: { landlordId } },
