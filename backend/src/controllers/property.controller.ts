@@ -441,51 +441,56 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
     const bookings = await prisma.booking.findMany({ where: { propertyId: id }, select: { id: true } });
     const bookingIds = bookings.map(b => b.id);
 
-    // 2. Perform strictly ordered cascade deletion in transaction
-    await prisma.$transaction([
-      // A. Delete Reviews targeting any booking of this property
-      prisma.review.deleteMany({ where: { bookingId: { in: bookingIds } } }),
+    // 2. Dynamically build transaction operations to avoid empty `in: []` Prisma errors
+    const ops: any[] = [];
 
-      // B. Delete Transactions referencing this property OR its bookings
-      prisma.transaction.deleteMany({ 
-        where: { 
-          OR: [
-            { propertyId: id },
-            ...(bookingIds.length > 0 ? [{ bookingId: { in: bookingIds } }] : [])
-          ] 
-        } 
-      }),
+    // A. Delete Reviews targeting any booking of this property
+    if (bookingIds.length > 0) {
+      ops.push(prisma.review.deleteMany({ where: { bookingId: { in: bookingIds } } }));
+    }
 
-      // C. Delete Bookings targeting this property
-      prisma.booking.deleteMany({ where: { propertyId: id } }),
+    // B. Delete Transactions referencing this property OR its bookings
+    const txConditions: any[] = [{ propertyId: id }];
+    if (bookingIds.length > 0) {
+      txConditions.push({ bookingId: { in: bookingIds } });
+    }
+    ops.push(prisma.transaction.deleteMany({ where: { OR: txConditions } }));
 
-      // D. Delete Roommate Invitations
-      prisma.roommateInvitation.deleteMany({ where: { propertyId: id } }),
+    // C. Delete Bookings targeting this property
+    ops.push(prisma.booking.deleteMany({ where: { propertyId: id } }));
 
-      // E. Delete Beds inside room units
-      prisma.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }),
+    // D. Delete Roommate Invitations
+    ops.push(prisma.roommateInvitation.deleteMany({ where: { propertyId: id } }));
 
-      // F. Delete Room Units
-      prisma.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }),
+    // E. Delete Beds inside room units
+    if (roomUnitIds.length > 0) {
+      ops.push(prisma.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }));
+    }
 
-      // G. Delete Rooms
-      prisma.room.deleteMany({ where: { propertyId: id } }),
+    // F. Delete Room Units
+    if (roomIds.length > 0) {
+      ops.push(prisma.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }));
+    }
 
-      // H. Delete Wishlist entries
-      prisma.wishlist.deleteMany({ where: { propertyId: id } }),
+    // G. Delete Rooms
+    ops.push(prisma.room.deleteMany({ where: { propertyId: id } }));
 
-      // I. Delete Property Subscriptions
-      prisma.propertySubscription.deleteMany({ where: { propertyId: id } }),
+    // H. Delete Wishlist entries
+    ops.push(prisma.wishlist.deleteMany({ where: { propertyId: id } }));
 
-      // J. Delete Maintenance Tickets
-      prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }),
+    // I. Delete Property Subscriptions
+    ops.push(prisma.propertySubscription.deleteMany({ where: { propertyId: id } }));
 
-      // K. Delete Breach Reports
-      prisma.breachReport.deleteMany({ where: { propertyId: id } }),
+    // J. Delete Maintenance Tickets
+    ops.push(prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }));
 
-      // L. Finally, delete the Property itself
-      prisma.property.delete({ where: { id } })
-    ]);
+    // K. Delete Breach Reports
+    ops.push(prisma.breachReport.deleteMany({ where: { propertyId: id } }));
+
+    // L. Finally, delete the Property itself
+    ops.push(prisma.property.delete({ where: { id } }));
+
+    await prisma.$transaction(ops);
 
     await logAudit(
       req.user.id,
@@ -510,9 +515,9 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
     }
 
     res.status(200).json({ message: 'Property deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting property:', error);
-    res.status(500).json({ message: 'Failed to delete property' });
+    res.status(500).json({ message: error?.message || 'Failed to delete property' });
   }
 };
 

@@ -408,40 +408,43 @@ const deleteProperty = async (req, res) => {
         const roomUnitIds = roomUnits.map(ru => ru.id);
         const bookings = await prisma_1.default.booking.findMany({ where: { propertyId: id }, select: { id: true } });
         const bookingIds = bookings.map(b => b.id);
-        // 2. Perform strictly ordered cascade deletion in transaction
-        await prisma_1.default.$transaction([
-            // A. Delete Reviews targeting any booking of this property
-            prisma_1.default.review.deleteMany({ where: { bookingId: { in: bookingIds } } }),
-            // B. Delete Transactions referencing this property OR its bookings
-            prisma_1.default.transaction.deleteMany({
-                where: {
-                    OR: [
-                        { propertyId: id },
-                        ...(bookingIds.length > 0 ? [{ bookingId: { in: bookingIds } }] : [])
-                    ]
-                }
-            }),
-            // C. Delete Bookings targeting this property
-            prisma_1.default.booking.deleteMany({ where: { propertyId: id } }),
-            // D. Delete Roommate Invitations
-            prisma_1.default.roommateInvitation.deleteMany({ where: { propertyId: id } }),
-            // E. Delete Beds inside room units
-            prisma_1.default.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }),
-            // F. Delete Room Units
-            prisma_1.default.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }),
-            // G. Delete Rooms
-            prisma_1.default.room.deleteMany({ where: { propertyId: id } }),
-            // H. Delete Wishlist entries
-            prisma_1.default.wishlist.deleteMany({ where: { propertyId: id } }),
-            // I. Delete Property Subscriptions
-            prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }),
-            // J. Delete Maintenance Tickets
-            prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }),
-            // K. Delete Breach Reports
-            prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }),
-            // L. Finally, delete the Property itself
-            prisma_1.default.property.delete({ where: { id } })
-        ]);
+        // 2. Dynamically build transaction operations to avoid empty `in: []` Prisma errors
+        const ops = [];
+        // A. Delete Reviews targeting any booking of this property
+        if (bookingIds.length > 0) {
+            ops.push(prisma_1.default.review.deleteMany({ where: { bookingId: { in: bookingIds } } }));
+        }
+        // B. Delete Transactions referencing this property OR its bookings
+        const txConditions = [{ propertyId: id }];
+        if (bookingIds.length > 0) {
+            txConditions.push({ bookingId: { in: bookingIds } });
+        }
+        ops.push(prisma_1.default.transaction.deleteMany({ where: { OR: txConditions } }));
+        // C. Delete Bookings targeting this property
+        ops.push(prisma_1.default.booking.deleteMany({ where: { propertyId: id } }));
+        // D. Delete Roommate Invitations
+        ops.push(prisma_1.default.roommateInvitation.deleteMany({ where: { propertyId: id } }));
+        // E. Delete Beds inside room units
+        if (roomUnitIds.length > 0) {
+            ops.push(prisma_1.default.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }));
+        }
+        // F. Delete Room Units
+        if (roomIds.length > 0) {
+            ops.push(prisma_1.default.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }));
+        }
+        // G. Delete Rooms
+        ops.push(prisma_1.default.room.deleteMany({ where: { propertyId: id } }));
+        // H. Delete Wishlist entries
+        ops.push(prisma_1.default.wishlist.deleteMany({ where: { propertyId: id } }));
+        // I. Delete Property Subscriptions
+        ops.push(prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }));
+        // J. Delete Maintenance Tickets
+        ops.push(prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }));
+        // K. Delete Breach Reports
+        ops.push(prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }));
+        // L. Finally, delete the Property itself
+        ops.push(prisma_1.default.property.delete({ where: { id } }));
+        await prisma_1.default.$transaction(ops);
         await (0, auditLogger_1.logAudit)(req.user.id, 'DELETE_PROPERTY', 'Property', id, { deleted: false, title: property.title }, { deleted: true }, req.ip || req.socket.remoteAddress);
         // Invalidate properties cache
         const keys = cache_1.default.keys();
@@ -458,7 +461,7 @@ const deleteProperty = async (req, res) => {
     }
     catch (error) {
         console.error('Error deleting property:', error);
-        res.status(500).json({ message: 'Failed to delete property' });
+        res.status(500).json({ message: error?.message || 'Failed to delete property' });
     }
 };
 exports.deleteProperty = deleteProperty;
