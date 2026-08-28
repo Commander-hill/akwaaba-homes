@@ -71,6 +71,14 @@ initializeSocket(httpServer);
 // ─── Trust proxy (Render / Vercel / Railway) ────────────────────────────────
 app.set('trust proxy', 1);
 
+// ─── Force HTTPS in Production ──────────────────────────────────────────────
+app.use((req: Request, res: Response, next) => {
+  if (isProduction && req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  next();
+});
+
 // ─── HTTP Security Headers (Helmet + OWASP Standards) ─────────────────────────
 app.use(
   helmet({
