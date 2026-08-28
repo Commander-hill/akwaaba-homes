@@ -35,10 +35,11 @@ export default function AdminPropertiesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 mb-6 shadow-xs flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Property Approvals</h1>
-          <p className="mt-2 text-[var(--muted-foreground)]">Review new listings and enforce quality standards before they go live.</p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">Review new listings and enforce quality standards before they go live.</p>
         </div>
         <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full">
           <Building className="w-8 h-8" />

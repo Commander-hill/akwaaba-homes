@@ -324,8 +324,8 @@ export default function TenantDashboard() {
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit">
+        {/* Tabs Strip */}
+        <div className="flex items-center gap-1 overflow-x-auto max-w-full p-1.5 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl w-full sm:w-fit no-scrollbar">
           <button
             onClick={() => setActiveTab('bookings')}
             className={clsx(

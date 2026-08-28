@@ -55,49 +55,52 @@ export default function AdminLandlordDeedsPage() {
   return (
     <div className="space-y-6 pb-12 animate-in fade-in">
       
-      {/* Header Banner */}
-      <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-emerald-900/20 via-teal-900/10 to-indigo-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
-            <ShieldCheck className="w-4 h-4" /> Legal Verification &amp; Property Title Audit
+      {/* Sticky Header & Filter Toolbar Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+        {/* Header Banner */}
+        <div className="glass-card p-6 rounded-3xl border border-[var(--border)] bg-gradient-to-r from-emerald-900/20 via-teal-900/10 to-indigo-900/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">
+              <ShieldCheck className="w-4 h-4" /> Legal Verification &amp; Property Title Audit
+            </div>
+            <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
+              Hostel Deed Audit Portal
+            </h1>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">
+              Review and quick-verify landlord property deeds, land title registration, and Ghana Card verification before public hostel listing.
+            </p>
           </div>
-          <h1 className="text-3xl font-black text-[var(--foreground)] tracking-tight">
-            Hostel Deed Audit Portal
-          </h1>
-          <p className="text-xs text-[var(--muted-foreground)] mt-1">
-            Review and quick-verify landlord property deeds, land title registration, and Ghana Card verification before public hostel listing.
-          </p>
-        </div>
-      </div>
-
-      {/* Filter Toolbar */}
-      <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
-          <input
-            type="text"
-            placeholder="Search landlord name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/30"
-          />
         </div>
 
-        <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">
-          {(['ALL', 'PENDING', 'VERIFIED', 'REJECTED'] as const).map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={clsx(
-                "px-3.5 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
-                statusFilter === status
-                  ? "bg-white dark:bg-slate-800 text-[var(--foreground)] shadow-sm"
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-              )}
-            >
-              {status.toLowerCase()}
-            </button>
-          ))}
+        {/* Filter Toolbar */}
+        <div className="glass-card p-4 rounded-2xl border border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="relative w-full md:w-96">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            <input
+              type="text"
+              placeholder="Search landlord name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-emerald-500/30"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-1.5 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-full md:w-auto">
+            {(['ALL', 'PENDING', 'VERIFIED', 'REJECTED'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={clsx(
+                  "px-3.5 py-1.5 text-[11px] font-bold rounded-lg transition-all capitalize cursor-pointer",
+                  statusFilter === status
+                    ? "bg-white dark:bg-slate-800 text-[var(--foreground)] shadow-sm"
+                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                )}
+              >
+                {status.toLowerCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

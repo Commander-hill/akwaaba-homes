@@ -89,14 +89,15 @@ export default function AdminNoticesPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      <div className="flex justify-between items-end">
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 mb-6 shadow-xs flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Dynamic Notices</h1>
-          <p className="text-[var(--muted-foreground)] mt-2">Manage broadcasts and alerts displayed to users.</p>
+          <p className="text-[var(--muted-foreground)] text-xs sm:text-sm mt-1">Manage broadcasts and alerts displayed to users.</p>
         </div>
         <button
           onClick={handleAddNew}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02]"
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Notice
