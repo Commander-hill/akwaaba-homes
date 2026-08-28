@@ -399,7 +399,18 @@ const deleteProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
-        await prisma_1.default.property.delete({ where: { id } });
+        // Safely delete all dependent records in transaction before deleting property
+        await prisma_1.default.$transaction([
+            prisma_1.default.wishlist.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.roommateInvitation.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.transaction.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.booking.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.room.deleteMany({ where: { propertyId: id } }),
+            prisma_1.default.property.delete({ where: { id } })
+        ]);
         await (0, auditLogger_1.logAudit)(req.user.id, 'DELETE_PROPERTY', 'Property', id, { deleted: false, title: property.title }, { deleted: true }, req.ip || req.socket.remoteAddress);
         // Invalidate properties cache
         const keys = cache_1.default.keys();
@@ -416,7 +427,7 @@ const deleteProperty = async (req, res) => {
     }
     catch (error) {
         console.error('Error deleting property:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Failed to delete property' });
     }
 };
 exports.deleteProperty = deleteProperty;

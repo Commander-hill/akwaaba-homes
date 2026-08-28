@@ -5,15 +5,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMyWishlist = exports.toggleWishlist = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const json_1 = require("../utils/json");
 /**
  * Toggle property in user wishlist (Add if not present, remove if present)
  */
 const toggleWishlist = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Authentication required. Please log in.' });
+            return;
+        }
         const { propertyId } = req.body;
         if (!propertyId) {
             res.status(400).json({ message: 'propertyId is required' });
+            return;
+        }
+        const property = await prisma_1.default.property.findUnique({ where: { id: propertyId } });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
             return;
         }
         const existing = await prisma_1.default.wishlist.findUnique({
@@ -44,7 +54,11 @@ exports.toggleWishlist = toggleWishlist;
  */
 const getMyWishlist = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Authentication required. Please log in.' });
+            return;
+        }
         const wishlists = await prisma_1.default.wishlist.findMany({
             where: { userId },
             include: {
@@ -57,7 +71,14 @@ const getMyWishlist = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
-        const properties = wishlists.map(w => w.property);
+        const properties = wishlists
+            .map(w => w.property)
+            .filter(Boolean)
+            .map(p => ({
+            ...p,
+            amenities: (0, json_1.safeJsonParse)(p.amenities, []),
+            images: (0, json_1.safeJsonParse)(p.images, [])
+        }));
         const savedPropertyIds = wishlists.map(w => w.propertyId);
         res.status(200).json({ wishlists, properties, savedPropertyIds });
     }

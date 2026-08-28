@@ -429,7 +429,18 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    await prisma.property.delete({ where: { id } });
+    // Safely delete all dependent records in transaction before deleting property
+    await prisma.$transaction([
+      prisma.wishlist.deleteMany({ where: { propertyId: id } }),
+      prisma.roommateInvitation.deleteMany({ where: { propertyId: id } }),
+      prisma.propertySubscription.deleteMany({ where: { propertyId: id } }),
+      prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }),
+      prisma.breachReport.deleteMany({ where: { propertyId: id } }),
+      prisma.transaction.deleteMany({ where: { propertyId: id } }),
+      prisma.booking.deleteMany({ where: { propertyId: id } }),
+      prisma.room.deleteMany({ where: { propertyId: id } }),
+      prisma.property.delete({ where: { id } })
+    ]);
 
     await logAudit(
       req.user.id,
@@ -456,7 +467,7 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
     res.status(200).json({ message: 'Property deleted successfully' });
   } catch (error) {
     console.error('Error deleting property:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Failed to delete property' });
   }
 };
 
