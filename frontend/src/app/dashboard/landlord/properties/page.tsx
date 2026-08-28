@@ -43,9 +43,9 @@ export default function LandlordPropertiesPage() {
     try {
       await api.delete(`/properties/${id}`);
       refetch();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete property:', error);
-      alert('Failed to delete property');
+      alert(error.response?.data?.message || 'Failed to delete property');
     } finally {
       setIsDeleting(false);
       setDeleteId(null);
