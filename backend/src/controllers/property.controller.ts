@@ -429,7 +429,7 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // 1. Gather all sub-resource IDs for hierarchical cascade deletion
+    // 1. Gather all related entity IDs (rooms, room units, beds, bookings)
     const rooms = await prisma.room.findMany({ where: { propertyId: id }, select: { id: true } });
     const roomIds = rooms.map(r => r.id);
 
@@ -438,59 +438,73 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       : [];
     const roomUnitIds = roomUnits.map(ru => ru.id);
 
-    const bookings = await prisma.booking.findMany({ where: { propertyId: id }, select: { id: true } });
+    const beds = roomUnitIds.length > 0
+      ? await prisma.bed.findMany({ where: { roomUnitId: { in: roomUnitIds } }, select: { id: true } })
+      : [];
+    const bedIds = beds.map(b => b.id);
+
+    const bookings = await prisma.booking.findMany({ 
+      where: { 
+        OR: [
+          { propertyId: id },
+          ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : [])
+        ] 
+      }, 
+      select: { id: true } 
+    });
     const bookingIds = bookings.map(b => b.id);
 
-    // 2. Dynamically build transaction operations to avoid empty `in: []` Prisma errors
-    const ops: any[] = [];
-
-    // A. Delete Reviews targeting any booking of this property
+    // 2. Perform sequential cascade deletion to handle all foreign key constraints
     if (bookingIds.length > 0) {
-      ops.push(prisma.review.deleteMany({ where: { bookingId: { in: bookingIds } } }));
+      await prisma.review.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => {});
+      await prisma.leaseAgreement.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => {});
     }
 
-    // B. Delete Transactions referencing this property OR its bookings
-    const txConditions: any[] = [{ propertyId: id }];
-    if (bookingIds.length > 0) {
-      txConditions.push({ bookingId: { in: bookingIds } });
-    }
-    ops.push(prisma.transaction.deleteMany({ where: { OR: txConditions } }));
+    // Delete transactions pointing to property, bookings, or rooms
+    const txOrConditions: any[] = [{ propertyId: id }];
+    if (bookingIds.length > 0) txOrConditions.push({ bookingId: { in: bookingIds } });
+    if (roomIds.length > 0) txOrConditions.push({ roomId: { in: roomIds } });
+    await prisma.transaction.deleteMany({ where: { OR: txOrConditions } }).catch(() => {});
 
-    // C. Delete Bookings targeting this property
-    ops.push(prisma.booking.deleteMany({ where: { propertyId: id } }));
+    // Delete bookings
+    await prisma.booking.deleteMany({ 
+      where: { 
+        OR: [
+          { propertyId: id },
+          ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : []),
+          ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : []),
+          ...(bedIds.length > 0 ? [{ bedId: { in: bedIds } }] : [])
+        ]
+      } 
+    }).catch(() => {});
 
-    // D. Delete Roommate Invitations
-    ops.push(prisma.roommateInvitation.deleteMany({ where: { propertyId: id } }));
+    // Delete roommate invitations
+    await prisma.roommateInvitation.deleteMany({ 
+      where: { 
+        OR: [
+          { propertyId: id },
+          ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : [])
+        ]
+      }
+    }).catch(() => {});
 
-    // E. Delete Beds inside room units
+    // Delete beds, room units, and rooms
     if (roomUnitIds.length > 0) {
-      ops.push(prisma.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }));
+      await prisma.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }).catch(() => {});
     }
-
-    // F. Delete Room Units
     if (roomIds.length > 0) {
-      ops.push(prisma.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }));
+      await prisma.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }).catch(() => {});
     }
+    await prisma.room.deleteMany({ where: { propertyId: id } }).catch(() => {});
 
-    // G. Delete Rooms
-    ops.push(prisma.room.deleteMany({ where: { propertyId: id } }));
+    // Delete property subscriptions, tickets, breaches, wishlist
+    await prisma.wishlist.deleteMany({ where: { propertyId: id } }).catch(() => {});
+    await prisma.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => {});
+    await prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => {});
+    await prisma.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => {});
 
-    // H. Delete Wishlist entries
-    ops.push(prisma.wishlist.deleteMany({ where: { propertyId: id } }));
-
-    // I. Delete Property Subscriptions
-    ops.push(prisma.propertySubscription.deleteMany({ where: { propertyId: id } }));
-
-    // J. Delete Maintenance Tickets
-    ops.push(prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }));
-
-    // K. Delete Breach Reports
-    ops.push(prisma.breachReport.deleteMany({ where: { propertyId: id } }));
-
-    // L. Finally, delete the Property itself
-    ops.push(prisma.property.delete({ where: { id } }));
-
-    await prisma.$transaction(ops);
+    // 3. Delete property record
+    await prisma.property.delete({ where: { id } });
 
     await logAudit(
       req.user.id,

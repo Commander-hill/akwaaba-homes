@@ -399,52 +399,74 @@ const deleteProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
-        // 1. Gather all sub-resource IDs for hierarchical cascade deletion
+        // 1. Gather all related entity IDs (rooms, room units, beds, bookings)
         const rooms = await prisma_1.default.room.findMany({ where: { propertyId: id }, select: { id: true } });
         const roomIds = rooms.map(r => r.id);
         const roomUnits = roomIds.length > 0
             ? await prisma_1.default.roomUnit.findMany({ where: { roomId: { in: roomIds } }, select: { id: true } })
             : [];
         const roomUnitIds = roomUnits.map(ru => ru.id);
-        const bookings = await prisma_1.default.booking.findMany({ where: { propertyId: id }, select: { id: true } });
+        const beds = roomUnitIds.length > 0
+            ? await prisma_1.default.bed.findMany({ where: { roomUnitId: { in: roomUnitIds } }, select: { id: true } })
+            : [];
+        const bedIds = beds.map(b => b.id);
+        const bookings = await prisma_1.default.booking.findMany({
+            where: {
+                OR: [
+                    { propertyId: id },
+                    ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : [])
+                ]
+            },
+            select: { id: true }
+        });
         const bookingIds = bookings.map(b => b.id);
-        // 2. Dynamically build transaction operations to avoid empty `in: []` Prisma errors
-        const ops = [];
-        // A. Delete Reviews targeting any booking of this property
+        // 2. Perform sequential cascade deletion to handle all foreign key constraints
         if (bookingIds.length > 0) {
-            ops.push(prisma_1.default.review.deleteMany({ where: { bookingId: { in: bookingIds } } }));
+            await prisma_1.default.review.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => { });
+            await prisma_1.default.leaseAgreement.deleteMany({ where: { bookingId: { in: bookingIds } } }).catch(() => { });
         }
-        // B. Delete Transactions referencing this property OR its bookings
-        const txConditions = [{ propertyId: id }];
-        if (bookingIds.length > 0) {
-            txConditions.push({ bookingId: { in: bookingIds } });
-        }
-        ops.push(prisma_1.default.transaction.deleteMany({ where: { OR: txConditions } }));
-        // C. Delete Bookings targeting this property
-        ops.push(prisma_1.default.booking.deleteMany({ where: { propertyId: id } }));
-        // D. Delete Roommate Invitations
-        ops.push(prisma_1.default.roommateInvitation.deleteMany({ where: { propertyId: id } }));
-        // E. Delete Beds inside room units
+        // Delete transactions pointing to property, bookings, or rooms
+        const txOrConditions = [{ propertyId: id }];
+        if (bookingIds.length > 0)
+            txOrConditions.push({ bookingId: { in: bookingIds } });
+        if (roomIds.length > 0)
+            txOrConditions.push({ roomId: { in: roomIds } });
+        await prisma_1.default.transaction.deleteMany({ where: { OR: txOrConditions } }).catch(() => { });
+        // Delete bookings
+        await prisma_1.default.booking.deleteMany({
+            where: {
+                OR: [
+                    { propertyId: id },
+                    ...(roomIds.length > 0 ? [{ roomId: { in: roomIds } }] : []),
+                    ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : []),
+                    ...(bedIds.length > 0 ? [{ bedId: { in: bedIds } }] : [])
+                ]
+            }
+        }).catch(() => { });
+        // Delete roommate invitations
+        await prisma_1.default.roommateInvitation.deleteMany({
+            where: {
+                OR: [
+                    { propertyId: id },
+                    ...(roomUnitIds.length > 0 ? [{ roomUnitId: { in: roomUnitIds } }] : [])
+                ]
+            }
+        }).catch(() => { });
+        // Delete beds, room units, and rooms
         if (roomUnitIds.length > 0) {
-            ops.push(prisma_1.default.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }));
+            await prisma_1.default.bed.deleteMany({ where: { roomUnitId: { in: roomUnitIds } } }).catch(() => { });
         }
-        // F. Delete Room Units
         if (roomIds.length > 0) {
-            ops.push(prisma_1.default.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }));
+            await prisma_1.default.roomUnit.deleteMany({ where: { roomId: { in: roomIds } } }).catch(() => { });
         }
-        // G. Delete Rooms
-        ops.push(prisma_1.default.room.deleteMany({ where: { propertyId: id } }));
-        // H. Delete Wishlist entries
-        ops.push(prisma_1.default.wishlist.deleteMany({ where: { propertyId: id } }));
-        // I. Delete Property Subscriptions
-        ops.push(prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }));
-        // J. Delete Maintenance Tickets
-        ops.push(prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }));
-        // K. Delete Breach Reports
-        ops.push(prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }));
-        // L. Finally, delete the Property itself
-        ops.push(prisma_1.default.property.delete({ where: { id } }));
-        await prisma_1.default.$transaction(ops);
+        await prisma_1.default.room.deleteMany({ where: { propertyId: id } }).catch(() => { });
+        // Delete property subscriptions, tickets, breaches, wishlist
+        await prisma_1.default.wishlist.deleteMany({ where: { propertyId: id } }).catch(() => { });
+        await prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => { });
+        await prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => { });
+        await prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => { });
+        // 3. Delete property record
+        await prisma_1.default.property.delete({ where: { id } });
         await (0, auditLogger_1.logAudit)(req.user.id, 'DELETE_PROPERTY', 'Property', id, { deleted: false, title: property.title }, { deleted: true }, req.ip || req.socket.remoteAddress);
         // Invalidate properties cache
         const keys = cache_1.default.keys();
