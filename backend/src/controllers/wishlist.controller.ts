@@ -1,16 +1,28 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { safeJsonParse } from '../utils/json';
 
 /**
  * Toggle property in user wishlist (Add if not present, remove if present)
  */
 export const toggleWishlist = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication required. Please log in.' });
+      return;
+    }
+
     const { propertyId } = req.body;
 
     if (!propertyId) {
       res.status(400).json({ message: 'propertyId is required' });
+      return;
+    }
+
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
       return;
     }
 
@@ -44,7 +56,12 @@ export const toggleWishlist = async (req: Request, res: Response): Promise<void>
  */
 export const getMyWishlist = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication required. Please log in.' });
+      return;
+    }
+
     const wishlists = await prisma.wishlist.findMany({
       where: { userId },
       include: {
@@ -58,7 +75,15 @@ export const getMyWishlist = async (req: Request, res: Response): Promise<void> 
       orderBy: { createdAt: 'desc' }
     });
 
-    const properties = wishlists.map(w => w.property);
+    const properties = wishlists
+      .map(w => w.property)
+      .filter(Boolean)
+      .map(p => ({
+        ...p,
+        amenities: safeJsonParse(p.amenities, []),
+        images: safeJsonParse(p.images, [])
+      }));
+
     const savedPropertyIds = wishlists.map(w => w.propertyId);
 
     res.status(200).json({ wishlists, properties, savedPropertyIds });
@@ -67,3 +92,4 @@ export const getMyWishlist = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: 'Failed to fetch wishlist' });
   }
 };
+

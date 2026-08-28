@@ -3,20 +3,37 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import Link from 'next/link';
-import { Heart, MapPin, Building, ShieldCheck, Trash2, Loader2, ArrowRight } from 'lucide-react';
+import { Heart, MapPin, Building, ShieldCheck, Loader2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 import WishlistButton from '@/components/WishlistButton';
 
 export default function WishlistPage() {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['wishlist'],
     queryFn: async () => {
       const res = await api.get('/wishlist');
       return res.data;
     },
+    retry: 1,
   });
 
-  const properties = data?.properties || [];
+  const rawProperties = data?.properties || [];
+
+  // Parse images safely
+  const properties = rawProperties.map((property: any) => {
+    let images: string[] = [];
+    if (Array.isArray(property.images)) {
+      images = property.images;
+    } else if (typeof property.images === 'string') {
+      try {
+        const parsed = JSON.parse(property.images);
+        images = Array.isArray(parsed) ? parsed : [property.images];
+      } catch {
+        images = property.images ? [property.images] : [];
+      }
+    }
+    return { ...property, images };
+  });
 
   return (
     <div className="min-h-screen bg-[var(--background)] py-10 px-4 sm:px-6 lg:px-8">
@@ -47,8 +64,30 @@ export default function WishlistPage() {
             <p className="text-[var(--muted-foreground)]">Loading your saved properties...</p>
           </div>
         ) : error ? (
-          <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 p-6 rounded-2xl text-center border border-red-100 dark:border-red-900/30">
-            Failed to load your wishlist. Please ensure you are logged in as a tenant.
+          <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 p-8 rounded-3xl text-center border border-red-200 dark:border-red-900/40 max-w-lg mx-auto my-12 shadow-sm space-y-4">
+            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center mx-auto text-red-500">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Unable to load wishlist</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                {(error as any)?.response?.data?.message || 'Please verify your tenant account session and try refreshing.'}
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => refetch()}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-md transition-all"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Try Again
+              </button>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+              >
+                Log In
+              </Link>
+            </div>
           </div>
         ) : properties.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-[var(--border)] shadow-sm max-w-lg mx-auto my-12">
@@ -130,3 +169,4 @@ export default function WishlistPage() {
     </div>
   );
 }
+
