@@ -242,11 +242,36 @@ export default function PropertiesPage() {
                   <label className="text-sm font-semibold mb-2 block">Must Have Amenity</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. WiFi, AC, Desk" 
+                    placeholder="e.g. Generator, AC, WiFi" 
                     value={amenitySearch}
                     onChange={(e) => setAmenitySearch(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-[var(--border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]" 
+                    className="w-full bg-white dark:bg-slate-900 border border-[var(--border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)] mb-2" 
                   />
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      { label: '⚡ Generator', val: 'Generator' },
+                      { label: '💧 24/7 Water', val: 'Water' },
+                      { label: '❄️ AC', val: 'Air Conditioning' },
+                      { label: '🛡️ Security', val: 'Security' },
+                      { label: '📶 WiFi', val: 'WiFi' },
+                      { label: '🏊 Pool', val: 'Pool' },
+                      { label: '🚗 Parking', val: 'Parking' },
+                      { label: '🍳 Kitchen', val: 'Kitchen' }
+                    ].map((chip, cIdx) => (
+                      <button
+                        key={cIdx}
+                        type="button"
+                        onClick={() => setAmenitySearch(amenitySearch === chip.val ? '' : chip.val)}
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition-all ${
+                          amenitySearch === chip.val
+                            ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                            : 'bg-slate-50 dark:bg-slate-800 text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'
+                        }`}
+                      >
+                        {chip.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>

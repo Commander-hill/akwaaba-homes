@@ -18,6 +18,65 @@ interface RoomInput {
   price: string;
 }
 
+const PRESET_AMENITY_CATEGORIES = [
+  {
+    category: '⚡ 24/7 Power & Utilities',
+    items: [
+      { name: 'Standby Generator', icon: '⚡' },
+      { name: 'Solar Inverter / Solar Power', icon: '☀️' },
+      { name: '24/7 Water (Borehole / Polytank)', icon: '💧' },
+      { name: 'Prepaid Electricity Meter', icon: '🔌' },
+      { name: 'Water Heater', icon: '🚿' }
+    ]
+  },
+  {
+    category: '🛡️ Security & Access',
+    items: [
+      { name: '24/7 Uniformed Security Guard', icon: '💂' },
+      { name: 'CCTV Surveillance Cameras', icon: '📹' },
+      { name: 'Electric Wall Fence', icon: '⚡' },
+      { name: 'Gated Compound', icon: '🚪' },
+      { name: 'Smart Keycard / Biometric Gate', icon: '🔑' }
+    ]
+  },
+  {
+    category: '🚗 Parking & Access',
+    items: [
+      { name: 'Dedicated Garage Parking', icon: '🚗' },
+      { name: 'Underground Parking', icon: '🅿️' },
+      { name: 'Paved Compound Parking', icon: '🚙' },
+      { name: 'Free Campus Shuttle Service', icon: '🚌' }
+    ]
+  },
+  {
+    category: '❄️ Climate & Comfort',
+    items: [
+      { name: 'Air Conditioning (AC)', icon: '❄️' },
+      { name: 'Ceiling Fan', icon: '🌀' },
+      { name: 'Private Balcony', icon: '🌅' },
+      { name: 'En-Suite Bathroom', icon: '🚽' }
+    ]
+  },
+  {
+    category: '📶 Internet & Study',
+    items: [
+      { name: 'High-Speed Fiber WiFi', icon: '📶' },
+      { name: 'Study Desk & Chair', icon: '🪑' },
+      { name: 'Dedicated Study Lounge', icon: '📚' }
+    ]
+  },
+  {
+    category: '🏊 Lifestyle & Wellness',
+    items: [
+      { name: 'Swimming Pool', icon: '🏊' },
+      { name: 'Fitness Gym', icon: '🏋️' },
+      { name: 'Garden / Courtyard', icon: '🌿' },
+      { name: 'Fitted Kitchenette / Kitchen', icon: '🍳' },
+      { name: 'Laundry Service / Washing Machine', icon: '🧺' }
+    ]
+  }
+];
+
 export default function NewPropertyPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -704,16 +763,86 @@ export default function NewPropertyPage() {
             </div>
           </div>
 
-          {/* Amenities */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)]">Amenities</label>
-            <input 
-              type="text" 
-              value={formData.amenities}
-              onChange={e => setFormData({...formData, amenities: e.target.value})}
-              placeholder="e.g. AC, WiFi, Study Desk (Comma separated)"
-              className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-            />
+          {/* Universal Facilities & Amenities */}
+          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+              <div>
+                <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
+                  <span>🏢</span> Residential &amp; Student Facilities (Amenities)
+                </label>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Click preset badges to highlight essential security, power, and lifestyle amenities.
+                </p>
+              </div>
+              {formData.amenities && (
+                <span className="text-xs font-bold px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-[var(--primary)] border border-indigo-200 dark:border-indigo-800 rounded-full">
+                  {formData.amenities.split(',').filter(Boolean).length} Selected
+                </span>
+              )}
+            </div>
+
+            {/* Category-Grouped Preset Badges */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {PRESET_AMENITY_CATEGORIES.map((cat, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/40 border border-[var(--border)] space-y-2.5">
+                  <div className="text-xs font-extrabold text-[var(--foreground)] tracking-wide uppercase">
+                    {cat.category}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {cat.items.map((item, itemIdx) => {
+                      const selectedList = formData.amenities
+                        .split(',')
+                        .map(a => a.trim().toLowerCase())
+                        .filter(Boolean);
+                      const isSelected = selectedList.includes(item.name.toLowerCase());
+
+                      return (
+                        <button
+                          key={itemIdx}
+                          type="button"
+                          onClick={() => {
+                            const currentList = formData.amenities
+                              .split(',')
+                              .map(a => a.trim())
+                              .filter(Boolean);
+                            let updatedList: string[];
+                            if (currentList.some(a => a.toLowerCase() === item.name.toLowerCase())) {
+                              updatedList = currentList.filter(a => a.toLowerCase() !== item.name.toLowerCase());
+                            } else {
+                              updatedList = [...currentList, item.name];
+                            }
+                            setFormData(prev => ({ ...prev, amenities: updatedList.join(', ') }));
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                            isSelected
+                              ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm scale-102 font-bold'
+                              : 'bg-white dark:bg-slate-800/80 text-[var(--foreground)] border-[var(--border)] hover:border-[var(--primary)]/60 hover:bg-indigo-50/40 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          <span>{item.name}</span>
+                          {isSelected && <span className="text-[11px] font-black">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Custom Amenities Comma-Separated Input */}
+            <div className="space-y-1.5 pt-2">
+              <label className="text-xs font-bold text-[var(--muted-foreground)]">
+                Selected Amenities / Additional Custom Amenities (Comma-separated)
+              </label>
+              <input 
+                type="text" 
+                value={formData.amenities}
+                onChange={e => setFormData({...formData, amenities: e.target.value})}
+                placeholder="e.g. Standby Generator, 24/7 Water, Air Conditioning, Study Desk"
+                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-2.5 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              />
+            </div>
           </div>
 
           {/* Description */}
