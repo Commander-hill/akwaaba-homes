@@ -179,7 +179,7 @@ export const getLandlordDeedAudits = async (req: Request, res: Response): Promis
             id: true,
             title: true,
             location: true,
-            isApproved: true
+            approvalStatus: true
           }
         }
       },

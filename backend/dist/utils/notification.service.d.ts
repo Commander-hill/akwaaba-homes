@@ -49,7 +49,7 @@ export declare const notifyPropertyApproval: (opts: {
     landlordEmail: string;
     landlordName: string;
     propertyTitle: string;
-    status: 'APPROVED' | 'REJECTED';
+    status: "APPROVED" | "REJECTED";
     reason?: string;
 }) => Promise<void>;
 export declare const notifyAdminAnnouncement: (opts: {

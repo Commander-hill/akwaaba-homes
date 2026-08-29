@@ -26,7 +26,7 @@ const initializeSocket = (server) => {
         // If not found in auth object or authorization header, check cookies
         if (!token && socket.handshake.headers.cookie) {
             try {
-                const cookies = (0, cookie_1.parseCookie)(socket.handshake.headers.cookie);
+                const cookies = (0, cookie_1.parse)(socket.handshake.headers.cookie);
                 token = cookies?.accessToken || '';
             }
             catch (e) {

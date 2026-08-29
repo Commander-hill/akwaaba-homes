@@ -1,1 +1,1 @@
-{"version":3,"file":"xss.middleware.d.ts","sourceRoot":"","sources":["../../src/middleware/xss.middleware.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AA+B1D;;GAEG;AACH,eAAO,MAAM,YAAY,QAAS,OAAO,OAAO,QAAQ,QAAQ,YAAY,SAqB3E,CAAC"}
+{"version":3,"file":"xss.middleware.d.ts","sourceRoot":"","sources":["../../src/middleware/xss.middleware.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AA+B1D;;GAEG;AACH,eAAO,MAAM,YAAY,GAAI,KAAK,OAAO,EAAE,KAAK,QAAQ,EAAE,MAAM,YAAY,SAqB3E,CAAC"}

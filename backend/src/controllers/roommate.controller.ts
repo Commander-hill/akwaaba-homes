@@ -82,7 +82,7 @@ export const getRoommateMatches = async (req: Request, res: Response): Promise<v
             phoneNumber: true,
             campus: true,
             programmeOfStudy: true,
-            profilePictureUrl: true,
+            avatarUrl: true,
             gender: true
           }
         }
@@ -250,7 +250,7 @@ export const getMyRoommateInvitations = async (req: Request, res: Response): Pro
             phoneNumber: true,
             campus: true,
             programmeOfStudy: true,
-            profilePictureUrl: true
+            avatarUrl: true
           }
         },
         property: { select: { id: true, title: true, location: true } }
@@ -270,7 +270,7 @@ export const getMyRoommateInvitations = async (req: Request, res: Response): Pro
             phoneNumber: true,
             campus: true,
             programmeOfStudy: true,
-            profilePictureUrl: true
+            avatarUrl: true
           }
         },
         property: { select: { id: true, title: true, location: true } }

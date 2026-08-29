@@ -2,7 +2,7 @@ import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import prisma from './utils/prisma';
 import jwt from 'jsonwebtoken';
-import { parseCookie } from 'cookie';
+import { parse } from 'cookie';
 
 interface SocketUser {
   id: string;
@@ -39,7 +39,7 @@ export const initializeSocket = (server: HttpServer) => {
     // If not found in auth object or authorization header, check cookies
     if (!token && socket.handshake.headers.cookie) {
       try {
-        const cookies = parseCookie(socket.handshake.headers.cookie);
+        const cookies = parse(socket.handshake.headers.cookie);
         token = cookies?.accessToken || '';
       } catch (e) {
         // ignore cookie parse error
