@@ -277,6 +277,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   const parsedImages = Array.isArray(property.images) ? property.images : (property.images ? JSON.parse(property.images) : []);
   const parsedAmenities = Array.isArray(property.amenities) ? property.amenities : (property.amenities ? JSON.parse(property.amenities) : []);
+  const parsedUtilities = Array.isArray(property.includedUtilities) ? property.includedUtilities : (property.includedUtilities ? JSON.parse(property.includedUtilities) : []);
   const mainImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
 
   const selectedRoom = property.rooms?.find((r: any) => r.id === selectedRoomId);
@@ -939,6 +940,94 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
             ))}
           </div>
+        </div>
+
+        {/* 📜 House Rules & Curfew Policies */}
+        <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <span>📜</span> Property Rules &amp; Curfew Policies
+            </h2>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">Key residence expectations agreed upon when booking.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1">
+              <div className="text-xs font-bold text-[var(--muted-foreground)] uppercase flex items-center gap-1.5">
+                <span>🚪</span> Gate Lock / Curfew
+              </div>
+              <div className="text-base font-extrabold text-[var(--foreground)]">
+                {property.gateLockTime || 'No Curfew / 24/7 Access'}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1">
+              <div className="text-xs font-bold text-[var(--muted-foreground)] uppercase flex items-center gap-1.5">
+                <span>👥</span> Visitor Policy
+              </div>
+              <div className="text-base font-extrabold text-[var(--foreground)]">
+                {property.visitorPolicy || 'Day visitors allowed until 8 PM'}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1">
+              <div className="text-xs font-bold text-[var(--muted-foreground)] uppercase flex items-center gap-1.5">
+                <span>🤫</span> Quiet Hours
+              </div>
+              <div className="text-base font-extrabold text-[var(--foreground)]">
+                {property.quietHours || 'From 10:00 PM'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 💳 Payment Structure, Deposits & Included Utilities */}
+        <div className="glass-card p-8 rounded-3xl border border-[var(--border)] space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <span>💳</span> Payment Structure &amp; Included Utilities
+            </h2>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">Payment options, deposit terms, and covered utility bills.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1">
+              <div className="text-xs font-bold text-[var(--muted-foreground)] uppercase flex items-center gap-1.5">
+                <span>📅</span> Accepted Payment Terms
+              </div>
+              <div className="text-base font-extrabold text-[var(--primary)]">
+                {property.paymentSchedule || 'Full Upfront'}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1">
+              <div className="text-xs font-bold text-[var(--muted-foreground)] uppercase flex items-center gap-1.5">
+                <span>🛡️</span> Refundable Caution Deposit
+              </div>
+              <div className="text-base font-extrabold text-[var(--foreground)]">
+                {property.cautionDeposit && Number(property.cautionDeposit) > 0 ? (
+                  <span className="text-emerald-600 dark:text-emerald-400">GH₵{Number(property.cautionDeposit).toLocaleString()} (Refundable upon checkout)</span>
+                ) : (
+                  <span className="text-slate-500 font-medium">No Deposit Required</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {parsedUtilities.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <div className="text-xs font-extrabold text-[var(--muted-foreground)] uppercase tracking-wide">
+                Covered / Included in Rent:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {parsedUtilities.map((util: string, uIdx: number) => (
+                  <span key={uIdx} className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5">
+                    <span>✓</span> {util}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Campus Transport & Landmark Proximity Map */}

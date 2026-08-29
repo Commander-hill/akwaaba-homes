@@ -87,6 +87,12 @@ export default function NewPropertyPage() {
     targetAudience: 'Open to All',
     furnishing: 'Unfurnished',
     pricePeriod: 'Academic Year',
+    gateLockTime: 'No Curfew / 24/7 Access',
+    visitorPolicy: 'Day visitors allowed until 8 PM',
+    quietHours: 'From 10:00 PM',
+    paymentSchedule: 'Full Academic Year',
+    cautionDeposit: '',
+    includedUtilities: ['Water Bill Included', 'Garbage/Trash Service Included'] as string[],
     description: '',
     location: '',
     amenities: '',
@@ -842,6 +848,167 @@ export default function NewPropertyPage() {
                 placeholder="e.g. Standby Generator, 24/7 Water, Air Conditioning, Study Desk"
                 className="w-full bg-transparent border border-[var(--input)] rounded-xl py-2.5 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
               />
+            </div>
+          </div>
+
+          {/* 📜 House / Hostel Rules & Curfew Policies */}
+          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+            <div>
+              <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
+                <span>📜</span> Property Rules &amp; Curfew Policies
+              </label>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Set clear expectations regarding gate lock times, quiet hours, and visitors.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Gate Lock Time */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                  <span>🚪</span> Gate Lock / Curfew Time
+                </label>
+                <select 
+                  value={formData.gateLockTime}
+                  onChange={e => setFormData({...formData, gateLockTime: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                >
+                  <option value="No Curfew / 24/7 Access">🔓 No Curfew (24/7 Access)</option>
+                  <option value="10:00 PM Gate Lock">🔒 10:00 PM Gate Lock</option>
+                  <option value="10:30 PM Gate Lock">🔒 10:30 PM Gate Lock</option>
+                  <option value="11:00 PM Gate Lock">🔒 11:00 PM Gate Lock</option>
+                  <option value="12:00 AM (Midnight) Lock">🔒 12:00 AM (Midnight) Lock</option>
+                </select>
+              </div>
+
+              {/* Visitor Policy */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                  <span>👥</span> Visitor Policy
+                </label>
+                <select 
+                  value={formData.visitorPolicy}
+                  onChange={e => setFormData({...formData, visitorPolicy: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                >
+                  <option value="Open / Normal Visitors Allowed">🌐 Open / Normal Visitors Allowed</option>
+                  <option value="Day visitors allowed until 8 PM">🌅 Day visitors allowed until 8 PM</option>
+                  <option value="Day visitors allowed until 10 PM">🌙 Day visitors allowed until 10 PM</option>
+                  <option value="Strictly No Overnight Opposite-Gender Guests">🚫 No Overnight Opposite-Gender Guests</option>
+                  <option value="Strictly No External Visitors">🔒 Strictly No External Visitors</option>
+                </select>
+              </div>
+
+              {/* Quiet Hours */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                  <span>🤫</span> Quiet Hours
+                </label>
+                <select 
+                  value={formData.quietHours}
+                  onChange={e => setFormData({...formData, quietHours: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                >
+                  <option value="From 10:00 PM">📚 From 10:00 PM (Quiet Study Hours)</option>
+                  <option value="From 9:00 PM">🌙 From 9:00 PM (Early Quiet)</option>
+                  <option value="From 11:00 PM">🌃 From 11:00 PM</option>
+                  <option value="None / Standard Residential">🏡 Standard Residential Quietness</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* 💳 Payment Structure & Refundable Deposits */}
+          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+            <div>
+              <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
+                <span>💳</span> Payment Structure, Deposits &amp; Included Utilities
+              </label>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Clarify accepted payment terms, refundable caution deposits, and included utility bills.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Accepted Payment Schedule */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                  <span>📅</span> Accepted Payment Schedule
+                </label>
+                <select 
+                  value={formData.paymentSchedule}
+                  onChange={e => setFormData({...formData, paymentSchedule: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                >
+                  <option value="Full Academic Year">🎓 Full Academic Year (Upfront)</option>
+                  <option value="2 Installments (Per Semester)">🗓️ 2 Installments (Per Semester)</option>
+                  <option value="Monthly in Advance">🏡 Monthly in Advance</option>
+                  <option value="Annual Lease Upfront">📜 Annual Lease Upfront</option>
+                  <option value="Flexible / Negotiable">🤝 Flexible / Negotiable with Landlord</option>
+                </select>
+              </div>
+
+              {/* Caution Deposit (GHS) */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
+                  <span className="flex items-center gap-1.5"><span>🛡️</span> Refundable Caution Deposit (GHS)</span>
+                  <span className="text-xs text-[var(--muted-foreground)] font-normal">Optional</span>
+                </label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input 
+                    type="number" 
+                    min="0"
+                    step="1"
+                    value={formData.cautionDeposit}
+                    onChange={e => setFormData({...formData, cautionDeposit: e.target.value})}
+                    placeholder="e.g. 200 (Refundable upon move-out)"
+                    className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Included Utilities Checkboxes */}
+            <div className="space-y-2 pt-2">
+              <label className="text-xs font-bold text-[var(--foreground)] block">
+                Included in Rental Price (Select all that apply)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {[
+                  { label: '💧 Water Bill Included', val: 'Water Bill Included' },
+                  { label: '🗑️ Garbage / Trash Fee Included', val: 'Garbage/Trash Service Included' },
+                  { label: '🔌 Prepaid Electricity Metered per Room', val: 'Prepaid Electricity Metered per Room' },
+                  { label: '🧹 Common Area Cleaning Included', val: 'Common Area Cleaning Included' },
+                  { label: '🛡️ Compound Security Fee Included', val: 'Compound Security Fee Included' },
+                  { label: '📶 Internet / WiFi Included', val: 'WiFi Internet Included' }
+                ].map((util, uIdx) => {
+                  const isChecked = formData.includedUtilities.includes(util.val);
+                  return (
+                    <label 
+                      key={uIdx}
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
+                        isChecked 
+                          ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-100 font-bold' 
+                          : 'bg-white dark:bg-slate-800/60 border-[var(--border)] text-[var(--foreground)] hover:border-slate-400'
+                      }`}
+                    >
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked}
+                        onChange={() => {
+                          const updated = isChecked 
+                            ? formData.includedUtilities.filter(u => u !== util.val)
+                            : [...formData.includedUtilities, util.val];
+                          setFormData({...formData, includedUtilities: updated});
+                        }}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+                      />
+                      <span>{util.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

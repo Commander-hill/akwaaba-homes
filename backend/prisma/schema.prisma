@@ -92,6 +92,17 @@ model Property {
   targetAudience String?  @default("Open to All")
   furnishing     String?  @default("Unfurnished")
   pricePeriod    String?  @default("Academic Year") // Nightly, Monthly, Academic Year, Annual
+  
+  // Rules & Policies
+  gateLockTime   String?  @default("No Curfew / 24/7 Access")
+  visitorPolicy  String?  @default("Day visitors allowed until 8 PM")
+  quietHours     String?  @default("From 10:00 PM")
+
+  // Payment & Deposits
+  paymentSchedule    String?  @default("Full Upfront")
+  cautionDeposit     Float?   @default(0)
+  includedUtilities  String?  @default("[]") // JSON array string
+
   isAvailable    Boolean  @default(true)
   approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt      DateTime @default(now())

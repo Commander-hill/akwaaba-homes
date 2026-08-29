@@ -26,13 +26,19 @@ const parseProperty = (property: any) => {
     ...property,
     amenities: safeJsonParse(property.amenities, []),
     images: safeJsonParse(property.images, []),
+    includedUtilities: safeJsonParse(property.includedUtilities, []),
   };
 };
 
 export const createProperty = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
-    const { title, type, targetAudience, furnishing, pricePeriod, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
+    const { 
+      title, type, targetAudience, furnishing, pricePeriod, 
+      gateLockTime, visitorPolicy, quietHours, 
+      paymentSchedule, cautionDeposit, includedUtilities,
+      description, location, latitude, longitude, amenities, images, videoUrl, rooms 
+    } = req.body;
 
     if (!title || !type || !description || !location || !rooms || !Array.isArray(rooms) || rooms.length === 0) {
       res.status(400).json({ message: 'Missing required fields or no rooms provided.' });
@@ -89,6 +95,12 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
         targetAudience: targetAudience || 'Open to All',
         furnishing: furnishing || 'Unfurnished',
         pricePeriod: pricePeriod || 'Academic Year',
+        gateLockTime: gateLockTime || 'No Curfew / 24/7 Access',
+        visitorPolicy: visitorPolicy || 'Day visitors allowed until 8 PM',
+        quietHours: quietHours || 'From 10:00 PM',
+        paymentSchedule: paymentSchedule || 'Full Upfront',
+        cautionDeposit: cautionDeposit ? parseFloat(cautionDeposit) : 0,
+        includedUtilities: JSON.stringify(includedUtilities || []),
         description,
         price: minPrice, 
         location,
@@ -370,7 +382,12 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
   try {
     const landlordId = req.user.id;
     const { id } = req.params;
-    const { title, type, targetAudience, furnishing, pricePeriod, description, location, amenities, images, videoUrl, isAvailable } = req.body;
+    const { 
+      title, type, targetAudience, furnishing, pricePeriod, 
+      gateLockTime, visitorPolicy, quietHours, 
+      paymentSchedule, cautionDeposit, includedUtilities,
+      description, location, amenities, images, videoUrl, isAvailable 
+    } = req.body;
 
     const property = await prisma.property.findUnique({ where: { id } });
 
@@ -392,6 +409,12 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
         targetAudience: targetAudience !== undefined ? targetAudience : property.targetAudience,
         furnishing: furnishing !== undefined ? furnishing : property.furnishing,
         pricePeriod: pricePeriod !== undefined ? pricePeriod : property.pricePeriod,
+        gateLockTime: gateLockTime !== undefined ? gateLockTime : property.gateLockTime,
+        visitorPolicy: visitorPolicy !== undefined ? visitorPolicy : property.visitorPolicy,
+        quietHours: quietHours !== undefined ? quietHours : property.quietHours,
+        paymentSchedule: paymentSchedule !== undefined ? paymentSchedule : property.paymentSchedule,
+        cautionDeposit: cautionDeposit !== undefined ? parseFloat(cautionDeposit) : property.cautionDeposit,
+        includedUtilities: includedUtilities !== undefined ? JSON.stringify(includedUtilities) : property.includedUtilities,
         description: description || property.description,
         location: location || property.location,
         amenities: amenities ? JSON.stringify(amenities) : property.amenities,
