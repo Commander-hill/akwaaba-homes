@@ -5,11 +5,12 @@ import { getIO } from '../socket';
 
 export const createTicket = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user || req.user.role !== 'TENANT') {
-      res.status(403).json({ message: 'Only tenants can submit maintenance tickets' });
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
+    const role = (req.user.role || '').toUpperCase();
     const { propertyId, title, description, priority, imageUrl } = req.body;
 
     if (!propertyId || !title || !description) {
@@ -17,18 +18,30 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Verify tenant actually has an active booking at this property
-    const activeBooking = await prisma.booking.findFirst({
-      where: {
-        tenantId: req.user.id,
-        propertyId,
-        status: { in: ['PENDING', 'APPROVED', 'COMPLETED'] } 
-      }
-    });
+    // Verify user has a booking at this property (Admins bypass)
+    if (role !== 'ADMIN') {
+      const activeBooking = await prisma.booking.findFirst({
+        where: {
+          tenantId: req.user.id,
+          propertyId,
+          status: { in: ['PENDING', 'APPROVED', 'COMPLETED', 'CONFIRMED'] } 
+        }
+      });
 
-    if (!activeBooking) {
-      res.status(403).json({ message: 'You can only report issues for properties you have booked' });
-      return;
+      if (!activeBooking) {
+        // Double-check if booking exists without status constraint
+        const anyBooking = await prisma.booking.findFirst({
+          where: {
+            tenantId: req.user.id,
+            propertyId
+          }
+        });
+
+        if (!anyBooking && role !== 'TENANT') {
+          res.status(403).json({ message: 'Only tenants with a booked property can submit maintenance tickets' });
+          return;
+        }
+      }
     }
 
     const ticket = await prisma.maintenanceTicket.create({
@@ -68,8 +81,8 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
 
 export const getTenantTickets = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user || req.user.role !== 'TENANT') {
-      res.status(403).json({ message: 'Access denied' });
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
@@ -92,8 +105,14 @@ export const getTenantTickets = async (req: Request, res: Response): Promise<voi
 
 export const getLandlordTickets = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user || req.user.role !== 'LANDLORD') {
-      res.status(403).json({ message: 'Access denied' });
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+
+    const role = (req.user.role || '').toUpperCase();
+    if (role !== 'LANDLORD' && role !== 'ADMIN') {
+      res.status(403).json({ message: 'Access denied: Landlord access required' });
       return;
     }
 
