@@ -163,10 +163,55 @@ const login = async (req, res) => {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
         }
+        // ── 1. CHECK ACCOUNT LOCKOUT ──
+        if (user.lockoutUntil && new Date(user.lockoutUntil) > new Date()) {
+            const remainingMinutes = Math.ceil((new Date(user.lockoutUntil).getTime() - Date.now()) / (60 * 1000));
+            res.status(429).json({
+                message: `Account temporarily locked due to multiple failed login attempts. Please try again in ${remainingMinutes} minute(s).`,
+                isLocked: true,
+                lockoutUntil: user.lockoutUntil
+            });
+            return;
+        }
         const isMatch = await bcrypt_1.default.compare(password, user.passwordHash);
         if (!isMatch) {
-            res.status(401).json({ message: 'Invalid credentials' });
-            return;
+            const newAttempts = (user.failedLoginAttempts || 0) + 1;
+            const updateData = { failedLoginAttempts: newAttempts };
+            if (newAttempts >= 5) {
+                const lockoutTime = new Date(Date.now() + 15 * 60 * 1000); // 15-minute lockout
+                updateData.lockoutUntil = lockoutTime;
+                await prisma_1.default.user.update({
+                    where: { id: user.id },
+                    data: updateData
+                });
+                try {
+                    await (0, auditLogger_1.logAudit)(user.id, 'ACCOUNT_LOCKED', 'User', user.id, null, { attempts: newAttempts, lockoutUntil: lockoutTime }, req.ip);
+                }
+                catch (e) { /* non-blocking */ }
+                res.status(429).json({
+                    message: 'Account locked for 15 minutes due to 5 consecutive failed login attempts. Please reset your password or try again later.',
+                    isLocked: true
+                });
+                return;
+            }
+            else {
+                await prisma_1.default.user.update({
+                    where: { id: user.id },
+                    data: updateData
+                });
+                const remaining = 5 - newAttempts;
+                res.status(401).json({
+                    message: `Invalid credentials. (${remaining} attempt${remaining === 1 ? '' : 's'} remaining before temporary account lockout)`
+                });
+                return;
+            }
+        }
+        // Reset failed attempts & lockout on successful login
+        if ((user.failedLoginAttempts && user.failedLoginAttempts > 0) || user.lockoutUntil) {
+            await prisma_1.default.user.update({
+                where: { id: user.id },
+                data: { failedLoginAttempts: 0, lockoutUntil: null }
+            });
         }
         // BLOCK SUSPENDED USERS
         if (user.isSuspended) {
@@ -184,8 +229,9 @@ const login = async (req, res) => {
             });
             return;
         }
-        const accessToken = (0, jwt_1.generateAccessToken)({ id: user.id, role: user.role });
-        const refreshToken = (0, jwt_1.generateRefreshToken)({ id: user.id });
+        const currentTokenVersion = user.tokenVersion || 0;
+        const accessToken = (0, jwt_1.generateAccessToken)({ id: user.id, role: user.role, tokenVersion: currentTokenVersion });
+        const refreshToken = (0, jwt_1.generateRefreshToken)({ id: user.id, tokenVersion: currentTokenVersion });
         // Parse User-Agent for Device Tracking
         const parser = new ua_parser_js_1.UAParser(req.headers['user-agent']);
         const browser = parser.getBrowser();
@@ -672,10 +718,17 @@ const resetPassword = async (req, res) => {
             data: {
                 passwordHash,
                 resetPasswordToken: null,
-                resetPasswordExpires: null
+                resetPasswordExpires: null,
+                failedLoginAttempts: 0,
+                lockoutUntil: null,
+                tokenVersion: { increment: 1 } // Instantly invalidates all previous sessions / JWTs
             }
         });
-        res.status(200).json({ message: 'Password has been successfully reset' });
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'PASSWORD_RESET_SUCCESS', 'User', user.id, null, null, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({ message: 'Password has been successfully reset. Please log in with your new credentials.' });
     }
     catch (error) {
         console.error('Error in reset password:', error);

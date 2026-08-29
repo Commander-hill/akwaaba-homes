@@ -27,7 +27,10 @@ export const validate = (validations: ValidationChain[]) => {
 
 export const registerValidation = [
   body('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('password')
+    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&_-#)'),
   body('firstName').notEmpty().withMessage('First name is required').trim().escape(),
   body('lastName').notEmpty().withMessage('Last name is required').trim().escape(),
   body('role').optional().isIn(['TENANT', 'LANDLORD', 'ADMIN']).withMessage('Invalid role'),

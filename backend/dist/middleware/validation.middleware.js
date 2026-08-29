@@ -24,7 +24,10 @@ exports.validate = validate;
 // --- Specific Validation Chains ---
 exports.registerValidation = [
     (0, express_validator_1.body)('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
-    (0, express_validator_1.body)('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+    (0, express_validator_1.body)('password')
+        .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&_-#)'),
     (0, express_validator_1.body)('firstName').notEmpty().withMessage('First name is required').trim().escape(),
     (0, express_validator_1.body)('lastName').notEmpty().withMessage('Last name is required').trim().escape(),
     (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD', 'ADMIN']).withMessage('Invalid role'),

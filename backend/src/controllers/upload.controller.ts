@@ -38,10 +38,32 @@ const streamUpload = (buffer: Buffer, folder: string, resourceType: 'image' | 'v
   });
 };
 
+// Inspect binary header bytes to prevent polyglot / extension spoofing attacks
+export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'any'): boolean => {
+  if (!buffer || buffer.length < 4) return false;
+
+  const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+  const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+  const isGif = buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38;
+  const isWebp = buffer.length >= 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+  const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+  const isMp4 = buffer.length >= 8 && buffer.subarray(4, 8).toString('ascii') === 'ftyp';
+  const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
+
+  if (type === 'image') return isJpeg || isPng || isWebp || isGif;
+  if (type === 'video') return isMp4 || isWebm;
+  return isJpeg || isPng || isWebp || isGif || isPdf || isMp4 || isWebm;
+};
+
 export const uploadAvatar = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No image provided' });
+      return;
+    }
+
+    if (!isValidFileType(req.file.buffer, 'image')) {
+      res.status(400).json({ error: 'Invalid or corrupted image format. Magic bytes header check failed.' });
       return;
     }
 
@@ -87,6 +109,11 @@ export const uploadVideo = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
+    if (!isValidFileType(req.file.buffer, 'video')) {
+      res.status(400).json({ error: 'Invalid video format. Supported formats: MP4, WebM.' });
+      return;
+    }
+
     const fileUrl = await streamUpload(req.file.buffer, 'videos', 'video');
     res.status(200).json({ url: fileUrl });
   } catch (error) {
@@ -99,6 +126,11 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
   try {
     if (!req.file) {
       res.status(400).json({ error: 'No document image provided' });
+      return;
+    }
+
+    if (!isValidFileType(req.file.buffer, 'any')) {
+      res.status(400).json({ error: 'Invalid document format. Supported formats: PDF, PNG, JPEG, WebP.' });
       return;
     }
 
@@ -121,6 +153,13 @@ export const uploadPropertyImages = async (req: Request, res: Response): Promise
     if (!files || files.length === 0) {
       res.status(400).json({ error: 'No images provided' });
       return;
+    }
+
+    for (const file of files) {
+      if (!isValidFileType(file.buffer, 'image')) {
+        res.status(400).json({ error: `Invalid image detected in upload: ${file.originalname}. Only genuine JPEG, PNG, or WebP images are permitted.` });
+        return;
+      }
     }
 
     const user = req.user;

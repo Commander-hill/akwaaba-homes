@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyMoMoAccountName = exports.handleTransferWebhook = exports.getPayoutHistory = exports.requestPayout = void 0;
 const axios_1 = __importDefault(require("axios"));
+const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const notification_service_1 = require("../utils/notification.service");
@@ -203,6 +204,17 @@ exports.getPayoutHistory = getPayoutHistory;
 // ─── Paystack Transfer Webhook Handler (transfer.success / transfer.failed) ─
 const handleTransferWebhook = async (req, res) => {
     try {
+        // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION ──
+        const paystackSignature = req.headers['x-paystack-signature'];
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+        if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
+            const hash = crypto_1.default.createHmac('sha512', secretKey).update(JSON.stringify(req.body)).digest('hex');
+            if (hash !== paystackSignature) {
+                console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
+                res.status(401).json({ message: 'Invalid webhook signature' });
+                return;
+            }
+        }
         const { event, data } = req.body;
         if (event === 'transfer.success' || event === 'transfer.failed') {
             const ref = data?.reference;

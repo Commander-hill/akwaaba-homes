@@ -46,6 +46,12 @@ model User {
   emailVerificationToken String?
   resetPasswordToken     String?
   resetPasswordExpires   DateTime?
+  
+  // Security & Account Lockout & Token Revocation
+  failedLoginAttempts    Int       @default(0)
+  lockoutUntil           DateTime?
+  tokenVersion           Int       @default(0)
+
   isSuspended            Boolean   @default(false)
   isProfileLocked        Boolean   @default(false)
   profileUnlockRequested Boolean   @default(false)

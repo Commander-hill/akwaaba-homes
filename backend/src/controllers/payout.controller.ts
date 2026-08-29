@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
+import crypto from 'crypto';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
 import { notifyBookingStatusChanged, notifyPayoutSent } from '../utils/notification.service';
@@ -241,6 +242,19 @@ export const getPayoutHistory = async (req: Request, res: Response): Promise<voi
 // ─── Paystack Transfer Webhook Handler (transfer.success / transfer.failed) ─
 export const handleTransferWebhook = async (req: Request, res: Response): Promise<void> => {
   try {
+    // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION ──
+    const paystackSignature = req.headers['x-paystack-signature'] as string;
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+    
+    if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
+      const hash = crypto.createHmac('sha512', secretKey).update(JSON.stringify(req.body)).digest('hex');
+      if (hash !== paystackSignature) {
+        console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
+        res.status(401).json({ message: 'Invalid webhook signature' });
+        return;
+      }
+    }
+
     const { event, data } = req.body;
 
     if (event === 'transfer.success' || event === 'transfer.failed') {

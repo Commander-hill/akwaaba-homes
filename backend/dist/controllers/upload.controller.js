@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadMedia = exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = void 0;
+exports.uploadMedia = exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = exports.isValidFileType = void 0;
 const sharp_1 = __importDefault(require("sharp"));
 const cloudinary_1 = require("cloudinary");
 const streamifier_1 = __importDefault(require("streamifier"));
@@ -36,10 +36,32 @@ const streamUpload = (buffer, folder, resourceType = 'auto') => {
         streamifier_1.default.createReadStream(buffer).pipe(stream);
     });
 };
+// Inspect binary header bytes to prevent polyglot / extension spoofing attacks
+const isValidFileType = (buffer, type) => {
+    if (!buffer || buffer.length < 4)
+        return false;
+    const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    const isPng = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    const isGif = buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38;
+    const isWebp = buffer.length >= 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WEBP';
+    const isPdf = buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46;
+    const isMp4 = buffer.length >= 8 && buffer.subarray(4, 8).toString('ascii') === 'ftyp';
+    const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
+    if (type === 'image')
+        return isJpeg || isPng || isWebp || isGif;
+    if (type === 'video')
+        return isMp4 || isWebm;
+    return isJpeg || isPng || isWebp || isGif || isPdf || isMp4 || isWebm;
+};
+exports.isValidFileType = isValidFileType;
 const uploadAvatar = async (req, res) => {
     try {
         if (!req.file) {
             res.status(400).json({ error: 'No image provided' });
+            return;
+        }
+        if (!(0, exports.isValidFileType)(req.file.buffer, 'image')) {
+            res.status(400).json({ error: 'Invalid or corrupted image format. Magic bytes header check failed.' });
             return;
         }
         const image = (0, sharp_1.default)(req.file.buffer);
@@ -78,6 +100,10 @@ const uploadVideo = async (req, res) => {
             res.status(400).json({ error: 'No video provided' });
             return;
         }
+        if (!(0, exports.isValidFileType)(req.file.buffer, 'video')) {
+            res.status(400).json({ error: 'Invalid video format. Supported formats: MP4, WebM.' });
+            return;
+        }
         const fileUrl = await streamUpload(req.file.buffer, 'videos', 'video');
         res.status(200).json({ url: fileUrl });
     }
@@ -91,6 +117,10 @@ const uploadDocument = async (req, res) => {
     try {
         if (!req.file) {
             res.status(400).json({ error: 'No document image provided' });
+            return;
+        }
+        if (!(0, exports.isValidFileType)(req.file.buffer, 'any')) {
+            res.status(400).json({ error: 'Invalid document format. Supported formats: PDF, PNG, JPEG, WebP.' });
             return;
         }
         const processedBuffer = await (0, sharp_1.default)(req.file.buffer)
@@ -112,6 +142,12 @@ const uploadPropertyImages = async (req, res) => {
         if (!files || files.length === 0) {
             res.status(400).json({ error: 'No images provided' });
             return;
+        }
+        for (const file of files) {
+            if (!(0, exports.isValidFileType)(file.buffer, 'image')) {
+                res.status(400).json({ error: `Invalid image detected in upload: ${file.originalname}. Only genuine JPEG, PNG, or WebP images are permitted.` });
+                return;
+            }
         }
         const user = req.user;
         const landlordIdSnippet = user?.id ? user.id.substring(0, 8).toUpperCase() : 'VERIFIED';

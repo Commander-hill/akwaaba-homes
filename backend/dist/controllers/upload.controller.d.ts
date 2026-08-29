@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+export declare const isValidFileType: (buffer: Buffer, type: "image" | "video" | "any") => boolean;
 export declare const uploadAvatar: (req: Request, res: Response) => Promise<void>;
 export declare const uploadVideo: (req: Request, res: Response) => Promise<void>;
 export declare const uploadDocument: (req: Request, res: Response) => Promise<void>;

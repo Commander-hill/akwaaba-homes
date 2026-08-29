@@ -32,6 +32,11 @@ const authenticate = async (req, res, next) => {
             res.status(403).json({ message: 'Your account has been suspended by an administrator.' });
             return;
         }
+        // Verify token version to revoke stale sessions upon password reset or logout from all devices
+        if (decoded.tokenVersion !== undefined && user.tokenVersion !== decoded.tokenVersion) {
+            res.status(401).json({ message: 'Session has expired or was revoked. Please log in again.' });
+            return;
+        }
         req.user = decoded;
         next();
     }
