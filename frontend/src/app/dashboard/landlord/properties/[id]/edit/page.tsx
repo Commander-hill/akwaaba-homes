@@ -22,6 +22,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     type: 'Hostel',
     targetAudience: 'Open to All',
     furnishing: 'Unfurnished',
+    pricePeriod: 'Academic Year',
     description: '',
     price: '',
     location: '',
@@ -51,6 +52,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         type: property.type || 'Hostel',
         targetAudience: property.targetAudience || 'Open to All',
         furnishing: property.furnishing || 'Unfurnished',
+        pricePeriod: property.pricePeriod || 'Academic Year',
         description: property.description,
         price: property.price.toString(),
         location: property.location,
@@ -212,7 +214,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               </label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Property Title</label>
                 <div className="relative">
@@ -252,6 +254,20 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                   <option value="Short-Term Vacationers">🏖️ Short-Term Vacationers</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Pricing Period</label>
+                <select 
+                  value={formData.pricePeriod}
+                  onChange={e => setFormData({...formData, pricePeriod: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                >
+                  <option value="Academic Year">🎓 Academic Year (2 Sems)</option>
+                  <option value="Monthly">🗓️ Monthly (Long-term)</option>
+                  <option value="Annual">🏡 Annual (Full Year)</option>
+                  <option value="Nightly">🌙 Nightly (Short-stay)</option>
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -269,7 +285,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Price (GHS / Year)</label>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
+                  Price (GHS / {formData.pricePeriod === 'Nightly' ? 'Night' : formData.pricePeriod === 'Monthly' ? 'Month' : formData.pricePeriod === 'Annual' ? 'Year' : 'Acad. Year'})
+                </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><DollarSign className="h-5 w-5 text-[var(--muted-foreground)]" /></div>
                   <input type="number" required min="0" step="0.01" className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} />

@@ -41,7 +41,7 @@ const parseProperty = (property) => {
 const createProperty = async (req, res) => {
     try {
         const landlordId = req.user.id;
-        const { title, type, targetAudience, furnishing, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
+        const { title, type, targetAudience, furnishing, pricePeriod, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
         if (!title || !type || !description || !location || !rooms || !Array.isArray(rooms) || rooms.length === 0) {
             res.status(400).json({ message: 'Missing required fields or no rooms provided.' });
             return;
@@ -97,6 +97,7 @@ const createProperty = async (req, res) => {
                 type,
                 targetAudience: targetAudience || 'Open to All',
                 furnishing: furnishing || 'Unfurnished',
+                pricePeriod: pricePeriod || 'Academic Year',
                 description,
                 price: minPrice,
                 location,
@@ -172,7 +173,7 @@ const createProperty = async (req, res) => {
 exports.createProperty = createProperty;
 const getProperties = async (req, res) => {
     try {
-        const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, limit = 20, page = 1 } = req.query;
+        const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, pricePeriod, limit = 20, page = 1 } = req.query;
         const cacheKey = `properties_${JSON.stringify(req.query)}`;
         const cachedData = cache_1.default.get(cacheKey);
         if (cachedData) {
@@ -201,6 +202,9 @@ const getProperties = async (req, res) => {
         }
         if (furnishing) {
             queryOptions.where.furnishing = String(furnishing);
+        }
+        if (pricePeriod) {
+            queryOptions.where.pricePeriod = String(pricePeriod);
         }
         if (roomType) {
             queryOptions.where.rooms = { some: { roomType: String(roomType) } };
@@ -351,7 +355,7 @@ const updateProperty = async (req, res) => {
     try {
         const landlordId = req.user.id;
         const { id } = req.params;
-        const { title, type, targetAudience, furnishing, description, location, amenities, images, videoUrl, isAvailable } = req.body;
+        const { title, type, targetAudience, furnishing, pricePeriod, description, location, amenities, images, videoUrl, isAvailable } = req.body;
         const property = await prisma_1.default.property.findUnique({ where: { id } });
         if (!property) {
             res.status(404).json({ message: 'Property not found' });
@@ -368,6 +372,7 @@ const updateProperty = async (req, res) => {
                 type: type || property.type,
                 targetAudience: targetAudience !== undefined ? targetAudience : property.targetAudience,
                 furnishing: furnishing !== undefined ? furnishing : property.furnishing,
+                pricePeriod: pricePeriod !== undefined ? pricePeriod : property.pricePeriod,
                 description: description || property.description,
                 location: location || property.location,
                 amenities: amenities ? JSON.stringify(amenities) : property.amenities,

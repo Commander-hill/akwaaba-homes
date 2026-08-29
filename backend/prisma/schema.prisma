@@ -91,6 +91,7 @@ model Property {
   videoUrl       String?
   targetAudience String?  @default("Open to All")
   furnishing     String?  @default("Unfurnished")
+  pricePeriod    String?  @default("Academic Year") // Nightly, Monthly, Academic Year, Annual
   isAvailable    Boolean  @default(true)
   approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt      DateTime @default(now())
@@ -111,6 +112,7 @@ model Property {
   @@index([price])
   @@index([targetAudience])
   @@index([furnishing])
+  @@index([pricePeriod])
 }
 
 model Room {

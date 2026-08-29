@@ -325,7 +325,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <div>
                   {!selectedRoomId && <div className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Starting from</div>}
                   <div className="text-3xl font-bold text-[var(--primary)]">GH₵{displayPrice}</div>
-                  <div className="text-sm text-[var(--muted-foreground)]">per academic year</div>
+                  <div className="text-sm text-[var(--muted-foreground)]">
+                    {property.pricePeriod === 'Nightly' ? 'per night' :
+                     property.pricePeriod === 'Monthly' ? 'per month' :
+                     property.pricePeriod === 'Annual' ? 'per year' : 'per academic year'}
+                  </div>
                 </div>
               </div>
             </div>
@@ -705,7 +709,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
                       <div className="text-right shrink-0 ml-3">
                         <div className="font-black text-xl text-[var(--foreground)]">GH₵{room.price}</div>
-                        <div className="text-[10px] text-[var(--muted-foreground)]">per year</div>
+                        <div className="text-[10px] text-[var(--muted-foreground)]">
+                          {property.pricePeriod === 'Nightly' ? 'per night' :
+                           property.pricePeriod === 'Monthly' ? 'per month' :
+                           property.pricePeriod === 'Annual' ? 'per year' : 'per academic year'}
+                        </div>
                       </div>
                     </div>
 

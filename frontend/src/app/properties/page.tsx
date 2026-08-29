@@ -15,6 +15,7 @@ interface Property {
   type: string;
   targetAudience?: string;
   furnishing?: string;
+  pricePeriod?: string;
   rooms: { roomType: string }[];
   totalCapacity: number;
   remainingCapacity: number;
@@ -42,6 +43,7 @@ export default function PropertiesPage() {
   const [filterType, setFilterType] = useState('');
   const [filterTargetAudience, setFilterTargetAudience] = useState('');
   const [filterFurnishing, setFilterFurnishing] = useState('');
+  const [filterPricePeriod, setFilterPricePeriod] = useState('');
   const [filterRoomType, setFilterRoomType] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -54,6 +56,7 @@ export default function PropertiesPage() {
     if (filterType) params.append('type', filterType);
     if (filterTargetAudience) params.append('targetAudience', filterTargetAudience);
     if (filterFurnishing) params.append('furnishing', filterFurnishing);
+    if (filterPricePeriod) params.append('pricePeriod', filterPricePeriod);
     if (filterRoomType) params.append('roomType', filterRoomType);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
@@ -65,7 +68,7 @@ export default function PropertiesPage() {
   };
 
   const { data: properties, isLoading, error, refetch } = useQuery({
-    queryKey: ['properties', searchLocation, filterType, filterTargetAudience, filterFurnishing, filterRoomType, minPrice, maxPrice, isAvailableOnly, amenitySearch],
+    queryKey: ['properties', searchLocation, filterType, filterTargetAudience, filterFurnishing, filterPricePeriod, filterRoomType, minPrice, maxPrice, isAvailableOnly, amenitySearch],
     queryFn: fetchProperties,
   });
 
@@ -185,6 +188,21 @@ export default function PropertiesPage() {
                 </div>
 
                 <div>
+                  <label className="text-sm font-semibold mb-2 block">Rental Period</label>
+                  <select 
+                    value={filterPricePeriod}
+                    onChange={(e) => setFilterPricePeriod(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-[var(--border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                  >
+                    <option value="">Any Period</option>
+                    <option value="Academic Year">Academic Year (2 Semesters)</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Annual">Annual (Full Year)</option>
+                    <option value="Nightly">Nightly (Short-Stay)</option>
+                  </select>
+                </div>
+
+                <div>
                   <label className="text-sm font-semibold mb-2 block">Room Type</label>
                   <select 
                     value={filterRoomType}
@@ -200,7 +218,7 @@ export default function PropertiesPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-semibold mb-2 block">Price Range (GHS / yr)</label>
+                  <label className="text-sm font-semibold mb-2 block">Price Range (GHS)</label>
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" 
@@ -248,6 +266,7 @@ export default function PropertiesPage() {
                     setFilterType('');
                     setFilterTargetAudience('');
                     setFilterFurnishing('');
+                    setFilterPricePeriod('');
                     setFilterRoomType('');
                     setMinPrice('');
                     setMaxPrice('');
@@ -370,7 +389,14 @@ export default function PropertiesPage() {
                       <div className="mt-auto pt-4 border-t border-[var(--border)] flex items-center justify-between">
                         <div>
                           <span className="text-xs text-[var(--muted-foreground)] font-semibold block mb-0.5">Starting from</span>
-                          <span className="text-xl font-extrabold text-[var(--foreground)]">GHS {property.price.toLocaleString()}</span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-extrabold text-[var(--foreground)]">GHS {property.price.toLocaleString()}</span>
+                            <span className="text-xs font-semibold text-[var(--muted-foreground)]">
+                              {property.pricePeriod === 'Nightly' ? '/ night' :
+                               property.pricePeriod === 'Monthly' ? '/ mo' :
+                               property.pricePeriod === 'Annual' ? '/ yr' : '/ acad. yr'}
+                            </span>
+                          </div>
                         </div>
                         <span className="text-[var(--primary)] text-sm font-bold bg-indigo-50 dark:bg-indigo-900/30 px-3.5 py-1.5 rounded-lg group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
                           Book Now

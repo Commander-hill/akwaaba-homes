@@ -196,7 +196,12 @@ export default function LandlordPropertiesPage() {
                 
                 <div className="mt-auto pt-4 border-t border-[var(--border)] flex items-center justify-between">
                   <div className="font-bold text-[var(--primary)]">
-                    GH₵{property.price.toLocaleString()} <span className="text-xs text-[var(--muted-foreground)] font-normal">/yr</span>
+                    GH₵{property.price.toLocaleString()}{' '}
+                    <span className="text-xs text-[var(--muted-foreground)] font-normal">
+                      {property.pricePeriod === 'Nightly' ? '/night' :
+                       property.pricePeriod === 'Monthly' ? '/mo' :
+                       property.pricePeriod === 'Annual' ? '/yr' : '/acad. yr'}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     {!property.isAvailable && (

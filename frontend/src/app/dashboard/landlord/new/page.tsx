@@ -27,6 +27,7 @@ export default function NewPropertyPage() {
     type: 'Hostel',
     targetAudience: 'Open to All',
     furnishing: 'Unfurnished',
+    pricePeriod: 'Academic Year',
     description: '',
     location: '',
     amenities: '',
@@ -405,7 +406,7 @@ export default function NewPropertyPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Property Type */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)]">Property Type *</label>
@@ -427,7 +428,7 @@ export default function NewPropertyPage() {
             {/* Target Audience */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                <span>👥</span> Target Tenant / Audience
+                <span>👥</span> Target Tenant
               </label>
               <select 
                 value={formData.targetAudience}
@@ -445,7 +446,7 @@ export default function NewPropertyPage() {
             {/* Furnishing Status */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                <span>🛋️</span> Furnishing Status
+                <span>🛋️</span> Furnishing
               </label>
               <select 
                 value={formData.furnishing}
@@ -455,6 +456,23 @@ export default function NewPropertyPage() {
                 <option value="Fully Furnished">✨ Fully Furnished</option>
                 <option value="Semi-Furnished">🛋️ Semi-Furnished</option>
                 <option value="Unfurnished">📦 Unfurnished</option>
+              </select>
+            </div>
+
+            {/* Pricing / Rental Period */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                <span>📅</span> Pricing Period *
+              </label>
+              <select 
+                value={formData.pricePeriod}
+                onChange={e => setFormData({...formData, pricePeriod: e.target.value})}
+                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              >
+                <option value="Academic Year">🎓 Academic Year (2 Sems)</option>
+                <option value="Monthly">🗓️ Monthly (Long-term)</option>
+                <option value="Annual">🏡 Annual (Full Year)</option>
+                <option value="Nightly">🌙 Nightly (Short-stay)</option>
               </select>
             </div>
           </div>
@@ -616,10 +634,10 @@ export default function NewPropertyPage() {
                         {numRoomsErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter room quantity</p>}
                       </div>
                       
-                      {/* Price/Year (GHS) */}
+                      {/* Price / Period (GHS) */}
                       <div className="space-y-2">
                         <label className="text-xs font-bold text-[var(--foreground)] flex justify-between items-center">
-                          <span>Price/Year (GHS) *</span>
+                          <span>Price / {formData.pricePeriod === 'Nightly' ? 'Night' : formData.pricePeriod === 'Monthly' ? 'Month' : formData.pricePeriod === 'Annual' ? 'Year' : 'Acad. Year'} (GHS) *</span>
                           {priceErr && <span className="text-[10px] font-bold text-red-500">⚠ Required</span>}
                         </label>
                         <div className="relative">
@@ -637,7 +655,7 @@ export default function NewPropertyPage() {
                             }`}
                           />
                         </div>
-                        {priceErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter price per year</p>}
+                        {priceErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter room price</p>}
                       </div>
                     </div>
                   </div>
