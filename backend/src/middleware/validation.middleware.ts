@@ -41,6 +41,8 @@ export const loginValidation = [
 export const createPropertyValidation = [
   body('title').notEmpty().withMessage('Title is required').trim().escape(),
   body('type').notEmpty().withMessage('Property type is required').trim().escape(),
+  body('targetAudience').optional().isString().trim().escape(),
+  body('furnishing').optional().isString().trim().escape(),
   body('description').notEmpty().withMessage('Description is required').trim().escape(),
   body('location').notEmpty().withMessage('Location is required').trim().escape(),
   body('rooms').isArray({ min: 1 }).withMessage('At least one room configuration is required'),
@@ -54,6 +56,8 @@ export const createPropertyValidation = [
 export const updatePropertyValidation = [
   body('title').optional().notEmpty().withMessage('Title is required').trim().escape(),
   body('type').optional().notEmpty().withMessage('Property type is required').trim().escape(),
+  body('targetAudience').optional().isString().trim().escape(),
+  body('furnishing').optional().isString().trim().escape(),
   body('description').optional().notEmpty().withMessage('Description is required').trim().escape(),
   body('location').optional().notEmpty().withMessage('Location is required').trim().escape(),
   body('amenities').optional().isArray().withMessage('Amenities must be an array'),

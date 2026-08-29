@@ -25,6 +25,8 @@ export default function NewPropertyPage() {
   const [formData, setFormData] = useState({
     title: '',
     type: 'Hostel',
+    targetAudience: 'Open to All',
+    furnishing: 'Unfurnished',
     description: '',
     location: '',
     amenities: '',
@@ -403,7 +405,7 @@ export default function NewPropertyPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Property Type */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-[var(--foreground)]">Property Type *</label>
@@ -422,35 +424,69 @@ export default function NewPropertyPage() {
               </select>
             </div>
 
-            {/* Location Name */}
+            {/* Target Audience */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-                <span>Location Name *</span>
-                {fieldErrors.location ? (
-                  <span className="text-xs font-bold text-red-500">⚠ Location is required</span>
-                ) : isGeocoding ? (
-                  <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse flex items-center gap-1">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting area...
-                  </span>
-                ) : null}
+              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                <span>👥</span> Target Tenant / Audience
               </label>
-              <div className="relative">
-                <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.location ? 'text-red-500' : 'text-slate-400'}`} />
-                <input 
-                  type="text" 
-                  value={formData.location}
-                  onChange={e => {
-                    setFormData({...formData, location: e.target.value});
-                    if (fieldErrors.location) setFieldErrors(prev => ({ ...prev, location: false }));
-                  }}
-                  placeholder="e.g. Ayeduase"
-                  className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
-                    fieldErrors.location 
-                      ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
-                      : 'border-[var(--input)] focus:ring-[var(--ring)]'
-                  }`}
-                />
-              </div>
+              <select 
+                value={formData.targetAudience}
+                onChange={e => setFormData({...formData, targetAudience: e.target.value})}
+                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              >
+                <option value="Open to All">🌐 Open to All</option>
+                <option value="Students & Young Professionals">🎓 Students & Young Professionals</option>
+                <option value="Working Professionals">💼 Working Professionals</option>
+                <option value="Families">👨‍👩‍👧‍👦 Families</option>
+                <option value="Short-Term Vacationers">🏖️ Short-Term Vacationers</option>
+              </select>
+            </div>
+
+            {/* Furnishing Status */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
+                <span>🛋️</span> Furnishing Status
+              </label>
+              <select 
+                value={formData.furnishing}
+                onChange={e => setFormData({...formData, furnishing: e.target.value})}
+                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              >
+                <option value="Fully Furnished">✨ Fully Furnished</option>
+                <option value="Semi-Furnished">🛋️ Semi-Furnished</option>
+                <option value="Unfurnished">📦 Unfurnished</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Location Name */}
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
+              <span>Location Name *</span>
+              {fieldErrors.location ? (
+                <span className="text-xs font-bold text-red-500">⚠ Location is required</span>
+              ) : isGeocoding ? (
+                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting area...
+                </span>
+              ) : null}
+            </label>
+            <div className="relative">
+              <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.location ? 'text-red-500' : 'text-slate-400'}`} />
+              <input 
+                type="text" 
+                value={formData.location}
+                onChange={e => {
+                  setFormData({...formData, location: e.target.value});
+                  if (fieldErrors.location) setFieldErrors(prev => ({ ...prev, location: false }));
+                }}
+                placeholder="e.g. Ayeduase / East Legon / Cape Coast"
+                className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
+                  fieldErrors.location 
+                    ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
+                    : 'border-[var(--input)] focus:ring-[var(--ring)]'
+                }`}
+              />
             </div>
           </div>
 

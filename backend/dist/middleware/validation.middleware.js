@@ -36,6 +36,8 @@ exports.loginValidation = [
 exports.createPropertyValidation = [
     (0, express_validator_1.body)('title').notEmpty().withMessage('Title is required').trim().escape(),
     (0, express_validator_1.body)('type').notEmpty().withMessage('Property type is required').trim().escape(),
+    (0, express_validator_1.body)('targetAudience').optional().isString().trim().escape(),
+    (0, express_validator_1.body)('furnishing').optional().isString().trim().escape(),
     (0, express_validator_1.body)('description').notEmpty().withMessage('Description is required').trim().escape(),
     (0, express_validator_1.body)('location').notEmpty().withMessage('Location is required').trim().escape(),
     (0, express_validator_1.body)('rooms').isArray({ min: 1 }).withMessage('At least one room configuration is required'),
@@ -48,6 +50,8 @@ exports.createPropertyValidation = [
 exports.updatePropertyValidation = [
     (0, express_validator_1.body)('title').optional().notEmpty().withMessage('Title is required').trim().escape(),
     (0, express_validator_1.body)('type').optional().notEmpty().withMessage('Property type is required').trim().escape(),
+    (0, express_validator_1.body)('targetAudience').optional().isString().trim().escape(),
+    (0, express_validator_1.body)('furnishing').optional().isString().trim().escape(),
     (0, express_validator_1.body)('description').optional().notEmpty().withMessage('Description is required').trim().escape(),
     (0, express_validator_1.body)('location').optional().notEmpty().withMessage('Location is required').trim().escape(),
     (0, express_validator_1.body)('amenities').optional().isArray().withMessage('Amenities must be an array'),

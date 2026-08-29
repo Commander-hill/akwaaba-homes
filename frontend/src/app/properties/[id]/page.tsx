@@ -335,14 +335,32 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-8 border-y border-[var(--border)]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 py-8 border-y border-[var(--border)]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <Home className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
                 <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Type</div>
-                <div className="font-bold">{property.type || 'Hostel'}</div>
+                <div className="font-bold text-sm">{property.type || 'Hostel'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold">
+                👥
+              </div>
+              <div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Target Tenant</div>
+                <div className="font-bold text-sm">{property.targetAudience || 'Open to All'}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold">
+                🛋️
+              </div>
+              <div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Furnishing</div>
+                <div className="font-bold text-sm">{property.furnishing || 'Unfurnished'}</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -351,7 +369,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
               <div>
                 <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Room Types</div>
-                <div className="font-bold">{property.rooms?.length || 0} Options</div>
+                <div className="font-bold text-sm">{property.rooms?.length || 0} Options</div>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -359,12 +377,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <Users className="w-5 h-5 text-[var(--primary)]" />
               </div>
               <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Total Capacity</div>
-                <div className="font-bold">{property.totalCapacity} beds</div>
+                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Capacity</div>
+                <div className="font-bold text-sm">{property.totalCapacity} beds</div>
               </div>
             </div>
             {/* Live Availability Block */}
-            <div className="col-span-2 md:col-span-1">
+            <div className="col-span-2 sm:col-span-1">
               <div className={`rounded-2xl p-4 border ${
                 property.remainingCapacity === 0
                   ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'

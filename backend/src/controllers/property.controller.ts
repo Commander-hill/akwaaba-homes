@@ -32,7 +32,7 @@ const parseProperty = (property: any) => {
 export const createProperty = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user.id;
-    const { title, type, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
+    const { title, type, targetAudience, furnishing, description, location, latitude, longitude, amenities, images, videoUrl, rooms } = req.body;
 
     if (!title || !type || !description || !location || !rooms || !Array.isArray(rooms) || rooms.length === 0) {
       res.status(400).json({ message: 'Missing required fields or no rooms provided.' });
@@ -86,6 +86,8 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
         landlordId,
         title,
         type,
+        targetAudience: targetAudience || 'Open to All',
+        furnishing: furnishing || 'Unfurnished',
         description,
         price: minPrice, 
         location,
@@ -166,7 +168,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
 export const getProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, limit = 20, page = 1 } = req.query;
+    const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, limit = 20, page = 1 } = req.query;
 
     const cacheKey = `properties_${JSON.stringify(req.query)}`;
     const cachedData = appCache.get(cacheKey);
@@ -193,6 +195,14 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
 
     if (type) {
       queryOptions.where.type = String(type);
+    }
+
+    if (targetAudience) {
+      queryOptions.where.targetAudience = String(targetAudience);
+    }
+
+    if (furnishing) {
+      queryOptions.where.furnishing = String(furnishing);
     }
 
     if (roomType) {
@@ -355,7 +365,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
   try {
     const landlordId = req.user.id;
     const { id } = req.params;
-    const { title, type, description, location, amenities, images, videoUrl, isAvailable } = req.body;
+    const { title, type, targetAudience, furnishing, description, location, amenities, images, videoUrl, isAvailable } = req.body;
 
     const property = await prisma.property.findUnique({ where: { id } });
 
@@ -374,6 +384,8 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
       data: {
         title: title || property.title,
         type: type || property.type,
+        targetAudience: targetAudience !== undefined ? targetAudience : property.targetAudience,
+        furnishing: furnishing !== undefined ? furnishing : property.furnishing,
         description: description || property.description,
         location: location || property.location,
         amenities: amenities ? JSON.stringify(amenities) : property.amenities,

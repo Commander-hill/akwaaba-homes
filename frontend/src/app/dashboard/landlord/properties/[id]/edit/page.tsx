@@ -20,6 +20,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
   const [formData, setFormData] = useState({
     title: '',
     type: 'Hostel',
+    targetAudience: 'Open to All',
+    furnishing: 'Unfurnished',
     description: '',
     price: '',
     location: '',
@@ -47,6 +49,8 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
       setFormData({
         title: property.title,
         type: property.type || 'Hostel',
+        targetAudience: property.targetAudience || 'Open to All',
+        furnishing: property.furnishing || 'Unfurnished',
         description: property.description,
         price: property.price.toString(),
         location: property.location,
@@ -208,7 +212,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               </label>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Property Title</label>
                 <div className="relative">
@@ -233,9 +237,37 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                   <option value="Guest House">Guest House / Villa</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Target Tenant</label>
+                <select 
+                  value={formData.targetAudience}
+                  onChange={e => setFormData({...formData, targetAudience: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                >
+                  <option value="Open to All">🌐 Open to All</option>
+                  <option value="Students & Young Professionals">🎓 Students & Young Professionals</option>
+                  <option value="Working Professionals">💼 Working Professionals</option>
+                  <option value="Families">👨‍👩‍👧‍👦 Families</option>
+                  <option value="Short-Term Vacationers">🏖️ Short-Term Vacationers</option>
+                </select>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Furnishing Status</label>
+                <select 
+                  value={formData.furnishing}
+                  onChange={e => setFormData({...formData, furnishing: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                >
+                  <option value="Fully Furnished">✨ Fully Furnished</option>
+                  <option value="Semi-Furnished">🛋️ Semi-Furnished</option>
+                  <option value="Unfurnished">📦 Unfurnished</option>
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Price (GHS / Year)</label>
                 <div className="relative">
@@ -243,6 +275,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                   <input type="number" required min="0" step="0.01" className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} />
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1 flex justify-between items-center">
                   <span>Location Name *</span>

@@ -89,6 +89,8 @@ model Property {
   amenities      String // Store as JSON string
   images         String // Store as JSON string
   videoUrl       String?
+  targetAudience String?  @default("Open to All")
+  furnishing     String?  @default("Unfurnished")
   isAvailable    Boolean  @default(true)
   approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt      DateTime @default(now())
@@ -107,6 +109,8 @@ model Property {
   @@index([location])
   @@index([type])
   @@index([price])
+  @@index([targetAudience])
+  @@index([furnishing])
 }
 
 model Room {

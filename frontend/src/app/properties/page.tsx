@@ -13,6 +13,8 @@ interface Property {
   id: string;
   title: string;
   type: string;
+  targetAudience?: string;
+  furnishing?: string;
   rooms: { roomType: string }[];
   totalCapacity: number;
   remainingCapacity: number;
@@ -38,6 +40,8 @@ export default function PropertiesPage() {
   
   // Filter States
   const [filterType, setFilterType] = useState('');
+  const [filterTargetAudience, setFilterTargetAudience] = useState('');
+  const [filterFurnishing, setFilterFurnishing] = useState('');
   const [filterRoomType, setFilterRoomType] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -48,6 +52,8 @@ export default function PropertiesPage() {
     const params = new URLSearchParams();
     if (searchLocation) params.append('location', searchLocation);
     if (filterType) params.append('type', filterType);
+    if (filterTargetAudience) params.append('targetAudience', filterTargetAudience);
+    if (filterFurnishing) params.append('furnishing', filterFurnishing);
     if (filterRoomType) params.append('roomType', filterRoomType);
     if (minPrice) params.append('minPrice', minPrice);
     if (maxPrice) params.append('maxPrice', maxPrice);
@@ -59,7 +65,7 @@ export default function PropertiesPage() {
   };
 
   const { data: properties, isLoading, error, refetch } = useQuery({
-    queryKey: ['properties', searchLocation, filterType, filterRoomType, minPrice, maxPrice, isAvailableOnly, amenitySearch],
+    queryKey: ['properties', searchLocation, filterType, filterTargetAudience, filterFurnishing, filterRoomType, minPrice, maxPrice, isAvailableOnly, amenitySearch],
     queryFn: fetchProperties,
   });
 
@@ -141,9 +147,40 @@ export default function PropertiesPage() {
                     <option value="Hostel">Hostel</option>
                     <option value="Apartment">Apartment / Flat</option>
                     <option value="Homestay">Homestay</option>
+                    <option value="Studio">Studio Apartment</option>
                     <option value="Residential House">Residential House</option>
                     <option value="Townhouse">Townhouse</option>
-                    <option value="Studio">Studio Apartment</option>
+                    <option value="Guest House">Guest House / Villa</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Target Tenant</label>
+                  <select 
+                    value={filterTargetAudience}
+                    onChange={(e) => setFilterTargetAudience(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-[var(--border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                  >
+                    <option value="">Any Target Group</option>
+                    <option value="Open to All">Open to All</option>
+                    <option value="Students & Young Professionals">Students & Young Professionals</option>
+                    <option value="Working Professionals">Working Professionals</option>
+                    <option value="Families">Families</option>
+                    <option value="Short-Term Vacationers">Short-Term Vacationers</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold mb-2 block">Furnishing Status</label>
+                  <select 
+                    value={filterFurnishing}
+                    onChange={(e) => setFilterFurnishing(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-[var(--border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                  >
+                    <option value="">Any Furnishing</option>
+                    <option value="Fully Furnished">Fully Furnished</option>
+                    <option value="Semi-Furnished">Semi-Furnished</option>
+                    <option value="Unfurnished">Unfurnished</option>
                   </select>
                 </div>
 
@@ -209,6 +246,8 @@ export default function PropertiesPage() {
                 <button 
                   onClick={() => {
                     setFilterType('');
+                    setFilterTargetAudience('');
+                    setFilterFurnishing('');
                     setFilterRoomType('');
                     setMinPrice('');
                     setMaxPrice('');
@@ -285,6 +324,16 @@ export default function PropertiesPage() {
 
                       <div className="flex flex-wrap gap-2 mb-3">
                         <span className="text-xs font-semibold bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{property.type || 'Hostel'}</span>
+                        {property.targetAudience && property.targetAudience !== 'Open to All' && (
+                          <span className="text-xs font-semibold bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-1 rounded-md">
+                            👥 {property.targetAudience}
+                          </span>
+                        )}
+                        {property.furnishing && (
+                          <span className="text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-1 rounded-md">
+                            🛋️ {property.furnishing}
+                          </span>
+                        )}
                         {property.rooms && property.rooms.length > 0 && (
                           <span className="text-xs font-semibold bg-indigo-50 dark:bg-indigo-900/30 text-[var(--primary)] px-2 py-1 rounded-md">
                             {property.rooms.length} Room Type{property.rooms.length > 1 ? 's' : ''}
