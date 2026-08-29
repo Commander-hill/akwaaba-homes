@@ -19,6 +19,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
   
   const [formData, setFormData] = useState({
     title: '',
+    type: 'Hostel',
     description: '',
     price: '',
     location: '',
@@ -45,6 +46,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     if (property) {
       setFormData({
         title: property.title,
+        type: property.type || 'Hostel',
         description: property.description,
         price: property.price.toString(),
         location: property.location,
@@ -206,11 +208,30 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Property Title</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Building className="h-5 w-5 text-[var(--muted-foreground)]" /></div>
-                <input type="text" required className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Property Title</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Building className="h-5 w-5 text-[var(--muted-foreground)]" /></div>
+                  <input type="text" required className="block w-full pl-10 pr-3 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Property Type</label>
+                <select 
+                  value={formData.type}
+                  onChange={e => setFormData({...formData, type: e.target.value})}
+                  className="w-full bg-transparent border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                >
+                  <option value="Hostel">Hostel</option>
+                  <option value="Homestay">Homestay</option>
+                  <option value="Apartment">Apartment / Flat</option>
+                  <option value="Studio">Studio Apartment</option>
+                  <option value="Residential House">Residential House</option>
+                  <option value="Townhouse">Townhouse</option>
+                  <option value="Guest House">Guest House / Villa</option>
+                </select>
               </div>
             </div>
 
