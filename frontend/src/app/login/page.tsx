@@ -27,9 +27,11 @@ export default function LoginPage() {
         window.location.href = '/dashboard/admin';
       } else if (response.data.user.role === 'LANDLORD') {
         window.location.href = '/dashboard/landlord';
+      } else if (response.data.user.role === 'CARETAKER' || response.data.user.role === 'STAFF') {
+        window.location.href = '/dashboard/tenant';
       } else {
         // Tenant
-        if (!response.data.user.studentId) {
+        if (response.data.user.isStudent && !response.data.user.studentId) {
           window.location.href = '/onboarding';
         } else {
           window.location.href = '/dashboard/tenant';

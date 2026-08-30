@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle, Wrench } from 'lucide-react';
 import api from '@/lib/axios';
 import PassportUpload from '@/components/PassportUpload';
 
@@ -70,7 +70,7 @@ export default function RegisterPage() {
       }
     }
 
-    if (currentStep === 2 && (!formData.isStudent || formData.role === 'LANDLORD')) {
+    if (currentStep === 2 && (!formData.isStudent || formData.role === 'LANDLORD' || formData.role === 'CARETAKER')) {
       setCurrentStep(4);
     } else {
       setCurrentStep((prev) => prev + 1);
@@ -79,7 +79,7 @@ export default function RegisterPage() {
 
   const handleBack = () => {
     setError('');
-    if (currentStep === 4 && (!formData.isStudent || formData.role === 'LANDLORD')) {
+    if (currentStep === 4 && (!formData.isStudent || formData.role === 'LANDLORD' || formData.role === 'CARETAKER')) {
       setCurrentStep(2);
     } else {
       setCurrentStep((prev) => prev - 1);
@@ -167,7 +167,7 @@ export default function RegisterPage() {
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
               <h2 className="text-[28px] font-extrabold text-white tracking-tight">How will you use AkwaabaHomes?</h2>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   type="button"
                   onClick={() => { setFormData({ ...formData, role: 'TENANT' }); setError(''); }}
@@ -176,8 +176,8 @@ export default function RegisterPage() {
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'TENANT' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
                     <User className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-lg text-white mb-1">I am a Tenant</h3>
-                  <p className="text-sm text-[#A1A1AA]">I want to find and book premium hostels or apartments.</p>
+                  <h3 className="font-bold text-lg text-white mb-1">Tenant</h3>
+                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I want to find and book premium hostels or apartments.</p>
                 </button>
 
                 <button
@@ -188,8 +188,20 @@ export default function RegisterPage() {
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'LANDLORD' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
                     <Building className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-lg text-white mb-1">I am a Landlord</h3>
-                  <p className="text-sm text-[#A1A1AA]">I want to list my properties and manage bookings.</p>
+                  <h3 className="font-bold text-lg text-white mb-1">Landlord</h3>
+                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I want to list my properties, track earnings, and manage bookings.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setFormData({ ...formData, role: 'CARETAKER', isStudent: false }); setError(''); }}
+                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'CARETAKER' ? 'border-[#5B4CFF] bg-[#5B4CFF]/10' : 'border-white/10 hover:border-white/30 bg-[#2A2A2B]/40'}`}
+                >
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'CARETAKER' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
+                    <Wrench className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-bold text-lg text-white mb-1">Caretaker / Staff</h3>
+                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I manage facility operations, tickets, check-ins, and compound notices.</p>
                 </button>
               </div>
 
