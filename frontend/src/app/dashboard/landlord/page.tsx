@@ -255,7 +255,7 @@ export default function LandlordDashboard() {
   const cashflows = earningsReport?.recentCashflows || [];
 
   return (
-    <div className="space-y-8 animate-in pb-12">
+    <div className="space-y-8 pb-12">
       <OnboardingProgressWidget 
         user={session} 
         hasProperty={Boolean(session?.hasProperty || session?._count?.properties > 0 || subStats.totalProperties > 0 || subProperties.length > 0)} 
@@ -423,14 +423,14 @@ export default function LandlordDashboard() {
       </div>
 
       {activeTab === 'messages' && (
-        <div className="animate-in">
+        <div>
           <MessagingTab />
         </div>
       )}
 
       {/* ─── TAB 1: BOOKING REQUESTS ──────────────────────────────────────────────── */}
       {activeTab === 'bookings' && (
-        <div className="animate-in space-y-4">
+        <div className="space-y-4">
           {isLoadingBookings ? (
             <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
               {[1,2,3].map(i => (
@@ -1128,28 +1128,28 @@ export default function LandlordDashboard() {
 
       {/* ─── TAB: FLOORPLAN & BED OCCUPANCY MATRIX ────────────────────────────────── */}
       {activeTab === 'occupancy' && (
-        <div className="animate-in">
+        <div>
           <FloorplanOccupancyTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: COMPOUND NOTICE BOARD ───────────────────────────────────────────── */}
       {activeTab === 'notices' && (
-        <div className="animate-in">
+        <div>
           <CompoundNoticeTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: OPERATING EXPENSES & P&L ────────────────────────────────────────── */}
       {activeTab === 'expenses' && (
-        <div className="animate-in">
+        <div>
           <ExpenseTrackerTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: STAFF & CARETAKER DELEGATION ────────────────────────────────────── */}
       {activeTab === 'staff' && (
-        <div className="animate-in">
+        <div>
           <StaffDelegationTab properties={myProperties} />
         </div>
       )}

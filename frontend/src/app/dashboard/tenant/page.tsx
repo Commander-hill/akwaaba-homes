@@ -324,7 +324,7 @@ export default function TenantDashboard() {
   const compoundNotices = Array.isArray(compoundNoticesData?.notices) ? compoundNoticesData.notices : [];
 
   return (
-    <div className="space-y-6 animate-in">
+    <div className="space-y-6">
       <OnboardingProgressWidget user={session} />
       {/* Sticky Header Banner, Notice & Tabs Container */}
       <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
@@ -1308,44 +1308,44 @@ export default function TenantDashboard() {
       )}
 
       {activeTab === 'visitors' && (
-        <div className="animate-in">
+        <div>
           <VisitorPassTab bookings={bookings} />
         </div>
       )}
 
       {activeTab === 'services' && (
-        <div className="animate-in">
+        <div>
           <HomeServicesTab bookings={bookings} />
         </div>
       )}
 
       {activeTab === 'vehicles' && (
-        <div className="animate-in">
+        <div>
           <VehicleParkingTab bookings={bookings} />
         </div>
       )}
 
       {activeTab === 'renewals' && (
-        <div className="animate-in">
+        <div>
           <LeaseRenewalTab bookings={bookings} />
         </div>
       )}
 
       {activeTab === 'deliveries' && (
-        <div className="animate-in">
+        <div>
           <DeliveryVaultTab bookings={bookings} />
         </div>
       )}
 
       {activeTab === 'billsplit' && (
-        <div className="animate-in">
+        <div>
           <BillSplitterTab bookings={bookings} />
         </div>
       )}
 
       {/* Review Modal */}
       {reviewModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
             <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Leave a Review</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-5">Your honest feedback helps other students find great accommodation.</p>
@@ -1383,7 +1383,7 @@ export default function TenantDashboard() {
 
       {/* Appeal Modal */}
       {appealModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in">
             <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-[var(--primary)]" /> Submit an Appeal</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-5">Explain why you believe this review should be reinstated. An admin will review your appeal.</p>
@@ -1410,7 +1410,7 @@ export default function TenantDashboard() {
 
       {/* Ticket Modal */}
       {ticketModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
             <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquarePlus className="w-5 h-5 text-[var(--primary)]" /> Report an Issue</h3>
             <p className="text-sm text-[var(--muted-foreground)] mb-6">Your landlord will be notified immediately.</p>
