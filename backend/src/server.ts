@@ -51,6 +51,12 @@ import expenseRoutes from './routes/expense.routes';
 import compoundNoticeRoutes from './routes/compoundNotice.routes';
 import inspectionRoutes from './routes/inspection.routes';
 import staffRoutes from './routes/staff.routes';
+import visitorPassRoutes from './routes/visitorPass.routes';
+import serviceBookingRoutes from './routes/serviceBooking.routes';
+import vehicleRoutes from './routes/vehicle.routes';
+import leaseRenewalRoutes from './routes/leaseRenewal.routes';
+import deliveryRoutes from './routes/delivery.routes';
+import billSplitRoutes from './routes/billSplit.routes';
 
 import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
@@ -250,6 +256,12 @@ app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1/compound-notices', compoundNoticeRoutes);
 app.use('/api/v1/inspections', inspectionRoutes);
 app.use('/api/v1/staff', staffRoutes);
+app.use('/api/v1/visitor-passes', visitorPassRoutes);
+app.use('/api/v1/service-bookings', serviceBookingRoutes);
+app.use('/api/v1/vehicles', vehicleRoutes);
+app.use('/api/v1/lease-renewals', leaseRenewalRoutes);
+app.use('/api/v1/deliveries', deliveryRoutes);
+app.use('/api/v1/bill-splits', billSplitRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(notFoundHandler);

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, Sparkles, Car, Package, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -11,6 +11,12 @@ import CommuteWidget from '@/components/CommuteWidget';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
 import MessagingTab from '@/components/MessagingTab';
+import VisitorPassTab from '@/components/tenant/VisitorPassTab';
+import HomeServicesTab from '@/components/tenant/HomeServicesTab';
+import VehicleParkingTab from '@/components/tenant/VehicleParkingTab';
+import LeaseRenewalTab from '@/components/tenant/LeaseRenewalTab';
+import DeliveryVaultTab from '@/components/tenant/DeliveryVaultTab';
+import BillSplitterTab from '@/components/tenant/BillSplitterTab';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
@@ -18,7 +24,9 @@ import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTe
 
 export default function TenantDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety' | 'messages'>('bookings');
+  const [activeTab, setActiveTab] = useState<
+    'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety' | 'messages' | 'visitors' | 'services' | 'vehicles' | 'renewals' | 'deliveries' | 'billsplit'
+  >('bookings');
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -452,6 +460,66 @@ export default function TenantDashboard() {
             )}
           >
             <MessageSquare className="w-4 h-4 text-indigo-500" /> Messages
+          </button>
+
+          <button
+            onClick={() => setActiveTab('visitors')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'visitors' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <KeyRound className="w-4 h-4 text-amber-500" /> Visitor Passes
+          </button>
+
+          <button
+            onClick={() => setActiveTab('services')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'services' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Sparkles className="w-4 h-4 text-blue-500" /> Home Services
+          </button>
+
+          <button
+            onClick={() => setActiveTab('vehicles')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'vehicles' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Car className="w-4 h-4 text-emerald-500" /> Vehicles & Parking
+          </button>
+
+          <button
+            onClick={() => setActiveTab('renewals')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'renewals' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <FileText className="w-4 h-4 text-purple-500" /> Lease Renewal
+          </button>
+
+          <button
+            onClick={() => setActiveTab('deliveries')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'deliveries' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Package className="w-4 h-4 text-orange-500" /> Parcel Vault
+          </button>
+
+          <button
+            onClick={() => setActiveTab('billsplit')}
+            className={clsx(
+              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              activeTab === 'billsplit' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <DollarSign className="w-4 h-4 text-emerald-600" /> Bill Splitter
           </button>
         </div>
       </div>
@@ -1241,6 +1309,42 @@ export default function TenantDashboard() {
               </a>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'visitors' && (
+        <div className="animate-in">
+          <VisitorPassTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'services' && (
+        <div className="animate-in">
+          <HomeServicesTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'vehicles' && (
+        <div className="animate-in">
+          <VehicleParkingTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'renewals' && (
+        <div className="animate-in">
+          <LeaseRenewalTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'deliveries' && (
+        <div className="animate-in">
+          <DeliveryVaultTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'billsplit' && (
+        <div className="animate-in">
+          <BillSplitterTab bookings={bookings} />
         </div>
       )}
 

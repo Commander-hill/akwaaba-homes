@@ -82,6 +82,13 @@ model User {
   inspections             InspectionChecklist[] @relation("InspectorChecklists")
   staffAssignments        PropertyStaff[] @relation("StaffUser")
   managedStaff            PropertyStaff[] @relation("LandlordStaff")
+  visitorPasses           VisitorPass[]
+  serviceBookings         ServiceBooking[]
+  vehicles                VehicleRegistration[]
+  leaseRenewals           LeaseRenewalRequest[]
+  packageDeliveries       PackageDelivery[]
+  createdBillSplits       BillSplit[] @relation("CreatedBillSplits")
+  participatedBillSplits  BillSplitParticipant[]
 
   @@index([role])
 }
@@ -131,6 +138,12 @@ model Property {
   compoundNotices      CompoundNotice[]
   inspections          InspectionChecklist[]
   staff                PropertyStaff[]
+  visitorPasses        VisitorPass[]
+  serviceBookings      ServiceBooking[]
+  vehicles             VehicleRegistration[]
+  leaseRenewals        LeaseRenewalRequest[]
+  packageDeliveries    PackageDelivery[]
+  billSplits           BillSplit[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -218,6 +231,7 @@ model Booking {
   leaseAgreement LeaseAgreement?
   transaction    Transaction?
   inspections    InspectionChecklist[]
+  leaseRenewals  LeaseRenewalRequest[]
 
   @@index([tenantId])
   @@index([status])
@@ -592,5 +606,167 @@ model PropertyStaff {
   @@index([propertyId])
   @@index([userId])
 }
+
+// ─── 1. DIGITAL VISITOR PASS & SECURITY GATE ACCESS ──────────────────────────────
+model VisitorPass {
+  id           String    @id @default(uuid())
+  tenantId     String
+  tenant       User      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId   String
+  property     Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  visitorName  String
+  visitorPhone String?
+  purpose      String?   // e.g. Guest Visit, Uber Delivery, Domestic Worker, Family
+  accessCode   String    // 6-digit random security PIN (e.g. 849201)
+  validFrom    DateTime  @default(now())
+  validUntil   DateTime
+  status       String    @default("ACTIVE") // ACTIVE, USED, EXPIRED, REVOKED
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([accessCode])
+  @@index([status])
+}
+
+// ─── 2. ON-DEMAND HOME SERVICES & MAINTENANCE CONCIERGE ─────────────────────────
+model ServiceBooking {
+  id            String    @id @default(uuid())
+  tenantId      String
+  tenant        User      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId    String
+  property      Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  serviceType   String    // AC_SERVICING, DEEP_CLEANING, PLUMBING, ELECTRICAL, FUMIGATION, WATER_FILTER
+  preferredDate DateTime
+  timeSlot      String    // MORNING (8AM - 12PM), AFTERNOON (12PM - 4PM), EVENING (4PM - 7PM)
+  status        String    @default("PENDING") // PENDING, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED
+  estimatedCost Float?
+  notes         String?
+  technicianName String?
+  technicianPhone String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([status])
+}
+
+// ─── 3. RESIDENT VEHICLE & PARKING BAY REGISTRY ──────────────────────────────────
+model VehicleRegistration {
+  id                String   @id @default(uuid())
+  tenantId          String
+  tenant            User     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId        String
+  property          Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  vehicleMake       String   // e.g. Toyota, Honda, Hyundai
+  vehicleModel      String   // e.g. Corolla, Civic, Elantra
+  licensePlate      String   // e.g. GR-2450-24
+  color             String?
+  parkingSlotNumber String?  // e.g. Bay B-04, Garage 2
+  passType          String   @default("RESIDENT") // RESIDENT, VISITOR
+  status            String   @default("ACTIVE")   // ACTIVE, REVOKED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([licensePlate])
+}
+
+// ─── 4. LEASE RENEWAL & RENT REVIEW APPLICATION ──────────────────────────────────
+model LeaseRenewalRequest {
+  id                    String    @id @default(uuid())
+  tenantId              String
+  tenant                User      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId            String
+  property              Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookingId             String
+  booking               Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  proposedDurationMonths Int      @default(12)
+  proposedStartDate     DateTime
+  proposedRent          Float?
+  tenantNotes           String?
+  status                String    @default("PENDING") // PENDING, ACCEPTED, DECLINED, NEGOTIATING
+  landlordResponse      String?
+  respondedAt           DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([bookingId])
+  @@index([status])
+}
+
+// ─── 5. ESTATE GATEHOUSE PARCEL & PACKAGE DELIVERY VAULT ────────────────────────
+model PackageDelivery {
+  id                 String    @id @default(uuid())
+  tenantId           String
+  tenant             User      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  propertyId         String
+  property           Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  courierName        String    // e.g. Jumia, DHL, FedEx, Bolt Food, Personal Delivery
+  trackingNumber     String?
+  packageDescription String?   // e.g. Amazon carton box, Sealed envelope
+  pickupCode         String    // 4-digit pickup OTP (e.g. 4921)
+  status             String    @default("PENDING_PICKUP") // PENDING_PICKUP, COLLECTED, RETURNED
+  loggedBy           String?   // Security Guard / Porter Name
+  receivedAt         DateTime  @default(now())
+  collectedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([status])
+}
+
+// ─── 6. SHARED UTILITY & EXPENSE SPLITTER ───────────────────────────────────────
+model BillSplit {
+  id          String                 @id @default(uuid())
+  creatorId   String
+  creator     User                   @relation("CreatedBillSplits", fields: [creatorId], references: [id], onDelete: Cascade)
+  propertyId  String
+  property    Property               @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title       String                 // e.g. "ECG Prepaid Units Top-Up", "Borehole Water Tanker"
+  category    String                 @default("ELECTRICITY_ECG") // ELECTRICITY_ECG, WATER_TANKER, INTERNET_WIFI, GAS_REFILL, CLEANING, OTHER
+  totalAmount Float
+  status      String                 @default("OPEN") // OPEN, SETTLED, CANCELLED
+  dueDate     DateTime?
+  notes       String?
+  participants BillSplitParticipant[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([creatorId])
+  @@index([propertyId])
+  @@index([status])
+}
+
+model BillSplitParticipant {
+  id          String    @id @default(uuid())
+  billSplitId String
+  billSplit   BillSplit @relation(fields: [billSplitId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  userName    String    // Roommate name (e.g. "Kwame", "Kofi")
+  userPhone   String?   // MoMo number for automated payment request
+  userEmail   String?
+  shareAmount Float
+  isPaid      Boolean   @default(false)
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([billSplitId])
+  @@index([userId])
+  @@index([isPaid])
+}
+
 
 
