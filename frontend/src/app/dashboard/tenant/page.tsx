@@ -997,7 +997,7 @@ export default function TenantDashboard() {
                       <div className="flex items-center gap-3">
                         {!isCompleted && (
                           <Link 
-                            href={`/lease-agreement/${b.id}`}
+                            href={`/dashboard/agreements/${b.id}`}
                             className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-2"
                           >
                             Sign Agreement Now
