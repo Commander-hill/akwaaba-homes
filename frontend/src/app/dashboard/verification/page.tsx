@@ -234,7 +234,7 @@ export default function VerificationPage() {
       </div>
 
       {/* LANDLORD VERIFIED BLUE BADGE SECTION */}
-      {session.role === 'LANDLORD' && (
+      {session?.role === 'LANDLORD' && (
         <div className="glass-card rounded-3xl p-8 max-w-2xl border-2 border-blue-500/40 relative overflow-hidden bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-slate-900 dark:to-indigo-950/40">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">

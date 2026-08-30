@@ -40,8 +40,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, isLoading, error, router, pathname]);
 
-  // While loading, show a slim top-bar progress pulse instead of a full-screen block
-  if (isLoading && !user) {
+  // While loading or unauthenticated, show a loading placeholder while redirect happens
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex flex-col">
         <div className="h-1 w-full bg-[var(--primary)] animate-pulse" />
@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   let sidebarGroups: SidebarGroup[] = [];
   
-  if (user.role === 'LANDLORD') {
+  if (user?.role === 'LANDLORD') {
     sidebarGroups = [
       {
         title: 'MAIN',

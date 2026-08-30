@@ -52,7 +52,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
   };
 
   // Derive portal name based on role
-  const portalName = user.role === 'ADMIN' ? 'Admin Portal' : user.role === 'LANDLORD' ? 'Landlord Portal' : 'Tenant Portal';
+  const portalName = user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'LANDLORD' ? 'Landlord Portal' : 'Tenant Portal';
 
   return (
     <aside 
@@ -233,7 +233,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
         {!isCollapsed && (
           <div className="mb-3 p-3 rounded-xl bg-black/30 backdrop-blur-md border border-white/15 relative overflow-hidden shadow-inner">
             <h4 className="text-xs font-extrabold text-white mb-0.5">Premium Plan</h4>
-            <p className="text-[11px] text-white/70 mb-2">{user.role} Access active</p>
+            <p className="text-[11px] text-white/70 mb-2">{user?.role || 'User'} Access active</p>
             <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-amber-400 via-rose-400 to-amber-300 w-3/4 rounded-full shadow-[0_0_8px_#F59E0B]" />
             </div>
@@ -244,14 +244,14 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden shrink-0 border border-white/30 shadow-md">
               <img 
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.firstName}%20${user.lastName}&backgroundColor=6366f1`} 
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.firstName || 'A'}%20${user?.lastName || 'H'}&backgroundColor=6366f1`} 
                 alt="avatar" 
                 className="w-full h-full object-cover" 
               />
             </div>
             {!isCollapsed && (
               <div className="text-left truncate">
-                <div className="text-sm font-bold text-white truncate">{user.firstName} {user.lastName}</div>
+                <div className="text-sm font-bold text-white truncate">{user?.firstName || 'User'} {user?.lastName || ''}</div>
               </div>
             )}
           </div>
@@ -259,7 +259,7 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
           {/* Collapsed Tooltip for Profile */}
           {isCollapsed && (
             <div className="absolute left-full ml-3 px-3 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-2xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-white/10">
-              {user.firstName} {user.lastName} ({user.role})
+              {user?.firstName || ''} {user?.lastName || ''} ({user?.role || ''})
             </div>
           )}
         </div>
