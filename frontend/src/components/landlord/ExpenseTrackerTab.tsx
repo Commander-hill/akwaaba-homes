@@ -47,18 +47,44 @@ interface AnalyticsData {
   }>;
 }
 
-export default function ExpenseTrackerTab({ properties }: { properties: any[] }) {
+export default function ExpenseTrackerTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Fallback query to guarantee live landlord properties list
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'landlord', 'mine'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/properties/landlord/mine');
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const rawProps = (propertiesData && propertiesData.length > 0) ? propertiesData : properties;
+  const propertyList = rawProps.map((p: any) => ({
+    id: p.id || p.propertyId,
+    title: p.title || p.propertyTitle || 'Property',
+    location: p.location || p.propertyLocation || ''
+  })).filter((p: any) => Boolean(p.id));
+
   // Form State
-  const [formPropertyId, setFormPropertyId] = useState(properties[0]?.id || '');
+  const [formPropertyId, setFormPropertyId] = useState('');
   const [category, setCategory] = useState('GENERATOR_FUEL');
   const [title, setTitle] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
+
+  React.useEffect(() => {
+    if (!formPropertyId && propertyList.length > 0) {
+      setFormPropertyId(propertyList[0].id);
+    }
+  }, [propertyList, formPropertyId]);
 
   const { data: expensesData, isLoading: isLoadingExpenses } = useQuery<{ expenses: ExpenseRecord[]; totalExpenseAmount: number }>({
     queryKey: ['expenses', selectedPropertyId],
@@ -182,9 +208,9 @@ export default function ExpenseTrackerTab({ properties }: { properties: any[] })
             className="px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
           >
             <option value="ALL">All Properties Portfolio</option>
-            {properties.map((p) => (
+            {propertyList.map((p: any) => (
               <option key={p.id} value={p.id}>
-                {p.title}
+                {p.title} {p.location ? `(${p.location})` : ''}
               </option>
             ))}
           </select>
@@ -363,9 +389,9 @@ export default function ExpenseTrackerTab({ properties }: { properties: any[] })
                   onChange={(e) => setFormPropertyId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
                 >
-                  {properties.map((p) => (
+                  {propertyList.map((p: any) => (
                     <option key={p.id} value={p.id}>
-                      {p.title}
+                      {p.title} {p.location ? `(${p.location})` : ''}
                     </option>
                   ))}
                 </select>
@@ -445,12 +471,17 @@ export default function ExpenseTrackerTab({ properties }: { properties: any[] })
               </button>
               <button
                 onClick={() => {
+                  const targetPropId = formPropertyId || propertyList[0]?.id;
+                  if (!targetPropId) {
+                    toast.error('Please select or add a property first');
+                    return;
+                  }
                   if (!title || !amount) {
                     toast.error('Title and amount are required');
                     return;
                   }
                   createExpenseMutation.mutate({
-                    propertyId: formPropertyId,
+                    propertyId: targetPropId,
                     category,
                     title,
                     amount: parseFloat(amount),

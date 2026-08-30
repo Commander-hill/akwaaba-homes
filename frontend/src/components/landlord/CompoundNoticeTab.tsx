@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
@@ -27,15 +27,41 @@ interface NoticeItem {
   };
 }
 
-export default function CompoundNoticeTab({ properties }: { properties: any[] }) {
+export default function CompoundNoticeTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
-  const [propertyId, setPropertyId] = useState(properties[0]?.id || '');
+  const [propertyId, setPropertyId] = useState('');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('GENERAL');
   const [priority, setPriority] = useState('NORMAL');
   const [expiresAt, setExpiresAt] = useState('');
+
+  // Fallback query to guarantee live landlord properties list
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'landlord', 'mine'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/properties/landlord/mine');
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const rawProps = (propertiesData && propertiesData.length > 0) ? propertiesData : properties;
+  const propertyList = rawProps.map((p: any) => ({
+    id: p.id || p.propertyId,
+    title: p.title || p.propertyTitle || 'Property',
+    location: p.location || p.propertyLocation || ''
+  })).filter((p: any) => Boolean(p.id));
+
+  useEffect(() => {
+    if (!propertyId && propertyList.length > 0) {
+      setPropertyId(propertyList[0].id);
+    }
+  }, [propertyList, propertyId]);
 
   const { data, isLoading } = useQuery<{ notices: NoticeItem[] }>({
     queryKey: ['compoundNotices', 'landlord'],
@@ -198,9 +224,9 @@ export default function CompoundNoticeTab({ properties }: { properties: any[] })
                   onChange={(e) => setPropertyId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
                 >
-                  {properties.map((p) => (
+                  {propertyList.map((p: any) => (
                     <option key={p.id} value={p.id}>
-                      {p.title} ({p.location})
+                      {p.title} {p.location ? `(${p.location})` : ''}
                     </option>
                   ))}
                 </select>
@@ -268,12 +294,17 @@ export default function CompoundNoticeTab({ properties }: { properties: any[] })
               </button>
               <button
                 onClick={() => {
+                  const targetPropertyId = propertyId || propertyList[0]?.id;
+                  if (!targetPropertyId) {
+                    toast.error('Please select or add a property first');
+                    return;
+                  }
                   if (!title || !message) {
-                    toast.error('Title and message are required');
+                    toast.error('Notice title and message are required');
                     return;
                   }
                   createNoticeMutation.mutate({
-                    propertyId,
+                    propertyId: targetPropertyId,
                     title,
                     message,
                     category,

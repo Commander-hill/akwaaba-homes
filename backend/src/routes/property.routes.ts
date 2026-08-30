@@ -8,8 +8,8 @@ import { getPropertyCampusLandmarks } from '../controllers/gis.controller';
 const router = Router();
 
 // Protected route for Landlord Stats (Must come BEFORE /:id to avoid ID conflict)
-router.get('/landlord/stats', authenticate, authorizeRole(['LANDLORD']), getLandlordStats);
-router.get('/landlord/mine', authenticate, authorizeRole(['LANDLORD']), getLandlordProperties);
+router.get('/landlord/stats', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordStats);
+router.get('/landlord/mine', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordProperties);
 
 // Public routes (Tenants & Guests)
 router.get('/', getProperties);

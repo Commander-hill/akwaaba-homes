@@ -61,12 +61,38 @@ interface MatrixResponse {
   matrix: RoomGroup[];
 }
 
-export default function FloorplanOccupancyTab({ properties }: { properties: any[] }) {
+export default function FloorplanOccupancyTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>(properties[0]?.id || '');
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
   const [floorFilter, setFloorFilter] = useState<number | 'ALL'>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedOccupant, setSelectedOccupant] = useState<OccupantInfo | null>(null);
+
+  // Fallback query to guarantee live landlord properties list
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'landlord', 'mine'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/properties/landlord/mine');
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const rawProps = (propertiesData && propertiesData.length > 0) ? propertiesData : properties;
+  const propertyList = rawProps.map((p: any) => ({
+    id: p.id || p.propertyId,
+    title: p.title || p.propertyTitle || 'Property',
+    location: p.location || p.propertyLocation || ''
+  })).filter((p: any) => Boolean(p.id));
+
+  React.useEffect(() => {
+    if (!selectedPropertyId && propertyList.length > 0) {
+      setSelectedPropertyId(propertyList[0].id);
+    }
+  }, [propertyList, selectedPropertyId]);
 
   const { data, isLoading, refetch, isFetching } = useQuery<MatrixResponse>({
     queryKey: ['occupancyMatrix', selectedPropertyId],
@@ -93,7 +119,7 @@ export default function FloorplanOccupancyTab({ properties }: { properties: any[
     }
   });
 
-  if (properties.length === 0) {
+  if (propertyList.length === 0 && !isLoading) {
     return (
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
         <Building className="w-12 h-12 text-slate-400 mx-auto mb-3" />
@@ -134,9 +160,9 @@ export default function FloorplanOccupancyTab({ properties }: { properties: any[
             onChange={(e) => setSelectedPropertyId(e.target.value)}
             className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-[var(--primary)]"
           >
-            {properties.map((p) => (
+            {propertyList.map((p: any) => (
               <option key={p.id} value={p.id}>
-                {p.title} ({p.location})
+                {p.title} {p.location ? `(${p.location})` : ''}
               </option>
             ))}
           </select>

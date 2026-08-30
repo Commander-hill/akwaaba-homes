@@ -33,15 +33,41 @@ interface StaffAssignment {
   };
 }
 
-export default function StaffDelegationTab({ properties }: { properties: any[] }) {
+export default function StaffDelegationTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
-  const [propertyId, setPropertyId] = useState(properties[0]?.id || '');
+  const [propertyId, setPropertyId] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('CARETAKER');
   const [canManageTickets, setCanManageTickets] = useState(true);
   const [canCheckInTenants, setCanCheckInTenants] = useState(true);
   const [canPostNotices, setCanPostNotices] = useState(true);
+
+  // Fallback query to guarantee live landlord properties list
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'landlord', 'mine'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/properties/landlord/mine');
+        return res.data?.data || [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const rawProps = (propertiesData && propertiesData.length > 0) ? propertiesData : properties;
+  const propertyList = rawProps.map((p: any) => ({
+    id: p.id || p.propertyId,
+    title: p.title || p.propertyTitle || 'Property',
+    location: p.location || p.propertyLocation || ''
+  })).filter((p: any) => Boolean(p.id));
+
+  React.useEffect(() => {
+    if (!propertyId && propertyList.length > 0) {
+      setPropertyId(propertyList[0].id);
+    }
+  }, [propertyList, propertyId]);
 
   const { data, isLoading } = useQuery<{ staff: StaffAssignment[] }>({
     queryKey: ['propertyStaff', 'landlord'],
@@ -220,9 +246,9 @@ export default function StaffDelegationTab({ properties }: { properties: any[] }
                   onChange={(e) => setPropertyId(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
                 >
-                  {properties.map((p) => (
+                  {propertyList.map((p: any) => (
                     <option key={p.id} value={p.id}>
-                      {p.title}
+                      {p.title} {p.location ? `(${p.location})` : ''}
                     </option>
                   ))}
                 </select>
@@ -297,12 +323,17 @@ export default function StaffDelegationTab({ properties }: { properties: any[] }
               </button>
               <button
                 onClick={() => {
+                  const targetPropertyId = propertyId || propertyList[0]?.id;
+                  if (!targetPropertyId) {
+                    toast.error('Please select or add a property first');
+                    return;
+                  }
                   if (!email) {
                     toast.error('Staff email is required');
                     return;
                   }
                   assignStaffMutation.mutate({
-                    propertyId,
+                    propertyId: targetPropertyId,
                     email,
                     role,
                     canManageTickets,

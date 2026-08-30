@@ -61,6 +61,20 @@ export default function LandlordDashboard() {
     }
   });
 
+  // Fetch Landlord Properties for all tabs & selectors
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'landlord', 'mine'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/properties/landlord/mine');
+        return data?.data || [];
+      } catch (err) {
+        return [];
+      }
+    }
+  });
+  const myProperties = propertiesData || [];
+
   // Fetch Landlord Agreements (Lease Vault) — only loads when agreements tab is open
   const { data: agreementsResponse, isLoading: isLoadingAgreements, refetch: refetchAgreements } = useQuery({
     queryKey: ['agreements', 'landlord'],
@@ -1118,28 +1132,28 @@ export default function LandlordDashboard() {
       {/* ─── TAB: FLOORPLAN & BED OCCUPANCY MATRIX ────────────────────────────────── */}
       {activeTab === 'occupancy' && (
         <div className="animate-in">
-          <FloorplanOccupancyTab properties={subProperties || []} />
+          <FloorplanOccupancyTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: COMPOUND NOTICE BOARD ───────────────────────────────────────────── */}
       {activeTab === 'notices' && (
         <div className="animate-in">
-          <CompoundNoticeTab properties={subProperties || []} />
+          <CompoundNoticeTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: OPERATING EXPENSES & P&L ────────────────────────────────────────── */}
       {activeTab === 'expenses' && (
         <div className="animate-in">
-          <ExpenseTrackerTab properties={subProperties || []} />
+          <ExpenseTrackerTab properties={myProperties} />
         </div>
       )}
 
       {/* ─── TAB: STAFF & CARETAKER DELEGATION ────────────────────────────────────── */}
       {activeTab === 'staff' && (
         <div className="animate-in">
-          <StaffDelegationTab properties={subProperties || []} />
+          <StaffDelegationTab properties={myProperties} />
         </div>
       )}
 
