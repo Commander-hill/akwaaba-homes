@@ -77,6 +77,11 @@ model User {
   sentRoommateInvites     RoommateInvitation[] @relation("SentRoommateInvites")
   receivedRoommateInvites RoommateInvitation[] @relation("ReceivedRoommateInvites")
   wishlists               Wishlist[]
+  expenses                PropertyExpense[] @relation("LandlordExpenses")
+  compoundNotices         CompoundNotice[] @relation("LandlordCompoundNotices")
+  inspections             InspectionChecklist[] @relation("InspectorChecklists")
+  staffAssignments        PropertyStaff[] @relation("StaffUser")
+  managedStaff            PropertyStaff[] @relation("LandlordStaff")
 
   @@index([role])
 }
@@ -122,6 +127,10 @@ model Property {
   subscription PropertySubscription?
   roommateInvitations RoommateInvitation[]
   wishlists            Wishlist[]
+  expenses             PropertyExpense[]
+  compoundNotices      CompoundNotice[]
+  inspections          InspectionChecklist[]
+  staff                PropertyStaff[]
 
   @@index([approvalStatus, isAvailable])
   @@index([location])
@@ -208,6 +217,7 @@ model Booking {
   review         Review?
   leaseAgreement LeaseAgreement?
   transaction    Transaction?
+  inspections    InspectionChecklist[]
 
   @@index([tenantId])
   @@index([status])
@@ -496,6 +506,90 @@ model Wishlist {
   createdAt  DateTime @default(now())
 
   @@unique([userId, propertyId])
+  @@index([userId])
+}
+
+model PropertyExpense {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  landlordId  String
+  landlord    User     @relation("LandlordExpenses", fields: [landlordId], references: [id])
+  category    String   // GENERATOR_FUEL, WATER_SUPPLY, MAINTENANCE_REPAIR, CLEANING_WASTE, SECURITY, UTILITIES, TAX_FEES, OTHER
+  title       String
+  amount      Float
+  date        DateTime @default(now())
+  receiptUrl  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([landlordId])
+  @@index([category])
+}
+
+model CompoundNotice {
+  id          String    @id @default(uuid())
+  propertyId  String
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  landlordId  String
+  landlord    User      @relation("LandlordCompoundNotices", fields: [landlordId], references: [id])
+  title       String
+  message     String
+  category    String    @default("GENERAL") // UTILITY, EVENT, MAINTENANCE, SECURITY, GENERAL
+  priority    String    @default("NORMAL")  // NORMAL, IMPORTANT, EMERGENCY
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([propertyId])
+  @@index([landlordId])
+  @@index([isActive])
+}
+
+model InspectionChecklist {
+  id                      String    @id @default(uuid())
+  bookingId               String
+  booking                 Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  propertyId              String
+  property                Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type                    String    @default("MOVE_IN") // MOVE_IN, MOVE_OUT
+  inspectorId             String
+  inspector               User      @relation("InspectorChecklists", fields: [inspectorId], references: [id])
+  items                   String    // JSON array string of checklist points & statuses (e.g. key handover, wall paint, lighting, plumbing)
+  notes                   String?
+  photos                  String?   // JSON array of photo URLs
+  cautionDepositDeduction Float     @default(0)
+  deductionReason         String?
+  status                  String    @default("COMPLETED") // DRAFT, COMPLETED, DISPUTED, RESOLVED
+  signedAt                DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([bookingId])
+  @@index([propertyId])
+  @@index([type])
+}
+
+model PropertyStaff {
+  id               String   @id @default(uuid())
+  propertyId       String
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  landlordId       String
+  landlord         User     @relation("LandlordStaff", fields: [landlordId], references: [id])
+  userId           String
+  user             User     @relation("StaffUser", fields: [userId], references: [id])
+  role             String   @default("CARETAKER") // CARETAKER, PORTER, PROPERTY_MANAGER
+  canManageTickets Boolean  @default(true)
+  canCheckInTenants Boolean @default(true)
+  canPostNotices   Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([propertyId, userId])
+  @@index([propertyId])
   @@index([userId])
 }
 

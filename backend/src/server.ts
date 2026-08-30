@@ -46,6 +46,11 @@ import pushRoutes from './routes/push.routes';
 import fraudRoutes from './routes/fraud.routes';
 import payoutRoutes from './routes/payout.routes';
 import wishlistRoutes from './routes/wishlist.routes';
+import occupancyRoutes from './routes/occupancy.routes';
+import expenseRoutes from './routes/expense.routes';
+import compoundNoticeRoutes from './routes/compoundNotice.routes';
+import inspectionRoutes from './routes/inspection.routes';
+import staffRoutes from './routes/staff.routes';
 
 import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
@@ -240,6 +245,11 @@ app.use('/api/v1/push', pushRoutes);
 app.use('/api/v1/fraud', fraudRoutes);
 app.use('/api/v1/payouts', payoutRoutes);
 app.use('/api/v1/wishlist', wishlistRoutes);
+app.use('/api/v1/occupancy', occupancyRoutes);
+app.use('/api/v1/expenses', expenseRoutes);
+app.use('/api/v1/compound-notices', compoundNoticeRoutes);
+app.use('/api/v1/inspections', inspectionRoutes);
+app.use('/api/v1/staff', staffRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(notFoundHandler);

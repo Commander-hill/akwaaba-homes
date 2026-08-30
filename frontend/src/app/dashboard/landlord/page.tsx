@@ -5,7 +5,8 @@ import api from '@/lib/axios';
 import { 
   Loader2, Users, Mail, Phone, Calendar, Check, X, ShieldAlert, ShieldCheck, 
   CreditCard, Star, PenTool, CheckCircle, Clock, FileSignature, Building, 
-  Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare
+  Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Sparkles, Wrench
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -15,6 +16,11 @@ import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
 import MessagingTab from '@/components/MessagingTab';
 import WithdrawalModal from '@/components/WithdrawalModal';
+import FloorplanOccupancyTab from '@/components/landlord/FloorplanOccupancyTab';
+import CompoundNoticeTab from '@/components/landlord/CompoundNoticeTab';
+import ExpenseTrackerTab from '@/components/landlord/ExpenseTrackerTab';
+import StaffDelegationTab from '@/components/landlord/StaffDelegationTab';
+import InspectionModal from '@/components/landlord/InspectionModal';
 import toast from 'react-hot-toast';
 
 function getImageUrl(path?: string | null): string {
@@ -26,9 +32,10 @@ function getImageUrl(path?: string | null): string {
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
 
   // Session Query — uses shared cache key so it's instant on re-nav
   const { data: session } = useQuery({
@@ -272,87 +279,136 @@ export default function LandlordDashboard() {
           <button
             onClick={() => setActiveTab('bookings')}
             className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-lg transition-all",
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all",
               activeTab === 'bookings' 
                 ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
-            Booking Requests ({bookings.length})
+            Bookings ({bookings.length})
           </button>
 
-        <button
-          onClick={() => setActiveTab('agreements')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'agreements' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <FileSignature className="w-4 h-4 text-purple-500" />
-          Lease Vault ({agreements.length})
-        </button>
+          <button
+            onClick={() => setActiveTab('occupancy')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'occupancy' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Layers className="w-3.5 h-3.5 text-emerald-500" />
+            Floorplan Matrix
+          </button>
 
-        <button
-          onClick={() => setActiveTab('tickets')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'tickets' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          Maintenance Tickets {tickets.filter((t:any) => t.status === 'PENDING').length > 0 && (
-            <span className="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs">
-              {tickets.filter((t:any) => t.status === 'PENDING').length}
-            </span>
-          )}
-        </button>
+          <button
+            onClick={() => setActiveTab('notices')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'notices' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Megaphone className="w-3.5 h-3.5 text-purple-500" />
+            Compound Notices
+          </button>
 
-        <button
-          onClick={() => setActiveTab('subscriptions')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'subscriptions' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <CreditCard className="w-4 h-4" />
-          Listing Subscriptions {subStats.expiringSoon > 0 && (
-            <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-xs">
-              {subStats.expiringSoon} Expiration Soon
-            </span>
-          )}
-        </button>
+          <button
+            onClick={() => setActiveTab('expenses')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'expenses' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
+            Expenses & P&L
+          </button>
 
-        <button
-          onClick={() => setActiveTab('financials')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'financials' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <DollarSign className="w-4 h-4" />
-          Earnings & Revenue
-        </button>
+          <button
+            onClick={() => setActiveTab('agreements')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'agreements' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <FileSignature className="w-3.5 h-3.5 text-indigo-500" />
+            Lease Vault ({agreements.length})
+          </button>
 
-        <button
-          onClick={() => setActiveTab('messages')}
-          className={clsx(
-            "px-5 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
-            activeTab === 'messages' 
-              ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
-              : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-          )}
-        >
-          <MessageSquare className="w-4 h-4 text-indigo-500" />
-          Direct Messages
-        </button>
-      </div>
+          <button
+            onClick={() => setActiveTab('tickets')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'tickets' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <Wrench className="w-3.5 h-3.5 text-red-500" />
+            Tickets {tickets.filter((t:any) => t.status === 'PENDING').length > 0 && (
+              <span className="bg-red-500 text-white px-1.5 py-0.2 rounded-full text-[10px]">
+                {tickets.filter((t:any) => t.status === 'PENDING').length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('staff')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'staff' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <UserCog className="w-3.5 h-3.5 text-blue-500" />
+            Staff Delegation
+          </button>
+
+          <button
+            onClick={() => setActiveTab('subscriptions')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'subscriptions' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <CreditCard className="w-3.5 h-3.5" />
+            Subscriptions
+          </button>
+
+          <button
+            onClick={() => setActiveTab('financials')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'financials' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            Financials & Payouts
+          </button>
+
+          <button
+            onClick={() => setActiveTab('messages')}
+            className={clsx(
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+              activeTab === 'messages' 
+                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            )}
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-teal-500" />
+            Messages
+          </button>
+        </div>
       </div>
 
       {activeTab === 'messages' && (
@@ -447,12 +503,21 @@ export default function LandlordDashboard() {
                             </>
                           )}
                           {(booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' || booking.status === 'PAID') && (
-                            <Link
-                              href={`/dashboard/agreements/${booking.id}`}
-                              className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20"
-                            >
-                              <FileSignature className="w-3.5 h-3.5" /> View & Sign Agreement
-                            </Link>
+                            <>
+                              <button
+                                onClick={() => setSelectedInspectionBooking(booking)}
+                                className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all"
+                                title="Digital Move-In / Move-Out Inspection"
+                              >
+                                <ClipboardCheck className="w-3.5 h-3.5" /> Inspect
+                              </button>
+                              <Link
+                                href={`/dashboard/agreements/${booking.id}`}
+                                className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20"
+                              >
+                                <FileSignature className="w-3.5 h-3.5" /> View & Sign Agreement
+                              </Link>
+                            </>
                           )}
                         </td>
                       </tr>
@@ -1050,10 +1115,47 @@ export default function LandlordDashboard() {
         </div>
       )}
 
-    {/* ── Withdrawal Modal ── */}
-    {showWithdrawalModal && (
-      <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
-    )}
+      {/* ─── TAB: FLOORPLAN & BED OCCUPANCY MATRIX ────────────────────────────────── */}
+      {activeTab === 'occupancy' && (
+        <div className="animate-in">
+          <FloorplanOccupancyTab properties={subProperties || []} />
+        </div>
+      )}
+
+      {/* ─── TAB: COMPOUND NOTICE BOARD ───────────────────────────────────────────── */}
+      {activeTab === 'notices' && (
+        <div className="animate-in">
+          <CompoundNoticeTab properties={subProperties || []} />
+        </div>
+      )}
+
+      {/* ─── TAB: OPERATING EXPENSES & P&L ────────────────────────────────────────── */}
+      {activeTab === 'expenses' && (
+        <div className="animate-in">
+          <ExpenseTrackerTab properties={subProperties || []} />
+        </div>
+      )}
+
+      {/* ─── TAB: STAFF & CARETAKER DELEGATION ────────────────────────────────────── */}
+      {activeTab === 'staff' && (
+        <div className="animate-in">
+          <StaffDelegationTab properties={subProperties || []} />
+        </div>
+      )}
+
+      {/* ── Move-In / Move-Out Inspection Modal ── */}
+      {selectedInspectionBooking && (
+        <InspectionModal
+          booking={selectedInspectionBooking}
+          isOpen={Boolean(selectedInspectionBooking)}
+          onClose={() => setSelectedInspectionBooking(null)}
+        />
+      )}
+
+      {/* ── Withdrawal Modal ── */}
+      {showWithdrawalModal && (
+        <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
+      )}
     </div>
   );
 }

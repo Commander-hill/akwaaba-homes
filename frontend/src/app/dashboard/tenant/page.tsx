@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart } from 'lucide-react';
+import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, ShieldAlert, CreditCard, Lock, FileText, Printer, Copy, ShieldCheck, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -302,12 +302,64 @@ export default function TenantDashboard() {
     }
   };
 
+  // Fetch Compound Broadcast Notices for Tenant's Booked Property
+  const activeBooking = bookings.find((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PENDING'].includes(b.status));
+  const activePropertyId = activeBooking?.propertyId;
+  const { data: compoundNoticesData } = useQuery({
+    queryKey: ['compoundNotices', 'tenant', activePropertyId],
+    queryFn: async () => {
+      if (!activePropertyId) return { notices: [] };
+      try {
+        const res = await api.get(`/compound-notices/property/${activePropertyId}`);
+        return res.data;
+      } catch (err) {
+        return { notices: [] };
+      }
+    },
+    enabled: Boolean(activePropertyId)
+  });
+  const compoundNotices = compoundNoticesData?.notices || [];
+
   return (
     <div className="space-y-6 animate-in">
       <OnboardingProgressWidget user={session} />
       {/* Sticky Header Banner, Notice & Tabs Container */}
       <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
         <NoticeBoard />
+
+        {/* Live Landlord Compound Notice Advisory */}
+        {compoundNotices.length > 0 && (
+          <div className="space-y-2">
+            {compoundNotices.map((notice: any) => {
+              const isEmergency = notice.priority === 'EMERGENCY';
+              const isImportant = notice.priority === 'IMPORTANT';
+              return (
+                <div
+                  key={notice.id}
+                  className={clsx(
+                    "p-3.5 rounded-2xl border flex items-start gap-3 shadow-xs animate-in",
+                    isEmergency && "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-300",
+                    isImportant && "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300",
+                    !isEmergency && !isImportant && "bg-purple-500/10 border-purple-500/30 text-purple-700 dark:text-purple-300"
+                  )}
+                >
+                  <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
+                  <div className="flex-1 text-xs">
+                    <div className="flex items-center gap-2 font-bold flex-wrap">
+                      <span className="uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/40">
+                        {notice.category} • {notice.property?.title}
+                      </span>
+                      <span>{notice.title}</span>
+                    </div>
+                    <p className="mt-1 font-medium opacity-90 whitespace-pre-line leading-relaxed">
+                      {notice.message}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
