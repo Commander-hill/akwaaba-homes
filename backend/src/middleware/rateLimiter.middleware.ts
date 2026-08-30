@@ -61,20 +61,13 @@ export const uploadRateLimiter = rateLimit({
   statusCode: 429,
 });
 
-// ─── General API limiter: all other routes ────────────────────────────────────
+// ─── General API limiter: all other routes (Safe DDoS Protection, No artificial lag) ─────
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: 5000, // Generous capacity for live dashboards, WebSockets & real-time polling
   message: { error: 'Too many requests from this IP. Please slow down and try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
-  skip: (req) => req.path.startsWith('/api/health'), // Skip health checks
-});
-
-// ─── Speed limiter: slow repeated requests before hard-blocking ───────────────
-export const speedLimiter = slowDown({
-  windowMs: 15 * 60 * 1000,
-  delayAfter: 60, // Begin slowing down after 60 requests
-  delayMs: (hits) => hits * 100, // Add 100ms per excess request
+  skip: (req) => req.path.startsWith('/api/health') || req.method === 'OPTIONS',
 });

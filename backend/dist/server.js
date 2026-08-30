@@ -160,8 +160,7 @@ app.get('/api/health', (req, res) => {
         timestamp: new Date().toISOString(),
     });
 });
-// ─── Global Rate Limiting + Speed Limiter ────────────────────────────────────
-app.use('/api', rateLimiter_middleware_1.speedLimiter);
+// ─── Global Rate Limiting (High-Throughput Safe Ceiling) ───────────────────────
 app.use('/api', rateLimiter_middleware_1.apiRateLimiter);
 // ─── Global Maintenance Mode Check ──────────────────────────────────────────
 app.use('/api', config_middleware_1.checkMaintenanceMode);

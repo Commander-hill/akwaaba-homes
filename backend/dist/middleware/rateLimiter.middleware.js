@@ -3,9 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.speedLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
+exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-const express_slow_down_1 = __importDefault(require("express-slow-down"));
 // ─── Login brute-force guard (5 attempts per 15 mins per IP) ─────────────────
 exports.loginRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -60,20 +59,14 @@ exports.uploadRateLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
     statusCode: 429,
 });
-// ─── General API limiter: all other routes ────────────────────────────────────
+// ─── General API limiter: all other routes (Safe DDoS Protection, No artificial lag) ─────
 exports.apiRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
-    max: 300,
+    max: 5000, // Generous capacity for live dashboards, WebSockets & real-time polling
     message: { error: 'Too many requests from this IP. Please slow down and try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
     statusCode: 429,
-    skip: (req) => req.path.startsWith('/api/health'), // Skip health checks
-});
-// ─── Speed limiter: slow repeated requests before hard-blocking ───────────────
-exports.speedLimiter = (0, express_slow_down_1.default)({
-    windowMs: 15 * 60 * 1000,
-    delayAfter: 60, // Begin slowing down after 60 requests
-    delayMs: (hits) => hits * 100, // Add 100ms per excess request
+    skip: (req) => req.path.startsWith('/api/health') || req.method === 'OPTIONS',
 });
 //# sourceMappingURL=rateLimiter.middleware.js.map

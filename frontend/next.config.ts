@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: false, // Prevents duplicate renders/network calls in dev mode
   async headers() {
     return [
       {

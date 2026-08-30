@@ -58,7 +58,7 @@ import leaseRenewalRoutes from './routes/leaseRenewal.routes';
 import deliveryRoutes from './routes/delivery.routes';
 import billSplitRoutes from './routes/billSplit.routes';
 
-import { apiRateLimiter, speedLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
+import { apiRateLimiter, adminRateLimiter, uploadRateLimiter } from './middleware/rateLimiter.middleware';
 import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { checkMaintenanceMode } from './middleware/config.middleware';
@@ -185,8 +185,7 @@ app.get('/api/health', (req: Request, res: Response) => {
   });
 });
 
-// ─── Global Rate Limiting + Speed Limiter ────────────────────────────────────
-app.use('/api', speedLimiter);
+// ─── Global Rate Limiting (High-Throughput Safe Ceiling) ───────────────────────
 app.use('/api', apiRateLimiter);
 
 // ─── Global Maintenance Mode Check ──────────────────────────────────────────

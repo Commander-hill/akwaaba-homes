@@ -30,12 +30,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0, // Immediately consider data stale so socket invalidations trigger instant refetch
-            gcTime: 10 * 60 * 1000,
-            refetchOnWindowFocus: true, // Automatically revalidate when user switches back to browser tab
+            staleTime: 30 * 1000, // Serve immediately from memory cache (instantaneous 0ms clicks & tab switches)
+            gcTime: 15 * 60 * 1000,
+            refetchOnWindowFocus: false, // Prevent UI stutter/lag when switching tabs or focusing elements
             refetchOnReconnect: true,  // Automatically revalidate when network reconnects
             retry: 1,
-            retryDelay: 1000,
+            retryDelay: 800,
           },
         },
       })
