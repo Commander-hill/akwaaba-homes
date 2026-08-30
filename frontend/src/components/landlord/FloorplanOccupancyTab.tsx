@@ -265,102 +265,108 @@ export default function FloorplanOccupancyTab({ properties = [] }: { properties?
 
           {/* Wing / Block Sections */}
           <div className="space-y-6">
-            {data?.matrix?.map((roomGroup) => (
-              <div
-                key={roomGroup.roomId}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold">
-                      {roomGroup.blockName}
-                    </span>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                      {roomGroup.roomType}
-                    </h3>
-                    <span className="text-xs text-slate-500">
-                      • GHS {roomGroup.price.toLocaleString()} / slot
+            {(!data?.matrix || data.matrix.length === 0) ? (
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-500 text-xs">
+                No room units or bed slots configured for this property yet.
+              </div>
+            ) : (
+              data.matrix.map((roomGroup) => (
+                <div
+                  key={roomGroup.roomId}
+                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold">
+                        {roomGroup.blockName}
+                      </span>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        {roomGroup.roomType}
+                      </h3>
+                      <span className="text-xs text-slate-500">
+                        • GHS {Number(roomGroup.price || 0).toLocaleString()} / slot
+                      </span>
+                    </div>
+
+                    <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
+                      Gender Policy: {roomGroup.gender}
                     </span>
                   </div>
 
-                  <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300">
-                    Gender Policy: {roomGroup.gender}
-                  </span>
-                </div>
+                  {/* Rooms & Bed Slots Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {roomGroup.units.map((unit) => (
+                      <div
+                        key={unit.unitId}
+                        className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Building className="w-4 h-4 text-slate-400" />
+                            {unit.unitNumber}
+                          </span>
+                          <span className="text-[11px] font-medium text-slate-500">
+                            Floor {unit.floor}
+                          </span>
+                        </div>
 
-                {/* Rooms & Bed Slots Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {roomGroup.units.map((unit) => (
-                    <div
-                      key={unit.unitId}
-                      className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700/60 space-y-3"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
-                          <Building className="w-4 h-4 text-slate-400" />
-                          {unit.unitNumber}
-                        </span>
-                        <span className="text-[11px] font-medium text-slate-500">
-                          Floor {unit.floor}
-                        </span>
-                      </div>
+                        {/* Beds within this room */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {unit.beds
+                            .filter((bed) => statusFilter === 'ALL' || bed.status === statusFilter)
+                            .map((bed) => {
+                              const isAvailable = bed.status === 'AVAILABLE';
+                              const isOccupied = bed.status === 'OCCUPIED';
+                              const isPending = bed.status === 'PENDING';
+                              const isMaint = bed.status === 'MAINTENANCE';
 
-                      {/* Beds within this room */}
-                      <div className="grid grid-cols-2 gap-2">
-                        {unit.beds
-                          .filter((bed) => statusFilter === 'ALL' || bed.status === statusFilter)
-                          .map((bed) => {
-                            const isAvailable = bed.status === 'AVAILABLE';
-                            const isOccupied = bed.status === 'OCCUPIED';
-                            const isPending = bed.status === 'PENDING';
-                            const isMaint = bed.status === 'MAINTENANCE';
+                              return (
+                                <div
+                                  key={bed.bedId}
+                                  onClick={() => {
+                                    if (bed.occupant) {
+                                      setSelectedOccupant(bed.occupant);
+                                    }
+                                  }}
+                                  className={clsx(
+                                    "p-2.5 rounded-lg border text-center transition-all cursor-pointer relative group",
+                                    isAvailable && "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20",
+                                    isOccupied && "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-500/20",
+                                    isPending && "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20",
+                                    isMaint && "bg-slate-500/10 border-slate-500/40 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20"
+                                  )}
+                                >
+                                  <div className="text-xs font-bold">{bed.bedNumber}</div>
+                                  <div className="text-[10px] font-medium mt-0.5 capitalize truncate">
+                                    {isOccupied && bed.occupant ? (bed.occupant.name || 'Resident').split(' ')[0] : bed.status.toLowerCase()}
+                                  </div>
 
-                            return (
-                              <div
-                                key={bed.bedId}
-                                onClick={() => {
-                                  if (bed.occupant) {
-                                    setSelectedOccupant(bed.occupant);
-                                  }
-                                }}
-                                className={clsx(
-                                  "p-2.5 rounded-lg border text-center transition-all cursor-pointer relative group",
-                                  isAvailable && "bg-emerald-500/10 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20",
-                                  isOccupied && "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-300 hover:bg-red-500/20",
-                                  isPending && "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20",
-                                  isMaint && "bg-slate-500/10 border-slate-500/40 text-slate-600 dark:text-slate-400 hover:bg-slate-500/20"
-                                )}
-                              >
-                                <div className="text-xs font-bold">{bed.bedNumber}</div>
-                                <div className="text-[10px] font-medium mt-0.5 capitalize truncate">
-                                  {isOccupied && bed.occupant ? bed.occupant.name.split(' ')[0] : bed.status.toLowerCase()}
+                                  {/* Hover status toggle for Available / Maintenance */}
+                                  {!isOccupied && !isPending && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleBedStatusMutation.mutate({
+                                          bedId: bed.bedId,
+                                          newStatus: isMaint ? 'AVAILABLE' : 'MAINTENANCE'
+                                        });
+                                      }}
+                                      className="opacity-0 group-hover:opacity-100 transition absolute inset-0 bg-black/75 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 p-1"
+                                    >
+                                      <Wrench className="w-3 h-3" />
+                                      {isMaint ? 'Make Available' : 'Mark Repair'}
+                                    </button>
+                                  )}
                                 </div>
-
-                                {/* Hover status toggle for Available / Maintenance */}
-                                {!isOccupied && !isPending && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      toggleBedStatusMutation.mutate({
-                                        bedId: bed.bedId,
-                                        newStatus: isMaint ? 'AVAILABLE' : 'MAINTENANCE'
-                                      });
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 transition absolute inset-0 bg-black/75 text-white text-[10px] font-bold rounded-lg flex items-center justify-center gap-1 p-1"
-                                  >
-                                    <Wrench className="w-3 h-3" />
-                                    {isMaint ? 'Make Available' : 'Mark Repair'}
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </>
       )}
@@ -384,9 +390,9 @@ export default function FloorplanOccupancyTab({ properties = [] }: { properties?
             <div className="text-center space-y-2">
               <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-black text-xl flex items-center justify-center mx-auto">
                 {selectedOccupant.avatarUrl ? (
-                  <img src={selectedOccupant.avatarUrl} alt={selectedOccupant.name} className="w-full h-full rounded-full object-cover" />
+                  <img src={selectedOccupant.avatarUrl} alt={selectedOccupant.name || 'User'} className="w-full h-full rounded-full object-cover" />
                 ) : (
-                  selectedOccupant.name.charAt(0)
+                  (selectedOccupant.name || 'U').charAt(0)
                 )}
               </div>
               <h4 className="font-bold text-slate-900 dark:text-white text-base">{selectedOccupant.name}</h4>

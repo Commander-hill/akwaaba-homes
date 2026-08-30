@@ -419,8 +419,8 @@ export const getLandlordBookings = async (req: Request, res: Response): Promise<
     const bookings = await prisma.booking.findMany({
       where: { property: { landlordId } },
       include: {
-        property: { select: { title: true } },
-        tenant: { select: { firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true, avatarUrl: true, gender: true, studentId: true, programmeOfStudy: true } }
+        property: { select: { id: true, title: true, cautionDeposit: true, location: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true, avatarUrl: true, gender: true, studentId: true, programmeOfStudy: true } }
       },
       orderBy: { createdAt: 'desc' }
     });

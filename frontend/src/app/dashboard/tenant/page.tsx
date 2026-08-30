@@ -318,7 +318,7 @@ export default function TenantDashboard() {
     },
     enabled: Boolean(activePropertyId)
   });
-  const compoundNotices = compoundNoticesData?.notices || [];
+  const compoundNotices = Array.isArray(compoundNoticesData?.notices) ? compoundNoticesData.notices : [];
 
   return (
     <div className="space-y-6 animate-in">
@@ -331,6 +331,7 @@ export default function TenantDashboard() {
         {compoundNotices.length > 0 && (
           <div className="space-y-2">
             {compoundNotices.map((notice: any) => {
+              if (!notice) return null;
               const isEmergency = notice.priority === 'EMERGENCY';
               const isImportant = notice.priority === 'IMPORTANT';
               return (
@@ -347,12 +348,12 @@ export default function TenantDashboard() {
                   <div className="flex-1 text-xs">
                     <div className="flex items-center gap-2 font-bold flex-wrap">
                       <span className="uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/40">
-                        {notice.category} • {notice.property?.title}
+                        {notice.category || 'NOTICE'} • {notice.property?.title || 'Hostel'}
                       </span>
-                      <span>{notice.title}</span>
+                      <span>{notice.title || 'Announcement'}</span>
                     </div>
                     <p className="mt-1 font-medium opacity-90 whitespace-pre-line leading-relaxed">
-                      {notice.message}
+                      {notice.message || ''}
                     </p>
                   </div>
                 </div>

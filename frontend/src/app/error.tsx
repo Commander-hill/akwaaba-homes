@@ -25,6 +25,11 @@ export default function Error({
           <p className="text-sm text-[var(--muted-foreground)]">
             This section failed to load. This is usually temporary.
           </p>
+          {error?.message && (
+            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 p-2.5 rounded-xl font-mono mt-2 break-all">
+              {error.message}
+            </p>
+          )}
         </div>
         {error.digest && (
           <p className="text-[10px] font-mono text-slate-400">Ref: {error.digest}</p>
