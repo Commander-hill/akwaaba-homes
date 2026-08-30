@@ -390,8 +390,12 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate new Access Token
-    const accessToken = generateAccessToken({ id: session.user.id, role: session.user.role });
+    // Generate new Access Token with tokenVersion
+    const accessToken = generateAccessToken({ 
+      id: session.user.id, 
+      role: session.user.role, 
+      tokenVersion: session.user.tokenVersion || 0 
+    });
 
     // Update lastActive
     await prisma.session.update({

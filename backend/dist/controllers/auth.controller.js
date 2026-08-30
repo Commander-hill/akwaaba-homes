@@ -347,8 +347,12 @@ const refresh = async (req, res) => {
             res.status(403).json({ message: 'Account is suspended' });
             return;
         }
-        // Generate new Access Token
-        const accessToken = (0, jwt_1.generateAccessToken)({ id: session.user.id, role: session.user.role });
+        // Generate new Access Token with tokenVersion
+        const accessToken = (0, jwt_1.generateAccessToken)({
+            id: session.user.id,
+            role: session.user.role,
+            tokenVersion: session.user.tokenVersion || 0
+        });
         // Update lastActive
         await prisma_1.default.session.update({
             where: { id: session.id },

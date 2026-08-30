@@ -58,6 +58,9 @@ api.interceptors.response.use(
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
         }).then(token => {
+          if (token && originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+          }
           return api(originalRequest);
         }).catch(err => {
           return Promise.reject(err);
@@ -69,12 +72,21 @@ api.interceptors.response.use(
 
       try {
         const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
-        await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
-        processQueue(null);
+        const refreshRes = await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
+        const newAccessToken = refreshRes.data?.accessToken;
+
+        if (newAccessToken && typeof window !== 'undefined') {
+          localStorage.setItem('akwaaba_access_token', newAccessToken);
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          }
+        }
+
+        processQueue(null, newAccessToken);
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // If refresh fails (e.g. token expired/invalid), redirect to login
+        // Only redirect to login if refreshToken is genuinely rejected
         if (typeof window !== 'undefined') {
           localStorage.removeItem('akwaaba_access_token');
           localStorage.removeItem('akwaaba_refresh_token');

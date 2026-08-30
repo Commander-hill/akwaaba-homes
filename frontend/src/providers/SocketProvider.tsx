@@ -83,54 +83,55 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     });
 
-    // --- REAL-TIME PLATFORM DATA SYNC & ZERO-REFRESH CACHE INVALIDATION ---
-    const invalidateAllPlatformViews = () => {
-      // Invalidate and trigger active query refetches with zero delay
-      queryClient.invalidateQueries({ refetchType: 'all' });
-      queryClient.refetchQueries({ type: 'active' });
+    // --- REAL-TIME TARGETED CACHE INVALIDATIONS (Zero-Logout, Lightning Speed) ---
+    const eventQueryMap: Record<string, string[][]> = {
+      ticket_created: [['tickets'], ['notifications'], ['landlord', 'stats']],
+      ticket_updated: [['tickets'], ['notifications'], ['landlord', 'stats']],
+      ticket_deleted: [['tickets'], ['notifications'], ['landlord', 'stats']],
+      booking_created: [['bookings'], ['occupancy'], ['properties'], ['landlord', 'stats'], ['notifications']],
+      booking_updated: [['bookings'], ['occupancy'], ['properties'], ['landlord', 'stats'], ['notifications']],
+      booking_cancelled: [['bookings'], ['occupancy'], ['properties'], ['landlord', 'stats'], ['notifications']],
+      room_updated: [['properties'], ['occupancy'], ['landlord', 'properties']],
+      room_capacity_updated: [['properties'], ['occupancy'], ['landlord', 'properties']],
+      property_created: [['properties'], ['landlord', 'properties'], ['landlord', 'stats']],
+      property_updated: [['properties'], ['landlord', 'properties'], ['landlord', 'stats']],
+      property_deleted: [['properties'], ['landlord', 'properties'], ['landlord', 'stats']],
+      review_created: [['reviews'], ['properties'], ['landlord', 'stats']],
+      review_updated: [['reviews'], ['properties'], ['landlord', 'stats']],
+      review_deleted: [['reviews'], ['properties'], ['landlord', 'stats']],
+      notice_created: [['notices'], ['compoundNotices']],
+      notice_updated: [['notices'], ['compoundNotices']],
+      notice_deleted: [['notices'], ['compoundNotices']],
+      breach_created: [['breaches'], ['notifications']],
+      breach_updated: [['breaches'], ['notifications']],
+      agreement_created: [['agreements'], ['leaseRenewals']],
+      agreement_updated: [['agreements'], ['leaseRenewals']],
+      visitor_pass_created: [['visitorPasses']],
+      visitor_pass_updated: [['visitorPasses']],
+      service_booking_created: [['serviceBookings']],
+      service_booking_updated: [['serviceBookings']],
+      vehicle_created: [['vehicles']],
+      vehicle_updated: [['vehicles']],
+      delivery_created: [['deliveries']],
+      delivery_updated: [['deliveries']],
+      bill_split_created: [['billSplits']],
+      bill_split_updated: [['billSplits']],
+      payout_created: [['payouts'], ['landlord', 'stats']],
+      payout_updated: [['payouts'], ['landlord', 'stats']],
+      subscription_created: [['subscriptions'], ['landlord', 'stats']],
+      subscription_updated: [['subscriptions'], ['landlord', 'stats']],
+      roommate_updated: [['roommates']],
+      invitation_updated: [['invitations']],
+      invitation_received: [['invitations'], ['notifications']],
+      wishlist_updated: [['wishlist']],
+      'activity:new': [['activities'], ['auditLogs']],
     };
 
-    const syncEvents = [
-      'booking_created',
-      'booking_updated',
-      'booking_cancelled',
-      'room_updated',
-      'room_capacity_updated',
-      'property_created',
-      'property_updated',
-      'property_deleted',
-      'ticket_created',
-      'ticket_updated',
-      'ticket_deleted',
-      'review_created',
-      'review_updated',
-      'review_deleted',
-      'notice_created',
-      'notice_updated',
-      'notice_deleted',
-      'breach_created',
-      'breach_updated',
-      'agreement_created',
-      'agreement_updated',
-      'user_updated',
-      'profile_updated',
-      'account_suspended',
-      'account_verified',
-      'subscription_created',
-      'subscription_updated',
-      'payout_created',
-      'payout_updated',
-      'roommate_updated',
-      'invitation_updated',
-      'invitation_received',
-      'wishlist_updated',
-      'activity:new'
-    ];
-
-    syncEvents.forEach(event => {
+    Object.entries(eventQueryMap).forEach(([event, queryKeys]) => {
       socketInstance.on(event, (data?: any) => {
-        console.log(`⚡ Real-time lightning sync triggered: [${event}]`, data || '');
-        invalidateAllPlatformViews();
+        queryKeys.forEach((key) => {
+          queryClient.invalidateQueries({ queryKey: key });
+        });
       });
     });
 
@@ -145,7 +146,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         queryClient.setQueryData(['public-config'], data);
         queryClient.setQueryData(['admin-config'], data);
       }
-      invalidateAllPlatformViews();
+      queryClient.invalidateQueries({ queryKey: ['public-config'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-config'] });
     });
 
     setSocket(socketInstance);

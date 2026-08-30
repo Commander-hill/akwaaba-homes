@@ -90,7 +90,7 @@ export default function LandlordDashboard() {
     enabled: activeTab === 'agreements'
   });
 
-  // Fetch Tickets — only loads when tickets tab is open
+  // Fetch Tickets — active for real-time badge updates and instant sync
   const { data: ticketsResponse, isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery({
     queryKey: ['tickets', 'landlord'],
     queryFn: async () => {
@@ -102,7 +102,6 @@ export default function LandlordDashboard() {
         return { tickets: [] };
       }
     },
-    enabled: activeTab === 'tickets'
   });
 
   // Fetch Subscriptions Overview — only loads when subscriptions tab is open
