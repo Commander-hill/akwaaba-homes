@@ -124,11 +124,9 @@ export default function PassportUpload({ onUploadSuccess, onUploadError, current
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full flex flex-col items-center justify-center">
       <div 
-        className={`relative border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center text-center transition-all ${
-          isDragging ? 'border-[#5B4CFF] bg-[#5B4CFF]/5' : error ? 'border-red-500/50 bg-red-500/5' : preview ? 'border-white/10 bg-[#1C1A1B]/40' : 'border-white/20 bg-[#2A2A2B]/40 hover:bg-[#2A2A2B]/60 hover:border-white/30'
-        }`}
+        className="relative flex flex-col items-center justify-center text-center transition-all cursor-pointer group py-2"
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
