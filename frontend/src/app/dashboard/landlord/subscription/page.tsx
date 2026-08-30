@@ -15,7 +15,7 @@ export default function LandlordSubscriptionPage() {
   });
 
   const { data: properties, isLoading } = useQuery({
-    queryKey: ['landlord-properties-billing'],
+    queryKey: ['landlord', 'properties'],
     queryFn: async () => {
       const res = await api.get('/properties/landlord/mine');
       return res.data.data;

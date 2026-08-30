@@ -922,8 +922,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 controls 
                 controlsList="nodownload"
                 className="absolute top-0 left-0 w-full h-full object-cover"
-                src={`http://localhost:5000${property.videoUrl}`}
-                poster={property.images?.[0] ? `http://localhost:5000${property.images[0]}` : undefined}
+                src={getImageUrl(property.videoUrl)}
+                poster={property.images?.[0] ? getImageUrl(property.images[0]) : undefined}
               >
                 Your browser does not support the video tag.
               </video>

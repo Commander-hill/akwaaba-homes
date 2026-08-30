@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { BedDouble } from 'lucide-react';
+import { getImageUrl } from '@/lib/utils';
 
 // Fix Leaflet's default icon path issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -146,7 +146,7 @@ export default function MapComponent({
                     <div className="flex flex-col gap-2">
                       <div className="h-24 bg-slate-100 rounded-md overflow-hidden relative">
                         {prop.images && prop.images.length > 0 ? (
-                          <img src={prop.images[0]} alt={prop.title} className="w-full h-full object-cover" />
+                          <img src={getImageUrl(prop.images[0])} alt={prop.title} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400"><BedDouble /></div>
                         )}

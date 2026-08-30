@@ -76,7 +76,6 @@ export default function ProfilePage() {
       const res = await api.get('/auth/sessions');
       return res.data.sessions;
     },
-    enabled: activeTab === 'security'
   });
 
   const revokeSessionMutation = useMutation({

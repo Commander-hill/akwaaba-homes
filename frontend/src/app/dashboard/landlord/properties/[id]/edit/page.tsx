@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, ArrowLeft, Building, MapPin, DollarSign, Image as ImageIcon, Info, CheckCircle, Video } from 'lucide-react';
 import Link from 'next/link';
@@ -69,6 +69,7 @@ const PRESET_AMENITY_CATEGORIES = [
 
 export default function EditPropertyPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const unwrappedParams = use(params);
   const propertyId = unwrappedParams.id;
   
@@ -245,6 +246,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         amenities: parsedAmenities,
         images: parsedImages
       });
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
       router.push('/dashboard/landlord/properties');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update property');

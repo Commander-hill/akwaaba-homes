@@ -31,7 +31,7 @@ export default function LandlordPropertiesPage() {
   const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
 
   const { data: properties, isLoading, refetch } = useQuery({
-    queryKey: ['landlord-properties'],
+    queryKey: ['landlord', 'properties'],
     queryFn: async () => {
       const res = await api.get('/properties/landlord/mine');
       return res.data.data;

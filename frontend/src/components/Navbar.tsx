@@ -50,7 +50,7 @@ export default function Navbar() {
       const { data } = await api.get('/config/public');
       return data;
     },
-    refetchInterval: 10000 // Poll every 10 seconds to react to admin config changes instantly
+    refetchInterval: 60000 // Background fallback poll (Instant updates via Socket)
   });
 
   const isAuthenticated = !!userResponse?.user;
