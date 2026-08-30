@@ -88,37 +88,34 @@ export default function TenantDashboard() {
     }
   });
 
-  // Tickets only load when the user opens the Tickets tab
+  // Tickets query
   const { data: ticketsResponse, isLoading: ticketsLoading } = useQuery({
     queryKey: ['tickets', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/tickets/me');
       return data;
     },
-    enabled: activeTab === 'tickets'
   });
 
-  // Agreements only load when the user opens the Documents tab
+  // Agreements query
   const { data: agreementsResponse, isLoading: agreementsLoading } = useQuery({
     queryKey: ['agreements', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/agreements/tenant');
       return data;
     },
-    enabled: activeTab === 'documents'
   });
 
-  // Transactions only load when the user opens the Payments tab
+  // Transactions query
   const { data: transactionsResponse, isLoading: transactionsLoading } = useQuery({
     queryKey: ['transactions', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/transactions/tenant');
       return data;
     },
-    enabled: activeTab === 'payments'
   });
 
-  // Roommate profile only loads when the user opens the Roommates tab
+  // Roommate profile query
   const { data: roommateProfileResponse, isLoading: profileLoading } = useQuery({
     queryKey: ['roommateProfile', 'me'],
     queryFn: async () => {
@@ -139,7 +136,6 @@ export default function TenantDashboard() {
         throw err;
       }
     },
-    enabled: activeTab === 'roommates'
   });
 
   const { data: roommateMatchesResponse, isLoading: matchesLoading } = useQuery({
@@ -148,7 +144,7 @@ export default function TenantDashboard() {
       const { data } = await api.get('/roommates/matches');
       return data;
     },
-    enabled: activeTab === 'roommates' && !!roommateProfileResponse?.profile
+    enabled: !!roommateProfileResponse?.profile
   });
 
   // Mutations
@@ -192,7 +188,6 @@ export default function TenantDashboard() {
       const { data } = await api.get('/reviews/mine');
       return data;
     },
-    enabled: activeTab === 'reviews'
   });
 
   const appealMutation = useMutation({

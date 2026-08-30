@@ -87,7 +87,6 @@ export default function LandlordDashboard() {
         return { agreements: [] };
       }
     },
-    enabled: activeTab === 'agreements'
   });
 
   // Fetch Tickets — active for real-time badge updates and instant sync
@@ -104,7 +103,7 @@ export default function LandlordDashboard() {
     },
   });
 
-  // Fetch Subscriptions Overview — only loads when subscriptions tab is open
+  // Fetch Subscriptions Overview — active for instant status updates
   const { data: subOverviewResponse, isLoading: isLoadingSubs, refetch: refetchSubs } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
@@ -116,7 +115,6 @@ export default function LandlordDashboard() {
         return { stats: { totalProperties: 0, activeSubscriptions: 0, expiringSoon: 0, unsubscribedOrExpired: 0 }, properties: [] };
       }
     },
-    enabled: activeTab === 'subscriptions'
   });
 
   // Fetch Detailed Earnings Report — only loads when financials tab is open
