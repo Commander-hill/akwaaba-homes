@@ -969,7 +969,7 @@ export default function TenantDashboard() {
                 const b = agreement.booking;
                 const p = b?.property || {};
                 const l = p?.landlord || {};
-                const isCompleted = agreement.status === 'COMPLETED';
+                const isCompleted = agreement.status === 'COMPLETED' || (Boolean(agreement.tenantSignature) && Boolean(agreement.landlordSignature));
 
                 return (
                   <div key={agreement.id} className="glass-card p-6 rounded-2xl border border-[var(--border)] hover:border-sky-500/30 transition-all space-y-5">
@@ -981,7 +981,7 @@ export default function TenantDashboard() {
                             "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
                             isCompleted ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
                           )}>
-                            {agreement.status}
+                            {isCompleted ? 'COMPLETED' : agreement.status}
                           </span>
                         </div>
                         <p className="text-xs text-[var(--muted-foreground)] mt-1 flex items-center gap-1">

@@ -601,7 +601,7 @@ export default function LandlordDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {agreements.map((item: any) => {
-                const isFullySigned = item.status === 'COMPLETED';
+                const isFullySigned = item.status === 'COMPLETED' || (Boolean(item.tenantSignature) && Boolean(item.landlordSignature));
                 const needsLandlordSig = !item.landlordSignature;
 
                 return (

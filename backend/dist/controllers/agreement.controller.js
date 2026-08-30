@@ -59,6 +59,31 @@ const getAgreementByBooking = async (req, res) => {
                 });
             }
         }
+        // Auto-complete if both signatures are present
+        if (agreement && agreement.status !== 'COMPLETED' && agreement.tenantSignature && agreement.landlordSignature) {
+            const dataToHash = JSON.stringify({
+                bookingId: agreement.bookingId,
+                tenantSignature: agreement.tenantSignature,
+                tenantSignedAt: agreement.tenantSignedAt,
+                tenantIpAddress: agreement.tenantIpAddress,
+                landlordSignature: agreement.landlordSignature,
+                landlordSignedAt: agreement.landlordSignedAt,
+                landlordIpAddress: agreement.landlordIpAddress,
+            });
+            const cryptographicHash = agreement.cryptographicHash || crypto_1.default.createHash('sha256').update(dataToHash).digest('hex');
+            agreement = await prisma_1.default.leaseAgreement.update({
+                where: { id: agreement.id },
+                data: { status: 'COMPLETED', cryptographicHash },
+                include: {
+                    booking: {
+                        include: {
+                            property: true,
+                            tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                        }
+                    }
+                }
+            });
+        }
         if (!agreement) {
             res.status(404).json({ message: 'Lease agreement not found for this booking' });
             return;
@@ -112,6 +137,27 @@ const getTenantAgreements = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
+        // Auto-heal any agreements that have both signatures
+        for (const a of agreements) {
+            if (a.status !== 'COMPLETED' && a.tenantSignature && a.landlordSignature) {
+                const dataToHash = JSON.stringify({
+                    bookingId: a.bookingId,
+                    tenantSignature: a.tenantSignature,
+                    tenantSignedAt: a.tenantSignedAt,
+                    tenantIpAddress: a.tenantIpAddress,
+                    landlordSignature: a.landlordSignature,
+                    landlordSignedAt: a.landlordSignedAt,
+                    landlordIpAddress: a.landlordIpAddress,
+                });
+                const cryptographicHash = a.cryptographicHash || crypto_1.default.createHash('sha256').update(dataToHash).digest('hex');
+                await prisma_1.default.leaseAgreement.update({
+                    where: { id: a.id },
+                    data: { status: 'COMPLETED', cryptographicHash }
+                });
+                a.status = 'COMPLETED';
+                a.cryptographicHash = cryptographicHash;
+            }
+        }
         res.status(200).json({ agreements });
     }
     catch (error) {
@@ -144,6 +190,27 @@ const getLandlordAgreements = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
+        // Auto-heal any agreements that have both signatures
+        for (const a of agreements) {
+            if (a.status !== 'COMPLETED' && a.tenantSignature && a.landlordSignature) {
+                const dataToHash = JSON.stringify({
+                    bookingId: a.bookingId,
+                    tenantSignature: a.tenantSignature,
+                    tenantSignedAt: a.tenantSignedAt,
+                    tenantIpAddress: a.tenantIpAddress,
+                    landlordSignature: a.landlordSignature,
+                    landlordSignedAt: a.landlordSignedAt,
+                    landlordIpAddress: a.landlordIpAddress,
+                });
+                const cryptographicHash = a.cryptographicHash || crypto_1.default.createHash('sha256').update(dataToHash).digest('hex');
+                await prisma_1.default.leaseAgreement.update({
+                    where: { id: a.id },
+                    data: { status: 'COMPLETED', cryptographicHash }
+                });
+                a.status = 'COMPLETED';
+                a.cryptographicHash = cryptographicHash;
+            }
+        }
         res.status(200).json({ agreements });
     }
     catch (error) {
@@ -154,12 +221,10 @@ const getLandlordAgreements = async (req, res) => {
 exports.getLandlordAgreements = getLandlordAgreements;
 const signAgreement = async (req, res) => {
     try {
-        console.log('--- signAgreement HIT! ---');
         const { bookingId } = req.params;
         const { signature } = req.body;
         const userId = req.user?.id;
         const role = req.user?.role;
-        console.log('bookingId:', bookingId, 'userId:', userId, 'role:', role, 'signature length:', signature?.length);
         if (!userId || !signature) {
             res.status(400).json({ message: 'Missing user or signature data' });
             return;
@@ -185,12 +250,6 @@ const signAgreement = async (req, res) => {
             updateData.tenantSignedAt = timestamp;
             updateData.tenantIpAddress = ipAddress;
             updateData.tenantUserAgent = userAgent;
-            if (agreement.status === 'PENDING_TENANT') {
-                updateData.status = 'PENDING_LANDLORD';
-            }
-            else if (agreement.landlordSignature) {
-                updateData.status = 'COMPLETED';
-            }
         }
         else if (role === 'LANDLORD') {
             if (agreement.booking.property.landlordId !== userId) {
@@ -201,24 +260,28 @@ const signAgreement = async (req, res) => {
             updateData.landlordSignedAt = timestamp;
             updateData.landlordIpAddress = ipAddress;
             updateData.landlordUserAgent = userAgent;
-            if (agreement.status === 'PENDING_LANDLORD') {
-                updateData.status = 'COMPLETED';
-            }
-            else if (agreement.tenantSignature) {
-                updateData.status = 'COMPLETED';
-            }
         }
-        if (updateData.status === 'COMPLETED') {
+        // Determine completion status based on actual presence of signatures
+        const hasTenantSignature = Boolean(updateData.tenantSignature || agreement.tenantSignature);
+        const hasLandlordSignature = Boolean(updateData.landlordSignature || agreement.landlordSignature);
+        if (hasTenantSignature && hasLandlordSignature) {
+            updateData.status = 'COMPLETED';
             const dataToHash = JSON.stringify({
                 bookingId,
-                tenantSignature: agreement.tenantSignature || updateData.tenantSignature,
-                tenantSignedAt: agreement.tenantSignedAt || updateData.tenantSignedAt,
-                tenantIpAddress: agreement.tenantIpAddress || updateData.tenantIpAddress,
-                landlordSignature: agreement.landlordSignature || updateData.landlordSignature,
-                landlordSignedAt: agreement.landlordSignedAt || updateData.landlordSignedAt,
-                landlordIpAddress: agreement.landlordIpAddress || updateData.landlordIpAddress,
+                tenantSignature: updateData.tenantSignature || agreement.tenantSignature,
+                tenantSignedAt: updateData.tenantSignedAt || agreement.tenantSignedAt,
+                tenantIpAddress: updateData.tenantIpAddress || agreement.tenantIpAddress,
+                landlordSignature: updateData.landlordSignature || agreement.landlordSignature,
+                landlordSignedAt: updateData.landlordSignedAt || agreement.landlordSignedAt,
+                landlordIpAddress: updateData.landlordIpAddress || agreement.landlordIpAddress,
             });
             updateData.cryptographicHash = crypto_1.default.createHash('sha256').update(dataToHash).digest('hex');
+        }
+        else if (hasTenantSignature && !hasLandlordSignature) {
+            updateData.status = 'PENDING_LANDLORD';
+        }
+        else if (!hasTenantSignature && hasLandlordSignature) {
+            updateData.status = 'PENDING_TENANT';
         }
         const updatedAgreement = await prisma_1.default.leaseAgreement.update({
             where: { id: agreement.id },
