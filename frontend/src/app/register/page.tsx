@@ -103,6 +103,18 @@ export default function RegisterPage() {
       return;
     }
 
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password) || !/\d/.test(formData.password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+      setError('Password must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
+      setIsLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
       setIsLoading(false);
@@ -356,6 +368,26 @@ export default function RegisterPage() {
                 <div>
                   <label className={labelClass}>Password</label>
                   <input type="password" required className={inputClass} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder="••••••••" />
+                  
+                  {/* Password Requirements Checklist */}
+                  <div className="mt-2.5 grid grid-cols-2 gap-2 text-[11px] text-[#A1A1AA]">
+                    <div className={`flex items-center gap-1.5 ${formData.password.length >= 8 ? 'text-emerald-400 font-bold' : ''}`}>
+                      <CheckCircle className={`w-3.5 h-3.5 ${formData.password.length >= 8 ? 'text-emerald-400' : 'text-[#71717A]'}`} />
+                      <span>Min. 8 characters</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${/[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
+                      <CheckCircle className={`w-3.5 h-3.5 ${/[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
+                      <span>Uppercase & lowercase</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${/\d/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
+                      <CheckCircle className={`w-3.5 h-3.5 ${/\d/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
+                      <span>At least 1 number</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
+                      <CheckCircle className={`w-3.5 h-3.5 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
+                      <span>Special character (@#$!%)</span>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className={labelClass}>Confirm Password</label>

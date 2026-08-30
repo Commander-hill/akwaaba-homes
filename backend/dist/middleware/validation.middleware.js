@@ -12,10 +12,12 @@ const validate = (validations) => {
             return next();
         }
         // Format errors strictly
+        const errorList = errors.array();
+        const firstErrorMessage = errorList[0]?.msg || 'Invalid input data';
         const extractedErrors = [];
-        errors.array().map((err) => extractedErrors.push({ [err.type]: err.msg }));
+        errorList.forEach((err) => extractedErrors.push({ field: err.path || err.param, message: err.msg }));
         res.status(400).json({
-            message: 'Invalid input data',
+            message: firstErrorMessage,
             errors: extractedErrors,
         });
     };
@@ -26,11 +28,11 @@ exports.registerValidation = [
     (0, express_validator_1.body)('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
     (0, express_validator_1.body)('password')
         .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_\-#])[A-Za-z\d@$!%*?&_\-#]{8,}$/)
-        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&_-#)'),
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{8,}$/)
+        .withMessage('Password must contain at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character'),
     (0, express_validator_1.body)('firstName').notEmpty().withMessage('First name is required').trim().escape(),
     (0, express_validator_1.body)('lastName').notEmpty().withMessage('Last name is required').trim().escape(),
-    (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD', 'ADMIN']).withMessage('Invalid role'),
+    (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF', 'ADMIN']).withMessage('Invalid role'),
 ];
 exports.loginValidation = [
     (0, express_validator_1.body)('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
