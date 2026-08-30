@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Plus, Edit2, Trash2, CheckCircle, XCircle, BellRing, Megaphone, X, Hash, Sparkles, Type, Heading2, AlignLeft, Link as LinkIcon, Check } from 'lucide-react';
+import { useDialog } from '@/providers/DialogProvider';
 
 interface Notice {
   id: string;
@@ -19,6 +20,7 @@ interface Notice {
 
 export default function AdminNoticesPage() {
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingNotice, setEditingNotice] = useState<Notice | null>(null);
 
@@ -144,8 +146,14 @@ export default function AdminNoticesPage() {
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button 
-                    onClick={() => {
-                      if(window.confirm('Are you sure you want to delete this notice?')) {
+                    onClick={async () => {
+                      const shouldDelete = await confirm({
+                        title: 'Delete Notice',
+                        message: 'Are you sure you want to delete this notice banner from the system?',
+                        confirmText: 'Delete Notice',
+                        type: 'danger',
+                      });
+                      if (shouldDelete) {
                         deleteMutation.mutate(notice.id);
                       }
                     }} 

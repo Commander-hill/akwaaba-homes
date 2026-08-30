@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useDialog } from '@/providers/DialogProvider';
 
 interface StaffAssignment {
   id: string;
@@ -35,6 +36,7 @@ interface StaffAssignment {
 
 export default function StaffDelegationTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [modalOpen, setModalOpen] = useState(false);
   const [propertyId, setPropertyId] = useState('');
   const [email, setEmail] = useState('');
@@ -170,8 +172,14 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
                 </div>
 
                 <button
-                  onClick={() => {
-                    if (confirm(`Revoke operational access for ${assignment.user.firstName}?`)) {
+                  onClick={async () => {
+                    const shouldRevoke = await confirm({
+                      title: 'Revoke Operational Access',
+                      message: `Are you sure you want to revoke staff and operational management access for ${assignment.user.firstName} ${assignment.user.lastName}?`,
+                      confirmText: 'Revoke Access',
+                      type: 'danger',
+                    });
+                    if (shouldRevoke) {
                       removeStaffMutation.mutate(assignment.id);
                     }
                   }}

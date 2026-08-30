@@ -9,12 +9,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { useDialog } from '@/providers/DialogProvider';
 
 export default function ProfilePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [activeTab, setActiveTab] = useState<'basic' | 'school' | 'security'>(
     tabParam === 'security' ? 'security' : 'basic'
   );
@@ -478,8 +480,14 @@ export default function ProfilePage() {
             </div>
             
             <button
-              onClick={() => {
-                if (confirm('Are you sure you want to log out all other active devices? You will remain logged in on this browser.')) {
+              onClick={async () => {
+                const shouldRevoke = await confirm({
+                  title: 'Log Out All Other Devices',
+                  message: 'Are you sure you want to log out all other active devices? You will remain logged in on this current browser.',
+                  confirmText: 'Log Out Devices',
+                  type: 'warning',
+                });
+                if (shouldRevoke) {
                   revokeAllOthersMutation.mutate();
                 }
               }}

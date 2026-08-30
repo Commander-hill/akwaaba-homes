@@ -11,6 +11,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useDialog } from '@/providers/DialogProvider';
 
 interface ExpenseRecord {
   id: string;
@@ -49,6 +50,7 @@ interface AnalyticsData {
 
 export default function ExpenseTrackerTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -348,8 +350,14 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
                       </td>
                       <td className="py-3.5 text-right">
                         <button
-                          onClick={() => {
-                            if (confirm('Delete this expense record?')) {
+                          onClick={async () => {
+                            const shouldDelete = await confirm({
+                              title: 'Delete Expense Record',
+                              message: 'Are you sure you want to delete this expense record? This will update your P&L calculations.',
+                              confirmText: 'Delete Record',
+                              type: 'danger',
+                            });
+                            if (shouldDelete) {
                               deleteExpenseMutation.mutate(expense.id);
                             }
                           }}

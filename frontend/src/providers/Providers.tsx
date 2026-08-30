@@ -6,6 +6,7 @@ import { Toaster, toast } from 'react-hot-toast';
 import { ThemeProvider } from 'next-themes';
 import { SocketProvider } from './SocketProvider';
 import { LanguageProvider } from './LanguageContext';
+import { DialogProvider } from './DialogProvider';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -46,35 +47,28 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <SocketProvider>
           <LanguageProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 5000,
-                style: {
-                  background: '#0F172A',
-                  color: '#FFFFFF',
-                  border: '1px solid #334155',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4)',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  padding: '12px 16px',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#FFFFFF',
+            <DialogProvider>
+              {children}
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 4500,
+                  className: '!bg-white/95 dark:!bg-[#111116]/95 !text-slate-900 dark:!text-white !border !border-slate-200/80 dark:!border-white/10 !backdrop-blur-xl !shadow-[0_20px_50px_rgba(0,0,0,0.3)] !rounded-2xl !px-5 !py-3.5 !text-xs sm:!text-sm !font-bold',
+                  success: {
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#FFFFFF',
+                    },
                   },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#FFFFFF',
+                  error: {
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#FFFFFF',
+                    },
                   },
-                },
-              }}
-            />
+                }}
+              />
+            </DialogProvider>
           </LanguageProvider>
         </SocketProvider>
       </QueryClientProvider>

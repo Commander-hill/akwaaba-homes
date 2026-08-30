@@ -11,9 +11,11 @@ import WishlistButton from '@/components/WishlistButton';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDialog } from '@/providers/DialogProvider';
 
 export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { confirm } = useDialog();
   const unwrappedParams = use(params);
   const propertyId = unwrappedParams.id;
   
@@ -1109,7 +1111,17 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       <span className="text-xs text-[var(--muted-foreground)]">{new Date(review.createdAt).toLocaleDateString()}</span>
                       {session && session.role === 'TENANT' && (
                         <button
-                          onClick={() => { if (confirm('Report this review to admins for moderation?')) flagMutation.mutate(review.id); }}
+                          onClick={async () => {
+                            const shouldFlag = await confirm({
+                              title: 'Report Review',
+                              message: 'Would you like to flag this review to platform administrators for content moderation?',
+                              confirmText: 'Report Review',
+                              type: 'warning',
+                            });
+                            if (shouldFlag) {
+                              flagMutation.mutate(review.id);
+                            }
+                          }}
                           className="p-1 text-slate-400 hover:text-red-500 transition-colors"
                           title="Report review"
                         >

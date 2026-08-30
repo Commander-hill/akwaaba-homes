@@ -36,6 +36,25 @@ export default function LandlordDashboard() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
+  const [ticketActionModal, setTicketActionModal] = useState<{
+    isOpen: boolean;
+    ticketId: string;
+    ticketTitle: string;
+    mode: 'SCHEDULE' | 'RESOLVE';
+    scheduledDate: string;
+    repairCost: string;
+    resolutionNotes: string;
+    completionImageUrl: string;
+  }>({
+    isOpen: false,
+    ticketId: '',
+    ticketTitle: '',
+    mode: 'RESOLVE',
+    scheduledDate: new Date().toISOString().split('T')[0],
+    repairCost: '0',
+    resolutionNotes: 'Repair completed successfully.',
+    completionImageUrl: '',
+  });
 
   // Session Query — uses shared cache key so it's instant on re-nav
   const { data: session } = useQuery({
@@ -748,10 +767,18 @@ export default function LandlordDashboard() {
                         {t.status === 'PENDING' && (
                           <button
                             onClick={() => {
-                              const date = prompt('Enter estimated repair date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-                              if (date) updateTicketMutation.mutate({ id: t.id, status: 'SCHEDULED', scheduledDate: date });
+                              setTicketActionModal({
+                                isOpen: true,
+                                ticketId: t.id,
+                                ticketTitle: t.title,
+                                mode: 'SCHEDULE',
+                                scheduledDate: new Date().toISOString().split('T')[0],
+                                repairCost: '0',
+                                resolutionNotes: '',
+                                completionImageUrl: '',
+                              });
                             }}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all"
+                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
                           >
                             Schedule Repair
                           </button>
@@ -760,7 +787,7 @@ export default function LandlordDashboard() {
                         {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
                           <button
                             onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
                           >
                             Start Repair
                           </button>
@@ -769,15 +796,15 @@ export default function LandlordDashboard() {
                         {t.status !== 'RESOLVED' && (
                           <button
                             onClick={() => {
-                              const costStr = prompt('Enter repair expenditure (GHS, optional):', '0');
-                              const notes = prompt('Enter resolution summary:', 'Repair completed successfully.');
-                              const proofUrl = prompt('Enter completion proof image URL (optional):', '');
-                              updateTicketMutation.mutate({
-                                id: t.id,
-                                status: 'RESOLVED',
-                                repairCost: costStr ? parseFloat(costStr) : 0,
-                                resolutionNotes: notes || '',
-                                completionImageUrl: proofUrl || undefined
+                              setTicketActionModal({
+                                isOpen: true,
+                                ticketId: t.id,
+                                ticketTitle: t.title,
+                                mode: 'RESOLVE',
+                                scheduledDate: new Date().toISOString().split('T')[0],
+                                repairCost: '0',
+                                resolutionNotes: 'Repair completed successfully.',
+                                completionImageUrl: '',
                               });
                             }}
                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/20"
@@ -1166,6 +1193,136 @@ export default function LandlordDashboard() {
       {/* ── Withdrawal Modal ── */}
       {showWithdrawalModal && (
         <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
+      )}
+
+      {/* ── Ticket Action & Resolution Modal ── */}
+      {ticketActionModal.isOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
+          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className={clsx(
+                  "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md",
+                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600 shadow-indigo-600/30" : "bg-emerald-600 shadow-emerald-600/30"
+                )}>
+                  {ticketActionModal.mode === 'SCHEDULE' ? '📅' : '🛠️'}
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    {ticketActionModal.mode === 'SCHEDULE' ? 'Schedule Maintenance' : 'Complete & Resolve Ticket'}
+                  </h3>
+                  <p className="text-xs text-slate-500 line-clamp-1">{ticketActionModal.ticketTitle}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs sm:text-sm">
+              {ticketActionModal.mode === 'SCHEDULE' ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Estimated Repair Date
+                  </label>
+                  <input
+                    type="date"
+                    value={ticketActionModal.scheduledDate}
+                    onChange={(e) => setTicketActionModal(prev => ({ ...prev, scheduledDate: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Repair Expenditure (GHS)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={ticketActionModal.repairCost}
+                        onChange={(e) => setTicketActionModal(prev => ({ ...prev, repairCost: e.target.value }))}
+                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Proof Photo URL (Optional)
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={ticketActionModal.completionImageUrl}
+                        onChange={(e) => setTicketActionModal(prev => ({ ...prev, completionImageUrl: e.target.value }))}
+                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      Resolution Summary / Work Done
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="e.g. Replaced leaking valve and sealed sink pipes."
+                      value={ticketActionModal.resolutionNotes}
+                      onChange={(e) => setTicketActionModal(prev => ({ ...prev, resolutionNotes: e.target.value }))}
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white resize-none"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (ticketActionModal.mode === 'SCHEDULE') {
+                    updateTicketMutation.mutate({
+                      id: ticketActionModal.ticketId,
+                      status: 'SCHEDULED',
+                      scheduledDate: ticketActionModal.scheduledDate,
+                    });
+                  } else {
+                    updateTicketMutation.mutate({
+                      id: ticketActionModal.ticketId,
+                      status: 'RESOLVED',
+                      repairCost: parseFloat(ticketActionModal.repairCost) || 0,
+                      resolutionNotes: ticketActionModal.resolutionNotes || 'Repair completed successfully.',
+                      completionImageUrl: ticketActionModal.completionImageUrl || undefined,
+                    });
+                  }
+                  setTicketActionModal(prev => ({ ...prev, isOpen: false }));
+                }}
+                disabled={updateTicketMutation.isPending}
+                className={clsx(
+                  "px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition shadow-lg",
+                  ticketActionModal.mode === 'SCHEDULE' 
+                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30" 
+                    : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
+                )}
+              >
+                {updateTicketMutation.isPending ? 'Saving...' : ticketActionModal.mode === 'SCHEDULE' ? 'Save Schedule' : 'Confirm Resolution'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -4,9 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Star, User, Home, Trash2, Flag, ShieldCheck, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
+import { useDialog } from '@/providers/DialogProvider';
 
 export default function AdminReviewsPage() {
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [appealNote, setAppealNote] = useState('');
   const [appealTarget, setAppealTarget] = useState<string | null>(null);
 
@@ -172,7 +174,23 @@ export default function AdminReviewsPage() {
                         {!review.isFlagged && (
                           <button onClick={() => flagMutation.mutate(review.id)} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg" title="Flag Review"><Flag className="w-4 h-4" /></button>
                         )}
-                        <button onClick={() => { if (confirm('Delete this review?')) deleteMutation.mutate(review.id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg" title="Delete Review"><Trash2 className="w-4 h-4" /></button>
+                        <button
+                          onClick={async () => {
+                            const shouldDelete = await confirm({
+                              title: 'Delete Review',
+                              message: 'Are you sure you want to permanently delete this user review?',
+                              confirmText: 'Delete Review',
+                              type: 'danger',
+                            });
+                            if (shouldDelete) {
+                              deleteMutation.mutate(review.id);
+                            }
+                          }}
+                          className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg transition"
+                          title="Delete Review"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

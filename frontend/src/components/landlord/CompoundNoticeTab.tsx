@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useDialog } from '@/providers/DialogProvider';
 
 interface NoticeItem {
   id: string;
@@ -29,6 +30,7 @@ interface NoticeItem {
 
 export default function CompoundNoticeTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
+  const { confirm } = useDialog();
   const [modalOpen, setModalOpen] = useState(false);
   const [propertyId, setPropertyId] = useState('');
   const [title, setTitle] = useState('');
@@ -171,8 +173,14 @@ export default function CompoundNoticeTab({ properties = [] }: { properties?: an
                   </div>
 
                   <button
-                    onClick={() => {
-                      if (confirm('Are you sure you want to remove this notice?')) {
+                    onClick={async () => {
+                      const shouldDelete = await confirm({
+                        title: 'Remove Compound Notice',
+                        message: 'Are you sure you want to remove this notice? It will no longer be visible to tenants.',
+                        confirmText: 'Remove Notice',
+                        type: 'danger',
+                      });
+                      if (shouldDelete) {
                         deleteNoticeMutation.mutate(notice.id);
                       }
                     }}
