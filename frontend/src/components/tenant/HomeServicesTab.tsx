@@ -85,13 +85,31 @@ export default function HomeServicesTab({ bookings = [] }: { bookings?: any[] })
   const [timeSlot, setTimeSlot] = useState('MORNING (8AM - 12PM)');
   const [notes, setNotes] = useState('');
 
-  const activeProperties = bookings
-    .filter((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID'].includes(b.status))
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'public-catalog'],
+    queryFn: async () => {
+      const res = await api.get('/properties');
+      return res.data;
+    }
+  });
+
+  const rawBookingProps = (bookings || [])
     .map((b: any) => ({
-      id: b.propertyId,
+      id: b.propertyId || b.property?.id,
       title: b.property?.title || 'Residential Residence',
       location: b.property?.location || ''
-    }));
+    }))
+    .filter((p: any) => Boolean(p.id));
+
+  const fallbackProps = (propertiesData?.properties || propertiesData?.data || [])
+    .map((p: any) => ({
+      id: p.id,
+      title: p.title || 'Residential Residence',
+      location: p.location || ''
+    }))
+    .filter((p: any) => Boolean(p.id));
+
+  const activeProperties = rawBookingProps.length > 0 ? rawBookingProps : fallbackProps;
 
   useEffect(() => {
     if (!propertyId && activeProperties.length > 0) {

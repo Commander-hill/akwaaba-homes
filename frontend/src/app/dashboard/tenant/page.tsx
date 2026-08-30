@@ -387,11 +387,11 @@ export default function TenantDashboard() {
         </div>
 
         {/* Tabs Strip */}
-        <div className="flex items-center gap-1 overflow-x-auto max-w-full p-1.5 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl w-full sm:w-fit no-scrollbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full p-1.5 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl w-full">
           <button
             onClick={() => setActiveTab('bookings')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap",
               activeTab === 'bookings' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -400,7 +400,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('tickets')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap",
               activeTab === 'tickets' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -409,7 +409,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('reviews')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'reviews' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -418,7 +418,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('documents')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'documents' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -427,7 +427,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('roommates')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'roommates' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -436,7 +436,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('payments')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'payments' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -445,7 +445,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('safety')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'safety' ? "bg-red-600 text-white shadow-sm" : "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
             )}
           >
@@ -455,7 +455,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('messages')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'messages' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -465,7 +465,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('visitors')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'visitors' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -475,7 +475,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('services')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'services' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -485,7 +485,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('vehicles')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'vehicles' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -495,7 +495,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('renewals')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'renewals' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -505,7 +505,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('deliveries')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'deliveries' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -515,7 +515,7 @@ export default function TenantDashboard() {
           <button
             onClick={() => setActiveTab('billsplit')}
             className={clsx(
-              "px-6 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center gap-2",
+              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
               activeTab === 'billsplit' ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >

@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import crypto from 'crypto';
@@ -17,18 +17,13 @@ export const createVisitorPass = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Verify tenant has active/approved booking in this property
-    const booking = await prisma.booking.findFirst({
-      where: {
-        tenantId,
-        propertyId,
-        status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID'] }
-      },
-      include: { property: true }
+    // Verify property exists
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
     });
 
-    if (!booking && req.user?.role !== 'ADMIN') {
-      res.status(403).json({ message: 'You must have an active stay at this property to generate visitor passes' });
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
       return;
     }
 

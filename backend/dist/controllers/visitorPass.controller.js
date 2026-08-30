@@ -17,17 +17,12 @@ const createVisitorPass = async (req, res) => {
             res.status(400).json({ message: 'Property ID and visitor name are required' });
             return;
         }
-        // Verify tenant has active/approved booking in this property
-        const booking = await prisma_1.default.booking.findFirst({
-            where: {
-                tenantId,
-                propertyId,
-                status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID'] }
-            },
-            include: { property: true }
+        // Verify property exists
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
         });
-        if (!booking && req.user?.role !== 'ADMIN') {
-            res.status(403).json({ message: 'You must have an active stay at this property to generate visitor passes' });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
             return;
         }
         // Generate a secure 6-digit access PIN

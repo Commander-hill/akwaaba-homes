@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
@@ -30,13 +30,70 @@ interface PackageDelivery {
 
 export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }) {
   const queryClient = useQueryClient();
+  const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Form State
+  const [propertyId, setPropertyId] = useState('');
+  const [courierName, setCourierName] = useState('');
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [packageDescription, setPackageDescription] = useState('');
+
+  const { data: propertiesData } = useQuery({
+    queryKey: ['properties', 'public-catalog'],
+    queryFn: async () => {
+      const res = await api.get('/properties');
+      return res.data;
+    }
+  });
+
+  const rawBookingProps = (bookings || [])
+    .map((b: any) => ({
+      id: b.propertyId || b.property?.id,
+      title: b.property?.title || 'Residential Residence',
+      location: b.property?.location || ''
+    }))
+    .filter((p: any) => Boolean(p.id));
+
+  const fallbackProps = (propertiesData?.properties || propertiesData?.data || [])
+    .map((p: any) => ({
+      id: p.id,
+      title: p.title || 'Residential Residence',
+      location: p.location || ''
+    }))
+    .filter((p: any) => Boolean(p.id));
+
+  const activeProperties = rawBookingProps.length > 0 ? rawBookingProps : fallbackProps;
+
+  useEffect(() => {
+    if (!propertyId && activeProperties.length > 0) {
+      setPropertyId(activeProperties[0].id);
+    }
+  }, [activeProperties, propertyId]);
 
   const { data, isLoading } = useQuery<{ deliveries: PackageDelivery[] }>({
     queryKey: ['deliveries', 'tenant'],
     queryFn: async () => {
       const res = await api.get('/deliveries');
       return res.data;
+    }
+  });
+
+  const logDeliveryMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.post('/deliveries', payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Inbound parcel pre-registered! Security will verify on arrival.');
+      setModalOpen(false);
+      setCourierName('');
+      setTrackingNumber('');
+      setPackageDescription('');
+      queryClient.invalidateQueries({ queryKey: ['deliveries', 'tenant'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to log delivery');
     }
   });
 
@@ -76,6 +133,13 @@ export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }
             <p className="text-xs text-slate-500">Track packages received at the compound gatehouse and present pickup OTPs</p>
           </div>
         </div>
+
+        <button
+          onClick={() => setModalOpen(true)}
+          className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-xs"
+        >
+          <Plus className="w-4 h-4" /> Pre-Register Delivery
+        </button>
       </div>
 
       {isLoading ? (
@@ -171,6 +235,105 @@ export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Pre-Register Delivery Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800 animate-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <Package className="w-5 h-5 text-orange-500" /> Pre-Register Inbound Parcel
+              </h3>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Residence</label>
+                <select
+                  value={propertyId}
+                  onChange={(e) => setPropertyId(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
+                >
+                  {activeProperties.map((p: any) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} {p.location ? `(${p.location})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Courier / Delivery Service</label>
+                <input
+                  type="text"
+                  value={courierName}
+                  onChange={(e) => setCourierName(e.target.value)}
+                  placeholder="e.g. Jumia Delivery, DHL, Bolt Food, FedEx"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tracking Number (Optional)</label>
+                <input
+                  type="text"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value)}
+                  placeholder="e.g. JM-948201-GH"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Package Description</label>
+                <input
+                  type="text"
+                  value={packageDescription}
+                  onChange={(e) => setPackageDescription(e.target.value)}
+                  placeholder="e.g. Laptop charger in brown carton box"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                onClick={() => setModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const targetPropertyId = propertyId || activeProperties[0]?.id;
+                  if (!targetPropertyId) {
+                    toast.error('Please select a residence');
+                    return;
+                  }
+                  if (!courierName) {
+                    toast.error('Courier name is required');
+                    return;
+                  }
+                  logDeliveryMutation.mutate({
+                    propertyId: targetPropertyId,
+                    courierName,
+                    trackingNumber,
+                    packageDescription
+                  });
+                }}
+                disabled={logDeliveryMutation.isPending}
+                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 shadow-sm"
+              >
+                {logDeliveryMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Log Parcel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -44,8 +44,8 @@ export default function LeaseRenewalTab({ bookings = [] }: { bookings?: any[] })
   const [proposedRent, setProposedRent] = useState('');
   const [tenantNotes, setTenantNotes] = useState('');
 
-  const activeBookings = bookings.filter((b: any) =>
-    ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID'].includes(b.status)
+  const activeBookings = (bookings || []).filter((b: any) =>
+    ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'PENDING'].includes(b.status)
   );
 
   React.useEffect(() => {
