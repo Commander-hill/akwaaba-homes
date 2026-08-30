@@ -30,15 +30,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (!phoneNumber || !gender || !dateOfBirth || !nationality || !guardianName || !guardianPhone) {
-      res.status(400).json({ message: 'Missing mandatory personal & emergency contact details (Phone, Gender, DOB, Nationality, Guardian Name & Phone are required)' });
+    if (!phoneNumber || !gender || !nationality) {
+      res.status(400).json({ message: 'Missing mandatory personal details (Phone, Gender, and Nationality are required)' });
       return;
     }
 
-    if (role === 'TENANT' && isStudent) {
-      if (!campus || !studentId || !dateOfAdmission || !programmeOfStudy || !yearOfStudy || !studentType) {
-        res.status(400).json({ message: 'Missing mandatory school information for student tenant (Campus, Student ID, Admission Date, Programme, Year, and Student Type are required)' });
+    if (role === 'TENANT') {
+      if (!dateOfBirth || !guardianName || !guardianPhone) {
+        res.status(400).json({ message: 'Missing mandatory tenant details (Date of Birth, Guardian Name & Phone are required)' });
         return;
+      }
+      if (isStudent) {
+        if (!campus || !studentId || !dateOfAdmission || !programmeOfStudy || !yearOfStudy || !studentType) {
+          res.status(400).json({ message: 'Missing mandatory school information for student tenant (Campus, Student ID, Admission Date, Programme, Year, and Student Type are required)' });
+          return;
+        }
       }
     }
 

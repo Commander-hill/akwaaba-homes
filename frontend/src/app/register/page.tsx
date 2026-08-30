@@ -57,9 +57,15 @@ export default function RegisterPage() {
         setError('Please fill in your name and email address.');
         return;
       }
-      if (!formData.phoneNumber.trim() || !formData.gender || !formData.dateOfBirth || !formData.nationality.trim() || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-        setError('Please fill in all mandatory personal details (Phone, Gender, Date of Birth, Country, and Emergency Contact).');
+      if (!formData.phoneNumber.trim() || !formData.gender || !formData.nationality.trim()) {
+        setError('Please fill in your Phone Number, Gender, and Country/Nationality.');
         return;
+      }
+      if (formData.role === 'TENANT') {
+        if (!formData.dateOfBirth || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
+          setError('Please fill in your Date of Birth and Guardian / Emergency Contact details.');
+          return;
+        }
       }
     }
 
@@ -263,21 +269,26 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClass}>Date of Birth *</label>
-                  <input type="date" required className={inputClass} value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} style={{ colorScheme: 'dark' }} />
-                </div>
-                <div>
                   <label className={labelClass}>Country / Nationality *</label>
                   <input type="text" required className={inputClass} value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="Ghana" />
                 </div>
-                <div>
-                  <label className={labelClass}>{formData.role === 'LANDLORD' ? 'Emergency Contact Name *' : 'Guardian Name *'}</label>
-                  <input type="text" required className={inputClass} value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="Jane Doe" />
-                </div>
-                <div>
-                  <label className={labelClass}>{formData.role === 'LANDLORD' ? 'Emergency Contact Phone *' : 'Guardian Phone *'}</label>
-                  <input type="tel" required className={inputClass} value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="054..." />
-                </div>
+
+                {formData.role === 'TENANT' && (
+                  <>
+                    <div>
+                      <label className={labelClass}>Date of Birth *</label>
+                      <input type="date" required className={inputClass} value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} style={{ colorScheme: 'dark' }} />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Guardian Name *</label>
+                      <input type="text" required className={inputClass} value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="Jane Doe" />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Guardian Phone *</label>
+                      <input type="tel" required className={inputClass} value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="054..." />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}
