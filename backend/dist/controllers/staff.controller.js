@@ -159,17 +159,17 @@ const getMyStaffAssignments = async (req, res) => {
             where: {
                 OR: [
                     { userId },
-                    ...(userEmail ? [{ user: { email: userEmail } }] : [])
+                    ...(userEmail ? [{ user: { email: { equals: userEmail, mode: 'insensitive' } } }] : [])
                 ]
             },
             include: {
                 property: {
                     include: {
                         landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                        rooms: true,
                         tickets: {
                             include: {
                                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true } },
-                                room: true,
                             },
                             orderBy: { createdAt: 'desc' },
                         },
