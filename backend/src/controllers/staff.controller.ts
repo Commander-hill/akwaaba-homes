@@ -85,10 +85,16 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
  */
 export const getPropertyStaff = async (req: Request, res: Response): Promise<void> => {
   try {
-    const landlordId = req.user?.id;
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
     const { propertyId } = req.query;
 
-    const where: any = { landlordId };
+    // If a Caretaker or Staff member calls /staff, return their assigned properties directly
+    if (userRole === 'CARETAKER' || userRole === 'STAFF') {
+      return getMyStaffAssignments(req, res);
+    }
+
+    const where: any = { landlordId: userId };
     if (propertyId && typeof propertyId === 'string') {
       where.propertyId = propertyId;
     }

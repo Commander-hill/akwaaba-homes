@@ -91,14 +91,36 @@ function CaretakerDashboardContent() {
     queryFn: async () => {
       try {
         const res = await api.get('/staff/mine');
-        return res.data;
+        const rawList = res.data?.assignments || res.data?.staff || [];
+        return { assignments: rawList };
       } catch (err) {
-        return { assignments: [] };
+        try {
+          const fallback = await api.get('/staff');
+          const rawList = fallback.data?.assignments || fallback.data?.staff || [];
+          return { assignments: rawList };
+        } catch {
+          return { assignments: [] };
+        }
       }
-    }
+    },
+    refetchInterval: 5000,
   });
 
-  const assignments = staffData?.assignments || [];
+  const rawAssignments = staffData?.assignments || [];
+  const assignments = rawAssignments.map((a: any) => {
+    if (a.property) {
+      return a;
+    }
+    return {
+      id: a.id,
+      role: a.role || 'CARETAKER',
+      canManageTickets: a.canManageTickets !== false,
+      canCheckInTenants: a.canCheckInTenants !== false,
+      canPostNotices: a.canPostNotices !== false,
+      property: a
+    };
+  });
+
   const assignedProperties = assignments.map((a: any) => a.property).filter(Boolean);
 
   // Aggregate operations across all assigned properties

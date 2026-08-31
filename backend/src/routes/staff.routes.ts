@@ -6,8 +6,10 @@ const router = Router();
 router.use(authenticate);
 
 router.post('/', assignStaff);
-router.get('/', getPropertyStaff);
 router.get('/mine', getMyStaffAssignments);
+router.get('/me', getMyStaffAssignments);
+router.get('/assignments', getMyStaffAssignments);
+router.get('/', getPropertyStaff);
 router.delete('/:id', removeStaff);
 
 export default router;

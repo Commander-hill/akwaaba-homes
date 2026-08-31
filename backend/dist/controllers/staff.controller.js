@@ -80,9 +80,14 @@ exports.assignStaff = assignStaff;
  */
 const getPropertyStaff = async (req, res) => {
     try {
-        const landlordId = req.user?.id;
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
         const { propertyId } = req.query;
-        const where = { landlordId };
+        // If a Caretaker or Staff member calls /staff, return their assigned properties directly
+        if (userRole === 'CARETAKER' || userRole === 'STAFF') {
+            return (0, exports.getMyStaffAssignments)(req, res);
+        }
+        const where = { landlordId: userId };
         if (propertyId && typeof propertyId === 'string') {
             where.propertyId = propertyId;
         }
