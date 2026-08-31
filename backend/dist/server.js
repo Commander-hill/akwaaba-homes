@@ -226,6 +226,7 @@ app.use('/api/v1/wishlist', wishlist_routes_1.default);
 app.use('/api/v1/occupancy', occupancy_routes_1.default);
 app.use('/api/v1/expenses', expense_routes_1.default);
 app.use('/api/v1/compound-notices', compoundNotice_routes_1.default);
+app.use('/api/v1/notices', compoundNotice_routes_1.default);
 app.use('/api/v1/inspections', inspection_routes_1.default);
 app.use('/api/v1/staff', staff_routes_1.default);
 app.use('/api/v1/visitor-passes', visitorPass_routes_1.default);
@@ -233,6 +234,7 @@ app.use('/api/v1/service-bookings', serviceBooking_routes_1.default);
 app.use('/api/v1/vehicles', vehicle_routes_1.default);
 app.use('/api/v1/lease-renewals', leaseRenewal_routes_1.default);
 app.use('/api/v1/deliveries', delivery_routes_1.default);
+app.use('/api/v1/parcels', delivery_routes_1.default);
 app.use('/api/v1/bill-splits', billSplit_routes_1.default);
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(errorHandler_middleware_1.notFoundHandler);

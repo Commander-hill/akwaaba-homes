@@ -31,15 +31,23 @@ export const createCompoundNotice = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
-      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId,
+        userId: req.user?.id,
+        canPostNotices: true
+      }
+    });
+
+    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not own this property or have notice posting permissions' });
       return;
     }
 
     const notice = await prisma.compoundNotice.create({
       data: {
         propertyId,
-        landlordId,
+        landlordId: property.landlordId,
         title,
         message,
         category: category || 'GENERAL',

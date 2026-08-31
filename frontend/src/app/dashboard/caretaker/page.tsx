@@ -162,8 +162,13 @@ function CaretakerDashboardContent() {
 
   const createNoticeMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await api.post('/notices', payload);
-      return res.data;
+      try {
+        const res = await api.post('/compound-notices', payload);
+        return res.data;
+      } catch (e) {
+        const res = await api.post('/notices', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       toast.success('Compound notice published!');
@@ -179,8 +184,13 @@ function CaretakerDashboardContent() {
 
   const logParcelMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await api.post('/parcels', payload);
-      return res.data;
+      try {
+        const res = await api.post('/parcels', payload);
+        return res.data;
+      } catch (e) {
+        const res = await api.post('/deliveries', payload);
+        return res.data;
+      }
     },
     onSuccess: () => {
       toast.success('Parcel logged into vault & tenant alerted!');

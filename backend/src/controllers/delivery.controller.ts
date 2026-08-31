@@ -9,14 +9,33 @@ import { getIO } from '../socket';
 export const logPackageDelivery = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { tenantId, propertyId, courierName, trackingNumber, packageDescription } = req.body;
+    const { tenantId, propertyId, courierName, carrier, trackingNumber, packageDescription, lockerNumber, location } = req.body;
 
-    const targetTenantId = tenantId || userId;
+    const courier = (courierName || carrier || 'Courier').trim();
+    const tracking = trackingNumber ? String(trackingNumber).trim() : null;
+    const description = (packageDescription || lockerNumber || location || '').trim() || null;
 
-    if (!propertyId || !courierName) {
-      res.status(400).json({ message: 'Property ID and courier name are required' });
+    if (!propertyId) {
+      res.status(400).json({ message: 'Property ID is required' });
       return;
     }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      include: {
+        bookings: {
+          where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
+          select: { tenantId: true }
+        }
+      }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const targetTenantId = tenantId || property.bookings[0]?.tenantId || userId;
 
     // Generate a 4-digit pickup code
     const pickupCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -25,9 +44,9 @@ export const logPackageDelivery = async (req: Request, res: Response): Promise<v
       data: {
         tenantId: targetTenantId,
         propertyId,
-        courierName: courierName.trim(),
-        trackingNumber: trackingNumber ? trackingNumber.trim() : null,
-        packageDescription: packageDescription ? packageDescription.trim() : null,
+        courierName: courier,
+        trackingNumber: tracking,
+        packageDescription: description,
         pickupCode,
         status: 'PENDING_PICKUP',
         loggedBy: req.user?.firstName ? `${req.user.firstName} ${req.user.lastName || ''}`.trim() : 'Front Desk'

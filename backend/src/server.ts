@@ -253,6 +253,7 @@ app.use('/api/v1/wishlist', wishlistRoutes);
 app.use('/api/v1/occupancy', occupancyRoutes);
 app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1/compound-notices', compoundNoticeRoutes);
+app.use('/api/v1/notices', compoundNoticeRoutes);
 app.use('/api/v1/inspections', inspectionRoutes);
 app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/visitor-passes', visitorPassRoutes);
@@ -260,6 +261,7 @@ app.use('/api/v1/service-bookings', serviceBookingRoutes);
 app.use('/api/v1/vehicles', vehicleRoutes);
 app.use('/api/v1/lease-renewals', leaseRenewalRoutes);
 app.use('/api/v1/deliveries', deliveryRoutes);
+app.use('/api/v1/parcels', deliveryRoutes);
 app.use('/api/v1/bill-splits', billSplitRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
