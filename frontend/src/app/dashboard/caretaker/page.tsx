@@ -111,11 +111,11 @@ function CaretakerDashboardContent() {
   );
 
   const allNotices = assignedProperties.flatMap((p: any) => 
-    (p.notices || []).map((n: any) => ({ ...n, propertyTitle: p.title, propertyId: p.id }))
+    (p.compoundNotices || p.notices || []).map((n: any) => ({ ...n, propertyTitle: p.title, propertyId: p.id }))
   );
 
   const allParcels = assignedProperties.flatMap((p: any) => 
-    (p.deliveryParcels || []).map((d: any) => ({ ...d, propertyTitle: p.title, propertyId: p.id }))
+    (p.packageDeliveries || p.deliveryParcels || []).map((d: any) => ({ ...d, propertyTitle: p.title, propertyId: p.id }))
   );
 
   const allVisitorPasses = assignedProperties.flatMap((p: any) => 

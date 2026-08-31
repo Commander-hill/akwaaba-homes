@@ -145,8 +145,18 @@ const getMyStaffAssignments = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized' });
             return;
         }
+        const currentUser = await prisma_1.default.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true }
+        });
+        const userEmail = currentUser?.email ? currentUser.email.toLowerCase().trim() : '';
         const assignments = await prisma_1.default.propertyStaff.findMany({
-            where: { userId },
+            where: {
+                OR: [
+                    { userId },
+                    ...(userEmail ? [{ user: { email: userEmail } }] : [])
+                ]
+            },
             include: {
                 property: {
                     include: {
@@ -158,9 +168,9 @@ const getMyStaffAssignments = async (req, res) => {
                             },
                             orderBy: { createdAt: 'desc' },
                         },
-                        notices: { orderBy: { createdAt: 'desc' } },
+                        compoundNotices: { orderBy: { createdAt: 'desc' } },
                         visitorPasses: { orderBy: { createdAt: 'desc' } },
-                        deliveryParcels: { orderBy: { createdAt: 'desc' } },
+                        packageDeliveries: { orderBy: { createdAt: 'desc' } },
                         bookings: {
                             where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
                             include: {
@@ -179,7 +189,7 @@ const getMyStaffAssignments = async (req, res) => {
     }
     catch (error) {
         console.error('Error fetching staff assignments:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: error?.message || 'Internal server error' });
     }
 };
 exports.getMyStaffAssignments = getMyStaffAssignments;
