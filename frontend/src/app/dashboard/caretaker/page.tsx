@@ -1,27 +1,37 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Building, Wrench, ShieldCheck, BellRing, Package, Key, Users, 
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
-  Phone, Mail, MapPin, ExternalLink, Clock, Sparkles, Check, X
+  Phone, Mail, MapPin, ExternalLink, Clock, Sparkles, Check, X,
+  FileText, ClipboardCheck, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import Link from 'next/link';
 import InspectionModal from '@/components/landlord/InspectionModal';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 function CaretakerDashboardContent() {
   const queryClient = useQueryClient();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'overview';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors' | 'properties'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors'>(
     (defaultTab as any) || 'overview'
   );
+
+  // Sync tab with URL search parameter changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl as any);
+    }
+  }, [searchParams]);
 
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
@@ -63,16 +73,20 @@ function CaretakerDashboardContent() {
   const [parcelLocation, setParcelLocation] = useState('Front Desk Shelf A');
 
   // Fetch Current Caretaker Session
-  const { data: session } = useQuery({
+  const { data: sessionData, isLoading: isAuthLoading } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
-      return res.data.user;
+      return res.data;
     }
   });
 
+  const currentUser = sessionData?.user || sessionData;
+  const userEmail = currentUser?.email || '';
+  const userName = (currentUser?.firstName ? (currentUser.firstName + ' ' + (currentUser.lastName || '')) : '').trim() || 'Caretaker';
+
   // Fetch Caretaker Assigned Properties & Operations Data
-  const { data: staffData, isLoading } = useQuery({
+  const { data: staffData, isLoading: isStaffLoading } = useQuery({
     queryKey: ['staff', 'mine'],
     queryFn: async () => {
       try {
@@ -158,15 +172,22 @@ function CaretakerDashboardContent() {
   });
 
   const handleCopyEmail = () => {
-    if (session?.email) {
-      navigator.clipboard.writeText(session.email);
+    if (userEmail) {
+      navigator.clipboard.writeText(userEmail);
       setCopiedEmail(true);
-      toast.success('Caretaker email copied to clipboard!');
+      toast.success('Staff email copied to clipboard!');
       setTimeout(() => setCopiedEmail(false), 2500);
+    } else {
+      toast.error('Email address not loaded yet. Please refresh the page.');
     }
   };
 
-  if (isLoading) {
+  const handleTabChange = (tabId: any) => {
+    setActiveTab(tabId);
+    router.push('/dashboard/caretaker?tab=' + tabId, { scroll: false });
+  };
+
+  if (isAuthLoading || isStaffLoading) {
     return (
       <div className="min-h-[500px] flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-[var(--primary)]" />
@@ -177,14 +198,14 @@ function CaretakerDashboardContent() {
   return (
     <div className="space-y-8 pb-16">
       
-      {/* Header Welcome Banner */}
+      {/* ── Header Welcome Banner ── */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#1E0B36] via-[#2A104E] to-[#401248] border border-white/10 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-xs font-bold text-amber-300">
             <Wrench className="w-3.5 h-3.5" /> Caretaker & Property Operations Hub
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Welcome, {session?.firstName || 'Caretaker'} {session?.lastName || ''}
+            Welcome, {userName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
             Manage daily hostel tickets, resident move-in inspections, parcel intake, and compound broadcast notices.
@@ -192,15 +213,15 @@ function CaretakerDashboardContent() {
         </div>
 
         {/* Staff Email Badge with 1-Click Copy */}
-        <div className="bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/15 space-y-2 shrink-0">
+        <div className="bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/15 space-y-2 shrink-0 w-full sm:w-auto">
           <div className="text-[11px] font-extrabold uppercase text-slate-400">Your Registered Staff Email</div>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs sm:text-sm font-bold text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-              {session?.email || 'N/A'}
+            <span className="font-mono text-xs sm:text-sm font-bold text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 break-all select-all">
+              {userEmail || 'Loading...'}
             </span>
             <button
               onClick={handleCopyEmail}
-              className="p-2 bg-white/10 hover:bg-white/20 text-amber-300 rounded-xl transition border border-white/10 flex items-center gap-1 text-xs font-bold"
+              className="p-2 bg-white/10 hover:bg-white/20 text-amber-300 rounded-xl transition border border-white/10 flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer active:scale-95"
               title="Copy staff email for Landlord"
             >
               {copiedEmail ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -210,9 +231,12 @@ function CaretakerDashboardContent() {
         </div>
       </div>
 
-      {/* KPI Metric Cards */}
+      {/* ── KPI Metric Cards ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1">
+        <div 
+          onClick={() => handleTabChange('overview')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-indigo-500/50 transition"
+        >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Properties</span>
             <Building className="w-4 h-4 text-indigo-500" />
@@ -221,7 +245,10 @@ function CaretakerDashboardContent() {
           <div className="text-[11px] text-slate-500">Assigned compounds</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1">
+        <div 
+          onClick={() => handleTabChange('tickets')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-amber-500/50 transition"
+        >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Open Tickets</span>
             <Wrench className="w-4 h-4 text-amber-500" />
@@ -232,7 +259,10 @@ function CaretakerDashboardContent() {
           <div className="text-[11px] text-slate-500">Needing repair action</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1">
+        <div 
+          onClick={() => handleTabChange('inspections')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-emerald-500/50 transition"
+        >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Inspections</span>
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
@@ -241,7 +271,10 @@ function CaretakerDashboardContent() {
           <div className="text-[11px] text-slate-500">Resident check-ins</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1">
+        <div 
+          onClick={() => handleTabChange('notices')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-sky-500/50 transition"
+        >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Notices</span>
             <BellRing className="w-4 h-4 text-sky-500" />
@@ -250,7 +283,10 @@ function CaretakerDashboardContent() {
           <div className="text-[11px] text-slate-500">Broadcast bulletins</div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 col-span-2 sm:col-span-1">
+        <div 
+          onClick={() => handleTabChange('parcels')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 col-span-2 sm:col-span-1 cursor-pointer hover:border-purple-500/50 transition"
+        >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Parcels</span>
             <Package className="w-4 h-4 text-purple-500" />
@@ -262,59 +298,59 @@ function CaretakerDashboardContent() {
         </div>
       </div>
 
-      {/* If Not Assigned To Any Properties Yet */}
-      {assignedProperties.length === 0 ? (
-        <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-4 shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
-            <Building className="w-8 h-8" />
-          </div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white">Awaiting Property Assignment</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Your caretaker account is ready! Please share your registered email (<strong>{session?.email}</strong>) with your Landlord or Property Manager so they can assign you to their property.
-          </p>
-          <div className="pt-2">
+      {/* ── Navigation Tabs ── */}
+      <div className="flex flex-wrap gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
+        {[
+          { id: 'overview', label: 'Operations Overview', icon: Building },
+          { id: 'tickets', label: 'Maintenance Requests (' + allTickets.filter((t: any) => t.status !== 'RESOLVED').length + ')', icon: Wrench },
+          { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: ShieldCheck },
+          { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
+          { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
+          { id: 'visitors', label: 'Gate Passes (' + allVisitorPasses.length + ')', icon: Key },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
             <button
-              onClick={handleCopyEmail}
-              className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-2xl text-xs sm:text-sm inline-flex items-center gap-2 shadow-lg shadow-[var(--primary)]/30 hover:opacity-95 transition"
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id as any)}
+              className={clsx(
+                "px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer",
+                isActive 
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md" 
+                  : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
+              )}
             >
-              <Copy className="w-4 h-4" /> Copy Staff Email for Landlord
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
             </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Navigation Tabs */}
-          <div className="flex flex-wrap gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
-            {[
-              { id: 'overview', label: 'Operations Overview', icon: Building },
-              { id: 'tickets', label: 'Maintenance Requests (' + allTickets.filter((t: any) => t.status !== 'RESOLVED').length + ')', icon: Wrench },
-              { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: ShieldCheck },
-              { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
-              { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
-              { id: 'visitors', label: 'Gate Passes (' + allVisitorPasses.length + ')', icon: Key },
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={clsx(
-                    "px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2",
-                    isActive 
-                      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md" 
-                      : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+          );
+        })}
+      </div>
 
-          {/* TAB: OVERVIEW & ASSIGNED PROPERTIES */}
-          {activeTab === 'overview' && (
+      {/* ── TAB: OVERVIEW & ASSIGNED PROPERTIES ── */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {assignedProperties.length === 0 ? (
+            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-4 shadow-sm">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                <Building className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white">Awaiting Property Assignment</h3>
+              <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+                Your caretaker account is ready! Please share your registered email (<strong>{userEmail || 'israelboateng5@outlook.com'}</strong>) with your Landlord or Property Manager so they can assign you to their property in their <strong>Staff & Caretakers</strong> tab.
+              </p>
+              <div className="pt-2">
+                <button
+                  onClick={handleCopyEmail}
+                  className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-2xl text-xs sm:text-sm inline-flex items-center gap-2 shadow-lg shadow-[var(--primary)]/30 hover:opacity-95 transition cursor-pointer"
+                >
+                  {copiedEmail ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedEmail ? 'Email Copied!' : 'Copy Staff Email for Landlord'}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
             <div className="space-y-6">
               <h2 className="text-lg font-black text-slate-900 dark:text-white">Your Assigned Properties</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -372,266 +408,328 @@ function CaretakerDashboardContent() {
               </div>
             </div>
           )}
+        </div>
+      )}
 
-          {/* TAB: MAINTENANCE TICKETS */}
-          {activeTab === 'tickets' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Maintenance Tickets</h2>
+      {/* ── TAB: MAINTENANCE TICKETS ── */}
+      {activeTab === 'tickets' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Maintenance Tickets</h2>
+          </div>
+
+          {allTickets.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                <Wrench className="w-6 h-6" />
               </div>
-
-              {allTickets.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center text-slate-500 text-sm">
-                  No maintenance requests reported for your assigned properties.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allTickets.map((t: any) => (
-                    <div key={t.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className={clsx(
-                            "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                            t.status === 'RESOLVED' ? "bg-emerald-500/10 text-emerald-600" :
-                            t.status === 'IN_PROGRESS' ? "bg-blue-500/10 text-blue-600" :
-                            t.status === 'SCHEDULED' ? "bg-indigo-500/10 text-indigo-600" :
-                            "bg-amber-500/10 text-amber-600"
-                          )}>
-                            {t.status}
-                          </span>
-                          <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1.5">{t.title}</h3>
-                          <p className="text-xs text-slate-500">{t.propertyTitle} • Room {t.room?.roomNumber || 'Unit'}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-400">{t.priority} PRIORITY</span>
-                      </div>
-
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl">
-                        {t.description}
-                      </p>
-
-                      {/* Action Buttons for Caretaker */}
-                      <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        {t.status === 'PENDING' && (
-                          <button
-                            onClick={() => {
-                              setTicketActionModal({
-                                isOpen: true,
-                                ticketId: t.id,
-                                ticketTitle: t.title,
-                                mode: 'SCHEDULE',
-                                scheduledDate: new Date().toISOString().split('T')[0],
-                                repairCost: '0',
-                                resolutionNotes: '',
-                                completionImageUrl: '',
-                              });
-                            }}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
-                          >
-                            Schedule Repair
-                          </button>
-                        )}
-
-                        {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
-                          <button
-                            onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
-                          >
-                            Start Repair
-                          </button>
-                        )}
-
-                        {t.status !== 'RESOLVED' && (
-                          <button
-                            onClick={() => {
-                              setTicketActionModal({
-                                isOpen: true,
-                                ticketId: t.id,
-                                ticketTitle: t.title,
-                                mode: 'RESOLVE',
-                                scheduledDate: new Date().toISOString().split('T')[0],
-                                repairCost: '0',
-                                resolutionNotes: 'Repair completed successfully by caretaker.',
-                                completionImageUrl: '',
-                              });
-                            }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-emerald-500/20"
-                          >
-                            Complete & Resolve
-                          </button>
-                        )}
-                      </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Maintenance Requests Reported</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {assignedProperties.length === 0 
+                  ? 'Once your landlord assigns you to their property, all tenant maintenance requests will appear here for you to schedule and resolve.'
+                  : 'All quiet! There are currently no pending or active repair requests from tenants on your assigned properties.'
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allTickets.map((t: any) => (
+                <div key={t.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className={clsx(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                        t.status === 'RESOLVED' ? "bg-emerald-500/10 text-emerald-600" :
+                        t.status === 'IN_PROGRESS' ? "bg-blue-500/10 text-blue-600" :
+                        t.status === 'SCHEDULED' ? "bg-indigo-500/10 text-indigo-600" :
+                        "bg-amber-500/10 text-amber-600"
+                      )}>
+                        {t.status}
+                      </span>
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1.5">{t.title}</h3>
+                      <p className="text-xs text-slate-500">{t.propertyTitle} • Room {t.room?.roomNumber || 'Unit'}</p>
                     </div>
-                  ))}
+                    <span className="text-[10px] font-bold text-slate-400">{t.priority} PRIORITY</span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl">
+                    {t.description}
+                  </p>
+
+                  {/* Action Buttons for Caretaker */}
+                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    {t.status === 'PENDING' && (
+                      <button
+                        onClick={() => {
+                          setTicketActionModal({
+                            isOpen: true,
+                            ticketId: t.id,
+                            ticketTitle: t.title,
+                            mode: 'SCHEDULE',
+                            scheduledDate: new Date().toISOString().split('T')[0],
+                            repairCost: '0',
+                            resolutionNotes: '',
+                            completionImageUrl: '',
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                      >
+                        Schedule Repair
+                      </button>
+                    )}
+
+                    {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
+                      <button
+                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
+                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+                      >
+                        Start Repair
+                      </button>
+                    )}
+
+                    {t.status !== 'RESOLVED' && (
+                      <button
+                        onClick={() => {
+                          setTicketActionModal({
+                            isOpen: true,
+                            ticketId: t.id,
+                            ticketTitle: t.title,
+                            mode: 'RESOLVE',
+                            scheduledDate: new Date().toISOString().split('T')[0],
+                            repairCost: '0',
+                            resolutionNotes: 'Repair completed successfully by caretaker.',
+                            completionImageUrl: '',
+                          });
+                        }}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-emerald-500/20 cursor-pointer"
+                      >
+                        Complete & Resolve
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
+        </div>
+      )}
 
-          {/* TAB: MOVE-IN / MOVE-OUT INSPECTIONS */}
-          {activeTab === 'inspections' && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Move-In & Move-Out Inspections</h2>
-              
-              {allBookings.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center text-slate-500 text-sm">
-                  No confirmed resident bookings found for inspection.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allBookings.map((b: any) => (
-                    <div key={b.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
-                            {b.status}
-                          </span>
-                          <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1">
-                            {b.tenant?.firstName} {b.tenant?.lastName}
-                          </h3>
-                          <p className="text-xs text-slate-500">{b.propertyTitle} • Room {b.room?.roomNumber || 'Unit'}</p>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                        <div>Dates: {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}</div>
-                        <div>Phone: {b.tenant?.phoneNumber || 'N/A'}</div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                        <button
-                          onClick={() => setSelectedInspectionBooking(b)}
-                          className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm"
-                        >
-                          <ShieldCheck className="w-4 h-4" /> Conduct Inspection Checklist
-                        </button>
-                      </div>
+      {/* ── TAB: MOVE-IN / MOVE-OUT INSPECTIONS ── */}
+      {activeTab === 'inspections' && (
+        <div className="space-y-6">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Move-In & Move-Out Inspections</h2>
+          
+          {allBookings.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Pending Inspections</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Confirmed student and tenant bookings will appear here for you to conduct digital room condition checklists upon move-in and key return.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allBookings.map((b: any) => (
+                <div key={b.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
+                        {b.status}
+                      </span>
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1">
+                        {b.tenant?.firstName} {b.tenant?.lastName}
+                      </h3>
+                      <p className="text-xs text-slate-500">{b.propertyTitle} • Room {b.room?.roomNumber || 'Unit'}</p>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                    <div>Dates: {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}</div>
+                    <div>Phone: {b.tenant?.phoneNumber || 'N/A'}</div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      onClick={() => setSelectedInspectionBooking(b)}
+                      className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4" /> Conduct Inspection Checklist
+                    </button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           )}
+        </div>
+      )}
 
-          {/* TAB: COMPOUND NOTICES */}
-          {activeTab === 'notices' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">Compound Broadcast Bulletins</h2>
+      {/* ── TAB: COMPOUND NOTICES ── */}
+      {activeTab === 'notices' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Compound Broadcast Bulletins</h2>
+            {assignedProperties.length > 0 && (
+              <button
+                onClick={() => {
+                  setNoticePropertyId(assignedProperties[0]?.id || '');
+                  setNoticeModalOpen(true);
+                }}
+                className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Post New Notice
+              </button>
+            )}
+          </div>
+
+          {allNotices.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center mx-auto">
+                <BellRing className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Compound Notices Published</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {assignedProperties.length === 0
+                  ? 'Once linked to a property, you can broadcast water/power outage alerts, generator timings, and rules to all residents.'
+                  : 'No notices posted yet. Click "Post New Notice" to broadcast updates to tenants.'
+                }
+              </p>
+              {assignedProperties.length > 0 && (
                 <button
                   onClick={() => {
                     setNoticePropertyId(assignedProperties[0]?.id || '');
                     setNoticeModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+                  className="px-5 py-2.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> Post New Notice
+                  <Plus className="w-4 h-4" /> Post First Notice
                 </button>
-              </div>
-
-              {allNotices.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center text-slate-500 text-sm">
-                  No notices published yet. Click "Post New Notice" to broadcast updates to tenants.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {allNotices.map((n: any) => (
-                    <div key={n.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full uppercase">
-                          {n.category} • {n.priority}
-                        </span>
-                        <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleDateString()}</span>
-                      </div>
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white">{n.title}</h3>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                        {n.message}
-                      </p>
-                      <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-                        Property: {n.propertyTitle}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {allNotices.map((n: any) => (
+                <div key={n.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full uppercase">
+                      {n.category} • {n.priority}
+                    </span>
+                    <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <h3 className="font-bold text-base text-slate-900 dark:text-white">{n.title}</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                    {n.message}
+                  </p>
+                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    Property: {n.propertyTitle}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
+        </div>
+      )}
 
-          {/* TAB: PARCEL VAULT */}
-          {activeTab === 'parcels' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-black text-slate-900 dark:text-white">Parcel Intake & Vault</h2>
+      {/* ── TAB: PARCEL VAULT ── */}
+      {activeTab === 'parcels' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Parcel Intake & Vault</h2>
+            {assignedProperties.length > 0 && (
+              <button
+                onClick={() => {
+                  setParcelPropertyId(assignedProperties[0]?.id || '');
+                  setParcelModalOpen(true);
+                }}
+                className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Log Incoming Parcel
+              </button>
+            )}
+          </div>
+
+          {allParcels.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mx-auto">
+                <Package className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">Parcel Vault Empty</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Log incoming courier deliveries (DHL, FedEx, Ghana Post) into the front desk locker vault. Tenants receive instant alerts.
+              </p>
+              {assignedProperties.length > 0 && (
                 <button
                   onClick={() => {
                     setParcelPropertyId(assignedProperties[0]?.id || '');
                     setParcelModalOpen(true);
                   }}
-                  className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm"
+                  className="px-5 py-2.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> Log Incoming Parcel
+                  <Plus className="w-4 h-4" /> Log Incoming Package
                 </button>
-              </div>
-
-              {allParcels.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center text-slate-500 text-sm">
-                  No parcel logs in vault. Click "Log Incoming Parcel" when courier packages arrive.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {allParcels.map((p: any) => (
-                    <div key={p.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-2">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full">
-                          {p.carrier || 'Courier'}
-                        </span>
-                        <span className={clsx("text-[10px] font-bold", p.status === 'ARRIVED' ? "text-amber-500" : "text-emerald-500")}>
-                          {p.status}
-                        </span>
-                      </div>
-                      <div className="font-bold text-sm text-slate-900 dark:text-white">Slot: {p.lockerNumber || 'Shelf A'}</div>
-                      <div className="text-xs text-slate-500">Tracking: {p.trackingNumber || 'N/A'}</div>
-                      <div className="text-[10px] text-slate-400">Logged: {new Date(p.createdAt).toLocaleDateString()}</div>
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
-          )}
-
-          {/* TAB: VISITOR PASSES */}
-          {activeTab === 'visitors' && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">Gate Access & Visitor Clearance</h2>
-              
-              {allVisitorPasses.length === 0 ? (
-                <div className="p-8 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center text-slate-500 text-sm">
-                  No guest entry passes active for your assigned properties.
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {allParcels.map((p: any) => (
+                <div key={p.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full">
+                      {p.carrier || 'Courier'}
+                    </span>
+                    <span className={clsx("text-[10px] font-bold", p.status === 'ARRIVED' ? "text-amber-500" : "text-emerald-500")}>
+                      {p.status}
+                    </span>
+                  </div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">Slot: {p.lockerNumber || 'Shelf A'}</div>
+                  <div className="text-xs text-slate-500">Tracking: {p.trackingNumber || 'N/A'}</div>
+                  <div className="text-[10px] text-slate-400">Logged: {new Date(p.createdAt).toLocaleDateString()}</div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {allVisitorPasses.map((v: any) => (
-                    <div key={v.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
-                      <div className="flex justify-between items-start">
-                        <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
-                          {v.status || 'ACTIVE'}
-                        </span>
-                        <span className="font-mono text-sm font-black text-indigo-600 dark:text-indigo-400">PIN: {v.accessCode}</span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">{v.visitorName}</h4>
-                        <p className="text-xs text-slate-500">{v.purpose || 'Guest Visit'}</p>
-                      </div>
-                      <div className="text-[10px] text-slate-400">Valid: {new Date(v.validFrom).toLocaleDateString()}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              ))}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {/* Ticket Resolution Modal */}
+      {/* ── TAB: VISITOR PASSES ── */}
+      {activeTab === 'visitors' && (
+        <div className="space-y-6">
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Gate Access & Visitor Clearance</h2>
+          
+          {allVisitorPasses.length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto">
+                <Key className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Active Visitor Passes</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When tenants generate guest access PINs or delivery passes from their app, they appear here in real time for front desk gate clearance.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {allVisitorPasses.map((v: any) => (
+                <div key={v.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
+                      {v.status || 'ACTIVE'}
+                    </span>
+                    <span className="font-mono text-sm font-black text-indigo-600 dark:text-indigo-400">PIN: {v.accessCode}</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">{v.visitorName}</h4>
+                    <p className="text-xs text-slate-500">{v.purpose || 'Guest Visit'}</p>
+                  </div>
+                  <div className="text-[10px] text-slate-400">Valid: {new Date(v.validFrom).toLocaleDateString()}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Ticket Resolution Modal ── */}
       {ticketActionModal.isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
           <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
@@ -652,7 +750,7 @@ function CaretakerDashboardContent() {
               </div>
               <button
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg"
+                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -706,7 +804,7 @@ function CaretakerDashboardContent() {
               <button
                 type="button"
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
@@ -731,7 +829,7 @@ function CaretakerDashboardContent() {
                 }}
                 disabled={updateTicketMutation.isPending}
                 className={clsx(
-                  "px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition shadow-lg",
+                  "px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition shadow-lg cursor-pointer",
                   ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600 hover:bg-indigo-700" : "bg-emerald-600 hover:bg-emerald-700"
                 )}
               >
@@ -742,7 +840,7 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* Move-In / Move-Out Inspection Modal */}
+      {/* ── Move-In / Move-Out Inspection Modal ── */}
       {selectedInspectionBooking && (
         <InspectionModal
           booking={selectedInspectionBooking}
@@ -751,7 +849,7 @@ function CaretakerDashboardContent() {
         />
       )}
 
-      {/* Post Notice Modal */}
+      {/* ── Post Notice Modal ── */}
       {noticeModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
           <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4">
@@ -759,7 +857,7 @@ function CaretakerDashboardContent() {
               <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <BellRing className="w-5 h-5 text-sky-500" /> Post Compound Broadcast Notice
               </h3>
-              <button onClick={() => setNoticeModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+              <button onClick={() => setNoticeModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm">
@@ -800,7 +898,7 @@ function CaretakerDashboardContent() {
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={() => setNoticeModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
+              <button onClick={() => setNoticeModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
               <button
                 onClick={() => {
                   if (!noticeTitle || !noticeMessage) {
@@ -816,7 +914,7 @@ function CaretakerDashboardContent() {
                   });
                 }}
                 disabled={createNoticeMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md"
+                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
               >
                 {createNoticeMutation.isPending ? 'Publishing...' : 'Publish Notice'}
               </button>
@@ -825,7 +923,7 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* Log Parcel Modal */}
+      {/* ── Log Parcel Modal ── */}
       {parcelModalOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
           <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4">
@@ -833,7 +931,7 @@ function CaretakerDashboardContent() {
               <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <Package className="w-5 h-5 text-purple-500" /> Log Incoming Courier Parcel
               </h3>
-              <button onClick={() => setParcelModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+              <button onClick={() => setParcelModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm">
@@ -885,7 +983,7 @@ function CaretakerDashboardContent() {
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={() => setParcelModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
+              <button onClick={() => setParcelModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
               <button
                 onClick={() => {
                   logParcelMutation.mutate({
@@ -896,7 +994,7 @@ function CaretakerDashboardContent() {
                   });
                 }}
                 disabled={logParcelMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md"
+                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
               >
                 {logParcelMutation.isPending ? 'Logging...' : 'Log & Alert Tenant'}
               </button>
