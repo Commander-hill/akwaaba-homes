@@ -27,11 +27,16 @@ const assignStaff = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
+        const staffEmail = String(email).toLowerCase().trim();
         const staffUser = await prisma_1.default.user.findUnique({
-            where: { email: email.toLowerCase().trim() }
+            where: { email: staffEmail }
         });
         if (!staffUser) {
-            res.status(404).json({ message: `No user found with email ${email}. They must register on Akwaaba Homes first.` });
+            res.status(404).json({ message: `No registered account found with email "${staffEmail}". Please ask your caretaker to register on Akwaaba Homes first.` });
+            return;
+        }
+        if (staffUser.id === landlordId) {
+            res.status(400).json({ message: 'You cannot assign yourself as staff on your own property.' });
             return;
         }
         const assignment = await prisma_1.default.propertyStaff.upsert({
@@ -49,7 +54,7 @@ const assignStaff = async (req, res) => {
             },
             create: {
                 propertyId,
-                landlordId,
+                landlordId: property.landlordId,
                 userId: staffUser.id,
                 role: role || 'CARETAKER',
                 canManageTickets: canManageTickets !== undefined ? canManageTickets : true,
@@ -62,11 +67,11 @@ const assignStaff = async (req, res) => {
                 }
             }
         });
-        res.status(200).json({ message: 'Staff member assigned successfully', assignment });
+        res.status(200).json({ message: `Staff member "${staffUser.firstName} ${staffUser.lastName}" assigned successfully!`, assignment });
     }
     catch (error) {
         console.error('Error assigning staff:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: error.message || 'Internal server error while assigning staff' });
     }
 };
 exports.assignStaff = assignStaff;

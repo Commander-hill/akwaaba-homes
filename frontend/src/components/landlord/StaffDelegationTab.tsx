@@ -91,7 +91,7 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
       queryClient.invalidateQueries({ queryKey: ['propertyStaff', 'landlord'] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to assign staff');
+      toast.error(err.response?.data?.message || err.message || 'Failed to assign staff');
     }
   });
 
