@@ -178,7 +178,10 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
 
     if (session.role !== 'TENANT' && session.role !== 'ADMIN') {
-      setBookingMessage({ text: 'Only tenants can book properties.', type: 'error' });
+      setBookingMessage({ 
+        text: `🔒 Booking Restricted: You are currently logged in with a ${session.role === 'CARETAKER' ? 'Caretaker' : session.role === 'STAFF' ? 'Staff' : 'Landlord'} account. Room bookings and leases are reserved exclusively for Tenant accounts.`, 
+        type: 'error' 
+      });
       return;
     }
 
@@ -631,6 +634,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
             )}
 
+            {(session?.role === 'CARETAKER' || session?.role === 'STAFF' || session?.role === 'LANDLORD') && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold flex items-center gap-2.5">
+                <span className="text-base">🔒</span>
+                <span>
+                  You are logged in with a <strong>{session.role === 'CARETAKER' ? 'Caretaker' : session.role === 'STAFF' ? 'Staff' : 'Landlord'}</strong> account. Room booking and lease contracts are reserved exclusively for Tenant / Student accounts.
+                </span>
+              </div>
+            )}
+
             <div className="space-y-4">
               {property.rooms?.map((room: any, index: number) => {
                 const userGender = session?.gender?.toUpperCase();
@@ -863,13 +875,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <div className="pt-4 flex flex-col sm:flex-row gap-4">
               <button
                 type="submit"
-                disabled={isBooking || !!myActiveBookingData || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0)}
+                disabled={isBooking || !!myActiveBookingData || !selectedRoomId || (selectedRoom && selectedRoom.remainingCapacity === 0) || (session?.role === 'CARETAKER' || session?.role === 'STAFF' || session?.role === 'LANDLORD')}
                 className={`flex-1 flex justify-center items-center gap-2 py-4 px-6 rounded-2xl text-white font-bold text-base transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                  myActiveBookingData ? 'bg-slate-700 dark:bg-slate-800' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90'
+                  myActiveBookingData || (session?.role === 'CARETAKER' || session?.role === 'STAFF' || session?.role === 'LANDLORD') ? 'bg-slate-700 dark:bg-slate-800' : 'bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-90'
                 }`}
               >
                 {isBooking ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (session?.role === 'CARETAKER' || session?.role === 'STAFF' || session?.role === 'LANDLORD') ? (
+                  '🔒 Booking Reserved for Tenants'
                 ) : myActiveBookingData ? (
                   myActiveBookingData.propertyId === propertyId ? '✓ Room Already Booked at this Property' :
                   myActiveBookingData.status === 'PENDING' ? '⏳ Pending Booking Request in Progress' :

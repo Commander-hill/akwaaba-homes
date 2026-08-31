@@ -64,6 +64,15 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     await cleanupExpiredBookings();
 
     const tenantId = req.user.id;
+    const userRole = req.user?.role;
+
+    if (userRole === 'CARETAKER' || userRole === 'STAFF' || userRole === 'LANDLORD') {
+      res.status(403).json({
+        message: 'Room bookings are reserved exclusively for Tenant accounts. Caretakers and Landlords cannot book rooms.'
+      });
+      return;
+    }
+
     const { propertyId, roomId, roomUnitId, bedId, startDate, endDate } = req.body;
 
     if (!propertyId || !roomId || !startDate || !endDate) {

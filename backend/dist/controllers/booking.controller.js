@@ -62,6 +62,13 @@ const createBooking = async (req, res) => {
         // Lazily purge expired pending bookings
         await (0, bookingCleanup_1.cleanupExpiredBookings)();
         const tenantId = req.user.id;
+        const userRole = req.user?.role;
+        if (userRole === 'CARETAKER' || userRole === 'STAFF' || userRole === 'LANDLORD') {
+            res.status(403).json({
+                message: 'Room bookings are reserved exclusively for Tenant accounts. Caretakers and Landlords cannot book rooms.'
+            });
+            return;
+        }
         const { propertyId, roomId, roomUnitId, bedId, startDate, endDate } = req.body;
         if (!propertyId || !roomId || !startDate || !endDate) {
             res.status(400).json({ message: 'Missing required fields' });
