@@ -94,7 +94,10 @@ const requestPayout = async (req, res) => {
                 const networkCodeMap = {
                     MTN: 'MTN',
                     Vodafone: 'VOD',
+                    Telecel: 'VOD',
+                    'Telecel (Vodafone)': 'VOD',
                     AirtelTigo: 'ATL',
+                    AT: 'ATL',
                 };
                 const bankCode = isMomo ? (networkCodeMap[bankOrNetwork] ?? bankOrNetwork) : bankOrNetwork;
                 // Step 1: Create Paystack recipient

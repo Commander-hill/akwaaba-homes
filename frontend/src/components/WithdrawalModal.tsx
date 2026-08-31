@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const MOMO_NETWORKS = ['MTN', 'Vodafone', 'AirtelTigo'];
+const MOMO_NETWORKS = ['MTN', 'Telecel', 'AirtelTigo', 'Vodafone'];
 const GHANA_BANKS = [
   'GCB Bank',
   'Ecobank Ghana',

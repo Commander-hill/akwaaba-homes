@@ -28,7 +28,14 @@ const createOrUpdateInspection = async (req, res) => {
             res.status(404).json({ message: 'Booking not found' });
             return;
         }
-        if (booking.property.landlordId !== inspectorId && booking.tenantId !== inspectorId && req.user?.role !== 'ADMIN') {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: {
+                propertyId: booking.propertyId,
+                userId: inspectorId,
+                canCheckInTenants: true
+            }
+        });
+        if (booking.property.landlordId !== inspectorId && booking.tenantId !== inspectorId && req.user?.role !== 'ADMIN' && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You are not authorized for this inspection' });
             return;
         }

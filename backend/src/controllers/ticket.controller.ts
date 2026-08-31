@@ -142,8 +142,8 @@ export const getLandlordTickets = async (req: Request, res: Response): Promise<v
 
 export const updateTicketStatus = async (req: Request, res: Response): Promise<void> => {
   try {
-    if (!req.user || (req.user.role !== 'LANDLORD' && req.user.role !== 'ADMIN')) {
-      res.status(403).json({ message: 'Only landlords or admins can update ticket status' });
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
       return;
     }
 
@@ -156,7 +156,7 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    // Verify ownership
+    // Verify ownership or staff delegation
     const ticket = await prisma.maintenanceTicket.findUnique({
       where: { id },
       include: { property: true, tenant: true }
@@ -167,8 +167,20 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    if (req.user.role === 'LANDLORD' && ticket.property.landlordId !== req.user.id) {
-      res.status(403).json({ message: 'You do not have permission to update this ticket' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId: ticket.propertyId,
+        userId: req.user.id,
+        canManageTickets: true
+      }
+    });
+
+    const isAuthorized = req.user.role === 'ADMIN' || 
+      ticket.property.landlordId === req.user.id || 
+      Boolean(isStaff);
+
+    if (!isAuthorized) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to manage tickets for this property' });
       return;
     }
 

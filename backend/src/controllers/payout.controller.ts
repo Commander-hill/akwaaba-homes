@@ -111,7 +111,10 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
         const networkCodeMap: Record<string, string> = {
           MTN: 'MTN',
           Vodafone: 'VOD',
+          Telecel: 'VOD',
+          'Telecel (Vodafone)': 'VOD',
           AirtelTigo: 'ATL',
+          AT: 'ATL',
         };
 
         const bankCode = isMomo ? (networkCodeMap[bankOrNetwork] ?? bankOrNetwork) : bankOrNetwork;
