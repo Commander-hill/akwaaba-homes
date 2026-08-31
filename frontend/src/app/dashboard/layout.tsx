@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, ShieldCheck, Building, CreditCard, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, ShieldCheck, Building, CreditCard, MessageSquare, Wrench, BellRing, Package, Key } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
@@ -32,9 +32,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/login');
       } else if (user.role === 'ADMIN') {
         router.push('/admin/dashboard');
-      } else if ((user.role === 'TENANT' || user.role === 'CARETAKER' || user.role === 'STAFF') && pathname.includes('/landlord')) {
+      } else if ((user.role === 'CARETAKER' || user.role === 'STAFF') && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/landlord'))) {
+        router.push('/dashboard/caretaker');
+      } else if (user.role === 'TENANT' && (pathname.startsWith('/dashboard/landlord') || pathname.startsWith('/dashboard/caretaker'))) {
         router.push('/dashboard/tenant');
-      } else if (user.role === 'LANDLORD' && pathname.startsWith('/dashboard/tenant')) {
+      } else if (user.role === 'LANDLORD' && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/caretaker'))) {
         router.push('/dashboard/landlord');
       }
     }
@@ -74,6 +76,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         title: 'ACCOUNT',
         links: [
           { name: 'Subscription', href: '/dashboard/landlord/subscription', icon: CreditCard },
+          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+          { name: 'Profile', href: '/dashboard/profile', icon: User },
+          { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },
+        ]
+      }
+    ];
+  } else if (user?.role === 'CARETAKER' || user?.role === 'STAFF') {
+    sidebarGroups = [
+      {
+        title: 'OPERATIONS',
+        links: [
+          { name: 'Operations Hub', href: '/dashboard/caretaker', icon: LayoutDashboard },
+          { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets', icon: Wrench },
+          { name: 'Inspections', href: '/dashboard/caretaker?tab=inspections', icon: ShieldCheck },
+          { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
+          { name: 'Parcel Vault', href: '/dashboard/caretaker?tab=parcels', icon: Package },
+          { name: 'Visitor Passes', href: '/dashboard/caretaker?tab=visitors', icon: Key },
+        ]
+      },
+      {
+        title: 'ACCOUNT',
+        links: [
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
           { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },

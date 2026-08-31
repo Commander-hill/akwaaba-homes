@@ -145,3 +145,52 @@ export const removeStaff = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Get Properties and Operations assigned to the logged-in Caretaker/Staff
+ */
+export const getMyStaffAssignments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const assignments = await prisma.propertyStaff.findMany({
+      where: { userId },
+      include: {
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+            tickets: {
+              include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true } },
+                room: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            },
+            notices: { orderBy: { createdAt: 'desc' } },
+            visitorPasses: { orderBy: { createdAt: 'desc' } },
+            deliveryParcels: { orderBy: { createdAt: 'desc' } },
+            bookings: {
+              where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
+              include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
+                room: true,
+                inspections: true,
+              },
+              orderBy: { createdAt: 'desc' },
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ assignments });
+  } catch (error: any) {
+    console.error('Error fetching staff assignments:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

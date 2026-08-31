@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.removeStaff = exports.getPropertyStaff = exports.assignStaff = void 0;
+exports.getMyStaffAssignments = exports.removeStaff = exports.getPropertyStaff = exports.assignStaff = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 /**
  * Assign Staff (Caretaker/Porter/Manager) to a Property by Email
@@ -135,4 +135,52 @@ const removeStaff = async (req, res) => {
     }
 };
 exports.removeStaff = removeStaff;
+/**
+ * Get Properties and Operations assigned to the logged-in Caretaker/Staff
+ */
+const getMyStaffAssignments = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const assignments = await prisma_1.default.propertyStaff.findMany({
+            where: { userId },
+            include: {
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                        tickets: {
+                            include: {
+                                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true } },
+                                room: true,
+                            },
+                            orderBy: { createdAt: 'desc' },
+                        },
+                        notices: { orderBy: { createdAt: 'desc' } },
+                        visitorPasses: { orderBy: { createdAt: 'desc' } },
+                        deliveryParcels: { orderBy: { createdAt: 'desc' } },
+                        bookings: {
+                            where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
+                            include: {
+                                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
+                                room: true,
+                                inspections: true,
+                            },
+                            orderBy: { createdAt: 'desc' },
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ assignments });
+    }
+    catch (error) {
+        console.error('Error fetching staff assignments:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getMyStaffAssignments = getMyStaffAssignments;
 //# sourceMappingURL=staff.controller.js.map

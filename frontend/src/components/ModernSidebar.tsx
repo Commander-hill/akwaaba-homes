@@ -52,7 +52,13 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
   };
 
   // Derive portal name based on role
-  const portalName = user?.role === 'ADMIN' ? 'Admin Portal' : user?.role === 'LANDLORD' ? 'Landlord Portal' : 'Tenant Portal';
+  const portalName = user?.role === 'ADMIN' 
+    ? 'Admin Portal' 
+    : user?.role === 'LANDLORD' 
+    ? 'Landlord Portal' 
+    : (user?.role === 'CARETAKER' || user?.role === 'STAFF') 
+    ? 'Caretaker Portal' 
+    : 'Tenant Portal';
 
   return (
     <aside 
