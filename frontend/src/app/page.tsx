@@ -10,7 +10,7 @@ import {
   Search, MapPin, Building, Star, ShieldCheck, Shield, Users, 
   ArrowRight, CheckCircle2, Lock, Sparkles, Home as HomeIcon, 
   DollarSign, Wrench, Package, Key, ChevronRight, BedDouble, 
-  GraduationCap, Clock, HelpCircle, PhoneCall
+  GraduationCap, Clock, HelpCircle, PhoneCall, FileText, Check
 } from 'lucide-react';
 import WishlistButton from '@/components/WishlistButton';
 
@@ -247,134 +247,215 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── LIVE FEATURED PROPERTIES SECTION ── */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold uppercase mb-2">
-              <Sparkles className="w-3.5 h-3.5" /> Handpicked Accommodations
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-              Featured Hostels &amp; Rentals
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
-              Top-rated, verified listings with transparent rates and student-friendly amenities.
-            </p>
+      {/* ── HOW IT WORKS IN 3 SIMPLE STEPS (PROMINENT SECTION) ── */}
+      <section id="how-it-works" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-500/10 to-amber-500/10 text-indigo-600 dark:text-indigo-400 rounded-full text-xs font-bold uppercase border border-indigo-500/20">
+            <HelpCircle className="w-3.5 h-3.5" /> 3-Step Verified Rental Journey
           </div>
-
-          <Link
-            href="/properties"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-black transition-all shadow-md shrink-0"
-          >
-            <span>Explore All Properties</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+            How Akwaaba Homes Works
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 text-sm max-w-lg mx-auto">
+            We eliminate rental scams, fake roadside agent fees, and deposit disputes with a secure, 3-step digital process.
+          </p>
         </div>
 
-        {/* Property Grid */}
-        {isPropsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="h-80 rounded-3xl bg-slate-200 dark:bg-slate-800/50 animate-pulse" />
-            ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          
+          {/* Step 1 */}
+          <div className="p-8 rounded-[32px] bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-indigo-500/5 rounded-bl-full pointer-events-none" />
+            <div className="space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-indigo-500/30">
+                01
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                Browse &amp; Virtual Tour
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Search campus-verified hostels and residential apartments. Inspect authentic photos, student reviews, room types, and transparent price periods with <strong>zero agent commissions</strong>.
+              </p>
+            </div>
+            <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span>100% Genuine Landlord Listings</span>
+            </div>
           </div>
-        ) : featuredProperties.length === 0 ? (
-          <div className="p-12 rounded-3xl bg-white dark:bg-[#16161D] border border-slate-200 dark:border-white/10 text-center space-y-4 shadow-sm">
-            <Building className="w-12 h-12 text-slate-400 mx-auto" />
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Properties Listed Yet</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
-              New verified hostels and rental apartments are being added daily. Check back soon or list your own property.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProperties.map((property) => (
-              <div 
-                key={property.id}
-                className="group relative rounded-3xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-2xl hover:border-[var(--primary)]/40 transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  {/* Property Image & Status Badges */}
-                  <div className="relative h-56 w-full overflow-hidden bg-slate-900">
-                    <img 
-                      src={getImageUrl(property.images?.[0]) || '/placeholder-property.jpg'} 
-                      alt={property.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
-                    
-                    {/* Top Badges */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/20">
-                        {property.type}
-                      </span>
-                      <div className="pointer-events-auto">
-                        <WishlistButton propertyId={property.id} />
-                      </div>
-                    </div>
 
-                    {/* Bottom Image Overlay Info */}
-                    <div className="absolute bottom-3 left-3 right-3 text-white flex justify-between items-end">
-                      <div>
-                        <div className="text-xl font-black text-amber-300">
-                          GHS {property.price.toLocaleString()}
-                          <span className="text-[11px] font-normal text-slate-200"> / {property.pricePeriod || 'Year'}</span>
+          {/* Step 2 */}
+          <div className="p-8 rounded-[32px] bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/5 rounded-bl-full pointer-events-none" />
+            <div className="space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-emerald-500/30">
+                02
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Reserve &amp; Digital Lease
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Lock in your room via Mobile Money (MTN, Telecel, AT) or Bank card. Your payment is held safely in escrow while both you and the host sign a cryptographic, legally binding tenancy agreement.
+              </p>
+            </div>
+            <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span>Escrow-Secured &amp; Signed Contract</span>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="p-8 rounded-[32px] bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-28 h-28 bg-amber-500/5 rounded-bl-full pointer-events-none" />
+            <div className="space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-amber-500/30">
+                03
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                Move In &amp; Inspect
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Arrive at the property and meet your assigned Caretaker or Porter for the official room condition inspection checklist. Collect your keys, verify room condition, and settle into your new home!
+              </p>
+            </div>
+            <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <span>Digital Checklist &amp; Key Handover</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── LIVE FEATURED PROPERTIES SECTION ── */}
+      <section className="py-16 bg-slate-100/70 dark:bg-[#121217] transition-colors border-y border-slate-200/80 dark:border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold uppercase mb-2">
+                <Sparkles className="w-3.5 h-3.5" /> Handpicked Accommodations
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                Featured Hostels &amp; Rentals
+              </h2>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+                Top-rated, verified listings with transparent rates and student-friendly amenities.
+              </p>
+            </div>
+
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-black transition-all shadow-md shrink-0"
+            >
+              <span>Explore All Properties</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Property Grid */}
+          {isPropsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <div key={n} className="h-80 rounded-3xl bg-slate-200 dark:bg-slate-800/50 animate-pulse" />
+              ))}
+            </div>
+          ) : featuredProperties.length === 0 ? (
+            <div className="p-12 rounded-3xl bg-white dark:bg-[#16161D] border border-slate-200 dark:border-white/10 text-center space-y-4 shadow-sm">
+              <Building className="w-12 h-12 text-slate-400 mx-auto" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Properties Listed Yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                New verified hostels and rental apartments are being added daily. Check back soon or list your own property.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProperties.map((property) => (
+                <div 
+                  key={property.id}
+                  className="group relative rounded-3xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 overflow-hidden shadow-sm hover:shadow-2xl hover:border-[var(--primary)]/40 transition-all duration-300 flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Property Image & Status Badges */}
+                    <div className="relative h-56 w-full overflow-hidden bg-slate-900">
+                      <img 
+                        src={getImageUrl(property.images?.[0]) || '/placeholder-property.jpg'} 
+                        alt={property.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
+                      
+                      {/* Top Badges */}
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/60 backdrop-blur-md text-white border border-white/20">
+                          {property.type}
+                        </span>
+                        <div className="pointer-events-auto">
+                          <WishlistButton propertyId={property.id} />
                         </div>
                       </div>
-                      {property.landlord?.isVerifiedLandlord && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/90 text-white text-[10px] font-bold">
-                          <ShieldCheck className="w-3 h-3" /> Verified Host
-                        </span>
-                      )}
+
+                      {/* Bottom Image Overlay Info */}
+                      <div className="absolute bottom-3 left-3 right-3 text-white flex justify-between items-end">
+                        <div>
+                          <div className="text-xl font-black text-amber-300">
+                            GHS {property.price.toLocaleString()}
+                            <span className="text-[11px] font-normal text-slate-200"> / {property.pricePeriod || 'Year'}</span>
+                          </div>
+                        </div>
+                        {property.landlord?.isVerifiedLandlord && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/90 text-white text-[10px] font-bold">
+                            <ShieldCheck className="w-3 h-3" /> Verified Host
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Body Content */}
+                    <div className="p-5 space-y-3">
+                      <h3 className="font-extrabold text-base text-slate-900 dark:text-white line-clamp-1 group-hover:text-[var(--primary)] transition-colors">
+                        {property.title}
+                      </h3>
+                      
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 line-clamp-1">
+                        <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                        <span>{property.location}</span>
+                      </p>
+
+                      {/* Room Type & Amenities Preview */}
+                      <div className="flex flex-wrap gap-1.5 pt-2 text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                        {property.rooms?.[0]?.roomType && (
+                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+                            🛏️ {property.rooms[0].roomType}
+                          </span>
+                        )}
+                        {property.furnishing && (
+                          <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
+                            🛋️ {property.furnishing}
+                          </span>
+                        )}
+                        {property.targetAudience && (
+                          <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                            🎯 {property.targetAudience}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  {/* Body Content */}
-                  <div className="p-5 space-y-3">
-                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white line-clamp-1 group-hover:text-[var(--primary)] transition-colors">
-                      {property.title}
-                    </h3>
-                    
-                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 line-clamp-1">
-                      <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                      <span>{property.location}</span>
-                    </p>
-
-                    {/* Room Type & Amenities Preview */}
-                    <div className="flex flex-wrap gap-1.5 pt-2 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                      {property.rooms?.[0]?.roomType && (
-                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
-                          🛏️ {property.rooms[0].roomType}
-                        </span>
-                      )}
-                      {property.furnishing && (
-                        <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
-                          🛋️ {property.furnishing}
-                        </span>
-                      )}
-                      {property.targetAudience && (
-                        <span className="px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                          🎯 {property.targetAudience}
-                        </span>
-                      )}
-                    </div>
+                  {/* Card Action Footer */}
+                  <div className="p-5 pt-0">
+                    <Link
+                      href={'/properties/' + property.id}
+                      className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-[var(--primary)] text-slate-900 hover:text-white dark:bg-slate-800 dark:hover:bg-[var(--primary)] dark:text-white text-xs font-black flex items-center justify-center gap-2 transition-all group-hover:shadow-md cursor-pointer"
+                    >
+                      <span>View Room Details &amp; Book</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
                   </div>
                 </div>
-
-                {/* Card Action Footer */}
-                <div className="p-5 pt-0">
-                  <Link
-                    href={'/properties/' + property.id}
-                    className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-[var(--primary)] text-slate-900 hover:text-white dark:bg-slate-800 dark:hover:bg-[var(--primary)] dark:text-white text-xs font-black flex items-center justify-center gap-2 transition-all group-hover:shadow-md cursor-pointer"
-                  >
-                    <span>View Room Details &amp; Book</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* ── ROOMMATE MATCHER SPOTLIGHT ── */}
@@ -434,79 +515,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS IN 3 SIMPLE STEPS ── */}
-      <section className="py-20 bg-slate-100/70 dark:bg-[#121217] transition-colors border-y border-slate-200/80 dark:border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full text-xs font-bold uppercase">
-              <HelpCircle className="w-3.5 h-3.5" /> Seamless Rental Experience
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-              How Akwaaba Homes Works
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              We eliminate rental scams, fake agent fees, and deposit disputes with a secure, 3-step digital journey.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            
-            {/* Step 1 */}
-            <div className="p-8 rounded-3xl bg-white dark:bg-[#181820] border border-slate-200/80 dark:border-white/10 shadow-sm relative flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-black text-xl">
-                  01
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Browse &amp; Virtual Tour</h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Search campus-verified hostels and residential apartments. Inspect authentic photos, student reviews, and transparent price periods with zero agent markups.
-                </p>
-              </div>
-              <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-indigo-500">
-                ✓ 100% Genuine Landlord Listings
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="p-8 rounded-3xl bg-white dark:bg-[#181820] border border-slate-200/80 dark:border-white/10 shadow-sm relative flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-xl">
-                  02
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Reserve &amp; Digital Lease</h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Lock in your room via Mobile Money (MTN, Telecel, AT) or Bank card. Your payment is held safely in escrow while both parties sign a cryptographic digital tenancy agreement.
-                </p>
-              </div>
-              <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-emerald-500">
-                ✓ Escrow-Secured Payments
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="p-8 rounded-3xl bg-white dark:bg-[#181820] border border-slate-200/80 dark:border-white/10 shadow-sm relative flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-xl">
-                  03
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">Move In &amp; Inspect</h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Arrive at the property and meet your assigned Caretaker or Porter for the official room condition inspection checklist. Collect your keys and settle into your new home!
-                </p>
-              </div>
-              <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 text-[11px] font-bold text-amber-500">
-                ✓ Digital Checklist &amp; Key Handover
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
       {/* ── DUAL CTA: FOR LANDLORDS & CARETAKERS ── */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="grid md:grid-cols-2 gap-8">
           
           {/* Landlord Card */}
