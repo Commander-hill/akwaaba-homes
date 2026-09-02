@@ -288,7 +288,7 @@ export default function LandlordDashboard() {
               <span className="text-zinc-950 dark:text-white">Property Asset &amp; Landlord Hub</span>
             </h1>
             <p className="text-xs text-[var(--muted-foreground)]">
-              Manage booking requests, tenant support tickets, listing subscriptions, and earnings reports.
+              Property asset management, verified tenant allocations, MoMo escrow payouts, and caretaker delegation.
             </p>
           </div>
 
@@ -468,8 +468,8 @@ export default function LandlordDashboard() {
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
-              <h3 className="text-lg font-bold">No booking requests yet</h3>
-              <p className="text-[var(--muted-foreground)]">When tenants book your properties, they will appear here.</p>
+              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Pending Reservation Requests</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto">Your listings are live on the platform. Prospective student tenants and residents will appear here for your review and lease issuance.</p>
             </div>
           ) : (
             <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">

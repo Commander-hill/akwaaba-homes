@@ -534,10 +534,12 @@ export default function TenantDashboard() {
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <Calendar className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
-              <h3 className="text-lg font-bold">No bookings yet</h3>
-              <p className="text-[var(--muted-foreground)] mb-6">You haven't requested to stay at any properties yet.</p>
-              <Link href="/properties" className="bg-[var(--primary)] text-white px-6 py-3 rounded-xl font-semibold shadow-md hover:opacity-90 transition-opacity">
-                Browse Properties
+              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Accommodations Reserved</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
+                Explore verified campus hostels and residential apartments across KNUST, Legon, and UCC. Your deposit is backed by MoMo escrow until physical on-site room handover.
+              </p>
+              <Link href="/properties" className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs">
+                Browse Verified Hostels &amp; Apartments
               </Link>
             </div>
           ) : (
@@ -670,8 +672,10 @@ export default function TenantDashboard() {
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <PenTool className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
-              <h3 className="text-lg font-bold">No maintenance requests</h3>
-              <p className="text-[var(--muted-foreground)] mb-6">Everything seems to be working perfectly!</p>
+              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Maintenance Tickets</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto">
+                Everything in your room is functioning properly. If you experience plumbing, electrical, or lock issues, report directly to your assigned caretaker above.
+              </p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -958,9 +962,9 @@ export default function TenantDashboard() {
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
-              <h3 className="text-lg font-bold">No Lease Agreements Found</h3>
-              <p className="text-[var(--muted-foreground)] max-w-sm mt-1 mb-6 text-sm">
-                Once a landlord approves your booking request, your digital lease agreement will be securely stored here.
+              <h3 className="text-base font-black text-zinc-950 dark:text-white">Lease Agreement Vault is Empty</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mt-1 mb-4 leading-relaxed">
+                When a landlord confirms your reservation, your statutory Ghana Rent Act (Act 220) tenancy agreement with a 64-character SHA-256 tamper-proof cryptographic audit seal will appear here for signing.
               </p>
             </div>
           ) : (
