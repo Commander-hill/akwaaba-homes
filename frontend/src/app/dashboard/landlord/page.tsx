@@ -281,11 +281,11 @@ export default function LandlordDashboard() {
       />
       
       {/* Sticky Header Banner & Tabs Container */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight flex items-center gap-3 flex-wrap">
-              <span>Landlord CRM Command Center</span>
+              <span className="text-zinc-950 dark:text-white">Property Asset &amp; Landlord Hub</span>
             </h1>
             <p className="text-xs text-[var(--muted-foreground)]">
               Manage booking requests, tenant support tickets, listing subscriptions, and earnings reports.
@@ -305,13 +305,13 @@ export default function LandlordDashboard() {
         </div>
 
         {/* Tabs */}
-        <div id="tour-landlord-tabs" className="flex space-x-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl w-fit flex-wrap gap-1">
+        <div id="tour-landlord-tabs" className="flex space-x-1 bg-zinc-100 dark:bg-zinc-900/80 p-1 rounded-xl w-fit flex-wrap gap-1 border border-zinc-200/60 dark:border-zinc-800/60">
           <button
             onClick={() => setActiveTab('bookings')}
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all",
               activeTab === 'bookings' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -323,7 +323,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'occupancy' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -336,7 +336,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'notices' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -349,7 +349,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'expenses' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -362,7 +362,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'agreements' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -375,7 +375,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'tickets' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -392,7 +392,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'staff' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -405,7 +405,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'subscriptions' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -418,7 +418,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'financials' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -431,7 +431,7 @@ export default function LandlordDashboard() {
             className={clsx(
               "px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
               activeTab === 'messages' 
-                ? "bg-white dark:bg-slate-800 text-[var(--primary)] shadow-sm" 
+                ? "bg-[#0F5132] text-white font-bold shadow-xs" 
                 : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
             )}
           >
@@ -451,7 +451,7 @@ export default function LandlordDashboard() {
       {activeTab === 'bookings' && (
         <div className="space-y-4">
           {isLoadingBookings ? (
-            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3 border border-[var(--border)]">
               {[1,2,3].map(i => (
                 <div key={i} className="flex gap-4 items-center animate-pulse">
                   <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
@@ -464,7 +464,7 @@ export default function LandlordDashboard() {
               ))}
             </div>
           ) : bookings.length === 0 ? (
-            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
@@ -472,10 +472,10 @@ export default function LandlordDashboard() {
               <p className="text-[var(--muted-foreground)]">When tenants book your properties, they will appear here.</p>
             </div>
           ) : (
-            <div className="glass-card rounded-2xl overflow-hidden border">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                  <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
                     <tr>
                       <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
                       <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
@@ -576,7 +576,7 @@ export default function LandlordDashboard() {
           </div>
 
           {isLoadingAgreements ? (
-            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3 border border-[var(--border)]">
               {[1,2,3].map(i => (
                 <div key={i} className="flex gap-4 items-center animate-pulse">
                   <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
@@ -589,7 +589,7 @@ export default function LandlordDashboard() {
               ))}
             </div>
           ) : agreements.length === 0 ? (
-            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center mb-4">
                 <FileSignature className="w-8 h-8" />
               </div>
@@ -605,7 +605,7 @@ export default function LandlordDashboard() {
                 const needsLandlordSig = !item.landlordSignature;
 
                 return (
-                  <div key={item.id} className="glass-card p-6 rounded-2xl border border-[var(--border)] hover:border-purple-500/50 transition-all flex flex-col justify-between space-y-4">
+                  <div key={item.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border border-[var(--border)] hover:border-purple-500/50 transition-all flex flex-col justify-between space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
@@ -652,7 +652,7 @@ export default function LandlordDashboard() {
       {activeTab === 'tickets' && (
         <div className="animate-in space-y-4">
           {isLoadingTickets ? (
-            <div className="glass-card rounded-2xl p-6 space-y-3 border border-[var(--border)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3 border border-[var(--border)]">
               {[1,2,3].map(i => (
                 <div key={i} className="flex gap-4 items-center animate-pulse">
                   <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
@@ -665,7 +665,7 @@ export default function LandlordDashboard() {
               ))}
             </div>
           ) : tickets.length === 0 ? (
-            <div className="glass-card p-12 rounded-2xl text-center flex flex-col items-center">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
               <CheckCircle className="w-12 h-12 text-emerald-500 mb-3" />
               <h3 className="text-lg font-bold">No maintenance tickets</h3>
               <p className="text-xs text-[var(--muted-foreground)]">All property issues are currently clear.</p>
@@ -676,7 +676,7 @@ export default function LandlordDashboard() {
                 const isUrgent = t.priority === 'URGENT' || t.priority === 'HIGH';
                 return (
                   <div key={t.id} className={clsx(
-                    "glass-card p-5 rounded-2xl border space-y-4 transition-all",
+                    "bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 rounded-2xl border space-y-4 transition-all",
                     t.isEscalated ? "border-red-500/60 bg-red-500/5 shadow-lg shadow-red-500/10" : "border-[var(--border)]"
                   )}>
                     {/* Header Badges */}
@@ -826,7 +826,7 @@ export default function LandlordDashboard() {
       {activeTab === 'subscriptions' && (
         <div className="animate-in space-y-6">
           {isLoadingSubs ? (
-            <div className="glass-card rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-4 border border-[var(--border)]">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="h-20 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
@@ -889,7 +889,7 @@ export default function LandlordDashboard() {
           </div>
 
           {/* Subscriptions Table */}
-          <div className="glass-card rounded-2xl overflow-hidden border">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
             <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold">Property Listing Subscriptions</h3>
@@ -901,7 +901,7 @@ export default function LandlordDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
                   <tr>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Property</th>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Location</th>
@@ -969,7 +969,7 @@ export default function LandlordDashboard() {
       {activeTab === 'financials' && (
         <div className="animate-in space-y-6">
           {isLoadingEarnings ? (
-            <div className="glass-card rounded-2xl p-6 space-y-4 border border-[var(--border)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-4 border border-[var(--border)]">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
@@ -1064,7 +1064,7 @@ export default function LandlordDashboard() {
           </div>
 
           {/* Revenue Chart */}
-          <div className="glass-card p-6 rounded-2xl border">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border">
             <h3 className="text-lg font-bold mb-6">Gross vs. Net Monthly Revenue Trend</h3>
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -1094,14 +1094,14 @@ export default function LandlordDashboard() {
           </div>
 
           {/* Detailed Transaction Ledger */}
-          <div className="glass-card rounded-2xl overflow-hidden border">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
             <div className="p-6 border-b border-[var(--border)]">
               <h3 className="text-lg font-bold">Transaction & Payout Ledger</h3>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white shadow-md">
+                <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
                   <tr>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Date</th>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Tenant</th>

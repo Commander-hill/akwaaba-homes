@@ -231,9 +231,9 @@ function CaretakerDashboardContent() {
     <div className="space-y-8 pb-16">
       
       {/* ── Header Welcome Banner ── */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#1E0B36] via-[#2A104E] to-[#401248] border border-white/10 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-zinc-900 dark:bg-[#12151D] border border-zinc-800 text-white shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 border border-white/15 rounded-full text-xs font-bold text-amber-300">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/20 rounded-full text-xs font-bold text-amber-400">
             <Wrench className="w-3.5 h-3.5" /> Caretaker & Property Operations Hub
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -245,7 +245,7 @@ function CaretakerDashboardContent() {
         </div>
 
         {/* Staff Email Badge with 1-Click Copy */}
-        <div className="bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/15 space-y-2 shrink-0 w-full sm:w-auto">
+        <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800 space-y-2 shrink-0 w-full sm:w-auto">
           <div className="text-[11px] font-extrabold uppercase text-slate-400">Your Registered Staff Email</div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs sm:text-sm font-bold text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 break-all select-all">
