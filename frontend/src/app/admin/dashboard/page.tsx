@@ -66,7 +66,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       {/* Sticky Header & Stats Container */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
+      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Command Center</h1>
@@ -78,59 +78,59 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border bg-[#EFF6FF] dark:bg-[#1E3A8A]/60 border-[#BFDBFE] dark:border-[#1E40AF] relative overflow-hidden group shadow-xs hover:shadow-md transition-all">
+          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <Users className="w-14 h-14 text-[#2563EB] dark:text-[#93C5FD]" />
+              <Users className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-[#DBEAFE] dark:bg-[#1D4ED8] text-[#1D4ED8] dark:text-[#BFDBFE] rounded-xl shadow-inner">
+              <div className="p-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl shadow-inner">
                 <Users className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-[#1E40AF] dark:text-[#BFDBFE] uppercase text-xs tracking-wider">Total Users</h3>
+              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Total Users</h3>
             </div>
-            <div className="text-3xl font-black text-[#1D4ED8] dark:text-[#EFF6FF]">{stats?.totalUsers || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-[#1E40AF] dark:text-[#93C5FD]">Including {stats?.totalLandlords || 0} Landlords</div>
+            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalUsers || 0}</div>
+            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Including {stats?.totalLandlords || 0} Landlords</div>
           </div>
 
-          <div className="p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] relative overflow-hidden group shadow-xs hover:shadow-md transition-all">
+          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <Building className="w-14 h-14 text-[#059669] dark:text-[#6EE7B7]" />
+              <Building className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#A7F3D0] rounded-xl shadow-inner">
+              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl shadow-inner">
                 <Building className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase text-xs tracking-wider">Properties</h3>
+              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Properties</h3>
             </div>
-            <div className="text-3xl font-black text-[#047857] dark:text-[#6EE7B7]">{stats?.totalProperties || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-[#065F46] dark:text-[#6EE7B7]">Listed on platform</div>
+            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalProperties || 0}</div>
+            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Listed on platform</div>
           </div>
 
-          <div className="p-5 rounded-2xl border bg-[#FFFBEB] dark:bg-[#451A03]/60 border-[#FDE68A] dark:border-[#78350F] relative overflow-hidden group shadow-xs hover:shadow-md transition-all">
+          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <CalendarCheck className="w-14 h-14 text-[#D97706] dark:text-[#FDE68A]" />
+              <CalendarCheck className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-[#FEF3C7] dark:bg-[#92400E] text-[#B45309] dark:text-[#FDE68A] rounded-xl shadow-inner">
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded-xl shadow-inner">
                 <CalendarCheck className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-[#78350F] dark:text-[#FDE68A] uppercase text-xs tracking-wider">Bookings</h3>
+              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Bookings</h3>
             </div>
-            <div className="text-3xl font-black text-[#B45309] dark:text-[#FEF3C7]">{stats?.totalBookings || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-[#78350F] dark:text-[#FDE68A]">All time system bookings</div>
+            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalBookings || 0}</div>
+            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">All time system bookings</div>
           </div>
 
-          <div className="p-5 rounded-2xl border bg-[#F3E8FF] dark:bg-[#3B0764]/60 border-[#E9D5FF] dark:border-[#581C87] relative overflow-hidden group shadow-xs hover:shadow-md transition-all">
+          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <CreditCard className="w-14 h-14 text-[#9333EA] dark:text-[#E9D5FF]" />
+              <CreditCard className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
             </div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-[#E9D5FF] dark:bg-[#6B21A8] text-[#7E22CE] dark:text-[#E9D5FF] rounded-xl shadow-inner">
+              <div className="p-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-xl shadow-inner">
                 <CreditCard className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-[#581C87] dark:text-[#E9D5FF] uppercase text-xs tracking-wider">Revenue (GHS)</h3>
+              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Revenue (GHS)</h3>
             </div>
-            <div className="text-3xl font-black text-[#7E22CE] dark:text-[#F3E8FF]">GH₵ {stats?.totalRevenue?.toLocaleString() || 0}</div>
+            <div className="text-3xl font-black text-zinc-950 dark:text-white">GH₵ {stats?.totalRevenue?.toLocaleString() || 0}</div>
             <div className="mt-1 text-xs font-semibold text-[#581C87] dark:text-[#E9D5FF]">From landlord subscriptions</div>
           </div>
         </div>

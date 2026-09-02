@@ -41,20 +41,20 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#0B0D12] relative overflow-hidden">
       {/* High-security background elements */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-purple-900/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-900/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-950/20 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-zinc-900/30 rounded-full blur-[100px] pointer-events-none" />
       
       {/* Grid pattern overlay */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
 
       <div className="max-w-md w-full p-8 relative z-10">
         <div className="flex flex-col items-center mb-10">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(91,70,229,0.5)] mb-6">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-zinc-700/60 shadow-xs mb-6">
             <Image src="/logo.png" alt="Akwaaba Homes" width={64} height={64} className="w-full h-full object-cover" priority />
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin<span className="text-purple-500">Portal</span></h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin<span className="text-[#198754]">Command</span></h1>
           <p className="text-slate-400 mt-2 font-mono text-sm tracking-widest uppercase">Restricted Access</p>
         </div>
 
@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 required
-                className="block w-full pl-12 pr-4 py-3.5 border border-slate-800 rounded-xl bg-[#111] text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all placeholder:text-slate-600"
+                className="block w-full pl-12 pr-4 py-3.5 border border-slate-800 rounded-xl bg-[#111] text-white focus:ring-1 focus:ring-[#0F5132] focus:border-[#0F5132] outline-none transition-all placeholder:text-slate-600"
                 placeholder="admin@system.local"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -92,7 +92,7 @@ export default function AdminLoginPage() {
               <input
                 type="password"
                 required
-                className="block w-full pl-12 pr-4 py-3.5 border border-slate-800 rounded-xl bg-[#111] text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all placeholder:text-slate-600"
+                className="block w-full pl-12 pr-4 py-3.5 border border-slate-800 rounded-xl bg-[#111] text-white focus:ring-1 focus:ring-[#0F5132] focus:border-[#0F5132] outline-none transition-all placeholder:text-slate-600"
                 placeholder="••••••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -104,7 +104,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-purple-600 hover:bg-purple-700 focus:outline-none transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)] hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-[#0F5132] hover:bg-[#0A3D24] text-white transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

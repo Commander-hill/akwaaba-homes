@@ -59,9 +59,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (isLoading && !user) {
     return (
       <div className="min-h-screen flex flex-col bg-slate-950">
-        <div className="h-1 w-full bg-purple-500 animate-pulse" />
+        <div className="h-1 w-full bg-[#0F5132] animate-pulse" />
         <div className="flex flex-1 flex-col items-center justify-center text-white">
-          <Loader2 className="w-12 h-12 animate-spin text-purple-500 mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-[#198754] mb-4" />
           <p className="text-slate-400 font-mono text-sm uppercase tracking-widest">Verifying Security Clearance...</p>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden -mt-20">
+    <div className="flex h-screen w-full bg-[#FBFBFC] dark:bg-[#0B0D12] overflow-hidden -mt-20">
       <head>
         <link rel="manifest" href="/admin-manifest.json" />
         <meta name="theme-color" content="#0A0F1D" />
@@ -113,10 +113,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] flex flex-col">
+      <div className="flex-1 overflow-y-auto bg-[#FBFBFC] dark:bg-[#0B0D12] flex flex-col">
         {/* Admin Header with Notification Bell */}
-        <div className="h-20 shrink-0 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 bg-white/80 dark:bg-[#111111]/80 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-white capitalize">
+        <div className="h-20 shrink-0 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-8 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md sticky top-0 z-10">
+          <h2 className="text-xl font-bold text-zinc-950 dark:text-white font-extrabold tracking-tight capitalize">
             {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
           </h2>
           <div className="flex items-center gap-4">
