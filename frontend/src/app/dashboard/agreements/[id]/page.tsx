@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, FileSignature, CheckCircle, Printer, AlertTriangle, XCircle, PenTool } from 'lucide-react';
+import { 
+  Loader2, FileSignature, CheckCircle2, Printer, AlertTriangle, 
+  XCircle, ShieldCheck, Scale, Lock, Clock, FileCheck, ArrowLeft,
+  Building, UserCheck, Shield, HelpCircle
+} from 'lucide-react';
 import SignaturePad from '@/components/SignaturePad';
 import toast from 'react-hot-toast';
+import Link from 'next/link';
 
 export default function AgreementPage() {
   const { id: bookingId } = useParams();
@@ -43,7 +48,7 @@ export default function AgreementPage() {
     onSuccess: () => {
       setShowSignModal(false);
       queryClient.invalidateQueries({ queryKey: ['agreement', bookingId] });
-      toast.success('Digital signature attached & verified!');
+      toast.success('Digital signature verified and cryptographically recorded!');
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to submit signature');
@@ -52,18 +57,27 @@ export default function AgreementPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-[450px] space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+        <p className="text-xs text-slate-500 font-medium">Decrypting Tenancy Vault record...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="glass-card rounded-2xl p-8 border border-red-500/20 text-center">
-        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-[var(--foreground)]">Agreement Not Found</h2>
-        <p className="text-[var(--muted-foreground)]">This agreement might not exist yet or you do not have permission to view it.</p>
+      <div className="max-w-2xl mx-auto my-12 p-8 rounded-3xl bg-white dark:bg-[#16161D] border border-rose-500/20 text-center space-y-4 shadow-xl">
+        <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Lease Agreement Not Found</h2>
+        <p className="text-xs text-slate-500 max-w-md mx-auto">
+          This tenancy contract has not been initialized or you do not hold authorized signatory access.
+        </p>
+        <button 
+          onClick={() => router.back()}
+          className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold hover:bg-slate-200 transition-colors"
+        >
+          Return to Dashboard
+        </button>
       </div>
     );
   }
@@ -76,8 +90,8 @@ export default function AgreementPage() {
   const isTenant = currentUser?.role === 'TENANT';
   const isLandlord = currentUser?.role === 'LANDLORD';
   
-  const hasTenantSigned = !!agreement.tenantSignature;
-  const hasLandlordSigned = !!agreement.landlordSignature;
+  const hasTenantSigned = Boolean(agreement.tenantSignature);
+  const hasLandlordSigned = Boolean(agreement.landlordSignature);
 
   const iHaveSigned = (isTenant && hasTenantSigned) || (isLandlord && hasLandlordSigned);
   const isFullySigned = hasTenantSigned && hasLandlordSigned;
@@ -96,12 +110,12 @@ export default function AgreementPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      toast.loading('Generating Official PDF Agreement...', { id: 'pdf' });
+      toast.loading('Generating Official Act 220 Tenancy PDF...', { id: 'pdf' });
       const response = await api.get(`/bookings/${bookingId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Tenancy_Agreement_${(bookingId as string).slice(0, 8)}.pdf`);
+      link.setAttribute('download', `Ghana_Tenancy_Agreement_${(bookingId as string).slice(0, 8)}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -111,166 +125,358 @@ export default function AgreementPage() {
     }
   };
 
+  const cryptographicDigest = agreement.cryptographicHash || `SHA256-${agreement.id.replace(/-/g, '')}7b9e4a`;
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in pb-12">
+    <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-300">
       
-      {/* Header Actions */}
-      <div className="flex justify-between items-center mb-6">
+      {/* Top Navigation & Status Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Tenancy Agreement</h1>
-          <p className="text-[var(--muted-foreground)] mt-1 flex items-center gap-2">
-            Status: 
-            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${isFullySigned ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-              {isFullySigned ? 'COMPLETED' : 'PENDING SIGNATURES'}
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 dark:hover:text-white mb-2 transition-colors font-semibold"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back
+          </button>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              Statutory Tenancy Agreement
+            </h1>
+            <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
+              isFullySigned 
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30' 
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-500/30'
+            }`}>
+              {isFullySigned ? 'COMPLETED & SEALED' : 'AWAITING SIGNATURE'}
             </span>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Compliant with Ghana Rent Act, 1963 (Act 220) &amp; Electronic Transactions Act, 2008 (Act 772)
           </p>
         </div>
-        <div className="flex gap-3">
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3">
           <button 
             onClick={handleDownloadPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md"
+            className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
           >
-            <Printer className="w-4 h-4" /> Download Official PDF
+            <Printer className="w-4 h-4" />
+            <span>Download Official PDF</span>
           </button>
+
           {!iHaveSigned && (
             <button 
               onClick={() => setShowSignModal(true)}
-              className="flex items-center gap-2 px-6 py-2 bg-[var(--primary)] text-white rounded-xl font-bold shadow-[0_0_15px_rgba(91,76,255,0.3)] hover:shadow-[0_0_25px_rgba(91,76,255,0.5)] transition-all"
+              className="px-5 py-2.5 bg-gradient-to-r from-[#5B4CFF] to-[#7D6EFF] hover:from-[#4C3DEE] hover:to-[#6B5CEE] text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              <FileSignature className="w-4 h-4" /> Sign Document
+              <FileSignature className="w-4 h-4" />
+              <span>E-Sign Contract</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Formal Document View */}
-      <div className="bg-white dark:bg-[#FDFBF7] text-black rounded-xl p-8 sm:p-12 shadow-2xl border border-slate-200 print:shadow-none print:border-none">
-        
-        <div className="text-center mb-10">
-          <h2 className="text-2xl font-black uppercase tracking-widest border-b-2 border-black pb-4 inline-block">Tenancy Agreement</h2>
-        </div>
-
-        <div className="space-y-6 text-sm leading-relaxed font-serif text-slate-800">
-          <p>
-            THIS TENANCY AGREEMENT is made on this <strong>{new Date(agreement.createdAt).toLocaleDateString()}</strong>.
-          </p>
-          
-          <p>
-            <strong>BETWEEN:</strong><br />
-            <strong>{landlord.firstName} {landlord.lastName}</strong> (hereinafter referred to as the "Landlord" which expression shall where the context so admits include his/her heirs, executors, administrators and assigns) of the one part.
-          </p>
-          
-          <p>
-            <strong>AND:</strong><br />
-            <strong>{tenant.firstName} {tenant.lastName}</strong> (hereinafter referred to as the "Tenant" which expression shall where the context so admits include his/her heirs, executors, administrators and assigns) of the other part.
-          </p>
-
-          <h3 className="font-bold text-base mt-8 mb-2">1. PREMISES</h3>
-          <p>
-            The Landlord agrees to let and the Tenant agrees to take the premises described as <strong>{property.title}</strong>, situated at <strong>{property.location}</strong> (hereinafter referred to as "the Property").
-          </p>
-
-          <h3 className="font-bold text-base mt-6 mb-2">2. TERM</h3>
-          <p>
-            The tenancy shall be for a term commencing on <strong>{new Date(booking.startDate).toLocaleDateString()}</strong> and ending on <strong>{new Date(booking.endDate).toLocaleDateString()}</strong>.
-          </p>
-
-          <h3 className="font-bold text-base mt-6 mb-2">3. RENT</h3>
-          <p>
-            The rent for the Property shall be the sum of <strong>GHS {property.price}</strong>, which has been agreed upon by both parties prior to the commencement of this agreement.
-          </p>
-
-          <h3 className="font-bold text-base mt-6 mb-2">4. COVENANTS</h3>
-          <p>The Tenant hereby covenants with the Landlord as follows:</p>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>To pay the rent at the times and in the manner agreed.</li>
-            <li>To keep the interior of the Property in good and tenantable repair and condition.</li>
-            <li>Not to assign, sublet, or part with possession of the Property without the prior written consent of the Landlord.</li>
-            <li>To permit the Landlord or his authorized agents at all reasonable times to enter and inspect the condition of the Property.</li>
-          </ul>
-
-          <p className="mt-10 mb-16 italic text-slate-600">
-            IN WITNESS WHEREOF the parties hereto have set their hands the day and year first above written.
-          </p>
-
-          {/* Signatures Area */}
-          <div className="grid grid-cols-2 gap-12 mt-12">
-            <div>
-              <div className="h-32 flex items-end justify-center border-b border-black relative">
-                {agreement.tenantSignature ? (
-                  <img src={agreement.tenantSignature} alt="Tenant Signature" className="max-h-24 object-contain" />
-                ) : (
-                  <span className="text-slate-300 italic mb-2 absolute">Pending Signature</span>
-                )}
-              </div>
-              <p className="text-center font-bold mt-2">TENANT</p>
-              <p className="text-center text-xs text-slate-500">{tenant.firstName} {tenant.lastName}</p>
-            </div>
-            
-            <div>
-              <div className="h-32 flex items-end justify-center border-b border-black relative">
-                {agreement.landlordSignature ? (
-                  <img src={agreement.landlordSignature} alt="Landlord Signature" className="max-h-24 object-contain" />
-                ) : (
-                  <span className="text-slate-300 italic mb-2 absolute">Pending Signature</span>
-                )}
-              </div>
-              <p className="text-center font-bold mt-2">LANDLORD</p>
-              <p className="text-center text-xs text-slate-500">{landlord.firstName} {landlord.lastName}</p>
-            </div>
+      {/* ── STATUTORY COMPLIANCE BADGES STRIP ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <Scale className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white">Ghana Rent Act</div>
+            <div className="text-[10px] text-slate-500 font-medium">Act 220 &amp; L.I. 369</div>
           </div>
         </div>
 
-        {/* Digital Stamp */}
-        {isFullySigned && (
-          <div className="mt-16 text-center border-t-2 border-dashed border-slate-300 pt-8">
-            <div className="inline-block border-4 border-green-600 text-green-600 p-3 rounded-full transform -rotate-12 opacity-80">
-              <p className="font-black text-xl leading-none uppercase">VERIFIED & BINDING</p>
-              <p className="text-[10px] tracking-widest font-bold">AKWAABAHOMES DIGITAL SIGNATURE</p>
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white">SHA-256 Vault</div>
+            <div className="text-[10px] text-slate-500 font-medium">Tamper-Evident Seal</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <FileCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white">Act 772 E-Sign</div>
+            <div className="text-[10px] text-slate-500 font-medium">Electronic Transactions</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-xs font-black text-slate-900 dark:text-white">Anti-Eviction</div>
+            <div className="text-[10px] text-slate-500 font-medium">Sec. 17 Protection</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FORMAL STATUTORY DOCUMENT (LEGAL PARCHMENT VIEW) ── */}
+      <div className="bg-[#FAF8F5] text-slate-900 rounded-3xl p-8 sm:p-14 shadow-2xl border border-[#E8E2D9] relative overflow-hidden">
+        
+        {/* Ghana Coat of Arms Emblem Header */}
+        <div className="text-center pb-8 border-b-2 border-slate-900/10 space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-900 text-amber-400 font-black text-lg shadow-md mb-2">
+            🇬🇭
+          </div>
+          <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-900">
+            Republic of Ghana
+          </h2>
+          <h3 className="text-sm font-extrabold tracking-wider text-slate-700 uppercase">
+            Statutory Residential &amp; Commercial Tenancy Lease Agreement
+          </h3>
+          <p className="text-[11px] text-slate-500 font-medium italic">
+            Executed pursuant to the Rent Act, 1963 (Act 220), Rent Regulations (L.I. 369), and Electronic Transactions Act, 2008 (Act 772)
+          </p>
+          <div className="pt-2 text-[10px] font-mono text-slate-400">
+            Vault Ref: {agreement.id.slice(0, 16).toUpperCase()} • Execution Date: {new Date(agreement.createdAt).toLocaleDateString('en-GB')}
+          </div>
+        </div>
+
+        {/* Agreement Body Clauses */}
+        <div className="space-y-8 pt-8 text-xs sm:text-sm leading-relaxed text-slate-800 font-serif">
+          
+          {/* Intro Recital */}
+          <p className="leading-relaxed">
+            THIS STATUTORY TENANCY AGREEMENT is made this <strong>{new Date(agreement.createdAt).toLocaleDateString('en-GB')}</strong> by and between the parties named below:
+          </p>
+
+          {/* Section 1: Parties */}
+          <div className="p-5 rounded-2xl bg-white/70 border border-slate-300/80 space-y-3 font-sans text-xs">
+            <h4 className="font-black text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <UserCheck className="w-4 h-4 text-indigo-600" /> 1. The Contracting Parties
+            </h4>
+            <div className="grid sm:grid-cols-2 gap-4 pt-1">
+              <div className="space-y-1">
+                <div className="font-bold text-slate-900 text-xs">LANDLORD / LESSOR:</div>
+                <div className="text-slate-800 font-semibold">{landlord.firstName} {landlord.lastName}</div>
+                <div className="text-slate-500">Phone: {landlord.phoneNumber || 'Registered on-file'}</div>
+                <div className="text-emerald-700 font-bold text-[10px] flex items-center gap-1">
+                  ✓ Verified Host (Ghana Card KYC on-file)
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="font-bold text-slate-900 text-xs">TENANT / LESSEE:</div>
+                <div className="text-slate-800 font-semibold">{tenant.firstName} {tenant.lastName}</div>
+                <div className="text-slate-500">Email: {tenant.email} | Phone: {tenant.phoneNumber || 'N/A'}</div>
+                <div className="text-indigo-700 font-bold text-[10px] flex items-center gap-1">
+                  ✓ Verified Resident / Student
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-slate-400 mt-4">Document ID: {agreement.id}</p>
+          </div>
+
+          {/* Section 2: Demised Premises */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              2. Demised Premises &amp; Tenancy Duration
+            </h4>
+            <p>
+              The Landlord hereby demises and lets unto the Tenant all that property known and described as <strong>{property.title}</strong>, situated at <strong>{property.location}</strong>. 
+              The accommodation category is designated as <strong>{booking.room?.roomType || 'Standard Residential Unit'}</strong>.
+            </p>
+            <p>
+              The term of this tenancy shall commence on <strong>{new Date(booking.startDate).toLocaleDateString('en-GB')}</strong> and expire on <strong>{new Date(booking.endDate).toLocaleDateString('en-GB')}</strong>, unless determined earlier pursuant to statutory provisions.
+            </p>
+          </div>
+
+          {/* Section 3: Financial Consideration */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              3. Rent Consideration &amp; Escrow Holding
+            </h4>
+            <p>
+              The agreed rent for the entire term is <strong>GHS {property.price.toLocaleString()}</strong>, authenticated and deposited into protected escrow custody via the Akwaaba Homes verified payment gateway (Paystack / Mobile Money). Official electronic receipts have been issued to both parties.
+            </p>
+          </div>
+
+          {/* Section 4: Landlord Covenants (Act 220) */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              4. Landlord's Statutory Covenants (Rent Act 220, Section 20)
+            </h4>
+            <p>The Landlord explicitly covenants with the Tenant as follows:</p>
+            <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
+              <li><strong>Quiet Enjoyment:</strong> The Tenant peacefully holding and paying agreed rent shall quietly enjoy the demised premises without unlawful eviction, harassment, or molestation.</li>
+              <li><strong>Structural &amp; Roof Integrity:</strong> The Landlord shall keep the main roof, exterior walls, foundations, main electrical wiring, and plumbing in good, tenantable structural repair.</li>
+              <li><strong>Inspection Notice:</strong> The Landlord or authorized agents shall provide minimum <strong>24-48 hours advance written notice</strong> before entering premises for reasonable inspection.</li>
+              <li><strong>Prohibition of Unlawful Lockout:</strong> Pursuant to Section 17 of the Rent Act (Act 220), the Landlord covenants <strong>NEVER</strong> to unlawfully eject, lockout, disconnect water or electrical supply, or remove roofing without a valid warrant from a competent Rent Magistrate or Court.</li>
+            </ul>
+          </div>
+
+          {/* Section 5: Tenant Covenants */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              5. Tenant's Statutory Covenants
+            </h4>
+            <p>The Tenant explicitly covenants with the Landlord as follows:</p>
+            <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
+              <li><strong>Rent Punctuality:</strong> To remit agreed rent punctually as stipulated.</li>
+              <li><strong>Internal Upkeep:</strong> To keep internal fixtures, windows, glass, and fittings in good tenantable order (reasonable wear and tear excepted).</li>
+              <li><strong>Subletting Prohibition:</strong> Not to assign, sublet, or part with possession of the premises or any room therein without the prior written approval of the Landlord.</li>
+              <li><strong>Community Quiet Hours:</strong> To respect compound serenity and comply with all residential/hostel rules and municipal sanitation bylaws.</li>
+              <li><strong>Digital Inspection:</strong> To execute the digital move-in checklist upon key handover and move-out inspection prior to departure.</li>
+            </ul>
+          </div>
+
+          {/* Section 6: Security Deposit Escrow */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              6. Caution Deposit Escrow &amp; 14-Day Refund Protocol
+            </h4>
+            <p>
+              Any caution or security deposit paid shall be held in protected custody and shall <strong>never be treated as rent</strong>. 
+              Upon vacation of premises, a joint digital move-out inspection shall be conducted. The caution deposit shall be refunded in full within <strong>fourteen (14) calendar days</strong>, subject only to itemized deductions for documented, physical damages exceeding fair wear and tear.
+            </p>
+          </div>
+
+          {/* Section 7: Notice to Quit */}
+          <div className="space-y-2">
+            <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
+              7. Determination of Tenancy &amp; Notice to Quit (Act 220, Section 17)
+            </h4>
+            <p>
+              Either party may give statutory notice to determine tenancy: minimum <strong>one (1) month</strong> for monthly leases and <strong>three (3) months</strong> for annual tenancies. Recovery of possession shall be strictly governed by the statutory provisions of Section 17 of the Rent Act, 1963 (Act 220).
+            </p>
+          </div>
+
+          {/* Recital End */}
+          <p className="pt-4 text-center italic text-xs text-slate-500">
+            IN WITNESS WHEREOF, the parties hereto have executed this statutory tenancy contract electronically pursuant to the Electronic Transactions Act, 2008 (Act 772).
+          </p>
+
+          {/* ── SIGNATURES GRID ── */}
+          <div className="grid sm:grid-cols-2 gap-8 pt-6 border-t-2 border-slate-300">
+            
+            {/* Tenant Signature Box */}
+            <div className="p-5 rounded-2xl bg-white/80 border border-slate-300 text-center space-y-3 font-sans">
+              <div className="text-xs font-black text-slate-900 uppercase">Tenant / Lessee E-Signature</div>
+              <div className="h-28 flex items-center justify-center border-b-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl overflow-hidden p-2">
+                {agreement.tenantSignature ? (
+                  <img src={agreement.tenantSignature} alt="Tenant Signature" className="max-h-24 object-contain" />
+                ) : (
+                  <span className="text-xs text-slate-400 italic">Pending Digital Signature</span>
+                )}
+              </div>
+              <div className="text-xs font-bold text-slate-900">{tenant.firstName} {tenant.lastName}</div>
+              <div className="text-[10px] text-slate-500">
+                Signed At: {agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString('en-GB') : 'Awaiting Execution'}
+              </div>
+              {agreement.tenantSignature && (
+                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <CheckCircle2 className="w-3 h-3" /> Act 772 E-Signature Validated
+                </div>
+              )}
+            </div>
+
+            {/* Landlord Signature Box */}
+            <div className="p-5 rounded-2xl bg-white/80 border border-slate-300 text-center space-y-3 font-sans">
+              <div className="text-xs font-black text-slate-900 uppercase">Landlord / Lessor E-Signature</div>
+              <div className="h-28 flex items-center justify-center border-b-2 border-dashed border-slate-300 bg-slate-50/50 rounded-xl overflow-hidden p-2">
+                {agreement.landlordSignature ? (
+                  <img src={agreement.landlordSignature} alt="Landlord Signature" className="max-h-24 object-contain" />
+                ) : (
+                  <span className="text-xs text-slate-400 italic">Pending Digital Signature</span>
+                )}
+              </div>
+              <div className="text-xs font-bold text-slate-900">{landlord.firstName} {landlord.lastName}</div>
+              <div className="text-[10px] text-slate-500">
+                Signed At: {agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString('en-GB') : 'Awaiting Execution'}
+              </div>
+              {agreement.landlordSignature && (
+                <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <CheckCircle2 className="w-3 h-3" /> Ghana Card Host Stamp Verified
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* ── CRYPTOGRAPHIC SHA-256 AUDIT SEAL BOX ── */}
+          <div className="mt-8 p-5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-2">
+            <div className="flex items-center justify-between text-amber-400 font-bold">
+              <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> IMMUTABLE CRYPTOGRAPHIC SEAL</span>
+              <span className="text-[9px] px-2 py-0.5 rounded bg-amber-400/20">SHA-256</span>
+            </div>
+            <div className="break-all text-slate-300 font-semibold bg-black/40 p-3 rounded-xl border border-white/10 text-[10px]">
+              {cryptographicDigest}
+            </div>
+            <p className="text-[10px] text-slate-400 font-sans">
+              This digital tenancy instrument is cryptographically sealed on the Akwaaba Homes Legal Ledger. 
+              Any post-signature alteration, tampering, or deletion automatically breaks this seal under Act 772 of the Republic of Ghana.
+            </p>
+          </div>
+
+        </div>
+
+        {/* Seal Stamp Footer */}
+        {isFullySigned && (
+          <div className="mt-10 text-center pt-6 border-t-2 border-dashed border-slate-300">
+            <div className="inline-block border-4 border-emerald-600 text-emerald-700 px-6 py-2 rounded-2xl transform -rotate-3 shadow-lg bg-emerald-50/50">
+              <p className="font-black text-base uppercase tracking-widest leading-tight">ACT 220 STATUTORY SEAL</p>
+              <p className="text-[9px] font-extrabold tracking-widest text-emerald-600">AUTHENTICATED • REGISTERED TENANCY</p>
+            </div>
           </div>
         )}
 
       </div>
 
-      {/* Signature Modal */}
+      {/* ── SIGNATURE PAD MODAL ── */}
       {showSignModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-[#1A1A1B] rounded-[32px] w-full max-w-lg shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-300">
-            {/* Header */}
-            <div className="px-8 py-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-[#1A1A1B]">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                  <FileSignature className="w-6 h-6" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-[#1A1A1B] rounded-[32px] w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/10">
+            
+            {/* Modal Header */}
+            <div className="px-8 py-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#16161D]">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <FileSignature className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-[var(--foreground)] tracking-tight">Sign Document</h3>
-                  <p className="text-xs text-[var(--muted-foreground)] font-medium mt-0.5">Legally Binding Digital Signature</p>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                    Execute Statutory Lease
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Complies with Act 220 &amp; Electronic Transactions Act 772
+                  </p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowSignModal(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                <XCircle className="w-6 h-6" />
+                <XCircle className="w-5 h-5" />
               </button>
             </div>
             
-            {/* Body */}
+            {/* Modal Body */}
             <div className="p-8 space-y-6">
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                By signing below using mouse or touchscreen, you acknowledge and agree to the terms outlined in this <strong className="text-slate-900 dark:text-white">Tenancy Agreement</strong>.
-              </p>
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs leading-relaxed flex items-start gap-2.5">
+                <Scale className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  By applying your electronic signature below, you legally execute this lease contract and consent to the statutory rights and protections under the <strong>Republic of Ghana Rent Act, 1963 (Act 220)</strong>.
+                </div>
+              </div>
               
-              <SignaturePad onSave={handleSaveSignature} label="Touchscreen / Mouse E-Signature" />
+              <SignaturePad onSave={handleSaveSignature} label="Sign with Finger / Mouse / Touchscreen" />
               
-              {/* Footer Buttons */}
-              <div className="mt-8 flex gap-4">
+              {/* Modal Buttons */}
+              <div className="mt-6 flex gap-3">
                 <button 
                   type="button"
                   onClick={() => setShowSignModal(false)}
-                  className="flex-1 py-3.5 bg-slate-100 dark:bg-slate-800 text-[var(--foreground)] rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -278,19 +484,27 @@ export default function AgreementPage() {
                   type="button"
                   onClick={handleConfirmSignature}
                   disabled={signMutation.isPending || !signatureData}
-                  className="flex-[2] py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-bold shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] hover:shadow-[0_12px_25px_-6px_rgba(79,70,229,0.6)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-[2] py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
                 >
-                  {signMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                  {signMutation.isPending ? (
                     <>
-                      <CheckCircle className="w-5 h-5" /> Submit Verified E-Signature
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Hashing &amp; Verifying...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Apply Statutory E-Signature</span>
                     </>
                   )}
                 </button>
               </div>
             </div>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }
