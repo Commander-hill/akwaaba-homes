@@ -84,8 +84,8 @@ export default function PropertiesPage() {
         {/* Page Header & Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Browse Properties</h1>
-            <p className="text-[var(--muted-foreground)] mt-1">Find the perfect place that fits your lifestyle.</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">Accommodations Directory</h1>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Direct landlord verified listings across KNUST, Legon, UCC, and Accra. Zero agent fees.</p>
           </div>
           
           <div className="flex w-full md:w-auto gap-3">
@@ -333,7 +333,7 @@ export default function PropertiesPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {properties?.map((property) => (
-                  <Link href={`/properties/${property.id}`} key={property.id} className="group flex flex-col bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-[var(--border)] shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <Link href={`/properties/${property.id}`} key={property.id} className="group flex flex-col bg-white dark:bg-[#12151D] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 shadow-xs hover:shadow-sm transition-all duration-200">
                     <div className="h-48 bg-slate-200 dark:bg-slate-800 relative overflow-hidden">
                       {property.images && property.images.length > 0 ? (
                         <img 
@@ -423,7 +423,7 @@ export default function PropertiesPage() {
                             </span>
                           </div>
                         </div>
-                        <span className="text-[var(--primary)] text-sm font-bold bg-indigo-50 dark:bg-indigo-900/30 px-3.5 py-1.5 rounded-lg group-hover:bg-[var(--primary)] group-hover:text-white transition-colors">
+                        <span className="text-[#0F5132] dark:text-emerald-400 text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-lg group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
                           Book Now
                         </span>
                       </div>

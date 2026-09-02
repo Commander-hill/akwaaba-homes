@@ -133,43 +133,34 @@ export default function RegisterPage() {
   const totalSteps = 4;
   const progressPercentage = ((currentStep) / totalSteps) * 100;
 
-  const inputClass = "block w-full p-3.5 bg-[#2A2A2B]/60 border border-white/5 rounded-2xl text-white placeholder-[#71717A] focus:bg-[#2A2A2B] focus:border-[#5B4CFF] focus:ring-1 focus:ring-[#5B4CFF] outline-none transition-all";
-  const labelClass = "block text-xs font-bold text-white uppercase tracking-wider mb-2";
+  const inputClass = "block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-all";
+  const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#111111]">
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 transition-colors">
       
-      {/* Full screen background image */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: 'url(/images/sunset-bg.png)',
-          filter: 'brightness(0.7) contrast(1.1)' 
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80"></div>
-      </div>
+      
 
       <div className="w-full max-w-2xl z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-12 mb-12">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <h1 className="text-4xl font-black tracking-tighter text-white">
-              AkwaabaHomes.
+            <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
+              Create your Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span> Account
             </h1>
           </Link>
-          <p className="mt-2 text-[#A1A1AA] font-medium">Create your premium housing account.</p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Verified student accommodation, digital leases, and direct landlord connections.</p>
         </div>
 
-        <div className="bg-[#1C1A1B]/80 backdrop-blur-xl rounded-[28px] p-6 sm:p-10 shadow-2xl border border-white/10 relative overflow-hidden">
+        <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 shadow-xs relative">
           
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-bold text-[#A1A1AA] uppercase tracking-wider">Step {currentStep} of {totalSteps}</span>
-              <span className="text-xs font-bold text-[#5B4CFF]">{Math.round(progressPercentage)}%</span>
+              <span className="text-xs font-bold text-[#0F5132] dark:text-[#198754]">{Math.round(progressPercentage)}%</span>
             </div>
-            <div className="h-2 bg-[#2A2A2B] rounded-full overflow-hidden">
-              <div className="h-full bg-[#5B4CFF] rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(91,76,255,0.5)]" style={{ width: `${progressPercentage}%` }}></div>
+            <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-full bg-[#0F5132] dark:bg-[#198754] rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
             </div>
           </div>
 
@@ -183,13 +174,13 @@ export default function RegisterPage() {
           {/* STEP 1: ROLE SELECTION */}
           {currentStep === 1 && (
             <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-[28px] font-extrabold text-white tracking-tight">How will you use AkwaabaHomes?</h2>
+              <h2 className="text-xl font-bold text-zinc-950 dark:text-white tracking-tight">How will you use AkwaabaHomes?</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button
                   type="button"
                   onClick={() => { setFormData({ ...formData, role: 'TENANT' }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'TENANT' ? 'border-[#5B4CFF] bg-[#5B4CFF]/10' : 'border-white/10 hover:border-white/30 bg-[#2A2A2B]/40'}`}
+                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'TENANT' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'TENANT' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
                     <User className="w-6 h-6" />
@@ -201,7 +192,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => { setFormData({ ...formData, role: 'LANDLORD', isStudent: false }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'LANDLORD' ? 'border-[#5B4CFF] bg-[#5B4CFF]/10' : 'border-white/10 hover:border-white/30 bg-[#2A2A2B]/40'}`}
+                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'LANDLORD' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'LANDLORD' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
                     <Building className="w-6 h-6" />
@@ -213,7 +204,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => { setFormData({ ...formData, role: 'CARETAKER', isStudent: false }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'CARETAKER' ? 'border-[#5B4CFF] bg-[#5B4CFF]/10' : 'border-white/10 hover:border-white/30 bg-[#2A2A2B]/40'}`}
+                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'CARETAKER' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'CARETAKER' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
                     <Wrench className="w-6 h-6" />
@@ -413,17 +404,17 @@ export default function RegisterPage() {
           {/* Navigation Buttons */}
           <div className="mt-10 flex justify-between gap-4 pt-6 border-t border-white/10">
             {currentStep > 1 ? (
-              <button onClick={handleBack} type="button" className="px-6 py-3.5 rounded-2xl font-bold text-white hover:bg-white/10 transition-colors flex items-center gap-2">
+              <button onClick={handleBack} type="button" className="px-4 py-2.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-2 text-xs cursor-pointer">
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
             ) : <div></div>}
             
             {currentStep < 4 ? (
-              <button onClick={handleNext} type="button" className="px-8 py-3.5 rounded-2xl font-bold bg-[#5B4CFF] text-white hover:bg-[#4B3DEE] shadow-[0_0_20px_rgba(91,76,255,0.3)] transition-all flex items-center gap-2">
+              <button onClick={handleNext} type="button" className="px-6 py-2.5 rounded-xl font-bold bg-[#0F5132] text-white hover:bg-[#0A3D24] transition-colors flex items-center gap-2 text-xs cursor-pointer">
                 Next <ArrowRight className="w-4 h-4" />
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={isLoading} className="px-8 py-3.5 rounded-2xl font-bold bg-white text-black hover:bg-gray-100 transition-all flex items-center gap-2 disabled:opacity-70">
+              <button onClick={handleSubmit} disabled={isLoading} className="px-6 py-2.5 rounded-xl font-bold bg-[#0F5132] text-white hover:bg-[#0A3D24] transition-colors flex items-center gap-2 text-xs cursor-pointer disabled:opacity-70">
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />} Create Account
               </button>
             )}
@@ -431,8 +422,8 @@ export default function RegisterPage() {
 
         </div>
 
-        <p className="mt-8 text-center text-sm font-medium text-[#A1A1AA]">
-          Already have an account? <Link href="/login" className="text-white font-bold hover:underline">Sign in</Link>
+        <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
+          Already have an account? <Link href="/login" className="font-bold text-[#0F5132] dark:text-[#198754] hover:underline">Sign in</Link>
         </p>
       </div>
     </div>

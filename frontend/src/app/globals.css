@@ -3,44 +3,45 @@
 
 @layer base {
   :root {
-    /* Base colors */
-    --background: #F8FAFC;
-    --foreground: #0F172A;
+    /* Editorial San Francisco / London Foundation */
+    --background: #FBFBFC;
+    --foreground: #090A0C;
     
-    /* Primary (Premium Indigo) */
-    --primary: #4F46E5;
+    /* Primary (Ghana Forest Emerald & Fintech Trust) */
+    --primary: #0F5132;
     --primary-foreground: #FFFFFF;
-    --primary-hover: #4338CA;
+    --primary-hover: #0A3D24;
 
-    /* Secondary (Terracotta Accent) */
-    --secondary: #E06D53;
+    /* Secondary (Warm Ghana Heritage Gold / Terracotta) */
+    --secondary: #D97706;
     --secondary-foreground: #FFFFFF;
-    --secondary-hover: #D05E44;
+    --secondary-hover: #B45309;
     
-    /* Cards & Surfaces */
+    /* Cards & Surfaces: Crisp, Solid, Architectural */
     --card: #FFFFFF;
-    --card-foreground: #0F172A;
-    --muted: #F1F5F9;
-    --muted-foreground: #64748B;
+    --card-foreground: #090A0C;
+    --muted: #F3F4F6;
+    --muted-foreground: #52525B;
     
-    /* Borders */
-    --border: #E2E8F0;
-    --input: #E2E8F0;
-    --ring: #4F46E5;
+    /* Crisp Hairline Borders */
+    --border: #E4E4E7;
+    --input: #E4E4E7;
+    --ring: #0F5132;
     
     --radius: 0.75rem;
   }
   
   .dark {
-    --background: #0B0F19;
-    --foreground: #F8FAFC;
-    --card: #111827;
-    --card-foreground: #F8FAFC;
-    --muted: #1E293B;
-    --muted-foreground: #94A3B8;
-    --border: #334155;
-    --input: #334155;
-    --primary: #6366F1;
+    /* Deep Obsidian Architectural Slate */
+    --background: #0B0D12;
+    --foreground: #F4F4F5;
+    --card: #12151D;
+    --card-foreground: #F4F4F5;
+    --muted: #1A1E29;
+    --muted-foreground: #A1A1AA;
+    --border: #262B37;
+    --input: #262B37;
+    --primary: #198754;
   }
 
   * {
@@ -53,63 +54,40 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.011em;
   }
   
   ::selection {
-    background-color: var(--primary);
-    color: white;
+    background-color: #0F5132;
+    color: #FFFFFF;
   }
 }
 
 @layer utilities {
-  .glass {
-    background-color: rgb(255 255 255 / 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgb(255 255 255 / 0.2);
+  .editorial-card {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
   }
-  .dark .glass {
-    background-color: rgb(15 23 42 / 0.7);
-    border-color: rgb(255 255 255 / 0.1);
+  .editorial-card:hover {
+    border-color: #A1A1AA;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
   }
-  .glass-card {
-    background-color: rgb(255 255 255 / 0.8);
-    backdrop-filter: blur(24px);
-    border: 1px solid rgb(255 255 255 / 0.5);
-    box-shadow: 0 8px 30px rgb(0 0 0 / 0.04);
+  .dark .editorial-card:hover {
+    border-color: #3F485B;
   }
-  .dark .glass-card {
-    background-color: rgb(30 41 59 / 0.8);
-    border-color: rgb(51 65 85 / 0.5);
-    box-shadow: 0 8px 30px rgb(0 0 0 / 0.2);
+  .hairline-border {
+    border: 1px solid var(--border);
   }
-  .text-gradient {
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    background-image: linear-gradient(to right, var(--primary), var(--secondary));
-  }
-  .bg-akwaaba-gradient,
-  thead, 
-  thead tr,
-  .thead-akwaaba {
-    background: linear-gradient(90deg, #4F46E5 0%, #7C3AED 50%, #E06D53 100%) !important;
-    color: #FFFFFF !important;
-  }
-  thead th, 
-  thead tr th,
-  .thead-akwaaba th {
-    background-color: transparent !important;
-    color: #FFFFFF !important;
-    font-weight: 800 !important;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+  .text-editorial-title {
+    letter-spacing: -0.028em;
   }
   .animate-in {
-    animation: fadeIn 0.5s ease-out forwards;
+    animation: fadeIn 0.4s ease-out forwards;
   }
   .animate-slide-up {
-    animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 
@@ -119,6 +97,6 @@
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
