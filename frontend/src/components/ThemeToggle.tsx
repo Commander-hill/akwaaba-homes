@@ -23,17 +23,13 @@ export default function ThemeToggle({ isScrolled }: { isScrolled?: boolean }) {
   return (
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className={`p-2 rounded-full transition-colors focus:outline-none ${
-        isScrolled 
-          ? 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300' 
-          : 'hover:bg-white/10 text-white'
-      }`}
+      className="p-2 rounded-xl transition-colors focus:outline-none hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer"
       aria-label="Toggle Dark Mode"
     >
       {isDark ? (
-        <Sun className="w-5 h-5 text-yellow-400" />
+        <Sun className="w-5 h-5 text-amber-400" />
       ) : (
-        <Moon className="w-5 h-5" />
+        <Moon className="w-5 h-5 text-slate-700 dark:text-slate-300" />
       )}
     </button>
   );

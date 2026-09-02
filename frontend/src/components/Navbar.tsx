@@ -73,10 +73,8 @@ export default function Navbar() {
       )}
 
       <nav className={clsx(
-        "transition-all duration-300",
-        isScrolled 
-          ? "bg-white/90 dark:bg-[#111111]/90 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 shadow-sm dark:shadow-xl" 
-          : "bg-transparent border-b border-transparent"
+        "transition-all duration-300 bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-xl border-b border-slate-200/80 dark:border-white/10",
+        isScrolled ? "shadow-md dark:shadow-xl" : "shadow-xs"
       )}>
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
@@ -93,10 +91,7 @@ export default function Navbar() {
                 priority
               />
             </div>
-            <span className={clsx(
-              "font-bold text-2xl tracking-tight transition-colors", 
-              isScrolled ? "text-gradient dark:text-white" : "text-white"
-            )}>
+            <span className="font-extrabold text-2xl tracking-tight text-slate-900 dark:text-white transition-colors group-hover:text-[#5B4CFF]">
               AKWAABA Homes
             </span>
           </Link>
@@ -115,9 +110,7 @@ export default function Navbar() {
                     "flex items-center gap-2 text-[15px] font-bold transition-colors",
                     isActive 
                       ? "text-[#5B4CFF]" 
-                      : isScrolled 
-                        ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" 
-                        : "text-white/80 hover:text-white"
+                      : "text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
                   )}
                 >
                   <Icon className={clsx("w-4 h-4", isActive ? "text-[#5B4CFF]" : "")} />
@@ -132,9 +125,7 @@ export default function Navbar() {
                 "flex items-center gap-2 px-5 py-2 rounded-full border text-sm font-bold transition-colors shadow-sm",
                 pathname.startsWith('/dashboard')
                   ? "border-[#5B4CFF] bg-[#5B4CFF]/10 text-[#5B4CFF]"
-                  : isScrolled 
-                    ? "border-slate-200 bg-white text-slate-900 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10" 
-                    : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+                  : "border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
               )}>
                 <UserCircle className="w-5 h-5 text-[#5B4CFF]" />
                 Dashboard
@@ -153,12 +144,7 @@ export default function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-4">
-                <Link href="/login" className={clsx(
-                  "text-[15px] font-bold transition-colors",
-                  isScrolled 
-                    ? "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" 
-                    : "text-white/80 hover:text-white"
-                )}>
+                <Link href="/login" className="text-[15px] font-bold text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white transition-colors">
                   Sign In
                 </Link>
                 <Link href="/register" className="bg-[#5B4CFF] text-white hover:bg-[#4B3DEE] px-6 py-2.5 rounded-full text-[15px] font-bold transition-all shadow-[0_0_20px_rgba(91,76,255,0.3)]">
@@ -173,10 +159,7 @@ export default function Navbar() {
             <LanguageSelector />
             <ThemeToggle isScrolled={isScrolled} />
             {isAuthenticated && <NotificationBell />}
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className={clsx(
-              "p-2 transition-colors", 
-              isScrolled ? "text-slate-900 dark:text-white" : "text-white"
-            )}>
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 transition-colors text-slate-900 dark:text-white cursor-pointer">
               {isMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
             </button>
           </div>
