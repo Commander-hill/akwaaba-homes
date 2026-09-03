@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { AlertTriangle, Home, CreditCard, ExternalLink, Loader2, Info } from 'lucide-react';
+import { AlertTriangle, CreditCard, Loader2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -41,14 +41,14 @@ export default function NoticeBoard() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+      <div className="w-full h-40 bg-emerald-950/20 border border-emerald-900/30 rounded-2xl animate-pulse flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
       </div>
     );
   }
 
   if (!notices || notices.length === 0) {
-    return null; // Don't render anything if no active notices
+    return null;
   }
 
   const notice = notices[currentIndex];
@@ -57,20 +57,20 @@ export default function NoticeBoard() {
     switch (type) {
       case 'CAUTION':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300 shadow-xs">
+            <AlertTriangle className="w-5 h-5" />
           </div>
         );
       case 'PAYMENT':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
-            <CreditCard className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-xs">
+            <CreditCard className="w-5 h-5" />
           </div>
         );
       case 'INFO':
         return (
-          <div className="w-11 h-11 rounded-2xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shadow-lg shadow-sky-500/10">
-            <Info className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-white shadow-xs">
+            <Info className="w-5 h-5" />
           </div>
         );
       default:
@@ -78,30 +78,28 @@ export default function NoticeBoard() {
     }
   };
 
-  const formattedOrderIndex = notice.orderIndex.toString().padStart(2, '0');
-
   return (
     <div id="tour-notice-board" className="mb-3">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Official Platform Advisory</div>
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Official Platform Advisory
+        </div>
       </div>
       
-      <div className="relative w-full bg-zinc-900 dark:bg-[#12151D] rounded-2xl p-5 sm:p-6 overflow-hidden shadow-xs transition-all duration-300 border border-zinc-800">
-        {/* Giant background number */}
-        
-
+      <div className="relative w-full bg-gradient-to-br from-[#0F5132] via-[#0D4428] to-[#072718] rounded-2xl p-5 sm:p-6 overflow-hidden shadow-xs transition-all duration-300 border border-emerald-800/60 text-white">
         <div className="relative z-10 max-w-3xl">
-          {/* Top Label */}
+          {/* Top Category Label */}
           {notice.topLabel && (
-            <div className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">
-              {notice.topLabel}
+            <div className="text-emerald-200/90 text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>{notice.topLabel}</span>
             </div>
           )}
           
           {/* Title Row */}
           <div className="flex items-center gap-3 mb-2">
             {notice.iconType && (
-              <div className="flex-shrink-0">
+              <div className="shrink-0">
                 {getIcon(notice.iconType)}
               </div>
             )}
@@ -111,7 +109,7 @@ export default function NoticeBoard() {
           </div>
 
           {/* Description */}
-          <p className="text-slate-200 text-xs sm:text-sm leading-relaxed max-w-2xl font-medium mb-4">
+          <p className="text-emerald-100/90 text-xs sm:text-sm leading-relaxed max-w-2xl font-medium mb-4">
             {notice.description}
           </p>
 
@@ -119,7 +117,7 @@ export default function NoticeBoard() {
           {notice.buttonText && notice.buttonLink && (
             <Link 
               href={notice.buttonLink}
-              className="inline-flex items-center justify-center px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-white hover:bg-emerald-50 text-[#0F5132] font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               {notice.buttonText}
             </Link>
@@ -133,7 +131,7 @@ export default function NoticeBoard() {
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-emerald-400 w-5' : 'bg-white/30 w-2 hover:bg-white/50'}`}
+                className={`h-1.5 rounded-full transition-all cursor-pointer ${idx === currentIndex ? 'bg-white w-5' : 'bg-white/30 w-1.5 hover:bg-white/50'}`}
                 aria-label={`View notice ${idx + 1}`}
               />
             ))}
