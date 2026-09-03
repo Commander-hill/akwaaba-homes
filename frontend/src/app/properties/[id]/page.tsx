@@ -13,6 +13,18 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDialog } from '@/providers/DialogProvider';
 
+
+function cleanText(text: string | null | undefined): string {
+  if (!text) return '';
+  return text
+    .replace(/&#x2F;/g, '/')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+}
+
 export default function PropertyDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { confirm } = useDialog();
@@ -281,6 +293,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   }
 
   const parsedImages = Array.isArray(property.images) ? property.images : (property.images ? JSON.parse(property.images) : []);
+  const validImages = parsedImages.filter((img: any) => typeof img === 'string' && img.trim().length > 5 && !img.includes('undefined') && !img.includes('null'));
   const parsedAmenities = Array.isArray(property.amenities) ? property.amenities : (property.amenities ? JSON.parse(property.amenities) : []);
   const parsedUtilities = Array.isArray(property.includedUtilities) ? property.includedUtilities : (property.includedUtilities ? JSON.parse(property.includedUtilities) : []);
   const mainImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
@@ -505,7 +518,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1">
-                      <span>🏠</span> YOUR ACTIVE BOOKING AT THIS HOSTEL
+                      <span>🏠</span> YOUR ACTIVE TENANCY RESERVATION AT THIS PROPERTY
                     </div>
                     <h4 className="text-lg font-black text-emerald-950 dark:text-emerald-50">
                       {myActiveBookingData.room?.roomType} {myActiveBookingData.room?.blockName ? `(${myActiveBookingData.room.blockName})` : ''}
@@ -531,7 +544,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-                  <span>🔒</span> You already hold an active room at this hostel. Multi-room bookings are locked to maintain student capacity fairness.
+                  <span>🔒</span> You currently hold an active reservation for this accommodation.
                 </div>
               </div>
             )}
@@ -926,7 +939,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       <div className="space-y-8">
         <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
           <h2 className="text-2xl font-bold mb-4">Description</h2>
-          <p className="text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">{property.description}</p>
+          <p className="text-[var(--muted-foreground)] leading-relaxed whitespace-pre-wrap">{cleanText(property.description)}</p>
         </div>
 
         {property.videoUrl && (
@@ -991,7 +1004,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>🤫</span> Quiet Hours
               </div>
               <div className="text-base font-extrabold text-[var(--foreground)]">
-                {property.quietHours || 'From 10:00 PM'}
+                {cleanText(property.quietHours) || 'From 10:00 PM'}
               </div>
             </div>
           </div>
