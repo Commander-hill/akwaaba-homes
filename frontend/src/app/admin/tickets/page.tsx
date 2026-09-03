@@ -141,7 +141,7 @@ export default function AdminTicketsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
+              <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
                 <tr>
                   <th className="px-6 py-4 text-white font-extrabold">Issue / Property</th>
                   <th className="px-6 py-4 text-white font-extrabold">Tenant</th>

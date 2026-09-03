@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Search, Mail, Phone, User, GraduationCap, MapPin, Building, Star, Filter } from 'lucide-react';
+import { Loader2, Search, Mail, Phone, User, GraduationCap, MapPin, Building, Star, Filter, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { getImageUrl } from '@/lib/utils';
@@ -22,16 +22,13 @@ export default function LandlordTenantsPage() {
 
   const bookings = bookingsResponse?.bookings || [];
 
-  // Filter and sort bookings to get unique tenants or just show all booking instances
   const filteredBookings = useMemo(() => {
     let result = bookings;
     
-    // Apply Status Filter
     if (statusFilter !== 'ALL') {
       result = result.filter((b: any) => b.status === statusFilter);
     }
 
-    // Apply Search Term
     if (searchTerm.trim() !== '') {
       const term = searchTerm.toLowerCase();
       result = result.filter((b: any) => {
@@ -52,81 +49,85 @@ export default function LandlordTenantsPage() {
   const pastCount = bookings.filter((b: any) => b.status === 'COMPLETED' || b.status === 'CANCELLED').length;
 
   return (
-    <div className="w-full space-y-6 animate-in">
+    <div className="w-full space-y-6 pb-12">
       {/* Sticky Header & Stats Container */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenants & Guests</h1>
-          <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage and view details for all people who have booked your properties.</p>
+      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Resident Directory &amp; Tenant Roster</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Verified occupants, room allocations, and tenancy contract statuses across your properties.</p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Ghana Card KYC &amp; Act 220 Audited</span>
+          </div>
         </div>
 
-        {/* Stats row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-4 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
-            <div>
-              <p className="text-[10px] sm:text-xs font-extrabold text-indigo-900/70 dark:text-indigo-300/80 uppercase tracking-wider mb-0.5">Total Bookings</p>
-              <p className="text-2xl sm:text-3xl font-black text-indigo-950 dark:text-indigo-200">{bookings.length}</p>
+        {/* 4 Architectural Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Total Bookings</span>
+              <User className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner shrink-0">
-              <User className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <div className="text-2xl font-black text-zinc-950 dark:text-white">{bookings.length}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">All-time reservation records</div>
           </div>
 
-          <div className="p-4 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
-            <div>
-              <p className="text-[10px] sm:text-xs font-extrabold text-emerald-900/70 dark:text-emerald-300/80 uppercase tracking-wider mb-0.5">Active</p>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">{activeCount}</p>
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Active Residents</span>
+              <Building className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner shrink-0">
-              <Building className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <div className="text-2xl font-black text-[#0F5132] dark:text-emerald-400">{activeCount}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Currently residing in rooms</div>
           </div>
 
-          <div className="p-4 rounded-2xl border bg-amber-50/80 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
-            <div>
-              <p className="text-[10px] sm:text-xs font-extrabold text-amber-900/70 dark:text-amber-300/80 uppercase tracking-wider mb-0.5">Pending</p>
-              <p className="text-2xl sm:text-3xl font-black text-amber-500 dark:text-amber-400">{pendingCount}</p>
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Pending Review</span>
+              <Filter className="w-4 h-4 text-amber-500" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300 flex items-center justify-center shadow-inner shrink-0">
-              <Filter className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <div className="text-2xl font-black text-amber-600 dark:text-amber-400">{pendingCount}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Awaiting landlord approval</div>
           </div>
 
-          <div className="p-4 rounded-2xl border bg-slate-100/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs transition-all hover:shadow-md">
-            <div>
-              <p className="text-[10px] sm:text-xs font-extrabold text-slate-700/80 dark:text-slate-400 uppercase tracking-wider mb-0.5">Past</p>
-              <p className="text-2xl sm:text-3xl font-black text-slate-600 dark:text-slate-300">{pastCount}</p>
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Past &amp; Completed</span>
+              <MapPin className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-inner shrink-0">
-              <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <div className="text-2xl font-black text-zinc-600 dark:text-zinc-400">{pastCount}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Vacated or cancelled leases</div>
           </div>
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden flex flex-col h-[600px]">
+      {/* Main Roster Container */}
+      <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs flex flex-col min-h-[500px]">
         {/* Toolbar */}
-        <div className="p-4 border-b border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
+        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             <input 
               type="text" 
               placeholder="Search by name, email, or student ID..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white dark:bg-[#0a0a0a] border border-[var(--input)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+              className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] outline-none transition-all"
             />
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto w-full sm:w-auto">
             {['ALL', 'PENDING', 'APPROVED', 'ACTIVE', 'COMPLETED', 'CANCELLED'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={clsx(
-                  "px-3 py-1.5 text-xs font-bold rounded-md whitespace-nowrap transition-colors",
+                  "px-3 py-1 text-[11px] font-bold rounded-lg whitespace-nowrap transition-all cursor-pointer",
                   statusFilter === status
-                    ? "bg-[var(--primary)] text-white"
-                    : "bg-white dark:bg-slate-800 border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                    ? "bg-[#0F5132] text-white shadow-xs"
+                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                 )}
               >
                 {status}
@@ -136,93 +137,105 @@ export default function LandlordTenantsPage() {
         </div>
 
         {/* Table Content */}
-        <div className="flex-1 overflow-auto bg-white dark:bg-[#0a0a0a]">
+        <div className="flex-1 overflow-auto">
           {isLoading ? (
             <SkeletonTable rows={5} columns={5} />
           ) : filteredBookings.length === 0 ? (
-            <div className="flex flex-col h-full items-center justify-center text-center p-8">
-              <User className="w-16 h-16 text-slate-200 dark:text-slate-800 mb-4" />
-              <h3 className="text-lg font-bold text-[var(--foreground)]">No Tenants Found</h3>
-              <p className="text-[var(--muted-foreground)] text-sm max-w-sm mt-1">
-                Try adjusting your search filters, or wait for new booking requests to come in.
+            <div className="flex flex-col h-full items-center justify-center text-center p-12 space-y-2">
+              <User className="w-10 h-10 text-zinc-300 dark:text-zinc-700" />
+              <h3 className="text-sm font-bold text-zinc-950 dark:text-white">No Matching Resident Records</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm">
+                Try adjusting your search criteria or switch the status filter tab above.
               </p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white z-10 shadow-md">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead className="sticky top-0 bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] font-bold tracking-wider z-10">
                 <tr>
-                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
-                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
-                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Dates</th>
-                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-4 text-xs font-extrabold text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3.5">Resident / Student</th>
+                  <th className="px-6 py-3.5">Assigned Property</th>
+                  <th className="px-6 py-3.5">Tenancy Term</th>
+                  <th className="px-6 py-3.5">Contact Clearance</th>
+                  <th className="px-6 py-3.5 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border)]">
+              <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
                 {filteredBookings.map((booking: any) => {
                   const t = booking.tenant;
-                  const isApproved = ['APPROVED', 'ACTIVE'].includes(booking.status);
+                  const isApproved = ['APPROVED', 'ACTIVE', 'COMPLETED'].includes(booking.status);
                   
                   return (
-                    <tr key={booking.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={booking.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={getImageUrl(t?.avatarUrl) || 'https://via.placeholder.com/150'} 
-                            alt={t?.firstName || 'Tenant'} 
-                            className="w-10 h-10 rounded-full object-cover border border-[var(--border)]"
-                          />
+                          <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-zinc-700 dark:text-zinc-300 shrink-0 overflow-hidden text-xs">
+                            {t?.avatarUrl ? (
+                              <img src={getImageUrl(t.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              `${t?.firstName?.[0] || 'U'}${t?.lastName?.[0] || ''}`
+                            )}
+                          </div>
                           <div>
-                            <div className="font-bold text-[var(--foreground)] text-sm">{t?.firstName || 'Unknown'} {t?.lastName || 'Tenant'}</div>
+                            <div className="font-bold text-zinc-950 dark:text-white text-xs">
+                              {t?.firstName || 'Unknown'} {t?.lastName || 'Tenant'}
+                            </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              {t?.gender && <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[var(--muted-foreground)]">{t.gender}</span>}
-                              {t?.studentId && (
-                                <span className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
-                                  <GraduationCap className="w-3 h-3" /> {t.studentId}
+                              {t?.gender && (
+                                <span className="text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.2 rounded text-zinc-500 font-medium">
+                                  {t.gender}
                                 </span>
                               )}
-                            </div>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                              <span className="text-xs font-medium text-[var(--muted-foreground)]">{(t?.reputationScore || 5.0).toFixed(1)}</span>
+                              {t?.studentId && (
+                                <span className="flex items-center gap-1 text-[10px] text-zinc-500">
+                                  <GraduationCap className="w-3 h-3 text-zinc-400" /> {t.studentId}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-[var(--foreground)] text-sm">{booking.property?.title || 'Unknown Property'}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">Booking Ref: {String(booking.id || '').substring(0,8)}</div>
+                        <div className="font-bold text-zinc-900 dark:text-white text-xs">
+                          {booking.property?.title || 'Unknown Property'}
+                        </div>
+                        <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                          Ref: #{String(booking.id || '').substring(0,8)}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-[var(--foreground)]">{new Date(booking.startDate).toLocaleDateString()}</div>
-                        <div className="text-xs text-[var(--muted-foreground)] mt-0.5">to {new Date(booking.endDate).toLocaleDateString()}</div>
+                        <div className="text-zinc-900 dark:text-white font-medium">
+                          {new Date(booking.startDate).toLocaleDateString()}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 mt-0.5">
+                          to {new Date(booking.endDate).toLocaleDateString()}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-1">
                           {isApproved ? (
                             <>
-                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
-                                <Mail className="w-3.5 h-3.5" /> {t?.email || 'N/A'}
+                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#0F5132] transition-colors">
+                                <Mail className="w-3 h-3 text-zinc-400" /> {t?.email || 'N/A'}
                               </a>
                               {t?.phoneNumber && (
-                                <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors">
-                                  <Phone className="w-3.5 h-3.5" /> {t.phoneNumber}
+                                <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#0F5132] transition-colors">
+                                  <Phone className="w-3 h-3 text-zinc-400" /> {t.phoneNumber}
                                 </a>
                               )}
                             </>
                           ) : (
-                            <span className="text-xs text-[var(--muted-foreground)] italic">Revealed when approved</span>
+                            <span className="text-[11px] text-zinc-400 italic">Protected until approval</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-right">
                         <span className={clsx(
-                          "inline-flex items-center px-2.5 py-1 rounded-md font-bold text-[10px]",
-                          booking.status === 'APPROVED' ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :
-                          booking.status === 'PENDING' ? "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" :
-                          booking.status === 'ACTIVE' ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400" :
-                          booking.status === 'COMPLETED' ? "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400" :
-                          "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                          "inline-flex items-center px-2.5 py-0.5 rounded-full font-bold text-[10px] border tracking-wide",
+                          booking.status === 'APPROVED' ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/60" :
+                          booking.status === 'PENDING' ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/60" :
+                          booking.status === 'ACTIVE' ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/60" :
+                          booking.status === 'COMPLETED' ? "bg-zinc-100 text-zinc-700 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700" :
+                          "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/60"
                         )}>
                           {booking.status}
                         </span>
