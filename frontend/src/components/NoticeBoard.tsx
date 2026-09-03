@@ -83,21 +83,17 @@ export default function NoticeBoard() {
   return (
     <div id="tour-notice-board" className="mb-3">
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-sm font-extrabold uppercase tracking-wider text-pink-500 dark:text-pink-400 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping inline-block" /> System Announcement & Notice
-        </h2>
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" /> Official Platform Advisory</div>
       </div>
       
-      <div className="relative w-full bg-[#0A1136] rounded-2xl p-5 sm:p-6 overflow-hidden shadow-xl transition-all duration-500 ease-in-out border border-indigo-900/50">
+      <div className="relative w-full bg-zinc-900 dark:bg-[#12151D] rounded-2xl p-5 sm:p-6 overflow-hidden shadow-xs transition-all duration-300 border border-zinc-800">
         {/* Giant background number */}
-        <div className="absolute -bottom-6 -right-3 text-[8rem] font-black text-white/[0.04] leading-none pointer-events-none select-none font-sans">
-          {formattedOrderIndex}
-        </div>
+        
 
         <div className="relative z-10 max-w-3xl">
           {/* Top Label */}
           {notice.topLabel && (
-            <div className="text-pink-300 text-[10px] font-black uppercase tracking-widest mb-1.5">
+            <div className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mb-1.5">
               {notice.topLabel}
             </div>
           )}
@@ -109,7 +105,7 @@ export default function NoticeBoard() {
                 {getIcon(notice.iconType)}
               </div>
             )}
-            <h3 className="text-xl sm:text-2xl font-black text-pink-400 tracking-tight">
+            <h3 className="text-lg sm:text-xl font-black text-white tracking-tight">
               {notice.title}
             </h3>
           </div>
@@ -123,7 +119,7 @@ export default function NoticeBoard() {
           {notice.buttonText && notice.buttonLink && (
             <Link 
               href={notice.buttonLink}
-              className="inline-flex items-center justify-center px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-pink-500/25 transition-all hover:scale-105"
+              className="inline-flex items-center justify-center px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold text-xs px-4 py-2 rounded-xl shadow-xs transition-colors"
             >
               {notice.buttonText}
             </Link>
@@ -137,7 +133,7 @@ export default function NoticeBoard() {
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}
-                className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-pink-400 w-6' : 'bg-white/30 w-2 hover:bg-white/50'}`}
+                className={`h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-emerald-400 w-5' : 'bg-white/30 w-2 hover:bg-white/50'}`}
                 aria-label={`View notice ${idx + 1}`}
               />
             ))}

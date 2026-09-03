@@ -381,149 +381,221 @@ export default function TenantDashboard() {
           </div>
         </div>
 
-        {/* Tabs Strip */}
-        <div className="flex items-center gap-1.5 overflow-x-auto max-w-full p-1.5 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl w-full">
-          <button
-            onClick={() => setActiveTab('bookings')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap",
-              activeTab === 'bookings' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            My Bookings
-          </button>
-          <button
-            onClick={() => setActiveTab('tickets')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap",
-              activeTab === 'tickets' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            Maintenance Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('reviews')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'reviews' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> My Reviews
-          </button>
-          <button
-            onClick={() => setActiveTab('documents')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'documents' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <FileText className="w-4 h-4" /> Lease Vault
-          </button>
-          <button
-            onClick={() => setActiveTab('roommates')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'roommates' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <Users className="w-4 h-4" /> Roommate Finder
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'payments' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <Receipt className="w-4 h-4" /> Payments & Receipts
-          </button>
-          <button
-            onClick={() => setActiveTab('safety')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'safety' ? "bg-red-600 text-white shadow-sm" : "text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
-            )}
-          >
-            <Siren className="w-4 h-4 animate-pulse text-red-400" /> 24/7 Emergency
-          </button>
+        {/* 3 Core Resident Workspaces */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          {/* Main Workspace Navigation */}
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={clsx(
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                ['bookings', 'documents', 'payments', 'renewals'].includes(activeTab)
+                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Tenancy &amp; Leases</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('messages')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'messages' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <MessageSquare className="w-4 h-4 text-indigo-500" /> Messages
-          </button>
+            <button
+              onClick={() => setActiveTab('tickets')}
+              className={clsx(
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                ['tickets', 'deliveries', 'visitors', 'vehicles', 'services'].includes(activeTab)
+                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              <PenTool className="w-3.5 h-3.5 text-blue-600" />
+              <span>Living &amp; Services</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('visitors')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'visitors' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <KeyRound className="w-4 h-4 text-amber-500" /> Visitor Passes
-          </button>
+            <button
+              onClick={() => setActiveTab('roommates')}
+              className={clsx(
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                ['roommates', 'billsplit', 'reviews', 'messages', 'safety'].includes(activeTab)
+                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              <Users className="w-3.5 h-3.5 text-amber-600" />
+              <span>Community &amp; Hub</span>
+            </button>
+          </div>
 
-          <button
-            onClick={() => setActiveTab('services')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'services' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+          {/* Sub-Pills for Currently Selected Workspace */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {['bookings', 'documents', 'payments', 'renewals'].includes(activeTab) && (
+              <>
+                <button
+                  onClick={() => setActiveTab('bookings')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'bookings'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  My Stays ({bookings.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab('documents')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'documents'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <FileText className="w-3 h-3" /> Lease Vault (Act 220)
+                </button>
+                <button
+                  onClick={() => setActiveTab('payments')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'payments'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <Receipt className="w-3 h-3" /> Receipts &amp; Ledger
+                </button>
+                <button
+                  onClick={() => setActiveTab('renewals')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'renewals'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Lease Renewal
+                </button>
+              </>
             )}
-          >
-            <Sparkles className="w-4 h-4 text-blue-500" /> Home Services
-          </button>
 
-          <button
-            onClick={() => setActiveTab('vehicles')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'vehicles' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            {['tickets', 'deliveries', 'visitors', 'vehicles', 'services'].includes(activeTab) && (
+              <>
+                <button
+                  onClick={() => setActiveTab('tickets')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'tickets'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Maintenance Tickets
+                </button>
+                <button
+                  onClick={() => setActiveTab('deliveries')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'deliveries'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <Package className="w-3 h-3" /> Parcel Vault
+                </button>
+                <button
+                  onClick={() => setActiveTab('visitors')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'visitors'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <KeyRound className="w-3 h-3" /> Visitor Passes
+                </button>
+                <button
+                  onClick={() => setActiveTab('vehicles')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'vehicles'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Parking
+                </button>
+                <button
+                  onClick={() => setActiveTab('services')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'services'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Home Services
+                </button>
+              </>
             )}
-          >
-            <Car className="w-4 h-4 text-emerald-500" /> Vehicles & Parking
-          </button>
 
-          <button
-            onClick={() => setActiveTab('renewals')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'renewals' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+            {['roommates', 'billsplit', 'reviews', 'messages', 'safety'].includes(activeTab) && (
+              <>
+                <button
+                  onClick={() => setActiveTab('roommates')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'roommates'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <Users className="w-3 h-3" /> Roommate Finder
+                </button>
+                <button
+                  onClick={() => setActiveTab('billsplit')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'billsplit'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Bill Splitter
+                </button>
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'reviews'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <Star className="w-3 h-3 text-amber-500" /> Reviews
+                </button>
+                <button
+                  onClick={() => setActiveTab('messages')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1",
+                    activeTab === 'messages'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  <MessageSquare className="w-3 h-3" /> Host Chat
+                </button>
+                <button
+                  onClick={() => setActiveTab('safety')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-1",
+                    activeTab === 'safety' && "bg-rose-600 text-white font-bold"
+                  )}
+                >
+                  <Siren className="w-3 h-3" /> 24/7 Desk
+                </button>
+              </>
             )}
-          >
-            <FileText className="w-4 h-4 text-purple-500" /> Lease Renewal
-          </button>
-
-          <button
-            onClick={() => setActiveTab('deliveries')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'deliveries' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <Package className="w-4 h-4 text-orange-500" /> Parcel Vault
-          </button>
-
-          <button
-            onClick={() => setActiveTab('billsplit')}
-            className={clsx(
-              "px-5 py-2.5 text-sm font-bold rounded-xl transition-all shrink-0 whitespace-nowrap flex items-center gap-2",
-              activeTab === 'billsplit' ? "bg-[#0F5132] text-white font-bold shadow-xs" : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
-            )}
-          >
-            <DollarSign className="w-4 h-4 text-emerald-600" /> Bill Splitter
-          </button>
+          </div>
         </div>
       </div>
-
-      {activeTab === 'messages' && (
-        <div className="animate-in">
-          <MessagingTab />
-        </div>
-      )}
 
       {activeTab === 'bookings' && (
         <div className="animate-in">
@@ -594,7 +666,7 @@ export default function TenantDashboard() {
                             <>
                               <Link 
                                 href={`/dashboard/agreements/${booking.id}`}
-                                className="text-xs font-bold text-white bg-[var(--primary)] px-3 py-1.5 rounded-full hover:opacity-90 transition-colors flex items-center gap-1 shadow-md shadow-[var(--primary)]/20"
+                                className="text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
                               >
                                 View Agreement
                               </Link>
@@ -622,7 +694,7 @@ export default function TenantDashboard() {
                               )}
                               <button 
                                 onClick={() => { setTicketPropertyId(booking.propertyId); setTicketError(''); setTicketModalOpen(true); }}
-                                className="text-xs font-bold text-slate-700 bg-slate-100 dark:bg-slate-800 dark:text-slate-300 px-3 py-1.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                                className="text-xs font-bold text-slate-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
                               >
                                 <PenTool className="w-3 h-3" /> Report Issue
                               </button>
@@ -631,7 +703,7 @@ export default function TenantDashboard() {
                           {booking.status === 'COMPLETED' && (
                             <button 
                               onClick={() => { setSelectedBookingId(booking.id); setReviewError(''); setReviewModalOpen(true); }}
-                              className="text-xs font-bold text-[var(--primary)] bg-indigo-50 dark:bg-slate-800 px-3 py-1.5 rounded-full hover:bg-indigo-100 dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                              className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                             >
                               <Star className="w-3 h-3 fill-current" /> Leave Review
                             </button>
