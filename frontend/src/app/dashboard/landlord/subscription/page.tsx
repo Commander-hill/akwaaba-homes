@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building } from 'lucide-react';
+import { Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LandlordSubscriptionPage() {
@@ -24,102 +24,121 @@ export default function LandlordSubscriptionPage() {
   });
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 pb-12">
       {/* Sticky Header & Stats Container */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Billing & Subscriptions</h1>
-          <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage listing fees and track the active status of your properties.</p>
+      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Listing Billing &amp; Subscriptions</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage annual listing fees, search visibility, and active property status.</p>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Paystack / MoMo Automated Billing</span>
+          </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 sm:gap-6">
-          <div className="p-3 sm:p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#E0E7FF] dark:bg-[#312E81] rounded-xl flex items-center justify-center text-[#4338CA] dark:text-[#A5B4FC] mb-2 shadow-inner shrink-0">
-              <Building className="w-4 h-4 sm:w-5 sm:h-5" />
+        {/* 3 Executive Metric Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Total Portfolio</span>
+              <Building className="w-4 h-4 text-zinc-400" />
             </div>
-            <div className="text-xl sm:text-3xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{properties?.length || 0}</div>
-            <div className="text-[10px] sm:text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider mt-0.5">Total Properties</div>
+            <div className="text-2xl font-black text-zinc-950 dark:text-white">{properties?.length || 0}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Listed properties managed</div>
           </div>
 
-          <div className="p-3 sm:p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#D1FAE5] dark:bg-[#047857] rounded-xl flex items-center justify-center text-[#047857] dark:text-[#6EE7B7] mb-2 shadow-inner shrink-0">
-              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Live &amp; Visible</span>
+              <CheckCircle className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
             </div>
-            <div className="text-xl sm:text-3xl font-black text-[#047857] dark:text-[#6EE7B7]">
+            <div className="text-2xl font-black text-[#0F5132] dark:text-emerald-400">
               {properties?.filter((p: any) => p.isAvailable).length || 0}
             </div>
-            <div className="text-[10px] sm:text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider mt-0.5">Active Listings</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Visible to students across Ghana</div>
           </div>
 
-          <div className="p-3 sm:p-5 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex flex-col items-center justify-center text-center shadow-xs transition-all hover:shadow-md">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#FECDD3] dark:bg-[#9F1239] rounded-xl flex items-center justify-center text-[#BE123C] dark:text-[#FECDD3] mb-2 shadow-inner shrink-0">
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Action Required</span>
+              <AlertCircle className="w-4 h-4 text-amber-500" />
             </div>
-            <div className="text-xl sm:text-3xl font-black text-[#BE123C] dark:text-[#FFE4E6]">
+            <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
               {properties?.filter((p: any) => !p.isAvailable).length || 0}
             </div>
-            <div className="text-[10px] sm:text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider mt-0.5">Unpaid / Hidden</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Unpublished or pending renewal</div>
           </div>
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl overflow-hidden border border-[var(--border)]">
-        <div className="px-6 py-4 border-b border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/50">
-          <h3 className="font-bold text-[var(--foreground)]">Property Billing Status</h3>
+      {/* Table Container */}
+      <div className="bg-white dark:bg-[#12151D] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xs">
+        <div className="px-6 py-4 border-b border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/50 flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white">Property Listing Billing Status</h3>
+          <span className="text-[11px] text-zinc-500">Auto-renews via Paystack Escrow</span>
         </div>
         
         {isLoading ? (
           <div className="p-12 flex justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" />
           </div>
         ) : properties?.length === 0 ? (
-          <div className="p-12 text-center text-[var(--muted-foreground)]">
-            You don't have any properties yet.
+          <div className="p-12 text-center text-xs text-zinc-500">
+            No properties registered under your landlord account yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#E06D53] text-white font-extrabold shadow-md">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] font-bold tracking-wider">
                 <tr>
-                  <th className="px-6 py-4 text-white font-extrabold">Property</th>
-                  <th className="px-6 py-4 text-white font-extrabold">Visibility</th>
-                  <th className="px-6 py-4 text-white font-extrabold">Subscription</th>
-                  <th className="px-6 py-4 text-right text-white font-extrabold">Action</th>
+                  <th className="px-6 py-3.5">Property Name</th>
+                  <th className="px-6 py-3.5">Search Visibility</th>
+                  <th className="px-6 py-3.5">Subscription Plan</th>
+                  <th className="px-6 py-3.5 text-right">Status / Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[var(--border)]">
+              <tbody className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70">
                 {properties?.map((property: any) => (
-                  <tr key={property.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                    <td className="px-6 py-4 font-medium text-[var(--foreground)]">
+                  <tr key={property.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/40 transition-colors">
+                    <td className="px-6 py-4 font-bold text-zinc-900 dark:text-white">
                       {property.title}
                     </td>
                     <td className="px-6 py-4">
                       {property.isAvailable ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 font-bold text-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Visible
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-400 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live on Campus
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 font-bold text-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Hidden
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 font-bold text-[11px] border border-rose-200 dark:border-rose-800/60">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Hidden / Expired
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-[var(--muted-foreground)] flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {property.subscription?.endDate 
-                        ? new Date(property.subscription.endDate).toLocaleDateString()
-                        : 'No active plan'}
+                    <td className="px-6 py-4 text-zinc-500 dark:text-zinc-400">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+                        <span>
+                          {property.subscription?.endDate 
+                            ? `Expires ${new Date(property.subscription.endDate).toLocaleDateString()}`
+                            : 'Standard Annual Plan'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       {!property.isAvailable ? (
                         <Link 
                           href="/dashboard/landlord/properties"
-                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-bold text-xs hover:bg-[var(--primary-hover)] transition-colors"
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg font-bold text-[11px] shadow-xs transition-colors"
                         >
-                          <CreditCard className="w-4 h-4" /> Pay to Publish
+                          <CreditCard className="w-3 h-3" /> Pay to Publish
                         </Link>
                       ) : (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-bold text-xs">Paid</span>
+                        <span className="inline-flex items-center gap-1 text-[#0F5132] dark:text-emerald-400 font-bold text-xs">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Active Paid</span>
+                        </span>
                       )}
                     </td>
                   </tr>
