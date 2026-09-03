@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, Globe, LogOut, CheckCircle2, AlertTriangle, Clock, ShieldAlert } from 'lucide-react';
+import { 
+  Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, 
+  Globe, LogOut, CheckCircle2, AlertTriangle, Clock, ShieldAlert, Lock, User, Check, Building2, GraduationCap
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
@@ -181,174 +184,195 @@ export default function ProfilePage() {
     setFormData({ ...formData, avatarUrl: randomAvatar });
   };
 
-  // Helper to calculate age if dateOfBirth is roughly formatted (e.g. FEB 03, 2003 or 2003-02-03)
   const calculateAge = (dob: string) => {
-    if (!dob) return 'N/A';
+    if (!dob) return null;
     const birthYear = new Date(dob).getFullYear();
-    if (isNaN(birthYear)) return 'N/A';
-    return `${new Date().getFullYear() - birthYear} years`;
+    if (isNaN(birthYear)) return null;
+    const age = new Date().getFullYear() - birthYear;
+    return age > 0 ? `${age} yrs` : null;
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
+    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" /></div>;
   }
 
   const isLocked = !!session?.isProfileLocked && session?.role !== 'ADMIN';
 
   return (
-    <div className="max-w-4xl mx-auto min-h-screen pb-12 animate-in text-slate-800 dark:text-slate-200">
+    <div className="max-w-4xl mx-auto pb-16 space-y-6">
       
-      {/* Header / Nav */}
-      <div className="flex justify-between items-center mb-6">
-        <Link href="/dashboard/tenant" className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
-          <ArrowLeft className="w-6 h-6" /> Profile
-        </Link>
+      {/* ── HEADER / NAV ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <Link 
+            href="/dashboard/tenant" 
+            className="inline-flex items-center gap-2 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-1"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
+          </Link>
+          <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+            Account Profile &amp; Credentials
+          </h1>
+        </div>
+
         {!isLocked ? (
           <button 
             onClick={handleSubmit} 
             disabled={isSaving}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors disabled:opacity-70 shadow-md"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-70 cursor-pointer"
           >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Profile
+            {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            <span>Save Profile</span>
           </button>
         ) : (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {session?.profileUnlockRequested ? (
-              <span className="bg-amber-100 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 flex items-center gap-1.5 shadow-sm">
-                ⏳ Edit Request Pending
+              <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-600" /> Edit Request Pending
               </span>
             ) : (
               <button
                 onClick={() => setRequestModalOpen(true)}
-                className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all cursor-pointer"
+                className="bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                🔓 Request Edit Access
+                Request Edit Access
               </button>
             )}
-            <div className="flex items-center gap-2 bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-extrabold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
-              <span>🔒 Locked (Read-Only)</span>
+            <div className="flex items-center gap-1.5 bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700">
+              <Lock className="w-3 h-3 text-zinc-400" />
+              <span>Locked (Institutional KYC)</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Safety & Immutability Warning Banner */}
-      {!isLocked ? (
-        <div className="mb-6 p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs sm:text-sm space-y-1">
-          <div className="font-extrabold flex items-center gap-1.5 text-indigo-700 dark:text-indigo-300">
-            <span>🛡️</span> Security & Data Accuracy Warning
+      {/* ── PROFILE HERO CARD ── */}
+      <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="w-20 h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 overflow-hidden flex items-center justify-center">
+              {formData.avatarUrl ? (
+                <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-emerald-950/40 border border-emerald-800/60 flex items-center justify-center text-emerald-400 text-2xl font-black">
+                  {formData.firstName?.[0] || 'U'}{formData.lastName?.[0] || ''}
+                </div>
+              )}
+            </div>
+            {!isLocked && (
+              <button 
+                onClick={handleSimulateAvatarUpload}
+                className="absolute -bottom-1 -right-1 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 p-1.5 rounded-lg shadow-xs hover:scale-105 transition-transform"
+                title="Change Avatar"
+              >
+                <Upload className="w-3 h-3" />
+              </button>
+            )}
           </div>
-          <p className="leading-relaxed">
-            Your information is stored safely and handled with strict confidentiality. 
-            <strong className="text-pink-600 dark:text-pink-400"> Warning:</strong> Once you fill out your credentials and click <strong>Save Profile</strong>, your details will become <strong>permanently locked and read-only</strong> to prevent identity fraud and ensure institutional compliance. You will not be able to edit them afterwards. Only an administrator can grant access to apply changes.
-          </p>
-        </div>
-      ) : (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs sm:text-sm space-y-2">
-          <div className="font-extrabold flex items-center justify-between gap-1.5 text-amber-800 dark:text-amber-300 text-sm">
-            <span className="flex items-center gap-1.5">🔒 Profile Status: Locked & Immutably Verified</span>
-            {session?.profileUnlockRequested && (
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 font-black">
-                Request Under Review
+
+          {/* User Details */}
+          <div className="space-y-1.5 flex-1 min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-xl font-black text-zinc-950 dark:text-white truncate">
+                {formData.firstName} {formData.otherNames} {formData.lastName}
+              </h2>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+                <Check className="w-3 h-3" /> Act 220 Verified
               </span>
-            )}
+            </div>
+
+            <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 flex-wrap">
+              <span className="font-medium text-zinc-700 dark:text-zinc-300">{formData.email}</span>
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+              <span>{formData.phoneNumber || 'No phone number'}</span>
+              <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+              <span>{formData.nationality || 'Ghana'}</span>
+              {calculateAge(formData.dateOfBirth) && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+                  <span>{calculateAge(formData.dateOfBirth)}</span>
+                </>
+              )}
+            </div>
           </div>
-          <p className="leading-relaxed">
-            {session?.profileUnlockRequested ? (
-              <>Your edit access request has been submitted to the system administrator: <em>"{session.profileUnlockReason}"</em>. You will receive edit permissions as soon as an admin approves your request.</>
-            ) : (
-              <>Your profile details have been saved and locked. If you need to correct any field, click <strong>"Request Edit Access"</strong> above to send an edit approval request to platform admins.</>
-            )}
-          </p>
         </div>
-      )}
+
+        {/* Lock Status Bar */}
+        {isLocked && (
+          <div className="mt-5 pt-4 border-t border-zinc-100 dark:border-zinc-800/80 flex items-start gap-2.5 text-xs text-zinc-500 dark:text-zinc-400">
+            <Lock className="w-3.5 h-3.5 text-zinc-400 mt-0.5 shrink-0" />
+            <p className="leading-relaxed">
+              {session?.profileUnlockRequested ? (
+                <>Your unlock request is currently under review: <em className="text-zinc-800 dark:text-zinc-200">"{session.profileUnlockReason}"</em>. An administrator will review your requested modifications.</>
+              ) : (
+                <>Identity fields are cryptographically locked for statutory compliance with Ghana Rent Act guidelines. To modify details, submit an edit access request above.</>
+              )}
+            </p>
+          </div>
+        )}
+      </div>
 
       {message && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-bold shadow-sm ${message.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+        <div className={clsx(
+          "p-3.5 rounded-xl text-xs font-bold border",
+          message.type === 'success' ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300"
+        )}>
           {message.text}
         </div>
       )}
 
-      {/* Profile Header Info */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-10 pl-2">
-        <div className="relative shrink-0">
-          <div className="w-32 h-32 rounded-3xl bg-white dark:bg-slate-800 shadow-md overflow-hidden border-4 border-white dark:border-slate-800">
-            {formData.avatarUrl ? (
-              <img src={formData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-3xl font-bold text-slate-400">
-                {formData.firstName?.[0] || 'U'}
-              </div>
-            )}
-          </div>
-          {!isLocked && (
-            <button 
-              onClick={handleSimulateAvatarUpload}
-              className="absolute -bottom-2 -right-2 bg-pink-500 text-white p-2.5 rounded-full shadow-lg hover:bg-pink-600 transition-transform hover:scale-105"
-              title="Upload Photo (Simulated)"
-            >
-              <Upload className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight">{formData.firstName} {formData.otherNames} {formData.lastName}</h1>
-          <div className="text-[var(--muted-foreground)] font-medium flex items-center flex-wrap gap-2 text-[15px]">
-            <span>{formData.email.toLowerCase()}</span>
-            <span className="w-1 h-1 rounded-full bg-slate-400"></span>
-            <span>{formData.phoneNumber || 'Add phone number'}</span>
-          </div>
-          <div className="flex items-center gap-3 pt-1 font-bold text-[15px]">
-            <span>{formData.nationality || 'Ghana'}</span>
-            <span className="w-1 h-1 rounded-full bg-slate-400"></span>
-            <span className="text-pink-500">{calculateAge(formData.dateOfBirth)}</span>
-            <div className="bg-[#2A294E] p-1.5 rounded-full ml-1">
-              <Star className="w-3 h-3 text-white fill-current" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Custom Tabs */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm mb-6 flex overflow-hidden border border-[var(--border)]">
+      {/* ── WORKSPACE TABS ── */}
+      <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 w-fit">
         <button
           onClick={() => setActiveTab('basic')}
           className={clsx(
-            "flex-1 py-4 text-center font-bold text-sm transition-colors",
-            activeTab === 'basic' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+            "px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'basic' 
+              ? "bg-[#0F5132] text-white shadow-xs" 
+              : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
           )}
         >
-          Basic Information
+          <User className="w-3.5 h-3.5" />
+          <span>Basic Identity</span>
         </button>
+
         {isStudent && (
           <button
             onClick={() => setActiveTab('school')}
             className={clsx(
-              "flex-1 py-4 text-center font-bold text-sm transition-colors",
-              activeTab === 'school' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+              "px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2",
+              activeTab === 'school' 
+                ? "bg-[#0F5132] text-white shadow-xs" 
+                : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
             )}
           >
-            School Information
+            <GraduationCap className="w-3.5 h-3.5" />
+            <span>Academic Details</span>
           </button>
         )}
+
         <button
           onClick={() => setActiveTab('security')}
           className={clsx(
-            "flex-1 py-4 text-center font-bold text-sm transition-colors flex items-center justify-center gap-2",
-            activeTab === 'security' ? "bg-pink-50 dark:bg-pink-900/20 text-pink-500" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+            "px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-2",
+            activeTab === 'security' 
+              ? "bg-[#0F5132] text-white shadow-xs" 
+              : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
           )}
         >
-          <Shield className="w-4 h-4 text-emerald-500" /> Security & Active Devices
+          <Shield className="w-3.5 h-3.5" />
+          <span>Security &amp; Devices</span>
         </button>
       </div>
 
       {/* Student Toggle for Tenants */}
       {session?.role === 'TENANT' && activeTab === 'basic' && (
-        <div className="mb-6 flex items-center justify-between bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+        <div className="flex items-center justify-between bg-zinc-50 dark:bg-zinc-900 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800">
           <div>
-            <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-300">University Student?</h3>
-            <p className="text-xs text-indigo-700/70 dark:text-indigo-400/70">Enable this to add your school information</p>
+            <h3 className="text-xs font-bold text-zinc-900 dark:text-white">Tertiary Student Registration</h3>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Enable student identification for campus hostel allocations</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input 
@@ -360,122 +384,250 @@ export default function ProfilePage() {
                 if (!isLocked) setIsStudent(e.target.checked);
               }}
             />
-            <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-indigo-600"></div>
+            <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-zinc-600 peer-checked:bg-[#0F5132]"></div>
           </label>
         </div>
       )}
 
-      {/* Grids */}
-      <form onSubmit={handleSubmit}>
+      {/* ── FORMS CONTAINER ── */}
+      <form onSubmit={handleSubmit} className="space-y-6">
         {activeTab === 'basic' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in">
-            
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">First Name *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="FIRST NAME" />
+          <>
+            {/* Section 1: Legal Identity */}
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                1. Legal Identity &amp; Personal Info
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">First Name *</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.firstName} 
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
+                    placeholder="FIRST NAME" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Other Name(s)</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.otherNames} 
+                    onChange={(e) => setFormData({...formData, otherNames: e.target.value})} 
+                    placeholder="OTHER NAMES" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Last Name *</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.lastName} 
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
+                    placeholder="LAST NAME" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gender *</label>
+                  <select 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer" 
+                    value={formData.gender} 
+                    onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                  >
+                    <option value="">SELECT GENDER</option>
+                    <option value="MALE">MALE</option>
+                    <option value="FEMALE">FEMALE</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Date Of Birth *</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.dateOfBirth} 
+                    onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} 
+                    placeholder="FEB 03, 2000" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Nationality *</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.nationality} 
+                    onChange={(e) => setFormData({...formData, nationality: e.target.value})} 
+                    placeholder="GHANA" 
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Other Name(S)</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.otherNames} onChange={(e) => setFormData({...formData, otherNames: e.target.value})} placeholder="OTHER NAMES" />
-            </div>
+            {/* Section 2: Contact & Emergency */}
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
+              <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                2. Contact &amp; Emergency Guardian
+              </h3>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Last Name *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="LAST NAME" />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Mobile Phone Number *</label>
+                  <input 
+                    type="tel" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.phoneNumber} 
+                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} 
+                    placeholder="024XXXXXXX" 
+                  />
+                </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Mobile Number *</label>
-              <input type="tel" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="MOBILE NUMBER" />
-            </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Registered Email Address</label>
+                  <input 
+                    type="email" 
+                    disabled 
+                    className="w-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-500 uppercase outline-none truncate disabled:cursor-not-allowed" 
+                    value={formData.email} 
+                    placeholder="EMAIL" 
+                  />
+                </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Email</label>
-              <input type="email" disabled className="w-full font-bold text-sm bg-transparent outline-none uppercase text-slate-500 truncate disabled:opacity-60 disabled:cursor-not-allowed" value={formData.email} placeholder="EMAIL" />
-            </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Guardian / Next of Kin Name *</label>
+                  <input 
+                    type="text" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.guardianName} 
+                    onChange={(e) => setFormData({...formData, guardianName: e.target.value})} 
+                    placeholder="GUARDIAN FULL NAME" 
+                  />
+                </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Gender *</label>
-              <select disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                <option value="">SELECT GENDER</option>
-                <option value="MALE">MALE</option>
-                <option value="FEMALE">FEMALE</option>
-              </select>
+                <div>
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Guardian Emergency Contact *</label>
+                  <input 
+                    type="tel" 
+                    disabled={isLocked} 
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                    value={formData.guardianPhone} 
+                    onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} 
+                    placeholder="GUARDIAN PHONE" 
+                  />
+                </div>
+              </div>
             </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Birth *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} placeholder="FEB 03, 2003" />
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Country *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="GHANA" />
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Name *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="GUARDIAN NAME" />
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Guardian Phone Number *</label>
-              <input type="tel" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="GUARDIAN PHONE" />
-            </div>
-            
-          </div>
+          </>
         )}
 
         {activeTab === 'school' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in">
-            
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Student ID *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="NRIT/CR/..." />
-            </div>
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-wider border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              Campus Affiliation &amp; Academic Credentials
+            </h3>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Date Of Admission *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} placeholder="JAN 14, 2022" />
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Campus / University *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.campus} 
+                  onChange={(e) => setFormData({...formData, campus: e.target.value})} 
+                  placeholder="KNUST, UG, UCC, ETC." 
+                />
+              </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Programme Of Study *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase truncate disabled:opacity-60 disabled:cursor-not-allowed" value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="BACHELOR OF SCIENCE..." />
-            </div>
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Student ID / Index No. *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.studentId} 
+                  onChange={(e) => setFormData({...formData, studentId: e.target.value})} 
+                  placeholder="STUDENT ID" 
+                />
+              </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Year Of Study *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})} placeholder="300" />
-            </div>
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Date Of Admission *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.dateOfAdmission} 
+                  onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} 
+                  placeholder="JAN 14, 2022" 
+                />
+              </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Student Type *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})} placeholder="UNDERGRADUATE" />
-            </div>
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Programme Of Study *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.programmeOfStudy} 
+                  onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} 
+                  placeholder="B.SC. COMPUTER SCIENCE" 
+                />
+              </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-[var(--border)]">
-              <label className="block text-xs font-medium text-slate-500 mb-1">Campus *</label>
-              <input type="text" disabled={isLocked} className="w-full font-bold text-sm bg-transparent outline-none focus:text-indigo-600 uppercase disabled:opacity-60 disabled:cursor-not-allowed" value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})} placeholder="UNIVERSITY OF CAPE COAST" />
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Year / Academic Level *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.yearOfStudy} 
+                  onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})} 
+                  placeholder="LEVEL 300" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Student Status *</label>
+                <input 
+                  type="text" 
+                  disabled={isLocked} 
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white uppercase outline-none focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed" 
+                  value={formData.studentType} 
+                  onChange={(e) => setFormData({...formData, studentType: e.target.value})} 
+                  placeholder="REGULAR UNDERGRADUATE" 
+                />
+              </div>
             </div>
-            
           </div>
         )}
       </form>
 
       {/* Security & Active Devices Tab Panel */}
       {activeTab === 'security' && (
-        <div className="space-y-6 animate-in">
-          
+        <div className="space-y-6">
           {/* Header Action Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[var(--border)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h3 className="font-extrabold text-lg text-[var(--foreground)] flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-indigo-500" /> Active Logged-in Devices & Remote Sessions
+              <h3 className="font-bold text-sm text-zinc-950 dark:text-white flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-[#198754]" /> Active Authenticated Sessions
               </h3>
-              <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-                Review all browsers and mobile devices currently signed into your account. If you spot an unrecognized device, click <strong>"Log Out All Other Devices"</strong> to immediately revoke its session token.
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Review all devices currently authorized to access your account. Revoke any unrecognized browser session immediately.
               </p>
             </div>
             
@@ -492,30 +644,30 @@ export default function ProfilePage() {
                 }
               }}
               disabled={revokeAllOthersMutation.isPending || !sessions || sessions.filter((s: any) => !s.isCurrentSession).length === 0}
-              className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-5 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-colors flex items-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {revokeAllOthersMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               )}
               Log Out All Other Devices
             </button>
           </div>
 
           {/* Device Sessions List */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-sm border border-[var(--border)] space-y-4">
-            <h4 className="font-extrabold text-sm text-[var(--foreground)] uppercase tracking-wider text-xs text-slate-500">
-              Active Sessions ({sessions?.length || 0})
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
+            <h4 className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+              Authorized Devices ({sessions?.length || 0})
             </h4>
 
             {isLoadingSessions ? (
               <div className="flex justify-center p-8">
-                <Loader2 className="w-6 h-6 animate-spin text-[var(--primary)]" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" />
               </div>
             ) : !sessions || sessions.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[var(--muted-foreground)]">
-                No active sessions found.
+              <div className="p-8 text-center text-xs text-zinc-500">
+                No active remote sessions detected.
               </div>
             ) : (
               <div className="space-y-3">
@@ -525,40 +677,46 @@ export default function ProfilePage() {
                   return (
                     <div
                       key={s.id}
-                      className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                      className={clsx(
+                        "p-4 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4",
                         s.isCurrentSession 
-                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800' 
-                          : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
-                      }`}
+                          ? "bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/60" 
+                          : "bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800"
+                      )}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className={`p-3 rounded-2xl shrink-0 ${s.isCurrentSession ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
-                          {isMobile ? <Smartphone className="w-5 h-5" /> : <Laptop className="w-5 h-5" />}
+                        <div className={clsx(
+                          "p-2.5 rounded-xl shrink-0 border",
+                          s.isCurrentSession 
+                            ? "bg-[#0F5132] text-white border-emerald-700" 
+                            : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700"
+                        )}>
+                          {isMobile ? <Smartphone className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
                         </div>
                         
-                        <div className="space-y-1 min-w-0">
+                        <div className="space-y-0.5 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h5 className="font-extrabold text-sm text-[var(--foreground)] truncate">
+                            <h5 className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                               {s.userAgent || 'Unknown Device'}
                             </h5>
                             {s.isCurrentSession ? (
-                              <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700 flex items-center gap-1">
-                                <CheckCircle2 className="w-3 h-3" /> Current Device
+                              <span className="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Current Session
                               </span>
                             ) : (
-                              <span className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                Remote Session
+                              <span className="bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                Remote Device
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-3 text-xs text-[var(--muted-foreground)] flex-wrap">
+                          <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400 flex-wrap">
                             <span className="flex items-center gap-1 font-mono">
-                              <Globe className="w-3.5 h-3.5 text-indigo-400" /> {s.ipAddress || 'Unknown IP'}
+                              <Globe className="w-3 h-3 text-zinc-400" /> {s.ipAddress || 'Unknown IP'}
                             </span>
-                            <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
+                            <span className="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-slate-400" /> Last active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
+                              <Clock className="w-3 h-3 text-zinc-400" /> Active {formatDistanceToNow(new Date(s.lastActive), { addSuffix: true })}
                             </span>
                           </div>
                         </div>
@@ -568,10 +726,10 @@ export default function ProfilePage() {
                         <button
                           onClick={() => revokeSessionMutation.mutate(s.id)}
                           disabled={revokeSessionMutation.isPending}
-                          className="px-3.5 py-2 text-xs font-bold text-red-600 hover:text-white border border-red-200 dark:border-red-800 hover:bg-red-600 rounded-xl transition-all self-start sm:self-center shrink-0 flex items-center gap-1.5"
+                          className="px-3 py-1.5 text-xs font-bold text-rose-600 hover:text-white border border-rose-200 dark:border-rose-900/40 hover:bg-rose-600 rounded-lg transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer"
                         >
-                          {revokeSessionMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />}
-                          Revoke Session
+                          {revokeSessionMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <LogOut className="w-3 h-3" />}
+                          <span>Revoke Session</span>
                         </button>
                       )}
                     </div>
@@ -580,48 +738,39 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-
-          {/* Security Recommendations Banner */}
-          <div className="p-4 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs space-y-1">
-            <div className="font-extrabold flex items-center gap-1.5 text-indigo-800 dark:text-indigo-300 text-sm">
-              <Shield className="w-4 h-4 text-indigo-600" /> Security Tip
-            </div>
-            <p className="leading-relaxed text-slate-600 dark:text-slate-300">
-              Akwaaba Homes automatically logs anomaly alerts if a new device or IP address accesses your account. If you ever receive an anomaly alert you don't recognize, log out all other devices immediately and reset your account password.
-            </p>
-          </div>
-
         </div>
       )}
 
       {/* Request Unlock Modal */}
       {requestModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5">
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-extrabold text-lg text-[var(--foreground)] flex items-center gap-2">
-                🔓 Request Profile Edit Access
+              <h3 className="font-bold text-sm text-zinc-950 dark:text-white flex items-center gap-2">
+                <Lock className="w-4 h-4 text-[#198754]" /> Request Profile Edit Approval
               </h3>
               <button
                 onClick={() => setRequestModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg font-bold"
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-sm font-bold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
-              Your profile is currently locked to prevent unverified modifications. Please state the specific reason for your edit request (e.g. <em>"Corrected emergency guardian phone number"</em>).
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Your profile is verified and locked for statutory tenancy compliance. State your specific reason for modification (e.g. <em>"Corrected emergency guardian phone number"</em>).
             </p>
 
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-[var(--foreground)]">Reason for Request *</label>
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                Reason for Modification *
+              </label>
               <textarea
                 rows={3}
                 value={requestReason}
                 onChange={(e) => setRequestReason(e.target.value)}
-                placeholder="State your reason for modifying locked profile fields..."
-                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="State reason for editing locked credentials..."
+                className="w-full p-3 text-xs bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700 outline-none focus:border-[#0F5132]"
               />
             </div>
 
@@ -629,7 +778,7 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => setRequestModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                className="px-4 py-2 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -637,10 +786,10 @@ export default function ProfilePage() {
                 type="button"
                 disabled={!requestReason.trim() || requestUnlockMutation.isPending}
                 onClick={() => requestUnlockMutation.mutate(requestReason)}
-                className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                className="px-5 py-2 text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
-                {requestUnlockMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Submit Edit Request
+                {requestUnlockMutation.isPending && <Loader2 className="w-3 h-3 animate-spin" />}
+                Submit Request
               </button>
             </div>
           </div>
