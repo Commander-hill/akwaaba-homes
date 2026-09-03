@@ -4,10 +4,16 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
-import { Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, Image as ImageIcon, X, Plus, Trash2, DollarSign, AlertCircle } from 'lucide-react';
+import { 
+  Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, 
+  Image as ImageIcon, X, Plus, Trash2, AlertCircle, ArrowLeft,
+  ArrowRight, Check, CheckCircle2, ShieldCheck, Zap, Droplets,
+  Shield, Car, Wind, Wifi, Dumbbell, Clock, KeyRound, Sparkles
+} from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
 import { getImageUrl } from '@/lib/utils';
+import clsx from 'clsx';
 
 interface RoomInput {
   id: string;
@@ -18,61 +24,67 @@ interface RoomInput {
   price: string;
 }
 
-const PRESET_AMENITY_CATEGORIES = [
+const AMENITY_SECTIONS = [
   {
-    category: '⚡ 24/7 Power & Utilities',
+    title: 'Power & Water Utilities',
+    icon: Zap,
     items: [
-      { name: 'Standby Generator', icon: '⚡' },
-      { name: 'Solar Inverter / Solar Power', icon: '☀️' },
-      { name: '24/7 Water (Borehole / Polytank)', icon: '💧' },
-      { name: 'Prepaid Electricity Meter', icon: '🔌' },
-      { name: 'Water Heater', icon: '🚿' }
+      'Standby Generator',
+      'Solar Inverter / Backup',
+      '24/7 Water (Borehole / Polytank)',
+      'Prepaid Electricity Meter',
+      'Water Heater'
     ]
   },
   {
-    category: '🛡️ Security & Access',
+    title: 'Compound Security',
+    icon: Shield,
     items: [
-      { name: '24/7 Uniformed Security Guard', icon: '💂' },
-      { name: 'CCTV Surveillance Cameras', icon: '📹' },
-      { name: 'Electric Wall Fence', icon: '⚡' },
-      { name: 'Gated Compound', icon: '🚪' },
-      { name: 'Smart Keycard / Biometric Gate', icon: '🔑' }
+      '24/7 Security Guard',
+      'CCTV Surveillance Cameras',
+      'Electric Wall Fence',
+      'Gated Compound',
+      'Smart Keycard / Biometric Gate'
     ]
   },
   {
-    category: '🚗 Parking & Access',
+    title: 'Parking & Transit',
+    icon: Car,
     items: [
-      { name: 'Dedicated Garage Parking', icon: '🚗' },
-      { name: 'Underground Parking', icon: '🅿️' },
-      { name: 'Paved Compound Parking', icon: '🚙' },
-      { name: 'Free Campus Shuttle Service', icon: '🚌' }
+      'Dedicated Garage Parking',
+      'Underground Parking',
+      'Paved Compound Parking',
+      'Free Campus Shuttle Service'
     ]
   },
   {
-    category: '❄️ Climate & Comfort',
+    title: 'Climate & Comfort',
+    icon: Wind,
     items: [
-      { name: 'Air Conditioning (AC)', icon: '❄️' },
-      { name: 'Ceiling Fan', icon: '🌀' },
-      { name: 'Private Balcony', icon: '🌅' },
-      { name: 'En-Suite Bathroom', icon: '🚽' }
+      'Air Conditioning (AC)',
+      'Ceiling Fan',
+      'Private Balcony',
+      'En-Suite Bathroom'
     ]
   },
   {
-    category: '📶 Internet & Study',
+    title: 'Connectivity & Study',
+    icon: Wifi,
     items: [
-      { name: 'High-Speed Fiber WiFi', icon: '📶' },
-      { name: 'Study Desk & Chair', icon: '🪑' },
-      { name: 'Dedicated Study Lounge', icon: '📚' }
+      'High-Speed Fiber WiFi',
+      'Study Desk & Chair',
+      'Dedicated Study Lounge'
     ]
   },
   {
-    category: '🏊 Lifestyle & Wellness',
+    title: 'Wellness & Facilities',
+    icon: Dumbbell,
     items: [
-      { name: 'Swimming Pool', icon: '🏊' },
-      { name: 'Fitness Gym', icon: '🏋️' },
-      { name: 'Garden / Courtyard', icon: '🌿' },
-      { name: 'Fitted Kitchenette / Kitchen', icon: '🍳' },
-      { name: 'Laundry Service / Washing Machine', icon: '🧺' }
+      'Fitness Gym',
+      'Swimming Pool',
+      'Courtyard / Garden',
+      'Fitted Kitchen / Kitchenette',
+      'Laundry Service / Washing Machine'
     ]
   }
 ];
@@ -80,6 +92,8 @@ const PRESET_AMENITY_CATEGORIES = [
 export default function NewPropertyPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -95,7 +109,7 @@ export default function NewPropertyPage() {
     includedUtilities: ['Water Bill Included', 'Garbage/Trash Service Included'] as string[],
     description: '',
     location: '',
-    amenities: '',
+    amenities: 'Standby Generator, 24/7 Water (Borehole / Polytank), Prepaid Electricity Meter',
     latitude: null as number | null,
     longitude: null as number | null,
     videoUrl: '',
@@ -113,8 +127,20 @@ export default function NewPropertyPage() {
   const [videoUploading, setVideoUploading] = useState(false);
   const [imagesUploading, setImagesUploading] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
-
   const [error, setError] = useState('');
+
+  const { data: session, isLoading: sessionLoading } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.user;
+    }
+  });
+
+  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
+  const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
+  const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
+  const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
 
   const handleLocationPin = async (lat: number, lng: number) => {
     setFormData(prev => ({ ...prev, latitude: lat, longitude: lng }));
@@ -165,47 +191,81 @@ export default function NewPropertyPage() {
     }
   };
 
-  const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const res = await api.get('/auth/me');
-      return res.data.user;
-    }
-  });
+  const handleAddRoom = () => {
+    setRooms(prev => [...prev, { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
+  };
 
-  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
-  const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
-  const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
-  const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
+  const handleRemoveRoom = (id: string) => {
+    setRooms(prev => prev.filter(r => r.id !== id));
+  };
 
-  const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const formattedData = {
-        ...data,
-        rooms: rooms.map(r => ({
-          blockName: r.blockName || null,
-          gender: r.gender,
-          roomType: r.roomType,
-          numberOfRooms: Number(r.numberOfRooms),
-          price: r.price
-        })),
-        amenities: data.amenities.split(',').map((a: string) => a.trim()).filter(Boolean),
-        images: data.images.length > 0 ? data.images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop']
-      };
-      const response = await api.post('/properties', formattedData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
-      queryClient.invalidateQueries({ queryKey: ['properties'] });
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      queryClient.invalidateQueries({ queryKey: ['session'] });
-      router.push('/dashboard/landlord/properties');
-    },
-    onError: (err: any) => {
-      setError(err.response?.data?.message || 'Failed to list property');
+  const handleRoomChange = (id: string, field: keyof RoomInput, value: any) => {
+    setRooms(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+  };
+
+  const totalBeds = rooms.reduce((acc, r) => {
+    const beds = parseInt(r.roomType.split(' ')[0], 10) || 1;
+    const qty = Number(r.numberOfRooms) || 0;
+    return acc + (qty * beds);
+  }, 0);
+
+  const toggleAmenity = (name: string) => {
+    const list = formData.amenities.split(',').map(s => s.trim()).filter(Boolean);
+    const exists = list.includes(name);
+    const updated = exists ? list.filter(item => item !== name) : [...list, name];
+    setFormData(prev => ({ ...prev, amenities: updated.join(', ') }));
+  };
+
+  const isAmenitySelected = (name: string) => {
+    const list = formData.amenities.split(',').map(s => s.trim()).filter(Boolean);
+    return list.includes(name);
+  };
+
+  const toggleUtility = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      includedUtilities: prev.includedUtilities.includes(name)
+        ? prev.includedUtilities.filter(u => u !== name)
+        : [...prev.includedUtilities, name]
+    }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (files.length + formData.images.length > 5) {
+      setError('You can upload a maximum of 5 images.');
+      return;
     }
-  });
+
+    setImagesUploading(true);
+    setError('');
+
+    try {
+      const uploadData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        uploadData.append('images', files[i]);
+      }
+
+      const res = await api.post('/upload/images', uploadData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...res.data.urls] }));
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to upload images');
+    } finally {
+      setImagesUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -237,191 +297,114 @@ export default function NewPropertyPage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    if (files.length + formData.images.length > 5) {
-      setError('You can only upload a maximum of 5 images per property.');
-      return;
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const formattedData = {
+        ...data,
+        rooms: rooms.map(r => ({
+          blockName: r.blockName || null,
+          gender: r.gender,
+          roomType: r.roomType,
+          numberOfRooms: Number(r.numberOfRooms),
+          price: r.price
+        })),
+        amenities: data.amenities.split(',').map((a: string) => a.trim()).filter(Boolean),
+        images: data.images.length > 0 ? data.images : ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop']
+      };
+      const response = await api.post('/properties', formattedData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+      router.push('/dashboard/landlord/properties');
+    },
+    onError: (err: any) => {
+      setError(err.response?.data?.message || 'Failed to list property');
     }
+  });
 
-    setImagesUploading(true);
+  const validateStep = (step: number) => {
     setError('');
-
-    try {
-      const uploadData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        uploadData.append('images', files[i]);
+    if (step === 1) {
+      if (!formData.title.trim()) {
+        setError('Please provide a property title.');
+        return false;
       }
+      if (!formData.location.trim()) {
+        setError('Please enter or pin the property location.');
+        return false;
+      }
+    } else if (step === 2) {
+      if (rooms.length === 0) {
+        setError('Add at least one unit configuration.');
+        return false;
+      }
+      for (const r of rooms) {
+        if (!r.numberOfRooms || Number(r.numberOfRooms) <= 0) {
+          setError('Please provide a valid room count for each unit.');
+          return false;
+        }
+        if (!r.price || Number(r.price) <= 0) {
+          setError('Please enter the annual rate in GH₵ for all units.');
+          return false;
+        }
+      }
+    } else if (step === 4) {
+      if (!formData.description.trim()) {
+        setError('Please write a brief overview description of your property.');
+        return false;
+      }
+    }
+    return true;
+  };
 
-      const res = await api.post('/upload/images', uploadData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      setFormData(prev => ({ ...prev, images: [...prev.images, ...res.data.urls] }));
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload images');
-    } finally {
-      setImagesUploading(false);
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4) as any);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const handleAddRoom = () => {
-    setRooms(prev => [...prev, { id: Date.now().toString(), blockName: '', gender: 'MIXED', roomType: '1 in a room', numberOfRooms: 1, price: '' }]);
+  const handleBack = () => {
+    setError('');
+    setCurrentStep(prev => Math.max(prev - 1, 1) as any);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  const handleRemoveRoom = (id: string) => {
-    setRooms(prev => prev.filter(r => r.id !== id));
-    if (roomErrors[id]) {
-      setRoomErrors(prev => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
-  };
-
-  const handleRoomChange = (id: string, field: keyof RoomInput, value: any) => {
-    setRooms(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-    if (roomErrors[id]) {
-      setRoomErrors(prev => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
-  };
-
-  const totalCapacity = rooms.reduce((acc, r) => {
-    const beds = parseInt(r.roomType.split(' ')[0], 10) || 1;
-    const qty = Number(r.numberOfRooms) || 0;
-    return acc + (qty * beds);
-  }, 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setFieldErrors({});
-    setRoomErrors({});
-
-    // 1. Top-Level Field Validation
-    const newFieldErrors: { title?: boolean; location?: boolean; description?: boolean } = {};
-    if (!formData.title?.trim()) newFieldErrors.title = true;
-    if (!formData.location?.trim()) newFieldErrors.location = true;
-    if (!formData.description?.trim()) newFieldErrors.description = true;
-
-    if (Object.keys(newFieldErrors).length > 0) {
-      setFieldErrors(newFieldErrors);
-      const missingLabels = [];
-      if (newFieldErrors.title) missingLabels.push('Property Title');
-      if (newFieldErrors.location) missingLabels.push('Location Name');
-      if (newFieldErrors.description) missingLabels.push('Description');
-      setError(`Please fill in all required property fields: ${missingLabels.join(', ')}.`);
-      window.scrollTo({ top: 150, behavior: 'smooth' });
-      return;
-    }
-
-    if (rooms.length === 0) {
-      setError('You must add at least one room configuration.');
-      return;
-    }
-
-    // 2. Precise Per-Room Configuration Validation
-    const newRoomErrors: { [roomId: string]: { numberOfRooms?: boolean; price?: boolean } } = {};
-    let firstInvalidRoomId: string | null = null;
-    let firstInvalidSummary = '';
-
-    rooms.forEach((room, index) => {
-      const isMissingRooms = !room.numberOfRooms || Number(room.numberOfRooms) <= 0;
-      const isMissingPrice = !room.price || String(room.price).trim() === '' || Number(room.price) <= 0;
-
-      if (isMissingRooms || isMissingPrice) {
-        newRoomErrors[room.id] = {
-          numberOfRooms: isMissingRooms,
-          price: isMissingPrice,
-        };
-
-        if (!firstInvalidRoomId) {
-          firstInvalidRoomId = room.id;
-          const blockLabel = room.blockName?.trim() ? `"${room.blockName}"` : `Configuration #${index + 1}`;
-          const missingItems = [];
-          if (isMissingRooms) missingItems.push('Number of Rooms');
-          if (isMissingPrice) missingItems.push('Price/Year');
-          firstInvalidSummary = `Room ${blockLabel} is incomplete: Please enter ${missingItems.join(' and ')}.`;
-        }
-      }
-    });
-
-    if (firstInvalidRoomId) {
-      setRoomErrors(newRoomErrors);
-      setError(`⚠️ Incomplete Room Configuration: ${firstInvalidSummary}`);
-
-      // Smooth scroll to the specific incomplete room block
-      setTimeout(() => {
-        const targetEl = document.getElementById(`room-config-${firstInvalidRoomId}`);
-        if (targetEl) {
-          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 50);
-      return;
-    }
-
-    if (videoUploading || imagesUploading) {
-      setError('Please wait for media to finish uploading');
-      return;
-    }
-
+    if (!validateStep(1) || !validateStep(2) || !validateStep(4)) return;
     createMutation.mutate(formData);
   };
 
   if (sessionLoading) {
-    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
+    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" /></div>;
   }
 
   if (isListingBlocked) {
     return (
-      <div className="max-w-2xl mx-auto my-12 p-8 glass-card rounded-3xl border border-red-200 dark:border-red-900/50 shadow-2xl text-center space-y-6 animate-in">
-        <div className="w-20 h-20 bg-red-100 dark:bg-red-950/50 text-red-600 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
-          <Lock className="w-10 h-10" />
+      <div className="max-w-2xl mx-auto my-12 p-8 bg-white dark:bg-[#12151D] border border-rose-200 dark:border-rose-900/50 rounded-2xl shadow-xs text-center space-y-6">
+        <div className="w-16 h-16 bg-rose-50 dark:bg-rose-950/40 text-rose-600 rounded-2xl flex items-center justify-center mx-auto border border-rose-200 dark:border-rose-800">
+          <Lock className="w-8 h-8" />
         </div>
-        
-        <div className="space-y-2">
-          <h2 className="text-2xl font-black text-[var(--foreground)] tracking-tight">🔒 Property Listing Page Locked</h2>
-          <p className="text-sm text-[var(--muted-foreground)] leading-relaxed max-w-xl mx-auto">
-            Under Akwaaba Homes platform security and verification policy, landlords must fill in all details on their profile page and submit their Ghana Card for identity verification before creating property listings.
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-black text-zinc-950 dark:text-white">Listing Studio Protected</h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+            In compliance with Ghana Rent Act (Act 220), landlords must complete profile identification and submit Ghana Card KYC before publishing accommodations.
           </p>
         </div>
-
-        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-left text-xs space-y-2">
-          <div className="font-extrabold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
-            <Info className="w-4 h-4 text-amber-600" /> Action Required Before Listing Properties:
-          </div>
-          <ul className="list-disc list-inside space-y-1 font-medium text-amber-900 dark:text-amber-200">
-            {isProfileIncomplete && (
-              <li>Complete all required profile details (First & Last Name, Phone, Gender, DOB, Nationality, Emergency Contact).</li>
-            )}
-            {isVerificationIncomplete && (
-              <li>Submit your Ghana Card details on the Verification page for KYC validation.</li>
-            )}
-          </ul>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap gap-3 justify-center pt-2">
           {isProfileIncomplete && (
-            <Link
-              href="/dashboard/profile"
-              className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              👤 Complete Profile First
+            <Link href="/dashboard/profile" className="px-4 py-2 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-xl text-xs font-bold">
+              Complete Account Profile
             </Link>
           )}
           {isVerificationIncomplete && (
-            <Link
-              href="/dashboard/verification"
-              className="w-full sm:w-auto px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
-            >
-              🆔 Submit Ghana Card Verification
+            <Link href="/dashboard/verification" className="px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold">
+              Submit Ghana Card KYC
             </Link>
           )}
         </div>
@@ -430,709 +413,616 @@ export default function NewPropertyPage() {
   }
 
   return (
-    <div className="w-full">
-      {/* Sticky Header Container */}
-      <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-slate-200/60 dark:border-slate-800/60 mb-6 shadow-xs">
-        <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">List New Property</h1>
-        <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Create a stunning listing to attract the best tenants.</p>
+    <div className="max-w-4xl mx-auto pb-16 space-y-6">
+      
+      {/* ── HEADER & STEPPER ── */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <Link href="/dashboard/landlord/properties" className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Properties
+            </Link>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Publish Accommodation Listing
+            </h1>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132]" />
+            <span>Act 220 Verified Standard</span>
+          </div>
+        </div>
+
+        {/* 4-Step Segmented Bar */}
+        <div className="grid grid-cols-4 gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+          {[
+            { step: 1, label: '1. Identity & GPS' },
+            { step: 2, label: '2. Units & Pricing' },
+            { step: 3, label: '3. Utilities & Rules' },
+            { step: 4, label: '4. Media & Review' },
+          ].map((s) => (
+            <button
+              key={s.step}
+              type="button"
+              onClick={() => {
+                if (s.step < currentStep || validateStep(currentStep)) {
+                  setCurrentStep(s.step as any);
+                }
+              }}
+              className={clsx(
+                "py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1",
+                currentStep === s.step 
+                  ? "bg-[#0F5132] text-white shadow-xs" 
+                  : currentStep > s.step 
+                  ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30" 
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="glass-card rounded-2xl p-6 sm:p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300 p-4 rounded-xl text-sm font-bold border border-red-200 dark:border-red-900/50 flex items-start gap-3 shadow-md animate-in fade-in">
-              <AlertCircle className="w-5 h-5 mt-0.5 shrink-0 text-red-500" />
-              <div>{error}</div>
-            </div>
-          )}
+      {error && (
+        <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2 animate-in">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
-          {/* Property Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-              <span>Property Title *</span>
-              {fieldErrors.title && <span className="text-xs font-bold text-red-500">⚠ Title is required</span>}
-            </label>
-            <div className="relative">
-              <Building2 className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.title ? 'text-red-500' : 'text-slate-400'}`} />
-              <input 
-                type="text" 
+      {/* ── STEP 1: IDENTITY & LOCATION ── */}
+      {currentStep === 1 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 1: Property Identity &amp; Location</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Define your property name, resident targeting, and map coordinates.</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Property / Hostel Title *
+              </label>
+              <input
+                type="text"
                 value={formData.title}
-                onChange={e => {
-                  setFormData({...formData, title: e.target.value});
-                  if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: false }));
-                }}
-                placeholder="e.g. Luxury Single Room at Evandy"
-                className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
-                  fieldErrors.title 
-                    ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
-                    : 'border-[var(--input)] focus:ring-[var(--ring)]'
-                }`}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                placeholder="e.g. Evandy Hostel - Executive Wing"
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Property Type */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)]">Property Type *</label>
-              <select 
-                value={formData.type}
-                onChange={e => setFormData({...formData, type: e.target.value})}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              >
-                <option value="Hostel">Hostel</option>
-                <option value="Homestay">Homestay</option>
-                <option value="Apartment">Apartment / Flat</option>
-                <option value="Studio">Studio Apartment</option>
-                <option value="Residential House">Residential House</option>
-                <option value="Townhouse">Townhouse</option>
-                <option value="Guest House">Guest House / Villa</option>
-              </select>
-            </div>
-
-            {/* Target Audience */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                <span>👥</span> Target Tenant
-              </label>
-              <select 
-                value={formData.targetAudience}
-                onChange={e => setFormData({...formData, targetAudience: e.target.value})}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              >
-                <option value="Open to All">🌐 Open to All</option>
-                <option value="Students & Young Professionals">🎓 Students & Young Professionals</option>
-                <option value="Working Professionals">💼 Working Professionals</option>
-                <option value="Families">👨‍👩‍👧‍👦 Families</option>
-                <option value="Short-Term Vacationers">🏖️ Short-Term Vacationers</option>
-              </select>
-            </div>
-
-            {/* Furnishing Status */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                <span>🛋️</span> Furnishing
-              </label>
-              <select 
-                value={formData.furnishing}
-                onChange={e => setFormData({...formData, furnishing: e.target.value})}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              >
-                <option value="Fully Furnished">✨ Fully Furnished</option>
-                <option value="Semi-Furnished">🛋️ Semi-Furnished</option>
-                <option value="Unfurnished">📦 Unfurnished</option>
-              </select>
-            </div>
-
-            {/* Pricing / Rental Period */}
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                <span>📅</span> Pricing Period *
-              </label>
-              <select 
-                value={formData.pricePeriod}
-                onChange={e => setFormData({...formData, pricePeriod: e.target.value})}
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              >
-                <option value="Academic Year">🎓 Academic Year (2 Sems)</option>
-                <option value="Monthly">🗓️ Monthly (Long-term)</option>
-                <option value="Annual">🏡 Annual (Full Year)</option>
-                <option value="Nightly">🌙 Nightly (Short-stay)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Location Name */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-              <span>Location Name *</span>
-              {fieldErrors.location ? (
-                <span className="text-xs font-bold text-red-500">⚠ Location is required</span>
-              ) : isGeocoding ? (
-                <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold animate-pulse flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Auto-detecting area...
-                </span>
-              ) : null}
-            </label>
-            <div className="relative">
-              <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${fieldErrors.location ? 'text-red-500' : 'text-slate-400'}`} />
-              <input 
-                type="text" 
-                value={formData.location}
-                onChange={e => {
-                  setFormData({...formData, location: e.target.value});
-                  if (fieldErrors.location) setFieldErrors(prev => ({ ...prev, location: false }));
-                }}
-                placeholder="e.g. Ayeduase / East Legon / Cape Coast"
-                className={`w-full bg-transparent border rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all ${
-                  fieldErrors.location 
-                    ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
-                    : 'border-[var(--input)] focus:ring-[var(--ring)]'
-                }`}
-              />
-            </div>
-          </div>
-
-          {/* Room Configurations Section */}
-          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
-            <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <h3 className="text-lg font-extrabold text-[var(--foreground)]">Room Configurations *</h3>
-                <p className="text-xs text-[var(--muted-foreground)]">Add the types of rooms available in this property.</p>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Property Type</label>
+                <select
+                  value={formData.type}
+                  onChange={e => setFormData({ ...formData, type: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="Hostel">Student Hostel</option>
+                  <option value="Apartment">Self-Contain Apartment</option>
+                  <option value="Homestay">Residential Homestay</option>
+                  <option value="Studio">Executive Studio</option>
+                </select>
               </div>
-              <button 
-                type="button" 
-                onClick={handleAddRoom}
-                className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" /> Add Room Type
-              </button>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Target Resident</label>
+                <select
+                  value={formData.targetAudience}
+                  onChange={e => setFormData({ ...formData, targetAudience: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="Open to All">Open to All</option>
+                  <option value="Students Only">Students Only</option>
+                  <option value="Working Professionals">Working Professionals</option>
+                  <option value="Postgraduate Only">Postgraduate Only</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Furnishing</label>
+                <select
+                  value={formData.furnishing}
+                  onChange={e => setFormData({ ...formData, furnishing: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="Unfurnished">Unfurnished</option>
+                  <option value="Semi-Furnished">Semi-Furnished</option>
+                  <option value="Fully Furnished">Fully Furnished</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Billing Period</label>
+                <select
+                  value={formData.pricePeriod}
+                  onChange={e => setFormData({ ...formData, pricePeriod: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="Academic Year">Academic Year (2 Sems)</option>
+                  <option value="Semester">Per Semester</option>
+                  <option value="Monthly">Monthly Rent</option>
+                  <option value="Annual">1 Calendar Year</option>
+                </select>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {rooms.map((room, index) => {
-                const hasRoomError = Boolean(roomErrors[room.id]);
-                const numRoomsErr = roomErrors[room.id]?.numberOfRooms;
-                const priceErr = roomErrors[room.id]?.price;
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Campus / Town Location *
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={e => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Ayeduase Gate, KNUST / East Legon / Cape Coast"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                />
+              </div>
+            </div>
 
-                const missingFieldNames = [];
-                if (numRoomsErr) missingFieldNames.push('Number of Rooms');
-                if (priceErr) missingFieldNames.push('Price/Year');
+            {/* Interactive Map */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-zinc-700 dark:text-zinc-300">Pinpoint GPS Location on Map</span>
+                {isGeocoding ? (
+                  <span className="text-[#0F5132] font-semibold text-xs flex items-center gap-1">
+                    <Loader2 className="w-3 h-3 animate-spin" /> Resolving neighborhood...
+                  </span>
+                ) : formData.latitude && formData.longitude ? (
+                  <span className="text-[#0F5132] font-semibold text-xs flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> GPS Coordinates Set
+                  </span>
+                ) : null}
+              </div>
+              <div className="h-64 w-full rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 relative z-0">
+                <Map 
+                  mode="picker" 
+                  selectedLocation={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null}
+                  onLocationSelect={handleLocationPin}
+                />
+              </div>
+            </div>
+          </div>
 
-                return (
-                  <div 
-                    key={room.id} 
-                    id={`room-config-${room.id}`}
-                    className={`p-5 rounded-xl transition-all duration-300 relative ${
-                      hasRoomError 
-                        ? 'border-2 border-red-500 bg-red-50/50 dark:bg-red-950/20 shadow-lg shadow-red-500/10 ring-2 ring-red-500/20' 
-                        : 'border border-[var(--border)] bg-slate-50/50 dark:bg-slate-800/20'
-                    }`}
-                  >
-                    {hasRoomError && (
-                      <div className="mb-4 p-3 rounded-lg bg-red-100 dark:bg-red-900/50 border border-red-300 dark:border-red-800 text-red-800 dark:text-red-200 text-xs font-black flex items-center gap-2 animate-in fade-in">
-                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>Incomplete Configuration #{index + 1} ({room.blockName || 'Untitled Block'}): Please fill in {missingFieldNames.join(' and ')}.</span>
-                      </div>
-                    )}
+          <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Units &amp; Pricing</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
-                    {rooms.length > 1 && (
-                      <button 
-                        type="button" 
-                        onClick={() => handleRemoveRoom(room.id)}
-                        className="absolute top-4 right-4 text-slate-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    )}
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                      {/* Block Name */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                          <span>🏢</span> Block / Wing Name
-                        </label>
-                        <input
-                          type="text"
-                          value={room.blockName}
-                          onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
-                          placeholder="e.g. Dakar Block A / Female Wing"
-                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                        />
-                      </div>
-                      {/* Gender Designation */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                          <span>⚧</span> Gender Designation *
-                        </label>
-                        <select
-                          value={room.gender}
-                          onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
-                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                        >
-                          <option value="MIXED">🔀 Mixed (Open to All)</option>
-                          <option value="MALE">♂ Male Only</option>
-                          <option value="FEMALE">♀ Female Only</option>
-                        </select>
-                        {room.gender !== 'MIXED' && (
-                          <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                            ⚠ Only {room.gender === 'MALE' ? 'male' : 'female'} students can book this block.
-                          </p>
-                        )}
-                      </div>
+      {/* ── STEP 2: UNITS & PRICING (GH₵) ── */}
+      {currentStep === 2 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <div>
+              <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 2: Room Units &amp; Rates (GH₵)</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Configure room categories, gender wings, and annual rates in Ghana Cedis.</p>
+            </div>
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl text-xs font-bold text-[#0F5132] dark:text-emerald-400">
+              Total Capacity: {totalBeds} Student Beds
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {rooms.map((room, idx) => (
+              <div key={room.id} className="p-4 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-200 dark:border-zinc-700/80 space-y-3 relative">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                    Unit Configuration #{idx + 1}
+                  </span>
+                  {rooms.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveRoom(room.id)}
+                      className="text-zinc-400 hover:text-rose-600 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Remove
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Block / Wing</label>
+                    <input
+                      type="text"
+                      value={room.blockName}
+                      onChange={e => handleRoomChange(room.id, 'blockName', e.target.value)}
+                      placeholder="e.g. Block A"
+                      className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gender Wing</label>
+                    <select
+                      value={room.gender}
+                      onChange={e => handleRoomChange(room.id, 'gender', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                    >
+                      <option value="MIXED">Mixed / Open</option>
+                      <option value="MALE">Male Wing Only</option>
+                      <option value="FEMALE">Female Wing Only</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Room Type</label>
+                    <select
+                      value={room.roomType}
+                      onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                    >
+                      <option value="1 in a room">1 in a room (Single)</option>
+                      <option value="2 in a room">2 in a room (Double)</option>
+                      <option value="3 in a room">3 in a room (Triple)</option>
+                      <option value="4 in a room">4 in a room (Quad)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Room Count</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={room.numberOfRooms}
+                      onChange={e => handleRoomChange(room.id, 'numberOfRooms', e.target.value)}
+                      className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Annual Rate (GH₵) *</label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400">GH₵</span>
+                      <input
+                        type="number"
+                        placeholder="e.g. 8500"
+                        value={room.price}
+                        onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
+                        className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-10 pr-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                      />
                     </div>
+                  </div>
+                </div>
+              </div>
+            ))}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mr-8">
-                      {/* Room Type */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--foreground)]">Room Type *</label>
-                        <select 
-                          value={room.roomType}
-                          onChange={e => handleRoomChange(room.id, 'roomType', e.target.value)}
-                          className="w-full bg-transparent border border-[var(--input)] rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                        >
-                          <option value="1 in a room">1 in a room</option>
-                          <option value="2 in a room">2 in a room</option>
-                          <option value="3 in a room">3 in a room</option>
-                          <option value="4 in a room">4 in a room</option>
-                        </select>
-                      </div>
-                      
-                      {/* Number of Rooms */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--foreground)] flex justify-between items-center">
-                          <span>Number of Rooms *</span>
-                          {numRoomsErr && <span className="text-[10px] font-bold text-red-500">⚠ Required</span>}
-                        </label>
-                        <input 
-                          type="number" 
-                          min="1"
-                          value={room.numberOfRooms}
-                          onChange={e => handleRoomChange(room.id, 'numberOfRooms', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
-                          placeholder="Qty"
-                          className={`w-full bg-transparent border rounded-lg py-2 px-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 transition-all ${
-                            numRoomsErr 
-                              ? 'border-red-500 focus:ring-red-500/30 bg-red-50/50 dark:bg-red-900/20' 
-                              : 'border-[var(--input)] focus:ring-[var(--ring)]'
-                          }`}
-                        />
-                        {numRoomsErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter room quantity</p>}
-                      </div>
-                      
-                      {/* Price / Period (GHS) */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--foreground)] flex justify-between items-center">
-                          <span>Price / {formData.pricePeriod === 'Nightly' ? 'Night' : formData.pricePeriod === 'Monthly' ? 'Month' : formData.pricePeriod === 'Annual' ? 'Year' : 'Acad. Year'} (GHS) *</span>
-                          {priceErr && <span className="text-[10px] font-bold text-red-500">⚠ Required</span>}
-                        </label>
-                        <div className="relative">
-                          <DollarSign className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 ${priceErr ? 'text-red-500' : 'text-slate-400'}`} />
-                          <input 
-                            type="number" 
-                            min="1"
-                            value={room.price}
-                            onChange={e => handleRoomChange(room.id, 'price', e.target.value)}
-                            placeholder="Amount"
-                            className={`w-full bg-transparent border rounded-lg py-2 pl-8 pr-3 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 transition-all ${
-                              priceErr 
-                                ? 'border-red-500 focus:ring-red-500/30 bg-red-50/50 dark:bg-red-900/20' 
-                                : 'border-[var(--input)] focus:ring-[var(--ring)]'
-                            }`}
-                          />
-                        </div>
-                        {priceErr && <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mt-1">⚠ Enter room price</p>}
-                      </div>
+            <button
+              type="button"
+              onClick={handleAddRoom}
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] text-xs font-bold rounded-xl transition-colors cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Another Room Type / Wing</span>
+            </button>
+          </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Utilities &amp; Rules</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 3: AMENITIES, UTILITIES & RULES ── */}
+      {currentStep === 3 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 3: Ghanaian Amenities &amp; House Rules</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Select compound facilities, security specifications, and house curfew guidelines.</p>
+          </div>
+
+          {/* Amenities Grid */}
+          <div className="space-y-4">
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Select Available Facilities</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {AMENITY_SECTIONS.map((sec) => {
+                const IconComponent = sec.icon;
+                return (
+                  <div key={sec.title} className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900 dark:text-white">
+                      <IconComponent className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                      <span>{sec.title}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {sec.items.map((item) => {
+                        const sel = isAmenitySelected(item);
+                        return (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => toggleAmenity(item)}
+                            className={clsx(
+                              "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer border text-left",
+                              sel
+                                ? "bg-[#0F5132] text-white border-emerald-700 shadow-xs"
+                                : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
+                            )}
+                          >
+                            {item}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
             </div>
-            
-            <div className="bg-slate-50 dark:bg-slate-800/50 border border-[var(--border)] rounded-xl p-4 mt-2">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider mb-1">Total Capacity</p>
-                  <p className="text-xs text-[var(--muted-foreground)]">Total individual beds this property can accommodate</p>
-                  <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                    <span className="font-semibold text-[var(--foreground)]">{rooms.reduce((a, r) => a + (Number(r.numberOfRooms) || 0), 0)}</span> physical rooms → <span className="font-semibold text-[var(--foreground)]">{totalCapacity}</span> beds
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-extrabold text-[var(--primary)]">{totalCapacity}</div>
-                  <div className="text-xs text-[var(--muted-foreground)]">beds</div>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Interactive Map Picker */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-              <span>Pinpoint on Map *</span>
-              {isGeocoding ? (
-                <span className="text-indigo-600 dark:text-indigo-400 font-medium text-xs flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Resolving area name...
-                </span>
-              ) : formData.latitude && formData.longitude ? (
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-xs flex items-center gap-1">
-                  ✓ Location Selected ({formData.location || `${formData.latitude.toFixed(4)}, ${formData.longitude.toFixed(4)}`})
-                </span>
-              ) : null}
-            </label>
-            <p className="text-xs text-[var(--muted-foreground)] mb-2">Click on the map to set exact GPS coordinates. The area name will auto-fill above.</p>
-            <div className="h-64 rounded-xl overflow-hidden border border-[var(--border)] relative z-0">
-              <Map 
-                mode="picker" 
-                selectedLocation={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : null}
-                onLocationSelect={handleLocationPin}
-              />
-            </div>
-          </div>
-
-          {/* Universal Facilities & Amenities */}
-          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+          {/* Rules & Policies */}
+          <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Curfew &amp; Compound Conduct</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
-                  <span>🏢</span> Residential &amp; Student Facilities (Amenities)
-                </label>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  Click preset badges to highlight essential security, power, and lifestyle amenities.
-                </p>
-              </div>
-              {formData.amenities && (
-                <span className="text-xs font-bold px-3 py-1 bg-indigo-50 dark:bg-indigo-950/60 text-[var(--primary)] border border-indigo-200 dark:border-indigo-800 rounded-full">
-                  {formData.amenities.split(',').filter(Boolean).length} Selected
-                </span>
-              )}
-            </div>
-
-            {/* Category-Grouped Preset Badges */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {PRESET_AMENITY_CATEGORIES.map((cat, idx) => (
-                <div key={idx} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/40 border border-[var(--border)] space-y-2.5">
-                  <div className="text-xs font-extrabold text-[var(--foreground)] tracking-wide uppercase">
-                    {cat.category}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {cat.items.map((item, itemIdx) => {
-                      const selectedList = formData.amenities
-                        .split(',')
-                        .map(a => a.trim().toLowerCase())
-                        .filter(Boolean);
-                      const isSelected = selectedList.includes(item.name.toLowerCase());
-
-                      return (
-                        <button
-                          key={itemIdx}
-                          type="button"
-                          onClick={() => {
-                            const currentList = formData.amenities
-                              .split(',')
-                              .map(a => a.trim())
-                              .filter(Boolean);
-                            let updatedList: string[];
-                            if (currentList.some(a => a.toLowerCase() === item.name.toLowerCase())) {
-                              updatedList = currentList.filter(a => a.toLowerCase() !== item.name.toLowerCase());
-                            } else {
-                              updatedList = [...currentList, item.name];
-                            }
-                            setFormData(prev => ({ ...prev, amenities: updatedList.join(', ') }));
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
-                            isSelected
-                              ? 'bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm scale-102 font-bold'
-                              : 'bg-white dark:bg-slate-800/80 text-[var(--foreground)] border-[var(--border)] hover:border-[var(--primary)]/60 hover:bg-indigo-50/40 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          <span>{item.icon}</span>
-                          <span>{item.name}</span>
-                          {isSelected && <span className="text-[11px] font-black">✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Custom Amenities Comma-Separated Input */}
-            <div className="space-y-1.5 pt-2">
-              <label className="text-xs font-bold text-[var(--muted-foreground)]">
-                Selected Amenities / Additional Custom Amenities (Comma-separated)
-              </label>
-              <input 
-                type="text" 
-                value={formData.amenities}
-                onChange={e => setFormData({...formData, amenities: e.target.value})}
-                placeholder="e.g. Standby Generator, 24/7 Water, Air Conditioning, Study Desk"
-                className="w-full bg-transparent border border-[var(--input)] rounded-xl py-2.5 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              />
-            </div>
-          </div>
-
-          {/* 📜 House / Hostel Rules & Curfew Policies */}
-          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
-            <div>
-              <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
-                <span>📜</span> Property Rules &amp; Curfew Policies
-              </label>
-              <p className="text-xs text-[var(--muted-foreground)]">
-                Set clear expectations regarding gate lock times, quiet hours, and visitors.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Gate Lock Time */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                  <span>🚪</span> Gate Lock / Curfew Time
-                </label>
-                <select 
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Gate Lock / Curfew</label>
+                <select
                   value={formData.gateLockTime}
-                  onChange={e => setFormData({...formData, gateLockTime: e.target.value})}
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                  onChange={e => setFormData({ ...formData, gateLockTime: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="No Curfew / 24/7 Access">🔓 No Curfew (24/7 Access)</option>
-                  <option value="10:00 PM Gate Lock">🔒 10:00 PM Gate Lock</option>
-                  <option value="10:30 PM Gate Lock">🔒 10:30 PM Gate Lock</option>
-                  <option value="11:00 PM Gate Lock">🔒 11:00 PM Gate Lock</option>
-                  <option value="12:00 AM (Midnight) Lock">🔒 12:00 AM (Midnight) Lock</option>
+                  <option value="No Curfew / 24/7 Access">24/7 Unrestricted Gate Access</option>
+                  <option value="Gate locks at 10:00 PM">Gate locks at 10:00 PM</option>
+                  <option value="Gate locks at 11:00 PM">Gate locks at 11:00 PM</option>
+                  <option value="Gate locks at 12:00 Midnight">Gate locks at 12:00 Midnight</option>
                 </select>
               </div>
 
-              {/* Visitor Policy */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                  <span>👥</span> Visitor Policy
-                </label>
-                <select 
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Visitor Policy</label>
+                <select
                   value={formData.visitorPolicy}
-                  onChange={e => setFormData({...formData, visitorPolicy: e.target.value})}
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                  onChange={e => setFormData({ ...formData, visitorPolicy: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="Open / Normal Visitors Allowed">🌐 Open / Normal Visitors Allowed</option>
-                  <option value="Day visitors allowed until 8 PM">🌅 Day visitors allowed until 8 PM</option>
-                  <option value="Day visitors allowed until 10 PM">🌙 Day visitors allowed until 10 PM</option>
-                  <option value="Strictly No Overnight Opposite-Gender Guests">🚫 No Overnight Opposite-Gender Guests</option>
-                  <option value="Strictly No External Visitors">🔒 Strictly No External Visitors</option>
+                  <option value="Day visitors allowed until 8 PM">Day visitors until 8:00 PM</option>
+                  <option value="No visitors allowed inside rooms">Visitors allowed in lounge only</option>
+                  <option value="Overnight visitors allowed with notice">Overnight permitted with notice</option>
+                  <option value="Strictly no external visitors">Strictly no visitors</option>
                 </select>
               </div>
 
-              {/* Quiet Hours */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                  <span>🤫</span> Quiet Hours
-                </label>
-                <select 
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Quiet Hours</label>
+                <select
                   value={formData.quietHours}
-                  onChange={e => setFormData({...formData, quietHours: e.target.value})}
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                  onChange={e => setFormData({ ...formData, quietHours: e.target.value })}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none cursor-pointer"
                 >
-                  <option value="From 10:00 PM">📚 From 10:00 PM (Quiet Study Hours)</option>
-                  <option value="From 9:00 PM">🌙 From 9:00 PM (Early Quiet)</option>
-                  <option value="From 11:00 PM">🌃 From 11:00 PM</option>
-                  <option value="None / Standard Residential">🏡 Standard Residential Quietness</option>
+                  <option value="From 10:00 PM">Quiet hours from 10:00 PM</option>
+                  <option value="From 11:00 PM">Quiet hours from 11:00 PM</option>
+                  <option value="24/7 Study Atmosphere">24/7 Quiet Study Atmosphere</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* 💳 Payment Structure & Refundable Deposits */}
-          <div className="space-y-4 pt-4 border-t border-[var(--border)]">
-            <div>
-              <label className="text-base font-extrabold text-[var(--foreground)] flex items-center gap-2">
-                <span>💳</span> Payment Structure, Deposits &amp; Included Utilities
-              </label>
-              <p className="text-xs text-[var(--muted-foreground)]">
-                Clarify accepted payment terms, refundable caution deposits, and included utility bills.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Accepted Payment Schedule */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                  <span>📅</span> Accepted Payment Schedule
-                </label>
-                <select 
-                  value={formData.paymentSchedule}
-                  onChange={e => setFormData({...formData, paymentSchedule: e.target.value})}
-                  className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 px-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                >
-                  <option value="Full Academic Year">🎓 Full Academic Year (Upfront)</option>
-                  <option value="2 Installments (Per Semester)">🗓️ 2 Installments (Per Semester)</option>
-                  <option value="Monthly in Advance">🏡 Monthly in Advance</option>
-                  <option value="Annual Lease Upfront">📜 Annual Lease Upfront</option>
-                  <option value="Flexible / Negotiable">🤝 Flexible / Negotiable with Landlord</option>
-                </select>
-              </div>
-
-              {/* Caution Deposit (GHS) */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-                  <span className="flex items-center gap-1.5"><span>🛡️</span> Refundable Caution Deposit (GHS)</span>
-                  <span className="text-xs text-[var(--muted-foreground)] font-normal">Optional</span>
+          {/* Included Utilities & Caution Deposit */}
+          <div className="space-y-3 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Caution Deposit &amp; Utility Coverage</div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Refundable Caution Deposit (GH₵)
                 </label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input 
-                    type="number" 
-                    min="0"
-                    step="1"
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-black text-zinc-400">GH₵</span>
+                  <input
+                    type="number"
                     value={formData.cautionDeposit}
-                    onChange={e => setFormData({...formData, cautionDeposit: e.target.value})}
-                    placeholder="e.g. 200 (Refundable upon move-out)"
-                    className="w-full bg-transparent border border-[var(--input)] rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                    onChange={e => setFormData({ ...formData, cautionDeposit: e.target.value })}
+                    placeholder="e.g. 500 (Refundable upon move-out)"
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl pl-10 pr-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Included Utilities Checkboxes */}
-            <div className="space-y-2 pt-2">
-              <label className="text-xs font-bold text-[var(--foreground)] block">
-                Included in Rental Price (Select all that apply)
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                {[
-                  { label: '💧 Water Bill Included', val: 'Water Bill Included' },
-                  { label: '🗑️ Garbage / Trash Fee Included', val: 'Garbage/Trash Service Included' },
-                  { label: '🔌 Prepaid Electricity Metered per Room', val: 'Prepaid Electricity Metered per Room' },
-                  { label: '🧹 Common Area Cleaning Included', val: 'Common Area Cleaning Included' },
-                  { label: '🛡️ Compound Security Fee Included', val: 'Compound Security Fee Included' },
-                  { label: '📶 Internet / WiFi Included', val: 'WiFi Internet Included' }
-                ].map((util, uIdx) => {
-                  const isChecked = formData.includedUtilities.includes(util.val);
-                  return (
-                    <label 
-                      key={uIdx}
-                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-semibold cursor-pointer transition-all ${
-                        isChecked 
-                          ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-400 text-emerald-900 dark:text-emerald-100 font-bold' 
-                          : 'bg-white dark:bg-slate-800/60 border-[var(--border)] text-[var(--foreground)] hover:border-slate-400'
-                      }`}
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Included in Listed Price</label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    'Water Bill Included',
+                    'Garbage/Trash Service Included',
+                    'Compound Security Fee Included',
+                    'WiFi Included',
+                    'Prepaid ECG Metered per Room'
+                  ].map(u => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => toggleUtility(u)}
+                      className={clsx(
+                        "px-2.5 py-1 text-[10px] font-bold rounded-lg border transition-colors cursor-pointer",
+                        formData.includedUtilities.includes(u)
+                          ? "bg-emerald-50 text-[#0F5132] border-emerald-300 dark:bg-emerald-950/40 dark:border-emerald-800"
+                          : "bg-zinc-50 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700"
+                      )}
                     >
-                      <input 
-                        type="checkbox" 
-                        checked={isChecked}
-                        onChange={() => {
-                          const updated = isChecked 
-                            ? formData.includedUtilities.filter(u => u !== util.val)
-                            : [...formData.includedUtilities, util.val];
-                          setFormData({...formData, includedUtilities: updated});
-                        }}
-                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
-                      />
-                      <span>{util.label}</span>
-                    </label>
-                  );
-                })}
+                      {formData.includedUtilities.includes(u) ? '✓ ' : '+ '}{u}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-              <span>Description *</span>
-              {fieldErrors.description && <span className="text-xs font-bold text-red-500">⚠ Description is required</span>}
-            </label>
-            <textarea 
-              value={formData.description}
-              onChange={e => {
-                setFormData({...formData, description: e.target.value});
-                if (fieldErrors.description) setFieldErrors(prev => ({ ...prev, description: false }));
-              }}
-              placeholder="Describe the property, rules, and nearby facilities..."
-              rows={4}
-              className={`w-full bg-transparent border rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 transition-all resize-none ${
-                fieldErrors.description 
-                  ? 'border-red-500 focus:ring-red-500/30 bg-red-50/20' 
-                  : 'border-[var(--input)] focus:ring-[var(--ring)]'
-              }`}
-            />
-          </div>
-
-          {/* Image Gallery Upload Field */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between">
-              <span>Property Gallery (Max 5 Images)</span>
-              {formData.images.length > 0 && <span className="text-[var(--primary)] font-medium text-xs">{formData.images.length}/5 Uploaded</span>}
-            </label>
-            <p className="text-xs text-[var(--muted-foreground)] mb-2">Upload up to 5 high-quality images of the property.</p>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {formData.images.map((url, idx) => (
-                <div key={idx} className="relative aspect-video rounded-lg overflow-hidden border border-[var(--border)] group">
-                  <img src={getImageUrl(url)} alt="Property" className="w-full h-full object-cover" />
-                  <button 
-                    type="button" 
-                    onClick={() => setFormData(p => ({...p, images: p.images.filter((_, i) => i !== idx)}))}
-                    className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              
-              {formData.images.length < 5 && (
-                <div className="aspect-video border-2 border-dashed border-[var(--border)] rounded-lg flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/20 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors relative cursor-pointer">
-                  {imagesUploading ? (
-                    <Loader2 className="w-6 h-6 animate-spin text-[var(--primary)]" />
-                  ) : (
-                    <>
-                      <ImageIcon className="w-6 h-6 text-slate-400 mb-1" />
-                      <span className="text-xs font-medium text-[var(--muted-foreground)]">Add Photos</span>
-                    </>
-                  )}
-                  <input 
-                    type="file" 
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    disabled={imagesUploading}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Video Upload Field */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-[var(--foreground)] flex justify-between">
-              <span>Video Walkthrough (Optional)</span>
-              {formData.videoUrl && <span className="text-emerald-500 font-medium text-xs">Video Uploaded</span>}
-            </label>
-            <p className="text-xs text-[var(--muted-foreground)] mb-2">Build trust by uploading a short video tour (Max 50MB, MP4/WebM).</p>
-            
-            <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-900/20 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors relative">
-              {videoUploading ? (
-                <div className="flex flex-col items-center gap-2">
-                  <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]">Uploading video...</span>
-                </div>
-              ) : formData.videoUrl ? (
-                <div className="flex flex-col items-center gap-2 text-emerald-600 dark:text-emerald-500">
-                  <Video className="w-8 h-8" />
-                  <span className="text-sm font-bold">Video Ready</span>
-                  <button 
-                    type="button" 
-                    onClick={() => { setFormData(p => ({...p, videoUrl: ''})); setVideoFile(null); }}
-                    className="text-xs underline mt-1"
-                  >
-                    Remove Video
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <Video className="w-10 h-10 text-slate-300 dark:text-slate-600 mb-3" />
-                  <span className="text-sm font-bold text-[var(--foreground)] mb-1">Click to upload video</span>
-                  <span className="text-xs text-[var(--muted-foreground)]">MP4 or WebM (Max 50MB)</span>
-                  <input 
-                    type="file" 
-                    accept="video/mp4, video/webm"
-                    onChange={handleVideoUpload}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-[var(--border)]">
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
             <button
-              type="submit"
-              disabled={createMutation.isPending}
-              className="w-full bg-[var(--primary)] text-white py-3 rounded-xl font-bold shadow-md hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              {createMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
-              {createMutation.isPending ? 'Publishing...' : 'Publish Listing'}
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Media &amp; Review</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
-        </form>
-      </div>
+        </div>
+      )}
+
+      {/* ── STEP 4: MEDIA, DESCRIPTION & REVIEW ── */}
+      {currentStep === 4 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 4: Media, Overview &amp; Review</h2>
+            <p className="text-xs text-zinc-500 mt-0.5">Upload verified property photos, tour video, and review your listing before publishing.</p>
+          </div>
+
+          <div className="space-y-4">
+            {/* Description */}
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Property Overview Description *
+              </label>
+              <textarea
+                rows={4}
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Detail key advantages: distance to campus gate, room amenities, caretaker availability, study environment..."
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl p-3.5 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+              />
+            </div>
+
+            {/* Photo Gallery */}
+            <div className="space-y-2">
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                Property Photos (Up to 5 Images)
+              </label>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {formData.images.map((img, i) => (
+                  <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 group">
+                    <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(i)}
+                      className="absolute top-1 right-1 bg-black/70 hover:bg-rose-600 text-white p-1 rounded-md transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+
+                {formData.images.length < 5 && (
+                  <label className="aspect-video rounded-xl border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors bg-zinc-50 dark:bg-zinc-800/30">
+                    <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    {imagesUploading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-[#0F5132]" />
+                    ) : (
+                      <>
+                        <ImageIcon className="w-5 h-5 text-zinc-400" />
+                        <span className="text-[10px] font-bold text-zinc-500">Upload Photo</span>
+                      </>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Video Tour */}
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Walkthrough Video (Optional, Max 50MB)
+              </label>
+              <div className="border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-4 text-center bg-zinc-50 dark:bg-zinc-800/30">
+                <input type="file" accept="video/mp4,video/webm" onChange={handleVideoUpload} className="hidden" id="video-upload" />
+                {videoUploading ? (
+                  <div className="flex items-center justify-center gap-2 text-xs font-bold text-[#0F5132]">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading walkthrough video...
+                  </div>
+                ) : formData.videoUrl ? (
+                  <div className="text-xs font-bold text-[#0F5132] flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4" /> Video tour uploaded successfully!
+                  </div>
+                ) : (
+                  <label htmlFor="video-upload" className="cursor-pointer text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white flex items-center justify-center gap-2">
+                    <Video className="w-4 h-4 text-zinc-400" />
+                    <span>Upload Short Video Tour (MP4 / WebM)</span>
+                  </label>
+                )}
+              </div>
+            </div>
+
+            {/* Pre-Publishing Audit Card */}
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+              <div className="text-xs font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+                Publication Summary
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Property</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">{formData.title || 'Untitled'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Location</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">{formData.location || 'Not set'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Capacity</span>
+                  <span className="font-bold text-[#0F5132] dark:text-emerald-400">{totalBeds} Student Beds</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Unit Configs</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{rooms.length} Room Types</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={createMutation.isPending}
+              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+            >
+              {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              <span>Publish Listing</span>
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
