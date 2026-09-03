@@ -309,18 +309,18 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
       {/* ── TOP HERO SECTION: GALLERY & PROPERTY HEADER (FULL WIDTH) ── */}
       <div className="space-y-8">
-        <div className="flex gap-4 h-[480px]">
-            <div className="flex-1 rounded-3xl overflow-hidden shadow-md">
+        <div className="flex gap-4 h-[380px] sm:h-[480px]">
+            <div className="flex-1 rounded-3xl overflow-hidden shadow-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800">
               <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
             </div>
-            {parsedImages.length > 1 && (
-              <div className="w-[30%] hidden md:flex flex-col gap-4">
-                {parsedImages.slice(1, 3).map((img: string, idx: number) => (
-                  <div key={idx} className="flex-1 rounded-2xl overflow-hidden shadow-md relative">
+            {validImages.length > 1 && (
+              <div className="w-[32%] hidden md:flex flex-col gap-4">
+                {validImages.slice(1, 3).map((img: string, idx: number) => (
+                  <div key={idx} className="flex-1 rounded-2xl overflow-hidden shadow-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 relative">
                     <img src={getImageUrl(img)} alt={`${property.title} ${idx + 2}`} className="w-full h-full object-cover" />
-                    {idx === 1 && parsedImages.length > 3 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer hover:bg-black/40 transition-colors">
-                        <span className="text-white font-bold text-xl">+{parsedImages.length - 3}</span>
+                    {idx === 1 && validImages.length > 3 && (
+                      <div className="absolute inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center cursor-pointer hover:bg-black/40 transition-colors">
+                        <span className="text-white font-extrabold text-sm">+{validImages.length - 3} Photos</span>
                       </div>
                     )}
                   </div>
@@ -334,8 +334,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               <div className="flex flex-wrap items-center gap-3">
                 <h1 className="text-4xl font-extrabold text-[var(--foreground)] tracking-tight">{property.title}</h1>
                 {property.landlord?.isVerifiedLandlord && (
-                  <span className="bg-blue-600 text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4" /> Verified Landlord 🛡️
+                  <span className="bg-[#0F5132] text-white text-xs font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1.5 border border-emerald-600/50">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" /> Direct Owner • Act 220 Verified
                   </span>
                 )}
               </div>
@@ -358,93 +358,46 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 py-8 border-y border-[var(--border)]">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Home className="w-5 h-5 text-[var(--primary)]" />
-              </div>
-              <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Type</div>
-                <div className="font-bold text-sm">{property.type || 'Hostel'}</div>
-              </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 py-6 border-y border-zinc-200 dark:border-zinc-800 text-xs">
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+              <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Property Type</div>
+              <div className="font-extrabold text-sm text-zinc-950 dark:text-white">{property.type || 'Residential'}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold">
-                👥
-              </div>
-              <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Target Tenant</div>
-                <div className="font-bold text-sm">{property.targetAudience || 'Open to All'}</div>
-              </div>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+              <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Target Resident</div>
+              <div className="font-extrabold text-sm text-zinc-950 dark:text-white">{property.targetAudience || 'Open to All'}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold">
-                🛋️
-              </div>
-              <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Furnishing</div>
-                <div className="font-bold text-sm">{property.furnishing || 'Unfurnished'}</div>
-              </div>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+              <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Furnishing</div>
+              <div className="font-extrabold text-sm text-zinc-950 dark:text-white">{property.furnishing || 'Unfurnished'}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Bed className="w-5 h-5 text-[var(--primary)]" />
-              </div>
-              <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Room Types</div>
-                <div className="font-bold text-sm">{property.rooms?.length || 0} Options</div>
-              </div>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/80">
+              <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Room Units</div>
+              <div className="font-extrabold text-sm text-zinc-950 dark:text-white">{property.rooms?.length || 1} Floorplan Option{(property.rooms?.length || 1) > 1 ? 's' : ''}</div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Users className="w-5 h-5 text-[var(--primary)]" />
-              </div>
-              <div>
-                <div className="text-[var(--muted-foreground)] text-xs font-semibold uppercase">Capacity</div>
-                <div className="font-bold text-sm">{property.totalCapacity} beds</div>
-              </div>
-            </div>
-            {/* Live Availability Block */}
-            <div className="col-span-2 sm:col-span-1">
-              <div className={`rounded-2xl p-4 border ${
-                property.remainingCapacity === 0
-                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                  : property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25)
-                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
-                  : 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
-              }`}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Availability</span>
-                  <span className={`text-xs font-extrabold ${
-                    property.remainingCapacity === 0 ? 'text-red-600' :
-                    property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'text-amber-600' :
-                    'text-emerald-600'
-                  }`}>
-                    {property.remainingCapacity === 0 ? 'FULL' :
-                     property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'ALMOST FULL' : 'AVAILABLE'}
-                  </span>
+
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200 dark:border-zinc-700/80 col-span-2 sm:col-span-1">
+              <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Tenancy Status</div>
+              {property.type === 'Hostel' ? (
+                <div className="font-extrabold text-sm text-[#0F5132] dark:text-emerald-400">
+                  {property.remainingCapacity} of {property.totalCapacity} beds vacant
                 </div>
-                <div className="text-2xl font-extrabold mb-2">
-                  {property.remainingCapacity ?? '–'}
-                  <span className="text-sm font-medium text-[var(--muted-foreground)]"> / {property.totalCapacity} beds left</span>
+              ) : (
+                <div className="flex items-center gap-1.5 text-xs font-black text-[#0F5132] dark:text-emerald-400">
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  <span>Vacant &amp; Move-in Ready</span>
                 </div>
-                <div className="h-2 bg-white/60 dark:bg-slate-900/40 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${
-                      property.remainingCapacity === 0 ? 'bg-red-400' :
-                      property.remainingCapacity <= Math.ceil((property.totalCapacity || 1) * 0.25) ? 'bg-amber-400' :
-                      'bg-emerald-400'
-                    }`}
-                    style={{ width: property.totalCapacity > 0 ? `${Math.round((property.remainingCapacity / property.totalCapacity) * 100)}%` : '100%' }}
-                  />
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
       </div>
 
-      {/* ── GIS CAMPUS DISTANCE & TRANSIT TIME HUB ── */}
+      {/* ── GIS CAMPUS DISTANCE & TRANSIT TIME HUB (HOSTELS ONLY) ── */}
+      {(property.type === 'Hostel' || property.targetAudience === 'Students Only') && (
       <div className="glass-card p-6 sm:p-8 rounded-3xl border border-[var(--border)] shadow-xl w-full space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -503,6 +456,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           ))}
         </div>
       </div>
+      )}
 
       {/* ── SECTION 2: REQUEST BOOKING (FULL WIDTH EDGE-TO-EDGE) ── */}
       <div className="glass-card p-6 sm:p-10 rounded-3xl border border-[var(--border)] shadow-xl w-full">
@@ -986,7 +940,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>🚪</span> Gate Lock / Curfew
               </div>
               <div className="text-base font-extrabold text-[var(--foreground)]">
-                {property.gateLockTime || 'No Curfew / 24/7 Access'}
+                {cleanText(property.gateLockTime) || 'No Curfew / 24/7 Access'}
               </div>
             </div>
 
@@ -995,7 +949,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>👥</span> Visitor Policy
               </div>
               <div className="text-base font-extrabold text-[var(--foreground)]">
-                {property.visitorPolicy || 'Day visitors allowed until 8 PM'}
+                {cleanText(property.visitorPolicy) || 'Day visitors allowed until 8 PM'}
               </div>
             </div>
 
@@ -1025,7 +979,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>📅</span> Accepted Payment Terms
               </div>
               <div className="text-base font-extrabold text-[var(--primary)]">
-                {property.paymentSchedule || 'Full Upfront'}
+                {cleanText(property.paymentSchedule) || 'Full Upfront'}
               </div>
             </div>
 
