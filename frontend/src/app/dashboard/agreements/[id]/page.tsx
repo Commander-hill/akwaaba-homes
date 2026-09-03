@@ -169,7 +169,7 @@ export default function AgreementPage() {
           {!iHaveSigned && (
             <button 
               onClick={() => setShowSignModal(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-[#5B4CFF] to-[#7D6EFF] hover:from-[#4C3DEE] hover:to-[#6B5CEE] text-white rounded-2xl text-xs font-black shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
             >
               <FileSignature className="w-4 h-4" />
               <span>E-Sign Contract</span>
@@ -178,46 +178,18 @@ export default function AgreementPage() {
         </div>
       </div>
 
-      {/* ── STATUTORY COMPLIANCE BADGES STRIP ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <Scale className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white">Ghana Rent Act</div>
-            <div className="text-[10px] text-slate-500 font-medium">Act 220 &amp; L.I. 369</div>
-          </div>
+      {/* ── STATUTORY COMPLIANCE BAR ── */}
+      <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2">
+          <Scale className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+          <span className="font-bold text-zinc-900 dark:text-white">
+            Republic of Ghana Rent Act, 1963 (Act 220) &amp; Electronic Transactions Act, 2008 (Act 772)
+          </span>
         </div>
-
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-            <Lock className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white">SHA-256 Vault</div>
-            <div className="text-[10px] text-slate-500 font-medium">Tamper-Evident Seal</div>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <FileCheck className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white">Act 772 E-Sign</div>
-            <div className="text-[10px] text-slate-500 font-medium">Electronic Transactions</div>
-          </div>
-        </div>
-
-        <div className="p-3.5 rounded-2xl bg-white dark:bg-[#16161D] border border-slate-200/80 dark:border-white/10 flex items-center gap-3 shadow-sm">
-          <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="text-xs font-black text-slate-900 dark:text-white">Anti-Eviction</div>
-            <div className="text-[10px] text-slate-500 font-medium">Sec. 17 Protection</div>
-          </div>
+        <div className="flex items-center gap-4 text-[11px] font-medium text-zinc-500">
+          <span>Sec. 17 Eviction Protection</span>
+          <span>•</span>
+          <span>SHA-256 Legal Vault Seal</span>
         </div>
       </div>
 
@@ -226,9 +198,7 @@ export default function AgreementPage() {
         
         {/* Ghana Coat of Arms Emblem Header */}
         <div className="text-center pb-8 border-b-2 border-slate-900/10 space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-900 text-amber-400 font-black text-lg shadow-md mb-2">
-            🇬🇭
-          </div>
+          <div className="text-xs font-bold tracking-widest text-[#0F5132] uppercase mb-1">Official Legal Instrument</div>
           <h2 className="text-lg sm:text-xl font-black uppercase tracking-widest text-slate-900">
             Republic of Ghana
           </h2>
