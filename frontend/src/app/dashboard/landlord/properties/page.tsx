@@ -180,7 +180,7 @@ export default function LandlordPropertiesPage() {
               <Building className="w-3.5 h-3.5 text-zinc-400" />
             </div>
             <div className="text-xl font-black text-zinc-950 dark:text-white">{portfolioStats.total}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Managed in portfolio</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Properties in portfolio</div>
           </div>
 
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
@@ -189,12 +189,12 @@ export default function LandlordPropertiesPage() {
               <CheckCircle className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
             </div>
             <div className="text-xl font-black text-[#0F5132] dark:text-emerald-400">{portfolioStats.live}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Accepting student bookings</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Accepting tenant & resident bookings</div>
           </div>
 
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Student Capacity</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Resident Capacity</span>
               <Bed className="w-3.5 h-3.5 text-zinc-400" />
             </div>
             <div className="text-xl font-black text-zinc-950 dark:text-white">{portfolioStats.totalBeds} Beds</div>
@@ -263,7 +263,7 @@ export default function LandlordPropertiesPage() {
         <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 w-full sm:w-auto">
           {[
             { id: 'ALL', label: `All (${portfolioStats.total})` },
-            { id: 'ACTIVE', label: `Live on Campus (${portfolioStats.live})` },
+            { id: 'ACTIVE', label: `Live & Listed (${portfolioStats.live})` },
             { id: 'DRAFT', label: `Drafts (${portfolioStats.drafts})` },
           ].map(tab => (
             <button
@@ -329,7 +329,7 @@ export default function LandlordPropertiesPage() {
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
                     {property.isAvailable ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#0F5132]/90 backdrop-blur-md text-white border border-emerald-500/40 shadow-xs">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live on Campus
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live & Listed
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-600/90 backdrop-blur-md text-white border border-amber-400/40 shadow-xs">

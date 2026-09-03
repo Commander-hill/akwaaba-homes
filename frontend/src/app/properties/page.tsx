@@ -84,8 +84,8 @@ export default function PropertiesPage() {
         {/* Page Header & Search */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">Accommodations Directory</h1>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Direct landlord verified listings across KNUST, Legon, UCC, and Accra. Zero agent fees.</p>
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">Verified Properties &amp; Rental Directory</h1>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">Verified homes, apartments, executive studios, and residential tenancies across Ghana. Zero roadside agent commissions.</p>
           </div>
           
           <div className="flex w-full md:w-auto gap-3">

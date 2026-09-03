@@ -608,10 +608,10 @@ export default function NewPropertyPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <div>
               <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 2: Room Units &amp; Rates (GH₵)</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Configure room categories, gender wings, and annual rates in Ghana Cedis.</p>
+              <p className="text-xs text-zinc-500 mt-0.5">Configure unit types, bedrooms, flats, and tenancy rates in Ghana Cedis.</p>
             </div>
             <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 px-3 py-1.5 rounded-xl text-xs font-bold text-[#0F5132] dark:text-emerald-400">
-              Total Capacity: {totalBeds} Student Beds
+              Total Capacity: {totalBeds} Residents / Beds
             </div>
           </div>
 
@@ -735,7 +735,7 @@ export default function NewPropertyPage() {
         <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
           <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
             <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 3: Ghanaian Amenities &amp; House Rules</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Select compound facilities, security specifications, and house curfew guidelines.</p>
+            <p className="text-xs text-zinc-500 mt-0.5">Select compound facilities, security specifications, and tenancy guidelines.</p>
           </div>
 
           {/* Amenities Grid */}
@@ -992,7 +992,7 @@ export default function NewPropertyPage() {
                 </div>
                 <div>
                   <span className="text-[10px] text-zinc-400 block uppercase">Capacity</span>
-                  <span className="font-bold text-[#0F5132] dark:text-emerald-400">{totalBeds} Student Beds</span>
+                  <span className="font-bold text-[#0F5132] dark:text-emerald-400">{totalBeds} Residents / Beds</span>
                 </div>
                 <div>
                   <span className="text-[10px] text-zinc-400 block uppercase">Unit Configs</span>

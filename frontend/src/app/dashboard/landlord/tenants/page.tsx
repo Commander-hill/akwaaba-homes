@@ -71,7 +71,7 @@ export default function LandlordTenantsPage() {
               <User className="w-4 h-4 text-zinc-400" />
             </div>
             <div className="text-2xl font-black text-zinc-950 dark:text-white">{bookings.length}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">All-time reservation records</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">All-time tenancy records</div>
           </div>
 
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
@@ -111,7 +111,7 @@ export default function LandlordTenantsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
             <input 
               type="text" 
-              placeholder="Search by name, email, or student ID..." 
+              placeholder="Search by name, email, or tenant reference..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-8 pr-3 py-1.5 bg-white dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] outline-none transition-all"
@@ -152,7 +152,7 @@ export default function LandlordTenantsPage() {
             <table className="w-full text-left text-xs border-collapse">
               <thead className="sticky top-0 bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] font-bold tracking-wider z-10">
                 <tr>
-                  <th className="px-6 py-3.5">Resident / Student</th>
+                  <th className="px-6 py-3.5">Resident / Tenant</th>
                   <th className="px-6 py-3.5">Assigned Property</th>
                   <th className="px-6 py-3.5">Tenancy Term</th>
                   <th className="px-6 py-3.5">Contact Clearance</th>

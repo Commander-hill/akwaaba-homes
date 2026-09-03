@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: 'AkwaabaHomes | Secure Hostel & Property Rentals',
-  description: 'The premium platform for students and landlords to connect for secure housing in Ghana.',
+  description: 'Ghana\'s premier rental platform connecting landlords and tenants for verified apartments, homes, executive studios, and residential tenancies.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

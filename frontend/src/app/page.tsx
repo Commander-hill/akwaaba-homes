@@ -123,7 +123,7 @@ export default function Home() {
 
               {/* Sub-copy */}
               <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed">
-                Connect directly with certified property owners and hostel managers across KNUST, Legon, UCC, and Accra. 
+                Connect directly with certified property owners, landlords, and facility managers across Accra, Kumasi, Takoradi, and nationwide. 
                 Pay securely via MoMo escrow — funds are released only after on-site key handover and condition sign-off.
               </p>
 
@@ -394,7 +394,7 @@ export default function Home() {
               Accommodations by Category
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Select verified housing tailored to student schedules or residential tenancies.
+              Select verified rental homes, apartments, executive studios, or student accommodations.
             </p>
           </div>
           <Link
@@ -614,7 +614,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-black text-zinc-950 dark:text-white">For Property Owners &amp; Landlords</h3>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                List your residential units or student hostels. Fill rooms without informal agent squabbles, manage tenant leases automatically, 
+                List your residential properties, apartments, or student hostels. Fill vacancies without informal agent squabbles, manage statutory leases automatically, 
                 and receive automated MoMo payouts straight into your MTN or Telecel wallet.
               </p>
               <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">

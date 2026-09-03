@@ -30,7 +30,7 @@ export default function LandlordSubscriptionPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Listing Billing &amp; Subscriptions</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage annual listing fees, search visibility, and active property status.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage listing fees, verified search visibility, and active rental status.</p>
           </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
             <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
@@ -57,7 +57,7 @@ export default function LandlordSubscriptionPage() {
             <div className="text-2xl font-black text-[#0F5132] dark:text-emerald-400">
               {properties?.filter((p: any) => p.isAvailable).length || 0}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Visible to students across Ghana</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Visible to prospective tenants across Ghana</div>
           </div>
 
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
@@ -108,7 +108,7 @@ export default function LandlordSubscriptionPage() {
                     <td className="px-6 py-4">
                       {property.isAvailable ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-400 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800/60">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live on Campus
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Live & Listed
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 font-bold text-[11px] border border-rose-200 dark:border-rose-800/60">

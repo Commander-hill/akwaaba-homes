@@ -339,7 +339,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
 
             <div class="grid-2">
               <div class="info-card">
-                <div class="card-label">Payer (Resident / Student)</div>
+                <div class="card-label">Payer (Tenant / Resident)</div>
                 <div class="card-main">${t.firstName || ''} ${t.lastName || 'Tenant Occupant'}</div>
                 <div class="card-sub">Email: ${t.email || 'Registered Tenant'}</div>
                 ${t.phoneNumber ? `<div class="card-sub">Phone: ${t.phoneNumber}</div>` : ''}
@@ -366,7 +366,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
               <tbody>
                 <tr>
                   <td class="font-bold">Student Accommodation Rent &amp; Unit Occupancy</td>
-                  <td>1 Academic Year</td>
+                  <td>1 Year Tenancy Term</td>
                   <td class="text-right font-bold">GHS ${(tx.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 </tr>
                 <tr>
