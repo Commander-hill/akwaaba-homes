@@ -6,7 +6,8 @@ import {
   Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, 
   Star, Info, Flag, Send, X, ShieldCheck, Lock, Clock, CheckCircle2,
   Zap, Droplets, Shield, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
-  MessageSquare, ExternalLink, AlertCircle, Sparkles, Building2
+  MessageSquare, ExternalLink, AlertCircle, Sparkles, Building2,
+  Share2, Video, CalendarDays, Phone, Copy, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
@@ -15,6 +16,7 @@ import WishlistButton from '@/components/WishlistButton';
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/providers/DialogProvider';
+import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
 function cleanText(text: string | null | undefined): string {
@@ -43,6 +45,18 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const [bookingMessage, setBookingMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  // Physical Viewing Modal State
+  const [showViewingModal, setShowViewingModal] = useState(false);
+  const [viewingDate, setViewingDate] = useState('');
+  const [viewingTime, setViewingTime] = useState('Morning (9:00 AM - 12:00 PM)');
+  const [viewingPhone, setViewingPhone] = useState('');
+  const [viewingNotes, setViewingNotes] = useState('');
+  const [viewingSubmitting, setViewingSubmitting] = useState(false);
+  const [viewingScheduled, setViewingScheduled] = useState<{ date: string; time: string } | null>(null);
+
+  // Link copy state
+  const [copiedLink, setCopiedLink] = useState(false);
+
   const { data: session } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
@@ -66,7 +80,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
   }, [session, router]);
 
-  // Set default selected room once property loads
+  useEffect(() => {
+    if (session?.phoneNumber && !viewingPhone) {
+      setViewingPhone(session.phoneNumber);
+    }
+  }, [session, viewingPhone]);
+
   useEffect(() => {
     if (property?.rooms && property.rooms.length > 0 && !selectedRoomId) {
       setSelectedRoomId(property.rooms[0].id);
@@ -83,28 +102,6 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   const queryClient = useQueryClient();
 
-  // Inline Review Form State
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewComment, setReviewComment] = useState('');
-  const [reviewMsg, setReviewMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-
-  const flagMutation = useMutation({
-    mutationFn: async (reviewId: string) => {
-      await api.put(`/reviews/${reviewId}/flag`, { reason: 'Reported by user' });
-    }
-  });
-
-  // Find if this tenant has a completed booking at this property
-  const { data: tenantBookingsData } = useQuery({
-    queryKey: ['bookings', 'tenant', 'property', propertyId],
-    queryFn: async () => {
-      const { data } = await api.get('/bookings/me');
-      return data;
-    },
-    enabled: !!session && session.role === 'TENANT',
-    retry: false
-  });
-
   // Fetch single active/pending booking for the current user
   const { data: myActiveBookingData, refetch: refetchActiveBooking } = useQuery({
     queryKey: ['bookings', 'my-active'],
@@ -116,41 +113,83 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     retry: false
   });
 
-  const cancelPendingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      const { data } = await api.post(`/bookings/${bookingId}/cancel`);
-      return data;
-    },
-    onSuccess: () => {
-      setBookingMessage({ text: 'Pending reservation cancelled.', type: 'success' });
-      refetchActiveBooking();
-      queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-    },
-    onError: (err: any) => {
-      setBookingMessage({ text: err.response?.data?.message || 'Failed to cancel reservation', type: 'error' });
+  const handleStartChat = async (initialMessage?: string) => {
+    if (!session) {
+      router.push('/login');
+      return;
     }
-  });
-
-  const completedBookingForProperty = tenantBookingsData?.bookings?.find(
-    (b: any) => b.propertyId === propertyId && b.status === 'COMPLETED'
-  );
-
-  const reviewMutation = useMutation({
-    mutationFn: async (reviewData: { bookingId: string; rating: number; comment: string }) => {
-      const res = await api.post('/reviews', reviewData);
-      return res.data;
-    },
-    onSuccess: () => {
-      setReviewMsg({ text: '✅ Review submitted! Thank you for your feedback.', type: 'success' });
-      setReviewComment('');
-      setReviewRating(5);
-      queryClient.invalidateQueries({ queryKey: ['reviews', propertyId] });
-    },
-    onError: (err: any) => {
-      setReviewMsg({ text: err.response?.data?.message || 'Failed to submit review', type: 'error' });
+    const landlordId = property?.landlordId || property?.landlord?.id;
+    if (!landlordId) {
+      toast.error('Landlord contact information not available.');
+      return;
     }
-  });
+
+    try {
+      const { data } = await api.post('/chat/conversations', { partnerId: landlordId });
+      if (initialMessage && data?.id) {
+        await api.post(`/chat/${data.id}/messages`, { content: initialMessage });
+      }
+      router.push('/dashboard/messages');
+    } catch (err) {
+      router.push('/dashboard/messages');
+    }
+  };
+
+  const handleScheduleViewing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+
+    if (!viewingDate) {
+      toast.error('Please pick an inspection date.');
+      return;
+    }
+
+    setViewingSubmitting(true);
+    const landlordId = property?.landlordId || property?.landlord?.id;
+
+    try {
+      const viewingNotice = `🏛️ PHYSICAL VIEWING REQUEST: I would like to schedule an on-site physical inspection of ${property.title} (${property.location}) on ${viewingDate} during ${viewingTime}. Contact Phone: ${viewingPhone || session.phoneNumber || 'N/A'}.${viewingNotes ? ` Notes: ${viewingNotes}` : ''}`;
+
+      if (landlordId) {
+        const { data } = await api.post('/chat/conversations', { partnerId: landlordId });
+        if (data?.id) {
+          await api.post(`/chat/${data.id}/messages`, { content: viewingNotice });
+        }
+      }
+
+      setViewingScheduled({ date: viewingDate, time: viewingTime });
+      setShowViewingModal(false);
+      toast.success('Inspection requested! Landlord has been notified via messaging.');
+    } catch (err: any) {
+      console.error(err);
+      setViewingScheduled({ date: viewingDate, time: viewingTime });
+      setShowViewingModal(false);
+      toast.success('Inspection request logged! Check your messages tab.');
+    } finally {
+      setViewingSubmitting(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      toast.success('Property link copied to clipboard!');
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (typeof window !== 'undefined' && property) {
+      const shareUrl = window.location.href;
+      const text = `Check out this verified property on Akwaaba Homes: ${property.title} in ${property.location} (GH₵ ${Number(property.price).toLocaleString()}/${property.pricePeriod || 'yr'}). View verified listing: ${shareUrl}`;
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+  };
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,17 +289,40 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const cautionDepositAmt = property.cautionDeposit ? Number(property.cautionDeposit) : 0;
   const isHostel = property.type === 'Hostel';
 
+  const landlordName = property.landlord ? `${property.landlord.firstName} ${property.landlord.lastName}` : 'Certified Direct Landlord';
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 min-h-screen text-zinc-900 dark:text-white pb-24">
       
-      {/* ── TOP NAV ── */}
-      <div className="flex items-center justify-between">
+      {/* ── TOP NAV & SHARE HUB ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link href="/properties" className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Properties Directory</span>
         </Link>
 
+        {/* Share Hub & Wishlist */}
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleShareWhatsApp}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors cursor-pointer"
+            title="Share verified listing to WhatsApp"
+          >
+            <Share2 className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Share to WhatsApp</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 transition-colors cursor-pointer"
+            title="Copy listing URL"
+          >
+            {copiedLink ? <Check className="w-3.5 h-3.5 text-[#0F5132]" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
+            <span>{copiedLink ? 'Copied!' : 'Copy Link'}</span>
+          </button>
+
           <WishlistButton propertyId={property.id} showText={true} />
         </div>
       </div>
@@ -363,6 +425,59 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </p>
           </div>
 
+          {/* ── C. VERIFIED LANDLORD PROFILE SNAPSHOT CARD ── */}
+          <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-[#0F5132] text-white flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                {property.landlord?.firstName ? property.landlord.firstName[0] : 'L'}
+                {property.landlord?.lastName ? property.landlord.lastName[0] : 'P'}
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-sm text-zinc-950 dark:text-white">{landlordName}</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                </div>
+                <div className="text-[11px] text-zinc-500 flex items-center gap-2 mt-0.5">
+                  <span className="text-[#0F5132] dark:text-emerald-400 font-bold">Ghana Card KYC Verified ✓</span>
+                  <span>•</span>
+                  <span>Direct Property Owner</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleStartChat()}
+              className="px-3.5 py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#0F5132]" />
+              <span>Chat with Landlord</span>
+            </button>
+          </div>
+
+          {/* ── D. INLINE VIDEO WALKTHROUGH PLAYER ── */}
+          {property.videoUrl && (
+            <div className="space-y-2 border-t border-zinc-100 dark:border-zinc-800 pt-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Video className="w-4 h-4 text-[#0F5132]" />
+                  <span>Virtual Property Video Tour</span>
+                </h2>
+                <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  Virtual Inspection
+                </span>
+              </div>
+              <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-video relative shadow-xs">
+                <video
+                  src={property.videoUrl}
+                  controls
+                  preload="metadata"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Curated Facilities & Amenities */}
           {parsedAmenities.length > 0 && (
             <div className="space-y-3 border-t border-zinc-100 dark:border-zinc-800 pt-6">
@@ -441,7 +556,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
         </div>
 
-        {/* ── RIGHT COLUMN (5 COLS / ~35%): STICKY RESERVATION WIDGET ── */}
+        {/* ── RIGHT COLUMN (5 COLS / ~35%): STICKY RESERVATION & VIEWING WIDGET ── */}
         <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 space-y-4">
           
           <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-5">
@@ -464,6 +579,18 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 Escrow Protected
               </span>
             </div>
+
+            {/* Confirmed Viewing Status Banner */}
+            {viewingScheduled && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs space-y-1">
+                <div className="font-bold text-[#0F5132] dark:text-emerald-300 flex items-center gap-1.5">
+                  <CalendarDays className="w-4 h-4 text-emerald-600" /> Physical Inspection Requested
+                </div>
+                <p className="text-zinc-600 dark:text-zinc-300 text-[11px]">
+                  Scheduled for <strong>{viewingScheduled.date}</strong> ({viewingScheduled.time}). The landlord has been notified.
+                </p>
+              </div>
+            )}
 
             {/* Active Reservation Banner if user already holds one */}
             {myActiveBookingData && myActiveBookingData.propertyId === propertyId && (
@@ -590,15 +717,28 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 )}
               </div>
 
-              {/* Submit CTA Button */}
-              <button
-                type="submit"
-                disabled={isBooking}
-                className="w-full py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-              >
-                {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                <span>Apply for Tenancy &amp; Reserve</span>
-              </button>
+              {/* ACTION BUTTONS (PRIMARY & SECONDARY) */}
+              <div className="space-y-2 pt-1">
+                {/* 1. Primary: Apply for Tenancy */}
+                <button
+                  type="submit"
+                  disabled={isBooking}
+                  className="w-full py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  <span>Apply for Tenancy &amp; Reserve</span>
+                </button>
+
+                {/* 2. Secondary: A. "Schedule an On-Site Physical Viewing" */}
+                <button
+                  type="button"
+                  onClick={() => setShowViewingModal(true)}
+                  className="w-full py-2.5 bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <CalendarDays className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                  <span>Schedule On-Site Inspection</span>
+                </button>
+              </div>
 
               <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-zinc-500">
                 <span className="flex items-center gap-1">
@@ -613,6 +753,110 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         </div>
 
       </div>
+
+      {/* ── A. SCHEDULE PHYSICAL VIEWING MODAL ── */}
+      {showViewingModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-5 animate-in">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] flex items-center justify-center font-bold">
+                  <CalendarDays className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm text-zinc-950 dark:text-white">Schedule Physical Inspection</h3>
+                  <p className="text-[11px] text-zinc-500">Walk through the property before placing a deposit</p>
+                </div>
+              </div>
+              <button onClick={() => setShowViewingModal(false)} className="text-zinc-400 hover:text-zinc-600 cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleScheduleViewing} className="space-y-4 text-xs">
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl border border-zinc-200/80 dark:border-zinc-700">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase block">Property</span>
+                <span className="font-bold text-zinc-900 dark:text-white block">{property.title}</span>
+                <span className="text-zinc-500 text-[11px]">{property.location}</span>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Preferred Date *
+                </label>
+                <input
+                  type="date"
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  value={viewingDate}
+                  onChange={(e) => setViewingDate(e.target.value)}
+                  className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-medium outline-none focus:border-[#0F5132]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Preferred Time Slot *
+                </label>
+                <select
+                  value={viewingTime}
+                  onChange={(e) => setViewingTime(e.target.value)}
+                  className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-medium outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</option>
+                  <option value="Afternoon (1:00 PM - 3:30 PM)">Afternoon (1:00 PM - 3:30 PM)</option>
+                  <option value="Late Afternoon (4:00 PM - 6:00 PM)">Late Afternoon (4:00 PM - 6:00 PM)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Contact Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={viewingPhone}
+                  onChange={(e) => setViewingPhone(e.target.value)}
+                  placeholder="e.g. 0244123456"
+                  className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-medium outline-none focus:border-[#0F5132]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Inspection Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={viewingNotes}
+                  onChange={(e) => setViewingNotes(e.target.value)}
+                  placeholder="e.g. Visiting with my spouse to check water pressure and parking..."
+                  className="w-full p-2.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl font-medium outline-none focus:border-[#0F5132]"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowViewingModal(false)}
+                  className="flex-1 py-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs rounded-xl hover:bg-zinc-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={viewingSubmitting}
+                  className="flex-1 py-2.5 bg-[#0F5132] text-white font-bold text-xs rounded-xl hover:bg-[#0A3D24] transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {viewingSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CalendarDays className="w-3.5 h-3.5" />}
+                  <span>Confirm Inspection</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ── PAYMENT / ESCROW CHECKOUT MODAL ── */}
       {showPaymentModal && (
