@@ -651,8 +651,20 @@ export const getAllReviews = async (req: Request, res: Response): Promise<void> 
   try { 
     const reviews = await prisma.review.findMany({ 
       include: { 
-        author: { select: { firstName: true, lastName: true, email: true } }, 
-        booking: { include: { property: { select: { title: true } } } } 
+        author: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }, 
+        booking: { 
+          include: { 
+            property: { 
+              select: { 
+                id: true, 
+                title: true, 
+                location: true,
+                type: true,
+                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+              } 
+            } 
+          } 
+        } 
       }, 
       orderBy: { createdAt: 'desc' } 
     }); 
