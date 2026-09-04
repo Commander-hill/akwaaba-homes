@@ -555,7 +555,7 @@ export default function LandlordDashboard() {
             <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
-                  <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
+                  <thead className="bg-[#0F5132] text-white">
                     <tr>
                       <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
                       <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
@@ -981,7 +981,7 @@ export default function LandlordDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
+                <thead className="bg-[#0F5132] text-white">
                   <tr>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Property</th>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Location</th>
@@ -1181,7 +1181,7 @@ export default function LandlordDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
+                <thead className="bg-[#0F5132] text-white">
                   <tr>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Date</th>
                     <th className="p-4 text-xs font-extrabold text-white uppercase">Tenant</th>

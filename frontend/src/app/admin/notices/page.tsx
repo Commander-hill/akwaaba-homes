@@ -108,7 +108,7 @@ export default function AdminNoticesPage() {
 
       <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] tracking-wider font-extrabold text-white shadow-md">
+          <thead className="bg-[#0F5132] text-white uppercase text-[10px] tracking-wider font-extrabold text-white shadow-md">
             <tr>
               <th className="px-6 py-4 w-16 text-center text-white font-extrabold">Order</th>
               <th className="px-6 py-4 text-white font-extrabold">Title</th>

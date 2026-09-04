@@ -1198,7 +1198,7 @@ export default function TenantDashboard() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100">
+                  <thead className="bg-[#0F5132] text-white">
                     <tr>
                       <th className="px-6 py-4 font-extrabold text-white uppercase">Transaction Ref</th>
                       <th className="px-6 py-4 font-extrabold text-white uppercase">Property &amp; Room</th>

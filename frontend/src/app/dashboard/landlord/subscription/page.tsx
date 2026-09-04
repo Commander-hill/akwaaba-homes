@@ -91,7 +91,7 @@ export default function LandlordSubscriptionPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] font-bold tracking-wider">
+              <thead className="bg-[#0F5132] text-white uppercase text-[10px] font-bold tracking-wider">
                 <tr>
                   <th className="px-6 py-3.5">Property Name</th>
                   <th className="px-6 py-3.5">Search Visibility</th>

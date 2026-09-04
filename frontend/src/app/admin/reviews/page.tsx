@@ -132,7 +132,7 @@ export default function AdminReviewsPage() {
         <div className="glass-card rounded-2xl border border-[var(--border)] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-white uppercase bg-zinc-900 dark:bg-zinc-800 text-zinc-100 shadow-md">
+              <thead className="text-xs text-white uppercase bg-[#0F5132] text-white shadow-md">
                 <tr>
                   <th className="px-6 py-4 font-extrabold text-white">Reviewer</th>
                   <th className="px-6 py-4 font-extrabold text-white">Property</th>

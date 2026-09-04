@@ -150,7 +150,7 @@ export default function LandlordTenantsPage() {
             </div>
           ) : (
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 bg-zinc-900 dark:bg-zinc-800 text-zinc-100 uppercase text-[10px] font-bold tracking-wider z-10">
+              <thead className="sticky top-0 bg-[#0F5132] text-white uppercase text-[10px] font-bold tracking-wider z-10">
                 <tr>
                   <th className="px-6 py-3.5">Resident / Tenant</th>
                   <th className="px-6 py-3.5">Assigned Property</th>

@@ -119,7 +119,7 @@ export default function AdminLandlordDeedsPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-gradient-to-r from-emerald-600 to-teal-700 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
+              <thead className="bg-[#0F5132] text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
                 <tr>
                   <th className="px-6 py-4 text-white font-extrabold">Landlord Name</th>
                   <th className="px-6 py-4 text-white font-extrabold">Contact Info</th>

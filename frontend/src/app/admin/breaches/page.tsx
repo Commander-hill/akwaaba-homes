@@ -178,7 +178,7 @@ export default function AdminBreachesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-zinc-900 dark:bg-zinc-800 text-zinc-100 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
+              <thead className="bg-[#0F5132] text-white text-[10px] font-extrabold uppercase tracking-wider text-white shadow-md">
                 <tr>
                   <th className="px-6 py-4 text-white font-extrabold">Offense Title &amp; Date</th>
                   <th className="px-6 py-4 text-white font-extrabold">Tenant (Accused)</th>
