@@ -530,6 +530,24 @@ export const getAllSubscriptions = async (req: Request, res: Response): Promise<
   }
 };
 
+export const getAllTransactions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const transactions = await prisma.transaction.findMany({
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+        property: { select: { id: true, title: true, location: true, type: true } },
+        booking: { select: { id: true, startDate: true, endDate: true, status: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.status(200).json(transactions);
+  } catch (error) {
+    console.error('Error fetching all transactions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const verifyUserCard = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

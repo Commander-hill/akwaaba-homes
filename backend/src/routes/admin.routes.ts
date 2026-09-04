@@ -9,6 +9,7 @@ import {
   updatePropertyApproval, 
   getAllBookings, 
   getAllSubscriptions,
+  getAllTransactions,
   getAllReviews,
   deleteReview,
   resolveAppeal,
@@ -71,6 +72,7 @@ router.put('/properties/:id/status', updatePropertyApproval);
 // Bookings & Transactions
 router.get('/bookings', getAllBookings);
 router.get('/subscriptions', getAllSubscriptions);
+router.get('/transactions', getAllTransactions);
 router.put('/subscriptions/:id/activate', activateSubscription);
 router.put('/subscriptions/:id/revoke', revokeSubscription);
 router.get('/reviews', getAllReviews);
