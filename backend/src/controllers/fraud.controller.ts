@@ -55,8 +55,21 @@ export const scanFraudRisk = async (req: Request, res: Response): Promise<void> 
     const imageLandlordMap: Record<string, string> = {};
     const duplicateImages: Set<string> = new Set();
 
+    const getImages = (raw: any): string[] => {
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        try {
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+      return [];
+    };
+
     properties.forEach(p => {
-      const images: string[] = Array.isArray(p.images) ? p.images as string[] : [];
+      const images: string[] = getImages(p.images);
       images.forEach(img => {
         if (imageLandlordMap[img] && imageLandlordMap[img] !== p.landlordId) {
           duplicateImages.add(img);
@@ -83,7 +96,7 @@ export const scanFraudRisk = async (req: Request, res: Response): Promise<void> 
       }
 
       // 2. Duplicate Photo Signal
-      const images: string[] = Array.isArray(p.images) ? p.images as string[] : [];
+      const images: string[] = getImages(p.images);
       const hasDuplicate = images.some(img => duplicateImages.has(img));
       if (hasDuplicate) {
         riskScore += 40;

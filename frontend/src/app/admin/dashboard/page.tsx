@@ -2,18 +2,24 @@
 
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, Users, Building, CalendarCheck, CreditCard, TrendingUp, XCircle, ShieldCheck, Megaphone, Send, Activity } from 'lucide-react';
+import { 
+  Loader2, Users, Building, CalendarCheck, CreditCard, TrendingUp, 
+  XCircle, ShieldCheck, Megaphone, Send, Activity, ArrowRight, 
+  CheckCircle2, Clock, AlertTriangle, FileCheck, Key, RefreshCw
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Link from 'next/link';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import FraudDetectionTab from '@/components/FraudDetectionTab';
+import clsx from 'clsx';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [broadcastTarget, setBroadcastTarget] = useState('ALL');
-  const [broadcastStatus, setBroadcastStatus] = useState<{type: 'success'|'error', text: string} | null>(null);
+  const [broadcastStatus, setBroadcastStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session'],
@@ -23,11 +29,25 @@ export default function AdminDashboardPage() {
     },
   });
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
       const res = await api.get('/admin/stats');
       return res.data;
+    },
+    enabled: !!session && session.role === 'ADMIN'
+  });
+
+  // Recent Activity stream
+  const { data: activityData } = useQuery({
+    queryKey: ['admin-activity'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/admin/activity');
+        return res.data;
+      } catch {
+        return [];
+      }
     },
     enabled: !!session && session.role === 'ADMIN'
   });
@@ -41,223 +61,328 @@ export default function AdminDashboardPage() {
       });
     },
     onSuccess: () => {
-      setBroadcastStatus({ type: 'success', text: 'Announcement broadcasted successfully!' });
+      setBroadcastStatus({ type: 'success', text: 'Announcement broadcasted successfully to all target members!' });
       setBroadcastSubject('');
       setBroadcastMessage('');
       setTimeout(() => setBroadcastStatus(null), 5000);
     },
     onError: (err: any) => {
-      setBroadcastStatus({ type: 'error', text: err.response?.data?.message || 'Failed to send broadcast' });
+      setBroadcastStatus({ type: 'error', text: err.response?.data?.message || 'Failed to dispatch broadcast' });
     }
   });
 
-  if (sessionLoading || statsLoading) return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>;
-
-  if (session?.role !== 'ADMIN') {
+  if (sessionLoading || statsLoading) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 space-y-4">
-        <XCircle className="w-16 h-16 text-red-500" />
-        <h2 className="text-2xl font-bold">Access Denied</h2>
-        <p className="text-[var(--muted-foreground)]">You must be an Administrator to view this page.</p>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-bold text-zinc-400">Loading platform executive console...</p>
       </div>
     );
   }
 
+  if (session?.role !== 'ADMIN') {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 space-y-3">
+        <XCircle className="w-12 h-12 text-rose-500" />
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Security Clearance Required</h2>
+        <p className="text-xs text-zinc-500">You must hold an active Administrator role to view this operational console.</p>
+      </div>
+    );
+  }
+
+  const totalUsers = stats?.totalUsers || 0;
+  const totalLandlords = stats?.totalLandlords || 0;
+  const totalTenants = Math.max(0, totalUsers - totalLandlords);
+  const totalRevenue = stats?.totalRevenue || 0;
+  const totalProperties = stats?.totalProperties || 0;
+  const totalBookings = stats?.totalBookings || 0;
+
   return (
-    <div className="space-y-6">
-      {/* Sticky Header & Stats Container */}
-      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight">Command Center</h1>
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">Overview of system activity and performance metrics.</p>
+    <div className="space-y-8 max-w-7xl mx-auto pb-16 text-zinc-900 dark:text-white">
+      
+      {/* ── EXECUTIVE HEADER ── */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-5">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Executive Operations Console
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              Act 220 Compliant
+            </span>
           </div>
-          <div className="p-3 bg-[var(--primary)]/10 text-[var(--primary)] rounded-full">
-            <TrendingUp className="w-8 h-8" />
-          </div>
+          <p className="text-xs text-zinc-500 mt-1">
+            Real-time governance, Paystack escrow oversight, and property compliance across Ghana.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <Users className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl shadow-inner">
-                <Users className="w-5 h-5" />
-              </div>
-              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Total Users</h3>
-            </div>
-            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalUsers || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Including {stats?.totalLandlords || 0} Landlords</div>
-          </div>
-
-          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <Building className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 rounded-xl shadow-inner">
-                <Building className="w-5 h-5" />
-              </div>
-              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Properties</h3>
-            </div>
-            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalProperties || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">Listed on platform</div>
-          </div>
-
-          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <CalendarCheck className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 rounded-xl shadow-inner">
-                <CalendarCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Bookings</h3>
-            </div>
-            <div className="text-3xl font-black text-zinc-950 dark:text-white">{stats?.totalBookings || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">All time system bookings</div>
-          </div>
-
-          <div className="p-5 rounded-2xl border bg-white dark:bg-[#12151D] border-zinc-200 dark:border-zinc-800 relative overflow-hidden shadow-xs hover:border-zinc-400 dark:hover:border-zinc-700 transition-all">
-            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-transform">
-              <CreditCard className="w-14 h-14 text-zinc-200 dark:text-zinc-800" />
-            </div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-xl shadow-inner">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <h3 className="font-extrabold text-zinc-500 dark:text-zinc-400 uppercase text-xs tracking-wider">Revenue (GHS)</h3>
-            </div>
-            <div className="text-3xl font-black text-zinc-950 dark:text-white">GH₵ {stats?.totalRevenue?.toLocaleString() || 0}</div>
-            <div className="mt-1 text-xs font-semibold text-[#581C87] dark:text-[#E9D5FF]">From landlord subscriptions</div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetchStats()}
+            className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Refresh Metrics</span>
+          </button>
         </div>
       </div>
 
-      {/* Analytics Chart */}
-      <div className="glass-card p-8 rounded-3xl border border-[var(--border)] relative overflow-hidden">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Activity className="w-5 h-5 text-[var(--primary)]" /> Platform Growth
+      {/* ── HIGH-DENSITY METRIC STRIP (4 EXECUTIVE CARDS) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        {/* Total Escrow Volume */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Escrow Volume</span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] flex items-center justify-center">
+              <CreditCard className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
+            GH₵ {totalRevenue.toLocaleString()}
+          </div>
+          <div className="text-[11px] text-zinc-500 flex items-center gap-1">
+            <span className="text-[#0F5132] font-bold">100% Secured</span>
+            <span>• Paystack Escrow</span>
+          </div>
+        </div>
+
+        {/* Listed Properties */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Active Listings</span>
+            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+              <Building className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
+            {totalProperties}
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            Across Accra &amp; Regional Centers
+          </div>
+        </div>
+
+        {/* Confirmed Leases / Bookings */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Confirmed Leases</span>
+            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+              <CalendarCheck className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
+            {totalBookings}
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            Tenancy Agreements Executed
+          </div>
+        </div>
+
+        {/* Platform Members */}
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Total Members</span>
+            <div className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center">
+              <Users className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">
+            {totalUsers}
+          </div>
+          <div className="text-[11px] text-zinc-500">
+            {totalLandlords} Landlords • {totalTenants} Tenants
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── 2-COLUMN OPERATIONAL WORKSPACE ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* ── LEFT COLUMN (65%): CHARTS & COMPLIANCE AUDIT ── */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Platform Tenancy Growth Curve */}
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold uppercase tracking-wider text-zinc-950 dark:text-white flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#0F5132]" />
+                  <span>Platform Growth &amp; Transaction Trajectory</span>
+                </h2>
+                <p className="text-[11px] text-zinc-500">6-month transaction and registration trend</p>
+              </div>
+
+              <div className="flex items-center gap-3 text-xs font-bold">
+                <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                  <span className="w-2 h-2 rounded-full bg-[#0F5132]"></span> Users
+                </span>
+                <span className="flex items-center gap-1.5 text-emerald-600">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Properties
+                </span>
+              </div>
+            </div>
+
+            {stats?.monthlyGrowth && (
+              <div className="h-56 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.monthlyGrowth} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                    <defs>
+                      <linearGradient id="growthEmerald" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#0F5132" stopOpacity={0.25}/>
+                        <stop offset="95%" stopColor="#0F5132" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" stroke="#A1A1AA" fontSize={11} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#A1A1AA" fontSize={11} tickLine={false} axisLine={false} />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#18181B', borderRadius: '10px', border: '1px solid #27272A', color: '#fff', fontSize: '11px', fontWeight: 'bold' }}
+                    />
+                    <Area type="monotone" dataKey="users" stroke="#0F5132" strokeWidth={2.5} fillOpacity={1} fill="url(#growthEmerald)" />
+                    <Area type="monotone" dataKey="properties" stroke="#10b981" strokeWidth={2} fillOpacity={0} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          {/* Listing Compliance & Risk Audit */}
+          <FraudDetectionTab />
+
+        </div>
+
+        {/* ── RIGHT COLUMN (35%): ACTION TRIAGE & BROADCAST ── */}
+        <div className="lg:col-span-4 space-y-6">
+          
+          {/* Priority Action Triage */}
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center justify-between">
+              <span>Action Required Queue</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                Priority
+              </span>
             </h2>
-            <p className="text-sm text-[var(--muted-foreground)] mt-1">6-month trend of user acquisition and listings</p>
-          </div>
-        </div>
-        
-        {stats?.monthlyGrowth ? (
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.monthlyGrowth} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--muted-foreground)" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: 'var(--card)', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  itemStyle={{ color: 'var(--foreground)', fontSize: '14px', fontWeight: 'bold' }}
-                />
-                <Line type="monotone" dataKey="users" name="Total Users" stroke="var(--primary)" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="properties" name="Properties" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="h-[300px] w-full flex items-center justify-center">
-            <span className="text-[var(--muted-foreground)]">No analytics data available.</span>
-          </div>
-        )}
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="glass-card rounded-2xl p-8 border border-[var(--border)] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-          <ShieldCheck className="w-12 h-12 text-emerald-500 mb-4" />
-          <h2 className="text-xl font-bold mb-2">Platform Security</h2>
-          <p className="text-[var(--muted-foreground)] mb-6">Manage users, ban fraudulent accounts, and approve identity verification cards.</p>
-          <button onClick={() => router.push('/admin/users')} className="px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-lg w-fit">
-            Manage Users
-          </button>
-        </div>
-        
-        <div className="glass-card rounded-2xl p-8 border border-[var(--border)] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-          <Building className="w-12 h-12 text-blue-500 mb-4" />
-          <h2 className="text-xl font-bold mb-2">Listing Approvals</h2>
-          <p className="text-[var(--muted-foreground)] mb-6">Review new property listings submitted by landlords and approve or reject them.</p>
-          <button onClick={() => router.push('/admin/properties')} className="px-6 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-lg w-fit">
-            Review Properties
-          </button>
-        </div>
-      </div>
-
-      {/* AI Fraud & Scam Detection Engine */}
-      <FraudDetectionTab />
-
-      {/* Admin Broadcast Component */}
-      <div className="glass-card p-8 rounded-3xl border border-[var(--border)]">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl">
-            <Megaphone className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">System Broadcast</h2>
-            <p className="text-sm text-[var(--muted-foreground)]">Send critical announcements via Email and In-App Notification.</p>
-          </div>
-        </div>
-
-        {broadcastStatus && (
-          <div className={`p-4 rounded-xl text-sm font-medium mb-6 border ${broadcastStatus.type === 'success' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:border-emerald-900/50' : 'bg-red-50 text-red-600 border-red-100 dark:bg-red-900/30 dark:border-red-900/50'}`}>
-            {broadcastStatus.text}
-          </div>
-        )}
-
-        <div className="space-y-4 max-w-2xl">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Target Audience</label>
-              <select 
-                value={broadcastTarget}
-                onChange={(e) => setBroadcastTarget(e.target.value)}
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all"
+            <div className="space-y-2.5 text-xs">
+              
+              {/* Landlord KYC Review */}
+              <Link 
+                href="/admin/users"
+                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
               >
-                <option value="ALL">All Users</option>
-                <option value="TENANT">Tenants Only</option>
-                <option value="LANDLORD">Landlords Only</option>
-              </select>
+                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-zinc-900 dark:text-white">Landlord KYC &amp; Ghana Card</div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Review submitted IDs to grant Act 220 Verified status.</p>
+                </div>
+              </Link>
+
+              {/* Property Moderation */}
+              <Link 
+                href="/admin/properties"
+                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
+              >
+                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] shrink-0">
+                  <Building className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-zinc-900 dark:text-white">Property Quality Moderation</div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Audit new listings before public publishing.</p>
+                </div>
+              </Link>
+
+              {/* Escrow Disbursements */}
+              <Link 
+                href="/admin/transactions"
+                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
+              >
+                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 shrink-0">
+                  <CreditCard className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="font-bold text-zinc-900 dark:text-white">Escrow Settlements &amp; MoMo</div>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Release tenant funds following key handover.</p>
+                </div>
+              </Link>
+
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Subject</label>
-              <input 
-                type="text" 
-                value={broadcastSubject}
-                onChange={(e) => setBroadcastSubject(e.target.value)}
-                placeholder="e.g. System Maintenance"
-                className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all"
-              />
+          </div>
+
+          {/* Quick System Broadcast Drawer */}
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
+            <div className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4 text-[#0F5132]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
+                Dispatch System Broadcast
+              </h2>
+            </div>
+
+            {broadcastStatus && (
+              <div className={clsx(
+                "p-2.5 rounded-xl text-xs font-bold border",
+                broadcastStatus.type === 'success' 
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                  : "bg-rose-50 text-rose-700 border-rose-200"
+              )}>
+                {broadcastStatus.text}
+              </div>
+            )}
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Target</label>
+                <select
+                  value={broadcastTarget}
+                  onChange={(e) => setBroadcastTarget(e.target.value)}
+                  className="w-full p-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none text-xs font-medium cursor-pointer"
+                >
+                  <option value="ALL">All Users (Tenants &amp; Landlords)</option>
+                  <option value="LANDLORD">Landlords Only</option>
+                  <option value="TENANT">Tenants Only</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={broadcastSubject}
+                  onChange={(e) => setBroadcastSubject(e.target.value)}
+                  placeholder="e.g. Scheduled Maintenance Notice"
+                  className="w-full p-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1">Message</label>
+                <textarea
+                  value={broadcastMessage}
+                  onChange={(e) => setBroadcastMessage(e.target.value)}
+                  placeholder="Write the announcement message..."
+                  rows={3}
+                  className="w-full p-2 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl outline-none text-xs resize-none"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => broadcastMutation.mutate()}
+                disabled={broadcastMutation.isPending || !broadcastSubject || !broadcastMessage}
+                className="w-full py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {broadcastMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                <span>Send Broadcast</span>
+              </button>
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Message</label>
-            <textarea 
-              value={broadcastMessage}
-              onChange={(e) => setBroadcastMessage(e.target.value)}
-              placeholder="Write the announcement message here..."
-              rows={4}
-              className="w-full px-4 py-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none transition-all resize-none"
-            />
-          </div>
-          <div className="pt-2">
-            <button 
-              onClick={() => broadcastMutation.mutate()}
-              disabled={broadcastMutation.isPending || !broadcastSubject || !broadcastMessage}
-              className="flex items-center gap-2 px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {broadcastMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-              Send Broadcast
-            </button>
-          </div>
+
         </div>
+
       </div>
+
     </div>
   );
 }
