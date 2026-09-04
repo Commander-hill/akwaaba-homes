@@ -78,19 +78,17 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
 
 export const getPlatformAnalytics = async (req: Request, res: Response): Promise<void> => {
   try {
-    const cachedAnalytics = appCache.get('admin_analytics');
-    if (cachedAnalytics) {
-      res.status(200).json(cachedAnalytics);
-      return;
-    }
-
-    // 1. Conversion Metrics
+    // 1. Conversion Metrics (Proper real estate tenancy pipeline)
     const totalBookings = await prisma.booking.count();
-    const approvedBookings = await prisma.booking.count({ where: { status: 'APPROVED' } });
-    const paidBookings = await prisma.booking.count({ where: { status: 'COMPLETED' } });
+    const approvedBookings = await prisma.booking.count({ 
+      where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED'] } } 
+    });
+    const paidBookings = await prisma.booking.count({ 
+      where: { status: { in: ['COMPLETED', 'CONFIRMED'] } } 
+    });
     const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
 
-    // 2. Revenue Metrics
+    // 2. Revenue Metrics (Escrow volume)
     const totalTransactions = await prisma.transaction.aggregate({
       _sum: { amount: true },
       where: { status: 'SUCCESS' }
@@ -109,7 +107,7 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
     const landlordIds = landlordGroup.map(g => g.landlordId);
     const landlords = await prisma.user.findMany({
       where: { id: { in: landlordIds } },
-      select: { id: true, firstName: true, lastName: true, email: true }
+      select: { id: true, firstName: true, lastName: true, email: true, isVerifiedLandlord: true }
     });
 
     const topLandlords = landlordGroup.map((g, index) => {
@@ -119,32 +117,67 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
         landlordId: g.landlordId,
         name: l ? `${l.firstName} ${l.lastName}` : 'Landlord',
         email: l ? l.email : 'N/A',
+        isVerified: l ? l.isVerifiedLandlord : false,
         totalEarningsGhs: g._sum.amount || 0
       };
     });
 
-    // 4. Geographical Density (Properties by Location / Region)
+    // 4. Metropolitan Property Density (Ghana Prime Real Estate Regions)
     const properties = await prisma.property.findMany({
-      select: { location: true }
+      select: { location: true, type: true }
     });
 
-    const locationCounts: Record<string, number> = {};
+    const locationCounts: Record<string, number> = {
+      'Greater Accra': 0,
+      'Ashanti (Kumasi)': 0,
+      'Central Region': 0,
+      'Western (Takoradi)': 0,
+      'Eastern & Other': 0
+    };
+
+    const categoryCounts: Record<string, number> = {
+      'Apartments': 0,
+      'Executive Studios': 0,
+      'Houses & Villas': 0,
+      'Flats & Co-living': 0,
+      'Student Hostels': 0
+    };
+
     properties.forEach(p => {
-      let loc = p.location || 'Other Region';
-      const lower = loc.toLowerCase();
-      if (lower.includes('ucc') || lower.includes('cape coast')) loc = 'UCC / Cape Coast';
-      else if (lower.includes('legon') || lower.includes('accra')) loc = 'UG Legon / Accra';
-      else if (lower.includes('knust') || lower.includes('kumasi')) loc = 'KNUST / Kumasi';
-      else if (lower.includes('uew') || lower.includes('winneba')) loc = 'UEW / Winneba';
-      else if (lower.includes('uenr') || lower.includes('sunyani')) loc = 'UENR / Sunyani';
+      const loc = (p.location || '').toLowerCase();
+      if (loc.includes('accra') || loc.includes('legon') || loc.includes('airport') || loc.includes('cantonments') || loc.includes('osu') || loc.includes('spintex') || loc.includes('tema') || loc.includes('dzorwulu')) {
+        locationCounts['Greater Accra']++;
+      } else if (loc.includes('kumasi') || loc.includes('ashanti') || loc.includes('knust') || loc.includes('ahodwo') || loc.includes('asokwa')) {
+        locationCounts['Ashanti (Kumasi)']++;
+      } else if (loc.includes('cape coast') || loc.includes('winneba') || loc.includes('central') || loc.includes('elmina') || loc.includes('ucc') || loc.includes('uew')) {
+        locationCounts['Central Region']++;
+      } else if (loc.includes('takoradi') || loc.includes('sekondi') || loc.includes('western') || loc.includes('tarkwa')) {
+        locationCounts['Western (Takoradi)']++;
+      } else {
+        locationCounts['Greater Accra']++;
+      }
 
-      locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+      const pType = (p.type || '').toLowerCase();
+      if (pType.includes('studio')) categoryCounts['Executive Studios']++;
+      else if (pType.includes('house') || pType.includes('villa') || pType.includes('homestay')) categoryCounts['Houses & Villas']++;
+      else if (pType.includes('flat') || pType.includes('roommate')) categoryCounts['Flats & Co-living']++;
+      else if (pType.includes('hostel')) categoryCounts['Student Hostels']++;
+      else categoryCounts['Apartments']++;
     });
 
-    const geographicalDensity = Object.keys(locationCounts).map(region => ({
-      region,
-      propertyCount: locationCounts[region]
-    }));
+    const geographicalDensity = Object.keys(locationCounts)
+      .map(region => ({
+        region,
+        propertyCount: locationCounts[region]
+      }))
+      .filter(item => item.propertyCount > 0);
+
+    const categoryMix = Object.keys(categoryCounts)
+      .map(name => ({
+        name,
+        count: categoryCounts[name]
+      }))
+      .filter(item => item.count > 0);
 
     // 5. Monthly Signup & Growth Trends (6 months)
     const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
@@ -162,6 +195,11 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
       };
     });
 
+    // 6. Act 220 Tenancy Deed Compliance
+    const totalDeeds = await prisma.leaseAgreement.count();
+    const completedDeeds = await prisma.leaseAgreement.count({ where: { status: 'COMPLETED' } });
+    const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
+
     const analyticsData = {
       funnel: {
         totalBookings,
@@ -172,10 +210,10 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
       totalRevenueGhs,
       topLandlords,
       geographicalDensity,
+      categoryMix,
+      deedExecutionRate,
       monthlyTrends
     };
-
-    appCache.set('admin_analytics', analyticsData, 60);
 
     res.status(200).json(analyticsData);
   } catch (error) {
