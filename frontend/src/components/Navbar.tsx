@@ -133,13 +133,15 @@ export default function Navbar() {
 
               <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-              {/* List Property CTA for Landlords */}
-              <Link
-                href="/dashboard/landlord/new"
-                className="text-[13px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-              >
-                List Property
-              </Link>
+              {/* List Property CTA: strictly for Landlords, never for Tenants */}
+              {!pathname?.startsWith('/dashboard/tenant') && role !== 'TENANT' && (role === 'LANDLORD' || !isAuthenticated) && (
+                <Link
+                  href="/dashboard/landlord/new"
+                  className="text-[13px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  List Property
+                </Link>
+              )}
               
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
@@ -200,13 +202,15 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
-              <Link
-                href="/dashboard/landlord/new"
-                onClick={() => setIsMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-lg text-sm font-bold text-[#0F5132] dark:text-[#198754] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-              >
-                + List a Property / Hostel
-              </Link>
+              {!pathname?.startsWith('/dashboard/tenant') && role !== 'TENANT' && (role === 'LANDLORD' || !isAuthenticated) && (
+                <Link
+                  href="/dashboard/landlord/new"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block px-3 py-2.5 rounded-lg text-sm font-bold text-[#0F5132] dark:text-[#198754] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                >
+                  + List a Property
+                </Link>
+              )}
             </div>
 
             <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
