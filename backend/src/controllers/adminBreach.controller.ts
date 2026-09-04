@@ -170,6 +170,9 @@ export const getLandlordDeedAudits = async (req: Request, res: Response): Promis
         email: true,
         phoneNumber: true,
         landlordDocUrl: true,
+        ghanaCardNumber: true,
+        ghanaCardStatus: true,
+        ghanaCardFrontUrl: true,
         isVerifiedLandlord: true,
         landlordVerificationStatus: true,
         reputationScore: true,
@@ -228,7 +231,7 @@ export const auditLandlordDeed = async (req: Request, res: Response): Promise<vo
       data: {
         userId: id,
         type: 'ANNOUNCEMENT',
-        title: status === 'VERIFIED' ? '🎉 Hostel Ownership Deed Verified!' : 'Landlord Deed Verification Update',
+        title: status === 'VERIFIED' ? '🎉 Property Ownership Deed Verified!' : 'Landlord Deed Verification Update',
         message: status === 'VERIFIED'
           ? 'Your ownership deed document has been approved! You now have Verified Landlord status on Akwaaba Homes.'
           : `Deed verification rejected.${notes ? ` Reason: ${notes}` : ' Please re-upload a clear property ownership document.'}`,
