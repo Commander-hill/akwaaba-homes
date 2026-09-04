@@ -35,7 +35,11 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
 
     const totalUsers = await prisma.user.count();
     const totalLandlords = await prisma.user.count({ where: { role: 'LANDLORD' } });
+    const totalTenants = await prisma.user.count({ where: { role: 'TENANT' } });
     const totalProperties = await prisma.property.count();
+    const verifiedProperties = await prisma.property.count({ where: { approvalStatus: 'APPROVED' } });
+    const verifiedUsers = await prisma.user.count({ where: { isCardVerified: true } });
+    const verifiedLandlords = await prisma.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } });
     const totalBookings = await prisma.booking.count();
     
     // Sum all successful transaction amounts (total platform transaction volume)
@@ -61,7 +65,11 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
     const responseData = {
       totalUsers,
       totalLandlords,
+      totalTenants,
       totalProperties,
+      verifiedProperties,
+      verifiedUsers,
+      verifiedLandlords,
       totalBookings,
       totalRevenue,
       monthlyGrowth
@@ -832,25 +840,220 @@ export const resolveAppeal = async (req: Request, res: Response): Promise<void> 
 
 export const getSystemActivity = async (req: Request, res: Response): Promise<void> => {
   try {
-
-    // Fetch the most recent cross-entity events to form a system activity log
-    const [recentBookings, recentUsers, recentProperties, recentSubscriptions] = await Promise.all([
+    // Fetch the most recent cross-entity events to form an executive platform telemetry stream
+    const [recentBookings, recentUsers, recentProperties, recentSubscriptions, recentTickets, recentBreaches, recentReviews] = await Promise.all([
       prisma.booking.findMany({
+        take: 12,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+          property: { select: { id: true, title: true, location: true, price: true } }
+        }
+      }),
+      prisma.user.findMany({
+        take: 12,
+        orderBy: { createdAt: 'desc' },
+        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, isCardVerified: true, isVerifiedLandlord: true, createdAt: true }
+      }),
+      prisma.property.findMany({
+        take: 12,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+        }
+      }),
+      prisma.propertySubscription.findMany({
         take: 8,
         orderBy: { createdAt: 'desc' },
-        include: { tenant: { select: { firstName: true, lastName: true } }, property: { select: { title: true } } }
+        include: {
+          property: {
+            include: {
+              landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+            }
+          }
+        }
       }),
-      prisma.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: { firstName: true, lastName: true, role: true, createdAt: true } }),
-      prisma.property.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: { title: true, approvalStatus: true, createdAt: true } }),
-      prisma.subscription.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { landlord: { select: { firstName: true, lastName: true } } } })
+      prisma.maintenanceTicket.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+          property: { select: { id: true, title: true, location: true } }
+        }
+      }),
+      prisma.breachReport.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reporter: { select: { id: true, firstName: true, lastName: true, role: true } },
+          tenant: { select: { id: true, firstName: true, lastName: true } },
+          property: { select: { id: true, title: true } }
+        }
+      }),
+      prisma.review.findMany({
+        take: 8,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: { select: { id: true, firstName: true, lastName: true } },
+          booking: {
+            select: {
+              property: { select: { id: true, title: true, location: true } }
+            }
+          }
+        }
+      })
     ]);
 
-    const activity = [
-      ...recentBookings.map(b => ({ type: 'BOOKING', message: `${b.tenant.firstName} ${b.tenant.lastName} booked "${b.property.title}"`, status: b.status, createdAt: b.createdAt })),
-      ...recentUsers.map(u => ({ type: 'USER', message: `New ${u.role} registered: ${u.firstName} ${u.lastName}`, status: 'NEW', createdAt: u.createdAt })),
-      ...recentProperties.map(p => ({ type: 'PROPERTY', message: `Property "${p.title}" submitted (${p.approvalStatus})`, status: p.approvalStatus, createdAt: p.createdAt })),
-      ...recentSubscriptions.map(s => ({ type: 'SUBSCRIPTION', message: `${s.landlord.firstName} ${s.landlord.lastName} initiated a subscription`, status: s.paymentStatus, createdAt: s.createdAt })),
-    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 20);
+    const activity: any[] = [
+      ...recentBookings.map(b => ({
+        id: `booking-${b.id}`,
+        type: 'BOOKING',
+        severity: b.status === 'CANCELLED' ? 'NOTICE' : (b.status === 'CONFIRMED' || b.status === 'COMPLETED' ? 'COMPLIANCE' : 'INFO'),
+        title: 'Tenancy Escrow Booking',
+        message: `${b.tenant?.firstName || 'Tenant'} ${b.tenant?.lastName || ''} booked residential lease on "${b.property?.title || 'Property'}"`,
+        actor: {
+          name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Tenant',
+          email: b.tenant?.email,
+          phone: b.tenant?.phoneNumber,
+          role: 'TENANT'
+        },
+        entity: {
+          type: 'Property',
+          id: b.property?.id,
+          title: b.property?.title,
+          location: b.property?.location,
+          financialAmount: b.property?.price ? `GH₵ ${b.property.price.toLocaleString()}` : undefined
+        },
+        status: b.status,
+        createdAt: b.createdAt
+      })),
+
+      ...recentUsers.map(u => ({
+        id: `user-${u.id}`,
+        type: 'USER',
+        severity: u.isVerifiedLandlord || u.isCardVerified ? 'COMPLIANCE' : 'INFO',
+        title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Registration`,
+        message: `New verified registration: ${u.firstName} ${u.lastName} (${u.role === 'LANDLORD' ? 'Property Owner' : 'Resident'})`,
+        actor: {
+          name: `${u.firstName} ${u.lastName}`,
+          email: u.email,
+          phone: u.phoneNumber,
+          role: u.role
+        },
+        entity: {
+          type: 'User Profile',
+          id: u.id,
+          title: `${u.firstName} ${u.lastName}`,
+          location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.isCardVerified ? 'Verified Ghana Card' : 'Pending NIA KYC')
+        },
+        status: u.isCardVerified || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
+        createdAt: u.createdAt
+      })),
+
+      ...recentProperties.map(p => ({
+        id: `prop-${p.id}`,
+        type: 'PROPERTY',
+        severity: p.approvalStatus === 'APPROVED' ? 'COMPLIANCE' : (p.approvalStatus === 'REJECTED' ? 'CRITICAL' : 'NOTICE'),
+        title: 'Residential Listing Submission',
+        message: `Property "${p.title}" (${p.location || 'Ghana'}) submitted for statutory deed & rent cap compliance audit`,
+        actor: {
+          name: p.landlord ? `${p.landlord.firstName} ${p.landlord.lastName}` : 'Property Owner',
+          email: p.landlord?.email,
+          phone: p.landlord?.phoneNumber,
+          role: 'LANDLORD'
+        },
+        entity: {
+          type: 'Property Listing',
+          id: p.id,
+          title: p.title,
+          location: p.location,
+          financialAmount: p.price ? `GH₵ ${p.price.toLocaleString()}` : undefined
+        },
+        status: p.approvalStatus,
+        createdAt: p.createdAt
+      })),
+
+      ...recentSubscriptions.map(s => ({
+        id: `sub-${s.id}`,
+        type: 'PAYMENT',
+        severity: s.paymentStatus === 'COMPLETED' ? 'COMPLIANCE' : 'NOTICE',
+        title: 'Landlord Listing License Fee',
+        message: `Annual Landlord Listing Permit transaction: GH₵ 100/yr for "${s.property?.title || 'Property'}"`,
+        actor: {
+          name: s.property?.landlord ? `${s.property.landlord.firstName} ${s.property.landlord.lastName}` : 'Landlord',
+          email: s.property?.landlord?.email,
+          role: 'LANDLORD'
+        },
+        entity: {
+          type: 'Subscription Permit',
+          id: s.id,
+          title: `License #${(s.paymentReference || s.id).slice(0, 8)}`,
+          financialAmount: 'GH₵ 100'
+        },
+        status: s.paymentStatus,
+        createdAt: s.createdAt
+      })),
+
+      ...recentTickets.map(t => ({
+        id: `ticket-${t.id}`,
+        type: 'MAINTENANCE',
+        severity: t.priority === 'URGENT' || t.priority === 'HIGH' ? 'CRITICAL' : 'NOTICE',
+        title: `Statutory Maintenance Request`,
+        message: `[${t.priority}] Repair reported at "${t.property?.title || 'Property'}": ${t.title}`,
+        actor: {
+          name: t.tenant ? `${t.tenant.firstName} ${t.tenant.lastName}` : 'Tenant',
+          email: t.tenant?.email,
+          role: 'TENANT'
+        },
+        entity: {
+          type: 'Property',
+          id: t.property?.id,
+          title: t.property?.title,
+          location: t.property?.location
+        },
+        status: t.status,
+        createdAt: t.createdAt
+      })),
+
+      ...recentBreaches.map(b => ({
+        id: `breach-${b.id}`,
+        type: 'SECURITY',
+        severity: 'CRITICAL',
+        title: 'Statutory Act 220 Breach Report',
+        message: `Breach claim lodged against tenant ${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''} at "${b.property?.title || 'Property'}": ${b.title}`,
+        actor: {
+          name: b.reporter ? `${b.reporter.firstName} ${b.reporter.lastName}` : 'Complainant',
+          role: b.reporter?.role || 'USER'
+        },
+        entity: {
+          type: 'Breach Docket',
+          id: b.id,
+          title: b.title
+        },
+        status: b.status,
+        createdAt: b.createdAt
+      })),
+
+      ...recentReviews.map(r => ({
+        id: `review-${r.id}`,
+        type: 'REVIEW',
+        severity: r.rating <= 2 ? 'NOTICE' : 'INFO',
+        title: `Tenant Reputation Rating (${r.rating} ★)`,
+        message: `${r.author?.firstName || 'Tenant'} ${r.author?.lastName || ''} submitted a ${r.rating} ★ tenancy rating for "${r.booking?.property?.title || 'Property'}"`,
+        actor: {
+          name: r.author ? `${r.author.firstName} ${r.author.lastName}` : 'Tenant',
+          role: 'TENANT'
+        },
+        entity: {
+          type: 'Property',
+          id: r.booking?.property?.id,
+          title: r.booking?.property?.title,
+          location: r.booking?.property?.location
+        },
+        status: r.isFlagged ? 'FLAGGED' : 'PUBLISHED',
+        createdAt: r.createdAt
+      }))
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30);
 
     res.status(200).json(activity);
   } catch (error) {
