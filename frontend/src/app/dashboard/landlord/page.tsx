@@ -6,7 +6,7 @@ import {
   Loader2, Users, Mail, Phone, Calendar, Check, X, ShieldAlert, ShieldCheck, 
   CreditCard, Star, PenTool, CheckCircle, Clock, FileSignature, Building, 
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
-  Megaphone, UserCog, ClipboardCheck, TrendingUp, Sparkles, Wrench
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Sparkles, Wrench, Plus
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -293,6 +293,14 @@ export default function LandlordDashboard() {
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
+            <Link
+              id="tour-add-property"
+              href="/dashboard/landlord/new"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>List Property</span>
+            </Link>
             <button
               onClick={() => setShowWithdrawalModal(true)}
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
@@ -348,7 +356,7 @@ export default function LandlordDashboard() {
         </div>
 
         {/* 3 Core Operational Workspaces */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div id="tour-landlord-tabs" className="flex flex-wrap items-center justify-between gap-3 pt-2">
           {/* Main Workspace Navigation */}
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <button

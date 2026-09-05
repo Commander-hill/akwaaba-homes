@@ -351,7 +351,7 @@ export default function TenantDashboard() {
                   <div className="flex-1 text-xs">
                     <div className="flex items-center gap-2 font-bold flex-wrap">
                       <span className="uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/40">
-                        {notice.category || 'NOTICE'} • {notice.property?.title || 'Hostel'}
+                        {notice.category || 'NOTICE'} • {notice.property?.title || 'Property'}
                       </span>
                       <span>{notice.title || 'Announcement'}</span>
                     </div>
@@ -368,7 +368,7 @@ export default function TenantDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
-            <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage your stays, report issues, and find roommates.</p>
+            <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage your residential tenancies, rent escrow payments, and maintenance requests.</p>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -382,7 +382,7 @@ export default function TenantDashboard() {
         </div>
 
         {/* 3 Core Resident Workspaces */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div id="tour-tenant-workspaces" className="flex flex-wrap items-center justify-between gap-3 pt-2">
           {/* Main Workspace Navigation */}
           <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
             <button

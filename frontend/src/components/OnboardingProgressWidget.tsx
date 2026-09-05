@@ -84,29 +84,29 @@ export default function OnboardingProgressWidget({ user: initialUser, hasPropert
   if (percentage === 100) return null; // Auto-hide widget once 100% complete!
 
   return (
-    <div id="tour-progress-widget" className="glass-card rounded-2xl p-5 border border-indigo-100 dark:border-indigo-900/40 bg-gradient-to-r from-indigo-50/50 via-purple-50/30 to-amber-50/20 dark:from-indigo-950/20 dark:via-purple-950/20 dark:to-amber-950/10 shadow-sm space-y-4 mb-6 transition-all duration-300 animate-in">
+    <div id="tour-progress-widget" className="glass-card rounded-2xl p-5 border border-emerald-200/80 dark:border-emerald-900/40 bg-gradient-to-r from-emerald-50/70 via-amber-50/30 to-zinc-50/50 dark:from-emerald-950/20 dark:via-amber-950/15 dark:to-zinc-900/30 shadow-xs space-y-4 mb-6 transition-all duration-300 animate-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-md transition-all">
+          <div className="w-10 h-10 rounded-xl bg-[#0F5132] text-white flex items-center justify-center font-black text-sm shadow-xs transition-all">
             {percentage}%
           </div>
           <div>
             <h3 className="font-extrabold text-base text-[var(--foreground)] flex items-center gap-2">
-              Setup & Verification Progress
-              <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-bold">
+              Setup &amp; Verification Progress
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 font-bold border border-amber-200 dark:border-amber-800/50">
                 Action Required
               </span>
             </h3>
             <p className="text-xs text-[var(--muted-foreground)]">
-              Complete your account setup to unlock booking and listing features.
+              Complete your statutory identity and profile verification to unlock verified tenancy bookings and listings.
             </p>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full sm:w-48 bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
+        <div className="w-full sm:w-48 bg-zinc-200 dark:bg-zinc-800 rounded-full h-2.5 overflow-hidden">
           <div
-            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 h-2.5 rounded-full transition-all duration-700 ease-out"
+            className="bg-gradient-to-r from-[#0F5132] via-[#15803D] to-[#D97706] h-2.5 rounded-full transition-all duration-700 ease-out"
             style={{ width: `${percentage}%` }}
           />
         </div>

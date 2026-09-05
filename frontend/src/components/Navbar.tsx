@@ -108,10 +108,12 @@ export default function Navbar() {
               <div className="hidden lg:flex items-center space-x-1">
                 {navLinks.map((link) => {
                   const isActive = pathname === link.href;
+                  const isProperties = link.href === '/properties';
                   return (
                     <Link
                       key={link.name}
                       href={link.href}
+                      id={isProperties ? 'tour-nav-properties' : undefined}
                       className={clsx(
                         "px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors",
                         isActive

@@ -1,14 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, Compass, HelpCircle, Building, ShieldCheck, MapPin, Search } from 'lucide-react';
+import { 
+  Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, Compass, HelpCircle, 
+  Building, ShieldCheck, MapPin, Search, FileText, Scale 
+} from 'lucide-react';
 
 interface TourStep {
   title: string;
   description: string;
   targetSelector?: string;
   icon: React.ElementType;
-  badge?: string;
+  badge: string;
+  statutoryNote?: string;
 }
 
 interface OnboardingTourProps {
@@ -26,61 +30,69 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
 
   const tenantSteps: TourStep[] = [
     {
-      title: "Welcome to Akwaaba Homes! 🏠",
-      description: "Your secure student housing & property rental platform in Ghana. Let's take a 30-second guided tour of your dashboard.",
+      title: "Welcome to Akwaaba Homes 🇬🇭",
+      description: "Ghana's trusted residential and commercial property tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and bank-grade rent escrow protection.",
       icon: Compass,
-      badge: "Step 1 of 4"
+      badge: "Step 1 of 4 • Institutional Network",
+      statutoryNote: "Ghana Rent Act, 1963 (Act 220) Compliant"
     },
     {
-      title: "Account Setup & Ghana Card Verification 🆔",
-      description: "Complete your profile details and submit your Ghana Card to verify your identity and unlock 1-click room booking.",
+      title: "Account Setup & Ghana Card (NIA) Verification 🆔",
+      description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
       targetSelector: '#tour-progress-widget',
       icon: ShieldCheck,
-      badge: "Step 2 of 4"
+      badge: "Step 2 of 4 • Identity Trust",
+      statutoryNote: "NIA Identity Verification Standard"
     },
     {
-      title: "Browse Hostels & Location Filter 📍",
-      description: "Click Properties in the navigation bar to search hostels near UCC, KNUST, or UG by price, room occupancy (1-4 in a room), and amenities.",
+      title: "Verified Property Discovery & Title Deeds 📍",
+      description: "Browse verified residential apartments, family homes, and commercial spaces across Greater Accra, Ashanti, and Western regions with certified Lands Commission title deeds.",
       targetSelector: '#tour-nav-properties',
       icon: Search,
-      badge: "Step 3 of 4"
+      badge: "Step 3 of 4 • Verified Listings",
+      statutoryNote: "Lands Commission Audited Listings"
     },
     {
-      title: "Dynamic Notice Board & Alerts 📢",
-      description: "Stay updated with important student notices, room availability broadcasts, and booking status updates right at the top of your page.",
-      targetSelector: '#tour-notice-board',
-      icon: Sparkles,
-      badge: "Step 4 of 4"
+      title: "Tenancy Leases & Resident Workspaces 📜",
+      description: "Access your 3 core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit facility maintenance requests.",
+      targetSelector: '#tour-tenant-workspaces',
+      icon: FileText,
+      badge: "Step 4 of 4 • Operations & Leases",
+      statutoryNote: "SHA-256 Digital Tenancy Agreement"
     }
   ];
 
   const landlordSteps: TourStep[] = [
     {
-      title: "Welcome to your Landlord Hub! 💼",
-      description: "Manage your hostel properties, track room capacities, view tenant booking applications, and monitor your earnings effortlessly.",
+      title: "Welcome to your Landlord Hub 💼",
+      description: "Ghana's premier property asset governance platform. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor institutional yields.",
       icon: Compass,
-      badge: "Step 1 of 4"
+      badge: "Step 1 of 4 • Asset Governance",
+      statutoryNote: "Ghana Real Estate Governance Standard"
     },
     {
-      title: "Account & Identity Verification 🛡️",
-      description: "Keep your account setup at 100% by completing your profile and identity verification to build trust with student tenants.",
+      title: "Title Deed & Lands Commission Audit 🛡️",
+      description: "Upload your property title deeds, indentures, and site plans for Lands Commission verification to earn the Verified Host badge and boost tenant booking confidence.",
       targetSelector: '#tour-progress-widget',
       icon: ShieldCheck,
-      badge: "Step 2 of 4"
+      badge: "Step 2 of 4 • Title Verification",
+      statutoryNote: "Lands Commission Certified Registry"
     },
     {
-      title: "List Property with Reverse Geocoding 📌",
-      description: "Click List New Property to add a listing. Simply click on the interactive map to automatically pinpoint exact GPS coordinates and auto-fill area names!",
+      title: "List Property with GPS Coordinates 📌",
+      description: "Add residential and commercial properties with Ghana Post digital addresses, interactive GPS mapping, high-resolution media galleries, and custom unit inventories.",
       targetSelector: '#tour-add-property',
       icon: MapPin,
-      badge: "Step 3 of 4"
+      badge: "Step 3 of 4 • Inventory Listing",
+      statutoryNote: "Ghana Post GPS Digital Address System"
     },
     {
-      title: "Subscriptions & Financial Reports 💳",
-      description: "Manage property listing subscriptions, track active listing statuses, and view gross & net earnings in your CRM dashboard.",
+      title: "Operational Workspaces & MoMo Payouts 💳",
+      description: "Access unified workflows for tenancy agreements, digital rent collection, instant Mobile Money withdrawals, GRA 5% tax withholding statements, and caretaker delegation.",
       targetSelector: '#tour-landlord-tabs',
       icon: Building,
-      badge: "Step 4 of 4"
+      badge: "Step 4 of 4 • Yields & Compliance",
+      statutoryNote: "GRA 5% Withholding Tax Compliant"
     }
   ];
 
@@ -136,8 +148,8 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       height: rect.height,
     });
 
-    const cardWidth = Math.min(window.innerWidth - 32, 420);
-    const cardHeight = 260;
+    const cardWidth = Math.min(window.innerWidth - 32, 440);
+    const cardHeight = 310;
 
     let left = rect.left + rect.width / 2 - cardWidth / 2;
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
@@ -201,23 +213,26 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       {/* Replay Tour Trigger Button */}
       <button
         onClick={handleReplay}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors shadow-sm cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#0F5132] dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-xs cursor-pointer"
         title="Replay Onboarding Tour"
       >
-        <HelpCircle className="w-3.5 h-3.5 text-indigo-500" />
-        <span>Take Tour</span>
+        <HelpCircle className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+        <span>Platform Tour</span>
       </button>
 
       {/* Tour Overlay & Dynamic Positioning */}
       {isOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden pointer-events-auto">
           {/* Dark Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity duration-300" onClick={handleComplete} />
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity duration-300" 
+            onClick={handleComplete} 
+          />
 
           {/* Targeted Spotlight Ring around Component */}
           {targetRect && (
             <div
-              className="fixed rounded-2xl border-4 border-indigo-500 shadow-[0_0_35px_rgba(99,102,241,0.85)] pointer-events-none z-[52] transition-all duration-300 animate-pulse"
+              className="fixed rounded-2xl border-4 border-[#0F5132] shadow-[0_0_40px_rgba(15,81,50,0.55)] pointer-events-none z-[52] transition-all duration-300 animate-pulse"
               style={{
                 top: `${targetRect.top - 8}px`,
                 left: `${targetRect.left - 8}px`,
@@ -229,7 +244,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
 
           {/* Tour Card Popover */}
           <div
-            className={`bg-white dark:bg-[#0A1136] border-2 border-indigo-400 dark:border-indigo-700 rounded-3xl p-6 max-w-md w-[calc(100vw-32px)] sm:w-[420px] shadow-2xl z-[55] space-y-4 transition-all duration-300 ${
+            className={`bg-white dark:bg-[#0B0F19] border-2 border-[#0F5132]/60 dark:border-emerald-500/40 rounded-3xl p-6 sm:p-7 max-w-md w-[calc(100vw-32px)] sm:w-[440px] shadow-2xl z-[55] space-y-4 transition-all duration-300 relative overflow-hidden backdrop-blur-md ${
               popoverPos.placement === 'center'
                 ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
                 : 'fixed'
@@ -241,17 +256,17 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
             }
           >
             {/* Background Glow */}
-            <div className="absolute -top-10 -right-10 w-36 h-36 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#0F5132]/25 via-[#D97706]/15 to-transparent rounded-full blur-2xl pointer-events-none" />
 
             {/* Header Badge & Close */}
             <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-800/50">
-                <Sparkles className="w-3 h-3 text-indigo-500" />
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
+                <Sparkles className="w-3 h-3 text-[#D97706]" />
                 {current.badge}
               </span>
               <button
                 onClick={handleComplete}
-                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="w-7 h-7 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Skip Tour"
               >
                 <X className="w-4 h-4" />
@@ -259,19 +274,27 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
             </div>
 
             {/* Step Icon & Title */}
-            <div className="flex items-start gap-4">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-sky-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0F5132] via-[#15803D] to-[#D97706] text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-900/30">
                 <StepIcon className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-extrabold text-[var(--foreground)] leading-tight">
+                <h3 className="text-base sm:text-lg font-black text-zinc-900 dark:text-white tracking-tight leading-snug">
                   {current.title}
                 </h3>
-                <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+                <p className="text-xs sm:text-[13px] text-zinc-600 dark:text-zinc-300 leading-relaxed font-medium">
                   {current.description}
                 </p>
               </div>
             </div>
+
+            {/* Statutory Compliance Note */}
+            {current.statutoryNote && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-700 dark:text-amber-300 text-[11px] font-bold">
+                <Scale className="w-3.5 h-3.5 shrink-0 text-[#D97706]" />
+                <span>{current.statutoryNote}</span>
+              </div>
+            )}
 
             {/* Progress Bar Dots */}
             <div className="flex items-center justify-center gap-1.5 pt-1">
@@ -280,26 +303,26 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
                   key={idx}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     idx === currentStep
-                      ? 'w-7 bg-indigo-600 dark:bg-indigo-400'
-                      : 'w-2 bg-slate-200 dark:bg-slate-800'
+                      ? 'w-8 bg-[#0F5132] dark:bg-emerald-400'
+                      : 'w-2 bg-zinc-200 dark:bg-zinc-800'
                   }`}
                 />
               ))}
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-[var(--border)] gap-3">
+            <div className="flex items-center justify-between pt-3 border-t border-zinc-200 dark:border-zinc-800 gap-3">
               {currentStep > 0 ? (
                 <button
                   onClick={handlePrev}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
               ) : (
                 <button
                   onClick={handleComplete}
-                  className="px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors cursor-pointer"
                 >
                   Skip Tour
                 </button>
@@ -307,15 +330,15 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
 
               <button
                 onClick={handleNext}
-                className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer"
+                className="px-5 py-2.5 bg-gradient-to-r from-[#0F5132] via-[#15803D] to-[#0A3D24] hover:from-[#0A3D24] hover:to-[#0F5132] text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-950/30 flex items-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 {currentStep === steps.length - 1 ? (
                   <>
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Got it, Finish!
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" /> Start Exploring
                   </>
                 ) : (
                   <>
-                    Next <ArrowRight className="w-3.5 h-3.5" />
+                    Next Step <ArrowRight className="w-3.5 h-3.5" />
                   </>
                 )}
               </button>
