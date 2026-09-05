@@ -303,11 +303,20 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Verify Paystack HMAC SHA512 signature
-    const signature = req.headers['x-paystack-signature'];
-    const hash = crypto.createHmac('sha512', secret).update(JSON.stringify(req.body)).digest('hex');
+    // Verify Paystack HMAC SHA512 signature using raw body buffer
+    const signature = req.headers['x-paystack-signature'] as string;
+    if (!signature) {
+      res.status(401).send('Missing signature header');
+      return;
+    }
 
-    if (hash !== signature) {
+    const rawPayload = req.rawBody || Buffer.from(JSON.stringify(req.body), 'utf8');
+    const hash = crypto.createHmac('sha512', secret).update(rawPayload).digest('hex');
+
+    const expectedBuf = Buffer.from(hash, 'utf8');
+    const actualBuf = Buffer.from(signature, 'utf8');
+
+    if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
       res.status(401).send('Invalid signature');
       return;
     }

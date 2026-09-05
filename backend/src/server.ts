@@ -158,8 +158,15 @@ app.use(
   })
 );
 
-// ─── Body parsing & cookies ──────────────────────────────────────────────────
-app.use(express.json({ limit: '10mb' }));
+// ─── Body parsing & cookies (preserves rawBody for webhook HMAC verification) ──
+app.use(
+  express.json({
+    limit: '10mb',
+    verify: (req: Request, _res: Response, buf: Buffer) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 

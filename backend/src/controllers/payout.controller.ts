@@ -62,47 +62,52 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Calculate net earnings available for withdrawal
+    // Calculate net earnings available for withdrawal with atomic transaction lock
     const sysConfig = await getSystemConfig();
     const commissionPct = sysConfig.platformCommissionPercent || 5.0;
 
-    const transactions = await prisma.transaction.findMany({
-      where: { landlordId, status: 'SUCCESS' },
-    });
+    // Atomic Serializable Transaction: Prevents concurrent race conditions / double-spending
+    const payout = await prisma.$transaction(
+      async (tx) => {
+        const transactions = await tx.transaction.findMany({
+          where: { landlordId, status: 'SUCCESS' },
+        });
 
-    const totalNetEarnings = transactions.reduce((acc, tx) => {
-      const net = tx.amount - (tx.amount * commissionPct) / 100;
-      return acc + net;
-    }, 0);
+        const totalNetEarnings = transactions.reduce((acc, t) => {
+          const net = t.amount - (t.amount * commissionPct) / 100;
+          return acc + net;
+        }, 0);
 
-    // Sum previous successful payouts
-    const previousPayouts = await prisma.payoutRequest.findMany({
-      where: { landlordId, status: { in: ['PENDING', 'PROCESSING', 'SUCCESS'] } },
-    });
-    const totalPaidOut = previousPayouts.reduce((acc, p) => acc + p.amount, 0);
+        // Sum previous pending, processing, and successful payouts
+        const previousPayouts = await tx.payoutRequest.findMany({
+          where: { landlordId, status: { in: ['PENDING', 'PROCESSING', 'SUCCESS'] } },
+        });
+        const totalPaidOut = previousPayouts.reduce((acc, p) => acc + p.amount, 0);
 
-    const availableBalance = totalNetEarnings - totalPaidOut;
+        const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
 
-    if (amount > availableBalance) {
-      res.status(400).json({
-        message: `Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`,
-        availableBalance,
-      });
-      return;
-    }
+        if (amount > availableBalance) {
+          throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`);
+        }
 
-    // Create payout record immediately (PENDING state)
-    const payout = await prisma.payoutRequest.create({
-      data: {
-        landlordId,
-        amount,
-        recipientType,
-        accountName,
-        accountNumber,
-        bankOrNetwork,
-        status: 'PENDING',
+        // Atomically create payout record (PENDING state)
+        return await tx.payoutRequest.create({
+          data: {
+            landlordId,
+            amount,
+            recipientType,
+            accountName,
+            accountNumber,
+            bankOrNetwork,
+            status: 'PENDING',
+          },
+        });
       },
-    });
+      {
+        isolationLevel: 'Serializable',
+        timeout: 10000,
+      }
+    );
 
     // Attempt Paystack Transfer in background
     setImmediate(async () => {
@@ -191,9 +196,14 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
       message: 'Withdrawal request submitted. Funds will arrive within minutes.',
       payout,
     });
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message && error.message.includes('INSUFFICIENT_BALANCE:')) {
+      const msg = error.message.replace('INSUFFICIENT_BALANCE:', '').trim();
+      res.status(400).json({ message: msg });
+      return;
+    }
     console.error('[Payout] requestPayout error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error processing payout' });
   }
 };
 
@@ -245,17 +255,33 @@ export const getPayoutHistory = async (req: Request, res: Response): Promise<voi
 // ─── Paystack Transfer Webhook Handler (transfer.success / transfer.failed) ─
 export const handleTransferWebhook = async (req: Request, res: Response): Promise<void> => {
   try {
-    // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION ──
+    // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION (RAW BUFFER) ──
     const paystackSignature = req.headers['x-paystack-signature'] as string;
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
     
-    if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
-      const hash = crypto.createHmac('sha512', secretKey).update(JSON.stringify(req.body)).digest('hex');
-      if (hash !== paystackSignature) {
-        console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
-        res.status(401).json({ message: 'Invalid webhook signature' });
-        return;
-      }
+    if (!secretKey) {
+      console.warn('⚠️ Missing PAYSTACK_SECRET_KEY for payout webhook.');
+      res.status(500).json({ message: 'Webhook misconfigured' });
+      return;
+    }
+
+    if (!paystackSignature) {
+      console.warn('⚠️ Missing x-paystack-signature header.');
+      res.status(401).json({ message: 'Missing signature header' });
+      return;
+    }
+
+    // Use raw binary body buffer to avoid JSON key-ordering or whitespace differences
+    const rawPayload = req.rawBody || Buffer.from(JSON.stringify(req.body), 'utf8');
+    const hash = crypto.createHmac('sha512', secretKey).update(rawPayload).digest('hex');
+
+    const expectedBuf = Buffer.from(hash, 'utf8');
+    const actualBuf = Buffer.from(paystackSignature, 'utf8');
+
+    if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
+      console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
+      res.status(401).json({ message: 'Invalid webhook signature' });
+      return;
     }
 
     const { event, data } = req.body;

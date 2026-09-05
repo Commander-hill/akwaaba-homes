@@ -274,18 +274,26 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Verify Paystack HMAC SHA512 Signature
-    if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
-      const hash = crypto
-        .createHmac('sha512', secretKey)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
+    if (!paystackSignature) {
+      console.warn('[Paystack Webhook] Missing x-paystack-signature header');
+      res.status(401).json({ message: 'Missing signature header' });
+      return;
+    }
 
-      if (hash !== paystackSignature) {
-        console.error('[Paystack Webhook] Invalid HMAC SHA512 signature header');
-        res.status(401).json({ message: 'Invalid webhook signature' });
-        return;
-      }
+    // Verify Paystack HMAC SHA512 Signature using raw body buffer
+    const rawPayload = req.rawBody || Buffer.from(JSON.stringify(req.body), 'utf8');
+    const hash = crypto
+      .createHmac('sha512', secretKey)
+      .update(rawPayload)
+      .digest('hex');
+
+    const expectedBuf = Buffer.from(hash, 'utf8');
+    const actualBuf = Buffer.from(paystackSignature, 'utf8');
+
+    if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
+      console.error('[Paystack Webhook] Invalid HMAC SHA512 signature header');
+      res.status(401).json({ message: 'Invalid webhook signature' });
+      return;
     }
 
     const { event, data } = req.body;

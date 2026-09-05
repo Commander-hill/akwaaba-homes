@@ -2,11 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/jwt';
 import prisma from '../utils/prisma';
 
-// Extend the Express Request interface to include the user
+// Extend the Express Request interface to include the user & rawBody
 declare global {
   namespace Express {
     interface Request {
       user?: any;
+      rawBody?: Buffer;
     }
   }
 }
