@@ -7,7 +7,7 @@ import {
   Building, Wrench, ShieldCheck, BellRing, Package, Key, Users, 
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
   Phone, Mail, MapPin, ExternalLink, Clock, Sparkles, Check, X,
-  FileText, ClipboardCheck, ArrowRight
+  FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, Fuel, Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -21,14 +21,14 @@ function CaretakerDashboardContent() {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'overview';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors' | 'meters'>(
     (defaultTab as any) || 'overview'
   );
 
   // Sync tab with URL search parameter changes
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors', 'meters'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl as any);
     }
   }, [searchParams]);
@@ -71,6 +71,114 @@ function CaretakerDashboardContent() {
   const [parcelCarrier, setParcelCarrier] = useState('DHL');
   const [parcelTracking, setParcelTracking] = useState('');
   const [parcelLocation, setParcelLocation] = useState('Front Desk Shelf A');
+
+  // Meter & Utility Logging state
+  const [meterReadings, setMeterReadings] = useState<Array<{
+    id: string;
+    propertyId: string;
+    propertyTitle: string;
+    utilityType: 'ECG_ELECTRICITY' | 'GWCL_WATER' | 'GENERATOR_DIESEL';
+    unitNumber: string;
+    meterNumber: string;
+    previousReading: number;
+    currentReading: number;
+    unitOfMeasure: string;
+    remainingCredit?: number;
+    fuelLevelPct?: number;
+    loggedAt: string;
+    status: 'NORMAL' | 'LOW_BALANCE' | 'HIGH_CONSUMPTION' | 'READY';
+    notes?: string;
+  }>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('akwaaba_caretaker_meters');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return [
+      {
+        id: 'meter-1',
+        propertyId: 'prop-1',
+        propertyTitle: 'East Legon Residential Compound',
+        utilityType: 'ECG_ELECTRICITY',
+        unitNumber: 'Flat 101',
+        meterNumber: 'ECG-4519284902-8',
+        previousReading: 1420.5,
+        currentReading: 1585.0,
+        unitOfMeasure: 'kWh',
+        remainingCredit: 140.0,
+        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+        status: 'NORMAL',
+        notes: 'Prepaid meter inspected, running steady.',
+      },
+      {
+        id: 'meter-2',
+        propertyId: 'prop-1',
+        propertyTitle: 'East Legon Residential Compound',
+        utilityType: 'GENERATOR_DIESEL',
+        unitNumber: 'Central Compound',
+        meterNumber: 'GEN-PERKINS-150KVA',
+        previousReading: 416.0,
+        currentReading: 428.5,
+        unitOfMeasure: 'Run Hours',
+        fuelLevelPct: 82,
+        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
+        status: 'READY',
+        notes: 'Diesel topped up 120L, oil level checked.',
+      },
+      {
+        id: 'meter-3',
+        propertyId: 'prop-1',
+        propertyTitle: 'East Legon Residential Compound',
+        utilityType: 'GWCL_WATER',
+        unitNumber: 'Flat 204',
+        meterNumber: 'GWCL-ACC-88391',
+        previousReading: 84.2,
+        currentReading: 96.5,
+        unitOfMeasure: 'm³',
+        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        status: 'NORMAL',
+        notes: 'Water submeter verified, zero leakage detected.',
+      },
+      {
+        id: 'meter-4',
+        propertyId: 'prop-1',
+        propertyTitle: 'East Legon Residential Compound',
+        utilityType: 'ECG_ELECTRICITY',
+        unitNumber: 'Flat 302',
+        meterNumber: 'ECG-4519284903-6',
+        previousReading: 2110.0,
+        currentReading: 2340.0,
+        unitOfMeasure: 'kWh',
+        remainingCredit: 28.5,
+        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+        status: 'LOW_BALANCE',
+        notes: 'Low prepaid balance alert sent to resident.',
+      }
+    ];
+  });
+
+  const [utilityFilter, setUtilityFilter] = useState<'ALL' | 'ECG_ELECTRICITY' | 'GWCL_WATER' | 'GENERATOR_DIESEL'>('ALL');
+  const [meterModalOpen, setMeterModalOpen] = useState(false);
+  const [meterForm, setMeterForm] = useState({
+    propertyId: '',
+    utilityType: 'ECG_ELECTRICITY' as 'ECG_ELECTRICITY' | 'GWCL_WATER' | 'GENERATOR_DIESEL',
+    unitNumber: '',
+    meterNumber: '',
+    previousReading: '',
+    currentReading: '',
+    remainingCredit: '',
+    fuelLevelPct: '',
+    notes: '',
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('akwaaba_caretaker_meters', JSON.stringify(meterReadings));
+      } catch (e) {}
+    }
+  }, [meterReadings]);
 
   // Fetch Current Caretaker Session
   const { data: sessionData, isLoading: isAuthLoading } = useQuery({
@@ -240,7 +348,7 @@ function CaretakerDashboardContent() {
             Welcome, {userName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Manage daily hostel tickets, resident move-in inspections, parcel intake, and compound broadcast notices.
+            Manage daily residential property maintenance, tenant move-in inspections, utility submeter logging, parcel vault, and compound broadcast notices.
           </p>
         </div>
 
@@ -264,7 +372,7 @@ function CaretakerDashboardContent() {
       </div>
 
       {/* ── KPI Metric Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div 
           onClick={() => handleTabChange('overview')}
           className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-indigo-500/50 transition"
@@ -317,7 +425,7 @@ function CaretakerDashboardContent() {
 
         <div 
           onClick={() => handleTabChange('parcels')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 col-span-2 sm:col-span-1 cursor-pointer hover:border-purple-500/50 transition"
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-purple-500/50 transition"
         >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Parcels</span>
@@ -327,6 +435,20 @@ function CaretakerDashboardContent() {
             {allParcels.filter((p: any) => p.status === 'ARRIVED').length}
           </div>
           <div className="text-[11px] text-slate-500">Unclaimed deliveries</div>
+        </div>
+
+        <div 
+          onClick={() => handleTabChange('meters')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-emerald-500/50 transition"
+        >
+          <div className="flex items-center justify-between text-slate-500">
+            <span className="text-xs font-bold uppercase">Meters</span>
+            <Gauge className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+          </div>
+          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+            {meterReadings.length}
+          </div>
+          <div className="text-[11px] text-slate-500">ECG &amp; submeters</div>
         </div>
       </div>
 
@@ -339,6 +461,7 @@ function CaretakerDashboardContent() {
           { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
           { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
           { id: 'visitors', label: 'Gate Passes (' + allVisitorPasses.length + ')', icon: Key },
+          { id: 'meters', label: 'Utility & Meters (' + meterReadings.length + ')', icon: Gauge },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -761,6 +884,221 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
+      {/* ── TAB: UTILITY & METER LOGGING ── */}
+      {activeTab === 'meters' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Gauge className="w-5 h-5 text-[#0F5132] dark:text-emerald-400" />
+                Utility Submeters &amp; Standby Generator Logs
+              </h2>
+              <p className="text-xs text-slate-500">
+                Log and monitor ECG prepaid electricity meters, GWCL water submeters, and central diesel generator run-hours across compounds.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setMeterForm({
+                  propertyId: assignedProperties[0]?.id || '',
+                  utilityType: 'ECG_ELECTRICITY',
+                  unitNumber: '',
+                  meterNumber: '',
+                  previousReading: '',
+                  currentReading: '',
+                  remainingCredit: '',
+                  fuelLevelPct: '',
+                  notes: '',
+                });
+                setMeterModalOpen(true);
+              }}
+              className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-2xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer self-start sm:self-auto shrink-0 active:scale-95"
+            >
+              <Plus className="w-4 h-4 text-amber-300" />
+              <span>Log Meter Reading</span>
+            </button>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap gap-2 pt-1">
+            {[
+              { id: 'ALL', label: `All Utilities (${meterReadings.length})` },
+              { id: 'ECG_ELECTRICITY', label: `⚡ ECG Electricity (${meterReadings.filter(m => m.utilityType === 'ECG_ELECTRICITY').length})` },
+              { id: 'GWCL_WATER', label: `💧 GWCL Water (${meterReadings.filter(m => m.utilityType === 'GWCL_WATER').length})` },
+              { id: 'GENERATOR_DIESEL', label: `⚙️ Standby Generator (${meterReadings.filter(m => m.utilityType === 'GENERATOR_DIESEL').length})` },
+            ].map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setUtilityFilter(f.id as any)}
+                className={clsx(
+                  "px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer",
+                  utilityFilter === f.id
+                    ? "bg-[#0F5132] text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Meter Cards Grid */}
+          {meterReadings.filter(m => utilityFilter === 'ALL' || m.utilityType === utilityFilter).length === 0 ? (
+            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
+                <Gauge className="w-6 h-6" />
+              </div>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Meter Logs Found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                No utility readings recorded under this category yet. Click "Log Meter Reading" to log your first ECG, water submeter, or generator reading.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {meterReadings
+                .filter(m => utilityFilter === 'ALL' || m.utilityType === utilityFilter)
+                .map((meter) => {
+                  const deltaConsumption = Math.max(0, Number((meter.currentReading - meter.previousReading).toFixed(1)));
+                  
+                  return (
+                    <div
+                      key={meter.id}
+                      className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 hover:border-emerald-500/40 transition"
+                    >
+                      {/* Top Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className={clsx(
+                            "w-9 h-9 rounded-xl flex items-center justify-center font-bold",
+                            meter.utilityType === 'ECG_ELECTRICITY' ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+                            meter.utilityType === 'GWCL_WATER' ? "bg-sky-500/10 text-sky-600 dark:text-sky-400" :
+                            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          )}>
+                            {meter.utilityType === 'ECG_ELECTRICITY' ? <Zap className="w-4 h-4" /> :
+                             meter.utilityType === 'GWCL_WATER' ? <Droplets className="w-4 h-4" /> :
+                             <Fuel className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                              {meter.utilityType === 'ECG_ELECTRICITY' ? 'ECG Prepaid' :
+                               meter.utilityType === 'GWCL_WATER' ? 'GWCL Water' : 'Standby Generator'}
+                            </span>
+                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{meter.unitNumber}</h4>
+                          </div>
+                        </div>
+
+                        <span className={clsx(
+                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
+                          meter.status === 'LOW_BALANCE' ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-500/30" :
+                          meter.status === 'READY' ? "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-500/30" :
+                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30"
+                        )}>
+                          {meter.status === 'LOW_BALANCE' ? '⚠️ Low Credit' :
+                           meter.status === 'READY' ? 'Ready' : 'Normal'}
+                        </span>
+                      </div>
+
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300">{meter.meterNumber}</span>
+                      </div>
+
+                      {/* Readings Comparison Box */}
+                      <div className="p-3 bg-slate-50 dark:bg-slate-900/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <div className="text-[10px] text-slate-400">Prev Reading</div>
+                            <div className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                              {meter.previousReading.toLocaleString()} {meter.unitOfMeasure}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400">Current Reading</div>
+                            <div className="font-mono font-black text-slate-900 dark:text-white">
+                              {meter.currentReading.toLocaleString()} {meter.unitOfMeasure}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800 text-[11px]">
+                          <span className="text-slate-500 font-medium">Consumption</span>
+                          <span className="font-mono font-black text-[#0F5132] dark:text-emerald-400">
+                            +{deltaConsumption} {meter.unitOfMeasure}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Remaining Credit or Fuel Level */}
+                      {meter.utilityType === 'ECG_ELECTRICITY' && meter.remainingCredit !== undefined && (
+                        <div className="flex items-center justify-between text-xs px-1">
+                          <span className="text-slate-500">Remaining Balance:</span>
+                          <span className={clsx(
+                            "font-bold font-mono",
+                            meter.remainingCredit < 50 ? "text-rose-600 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400"
+                          )}>
+                            GHS {meter.remainingCredit.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
+
+                      {meter.utilityType === 'GENERATOR_DIESEL' && meter.fuelLevelPct !== undefined && (
+                        <div className="space-y-1 px-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-slate-500">Diesel Fuel Level:</span>
+                            <span className="font-bold text-slate-900 dark:text-white font-mono">{meter.fuelLevelPct}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div 
+                              className={clsx(
+                                "h-full rounded-full transition-all",
+                                meter.fuelLevelPct > 50 ? "bg-emerald-500" : meter.fuelLevelPct > 25 ? "bg-amber-500" : "bg-rose-500"
+                              )} 
+                              style={{ width: `${meter.fuelLevelPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {meter.notes && (
+                        <p className="text-[11px] text-slate-500 italic px-1 line-clamp-1">
+                          "{meter.notes}"
+                        </p>
+                      )}
+
+                      {/* Footer actions */}
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
+                        <span>{new Date(meter.loggedAt).toLocaleDateString('en-GB')}</span>
+                        <button
+                          onClick={() => {
+                            setNoticePropertyId(meter.propertyId || assignedProperties[0]?.id);
+                            setNoticeCategory('UTILITY');
+                            setNoticePriority(meter.status === 'LOW_BALANCE' ? 'HIGH' : 'NORMAL');
+                            setNoticeTitle(
+                              meter.utilityType === 'GENERATOR_DIESEL'
+                                ? 'Central Standby Generator Run-Hours & Diesel Log'
+                                : meter.utilityType === 'ECG_ELECTRICITY'
+                                ? `ECG Prepaid Power Reading for ${meter.unitNumber}`
+                                : `GWCL Water Submeter Reading for ${meter.unitNumber}`
+                            );
+                            setNoticeMessage(
+                              meter.utilityType === 'GENERATOR_DIESEL'
+                                ? `Central Generator recorded ${meter.currentReading} run hours with fuel level at ${meter.fuelLevelPct}%. Ready for standby compound power.`
+                                : `Meter ${meter.meterNumber} logged at ${meter.currentReading} ${meter.unitOfMeasure} (Delta: +${deltaConsumption} ${meter.unitOfMeasure}). ${meter.remainingCredit !== undefined ? `Current credit remaining: GHS ${meter.remainingCredit.toFixed(2)}.` : ''}`
+                            );
+                            setNoticeModalOpen(true);
+                          }}
+                          className="text-[#0F5132] dark:text-emerald-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <BellRing className="w-3 h-3" /> Post Broadcast
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Ticket Resolution Modal ── */}
       {ticketActionModal.isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
@@ -1029,6 +1367,238 @@ function CaretakerDashboardContent() {
                 className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
               >
                 {logParcelMutation.isPending ? 'Logging...' : 'Log & Alert Tenant'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Log Meter Reading Modal ── */}
+      {meterModalOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
+          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
+                  <Gauge className="w-4 h-4" />
+                </div>
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                  Log Utility Submeter Reading
+                </h3>
+              </div>
+              <button 
+                onClick={() => setMeterModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs sm:text-sm">
+              {/* Property Select */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Compound / Property
+                </label>
+                <select
+                  value={meterForm.propertyId}
+                  onChange={(e) => setMeterForm(prev => ({ ...prev, propertyId: e.target.value }))}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
+                >
+                  {assignedProperties.map((p: any) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Utility Type Radio */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Utility Category
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'ECG_ELECTRICITY', label: '⚡ ECG Power', icon: Zap },
+                    { id: 'GWCL_WATER', label: '💧 Water', icon: Droplets },
+                    { id: 'GENERATOR_DIESEL', label: '⚙️ Generator', icon: Fuel },
+                  ].map((u) => (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => setMeterForm(prev => ({ ...prev, utilityType: u.id as any }))}
+                      className={clsx(
+                        "p-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition cursor-pointer",
+                        meterForm.utilityType === u.id
+                          ? "bg-[#0F5132] text-white border-[#0F5132] shadow-xs"
+                          : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
+                      )}
+                    >
+                      <u.icon className="w-4 h-4" />
+                      <span>{u.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Unit & Meter Number */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Flat / Unit Number
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Flat 102, Penthouse B"
+                    value={meterForm.unitNumber}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, unitNumber: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Meter Serial / ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ECG-481920-X"
+                    value={meterForm.meterNumber}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, meterNumber: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Previous vs Current Reading */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Previous Reading ({meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Hours'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g. 1420.0"
+                    value={meterForm.previousReading}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, previousReading: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Current Reading ({meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Hours'})
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g. 1560.5"
+                    value={meterForm.currentReading}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, currentReading: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Conditional: Remaining Credit (for ECG) or Fuel Level (for Generator) */}
+              {meterForm.utilityType === 'ECG_ELECTRICITY' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Remaining Prepaid Balance (GHS)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 85.00"
+                    value={meterForm.remainingCredit}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, remainingCredit: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
+                  />
+                </div>
+              )}
+
+              {meterForm.utilityType === 'GENERATOR_DIESEL' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Diesel Fuel Tank Level (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="e.g. 80"
+                    value={meterForm.fuelLevelPct}
+                    onChange={(e) => setMeterForm(prev => ({ ...prev, fuelLevelPct: e.target.value }))}
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
+                  />
+                </div>
+              )}
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Inspection Remarks / Observations
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Seal intact, no tampering, steady operation."
+                  value={meterForm.notes}
+                  onChange={(e) => setMeterForm(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button 
+                type="button"
+                onClick={() => setMeterModalOpen(false)} 
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!meterForm.unitNumber || !meterForm.meterNumber || !meterForm.currentReading) {
+                    toast.error('Please enter unit number, meter number, and current reading');
+                    return;
+                  }
+
+                  const prevNum = parseFloat(meterForm.previousReading) || 0;
+                  const currNum = parseFloat(meterForm.currentReading) || 0;
+
+                  if (currNum < prevNum) {
+                    toast.error('Current reading cannot be lower than previous reading');
+                    return;
+                  }
+
+                  const selectedProp = assignedProperties.find((p: any) => p.id === meterForm.propertyId) || assignedProperties[0];
+                  const remCredit = meterForm.remainingCredit ? parseFloat(meterForm.remainingCredit) : undefined;
+                  const fuelLevel = meterForm.fuelLevelPct ? parseInt(meterForm.fuelLevelPct, 10) : undefined;
+
+                  const newEntry = {
+                    id: `meter-${Date.now()}`,
+                    propertyId: selectedProp?.id || 'prop-default',
+                    propertyTitle: selectedProp?.title || 'Residential Compound',
+                    utilityType: meterForm.utilityType,
+                    unitNumber: meterForm.unitNumber,
+                    meterNumber: meterForm.meterNumber,
+                    previousReading: prevNum,
+                    currentReading: currNum,
+                    unitOfMeasure: meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Run Hours',
+                    remainingCredit: remCredit,
+                    fuelLevelPct: fuelLevel,
+                    loggedAt: new Date().toISOString(),
+                    status: (remCredit !== undefined && remCredit < 50 ? 'LOW_BALANCE' : meterForm.utilityType === 'GENERATOR_DIESEL' ? 'READY' : 'NORMAL') as any,
+                    notes: meterForm.notes || 'Recorded by caretaker inspection.',
+                  };
+
+                  setMeterReadings(prev => [newEntry, ...prev]);
+                  setMeterModalOpen(false);
+                  toast.success('Meter reading logged & recorded!');
+                }}
+                className="px-6 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer transition active:scale-95"
+              >
+                Save &amp; Log Reading
               </button>
             </div>
           </div>

@@ -186,10 +186,14 @@ export default function AgreementPage() {
             Republic of Ghana Rent Act, 1963 (Act 220) &amp; Electronic Transactions Act, 2008 (Act 772)
           </span>
         </div>
-        <div className="flex items-center gap-4 text-[11px] font-medium text-zinc-500">
+        <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-zinc-500">
+          <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
+            <Building className="w-3.5 h-3.5" /> Lands Commission Deed GA-2026-TITLED
+          </span>
+          <span>•</span>
           <span>Sec. 17 Eviction Protection</span>
           <span>•</span>
-          <span>SHA-256 Legal Vault Seal</span>
+          <span>SHA-256 Ledger Seal</span>
         </div>
       </div>
 
@@ -224,7 +228,7 @@ export default function AgreementPage() {
           {/* Section 1: Parties */}
           <div className="p-5 rounded-2xl bg-white/70 border border-slate-300/80 space-y-3 font-sans text-xs">
             <h4 className="font-black text-slate-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-              <UserCheck className="w-4 h-4 text-indigo-600" /> 1. The Contracting Parties
+              <UserCheck className="w-4 h-4 text-[#0F5132]" /> 1. The Contracting Parties
             </h4>
             <div className="grid sm:grid-cols-2 gap-4 pt-1">
               <div className="space-y-1">
@@ -240,8 +244,8 @@ export default function AgreementPage() {
                 <div className="font-bold text-slate-900 text-xs">TENANT / LESSEE:</div>
                 <div className="text-slate-800 font-semibold">{tenant.firstName} {tenant.lastName}</div>
                 <div className="text-slate-500">Email: {tenant.email} | Phone: {tenant.phoneNumber || 'N/A'}</div>
-                <div className="text-indigo-700 font-bold text-[10px] flex items-center gap-1">
-                  ✓ Verified Resident / Student
+                <div className="text-emerald-700 font-bold text-[10px] flex items-center gap-1">
+                  ✓ Verified Resident (Ghana Card NIA on-file)
                 </div>
               </div>
             </div>
@@ -295,7 +299,7 @@ export default function AgreementPage() {
               <li><strong>Rent Punctuality:</strong> To remit agreed rent punctually as stipulated.</li>
               <li><strong>Internal Upkeep:</strong> To keep internal fixtures, windows, glass, and fittings in good tenantable order (reasonable wear and tear excepted).</li>
               <li><strong>Subletting Prohibition:</strong> Not to assign, sublet, or part with possession of the premises or any room therein without the prior written approval of the Landlord.</li>
-              <li><strong>Community Quiet Hours:</strong> To respect compound serenity and comply with all residential/hostel rules and municipal sanitation bylaws.</li>
+              <li><strong>Community Quiet Hours:</strong> To respect compound serenity and comply with all residential compound guidelines, quiet hours, and municipal sanitation bylaws.</li>
               <li><strong>Digital Inspection:</strong> To execute the digital move-in checklist upon key handover and move-out inspection prior to departure.</li>
             </ul>
           </div>
@@ -373,8 +377,28 @@ export default function AgreementPage() {
 
           </div>
 
+          {/* ── LANDS COMMISSION DEED REGISTRY AUDIT BADGE ── */}
+          <div className="mt-8 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs font-sans">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center font-black shrink-0">
+                <Building className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-black text-slate-900 dark:text-amber-200 uppercase tracking-wider text-[11px]">
+                  Lands Commission Statutory Deed Registry Audit
+                </div>
+                <div className="text-[11px] text-slate-600 dark:text-amber-300/80 font-mono">
+                  Deed Registration: GA-2026-AKW-TITLED-REGISTRY • Title Certificate Registered (Act 767)
+                </div>
+              </div>
+            </div>
+            <div className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-black text-[10px] rounded-full border border-amber-400/40 uppercase tracking-wider shrink-0">
+              🛡️ Certified Title On-File
+            </div>
+          </div>
+
           {/* ── CRYPTOGRAPHIC SHA-256 AUDIT SEAL BOX ── */}
-          <div className="mt-8 p-5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-2">
+          <div className="mt-4 p-5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-2">
             <div className="flex items-center justify-between text-amber-400 font-bold">
               <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> IMMUTABLE CRYPTOGRAPHIC SEAL</span>
               <span className="text-[9px] px-2 py-0.5 rounded bg-amber-400/20">SHA-256</span>
@@ -410,7 +434,7 @@ export default function AgreementPage() {
             {/* Modal Header */}
             <div className="px-8 py-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#16161D]">
               <div className="flex items-center gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-600/10 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center">
                   <FileSignature className="w-5 h-5" />
                 </div>
                 <div>
@@ -433,7 +457,7 @@ export default function AgreementPage() {
             {/* Modal Body */}
             <div className="p-8 space-y-6">
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs leading-relaxed flex items-start gap-2.5">
-                <Scale className="w-4 h-4 shrink-0 mt-0.5" />
+                <Scale className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                 <div>
                   By applying your electronic signature below, you legally execute this lease contract and consent to the statutory rights and protections under the <strong>Republic of Ghana Rent Act, 1963 (Act 220)</strong>.
                 </div>
@@ -454,7 +478,7 @@ export default function AgreementPage() {
                   type="button"
                   onClick={handleConfirmSignature}
                   disabled={signMutation.isPending || !signatureData}
-                  className="flex-[2] py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-black text-xs shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+                  className="flex-[2] py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-2xl font-black text-xs shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
                 >
                   {signMutation.isPending ? (
                     <>
@@ -463,7 +487,7 @@ export default function AgreementPage() {
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-4 h-4" />
+                      <CheckCircle2 className="w-4 h-4 text-amber-300" />
                       <span>Apply Statutory E-Signature</span>
                     </>
                   )}

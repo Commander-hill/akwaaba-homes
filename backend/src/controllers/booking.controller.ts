@@ -14,7 +14,7 @@ import { generateTenancyAgreementPDF } from '../utils/pdf.service';
 export const downloadAgreementPDF = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const booking = await prisma.booking.findUnique({
+    let booking = await prisma.booking.findUnique({
       where: { id },
       include: {
         property: { include: { landlord: true } },
@@ -23,6 +23,26 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
         leaseAgreement: true
       }
     });
+
+    // Fallback: Check if id passed is actually a lease agreement ID
+    if (!booking) {
+      const agreement = await prisma.leaseAgreement.findUnique({
+        where: { id },
+        include: {
+          booking: {
+            include: {
+              property: { include: { landlord: true } },
+              room: true,
+              tenant: true,
+              leaseAgreement: true
+            }
+          }
+        }
+      });
+      if (agreement?.booking) {
+        booking = agreement.booking;
+      }
+    }
 
     if (!booking) {
       res.status(404).json({ message: 'Booking record not found' });
@@ -57,7 +77,9 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
       rentAmount: booking.room.price,
       cryptographicHash: booking.leaseAgreement?.cryptographicHash,
       tenantSignedAt: booking.leaseAgreement?.tenantSignedAt ? new Date(booking.leaseAgreement.tenantSignedAt).toLocaleString() : null,
+      tenantSignatureUrl: booking.leaseAgreement?.tenantSignature || null,
       landlordSignedAt: booking.leaseAgreement?.landlordSignedAt ? new Date(booking.leaseAgreement.landlordSignedAt).toLocaleString() : null,
+      landlordSignatureUrl: booking.leaseAgreement?.landlordSignature || null,
     });
 
     res.setHeader('Content-Type', 'application/pdf');
