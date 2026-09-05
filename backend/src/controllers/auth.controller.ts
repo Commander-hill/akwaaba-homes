@@ -767,9 +767,9 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
           <p>You requested a password reset for your AkwaabaHomes account.</p>
           <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
           <br />
-          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #0F5132; color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px;">Reset Password</a>
           <br /><br />
-          <p>If you did not request this, please ignore this email.</p>
+          <p style="color: #6b7280; font-size: 12px;">If you did not request this password reset, please ignore this message or contact Akwaaba Homes support.</p>
         </div>
       `,
     })
