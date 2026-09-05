@@ -1242,13 +1242,45 @@ export const broadcastNotification = async (req: Request, res: Response): Promis
 
     await logAudit(
       req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS',
-      null, { target, count: users.length, title },
+      null, { target, count: users.length, title, message },
       req.ip || req.socket.remoteAddress
     );
 
     res.status(200).json({ message: 'Broadcast successful', count: users.length });
   } catch (error) {
     console.error('Error broadcasting notification:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getBroadcastHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const logs = await prisma.auditLog.findMany({
+      where: { action: 'ADMIN_BROADCAST_NOTIFICATION' },
+      include: { user: { select: { firstName: true, lastName: true, email: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 15
+    });
+
+    const history = logs.map(log => {
+      let details: any = {};
+      try {
+        details = typeof log.newData === 'string' ? JSON.parse(log.newData) : log.newData || {};
+      } catch (e) {}
+      return {
+        id: log.id,
+        title: details.title || 'Platform Announcement',
+        message: details.message || '',
+        target: details.target || 'ALL_USERS',
+        count: details.count || 0,
+        dispatchedBy: `${log.user?.firstName || 'Admin'} ${log.user?.lastName || ''}`.trim(),
+        createdAt: log.createdAt
+      };
+    });
+
+    res.status(200).json(history);
+  } catch (error) {
+    console.error('Error fetching broadcast history:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

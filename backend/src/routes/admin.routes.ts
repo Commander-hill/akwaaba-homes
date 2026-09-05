@@ -23,7 +23,8 @@ import {
   adminUpdateTicketStatus,
   getConfig,
   updateConfig,
-  broadcastNotification
+  broadcastNotification,
+  getBroadcastHistory
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -86,6 +87,7 @@ router.put('/config', updateConfig);
 
 // Broadcast Notifications
 router.post('/notifications/broadcast', broadcastNotification);
+router.get('/notifications/broadcasts/history', getBroadcastHistory);
 
 // Maintenance Tickets
 router.get('/tickets', getAllTickets);
