@@ -371,7 +371,7 @@ export async function generateReceiptPDF(data: {
       .fontSize(10)
       .font('Helvetica')
       .fillColor('#A7F3D0')
-      .text('OFFICIAL HOSTEL PAYMENT RECEIPT', 40, 55);
+      .text('OFFICIAL TENANCY PAYMENT & ESCROW RECEIPT', 40, 55);
 
     doc
       .fontSize(9)
@@ -389,7 +389,7 @@ export async function generateReceiptPDF(data: {
       .fillColor('#047857')
       .fontSize(14)
       .font('Helvetica-Bold')
-      .text('✅ PAYMENT CONFIRMED & AUDITED', 55, 137);
+      .text('✅ ESCROW PAYMENT CLEARED & AUDITED', 55, 137);
 
     // Customer & Booking Metadata
     const startY = 185;
@@ -401,16 +401,16 @@ export async function generateReceiptPDF(data: {
       .fillColor('#334155')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('PAYER & PROPERTY DETAILS', 50, startY + 12);
+      .text('PAYER & PREMISES DETAILS', 50, startY + 12);
 
     doc
       .fontSize(9)
       .font('Helvetica')
       .fillColor('#0F172A')
-      .text(`Student Name: ${data.studentName}`, 50, startY + 32)
+      .text(`Tenant Name: ${data.studentName}`, 50, startY + 32)
       .text(`Email Address: ${data.studentEmail} (${data.studentPhone || 'N/A'})`, 50, startY + 47)
-      .text(`Hostel / Property: ${data.propertyTitle}`, 50, startY + 62)
-      .text(`Room Option: ${data.roomType}`, 300, startY + 62);
+      .text(`Property / Premises: ${data.propertyTitle}`, 50, startY + 62)
+      .text(`Unit / Option: ${data.roomType}`, 300, startY + 62);
 
     // Itemized Financial Table
     const tableY = 295;
@@ -435,7 +435,7 @@ export async function generateReceiptPDF(data: {
       .fillColor('#0F172A')
       .fontSize(9)
       .font('Helvetica')
-      .text(`Hostel Accommodation Rent (${data.roomType})`, 50, tableY + 38)
+      .text(`Residential Tenancy Advance Rent (${data.roomType})`, 50, tableY + 38)
       .text(`${data.paymentMethod} / Paystack`, 320, tableY + 38)
       .font('Helvetica-Bold')
       .text(`GHS ${data.grossAmount.toLocaleString()}`, 440, tableY + 38, { align: 'right' });
@@ -464,7 +464,7 @@ export async function generateReceiptPDF(data: {
       .fontSize(8)
       .font('Helvetica-Oblique')
       .fillColor('#64748B')
-      .text('This is an official computer-generated receipt issued by Akwaaba Homes Student Housing Platform.', 40, footerY, { width: 515 });
+      .text('This is an official computer-generated receipt issued by the Akwaaba Homes Tenancy Platform under Act 220.', 40, footerY, { width: 515 });
 
     doc
       .fontSize(8)
