@@ -68,12 +68,16 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    // Strict defense-in-depth: public registration only allows TENANT or LANDLORD
+    const allowedRoles = ['TENANT', 'LANDLORD'];
+    const safeRole = allowedRoles.includes(role) ? role : 'TENANT';
+
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
         avatarUrl: avatarUrl ? String(avatarUrl).trim() : null,
         passwordHash,
-        role: role || 'TENANT',
+        role: safeRole,
         firstName,
         lastName,
         otherNames,

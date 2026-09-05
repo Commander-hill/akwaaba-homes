@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
+import axios from 'axios';
 import sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
@@ -218,9 +219,28 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
       return;
     }
 
-    res.redirect(String(url));
+    const rawUrl = String(url);
+    // Security check: Only allow streaming from verified Cloudinary assets
+    if (!rawUrl.startsWith('https://res.cloudinary.com/')) {
+      res.status(400).json({ error: 'Invalid document source' });
+      return;
+    }
+
+    // Stream directly through backend so client never sees or stores raw Cloudinary bucket URL
+    const documentResponse = await axios.get(rawUrl, {
+      responseType: 'stream',
+      timeout: 15000
+    });
+
+    res.setHeader('Content-Type', documentResponse.headers['content-type'] || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    documentResponse.data.pipe(res);
   } catch (error) {
-    console.error('Error serving secure document:', error);
+    console.error('Error serving secure document stream:', error);
     res.status(500).json({ error: 'Internal server error serving secure document' });
   }
 };

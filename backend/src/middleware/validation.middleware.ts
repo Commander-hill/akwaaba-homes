@@ -35,7 +35,7 @@ export const registerValidation = [
     .withMessage('Password must contain at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character'),
   body('firstName').notEmpty().withMessage('First name is required').trim().escape(),
   body('lastName').notEmpty().withMessage('Last name is required').trim().escape(),
-  body('role').optional().isIn(['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF', 'ADMIN']).withMessage('Invalid role'),
+  body('role').optional().isIn(['TENANT', 'LANDLORD']).withMessage('Public registration role must be either TENANT or LANDLORD'),
 ];
 
 export const loginValidation = [

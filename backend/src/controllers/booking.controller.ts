@@ -29,6 +29,18 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
       return;
     }
 
+    // Strict IDOR Authorization Check
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const isTenant = booking.tenantId === userId;
+    const isLandlord = booking.property?.landlordId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isTenant && !isLandlord && !isAdmin) {
+      res.status(403).json({ message: 'Access denied. You are not authorized to view or download this tenancy agreement.' });
+      return;
+    }
+
     const pdfBuffer = await generateTenancyAgreementPDF({
       agreementId: booking.leaseAgreement?.id || booking.id,
       bookingId: booking.id,
@@ -662,39 +674,49 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const isTestRef = reference.startsWith('BOOKING_TEST_') || reference.includes('test');
-    let isSuccess = false;
-    let verifiedAmount = Math.round(booking.room!.price * 100);
+    // 1. Replay attack prevention: ensure reference has never been used
+    const existingTx = await prisma.transaction.findFirst({
+      where: { reference }
+    });
+    if (existingTx) {
+      res.status(400).json({ message: 'This payment reference has already been processed or claimed.' });
+      return;
+    }
 
-    if (isTestRef || !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_')) {
-      try {
-        if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual') && !isTestRef) {
-          const verifyRes = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-            headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
-          });
-          isSuccess = verifyRes.data.data.status === 'success';
-          if (verifyRes.data.data.amount) verifiedAmount = verifyRes.data.data.amount;
-        } else {
-          isSuccess = true; // Auto-verify test transactions
-        }
-      } catch (err) {
-        if (isTestRef || process.env.PAYSTACK_SECRET_KEY?.startsWith('sk_test_')) {
-          isSuccess = true;
-        } else {
-          res.status(400).json({ message: 'Payment verification failed' });
-          return;
-        }
-      }
-    } else {
+    // 2. Cryptographic verification with Paystack
+    const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+    if (!paystackKey) {
+      res.status(500).json({ message: 'Paystack secret key is not configured.' });
+      return;
+    }
+
+    let isSuccess = false;
+    let verifiedAmount = 0;
+
+    try {
       const verifyRes = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+        headers: { Authorization: `Bearer ${paystackKey}` }
       });
-      isSuccess = verifyRes.data.data.status === 'success';
-      if (verifyRes.data.data.amount) verifiedAmount = verifyRes.data.data.amount;
+      const txData = verifyRes.data?.data;
+      isSuccess = txData?.status === 'success';
+      verifiedAmount = txData?.amount || 0;
+    } catch (err: any) {
+      console.error('Paystack verification call failed:', err.response?.data || err.message);
+      res.status(400).json({ message: 'Payment verification failed with provider.' });
+      return;
     }
 
     if (!isSuccess) {
-      res.status(400).json({ message: 'Payment verification failed' });
+      res.status(400).json({ message: 'Payment verification failed. Transaction was not successful.' });
+      return;
+    }
+
+    // 3. Exact amount assertion (pesewas)
+    const expectedAmount = Math.round(booking.room!.price * 100);
+    if (verifiedAmount < expectedAmount) {
+      res.status(400).json({ 
+        message: `Payment amount mismatch. Expected GHS ${booking.room!.price.toFixed(2)}, but received GHS ${(verifiedAmount / 100).toFixed(2)}.` 
+      });
       return;
     }
 

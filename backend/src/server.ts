@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // ─── Startup environment validation ─────────────────────────────────────────
-const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'PAYSTACK_SECRET_KEY'];
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'REFRESH_JWT_SECRET', 'PAYSTACK_SECRET_KEY', 'ENCRYPTION_KEY'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
 if (missing.length > 0) {
   console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
@@ -139,17 +139,16 @@ const ALLOWED_ORIGINS = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow server-to-server (no origin) and listed origins
+      // Allow server-to-server or curl/mobile (no origin) and explicitly allowlisted origins
       if (
         !origin ||
         ALLOWED_ORIGINS.some((o) => origin === o || origin.startsWith(o)) ||
-        origin.endsWith('.vercel.app') ||
-        origin.endsWith('.onrender.com')
+        ((origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) && origin.includes('akwaaba'))
       ) {
         callback(null, true);
       } else {
-        console.warn(`⚠️ Blocked CORS request from: ${origin}`);
-        callback(null, true); // Gracefully allow rather than throwing a server error
+        console.warn(`🚨 Blocked unauthorized CORS request from origin: ${origin}`);
+        callback(new Error(`CORS policy: Origin ${origin} is not authorized`));
       }
     },
     credentials: true,
