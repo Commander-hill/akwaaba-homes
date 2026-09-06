@@ -10,7 +10,7 @@ import {
   MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
   Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
   Sparkles, Car, Package, DollarSign, ShieldAlert, Shield, HeartPulse, Flame, 
-  Radio, Building2, Check, ShieldCheck, Trash2 
+  Radio, Building2, Check, ShieldCheck, Trash2, Wrench, Camera 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -25,6 +25,7 @@ import VehicleParkingTab from '@/components/tenant/VehicleParkingTab';
 import LeaseRenewalTab from '@/components/tenant/LeaseRenewalTab';
 import DeliveryVaultTab from '@/components/tenant/DeliveryVaultTab';
 import BillSplitterTab from '@/components/tenant/BillSplitterTab';
+import ReportIssueModal from '@/components/tenant/ReportIssueModal';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
@@ -157,6 +158,7 @@ function TenantDashboardContent() {
   // Ticket State
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
   const [ticketPropertyId, setTicketPropertyId] = useState('');
+  const [ticketPropertyTitle, setTicketPropertyTitle] = useState('');
   const [ticketTitle, setTicketTitle] = useState('');
   const [ticketDesc, setTicketDesc] = useState('');
   const [ticketPriority, setTicketPriority] = useState('MEDIUM');
@@ -318,7 +320,7 @@ function TenantDashboardContent() {
   });
 
   const ticketMutation = useMutation({
-    mutationFn: async (ticketData: { propertyId: string; title: string; description: string; priority: string }) => {
+    mutationFn: async (ticketData: { propertyId: string; title: string; description: string; priority: string; imageUrl?: string }) => {
       const res = await api.post('/tickets', ticketData);
       return res.data;
     },
@@ -328,7 +330,7 @@ function TenantDashboardContent() {
       setTicketDesc('');
       setTicketPriority('MEDIUM');
       queryClient.invalidateQueries({ queryKey: ['tickets', 'tenant'] });
-      toast.success('Maintenance request submitted successfully!');
+      toast.success('Maintenance ticket submitted to property manager and caretaker!');
     },
     onError: (err: any) => {
       setTicketError(err.response?.data?.message || 'Failed to submit request');
@@ -703,10 +705,16 @@ function TenantDashboardContent() {
                                 </button>
                               )}
                               <button 
-                                onClick={() => { setTicketPropertyId(booking.propertyId); setTicketError(''); setTicketModalOpen(true); }}
-                                className="text-xs font-bold text-slate-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                onClick={() => { 
+                                  setTicketPropertyId(booking.propertyId); 
+                                  setTicketPropertyTitle(booking.property?.title || '');
+                                  setTicketError(''); 
+                                  setTicketModalOpen(true); 
+                                }}
+                                className="text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                               >
-                                <PenTool className="w-3 h-3" /> Report Issue
+                                <Wrench className="w-3.5 h-3.5 text-emerald-500" />
+                                <span>Report Issue</span>
                               </button>
                             </>
                           )}
@@ -759,37 +767,121 @@ function TenantDashboardContent() {
       )}
 
       {activeTab === 'tickets' && (
-        <div className="animate-in">
+        <div className="animate-in space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-xs">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-emerald-500" /> Maintenance & Repair Tickets
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                Track real-time resolution status and scheduled caretaker visits for your residence.
+              </p>
+            </div>
+            {activeBookings.length > 0 && (
+              <button
+                onClick={() => {
+                  const targetBooking = activeBookings.find((b: any) => ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status)) || activeBookings[0];
+                  setTicketPropertyId(targetBooking.propertyId);
+                  setTicketPropertyTitle(targetBooking.property?.title || '');
+                  setTicketError('');
+                  setTicketModalOpen(true);
+                }}
+                className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span>Report an Issue</span>
+              </button>
+            )}
+          </div>
+
           {ticketsLoading ? (
             <SkeletonTable rows={3} columns={4} />
           ) : tickets.length === 0 ? (
             <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <PenTool className="w-8 h-8 text-[var(--muted-foreground)]" />
+                <Wrench className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
               <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Maintenance Tickets</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto">
-                Everything in your room is functioning properly. If you experience plumbing, electrical, or lock issues, report directly to your assigned caretaker above.
+                Everything in your room is functioning properly. If you experience plumbing, electrical, or lock issues, submit a ticket to alert your caretaker.
               </p>
+              {activeBookings.length > 0 && (
+                <button
+                  onClick={() => {
+                    const targetBooking = activeBookings.find((b: any) => ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status)) || activeBookings[0];
+                    setTicketPropertyId(targetBooking.propertyId);
+                    setTicketPropertyTitle(targetBooking.property?.title || '');
+                    setTicketError('');
+                    setTicketModalOpen(true);
+                  }}
+                  className="mt-5 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>Report First Issue</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid gap-4">
               {tickets.map((ticket: any) => (
-                <div key={ticket.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 rounded-xl border flex flex-col sm:flex-row justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-lg">{ticket.title}</h3>
-                      {getPriorityBadge(ticket.priority)}
+                <div key={ticket.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 rounded-2xl border flex flex-col justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="space-y-1.5 flex-1">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <h3 className="font-bold text-base text-zinc-950 dark:text-white">{ticket.title}</h3>
+                        {getPriorityBadge(ticket.priority)}
+                      </div>
+                      <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
+                        {ticket.description}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400 pt-1">
+                        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-emerald-500" /> {ticket.property?.title}</span>
+                        <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                        {ticket.scheduledDate && (
+                          <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold">
+                            <Clock className="w-3.5 h-3.5" /> Scheduled Visit: {new Date(ticket.scheduledDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-[var(--muted-foreground)] mb-3">{ticket.description}</p>
-                    <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                      <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {ticket.property.title}</span>
-                      <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                    <div className="shrink-0">
+                      {getStatusBadge(ticket.status)}
                     </div>
                   </div>
-                  <div className="flex items-start shrink-0">
-                    {getStatusBadge(ticket.status)}
-                  </div>
+
+                  {/* Photo Proof & Completion Proof Section */}
+                  {(ticket.imageUrl || ticket.completionImageUrl || ticket.resolutionNotes) && (
+                    <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center gap-3">
+                      {ticket.imageUrl && (
+                        <a 
+                          href={getImageUrl(ticket.imageUrl)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                        >
+                          <Camera className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>View Your Attached Photo Proof</span>
+                        </a>
+                      )}
+                      {ticket.completionImageUrl && (
+                        <a 
+                          href={getImageUrl(ticket.completionImageUrl)} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          <span>View Caretaker Completion Proof</span>
+                        </a>
+                      )}
+                      {ticket.resolutionNotes && (
+                        <div className="w-full mt-1 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-zinc-700 dark:text-zinc-300">
+                          <span className="font-bold text-emerald-800 dark:text-emerald-400">Resolution Note: </span>
+                          <span>{ticket.resolutionNotes}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1631,46 +1723,17 @@ function TenantDashboardContent() {
         </div>
       )}
 
-      {/* Ticket Modal */}
-      {ticketModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
-            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquarePlus className="w-5 h-5 text-[var(--primary)]" /> Report an Issue</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-6">Your landlord will be notified immediately.</p>
-            
-            {ticketError && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium">{ticketError}</div>}
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Title (What's wrong?)</label>
-                <input type="text" className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" placeholder="e.g. Leaking sink in bathroom" value={ticketTitle} onChange={(e) => setTicketTitle(e.target.value)} />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Priority Level</label>
-                <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={ticketPriority} onChange={(e) => setTicketPriority(e.target.value)}>
-                  <option value="LOW">Low - Not urgent</option>
-                  <option value="MEDIUM">Medium - Needs attention</option>
-                  <option value="HIGH">High - Impacts daily life</option>
-                  <option value="URGENT">Urgent - Emergency</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[100px]" placeholder="Provide more details about the issue..." value={ticketDesc} onChange={(e) => setTicketDesc(e.target.value)} />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4">
-                <button onClick={() => setTicketModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
-                <button onClick={() => { if (!ticketTitle || !ticketDesc) { setTicketError('Provide a title and description'); return; } ticketMutation.mutate({ propertyId: ticketPropertyId, title: ticketTitle, description: ticketDesc, priority: ticketPriority }); }} disabled={ticketMutation.isPending} className="px-6 py-2 bg-[var(--primary)] text-white text-sm font-bold rounded-lg flex items-center gap-2 hover:opacity-90 transition-opacity">
-                  {ticketMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />} Submit Ticket
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Overhauled Modern Report Issue Modal */}
+      <ReportIssueModal
+        isOpen={ticketModalOpen}
+        onClose={() => setTicketModalOpen(false)}
+        propertyId={ticketPropertyId}
+        propertyTitle={ticketPropertyTitle}
+        onSubmit={async (ticketData) => {
+          await ticketMutation.mutateAsync(ticketData);
+        }}
+        isSubmitting={ticketMutation.isPending}
+      />
     </div>
   );
 }
