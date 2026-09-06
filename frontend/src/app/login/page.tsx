@@ -52,6 +52,13 @@ export default function LoginPage() {
         return;
       }
 
+      if (response.data?.accessToken) {
+        localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+      }
+      if (response.data?.refreshToken) {
+        localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
+      }
+
       redirectByRole(response.data.user);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid email or password.');
@@ -69,6 +76,13 @@ export default function LoginPage() {
         tempToken,
         code: twoFactorCode.trim()
       });
+
+      if (response.data?.accessToken) {
+        localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+      }
+      if (response.data?.refreshToken) {
+        localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
+      }
 
       redirectByRole(response.data.user);
     } catch (err: any) {

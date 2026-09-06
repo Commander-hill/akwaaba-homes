@@ -39,6 +39,12 @@ export default function AdminLoginPage() {
       if (response.status === 200) {
         const userRole = response.data.user.role;
         if (userRole === 'ADMIN') {
+          if (response.data?.accessToken) {
+            localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+          }
+          if (response.data?.refreshToken) {
+            localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
+          }
           window.location.href = '/admin/dashboard';
         } else {
           await api.post('/auth/logout');
@@ -66,6 +72,12 @@ export default function AdminLoginPage() {
       if (response.status === 200) {
         const userRole = response.data.user.role;
         if (userRole === 'ADMIN') {
+          if (response.data?.accessToken) {
+            localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+          }
+          if (response.data?.refreshToken) {
+            localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
+          }
           window.location.href = '/admin/dashboard';
         } else {
           await api.post('/auth/logout');
