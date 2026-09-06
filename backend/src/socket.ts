@@ -90,17 +90,71 @@ export const initializeSocket = (server: HttpServer) => {
       }
     }
 
-    // Join a specific conversation room (optional, but good for keeping track of active chats)
-    socket.on('join_conversation', (conversationId: string) => {
-      socket.join(conversationId);
-      console.log(`User ${socket.user?.id} joined conversation ${conversationId}`);
+    // Join a specific conversation room (strictly authorized)
+    socket.on('join_conversation', async (conversationId: string) => {
+      try {
+        const userId = socket.user?.id;
+        if (!userId) {
+          socket.emit('error', { message: 'Authentication required to join conversation' });
+          return;
+        }
+
+        const conv = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+          select: { tenantId: true, landlordId: true }
+        });
+
+        if (!conv) {
+          socket.emit('error', { message: 'Conversation not found' });
+          return;
+        }
+
+        const isAuthorized = conv.tenantId === userId || conv.landlordId === userId || socket.user?.role === 'ADMIN';
+        if (!isAuthorized) {
+          console.warn(`🚨 Unauthorized socket room join attempt by user ${userId} for conversation ${conversationId}`);
+          socket.emit('error', { message: 'Forbidden: You are not a participant in this conversation' });
+          return;
+        }
+
+        socket.join(conversationId);
+        console.log(`User ${userId} securely joined conversation ${conversationId}`);
+      } catch (err) {
+        console.error('Error joining conversation via socket:', err);
+      }
     });
 
-    // Handle sending messages
+    // Handle sending messages (strictly authorized)
     socket.on('send_message', async (data: { conversationId: string, receiverId: string, content?: string, mediaUrl?: string, mediaType?: string, fileName?: string, duration?: number }) => {
       try {
+        const senderId = socket.user?.id;
+        if (!senderId) {
+          socket.emit('error', { message: 'Authentication required to send message' });
+          return;
+        }
+
         const { conversationId, receiverId, content, mediaUrl, mediaType, fileName, duration } = data;
-        const senderId = socket.user!.id;
+        if (!conversationId || (!content && !mediaUrl)) {
+          socket.emit('error', { message: 'Missing conversationId or content' });
+          return;
+        }
+
+        // Verify sender is participant of the conversation
+        const conv = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+          select: { tenantId: true, landlordId: true }
+        });
+
+        if (!conv) {
+          socket.emit('error', { message: 'Conversation not found' });
+          return;
+        }
+
+        const isAuthorized = conv.tenantId === senderId || conv.landlordId === senderId || socket.user?.role === 'ADMIN';
+        if (!isAuthorized) {
+          console.warn(`🚨 Unauthorized socket send_message attempt by user ${senderId} for conversation ${conversationId}`);
+          socket.emit('error', { message: 'Forbidden: You are not a participant in this conversation' });
+          return;
+        }
 
         // Save message to database
         const message = await prisma.message.create({
@@ -133,13 +187,17 @@ export const initializeSocket = (server: HttpServer) => {
       }
     });
 
-    // Handle typing indicators
+    // Handle typing indicators (safe check)
     socket.on('typing', (data: { conversationId: string, receiverId: string }) => {
-      socket.to(data.conversationId).emit('typing', { senderId: socket.user!.id });
+      if (socket.user?.id) {
+        socket.to(data.conversationId).emit('typing', { senderId: socket.user.id });
+      }
     });
 
     socket.on('stop_typing', (data: { conversationId: string, receiverId: string }) => {
-      socket.to(data.conversationId).emit('stop_typing', { senderId: socket.user!.id });
+      if (socket.user?.id) {
+        socket.to(data.conversationId).emit('stop_typing', { senderId: socket.user.id });
+      }
     });
 
     socket.on('disconnect', () => {

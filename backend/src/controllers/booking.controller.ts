@@ -490,6 +490,13 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       return;
     }
 
+    if (status === 'COMPLETED' && req.user.role !== 'ADMIN') {
+      res.status(403).json({ 
+        message: 'Forbidden: Tenancy can only transition to COMPLETED upon verified escrow payment or administrative review.' 
+      });
+      return;
+    }
+
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
@@ -506,6 +513,14 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
+    }
+
+    // Release reserved bed back to AVAILABLE if booking is rejected or cancelled
+    if ((status === 'REJECTED' || status === 'CANCELLED') && booking.bedId) {
+      await prisma.bed.update({
+        where: { id: booking.bedId },
+        data: { status: 'AVAILABLE' }
+      });
     }
 
     const updatedBooking = await prisma.booking.update({ where: { id }, data: { status } });
@@ -739,6 +754,13 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ 
         message: `Payment amount mismatch. Expected GHS ${booking.room!.price.toFixed(2)}, but received GHS ${(verifiedAmount / 100).toFixed(2)}.` 
       });
+      return;
+    }
+
+    // 4. Booking association assertion (Metadata check)
+    const txBookingId = verifyRes.data?.data?.metadata?.bookingId;
+    if (txBookingId && txBookingId !== booking.id) {
+      res.status(400).json({ message: 'Payment reference belongs to a different tenancy booking.' });
       return;
     }
 

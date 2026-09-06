@@ -29,18 +29,8 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
       });
 
       if (!activeBooking) {
-        // Double-check if booking exists without status constraint
-        const anyBooking = await prisma.booking.findFirst({
-          where: {
-            tenantId: req.user.id,
-            propertyId
-          }
-        });
-
-        if (!anyBooking && role !== 'TENANT') {
-          res.status(403).json({ message: 'Only tenants with a booked property can submit maintenance tickets' });
-          return;
-        }
+        res.status(403).json({ message: 'Only tenants with an active or confirmed booking at this property can submit maintenance tickets' });
+        return;
       }
     }
 

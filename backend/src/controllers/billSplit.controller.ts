@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -102,6 +102,17 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
 
     if (!participant) {
       res.status(404).json({ message: 'Participant record not found' });
+      return;
+    }
+
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const isCreator = participant.billSplit.creatorId === userId;
+    const isParticipantSelf = participant.userId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isCreator && !isParticipantSelf && !isAdmin) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to modify this bill split payment status' });
       return;
     }
 

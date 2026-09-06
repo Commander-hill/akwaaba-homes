@@ -262,9 +262,12 @@ export const uploadMedia = async (req: Request, res: Response): Promise<void> =>
     } else if (mime.startsWith('audio/')) {
       folder = 'chat/audio';
       resourceType = 'video'; // Cloudinary uses resource_type video for audio
-    } else if (mime.includes('pdf') || mime.includes('document')) {
+    } else if (mime === 'application/pdf') {
       folder = 'chat/documents';
       resourceType = 'auto';
+    } else {
+      res.status(400).json({ error: 'Unsupported file format. Only images, audio files, and PDFs are permitted.' });
+      return;
     }
 
     const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);

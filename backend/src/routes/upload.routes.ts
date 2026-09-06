@@ -2,16 +2,34 @@ import { Router } from 'express';
 import multer from 'multer';
 import { uploadAvatar, uploadVideo, uploadDocument, uploadPropertyImages, serveSecureDocument, uploadMedia } from '../controllers/upload.controller';
 import { authenticate } from '../middleware/auth.middleware';
+import { uploadRateLimiter } from '../middleware/rateLimiter.middleware';
 
 const router = Router();
+
+// Apply upload rate limiting to all upload operations
+router.use(uploadRateLimiter);
 
 // Storage configuration
 const storage = multer.memoryStorage();
 
-// General media upload (images, audio, PDF up to 25MB)
+// Allowed media MIME types for chat attachments
+const ALLOWED_MEDIA_MIMES = [
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a', 'audio/webm',
+  'application/pdf'
+];
+
+// General media upload (images, audio, PDF up to 25MB with strict file filter)
 const uploadMediaConfig = multer({
   storage,
-  limits: { fileSize: 25 * 1024 * 1024 }
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MEDIA_MIMES.includes(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype.startsWith('audio/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file format. Only images, audio, and PDF files are allowed.'));
+    }
+  }
 });
 
 // Avatar upload (images up to 2MB)
