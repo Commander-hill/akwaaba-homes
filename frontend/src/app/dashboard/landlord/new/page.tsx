@@ -7,7 +7,7 @@ import api from '@/lib/axios';
 import { 
   Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, 
   Image as ImageIcon, X, Plus, Trash2, AlertCircle, ArrowLeft,
-  ArrowRight, Check, CheckCircle2, ShieldCheck, Zap, Droplets,
+  ArrowRight, Check, CheckCircle2, Zap, Droplets,
   Shield, Car, Wind, Wifi, Dumbbell, Clock, KeyRound, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
@@ -425,10 +425,6 @@ export default function NewPropertyPage() {
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
               Publish Accommodation Listing
             </h1>
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132]" />
-            <span>Act 220 Verified Standard</span>
           </div>
         </div>
 

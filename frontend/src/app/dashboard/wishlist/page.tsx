@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import Link from 'next/link';
-import { Heart, MapPin, Building, ShieldCheck, Loader2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
+import { Heart, MapPin, Building, CheckCircle2, Loader2, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 import WishlistButton from '@/components/WishlistButton';
 
@@ -125,19 +125,19 @@ export default function WishlistPage() {
                   <div className="absolute top-4 right-4 z-10">
                     <WishlistButton propertyId={property.id} initialIsSaved={true} />
                   </div>
-
-                  {property.landlord?.isVerifiedLandlord && (
-                    <div className="absolute top-4 left-4 bg-blue-600 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      Verified Host
-                    </div>
-                  )}
                 </div>
 
                 <div className="p-5 flex flex-col flex-1">
-                  <h3 className="text-lg font-bold text-[var(--foreground)] line-clamp-1 leading-tight group-hover:text-[var(--primary)] transition-colors mb-1">
-                    {property.title}
-                  </h3>
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <h3 className="text-lg font-bold text-[var(--foreground)] line-clamp-1 leading-tight group-hover:text-[var(--primary)] transition-colors">
+                      {property.title}
+                    </h3>
+                    {property.landlord?.isVerifiedLandlord && (
+                      <span title="Verified Host">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] mb-3">
                     <MapPin className="w-4 h-4 text-[var(--secondary)]" />

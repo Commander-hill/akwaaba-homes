@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building, ShieldCheck } from 'lucide-react';
+import { Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LandlordSubscriptionPage() {
@@ -31,10 +31,6 @@ export default function LandlordSubscriptionPage() {
           <div>
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Listing Billing &amp; Subscriptions</h1>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage listing fees, verified search visibility, and active rental status.</p>
-          </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span>Paystack / MoMo Automated Billing</span>
           </div>
         </div>
 

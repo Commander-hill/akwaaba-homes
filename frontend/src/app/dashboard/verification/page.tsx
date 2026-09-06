@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { 
-  ShieldCheck, Loader2, ArrowRight, FileCheck, UploadCloud, 
+  CreditCard, Loader2, ArrowRight, FileCheck, UploadCloud, 
   CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock
 } from 'lucide-react';
 import api from '@/lib/axios';
@@ -133,14 +133,11 @@ export default function VerificationPage() {
     <div className="max-w-3xl space-y-6 pb-12">
       {/* Page Header */}
       <div>
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[11px] font-bold tracking-wider uppercase mb-2 border border-zinc-200/60 dark:border-zinc-700">
-          <Lock className="w-3 h-3 text-[#198754]" /> Statutory Compliance Vault
-        </div>
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
           Identity &amp; Host Certification
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Government-grade KYC verification via the National Identification Authority (NIA) and Lands Commission registry.
+          Identity verification and property deed certification.
         </p>
       </div>
 
@@ -148,26 +145,17 @@ export default function VerificationPage() {
       <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
           <div className="flex items-center gap-3.5">
-            <div className={clsx(
-              "w-11 h-11 rounded-xl flex items-center justify-center shrink-0 border",
-              isVerified ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400" :
-              isPending ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-600 dark:text-amber-400" :
-              isRejected ? "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400" :
-              "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-500"
-            )}>
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 shrink-0">
+              <CreditCard className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-zinc-950 dark:text-white">
                   Ghana Card (National ID)
                 </h2>
-                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/60 dark:border-zinc-700">
-                  NIA Tier-1
-                </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Required by Act 220 for legal tenancy contract signature validation.
+                Required for identity verification and digital lease agreements.
               </p>
             </div>
           </div>
@@ -240,8 +228,8 @@ export default function VerificationPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#198754]" />
-                  <span>Statutory Compliance Notice</span>
+                  <AlertCircle className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Submission Notice</span>
                 </div>
                 <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   Provide your exact Ghana Card PIN as printed on your national ID. Once submitted, submissions are locked to prevent identity tampering.
@@ -325,7 +313,7 @@ export default function VerificationPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Encrypting &amp; Submitting...</span>
+                      <span>Submitting...</span>
                     </>
                   ) : (
                     <>

@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, 
   CreditCard, CheckCircle, ExternalLink, Search, Users, Bed, 
-  TrendingUp, ShieldCheck, Eye
+  TrendingUp, Eye
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -215,10 +215,10 @@ export default function LandlordPropertiesPage() {
       {isListingBlocked && (
         <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 text-xs space-y-2">
           <div className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 text-sm">
-            <ShieldCheck className="w-4 h-4 text-amber-600" /> Property Listing Creation Locked
+            <AlertCircle className="w-4 h-4 text-amber-600" /> Verification Required to Publish Listings
           </div>
           <p className="leading-relaxed">
-            Under Ghana Rent Act statutory policy, landlords must complete profile identification and submit Ghana Card KYC before listing new properties.
+            To ensure trust and prevent fraudulent listings, please complete your profile details and verify your identity before creating new property listings.
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             {isProfileIncomplete && (
