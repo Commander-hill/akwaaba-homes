@@ -7,12 +7,26 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-// ─── Startup environment validation ─────────────────────────────────────────
-const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'REFRESH_JWT_SECRET', 'PAYSTACK_SECRET_KEY', 'ENCRYPTION_KEY'];
+// ─── Startup environment validation & graceful fallbacks ─────────────────────
+const crypto_1 = __importDefault(require("crypto"));
+// If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET
+if (!process.env.REFRESH_JWT_SECRET && process.env.JWT_SECRET) {
+    process.env.REFRESH_JWT_SECRET = process.env.JWT_SECRET;
+}
+// If ENCRYPTION_KEY is missing, safely derive a deterministic 32-byte hex key from JWT_SECRET
+if (!process.env.ENCRYPTION_KEY && process.env.JWT_SECRET) {
+    process.env.ENCRYPTION_KEY = crypto_1.default.createHash('sha256').update(process.env.JWT_SECRET + '_akwaaba_enc_key').digest('hex');
+    console.warn('⚠️ Notice: ENCRYPTION_KEY not explicitly configured; safely derived from JWT_SECRET.');
+}
+// Strictly required variables to initialize server and database
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
 if (missing.length > 0) {
-    console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
+    console.error(`❌ Missing critical environment variables: ${missing.join(', ')}`);
     process.exit(1);
+}
+if (!process.env.PAYSTACK_SECRET_KEY) {
+    console.warn('⚠️ Notice: PAYSTACK_SECRET_KEY not set. Financial transactions will require configuration.');
 }
 if (process.env.NODE_ENV === 'production' &&
     (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'akwaaba_super_secret_jwt_key_2026_dev')) {

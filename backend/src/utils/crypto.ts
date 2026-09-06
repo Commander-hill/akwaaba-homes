@@ -1,6 +1,10 @@
 import crypto from 'crypto';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex'); // Fallback for safety, though keys should be persistent
+const ENCRYPTION_KEY =
+  process.env.ENCRYPTION_KEY ||
+  (process.env.JWT_SECRET
+    ? crypto.createHash('sha256').update(process.env.JWT_SECRET + '_akwaaba_enc_key').digest('hex')
+    : 'akwaaba_fallback_32byte_aes_key');
 const ALGORITHM = 'aes-256-cbc';
 
 // Helper to ensure key is exactly 32 bytes

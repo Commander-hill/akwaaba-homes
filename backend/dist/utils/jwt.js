@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyRefreshToken = exports.verifyAccessToken = exports.generateRefreshToken = exports.generateAccessToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-dev-only-change-in-prod';
-const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET || 'fallback-refresh-secret-key-prod';
+const REFRESH_JWT_SECRET = process.env.REFRESH_JWT_SECRET || process.env.JWT_SECRET || 'fallback-refresh-secret-key-prod';
 const generateAccessToken = (payload) => {
     return jsonwebtoken_1.default.sign(payload, JWT_SECRET, { expiresIn: '15m' }); // 15 minutes
 };

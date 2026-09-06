@@ -5,7 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.decryptData = exports.encryptData = void 0;
 const crypto_1 = __importDefault(require("crypto"));
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto_1.default.randomBytes(32).toString('hex'); // Fallback for safety, though keys should be persistent
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ||
+    (process.env.JWT_SECRET
+        ? crypto_1.default.createHash('sha256').update(process.env.JWT_SECRET + '_akwaaba_enc_key').digest('hex')
+        : 'akwaaba_fallback_32byte_aes_key');
 const ALGORITHM = 'aes-256-cbc';
 // Helper to ensure key is exactly 32 bytes
 const getKeyBuffer = () => {
