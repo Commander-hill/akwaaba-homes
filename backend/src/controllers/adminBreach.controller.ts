@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import appCache from '../utils/cache';
+import { emitToUser, emitToAll } from '../socket';
 
 /**
  * Fetch all contract breach reports for admin moderation
@@ -225,6 +227,14 @@ export const auditLandlordDeed = async (req: Request, res: Response): Promise<vo
         landlordVerificationStatus: status
       }
     });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+
+    try {
+      emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: status === 'VERIFIED' });
+      emitToAll('user_updated', { userId: id });
+    } catch (e) {}
 
     // Send notification
     await prisma.notification.create({

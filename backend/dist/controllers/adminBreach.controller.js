@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.auditLandlordDeed = exports.getLandlordDeedAudits = exports.resolveBreachReport = exports.getAdminBreachReports = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const cache_1 = __importDefault(require("../utils/cache"));
+const socket_1 = require("../socket");
 /**
  * Fetch all contract breach reports for admin moderation
  */
@@ -211,6 +213,13 @@ const auditLandlordDeed = async (req, res) => {
                 landlordVerificationStatus: status
             }
         });
+        cache_1.default.del(`user:me:${id}`);
+        cache_1.default.flushAll();
+        try {
+            (0, socket_1.emitToUser)(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: status === 'VERIFIED' });
+            (0, socket_1.emitToAll)('user_updated', { userId: id });
+        }
+        catch (e) { }
         // Send notification
         await prisma_1.default.notification.create({
             data: {

@@ -440,6 +440,8 @@ const establishUserSessionAndRespond = async (
       lastName: user.lastName,
       studentId: user.studentId,
       twoFactorEnabled: !!user.twoFactorEnabled,
+      isVerifiedLandlord: !!user.isVerifiedLandlord,
+      landlordVerificationStatus: user.landlordVerificationStatus || 'NOT_SUBMITTED',
     },
   });
 };
@@ -637,6 +639,9 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         ghanaCardStatus: true,
         ghanaCardFrontUrl: true,
         ghanaCardBackUrl: true,
+        landlordDocUrl: true,
+        isVerifiedLandlord: true,
+        landlordVerificationStatus: true,
         otherNames: true,
         phoneNumber: true,
         gender: true,
@@ -674,6 +679,9 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     }
     if (user.ghanaCardBackUrl) {
       user.ghanaCardBackUrl = generateSignedDocumentUrl(user.ghanaCardBackUrl);
+    }
+    if (user.landlordDocUrl) {
+      user.landlordDocUrl = generateSignedDocumentUrl(user.landlordDocUrl);
     }
 
     const hasProperty = (user._count?.properties || 0) > 0;

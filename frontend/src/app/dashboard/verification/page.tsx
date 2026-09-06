@@ -129,6 +129,10 @@ export default function VerificationPage() {
   const isPending = session.ghanaCardStatus === 'PENDING';
   const isRejected = session.ghanaCardStatus === 'REJECTED';
 
+  const isLandlordVerified = session.isVerifiedLandlord === true || session.landlordVerificationStatus === 'VERIFIED';
+  const isLandlordPending = session.landlordVerificationStatus === 'PENDING';
+  const isLandlordRejected = session.landlordVerificationStatus === 'REJECTED';
+
   return (
     <div className="max-w-3xl space-y-6 pb-12">
       {/* Page Header */}
@@ -351,32 +355,50 @@ export default function VerificationPage() {
             <div>
               <span className={clsx(
                 "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border tracking-wide",
-                session.isVerifiedLandlord ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800" :
-                session.landlordVerificationStatus === 'PENDING' ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800" :
+                isLandlordVerified ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800" :
+                isLandlordPending ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800" :
+                isLandlordRejected ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800" :
                 "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
               )}>
-                {session.isVerifiedLandlord && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
-                {session.landlordVerificationStatus === 'PENDING' && <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />}
+                {isLandlordVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                {isLandlordPending && <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />}
+                {isLandlordRejected && <AlertCircle className="w-3.5 h-3.5 text-rose-600" />}
                 <span>
-                  {session.isVerifiedLandlord ? 'CERTIFIED HOST' : session.landlordVerificationStatus || 'UNVERIFIED'}
+                  {isLandlordVerified ? 'VERIFIED HOST' : isLandlordPending ? 'UNDER REVIEW' : isLandlordRejected ? 'REJECTED' : 'NOT SUBMITTED'}
                 </span>
               </span>
             </div>
           </div>
 
           <div className="pt-6">
-            {session.isVerifiedLandlord ? (
+            {isLandlordVerified ? (
               <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-4 flex items-start gap-3">
                 <div className="p-1 rounded-full bg-emerald-500 text-white shrink-0 mt-0.5">
                   <Check className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <div className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
-                    Host Deed Certified by Akwaaba Homes
+                    Property Ownership Deed Verified
                   </div>
                   <p className="text-xs text-emerald-700 dark:text-emerald-300/80 mt-0.5 leading-relaxed">
-                    Your property deeds are audited. All your student hostels and residential apartments display the <span className="font-bold text-[#0F5132] dark:text-emerald-400">Direct Landlord Verified</span> badge across search results.
+                    Your property ownership documents have been reviewed and approved. All your listings now display verified host status.
                   </p>
+                </div>
+              </div>
+            ) : isLandlordPending ? (
+              <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-zinc-900 dark:text-white">
+                      Document Submitted &amp; Awaiting Clearance
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
+                      Your property deed documentation has been uploaded and is currently under administrative review.
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
