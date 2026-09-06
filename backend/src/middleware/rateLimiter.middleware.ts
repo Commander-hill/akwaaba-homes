@@ -1,10 +1,10 @@
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
 
-// ─── Login brute-force guard (5 attempts per 15 mins per IP) ─────────────────
+// ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: process.env.NODE_ENV === 'production' ? 5 : 500,
   message: { error: 'Too many login attempts. Your IP has been temporarily restricted for 15 minutes to prevent brute-force attacks.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -14,7 +14,7 @@ export const loginRateLimiter = rateLimit({
 // ─── General auth routes: registration & refresh guard ─────────────────────
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15,
+  max: process.env.NODE_ENV === 'production' ? 15 : 500,
   message: { error: 'Too many authentication requests. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,

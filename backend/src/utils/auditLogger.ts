@@ -12,10 +12,10 @@ export const logAudit = async (
   try {
     await prisma.auditLog.create({
       data: {
-        userId,
+        user: { connect: { id: userId } },
         action,
         entity,
-        entityId,
+        entityId: entityId || 'SYSTEM',
         oldData: oldData ? JSON.stringify(oldData) : null,
         newData: newData ? JSON.stringify(newData) : null,
         ipAddress
