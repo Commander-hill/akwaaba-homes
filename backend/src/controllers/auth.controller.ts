@@ -19,6 +19,16 @@ import {
 } from '../utils/emailTemplate';
 import { emitToAll, emitToUser, getIO } from '../socket';
 import appCache from '../utils/cache';
+import {
+  generateTOTPSecret,
+  formatSecretKey,
+  getTOTPUri,
+  generateTOTPCode,
+  verifyTOTPCode,
+  generateRecoveryCodes,
+  verifyAndConsumeRecoveryCode,
+  generateQRCodeSvg
+} from '../utils/totp.service';
 
 
 
@@ -310,105 +320,195 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const currentTokenVersion = user.tokenVersion || 0;
-    const accessToken = generateAccessToken({ id: user.id, role: user.role, tokenVersion: currentTokenVersion });
-    const refreshToken = generateRefreshToken({ id: user.id, tokenVersion: currentTokenVersion });
-
-    // Parse User-Agent for Device Tracking
-    const parser = new UAParser(req.headers['user-agent']);
-    const browser = parser.getBrowser();
-    const os = parser.getOS();
-    const device = parser.getDevice();
-    const userAgentStr = `${browser.name || 'Unknown Browser'} on ${os.name || 'Unknown OS'}`;
-    const deviceFamilyStr = device.type ? `${device.vendor || ''} ${device.type}`.trim() : 'Desktop';
-    const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
-    const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
-
-    // Check if this device/IP is new (Anomaly / New Device Detection)
-    const existingSessionCount = await prisma.session.count({
-      where: {
-        userId: user.id,
-        userAgent: userAgentStr,
-        ipAddress: ipAddress
-      }
-    });
-
-    if (existingSessionCount === 0) {
-      // 🚨 Suspicious / New Device Sign-In Alert
-      try {
-        await prisma.notification.create({
-          data: {
-            userId: user.id,
-            type: 'SECURITY',
-            title: '🚨 New Device Sign-In Detected',
-            message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
-            link: '/dashboard/profile'
-          }
-        });
-
-        const { getIO } = await import('../socket');
-        getIO().to(user.id).emit('notification', {
-          title: '🚨 New Device Sign-In Detected',
-          message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
-          type: 'security'
-        });
-      } catch (e) { /* non-blocking */ }
-
-      try {
-        await logAudit(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
-      } catch (e) { /* non-blocking */ }
+    // CHECK TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE)
+    if (user.twoFactorEnabled) {
+      const tempToken = crypto.randomBytes(32).toString('hex');
+      appCache.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
+      res.status(200).json({
+        requireTwoFactor: true,
+        tempToken,
+        message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
+      });
+      return;
     }
 
-    // Save session in DB
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshToken,
-        ipAddress,
-        userAgent: userAgentStr,
-        deviceFamily: deviceFamilyStr,
-        osFamily: osFamilyStr,
-        expiresAt
-      }
-    });
-
-    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
-    
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 15 * 60 * 1000, // 15 mins
-      path: '/'
-    });
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/'
-    });
-
-    res.status(200).json({
-      message: 'Logged in successfully',
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        studentId: user.studentId, // Used to check if onboarding is complete
-      },
-    });
+    await establishUserSessionAndRespond(user, req, res);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Helper to establish user session, device tracking, cookies and JSON response
+const establishUserSessionAndRespond = async (
+  user: any,
+  req: Request,
+  res: Response,
+  message: string = 'Logged in successfully'
+): Promise<void> => {
+  const currentTokenVersion = user.tokenVersion || 0;
+  const accessToken = generateAccessToken({ id: user.id, role: user.role, tokenVersion: currentTokenVersion });
+  const refreshToken = generateRefreshToken({ id: user.id, tokenVersion: currentTokenVersion });
+
+  // Parse User-Agent for Device Tracking
+  const parser = new UAParser(req.headers['user-agent']);
+  const browser = parser.getBrowser();
+  const os = parser.getOS();
+  const device = parser.getDevice();
+  const userAgentStr = `${browser.name || 'Unknown Browser'} on ${os.name || 'Unknown OS'}`;
+  const deviceFamilyStr = device.type ? `${device.vendor || ''} ${device.type}`.trim() : 'Desktop';
+  const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
+  const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
+
+  // Check if this device/IP is new (Anomaly / New Device Detection)
+  const existingSessionCount = await prisma.session.count({
+    where: {
+      userId: user.id,
+      userAgent: userAgentStr,
+      ipAddress: ipAddress
+    }
+  });
+
+  if (existingSessionCount === 0) {
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'SECURITY',
+          title: '🚨 New Device Sign-In Detected',
+          message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
+          link: '/dashboard/profile'
+        }
+      });
+
+      const { getIO } = await import('../socket');
+      getIO().to(user.id).emit('notification', {
+        title: '🚨 New Device Sign-In Detected',
+        message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
+        type: 'security'
+      });
+    } catch (e) { /* non-blocking */ }
+
+    try {
+      await logAudit(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
+    } catch (e) { /* non-blocking */ }
+  }
+
+  // Save session in DB
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      refreshToken,
+      ipAddress,
+      userAgent: userAgentStr,
+      deviceFamily: deviceFamilyStr,
+      osFamily: osFamilyStr,
+      expiresAt
+    }
+  });
+
+  const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+  
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 15 * 60 * 1000, // 15 mins
+    path: '/'
+  });
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/'
+  });
+
+  res.status(200).json({
+    message,
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      studentId: user.studentId,
+      twoFactorEnabled: !!user.twoFactorEnabled,
+    },
+  });
+};
+
+export const login2FA = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tempToken, code } = req.body;
+
+    if (!tempToken || !code) {
+      res.status(400).json({ message: 'Missing temporary token or verification code' });
+      return;
+    }
+
+    const userId = appCache.get(`2fa_pending_${tempToken}`) as string;
+    if (!userId) {
+      res.status(401).json({ message: 'Two-factor session expired or invalid. Please sign in again.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+      res.status(400).json({ message: 'Two-factor authentication is not active on this account.' });
+      return;
+    }
+
+    const cleanCode = String(code).trim().toUpperCase();
+    let isTotpValid = false;
+    const decryptedSecret = decryptData(user.twoFactorSecret);
+
+    if (/^\d{6}$/.test(cleanCode)) {
+      isTotpValid = verifyTOTPCode(cleanCode, decryptedSecret);
+    }
+
+    let isRecoveryValid = false;
+    let updatedRecoveryCodes: string[] | null = null;
+    if (!isTotpValid) {
+      const recoveryCheck = verifyAndConsumeRecoveryCode(cleanCode, user.twoFactorRecoveryCodes);
+      if (recoveryCheck.valid) {
+        isRecoveryValid = true;
+        updatedRecoveryCodes = recoveryCheck.remainingHashedCodes;
+      }
+    }
+
+    if (!isTotpValid && !isRecoveryValid) {
+      res.status(401).json({ message: 'Invalid 2FA code or recovery code. Please try again.' });
+      return;
+    }
+
+    if (isRecoveryValid && updatedRecoveryCodes) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { twoFactorRecoveryCodes: JSON.stringify(updatedRecoveryCodes) }
+      });
+      try {
+        await logAudit(user.id, '2FA_RECOVERY_CODE_CONSUMED', 'User', user.id, null, { remainingCodes: updatedRecoveryCodes.length }, req.ip);
+      } catch (e) { /* non-blocking */ }
+    }
+
+    // Invalidate the pending 2FA token
+    appCache.del(`2fa_pending_${tempToken}`);
+
+    try {
+      await logAudit(user.id, 'LOGIN_2FA_SUCCESS', 'User', user.id, null, { method: isRecoveryValid ? 'RECOVERY_CODE' : 'TOTP' }, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    await establishUserSessionAndRespond(user, req, res, 'Two-factor authentication verified successfully');
+  } catch (error) {
+    console.error('login2FA error:', error);
+    res.status(500).json({ message: 'Internal server error during 2FA verification' });
   }
 };
 
@@ -916,5 +1016,193 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   } catch (error) {
     console.error('Error in reset password:', error);
     res.status(500).json({ message: 'Failed to reset password' });
+  }
+};
+
+// ─── TWO-FACTOR AUTHENTICATION (TOTP / RFC 6238) MANAGEMENT ───────────────────
+
+export const get2FAStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { twoFactorEnabled: true, twoFactorRecoveryCodes: true }
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    let remainingRecoveryCodes = 0;
+    if (user.twoFactorRecoveryCodes) {
+      try {
+        const parsed = JSON.parse(user.twoFactorRecoveryCodes);
+        if (Array.isArray(parsed)) remainingRecoveryCodes = parsed.length;
+      } catch (e) { /* ignore */ }
+    }
+
+    res.status(200).json({
+      twoFactorEnabled: !!user.twoFactorEnabled,
+      remainingRecoveryCodes
+    });
+  } catch (error) {
+    console.error('get2FAStatus error:', error);
+    res.status(500).json({ message: 'Failed to retrieve 2FA status' });
+  }
+};
+
+export const setup2FA = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const secret = generateTOTPSecret();
+    const uri = getTOTPUri(user.email, secret);
+    const qrCodeSvg = generateQRCodeSvg(uri, 240);
+    const { rawCodes, hashedCodes } = generateRecoveryCodes(8);
+
+    // Cache temporary setup data for 10 minutes
+    appCache.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
+
+    res.status(200).json({
+      secret,
+      formattedSecret: formatSecretKey(secret),
+      qrCodeSvg,
+      rawCodes,
+      otpauthUri: uri,
+      message: 'Scan the QR code with your authenticator app (Google Authenticator, Authy, Microsoft Authenticator) or enter the secret key manually.'
+    });
+  } catch (error) {
+    console.error('setup2FA error:', error);
+    res.status(500).json({ message: 'Failed to initialize 2FA setup' });
+  }
+};
+
+export const enable2FA = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { code } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!code || typeof code !== 'string') {
+      res.status(400).json({ message: 'Verification code is required' });
+      return;
+    }
+
+    const setupData = appCache.get(`2fa_setup_${userId}`) as { secret: string; hashedCodes: string[]; rawCodes: string[] } | undefined;
+    if (!setupData) {
+      res.status(400).json({ message: '2FA setup session expired. Please start the setup process again.' });
+      return;
+    }
+
+    const isValid = verifyTOTPCode(code.trim(), setupData.secret);
+    if (!isValid) {
+      res.status(400).json({ message: 'Invalid 6-digit code. Please verify the code displayed in your authenticator app.' });
+      return;
+    }
+
+    const encryptedSecret = encryptData(setupData.secret);
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: true,
+        twoFactorSecret: encryptedSecret,
+        twoFactorRecoveryCodes: JSON.stringify(setupData.hashedCodes)
+      }
+    });
+
+    appCache.del(`2fa_setup_${userId}`);
+
+    try {
+      await logAudit(userId, '2FA_ENABLED', 'User', userId, null, {}, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({
+      success: true,
+      message: 'Two-factor authentication has been successfully activated on your account!'
+    });
+  } catch (error) {
+    console.error('enable2FA error:', error);
+    res.status(500).json({ message: 'Failed to enable 2FA' });
+  }
+};
+
+export const disable2FA = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { password, code } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (!user.twoFactorEnabled) {
+      res.status(400).json({ message: '2FA is not currently enabled on your account.' });
+      return;
+    }
+
+    // Require either correct account password or valid current TOTP code to disable
+    let isAuthorized = false;
+
+    if (password) {
+      isAuthorized = await bcrypt.compare(password, user.passwordHash);
+    }
+
+    if (!isAuthorized && code && user.twoFactorSecret) {
+      const decryptedSecret = decryptData(user.twoFactorSecret);
+      isAuthorized = verifyTOTPCode(String(code).trim(), decryptedSecret);
+    }
+
+    if (!isAuthorized) {
+      res.status(401).json({ message: 'Invalid password or verification code. Cannot disable 2FA without valid authorization.' });
+      return;
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+        twoFactorRecoveryCodes: null
+      }
+    });
+
+    try {
+      await logAudit(userId, '2FA_DISABLED', 'User', userId, null, {}, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({
+      success: true,
+      message: 'Two-factor authentication has been disabled.'
+    });
+  } catch (error) {
+    console.error('disable2FA error:', error);
+    res.status(500).json({ message: 'Failed to disable 2FA' });
   }
 };

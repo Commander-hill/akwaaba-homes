@@ -1,5 +1,23 @@
 import { Router } from 'express';
-import { register, login, logout, refresh, verifyEmail, getMe, submitGhanaCard, submitLandlordVerification, updateProfile, requestProfileUnlock, forgotPassword, resetPassword } from '../controllers/auth.controller';
+import {
+  register,
+  login,
+  login2FA,
+  get2FAStatus,
+  setup2FA,
+  enable2FA,
+  disable2FA,
+  logout,
+  refresh,
+  verifyEmail,
+  getMe,
+  submitGhanaCard,
+  submitLandlordVerification,
+  updateProfile,
+  requestProfileUnlock,
+  forgotPassword,
+  resetPassword
+} from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter } from '../middleware/rateLimiter.middleware';
@@ -9,6 +27,7 @@ const router = Router();
 
 router.post('/register', authRateLimiter, validate(registerValidation), register);
 router.post('/login', loginRateLimiter, validate(loginValidation), login);
+router.post('/login/2fa', loginRateLimiter, login2FA);
 router.post('/logout', logout);
 router.post('/refresh', authRateLimiter, refresh);
 router.post('/verify-email', otpRateLimiter, verifyEmail);
@@ -16,6 +35,12 @@ router.post('/ghana-card', authenticate, submitGhanaCard);
 router.post('/landlord-verification', authenticate, submitLandlordVerification);
 router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
 router.post('/reset-password', passwordResetRateLimiter, resetPassword);
+
+// Two-Factor Authentication Management (Authenticated)
+router.get('/2fa/status', authenticate, get2FAStatus);
+router.post('/2fa/setup', authenticate, setup2FA);
+router.post('/2fa/enable', authenticate, enable2FA);
+router.post('/2fa/disable', authenticate, disable2FA);
 
 // Protected routes
 router.get('/me', authenticate, getMe);

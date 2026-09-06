@@ -3,7 +3,12 @@ import axios from 'axios';
 import crypto from 'crypto';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
-import { notifyBookingStatusChanged, notifyPayoutSent } from '../utils/notification.service';
+import { notifyBookingStatusChanged, notifyPayoutSent, getTransporter } from '../utils/notification.service';
+import appCache from '../utils/cache';
+import { decryptData } from '../utils/crypto';
+import { verifyTOTPCode, verifyAndConsumeRecoveryCode } from '../utils/totp.service';
+import { renderInstitutionalEmail, emailBadgeHtml, emailCardHtml } from '../utils/emailTemplate';
+import { logAudit } from '../utils/auditLogger';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 
@@ -41,6 +46,82 @@ async function createPaystackRecipient(
   return res.data.data.recipient_code;
 }
 
+// ─── POST /api/v1/payouts/otp ───────────────────────────────────────────────
+export const requestPayoutOTP = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user?.id;
+    if (!landlordId || req.user?.role !== 'LANDLORD') {
+      res.status(403).json({ message: 'Forbidden — Landlords only' });
+      return;
+    }
+
+    const landlord = await prisma.user.findUnique({
+      where: { id: landlordId },
+      select: { email: true, firstName: true }
+    });
+
+    if (!landlord) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // Generate 6-digit OTP code
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    appCache.set(`payout_otp_${landlordId}`, otpCode, 300); // 5 minutes TTL
+
+    const transporter = getTransporter();
+    if (transporter) {
+      const bodyHtml = `
+        <div style="margin-bottom:24px;">
+          <div style="margin-bottom:12px;">
+            ${emailBadgeHtml({ label: 'STEP-UP SECURITY', value: 'WITHDRAWAL AUTHORIZATION', variant: 'emerald' })}
+          </div>
+          <h2 style="color:#0F172A;font-size:20px;font-weight:800;margin:0 0 10px;line-height:1.3;">
+            Authorize Mobile Money / Bank Withdrawal
+          </h2>
+          <p style="color:#475569;font-size:14px;line-height:1.7;margin:0;">
+            Dear <strong>${landlord.firstName}</strong>, a withdrawal of rental earnings was initiated from your landlord balance.
+          </p>
+          <div style="background:#F0FDF4;border:2px dashed #0F5132;border-radius:12px;padding:20px;text-align:center;margin:24px 0;">
+            <p style="color:#64748B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">
+              Your 6-Digit One-Time Authorization Code
+            </p>
+            <div style="font-size:32px;font-weight:900;letter-spacing:8px;color:#0F5132;font-family:ui-monospace,Menlo,monospace;">
+              ${otpCode}
+            </div>
+            <p style="color:#94A3B8;font-size:11px;margin:8px 0 0;">
+              This code expires in 5 minutes. Never share this authorization code with anyone.
+            </p>
+          </div>
+          <p style="color:#64748B;font-size:13px;line-height:1.6;margin:0;">
+            If you did not initiate this withdrawal, please contact Akwaaba Homes fraud support immediately and change your account password.
+          </p>
+        </div>
+      `;
+
+      transporter.sendMail({
+        from: `"Akwaaba Security" <${process.env.SMTP_USER}>`,
+        to: landlord.email,
+        subject: `[Akwaaba Homes] ${otpCode} is your withdrawal authorization code`,
+        html: renderInstitutionalEmail({
+          title: 'Withdrawal Authorization Code',
+          preheader: `Use code ${otpCode} to authorize your cash payout`,
+          categoryTag: 'FINANCIAL SECURITY',
+          bodyHtml
+        })
+      }).catch(err => console.error('Failed to send payout OTP email:', err));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `A 6-digit authorization code has been dispatched to ${landlord.email}. Code expires in 5 minutes.`
+    });
+  } catch (error) {
+    console.error('requestPayoutOTP error:', error);
+    res.status(500).json({ message: 'Failed to generate payout OTP' });
+  }
+};
+
 // ─── POST /api/v1/payouts/request ───────────────────────────────────────────
 export const requestPayout = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -50,7 +131,7 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const { amount, recipientType, accountName, accountNumber, bankOrNetwork } = req.body;
+    const { amount, recipientType, accountName, accountNumber, bankOrNetwork, twoFactorCode, emailOtp } = req.body;
 
     if (!amount || !recipientType || !accountName || !accountNumber || !bankOrNetwork) {
       res.status(400).json({ message: 'All payout fields are required' });
@@ -61,6 +142,93 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ message: 'Minimum withdrawal amount is GHS 10' });
       return;
     }
+
+    // ─── STEP-UP AUTHENTICATION (TOTP / EMAIL OTP) ──────────────────────
+    const landlord = await prisma.user.findUnique({
+      where: { id: landlordId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        twoFactorEnabled: true,
+        twoFactorSecret: true,
+        twoFactorRecoveryCodes: true
+      }
+    });
+
+    if (!landlord) {
+      res.status(404).json({ message: 'Landlord not found' });
+      return;
+    }
+
+    let authPassed = false;
+    let authMethodUsed = '';
+
+    if (landlord.twoFactorEnabled && landlord.twoFactorSecret) {
+      if (twoFactorCode) {
+        const cleanCode = String(twoFactorCode).trim();
+        const decryptedSecret = decryptData(landlord.twoFactorSecret);
+        if (/^\d{6}$/.test(cleanCode) && verifyTOTPCode(cleanCode, decryptedSecret)) {
+          authPassed = true;
+          authMethodUsed = 'TOTP_2FA';
+        } else {
+          // Check recovery code
+          const recoveryRes = verifyAndConsumeRecoveryCode(cleanCode, landlord.twoFactorRecoveryCodes);
+          if (recoveryRes.valid && recoveryRes.remainingHashedCodes) {
+            await prisma.user.update({
+              where: { id: landlord.id },
+              data: { twoFactorRecoveryCodes: JSON.stringify(recoveryRes.remainingHashedCodes) }
+            });
+            authPassed = true;
+            authMethodUsed = '2FA_RECOVERY_CODE';
+          }
+        }
+      } else if (emailOtp) {
+        const cachedOtp = appCache.get(`payout_otp_${landlordId}`);
+        if (cachedOtp && String(cachedOtp).trim() === String(emailOtp).trim()) {
+          authPassed = true;
+          authMethodUsed = 'EMAIL_OTP';
+          appCache.del(`payout_otp_${landlordId}`);
+        }
+      }
+
+      if (!authPassed) {
+        res.status(403).json({
+          requireStepUp: true,
+          method: '2FA_OR_EMAIL',
+          message: 'Step-up authentication required. Please enter your 6-digit TOTP code or request an email OTP.'
+        });
+        return;
+      }
+    } else {
+      // 2FA not enabled on account: Require 6-digit Email OTP
+      if (!emailOtp) {
+        res.status(403).json({
+          requireStepUp: true,
+          method: 'EMAIL_OTP',
+          message: 'Security authorization code required. Please click "Request Email Code" to authorize this withdrawal.'
+        });
+        return;
+      }
+
+      const cachedOtp = appCache.get(`payout_otp_${landlordId}`);
+      if (!cachedOtp || String(cachedOtp).trim() !== String(emailOtp).trim()) {
+        res.status(403).json({
+          requireStepUp: true,
+          method: 'EMAIL_OTP',
+          message: 'Invalid or expired authorization code. Please request a new code.'
+        });
+        return;
+      }
+
+      authPassed = true;
+      authMethodUsed = 'EMAIL_OTP';
+      appCache.del(`payout_otp_${landlordId}`);
+    }
+
+    try {
+      await logAudit(landlordId, 'PAYOUT_STEP_UP_PASSED', 'PayoutRequest', null, null, { amount, authMethodUsed }, req.ip);
+    } catch (e) { /* non-blocking */ }
 
     // Calculate net earnings available for withdrawal with atomic transaction lock
     const sysConfig = await getSystemConfig();

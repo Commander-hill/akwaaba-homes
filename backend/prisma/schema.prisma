@@ -52,6 +52,11 @@ model User {
   lockoutUntil           DateTime?
   tokenVersion           Int       @default(0)
 
+  // Two-Factor Authentication (2FA / TOTP)
+  twoFactorEnabled       Boolean   @default(false)
+  twoFactorSecret        String?   // AES-256 encrypted TOTP base32 secret
+  twoFactorRecoveryCodes String?   // JSON array of hashed one-time backup recovery codes
+
   isSuspended            Boolean   @default(false)
   isProfileLocked        Boolean   @default(false)
   profileUnlockRequested Boolean   @default(false)

@@ -2,25 +2,24 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
-  withCredentials: true, // Crucial for sending/receiving HTTP-only cookies
+  withCredentials: true, // Strict HTTP-only cookie authentication
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Purge any legacy tokens from localStorage to enforce pure httpOnly security
+if (typeof window !== 'undefined') {
+  try {
+    localStorage.removeItem('akwaaba_access_token');
+    localStorage.removeItem('akwaaba_refresh_token');
+  } catch (e) {
+    // Non-blocking in sandboxed environments
+  }
+}
+
 let isRefreshing = false;
 let failedQueue: any[] = [];
-
-// Attach token from localStorage if available (Fallback for strict browsers blocking 3rd-party cookies)
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('akwaaba_access_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
@@ -36,17 +35,6 @@ const processQueue = (error: any, token: string | null = null) => {
 
 api.interceptors.response.use(
   (response) => {
-    // If the server returns a token in the payload (login/refresh fallback), save it
-    if (typeof window !== 'undefined' && response.data?.accessToken) {
-      localStorage.setItem('akwaaba_access_token', response.data.accessToken);
-    }
-    if (typeof window !== 'undefined' && response.data?.refreshToken) {
-      localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
-    }
-    if (typeof window !== 'undefined' && response.config.url?.includes('/auth/logout')) {
-      localStorage.removeItem('akwaaba_access_token');
-      localStorage.removeItem('akwaaba_refresh_token');
-    }
     return response;
   },
   async (error) => {
@@ -57,10 +45,7 @@ api.interceptors.response.use(
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          if (token && originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-          }
+        }).then(() => {
           return api(originalRequest);
         }).catch(err => {
           return Promise.reject(err);
@@ -71,25 +56,13 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
-        const refreshRes = await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
-        const newAccessToken = refreshRes.data?.accessToken;
-
-        if (newAccessToken && typeof window !== 'undefined') {
-          localStorage.setItem('akwaaba_access_token', newAccessToken);
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          }
-        }
-
-        processQueue(null, newAccessToken);
+        // Rely exclusively on browser-sent httpOnly refreshToken cookie
+        await api.post('/auth/refresh', {});
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Only redirect to login if refreshToken is genuinely rejected
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('akwaaba_access_token');
-          localStorage.removeItem('akwaaba_refresh_token');
           const publicPaths = ['/login', '/register', '/admin/login', '/forgot-password', '/reset-password'];
           if (!publicPaths.includes(window.location.pathname) && window.location.pathname !== '/') {
             window.location.href = '/login';
