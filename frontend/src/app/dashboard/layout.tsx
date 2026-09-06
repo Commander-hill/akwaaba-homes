@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/dashboard/caretaker');
       } else if (user.role === 'TENANT' && (pathname.startsWith('/dashboard/landlord') || pathname.startsWith('/dashboard/caretaker'))) {
         router.push('/dashboard/tenant');
-      } else if (user.role === 'LANDLORD' && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/caretaker'))) {
+      } else if (user.role === 'LANDLORD' && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/caretaker') || pathname.startsWith('/dashboard/roommates'))) {
         router.push('/dashboard/landlord');
       }
     }

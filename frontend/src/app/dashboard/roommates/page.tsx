@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
@@ -44,6 +44,22 @@ export default function RoommatesPage() {
     studyHabits: 'QUIET',
     bio: ''
   });
+
+  // Protect page: strictly for tenants / seekers
+  const { data: userResponse } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data;
+    },
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (userResponse?.user?.role === 'LANDLORD') {
+      router.replace('/dashboard/landlord');
+    }
+  }, [userResponse, router]);
 
   // Fetch roommate profile & matches
   const { data: matchResponse, isLoading: isLoadingMatches } = useQuery({

@@ -56,10 +56,18 @@ export default function Navbar() {
   const role = userResponse?.user?.role;
   const dashboardHref = role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
 
+  const isLandlord = role === 'LANDLORD' || pathname?.startsWith('/dashboard/landlord');
+  const isStaff = role === 'CARETAKER' || role === 'STAFF' || pathname?.startsWith('/dashboard/caretaker');
+
   const navLinks = [
     { name: 'Home', href: '/' },
     { name: 'Browse Accommodations', href: '/properties' },
-    { name: 'Roommate Matcher', href: '/dashboard/roommates' },
+    ...(isLandlord 
+      ? [{ name: 'My Properties', href: '/dashboard/landlord/properties' }]
+      : isStaff 
+        ? []
+        : [{ name: 'Roommate Matcher', href: '/dashboard/roommates' }]
+    ),
   ];
   
   return (
@@ -116,7 +124,7 @@ export default function Navbar() {
                       href={link.href}
                       id={isProperties ? 'tour-nav-properties' : undefined}
                       className={clsx(
-                        "px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors",
+                        "px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap",
                         isActive
                           ? "text-[#0F5132] dark:text-[#198754] bg-emerald-50 dark:bg-emerald-950/40 font-bold"
                           : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/60"
