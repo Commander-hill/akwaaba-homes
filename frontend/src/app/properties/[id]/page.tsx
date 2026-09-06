@@ -86,11 +86,46 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
   }, [session, viewingPhone]);
 
+  const currentRoom = property?.rooms?.find((r: any) => r.id === selectedRoomId) || property?.rooms?.[0];
+
   useEffect(() => {
     if (property?.rooms && property.rooms.length > 0 && !selectedRoomId) {
       setSelectedRoomId(property.rooms[0].id);
     }
   }, [property, selectedRoomId]);
+
+  // Automatically pre-select first available unit & bed slot when room is selected
+  useEffect(() => {
+    if (!currentRoom?.roomUnits || currentRoom.roomUnits.length === 0) {
+      setSelectedRoomUnitId('');
+      setSelectedBedId('');
+      return;
+    }
+
+    let targetUnit = currentRoom.roomUnits.find((u: any) => u.id === selectedRoomUnitId);
+
+    if (!targetUnit) {
+      targetUnit = currentRoom.roomUnits.find((u: any) => 
+        u.beds && u.beds.some((b: any) => b.status === 'AVAILABLE')
+      ) || currentRoom.roomUnits[0];
+
+      if (targetUnit) {
+        setSelectedRoomUnitId(targetUnit.id);
+      }
+    }
+
+    if (targetUnit?.beds && targetUnit.beds.length > 0) {
+      const isCurrentBedValid = targetUnit.beds.some((b: any) => b.id === selectedBedId && b.status === 'AVAILABLE');
+      if (!isCurrentBedValid) {
+        const firstAvailableBed = targetUnit.beds.find((b: any) => b.status === 'AVAILABLE') || targetUnit.beds[0];
+        if (firstAvailableBed) {
+          setSelectedBedId(firstAvailableBed.id);
+        }
+      }
+    } else {
+      setSelectedBedId('');
+    }
+  }, [currentRoom, selectedRoomUnitId, selectedBedId]);
 
   const { data: reviewsData } = useQuery({
     queryKey: ['reviews', propertyId],
@@ -647,8 +682,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                             checked={selectedRoomId === room.id}
                             onChange={() => {
                               setSelectedRoomId(room.id);
-                              setSelectedRoomUnitId('');
-                              setSelectedBedId('');
+                              setBookingMessage(null);
                             }}
                             className="accent-[#0F5132]"
                           />
@@ -668,6 +702,120 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </label>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Unit Number & Bed Space Selection */}
+              {currentRoom && currentRoom.roomUnits && currentRoom.roomUnits.length > 0 && (
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800/40 rounded-xl border border-zinc-200 dark:border-zinc-700 space-y-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                        Select Unit / Door
+                      </label>
+                      <span className="text-[10px] text-zinc-400 font-medium">
+                        {currentRoom.roomUnits.length} {currentRoom.roomUnits.length === 1 ? 'unit' : 'units'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 max-h-44 overflow-y-auto pr-1">
+                      {currentRoom.roomUnits.map((unit: any) => {
+                        const availableBedsCount = unit.beds?.filter((b: any) => b.status === 'AVAILABLE').length || 0;
+                        const isAvailable = availableBedsCount > 0;
+                        const isSelected = selectedRoomUnitId === unit.id;
+
+                        return (
+                          <button
+                            key={unit.id}
+                            type="button"
+                            disabled={!isAvailable}
+                            onClick={() => {
+                              setSelectedRoomUnitId(unit.id);
+                              setBookingMessage(null);
+                              const firstAvail = unit.beds?.find((b: any) => b.status === 'AVAILABLE') || unit.beds?.[0];
+                              if (firstAvail) setSelectedBedId(firstAvail.id);
+                            }}
+                            className={clsx(
+                              "p-2 rounded-lg border text-left transition-all cursor-pointer text-xs",
+                              isSelected
+                                ? "bg-[#0F5132]/10 border-[#0F5132] text-zinc-950 dark:text-white font-bold ring-1 ring-[#0F5132]"
+                                : isAvailable
+                                ? "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 text-zinc-800 dark:text-zinc-200"
+                                : "bg-zinc-100 dark:bg-zinc-800/20 border-zinc-200 dark:border-zinc-800 text-zinc-400 cursor-not-allowed opacity-50"
+                            )}
+                          >
+                            <div className="font-bold flex items-center justify-between">
+                              <span>{unit.unitNumber}</span>
+                              {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132]"></span>}
+                            </div>
+                            <div className="text-[10px] text-zinc-500 font-normal">
+                              {unit.floor ? `Floor ${unit.floor} • ` : ''}
+                              {isAvailable ? `${availableBedsCount} available` : 'Occupied'}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Bed Slot Selection (if unit has multiple beds) */}
+                  {(() => {
+                    const selectedUnit = currentRoom.roomUnits.find((u: any) => u.id === selectedRoomUnitId);
+                    if (!selectedUnit?.beds || selectedUnit.beds.length === 0) return null;
+
+                    // If unit has only 1 bed, auto-allocated
+                    if (selectedUnit.beds.length === 1) {
+                      return (
+                        <div className="flex items-center justify-between text-[11px] pt-2 border-t border-zinc-200 dark:border-zinc-700/60 text-zinc-500">
+                          <span>Allocated Space:</span>
+                          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                            {selectedUnit.beds[0].bedNumber} (Primary Space)
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="pt-2 border-t border-zinc-200 dark:border-zinc-700/60">
+                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
+                          Select Bed Slot
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {selectedUnit.beds.map((bed: any) => {
+                            const isAvail = bed.status === 'AVAILABLE';
+                            const isBedSelected = selectedBedId === bed.id;
+
+                            return (
+                              <button
+                                key={bed.id}
+                                type="button"
+                                disabled={!isAvail}
+                                onClick={() => {
+                                  setSelectedBedId(bed.id);
+                                  setBookingMessage(null);
+                                }}
+                                className={clsx(
+                                  "p-2 rounded-lg border text-left transition-all text-xs cursor-pointer",
+                                  isBedSelected
+                                    ? "bg-[#0F5132]/10 border-[#0F5132] text-zinc-950 dark:text-white font-bold ring-1 ring-[#0F5132]"
+                                    : isAvail
+                                    ? "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 text-zinc-800 dark:text-zinc-200"
+                                    : "bg-zinc-100 dark:bg-zinc-800/20 border-zinc-200 dark:border-zinc-800 text-zinc-400 cursor-not-allowed opacity-50"
+                                )}
+                              >
+                                <div className="font-bold flex items-center justify-between">
+                                  <span>{bed.bedNumber}</span>
+                                  {isBedSelected && <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132]"></span>}
+                                </div>
+                                <div className="text-[10px] text-zinc-500 font-normal">
+                                  {isAvail ? 'Available' : 'Booked'}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -725,7 +873,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   disabled={isBooking}
                   className="w-full py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Building2 className="w-4 h-4" />}
                   <span>Apply for Tenancy &amp; Reserve</span>
                 </button>
 
