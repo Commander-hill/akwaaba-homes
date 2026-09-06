@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -250,9 +250,8 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
                 <div className="text-xs font-bold text-zinc-200 truncate">
                   {user?.firstName || 'User'} {user?.lastName || ''}
                 </div>
-                <div className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
-                  <ShieldCheck className="w-3 h-3" />
-                  <span>KYC Verified</span>
+                <div className="text-[10px] text-zinc-400 font-medium capitalize truncate">
+                  {user?.role ? user.role.toLowerCase() : 'Resident'}
                 </div>
               </div>
             )}
@@ -260,8 +259,8 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
 
           {/* Collapsed Tooltip for Profile */}
           {isCollapsed && (
-            <div className="absolute left-full ml-3 px-3 py-1.5 bg-zinc-900 text-zinc-200 text-xs font-semibold rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-zinc-800">
-              {user?.firstName || ''} {user?.lastName || ''} • KYC Verified
+            <div className="absolute left-full ml-3 px-3 py-1.5 bg-zinc-900 text-zinc-200 text-xs font-semibold rounded-lg shadow-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border border-zinc-800 capitalize">
+              {user?.firstName || ''} {user?.lastName || ''} • {user?.role ? user.role.toLowerCase() : 'Resident'}
             </div>
           )}
         </div>

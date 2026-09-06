@@ -377,9 +377,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 {property.type || 'Residential Tenancy'}
               </span>
               {property.landlord?.isVerifiedLandlord && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Direct Owner • Act 220 Verified</span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  <span>Verified Host</span>
                 </span>
               )}
             </div>
@@ -740,12 +740,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 </button>
               </div>
 
-              <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-zinc-500">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132]" /> Ghana Card Verified
-                </span>
-                <span>•</span>
-                <span>Act 220 Lease Agreement</span>
+              <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-zinc-400">
+                <Lock className="w-3 h-3 text-zinc-400" />
+                <span>Protected by MoMo escrow payment</span>
               </div>
             </form>
           </div>

@@ -386,17 +386,19 @@ export default function RoommatesPage() {
                           </div>
                         )}
                         <div className="truncate">
-                          <h3 className="font-bold text-sm text-zinc-950 dark:text-white truncate">
-                            {match.user.firstName} {match.user.lastName}
-                          </h3>
+                          <div className="flex items-center gap-1.5 truncate">
+                            <h3 className="font-bold text-sm text-zinc-950 dark:text-white truncate">
+                              {match.user.firstName} {match.user.lastName}
+                            </h3>
+                            {match.user.ghanaCardStatus === 'APPROVED' && (
+                              <span title="Verified Resident">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-zinc-500 truncate mt-0.5">
                             {match.user.programmeOfStudy || 'Working Professional'}
                           </div>
-                          {match.user.ghanaCardStatus === 'APPROVED' && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0F5132] dark:text-emerald-400">
-                              <ShieldCheck className="w-3 h-3" /> Ghana Card Verified
-                            </span>
-                          )}
                         </div>
                       </div>
 

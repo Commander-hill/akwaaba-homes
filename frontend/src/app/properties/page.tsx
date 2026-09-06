@@ -2,10 +2,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Search, MapPin, Filter, Loader2, BedDouble, X, Map as MapIcon, 
-  Grid2X2, ShieldCheck, CheckCircle2, Building, Home, Bed, 
+  Search, SlidersHorizontal, MapPin, Filter, Loader2, Map as MapIcon,
+  Grid2X2, CheckCircle2, Building, Home, Bed, 
   Zap, Droplets, Wind, Shield, Wifi, Dumbbell, Car, UtensilsCrossed,
-  Sparkles, ArrowRight
+  X, Sparkles, ChevronDown, Check, ArrowRight, BedDouble, AlertCircle
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import api from '@/lib/axios';
@@ -461,8 +461,8 @@ export default function PropertiesPage() {
                           </div>
                         ) : (
                           <div className="bg-zinc-50 dark:bg-zinc-900/60 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800 text-[11px] flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
-                            <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                            <span className="font-medium truncate">Direct Owner • Act 220 Verified Tenancy</span>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span className="font-medium truncate">Direct Landlord • Verified</span>
                           </div>
                         )}
                         

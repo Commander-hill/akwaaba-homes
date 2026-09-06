@@ -5,8 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, 
-  Globe, LogOut, CheckCircle2, AlertTriangle, Clock, ShieldAlert, Lock, User, Check, Building2, GraduationCap,
-  KeyRound, QrCode, Copy, Download, X, ShieldCheck
+  Globe, LogOut, CheckCircle2, AlertTriangle, Clock, Lock, User, Check, Building2, GraduationCap,
+  KeyRound, QrCode, Copy, Download, X
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -787,7 +787,7 @@ export default function ProfilePage() {
                     {isSettingUp2FA ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <KeyRound className="w-3.5 h-3.5" />
                     )}
                     Set Up Authenticator App
                   </button>
@@ -813,8 +813,8 @@ export default function ProfilePage() {
           {/* Header Action Card */}
           <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h3 className="font-bold text-sm text-zinc-950 dark:text-white flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-[#198754]" /> Active Authenticated Sessions
+              <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
+                Active Authenticated Sessions
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
                 Review all devices currently authorized to access your account. Revoke any unrecognized browser session immediately.
@@ -990,10 +990,10 @@ export default function ProfilePage() {
       {setupModalOpen && setupData && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto animate-in">
           <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 max-w-lg w-full border border-zinc-200 dark:border-zinc-800 shadow-2xl space-y-6 my-8">
-            <div className="flex justify-between items-center pb-2 border-b border-zinc-100 dark:border-zinc-800">
+            <div className="flex justify-between items-center pb-3 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[#0F5132] dark:text-[#198754]">
-                  <KeyRound className="w-5 h-5" />
+                <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300">
+                  <KeyRound className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
@@ -1116,7 +1116,7 @@ export default function ProfilePage() {
                     disabled={confirmationCode.trim().length !== 6 || isEnabling2FA}
                     className="px-6 py-2.5 text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] rounded-xl shadow-xs transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                   >
-                    {isEnabling2FA ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    {isEnabling2FA ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                     Activate 2FA
                   </button>
                 </div>

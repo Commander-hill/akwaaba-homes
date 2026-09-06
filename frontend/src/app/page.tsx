@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { 
-  Search, MapPin, Building, ShieldCheck, Shield, Users, 
+  Search, MapPin, Building, Shield, Users, 
   ArrowRight, CheckCircle2, Lock, DollarSign, Wrench, ChevronRight,
   GraduationCap, Clock, HelpCircle, FileText, Check, Sparkles,
   Zap, Compass, PhoneCall, AlertCircle, Eye, BedDouble, Droplet
@@ -107,10 +107,10 @@ export default function Home() {
             {/* Left Column: Clear Editorial Messaging */}
             <div className="lg:col-span-7 space-y-6">
               
-              {/* Trust Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-xs font-bold tracking-tight">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Ghana Rent Act (Act 220) &amp; Ghana Card KYC Verified</span>
+              {/* Editorial Category Eyebrow */}
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide uppercase">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Direct Landlord &amp; Hostel Network</span>
               </div>
 
               {/* Editorial Title */}
@@ -279,42 +279,42 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/50">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
                 <Lock className="w-4 h-4" />
               </div>
               <div>
                 <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Escrow Protected</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Rent safely held until on-site key handover</p>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Rent released after on-site key handover</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-800/50">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <CheckCircle2 className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Ghana Card KYC</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Verified landlord &amp; caretaker identities</p>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Identity Verified</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Verified landlord &amp; caretaker accounts</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-800/50">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
                 <Zap className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Instant MoMo Payouts</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">MTN, Telecel Cash, AT &amp; Bank Transfer</p>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Direct MoMo Payouts</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">MTN, Telecel Cash &amp; Bank Transfer</p>
               </div>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-800/50">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
                 <FileText className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Act 220 Legal Leases</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Statutory tenancy contracts with SHA-256 seal</p>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Digital Tenancy Leases</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">E-signed agreements with statutory audit seals</p>
               </div>
             </div>
 
@@ -506,19 +506,21 @@ export default function Home() {
                         GH₵ {prop.price.toLocaleString()}
                         <span className="text-[10px] font-normal text-zinc-500"> / {prop.pricePeriod || 'Year'}</span>
                       </span>
-                      {prop.landlord?.isVerifiedLandlord && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1">
-                          <ShieldCheck className="w-3 h-3" /> Verified Host
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   {/* Body Content */}
                   <div className="p-4 space-y-2">
-                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                      {prop.title}
-                    </h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
+                        {prop.title}
+                      </h3>
+                      {prop.landlord?.isVerifiedLandlord && (
+                        <span title="Verified Host">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        </span>
+                      )}
+                    </div>
                     
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 line-clamp-1">
                       <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
@@ -526,17 +528,17 @@ export default function Home() {
                     </p>
 
                     {/* Ghanaian Utility & Housing Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-1.5 text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">
+                    <div className="flex flex-wrap gap-1.5 pt-1.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
                       {prop.rooms?.[0]?.roomType && (
                         <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                          🛏️ {prop.rooms[0].roomType}
+                          {prop.rooms[0].roomType}
                         </span>
                       )}
                       <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                        ⚡ Prepaid ECG Meter
+                        Prepaid ECG
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                        💧 Polytank Backup
+                        Water Storage
                       </span>
                     </div>
                   </div>

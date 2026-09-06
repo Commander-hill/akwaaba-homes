@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, Loader2, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 
@@ -120,8 +120,8 @@ export default function AdminLoginPage() {
           /* Admin 2FA Verification Form */
           <form onSubmit={handle2FASubmit} className="space-y-5">
             <div className="text-center pb-2">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-950/40 border border-emerald-800/80 flex items-center justify-center mx-auto mb-3 text-[#198754]">
-                <ShieldCheck className="w-7 h-7" />
+              <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                <Lock className="w-5 h-5" />
               </div>
               <h2 className="text-lg font-bold text-white tracking-wide">
                 Two-Factor Security Verification
