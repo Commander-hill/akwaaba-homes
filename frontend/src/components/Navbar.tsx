@@ -11,6 +11,7 @@ import api from '@/lib/axios';
 import NotificationBell from './NotificationBell';
 import ThemeToggle from './ThemeToggle';
 import LanguageSelector from './LanguageSelector';
+import LiveGhanaClock from './LiveGhanaClock';
 import { useLanguage } from '@/providers/LanguageContext';
 
 export default function Navbar() {
@@ -130,6 +131,7 @@ export default function Navbar() {
 
             {/* Right: Quick Tools & Authentication */}
             <div className="hidden md:flex items-center space-x-3">
+              <LiveGhanaClock variant="pill" className="hidden xl:inline-flex" />
               <LanguageSelector />
               <ThemeToggle isScrolled={true} />
 
