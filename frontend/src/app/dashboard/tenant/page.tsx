@@ -37,6 +37,57 @@ const VALID_TENANT_TABS = [
 ] as const;
 type TenantTabType = typeof VALID_TENANT_TABS[number];
 
+function LiveBookingCountdown({ createdAt, onExpire }: { createdAt: string; onExpire?: () => void }) {
+  const getRemainingSeconds = () => {
+    const expiresAt = new Date(createdAt).getTime() + 15 * 60 * 1000;
+    return Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+  };
+
+  const [diffSec, setDiffSec] = useState<number>(getRemainingSeconds);
+
+  useEffect(() => {
+    // Initial sync
+    const initial = getRemainingSeconds();
+    setDiffSec(initial);
+
+    if (initial <= 0) {
+      onExpire?.();
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const remaining = getRemainingSeconds();
+      setDiffSec(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+        onExpire?.();
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  if (diffSec <= 0) {
+    return (
+      <span className="text-[11px] font-mono font-extrabold text-rose-700 dark:text-rose-300 bg-rose-100 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-300 dark:border-rose-800 flex items-center gap-1 shadow-xs">
+        <Clock className="w-3 h-3 text-rose-500" />
+        Expired
+      </span>
+    );
+  }
+
+  const minutes = Math.floor(diffSec / 60);
+  const seconds = String(diffSec % 60).padStart(2, '0');
+
+  return (
+    <span className="text-[11px] font-mono font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-xs">
+      <Clock className="w-3 h-3 animate-pulse text-amber-600 dark:text-amber-400" />
+      {minutes}m {seconds}s left
+    </span>
+  );
+}
+
 function TenantDashboardContent() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -465,13 +516,10 @@ function TenantDashboardContent() {
                       <div className="flex flex-col items-end gap-2">
                         <div className="flex items-center gap-2">
                           {booking.status === 'PENDING' && booking.createdAt && (
-                            <span className="text-[11px] font-mono font-extrabold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-300 dark:border-amber-700 flex items-center gap-1 shadow-sm">
-                              <Clock className="w-3 h-3 animate-pulse text-amber-600 dark:text-amber-400" /> 
-                              {(() => {
-                                const diffSec = Math.max(0, Math.floor((new Date(booking.createdAt).getTime() + 15 * 60 * 1000 - Date.now()) / 1000));
-                                return `${Math.floor(diffSec / 60)}m ${String(diffSec % 60).padStart(2, '0')}s left`;
-                              })()}
-                            </span>
+                            <LiveBookingCountdown 
+                              createdAt={booking.createdAt} 
+                              onExpire={() => queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] })} 
+                            />
                           )}
                           {getStatusBadge(booking.status)}
                         </div>
