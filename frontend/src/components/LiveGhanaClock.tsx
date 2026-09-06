@@ -7,10 +7,10 @@ import clsx from 'clsx';
 interface LiveGhanaClockProps {
   isCollapsed?: boolean;
   className?: string;
-  variant?: 'sidebar' | 'pill';
+  variant?: 'sidebar' | 'pill' | 'header';
 }
 
-export default function LiveGhanaClock({ isCollapsed = false, className, variant = 'sidebar' }: LiveGhanaClockProps) {
+export default function LiveGhanaClock({ isCollapsed = false, className, variant = 'header' }: LiveGhanaClockProps) {
   const [timeStr, setTimeStr] = useState<string>('');
   const [dateStr, setDateStr] = useState<string>('');
   const [mounted, setMounted] = useState(false);
@@ -50,6 +50,11 @@ export default function LiveGhanaClock({ isCollapsed = false, className, variant
 
   // Avoid Next.js hydration mismatch on initial server render
   if (!mounted) {
+    if (variant === 'header') {
+      return (
+        <div className={clsx("h-12 w-54 rounded-xl bg-zinc-200 dark:bg-zinc-800/60 animate-pulse", className)} />
+      );
+    }
     if (variant === 'pill') {
       return (
         <div className="h-8 w-28 rounded-full bg-zinc-100 dark:bg-zinc-800/60 animate-pulse" />
@@ -58,6 +63,38 @@ export default function LiveGhanaClock({ isCollapsed = false, className, variant
     return (
       <div className={clsx("px-3 py-2", className)}>
         <div className={clsx("animate-pulse bg-zinc-900/60 rounded-xl", isCollapsed ? "h-10 w-10 mx-auto" : "h-14 w-full")} />
+      </div>
+    );
+  }
+
+  // Header variant (for the white space in Navbar directly on top of the sidebar / AkwaabaHomes)
+  if (variant === 'header') {
+    return (
+      <div 
+        title={`Ghana Standard Time (GMT) • ${dateStr}`}
+        className={clsx("flex items-center", className)}
+      >
+        <div className="px-3 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-900 border border-zinc-800/90 shadow-sm flex flex-col gap-1 select-none min-w-[215px]">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-zinc-200">ACCRA, GH • GMT</span>
+            </div>
+            <span className="text-[10px] text-zinc-400 font-medium">{dateStr}</span>
+          </div>
+
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="font-mono font-extrabold text-sm tracking-widest text-emerald-400 tabular-nums">
+              {timeStr}
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-1.5 py-0.5 rounded">
+              LIVE
+            </span>
+          </div>
+        </div>
       </div>
     );
   }

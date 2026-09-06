@@ -6,7 +6,6 @@ import { LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen } from 'lucide-re
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import LiveGhanaClock from './LiveGhanaClock';
 
 export interface SidebarLink {
   name: string;
@@ -104,9 +103,6 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
           )}
         </button>
       </div>
-
-      {/* Live Ghana Clock (Accra GMT 12-Hour) */}
-      <LiveGhanaClock isCollapsed={isCollapsed} />
 
       {/* Workspace / Role Switcher */}
       <div className="px-3 py-3.5 shrink-0">
