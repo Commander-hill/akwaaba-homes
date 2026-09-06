@@ -20,8 +20,8 @@ router.get('/:id/pdf', authenticate, downloadAgreementPDF);
 router.get('/my-active', authenticate, authorizeRole(['TENANT', 'ADMIN']), getMyActiveBooking);
 router.post('/', authenticate, authorizeRole(['TENANT', 'ADMIN']), createBooking);
 router.get('/me', authenticate, authorizeRole(['TENANT', 'ADMIN']), getTenantBookings);
-router.post('/:id/pay', authenticate, authorizeRole(['TENANT']), payBooking);
-router.post('/:id/verify-payment', authenticate, authorizeRole(['TENANT']), verifyPayment);
+router.post('/:id/pay', authenticate, authorizeRole(['TENANT', 'ADMIN']), payBooking);
+router.post('/:id/verify-payment', authenticate, authorizeRole(['TENANT', 'ADMIN']), verifyPayment);
 router.post('/:id/cancel', authenticate, authorizeRole(['TENANT', 'ADMIN']), cancelPendingBooking);
 router.delete('/:id', authenticate, authorizeRole(['TENANT', 'ADMIN']), deleteBooking);
 

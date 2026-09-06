@@ -129,7 +129,15 @@ function TenantDashboardContent() {
     const trxref = urlParams.get('trxref');
 
     if (verifyId && (reference || trxref)) {
-      verifyPaymentMutation.mutate({ bookingId: verifyId, reference: (reference || trxref) as string });
+      toast.loading('Verifying payment with payment gateway...', { id: 'payment-verifying' });
+      verifyPaymentMutation.mutate(
+        { bookingId: verifyId, reference: (reference || trxref) as string },
+        {
+          onSettled: () => {
+            toast.dismiss('payment-verifying');
+          }
+        }
+      );
     }
   }, []);
   
@@ -361,6 +369,9 @@ function TenantDashboardContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'my-active'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions', 'tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['agreements', 'tenant'] });
       toast.success('Payment verified! Your booking is now complete.');
       // Remove query params
       window.history.replaceState({}, document.title, window.location.pathname);
