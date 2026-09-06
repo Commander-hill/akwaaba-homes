@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
@@ -7,7 +7,12 @@ import PwaRegister from '../components/PwaRegister';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
 import MaintenanceGuard from '../components/MaintenanceGuard';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
+});
 
 export const viewport: Viewport = {
   themeColor: '#4F46E5',
@@ -36,8 +41,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
-      <body className="font-sans" suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <Providers>
           <PwaRegister />
           <MaintenanceGuard>
