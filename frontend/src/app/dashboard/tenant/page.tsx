@@ -10,7 +10,7 @@ import {
   MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
   Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
   Sparkles, Car, Package, DollarSign, ShieldAlert, Shield, HeartPulse, Flame, 
-  Radio, Building2, Check, ShieldCheck 
+  Radio, Building2, Check, ShieldCheck, Trash2 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -167,6 +167,9 @@ function TenantDashboardContent() {
   // Emergency Dispatch Copy State
   const [copiedDispatchAddress, setCopiedDispatchAddress] = useState(false);
 
+  // Booking Tab Sub-Filter State
+  const [bookingFilter, setBookingFilter] = useState<'ACTIVE' | 'CANCELLED'>('ACTIVE');
+
   // Queries
   // Bookings load eagerly — this is the primary tab
   const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
@@ -271,6 +274,21 @@ function TenantDashboardContent() {
     }
   });
 
+  const deleteBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const { data } = await api.delete(`/bookings/${bookingId}`);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Booking removed from your history.');
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'my-active'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to remove booking');
+    }
+  });
+
   const { data: myReviewsData, isLoading: myReviewsLoading } = useQuery({
     queryKey: ['myReviews'],
     queryFn: async () => {
@@ -353,6 +371,10 @@ function TenantDashboardContent() {
   });
 
   const bookings = bookingsResponse?.bookings || [];
+  const activeBookings = bookings.filter((b: any) => ['PENDING', 'APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE'].includes(b.status));
+  const cancelledBookings = bookings.filter((b: any) => ['CANCELLED', 'REJECTED'].includes(b.status));
+  const displayedBookings = bookingFilter === 'ACTIVE' ? activeBookings : cancelledBookings;
+
   const tickets = ticketsResponse?.tickets || [];
   const agreements = agreementsResponse?.agreements || [];
   const transactions = transactionsResponse?.transactions || [];
@@ -376,6 +398,7 @@ function TenantDashboardContent() {
       case 'PENDING': return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold"><Clock className="w-3 h-3" /> Pending</span>;
       case 'REJECTED': return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold"><XCircle className="w-3 h-3" /> Rejected</span>;
       case 'COMPLETED': return <span className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Completed</span>;
+      case 'CANCELLED': return <span className="inline-flex items-center gap-1 bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 px-3 py-1 rounded-full text-xs font-bold border border-zinc-200 dark:border-zinc-700"><XCircle className="w-3 h-3 text-zinc-400" /> Cancelled</span>;
       
       // Ticket specific
       case 'IN_PROGRESS': return <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold"><PenTool className="w-3 h-3" /> In Progress</span>;
@@ -395,7 +418,7 @@ function TenantDashboardContent() {
   };
 
   // Fetch Compound Broadcast Notices for Tenant's Booked Property
-  const activeBooking = bookings.find((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PENDING'].includes(b.status));
+  const activeBooking = activeBookings.find((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PENDING'].includes(b.status));
   const activePropertyId = activeBooking?.propertyId;
   const { data: compoundNoticesData } = useQuery({
     queryKey: ['compoundNotices', 'tenant', activePropertyId],
@@ -472,26 +495,112 @@ function TenantDashboardContent() {
       </div>
 
       {activeTab === 'bookings' && (
-        <div className="animate-in">
+        <div className="animate-in space-y-4">
+          {/* Sub-tabs if there are any cancelled or active bookings */}
+          {!bookingsLoading && cancelledBookings.length > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="inline-flex items-center p-1 bg-zinc-100 dark:bg-zinc-800/70 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
+                <button
+                  onClick={() => setBookingFilter('ACTIVE')}
+                  className={clsx(
+                    "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                    bookingFilter === 'ACTIVE'
+                      ? "bg-white dark:bg-[#181B24] text-zinc-900 dark:text-white shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                  )}
+                >
+                  <span>Active Accommodations</span>
+                  <span className={clsx(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-extrabold",
+                    bookingFilter === 'ACTIVE' 
+                      ? "bg-[#0F5132]/15 text-[#0F5132] dark:bg-emerald-500/20 dark:text-emerald-400" 
+                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                  )}>
+                    {activeBookings.length}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setBookingFilter('CANCELLED')}
+                  className={clsx(
+                    "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                    bookingFilter === 'CANCELLED'
+                      ? "bg-white dark:bg-[#181B24] text-zinc-900 dark:text-white shadow-xs"
+                      : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+                  )}
+                >
+                  <span>Cancelled &amp; Past</span>
+                  <span className={clsx(
+                    "px-1.5 py-0.5 rounded-full text-[10px] font-extrabold",
+                    bookingFilter === 'CANCELLED'
+                      ? "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                  )}>
+                    {cancelledBookings.length}
+                  </span>
+                </button>
+              </div>
+
+              {bookingFilter === 'CANCELLED' && (
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  Cancelled bookings can be permanently removed from your dashboard.
+                </p>
+              )}
+            </div>
+          )}
+
           {bookingsLoading ? (
             <SkeletonTable rows={3} columns={4} />
-          ) : bookings.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Calendar className="w-8 h-8 text-[var(--muted-foreground)]" />
+          ) : displayedBookings.length === 0 ? (
+            bookingFilter === 'ACTIVE' ? (
+              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-[var(--muted-foreground)]" />
+                </div>
+                <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Accommodations Reserved</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
+                  Explore verified campus hostels and residential apartments across KNUST, Legon, and UCC. Your deposit is backed by MoMo escrow until physical on-site room handover.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Link href="/properties" className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs">
+                    Browse Verified Hostels &amp; Apartments
+                  </Link>
+                  {cancelledBookings.length > 0 && (
+                    <button
+                      onClick={() => setBookingFilter('CANCELLED')}
+                      className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors border border-zinc-200 dark:border-zinc-700"
+                    >
+                      View Cancelled Requests ({cancelledBookings.length})
+                    </button>
+                  )}
+                </div>
               </div>
-              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Accommodations Reserved</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
-                Explore verified campus hostels and residential apartments across KNUST, Legon, and UCC. Your deposit is backed by MoMo escrow until physical on-site room handover.
-              </p>
-              <Link href="/properties" className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs">
-                Browse Verified Hostels &amp; Apartments
-              </Link>
-            </div>
+            ) : (
+              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                  <XCircle className="w-8 h-8 text-zinc-400" />
+                </div>
+                <h3 className="text-base font-black text-zinc-950 dark:text-white">No Cancelled Requests</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
+                  You do not have any cancelled or declined room bookings.
+                </p>
+                <button
+                  onClick={() => setBookingFilter('ACTIVE')}
+                  className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+                >
+                  Back to Active Accommodations
+                </button>
+              </div>
+            )
           ) : (
             <div className="grid gap-6">
-              {bookings.map((booking: any) => (
-                <div key={booking.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+              {displayedBookings.map((booking: any) => (
+                <div 
+                  key={booking.id} 
+                  className={clsx(
+                    "bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center transition-all",
+                    (booking.status === 'CANCELLED' || booking.status === 'REJECTED') && "opacity-90"
+                  )}
+                >
                   <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 relative">
                     {(() => {
                       try {
@@ -533,11 +642,30 @@ function TenantDashboardContent() {
                               {cancelPendingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />} Cancel Request
                             </button>
                           )}
+                          {(booking.status === 'CANCELLED' || booking.status === 'REJECTED') && (
+                            <button
+                              onClick={() => {
+                                if (confirm('Remove this cancelled booking from your dashboard?')) {
+                                  deleteBookingMutation.mutate(booking.id);
+                                }
+                              }}
+                              disabled={deleteBookingMutation.isPending}
+                              className="text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 hover:bg-red-50 dark:bg-zinc-800 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 border border-zinc-200 dark:border-zinc-700 hover:border-red-200 dark:hover:border-red-900/50 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                              title="Remove from your dashboard"
+                            >
+                              {deleteBookingMutation.isPending ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                              Remove from List
+                            </button>
+                          )}
                           {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
                             <>
                               <Link 
                                 href={`/dashboard/agreements/${booking.id}`}
-                                className="text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                className="text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] px-3 py-1.5 rounded-lg transition-colors"
                               >
                                 View Agreement
                               </Link>
@@ -565,7 +693,7 @@ function TenantDashboardContent() {
                               )}
                               <button 
                                 onClick={() => { setTicketPropertyId(booking.propertyId); setTicketError(''); setTicketModalOpen(true); }}
-                                className="text-xs font-bold text-slate-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                                className="text-xs font-bold text-slate-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                               >
                                 <PenTool className="w-3 h-3" /> Report Issue
                               </button>
@@ -574,7 +702,7 @@ function TenantDashboardContent() {
                           {booking.status === 'COMPLETED' && (
                             <button 
                               onClick={() => { setSelectedBookingId(booking.id); setReviewError(''); setReviewModalOpen(true); }}
-                              className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg text-xs font-bold dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
+                              className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                             >
                               <Star className="w-3 h-3 fill-current" /> Leave Review
                             </button>
@@ -582,6 +710,19 @@ function TenantDashboardContent() {
                         </div>
                       </div>
                     </div>
+
+                    {booking.status === 'CANCELLED' && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400">
+                        <XCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span>This booking request was cancelled. Any reserved room or bed hold has been released.</span>
+                      </div>
+                    )}
+                    {booking.status === 'REJECTED' && (
+                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-600 dark:text-red-400">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                        <span>This booking request was declined by the property owner.</span>
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap gap-4 text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
                       <div>
@@ -1152,7 +1293,7 @@ function TenantDashboardContent() {
 
           {/* Residence Manager & Location Card */}
           {(() => {
-            const activeBooking = bookings.find((b: any) => ['COMPLETED', 'APPROVED', 'CONFIRMED'].includes(b.status)) || bookings[0];
+            const activeBooking = activeBookings.find((b: any) => ['COMPLETED', 'APPROVED', 'CONFIRMED'].includes(b.status)) || activeBookings[0] || null;
             const p = activeBooking?.property;
             const phone = p?.landlord?.phoneNumber || '+233200000000';
             const cleanPhone = phone.replace(/[^0-9+]/g, '');

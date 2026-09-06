@@ -8,7 +8,8 @@ import {
   verifyPayment,
   getMyActiveBooking,
   cancelPendingBooking,
-  downloadAgreementPDF
+  downloadAgreementPDF,
+  deleteBooking
 } from '../controllers/booking.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
@@ -22,6 +23,7 @@ router.get('/me', authenticate, authorizeRole(['TENANT', 'ADMIN']), getTenantBoo
 router.post('/:id/pay', authenticate, authorizeRole(['TENANT']), payBooking);
 router.post('/:id/verify-payment', authenticate, authorizeRole(['TENANT']), verifyPayment);
 router.post('/:id/cancel', authenticate, authorizeRole(['TENANT', 'ADMIN']), cancelPendingBooking);
+router.delete('/:id', authenticate, authorizeRole(['TENANT', 'ADMIN']), deleteBooking);
 
 // Landlord routes
 router.get('/landlord', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordBookings);

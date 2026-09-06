@@ -945,4 +945,56 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
     console.error('Error cancelling pending booking:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+
+export const deleteBooking = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user.id;
+    const { id } = req.params;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking not found' });
+      return;
+    }
+
+    if (booking.tenantId !== tenantId && req.user.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!['CANCELLED', 'REJECTED', 'PENDING'].includes(booking.status)) {
+      res.status(400).json({ message: 'Only cancelled, rejected, or pending unpaid bookings can be deleted.' });
+      return;
+    }
+
+    // Release bed if any
+    if (booking.bedId) {
+      await prisma.bed.update({
+        where: { id: booking.bedId },
+        data: { status: 'AVAILABLE' }
+      }).catch(() => {});
+    }
+
+    // Delete the booking record
+    await prisma.booking.delete({
+      where: { id }
+    });
+
+    try {
+      getIO().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+      appCache.del(`bookings:tenant:${tenantId}`);
+      appCache.flushAll();
+    } catch (e) {
+      /* non-blocking */
+    }
+
+    res.status(200).json({ message: 'Booking deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting booking:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
