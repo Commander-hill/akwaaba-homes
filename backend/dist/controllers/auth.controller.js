@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -722,6 +722,47 @@ const submitLandlordVerification = async (req, res) => {
     }
 };
 exports.submitLandlordVerification = submitLandlordVerification;
+const submitStudentVerification = async (req, res) => {
+    try {
+        const { campus, studentId, programmeOfStudy, yearOfStudy, dateOfAdmission, studentType } = req.body;
+        if (!req.user?.id) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (!campus || !campus.trim() || !studentId || !studentId.trim()) {
+            res.status(400).json({ message: 'Institution/Campus and Student ID are required to verify student status' });
+            return;
+        }
+        const updatedUser = await prisma_1.default.user.update({
+            where: { id: req.user.id },
+            data: {
+                campus: campus.trim(),
+                studentId: studentId.trim(),
+                ...(programmeOfStudy ? { programmeOfStudy: programmeOfStudy.trim() } : {}),
+                ...(yearOfStudy ? { yearOfStudy: yearOfStudy.trim() } : {}),
+                ...(dateOfAdmission ? { dateOfAdmission: dateOfAdmission.trim() } : {}),
+                ...(studentType ? { studentType: studentType.trim() } : {}),
+            }
+        });
+        cache_1.default.del(`user:me:${req.user.id}`);
+        try {
+            (0, socket_1.emitToUser)(req.user.id, 'profile_updated', updatedUser);
+            (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+        }
+        catch (e) { /* non-blocking */ }
+        const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
+        await (0, auditLogger_1.logAudit)(req.user.id, 'SUBMIT_STUDENT_VERIFICATION', 'User', req.user.id, { campus: campus.trim(), studentId: studentId.trim() }, {}, ipAddress);
+        res.status(200).json({
+            message: 'Student status credentials registered successfully',
+            user: updatedUser
+        });
+    }
+    catch (error) {
+        console.error('Submit Student Verification error:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.submitStudentVerification = submitStudentVerification;
 const updateProfile = async (req, res) => {
     try {
         const { firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType } = req.body;

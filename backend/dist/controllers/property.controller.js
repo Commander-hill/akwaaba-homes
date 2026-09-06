@@ -317,10 +317,43 @@ const getPropertyById = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        // Compute real-time remaining capacity for the whole property
-        const completedCount = await prisma_1.default.booking.count({
-            where: { propertyId: property.id, status: 'COMPLETED' }
+        // Query real-time active bookings for this property
+        const activePropertyBookings = await prisma_1.default.booking.findMany({
+            where: {
+                propertyId: property.id,
+                status: { in: ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE'] }
+            },
+            select: {
+                id: true,
+                roomId: true,
+                roomUnitId: true,
+                bedId: true,
+                status: true,
+                tenantId: true
+            }
         });
+        const activeBedIds = new Set(activePropertyBookings.map(b => b.bedId).filter(Boolean));
+        const activeUnitIds = new Set(activePropertyBookings.map(b => b.roomUnitId).filter(Boolean));
+        // Self-healing: if any booking on a 1-bed unit lacks a bedId, associate the bed and mark it booked
+        for (const b of activePropertyBookings) {
+            if (!b.bedId && b.roomUnitId) {
+                const u = property.rooms?.flatMap((r) => r.roomUnits || []).find((unit) => unit.id === b.roomUnitId);
+                if (u && u.beds?.length === 1) {
+                    const singleBed = u.beds[0];
+                    activeBedIds.add(singleBed.id);
+                    prisma_1.default.booking.update({
+                        where: { id: b.id },
+                        data: { bedId: singleBed.id }
+                    }).catch(() => { });
+                    prisma_1.default.bed.update({
+                        where: { id: singleBed.id },
+                        data: { status: ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status) ? 'BOOKED' : 'RESERVED' }
+                    }).catch(() => { });
+                }
+            }
+        }
+        // Compute real-time remaining capacity for the whole property
+        const completedCount = activePropertyBookings.filter(b => b.status === 'COMPLETED' || b.status === 'ACTIVE').length;
         let totalCapacity = 0;
         if (property.rooms && Array.isArray(property.rooms)) {
             totalCapacity = property.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
@@ -329,7 +362,7 @@ const getPropertyById = async (req, res) => {
         // Compute remaining capacity for EACH room individually
         const roomBookingCounts = await prisma_1.default.booking.groupBy({
             by: ['roomId'],
-            where: { propertyId: property.id, status: 'COMPLETED', roomId: { not: null } },
+            where: { propertyId: property.id, status: { in: ['COMPLETED', 'ACTIVE'] }, roomId: { not: null } },
             _count: { id: true }
         });
         const roomBookingMap = {};
@@ -338,10 +371,40 @@ const getPropertyById = async (req, res) => {
         const enrichedRooms = (property.rooms || []).map((room) => {
             const roomTotalCapacity = room.numberOfRooms * room.bedsPerRoom;
             const roomCompletedCount = roomBookingMap[room.id] || 0;
+            const roomRemainingCapacity = Math.max(0, roomTotalCapacity - roomCompletedCount);
+            const enrichedUnits = (room.roomUnits || []).map((unit) => {
+                const enrichedBeds = (unit.beds || []).map((bed) => {
+                    const isDirectlyBooked = activeBedIds.has(bed.id);
+                    const isUnitBooked = unit.beds?.length === 1 && activeUnitIds.has(unit.id);
+                    const hasLinkedBooking = bed.bookings?.some((b) => ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE'].includes(b.status));
+                    let effectiveStatus = bed.status;
+                    if (bed.status === 'MAINTENANCE') {
+                        effectiveStatus = 'MAINTENANCE';
+                    }
+                    else if (isDirectlyBooked || isUnitBooked || hasLinkedBooking) {
+                        effectiveStatus = 'BOOKED';
+                    }
+                    return {
+                        ...bed,
+                        status: effectiveStatus,
+                        isBooked: effectiveStatus === 'BOOKED' || effectiveStatus === 'OCCUPIED' || effectiveStatus === 'RESERVED'
+                    };
+                });
+                const availableBedsCount = enrichedBeds.filter((b) => b.status === 'AVAILABLE').length;
+                return {
+                    ...unit,
+                    beds: enrichedBeds,
+                    availableBedsCount,
+                    isAvailable: availableBedsCount > 0,
+                    isOccupied: availableBedsCount === 0
+                };
+            });
             return {
                 ...room,
+                roomUnits: enrichedUnits,
                 totalCapacity: roomTotalCapacity,
-                remainingCapacity: Math.max(0, roomTotalCapacity - roomCompletedCount)
+                remainingCapacity: roomRemainingCapacity,
+                isSoldOut: roomRemainingCapacity <= 0
             };
         });
         const enrichedProperty = {

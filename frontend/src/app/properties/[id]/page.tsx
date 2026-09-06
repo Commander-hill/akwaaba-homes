@@ -7,7 +7,7 @@ import {
   Star, Info, Flag, Send, X, ShieldCheck, Lock, Clock, CheckCircle2,
   Zap, Droplets, Shield, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
   MessageSquare, ExternalLink, AlertCircle, Sparkles, Building2,
-  Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle
+  Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
@@ -87,6 +87,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   }, [session, viewingPhone]);
 
   const currentRoom = property?.rooms?.find((r: any) => r.id === selectedRoomId) || property?.rooms?.[0];
+
+  const isStudentRestricted = Boolean(property?.type === 'Hostel' || property?.targetAudience === 'Students Only');
+  const isVerifiedStudent = Boolean(session?.studentId && session.studentId.trim().length > 0 && session?.campus && session.campus.trim().length > 0);
 
   useEffect(() => {
     if (property?.rooms && property.rooms.length > 0 && !selectedRoomId) {
@@ -238,6 +241,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     if (session.role !== 'TENANT' && session.role !== 'ADMIN') {
       setBookingMessage({ 
         text: 'Reservations are reserved exclusively for Tenant accounts.', 
+        type: 'error' 
+      });
+      return;
+    }
+
+    if (isStudentRestricted && !isVerifiedStudent) {
+      setBookingMessage({ 
+        text: 'Student Access Restricted: This accommodation is strictly reserved for verified tertiary students. Please complete your Student Verification (Campus & Student ID) before booking.', 
         type: 'error' 
       });
       return;
@@ -721,6 +732,40 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 {/* Reservation Form */}
                 <form onSubmit={handleBooking} className="space-y-4 text-xs">
                   
+                  {/* Student-Only Access Clearance Banner */}
+                  {isStudentRestricted && (
+                    <div className={clsx(
+                      "p-3.5 rounded-xl border text-xs space-y-1",
+                      isVerifiedStudent 
+                        ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200"
+                        : "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200"
+                    )}>
+                      <div className="flex items-center gap-2 font-bold">
+                        <GraduationCap className={clsx("w-4 h-4 shrink-0", isVerifiedStudent ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")} />
+                        <span>{isVerifiedStudent ? 'Student Clearance Verified' : 'Strictly Students Only — Student ID Required'}</span>
+                        {isVerifiedStudent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 ml-auto shrink-0" />}
+                      </div>
+                      <p className={clsx("text-[11px] leading-relaxed", isVerifiedStudent ? "text-emerald-700 dark:text-emerald-300" : "text-zinc-600 dark:text-zinc-400")}>
+                        {isVerifiedStudent ? (
+                          <span>Resident student status cleared: <strong>{session?.campus}</strong> (ID: {session?.studentId}).</span>
+                        ) : (
+                          <span>This hostel is restricted to verified tertiary students. You must verify your Campus and Student ID before placing a booking.</span>
+                        )}
+                      </p>
+                      {!isVerifiedStudent && (
+                        <div className="pt-0.5">
+                          <Link
+                            href="/dashboard/verification#student-verification"
+                            className="inline-flex items-center gap-1 font-bold text-amber-800 dark:text-amber-400 hover:underline text-[11px]"
+                          >
+                            <span>Complete Student Verification now</span>
+                            <span>&rarr;</span>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Unit / Room Plan Selector */}
                   {property.rooms && property.rooms.length > 0 && (
                     <div>
@@ -959,27 +1004,37 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               {/* ACTION BUTTONS (PRIMARY & SECONDARY) */}
               <div className="space-y-2 pt-1">
                 {/* 1. Primary: Apply for Tenancy */}
-                <button
-                  type="submit"
-                  disabled={isBooking || Boolean(myActiveBookingData) || (currentRoom?.roomUnits?.length > 0 && !selectedBedId) || currentRoom?.isSoldOut}
-                  className={clsx(
-                    "w-full py-3 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2",
-                    isBooking || Boolean(myActiveBookingData) || (currentRoom?.roomUnits?.length > 0 && !selectedBedId) || currentRoom?.isSoldOut
-                      ? "bg-zinc-400 dark:bg-zinc-700 cursor-not-allowed opacity-60"
-                      : "bg-[#0F5132] hover:bg-[#0A3D24] cursor-pointer"
-                  )}
-                >
-                  {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Building2 className="w-4 h-4" />}
-                  <span>
-                    {myActiveBookingData
-                      ? 'Active Tenancy Already Registered'
-                      : currentRoom?.isSoldOut
-                      ? 'Room Fully Booked'
-                      : currentRoom?.roomUnits?.length > 0 && !selectedBedId
-                      ? 'No Vacant Units'
-                      : 'Apply for Tenancy & Reserve'}
-                  </span>
-                </button>
+                {isStudentRestricted && !isVerifiedStudent ? (
+                  <Link
+                    href="/dashboard/verification#student-verification"
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 text-center cursor-pointer"
+                  >
+                    <GraduationCap className="w-4 h-4" />
+                    <span>Verify Student ID to Reserve Hostel &rarr;</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isBooking || Boolean(myActiveBookingData) || (currentRoom?.roomUnits?.length > 0 && !selectedBedId) || currentRoom?.isSoldOut}
+                    className={clsx(
+                      "w-full py-3 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2",
+                      isBooking || Boolean(myActiveBookingData) || (currentRoom?.roomUnits?.length > 0 && !selectedBedId) || currentRoom?.isSoldOut
+                        ? "bg-zinc-400 dark:bg-zinc-700 cursor-not-allowed opacity-60"
+                        : "bg-[#0F5132] hover:bg-[#0A3D24] cursor-pointer"
+                    )}
+                  >
+                    {isBooking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Building2 className="w-4 h-4" />}
+                    <span>
+                      {myActiveBookingData
+                        ? 'Active Tenancy Already Registered'
+                        : currentRoom?.isSoldOut
+                        ? 'Room Fully Booked'
+                        : currentRoom?.roomUnits?.length > 0 && !selectedBedId
+                        ? 'No Vacant Units'
+                        : 'Apply for Tenancy & Reserve'}
+                    </span>
+                  </button>
+                )}
 
                 {/* 2. Secondary: A. "Schedule an On-Site Physical Viewing" */}
                 <button

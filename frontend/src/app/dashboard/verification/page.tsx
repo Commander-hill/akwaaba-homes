@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { 
   CreditCard, Loader2, ArrowRight, FileCheck, UploadCloud, 
-  CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock
+  CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock, GraduationCap
 } from 'lucide-react';
 import api from '@/lib/axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -73,6 +73,56 @@ export default function VerificationPage() {
     }
   };
 
+  // Student verification state
+  const [campus, setCampus] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [programmeOfStudy, setProgrammeOfStudy] = useState('');
+  const [yearOfStudy, setYearOfStudy] = useState('');
+  const [studentDoc, setStudentDoc] = useState<File | null>(null);
+  const [isSubmittingStudent, setIsSubmittingStudent] = useState(false);
+  const [studentMsg, setStudentMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [isEditingStudent, setIsEditingStudent] = useState(false);
+
+  const handleStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingStudent(true);
+    setStudentMsg(null);
+
+    const activeCampus = campus || session?.campus;
+    const activeStudentId = studentId || session?.studentId;
+
+    if (!activeCampus || !activeCampus.trim() || !activeStudentId || !activeStudentId.trim()) {
+      setStudentMsg({ text: 'Institution/Campus and Student ID Number are required.', type: 'error' });
+      setIsSubmittingStudent(false);
+      return;
+    }
+
+    try {
+      let studentDocUrl = session?.studentType;
+      if (studentDoc) {
+        studentDocUrl = await uploadDoc(studentDoc);
+      }
+
+      await api.post('/auth/student-verification', {
+        campus: activeCampus.trim(),
+        studentId: activeStudentId.trim(),
+        programmeOfStudy: (programmeOfStudy || session?.programmeOfStudy || '').trim(),
+        yearOfStudy: (yearOfStudy || session?.yearOfStudy || '').trim(),
+        studentType: studentDocUrl || 'VERIFIED'
+      });
+
+      setStudentMsg({ text: 'Student credentials saved and verified successfully! You are now eligible to book student-only hostels.', type: 'success' });
+      setIsEditingStudent(false);
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['session'] });
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    } catch (err: any) {
+      setStudentMsg({ text: err.response?.data?.message || 'Failed to update student verification', type: 'error' });
+    } finally {
+      setIsSubmittingStudent(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -133,15 +183,17 @@ export default function VerificationPage() {
   const isLandlordPending = session.landlordVerificationStatus === 'PENDING';
   const isLandlordRejected = session.landlordVerificationStatus === 'REJECTED';
 
+  const isStudentVerified = Boolean(session.studentId && session.studentId.trim().length > 0 && session.campus && session.campus.trim().length > 0);
+
   return (
     <div className="max-w-3xl space-y-6 pb-12">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-          Identity &amp; Host Certification
+          Identity, Academic &amp; Host Certification
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Identity verification and property deed certification.
+          Identity verification, tertiary student clearance, and property deed certification.
         </p>
       </div>
 
@@ -332,7 +384,252 @@ export default function VerificationPage() {
         </div>
       </div>
 
-      {/* ── CARD 2: LANDLORD DEED & HOST CERTIFICATION ── */}
+      {/* ── CARD 2: TERTIARY STUDENT STATUS (HOSTEL ACCESS) ── */}
+      {session?.role !== 'LANDLORD' && (
+        <div id="student-verification" className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-700 dark:text-zinc-300 shrink-0">
+                <GraduationCap className="w-5 h-5 text-[#0F5132] dark:text-emerald-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-zinc-950 dark:text-white">
+                    Tertiary Student Verification
+                  </h2>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Required to access and book accommodations restricted to registered university or polytechnic students.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span className={clsx(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border tracking-wide",
+                isStudentVerified ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800" :
+                "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
+              )}>
+                {isStudentVerified ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-zinc-400" />}
+                <span>{isStudentVerified ? 'STUDENT VERIFIED' : 'NOT VERIFIED'}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-6">
+            {isStudentVerified && !isEditingStudent ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 rounded-xl p-4 flex items-start gap-3">
+                  <div className="p-1 rounded-full bg-emerald-500 text-white shrink-0 mt-0.5">
+                    <Check className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                      Academic Credentials Cleared
+                    </div>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300/80 leading-relaxed">
+                      You are recognized as an active tertiary student. You have full clearance to reserve rooms in Student-Only hostels.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+                  <div>
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Campus / Institution</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">{session.campus}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Student ID Number</span>
+                    <span className="font-mono font-bold text-zinc-900 dark:text-white">{session.studentId}</span>
+                  </div>
+                  {session.programmeOfStudy && (
+                    <div>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase block">Programme of Study</span>
+                      <span className="font-medium text-zinc-800 dark:text-zinc-200">{session.programmeOfStudy}</span>
+                    </div>
+                  )}
+                  {session.yearOfStudy && (
+                    <div>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase block">Academic Level</span>
+                      <span className="font-medium text-zinc-800 dark:text-zinc-200">{session.yearOfStudy}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCampus(session.campus || '');
+                      setStudentId(session.studentId || '');
+                      setProgrammeOfStudy(session.programmeOfStudy || '');
+                      setYearOfStudy(session.yearOfStudy || '');
+                      setIsEditingStudent(true);
+                      setStudentMsg(null);
+                    }}
+                    className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Update Academic Information &rarr;
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleStudentSubmit} className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
+                  <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <span>Hostel Access Requirements</span>
+                  </div>
+                  <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Student-only accommodations and university-affiliated hostels require valid campus registration details to prevent non-student access.
+                  </p>
+                </div>
+
+                {studentMsg && (
+                  <div className={clsx(
+                    "p-3.5 rounded-xl text-xs font-bold border",
+                    studentMsg.type === 'success' ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300"
+                  )}>
+                    {studentMsg.text}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-wider mb-1.5">
+                      Institution / Campus *
+                    </label>
+                    <input
+                      type="text"
+                      list="campus-list"
+                      required
+                      placeholder="e.g. Koforidua Technical University"
+                      className="block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] outline-none transition-all"
+                      value={campus || (isEditingStudent ? campus : (session?.campus || ''))}
+                      onChange={(e) => setCampus(e.target.value)}
+                    />
+                    <datalist id="campus-list">
+                      <option value="Koforidua Technical University (KTU)" />
+                      <option value="University of Ghana (UG - Legon)" />
+                      <option value="Kwame Nkrumah University of Science & Technology (KNUST)" />
+                      <option value="University of Cape Coast (UCC)" />
+                      <option value="University of Education, Winneba (UEW)" />
+                      <option value="Ghana Institute of Management and Public Administration (GIMPA)" />
+                      <option value="Accra Technical University (ATU)" />
+                      <option value="Kumasi Technical University (KsTU)" />
+                      <option value="University of Mines and Technology (UMaT)" />
+                      <option value="University of Professional Studies, Accra (UPSA)" />
+                      <option value="Ashesi University" />
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-wider mb-1.5">
+                      Student ID Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 04/2021/1420D or 10982341"
+                      className="block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono font-bold text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] outline-none transition-all"
+                      value={studentId || (isEditingStudent ? studentId : (session?.studentId || ''))}
+                      onChange={(e) => setStudentId(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-wider mb-1.5">
+                      Programme of Study (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. BSc Computer Science, HND Accountancy"
+                      className="block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] outline-none transition-all"
+                      value={programmeOfStudy || (isEditingStudent ? programmeOfStudy : (session?.programmeOfStudy || ''))}
+                      onChange={(e) => setProgrammeOfStudy(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-wider mb-1.5">
+                      Academic Level / Year (Optional)
+                    </label>
+                    <select
+                      className="block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] outline-none transition-all cursor-pointer"
+                      value={yearOfStudy || (isEditingStudent ? yearOfStudy : (session?.yearOfStudy || ''))}
+                      onChange={(e) => setYearOfStudy(e.target.value)}
+                    >
+                      <option value="">Select Level</option>
+                      <option value="Level 100">Level 100 (Freshman)</option>
+                      <option value="Level 200">Level 200 (Sophomore)</option>
+                      <option value="Level 300">Level 300 (Junior)</option>
+                      <option value="Level 400">Level 400 (Senior)</option>
+                      <option value="Postgraduate">Postgraduate (Masters/PhD)</option>
+                      <option value="Diploma/Certificate">Diploma / Certificate</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 mb-1.5">
+                    Student ID Card or Admission Letter Proof (Optional)
+                  </label>
+                  <label className="flex flex-col items-center justify-center p-4 border border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 bg-zinc-50 dark:bg-zinc-900/40 cursor-pointer transition-colors text-center">
+                    <UploadCloud className="w-5 h-5 text-zinc-400 mb-1.5" />
+                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      {studentDoc ? studentDoc.name : 'Upload Student ID Card or Letter'}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 mt-0.5">JPG, PNG, PDF up to 10MB</span>
+                    <input
+                      type="file"
+                      accept="image/*,.pdf"
+                      className="hidden"
+                      onChange={(e) => setStudentDoc(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmittingStudent}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {isSubmittingStudent ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving Academic Credentials...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Save &amp; Verify Student Status</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+
+                  {isEditingStudent && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditingStudent(false);
+                        setStudentMsg(null);
+                      }}
+                      className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── CARD 3: LANDLORD DEED & HOST CERTIFICATION ── */}
       {session?.role === 'LANDLORD' && (
         <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">

@@ -13,6 +13,7 @@ import {
   getMe,
   submitGhanaCard,
   submitLandlordVerification,
+  submitStudentVerification,
   updateProfile,
   requestProfileUnlock,
   forgotPassword,
@@ -33,6 +34,7 @@ router.post('/refresh', authRateLimiter, refresh);
 router.post('/verify-email', otpRateLimiter, verifyEmail);
 router.post('/ghana-card', authenticate, submitGhanaCard);
 router.post('/landlord-verification', authenticate, submitLandlordVerification);
+router.post('/student-verification', authenticate, submitStudentVerification);
 router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
 router.post('/reset-password', passwordResetRateLimiter, resetPassword);
 

@@ -826,6 +826,52 @@ export const submitLandlordVerification = async (req: Request, res: Response): P
   }
 };
 
+export const submitStudentVerification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { campus, studentId, programmeOfStudy, yearOfStudy, dateOfAdmission, studentType } = req.body;
+
+    if (!req.user?.id) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!campus || !campus.trim() || !studentId || !studentId.trim()) {
+      res.status(400).json({ message: 'Institution/Campus and Student ID are required to verify student status' });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        campus: campus.trim(),
+        studentId: studentId.trim(),
+        ...(programmeOfStudy ? { programmeOfStudy: programmeOfStudy.trim() } : {}),
+        ...(yearOfStudy ? { yearOfStudy: yearOfStudy.trim() } : {}),
+        ...(dateOfAdmission ? { dateOfAdmission: dateOfAdmission.trim() } : {}),
+        ...(studentType ? { studentType: studentType.trim() } : {}),
+      }
+    });
+
+    appCache.del(`user:me:${req.user.id}`);
+
+    try {
+      emitToUser(req.user.id, 'profile_updated', updatedUser);
+      emitToAll('user_updated', { userId: req.user.id });
+    } catch (e) { /* non-blocking */ }
+
+    const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
+    await logAudit(req.user.id, 'SUBMIT_STUDENT_VERIFICATION', 'User', req.user.id, { campus: campus.trim(), studentId: studentId.trim() }, {}, ipAddress);
+
+    res.status(200).json({
+      message: 'Student status credentials registered successfully',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Submit Student Verification error:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const { 

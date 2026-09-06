@@ -151,6 +151,26 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       res.status(404).json({ message: 'Property not found' });
       return;
     }
+
+    // ── STRICT STUDENT-ONLY ACCESS GUARD ──
+    const isStudentRestricted = property.type === 'Hostel' || property.targetAudience === 'Students Only';
+    if (isStudentRestricted) {
+      const tenant = await prisma.user.findUnique({ 
+        where: { id: tenantId },
+        select: { id: true, studentId: true, campus: true, programmeOfStudy: true }
+      });
+      const hasStudentId = Boolean(tenant?.studentId && tenant.studentId.trim().length > 0);
+      const hasCampus = Boolean(tenant?.campus && tenant.campus.trim().length > 0);
+
+      if (!hasStudentId || !hasCampus) {
+        res.status(403).json({
+          message: 'Student Access Restricted: This accommodation is strictly reserved for verified tertiary students. Please complete your Student Profile (Campus and Student ID) to book this hostel.',
+          requiresStudentVerification: true,
+          propertyTitle: property.title
+        });
+        return;
+      }
+    }
     
     const room = await prisma.room.findUnique({ where: { id: roomId } });
     if (!room || room.propertyId !== propertyId) {
