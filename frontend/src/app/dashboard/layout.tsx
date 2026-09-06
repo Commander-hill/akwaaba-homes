@@ -2,8 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import { LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, ShieldCheck, Building, CreditCard, MessageSquare, Wrench, BellRing, Package, Key } from 'lucide-react';
+import { useEffect, Suspense } from 'react';
+import { 
+  LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, 
+  ShieldCheck, Building, CreditCard, MessageSquare, Wrench, BellRing, 
+  Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator 
+} from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
@@ -107,11 +111,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   } else {
     sidebarGroups = [
       {
-        title: 'MAIN',
+        title: 'RESIDENCE',
         links: [
           { name: 'My Bookings', href: '/dashboard/tenant', icon: LayoutDashboard },
-          { name: 'Find Properties', href: '/properties', icon: Home },
-          { name: 'Find Roommates', href: '/dashboard/roommates', icon: User },
+          { name: 'Lease & Documents', href: '/dashboard/tenant?tab=documents', icon: FileText },
+          { name: 'Rent & Payments', href: '/dashboard/tenant?tab=payments', icon: Receipt },
+          { name: 'Maintenance & Repairs', href: '/dashboard/tenant?tab=tickets', icon: Wrench },
+          { name: 'Safety & Hotlines', href: '/dashboard/tenant?tab=safety', icon: PhoneCall },
+        ]
+      },
+      {
+        title: 'LIVING & COMMUNITY',
+        links: [
+          { name: 'Find Roommates', href: '/dashboard/roommates', icon: Users },
+          { name: 'Bill Splitter', href: '/dashboard/tenant?tab=billsplit', icon: Calculator },
+          { name: 'Guest Passes', href: '/dashboard/tenant?tab=visitors', icon: KeyRound },
+          { name: 'Package Deliveries', href: '/dashboard/tenant?tab=deliveries', icon: Package },
+          { name: 'Saved Wishlist', href: '/dashboard/wishlist', icon: Heart },
+          { name: 'Explore Homes', href: '/properties', icon: Compass },
         ]
       },
       {
@@ -127,7 +144,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-[calc(100vh-5rem)] w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
-      <ModernSidebar user={user} groups={sidebarGroups} onLogout={handleLogout} />
+      <Suspense fallback={<div className="w-64 bg-[#0B0D12]" />}>
+        <ModernSidebar user={user} groups={sidebarGroups} onLogout={handleLogout} />
+      </Suspense>
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a]">

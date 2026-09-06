@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, Sparkles, Car, Package, DollarSign } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -22,11 +23,38 @@ import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
 import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTemplates';
 
-export default function TenantDashboard() {
+const VALID_TENANT_TABS = [
+  'bookings', 'tickets', 'reviews', 'roommates', 'documents', 'payments', 
+  'safety', 'messages', 'visitors', 'services', 'vehicles', 'renewals', 
+  'deliveries', 'billsplit'
+] as const;
+type TenantTabType = typeof VALID_TENANT_TABS[number];
+
+function TenantDashboardContent() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<
-    'bookings' | 'tickets' | 'reviews' | 'roommates' | 'documents' | 'payments' | 'safety' | 'messages' | 'visitors' | 'services' | 'vehicles' | 'renewals' | 'deliveries' | 'billsplit'
-  >('bookings');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
+  const [activeTab, setActiveTabState] = useState<TenantTabType>(
+    (tabParam && (VALID_TENANT_TABS as readonly string[]).includes(tabParam)) 
+      ? (tabParam as TenantTabType) 
+      : 'bookings'
+  );
+
+  const setActiveTab = (tab: TenantTabType) => {
+    setActiveTabState(tab);
+    const url = tab === 'bookings' ? '/dashboard/tenant' : `/dashboard/tenant?tab=${tab}`;
+    router.replace(url, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (tabParam && (VALID_TENANT_TABS as readonly string[]).includes(tabParam)) {
+      setActiveTabState(tabParam as TenantTabType);
+    } else if (!tabParam) {
+      setActiveTabState('bookings');
+    }
+  }, [tabParam]);
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -1525,5 +1553,17 @@ export default function TenantDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TenantDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[500px] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--primary)]" />
+      </div>
+    }>
+      <TenantDashboardContent />
+    </Suspense>
   );
 }

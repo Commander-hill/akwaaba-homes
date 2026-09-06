@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -32,6 +32,7 @@ interface ModernSidebarProps {
 
 export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -153,7 +154,16 @@ export default function ModernSidebar({ user, groups, onLogout }: ModernSidebarP
               <div className="space-y-1">
                 {group.links.map((link) => {
                   const Icon = link.icon;
-                  const isActive = pathname === link.href;
+                  const [linkPath, linkQuery] = link.href.split('?');
+                  const linkTab = linkQuery ? new URLSearchParams(linkQuery).get('tab') : null;
+                  const currentTab = searchParams ? searchParams.get('tab') : null;
+
+                  let isActive = false;
+                  if (linkTab) {
+                    isActive = pathname === linkPath && currentTab === linkTab;
+                  } else if (pathname === linkPath) {
+                    isActive = !currentTab || (linkPath === '/dashboard/tenant' && currentTab === 'bookings');
+                  }
 
                   return (
                     <Link
