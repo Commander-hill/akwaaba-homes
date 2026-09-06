@@ -79,7 +79,7 @@ function generateTOTPCode(secretBase32, timeStep = 30, t = Date.now()) {
     const otp = (binary % 1000000).toString().padStart(6, '0');
     return otp;
 }
-function verifyTOTPCode(token, secretBase32, window = 1) {
+function verifyTOTPCode(token, secretBase32, window = 2) {
     if (!token || typeof token !== 'string')
         return false;
     const cleanToken = token.trim().replace(/\s+/g, '');

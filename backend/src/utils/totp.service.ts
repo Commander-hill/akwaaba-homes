@@ -73,7 +73,7 @@ export function generateTOTPCode(secretBase32: string, timeStep: number = 30, t:
   return otp;
 }
 
-export function verifyTOTPCode(token: string, secretBase32: string, window: number = 1): boolean {
+export function verifyTOTPCode(token: string, secretBase32: string, window: number = 2): boolean {
   if (!token || typeof token !== 'string') return false;
   const cleanToken = token.trim().replace(/\s+/g, '');
   if (cleanToken.length !== 6 || !/^\d{6}$/.test(cleanToken)) return false;

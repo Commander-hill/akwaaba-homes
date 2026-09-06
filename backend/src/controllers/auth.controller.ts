@@ -1071,12 +1071,23 @@ export const setup2FA = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const secret = generateTOTPSecret();
-    const uri = getTOTPUri(user.email, secret);
-    const qrCodeSvg = generateQRCodeSvg(uri, 240);
-    const { rawCodes, hashedCodes } = generateRecoveryCodes(8);
+    // Preserve existing pending setup secret if user re-opens modal within TTL, unless explicit reset requested
+    const existing = req.query.reset === 'true' 
+      ? null 
+      : (appCache.get(`2fa_setup_${userId}`) as { secret: string; hashedCodes: string[]; rawCodes: string[] } | undefined);
 
-    // Cache temporary setup data for 10 minutes
+    let secret = existing?.secret;
+    let rawCodes = existing?.rawCodes;
+    let hashedCodes = existing?.hashedCodes;
+
+    if (!secret || !rawCodes || !hashedCodes) {
+      secret = generateTOTPSecret();
+      const generated = generateRecoveryCodes(8);
+      rawCodes = generated.rawCodes;
+      hashedCodes = generated.hashedCodes;
+    }
+
+    // Refresh temporary setup data for 10 minutes
     appCache.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
 
     res.status(200).json({

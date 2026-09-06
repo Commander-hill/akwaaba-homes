@@ -940,11 +940,20 @@ const setup2FA = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        const secret = (0, totp_service_1.generateTOTPSecret)();
-        const uri = (0, totp_service_1.getTOTPUri)(user.email, secret);
-        const qrCodeSvg = (0, totp_service_1.generateQRCodeSvg)(uri, 240);
-        const { rawCodes, hashedCodes } = (0, totp_service_1.generateRecoveryCodes)(8);
-        // Cache temporary setup data for 10 minutes
+        // Preserve existing pending setup secret if user re-opens modal within TTL, unless explicit reset requested
+        const existing = req.query.reset === 'true'
+            ? null
+            : cache_1.default.get(`2fa_setup_${userId}`);
+        let secret = existing?.secret;
+        let rawCodes = existing?.rawCodes;
+        let hashedCodes = existing?.hashedCodes;
+        if (!secret || !rawCodes || !hashedCodes) {
+            secret = (0, totp_service_1.generateTOTPSecret)();
+            const generated = (0, totp_service_1.generateRecoveryCodes)(8);
+            rawCodes = generated.rawCodes;
+            hashedCodes = generated.hashedCodes;
+        }
+        // Refresh temporary setup data for 10 minutes
         cache_1.default.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
         res.status(200).json({
             secret,
