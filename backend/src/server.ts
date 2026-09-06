@@ -206,6 +206,8 @@ app.get('/api/health', (req: Request, res: Response) => {
     status: 'ok',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
+    commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
+    uptime: Math.round(process.uptime()),
   });
 });
 

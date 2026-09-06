@@ -176,6 +176,8 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString(),
+        commit: process.env.RENDER_GIT_COMMIT || 'local-dev',
+        uptime: Math.round(process.uptime()),
     });
 });
 // ─── Global Rate Limiting (High-Throughput Safe Ceiling) ───────────────────────
