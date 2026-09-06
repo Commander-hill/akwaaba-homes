@@ -3,12 +3,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyMoMoAccountName = exports.handleTransferWebhook = exports.getPayoutHistory = exports.requestPayout = void 0;
+exports.verifyMoMoAccountName = exports.handleTransferWebhook = exports.getPayoutHistory = exports.requestPayout = exports.requestPayoutOTP = void 0;
 const axios_1 = __importDefault(require("axios"));
 const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const notification_service_1 = require("../utils/notification.service");
+const cache_1 = __importDefault(require("../utils/cache"));
+const crypto_2 = require("../utils/crypto");
+const totp_service_1 = require("../utils/totp.service");
+const emailTemplate_1 = require("../utils/emailTemplate");
+const auditLogger_1 = require("../utils/auditLogger");
 const PAYSTACK_BASE = 'https://api.paystack.co';
 // ─── Helper: Create Paystack Recipient ──────────────────────────────────────
 async function createPaystackRecipient(type, name, accountNumber, bankOrNetwork) {
@@ -35,6 +40,77 @@ async function createPaystackRecipient(type, name, accountNumber, bankOrNetwork)
     });
     return res.data.data.recipient_code;
 }
+// ─── POST /api/v1/payouts/otp ───────────────────────────────────────────────
+const requestPayoutOTP = async (req, res) => {
+    try {
+        const landlordId = req.user?.id;
+        if (!landlordId || req.user?.role !== 'LANDLORD') {
+            res.status(403).json({ message: 'Forbidden — Landlords only' });
+            return;
+        }
+        const landlord = await prisma_1.default.user.findUnique({
+            where: { id: landlordId },
+            select: { email: true, firstName: true }
+        });
+        if (!landlord) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        // Generate 6-digit OTP code
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        cache_1.default.set(`payout_otp_${landlordId}`, otpCode, 300); // 5 minutes TTL
+        const transporter = (0, notification_service_1.getTransporter)();
+        if (transporter) {
+            const bodyHtml = `
+        <div style="margin-bottom:24px;">
+          <div style="margin-bottom:12px;">
+            ${(0, emailTemplate_1.emailBadgeHtml)({ label: 'STEP-UP SECURITY', value: 'WITHDRAWAL AUTHORIZATION', variant: 'emerald' })}
+          </div>
+          <h2 style="color:#0F172A;font-size:20px;font-weight:800;margin:0 0 10px;line-height:1.3;">
+            Authorize Mobile Money / Bank Withdrawal
+          </h2>
+          <p style="color:#475569;font-size:14px;line-height:1.7;margin:0;">
+            Dear <strong>${landlord.firstName}</strong>, a withdrawal of rental earnings was initiated from your landlord balance.
+          </p>
+          <div style="background:#F0FDF4;border:2px dashed #0F5132;border-radius:12px;padding:20px;text-align:center;margin:24px 0;">
+            <p style="color:#64748B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">
+              Your 6-Digit One-Time Authorization Code
+            </p>
+            <div style="font-size:32px;font-weight:900;letter-spacing:8px;color:#0F5132;font-family:ui-monospace,Menlo,monospace;">
+              ${otpCode}
+            </div>
+            <p style="color:#94A3B8;font-size:11px;margin:8px 0 0;">
+              This code expires in 5 minutes. Never share this authorization code with anyone.
+            </p>
+          </div>
+          <p style="color:#64748B;font-size:13px;line-height:1.6;margin:0;">
+            If you did not initiate this withdrawal, please contact Akwaaba Homes fraud support immediately and change your account password.
+          </p>
+        </div>
+      `;
+            transporter.sendMail({
+                from: `"Akwaaba Security" <${process.env.SMTP_USER}>`,
+                to: landlord.email,
+                subject: `[Akwaaba Homes] ${otpCode} is your withdrawal authorization code`,
+                html: (0, emailTemplate_1.renderInstitutionalEmail)({
+                    title: 'Withdrawal Authorization Code',
+                    preheader: `Use code ${otpCode} to authorize your cash payout`,
+                    categoryTag: 'FINANCIAL SECURITY',
+                    bodyHtml
+                })
+            }).catch(err => console.error('Failed to send payout OTP email:', err));
+        }
+        res.status(200).json({
+            success: true,
+            message: `A 6-digit authorization code has been dispatched to ${landlord.email}. Code expires in 5 minutes.`
+        });
+    }
+    catch (error) {
+        console.error('requestPayoutOTP error:', error);
+        res.status(500).json({ message: 'Failed to generate payout OTP' });
+    }
+};
+exports.requestPayoutOTP = requestPayoutOTP;
 // ─── POST /api/v1/payouts/request ───────────────────────────────────────────
 const requestPayout = async (req, res) => {
     try {
@@ -43,7 +119,7 @@ const requestPayout = async (req, res) => {
             res.status(403).json({ message: 'Forbidden — Landlords only' });
             return;
         }
-        const { amount, recipientType, accountName, accountNumber, bankOrNetwork } = req.body;
+        const { amount, recipientType, accountName, accountNumber, bankOrNetwork, twoFactorCode, emailOtp } = req.body;
         if (!amount || !recipientType || !accountName || !accountNumber || !bankOrNetwork) {
             res.status(400).json({ message: 'All payout fields are required' });
             return;
@@ -52,40 +128,125 @@ const requestPayout = async (req, res) => {
             res.status(400).json({ message: 'Minimum withdrawal amount is GHS 10' });
             return;
         }
-        // Calculate net earnings available for withdrawal
-        const sysConfig = await (0, config_service_1.getSystemConfig)();
-        const commissionPct = sysConfig.platformCommissionPercent || 5.0;
-        const transactions = await prisma_1.default.transaction.findMany({
-            where: { landlordId, status: 'SUCCESS' },
+        // ─── STEP-UP AUTHENTICATION (TOTP / EMAIL OTP) ──────────────────────
+        const landlord = await prisma_1.default.user.findUnique({
+            where: { id: landlordId },
+            select: {
+                id: true,
+                email: true,
+                firstName: true,
+                twoFactorEnabled: true,
+                twoFactorSecret: true,
+                twoFactorRecoveryCodes: true
+            }
         });
-        const totalNetEarnings = transactions.reduce((acc, tx) => {
-            const net = tx.amount - (tx.amount * commissionPct) / 100;
-            return acc + net;
-        }, 0);
-        // Sum previous successful payouts
-        const previousPayouts = await prisma_1.default.payoutRequest.findMany({
-            where: { landlordId, status: { in: ['PENDING', 'PROCESSING', 'SUCCESS'] } },
-        });
-        const totalPaidOut = previousPayouts.reduce((acc, p) => acc + p.amount, 0);
-        const availableBalance = totalNetEarnings - totalPaidOut;
-        if (amount > availableBalance) {
-            res.status(400).json({
-                message: `Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`,
-                availableBalance,
-            });
+        if (!landlord) {
+            res.status(404).json({ message: 'Landlord not found' });
             return;
         }
-        // Create payout record immediately (PENDING state)
-        const payout = await prisma_1.default.payoutRequest.create({
-            data: {
-                landlordId,
-                amount,
-                recipientType,
-                accountName,
-                accountNumber,
-                bankOrNetwork,
-                status: 'PENDING',
-            },
+        let authPassed = false;
+        let authMethodUsed = '';
+        if (landlord.twoFactorEnabled && landlord.twoFactorSecret) {
+            if (twoFactorCode) {
+                const cleanCode = String(twoFactorCode).trim();
+                const decryptedSecret = (0, crypto_2.decryptData)(landlord.twoFactorSecret);
+                if (/^\d{6}$/.test(cleanCode) && (0, totp_service_1.verifyTOTPCode)(cleanCode, decryptedSecret)) {
+                    authPassed = true;
+                    authMethodUsed = 'TOTP_2FA';
+                }
+                else {
+                    // Check recovery code
+                    const recoveryRes = (0, totp_service_1.verifyAndConsumeRecoveryCode)(cleanCode, landlord.twoFactorRecoveryCodes);
+                    if (recoveryRes.valid && recoveryRes.remainingHashedCodes) {
+                        await prisma_1.default.user.update({
+                            where: { id: landlord.id },
+                            data: { twoFactorRecoveryCodes: JSON.stringify(recoveryRes.remainingHashedCodes) }
+                        });
+                        authPassed = true;
+                        authMethodUsed = '2FA_RECOVERY_CODE';
+                    }
+                }
+            }
+            else if (emailOtp) {
+                const cachedOtp = cache_1.default.get(`payout_otp_${landlordId}`);
+                if (cachedOtp && String(cachedOtp).trim() === String(emailOtp).trim()) {
+                    authPassed = true;
+                    authMethodUsed = 'EMAIL_OTP';
+                    cache_1.default.del(`payout_otp_${landlordId}`);
+                }
+            }
+            if (!authPassed) {
+                res.status(403).json({
+                    requireStepUp: true,
+                    method: '2FA_OR_EMAIL',
+                    message: 'Step-up authentication required. Please enter your 6-digit TOTP code or request an email OTP.'
+                });
+                return;
+            }
+        }
+        else {
+            // 2FA not enabled on account: Require 6-digit Email OTP
+            if (!emailOtp) {
+                res.status(403).json({
+                    requireStepUp: true,
+                    method: 'EMAIL_OTP',
+                    message: 'Security authorization code required. Please click "Request Email Code" to authorize this withdrawal.'
+                });
+                return;
+            }
+            const cachedOtp = cache_1.default.get(`payout_otp_${landlordId}`);
+            if (!cachedOtp || String(cachedOtp).trim() !== String(emailOtp).trim()) {
+                res.status(403).json({
+                    requireStepUp: true,
+                    method: 'EMAIL_OTP',
+                    message: 'Invalid or expired authorization code. Please request a new code.'
+                });
+                return;
+            }
+            authPassed = true;
+            authMethodUsed = 'EMAIL_OTP';
+            cache_1.default.del(`payout_otp_${landlordId}`);
+        }
+        try {
+            await (0, auditLogger_1.logAudit)(landlordId, 'PAYOUT_STEP_UP_PASSED', 'PayoutRequest', null, null, { amount, authMethodUsed }, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        // Calculate net earnings available for withdrawal with atomic transaction lock
+        const sysConfig = await (0, config_service_1.getSystemConfig)();
+        const commissionPct = sysConfig.platformCommissionPercent || 5.0;
+        // Atomic Serializable Transaction: Prevents concurrent race conditions / double-spending
+        const payout = await prisma_1.default.$transaction(async (tx) => {
+            const transactions = await tx.transaction.findMany({
+                where: { landlordId, status: 'SUCCESS' },
+            });
+            const totalNetEarnings = transactions.reduce((acc, t) => {
+                const net = t.amount - (t.amount * commissionPct) / 100;
+                return acc + net;
+            }, 0);
+            // Sum previous pending, processing, and successful payouts
+            const previousPayouts = await tx.payoutRequest.findMany({
+                where: { landlordId, status: { in: ['PENDING', 'PROCESSING', 'SUCCESS'] } },
+            });
+            const totalPaidOut = previousPayouts.reduce((acc, p) => acc + p.amount, 0);
+            const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
+            if (amount > availableBalance) {
+                throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`);
+            }
+            // Atomically create payout record (PENDING state)
+            return await tx.payoutRequest.create({
+                data: {
+                    landlordId,
+                    amount,
+                    recipientType,
+                    accountName,
+                    accountNumber,
+                    bankOrNetwork,
+                    status: 'PENDING',
+                },
+            });
+        }, {
+            isolationLevel: 'Serializable',
+            timeout: 10000,
         });
         // Attempt Paystack Transfer in background
         setImmediate(async () => {
@@ -159,8 +320,13 @@ const requestPayout = async (req, res) => {
         });
     }
     catch (error) {
+        if (error?.message && error.message.includes('INSUFFICIENT_BALANCE:')) {
+            const msg = error.message.replace('INSUFFICIENT_BALANCE:', '').trim();
+            res.status(400).json({ message: msg });
+            return;
+        }
         console.error('[Payout] requestPayout error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error processing payout' });
     }
 };
 exports.requestPayout = requestPayout;
@@ -207,16 +373,28 @@ exports.getPayoutHistory = getPayoutHistory;
 // ─── Paystack Transfer Webhook Handler (transfer.success / transfer.failed) ─
 const handleTransferWebhook = async (req, res) => {
     try {
-        // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION ──
+        // ── CRYPTOGRAPHIC WEBHOOK SIGNATURE VERIFICATION (RAW BUFFER) ──
         const paystackSignature = req.headers['x-paystack-signature'];
         const secretKey = process.env.PAYSTACK_SECRET_KEY;
-        if (secretKey && !secretKey.startsWith('sk_test_') && !secretKey.includes('replace_with_your_actual')) {
-            const hash = crypto_1.default.createHmac('sha512', secretKey).update(JSON.stringify(req.body)).digest('hex');
-            if (hash !== paystackSignature) {
-                console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
-                res.status(401).json({ message: 'Invalid webhook signature' });
-                return;
-            }
+        if (!secretKey) {
+            console.warn('⚠️ Missing PAYSTACK_SECRET_KEY for payout webhook.');
+            res.status(500).json({ message: 'Webhook misconfigured' });
+            return;
+        }
+        if (!paystackSignature) {
+            console.warn('⚠️ Missing x-paystack-signature header.');
+            res.status(401).json({ message: 'Missing signature header' });
+            return;
+        }
+        // Use raw binary body buffer to avoid JSON key-ordering or whitespace differences
+        const rawPayload = req.rawBody || Buffer.from(JSON.stringify(req.body), 'utf8');
+        const hash = crypto_1.default.createHmac('sha512', secretKey).update(rawPayload).digest('hex');
+        const expectedBuf = Buffer.from(hash, 'utf8');
+        const actualBuf = Buffer.from(paystackSignature, 'utf8');
+        if (expectedBuf.length !== actualBuf.length || !crypto_1.default.timingSafeEqual(expectedBuf, actualBuf)) {
+            console.warn('⚠️ Rejected unauthorized Paystack payout webhook with invalid signature.');
+            res.status(401).json({ message: 'Invalid webhook signature' });
+            return;
         }
         const { event, data } = req.body;
         if (event === 'transfer.success' || event === 'transfer.failed') {

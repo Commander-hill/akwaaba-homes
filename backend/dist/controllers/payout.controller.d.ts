@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+export declare const requestPayoutOTP: (req: Request, res: Response) => Promise<void>;
 export declare const requestPayout: (req: Request, res: Response) => Promise<void>;
 export declare const getPayoutHistory: (req: Request, res: Response) => Promise<void>;
 export declare const handleTransferWebhook: (req: Request, res: Response) => Promise<void>;

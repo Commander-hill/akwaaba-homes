@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -13,8 +13,10 @@ const auditLogger_1 = require("../utils/auditLogger");
 const crypto_2 = __importDefault(require("crypto"));
 const ua_parser_js_1 = require("ua-parser-js");
 const notification_service_1 = require("../utils/notification.service");
+const emailTemplate_1 = require("../utils/emailTemplate");
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
+const totp_service_1 = require("../utils/totp.service");
 const register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
@@ -48,12 +50,15 @@ const register = async (req, res) => {
         const passwordHash = await bcrypt_1.default.hash(password, saltRounds);
         // Generate verification token
         const verificationToken = crypto_2.default.randomBytes(32).toString('hex');
+        // Strict defense-in-depth: public registration only allows TENANT or LANDLORD
+        const allowedRoles = ['TENANT', 'LANDLORD'];
+        const safeRole = allowedRoles.includes(role) ? role : 'TENANT';
         const user = await prisma_1.default.user.create({
             data: {
                 email: normalizedEmail,
                 avatarUrl: avatarUrl ? String(avatarUrl).trim() : null,
                 passwordHash,
-                role: role || 'TENANT',
+                role: safeRole,
                 firstName,
                 lastName,
                 otherNames,
@@ -78,22 +83,56 @@ const register = async (req, res) => {
         const verifyLink = `${frontendUrl}/verify-email?token=${verificationToken}`;
         const transporter = (0, notification_service_1.getTransporter)();
         if (transporter) {
+            const bodyHtml = `
+        <div style="margin-bottom:24px;">
+          <div style="margin-bottom:12px;">
+            ${(0, emailTemplate_1.emailBadgeHtml)({ label: 'ACCOUNT SECURITY', value: 'IDENTITY VERIFICATION', variant: 'emerald' })}
+          </div>
+          <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
+            Welcome to Akwaaba Homes — Verify Your Account
+          </h2>
+          <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
+            Dear <strong>${user.firstName}</strong>, thank you for joining Ghana's institutional housing and tenancy network.
+          </p>
+          <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
+            To authenticate your account, protect against impersonation, and enable verified tenant/landlord transactions, please confirm your email address below:
+          </p>
+        </div>
+
+        ${(0, emailTemplate_1.emailCardHtml)(`
+          ${(0, emailTemplate_1.emailMetaTableHtml)([
+                { label: 'Registered Email', value: user.email },
+                { label: 'Platform Role', value: user.role || 'TENANT' },
+                { label: 'Identity Protection', value: 'NIA Ghana Card Protocol Ready' },
+                { label: 'Legal Compliance', value: 'Rent Act, 1963 (Act 220)' }
+            ])}
+        `, 'Account Credentials')}
+
+        ${(0, emailTemplate_1.emailButtonHtml)({
+                label: 'Verify Email Address',
+                url: verifyLink,
+                variant: 'primary'
+            })}
+
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-top:20px;">
+          <p style="color:#64748B;font-size:12px;line-height:1.6;margin:0 0 6px;">
+            If the button above does not open, copy and paste this secure link directly into your browser:
+          </p>
+          <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,Menlo,monospace;word-break:break-all;margin:0;">
+            ${verifyLink}
+          </p>
+        </div>
+      `;
             const mailOptions = {
                 from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
                 to: user.email,
                 subject: 'Verify your Akwaaba Homes Account',
-                html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 12px;">
-            <h2 style="color: #4F46E5;">Welcome to Akwaaba Homes!</h2>
-            <p style="color: #374151; font-size: 16px;">Hi ${user.firstName},</p>
-            <p style="color: #374151; font-size: 16px;">Thank you for registering. To start using your account, please verify your email address by clicking the button below:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${verifyLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Verify Email Address</a>
-            </div>
-            <p style="color: #6b7280; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-            <p style="color: #6b7280; font-size: 12px; word-break: break-all;">${verifyLink}</p>
-          </div>
-        `,
+                html: (0, emailTemplate_1.renderInstitutionalEmail)({
+                    title: 'Verify Your Akwaaba Homes Account',
+                    preheader: `Hi ${user.firstName}, please verify your email address on Akwaaba Homes`,
+                    categoryTag: 'ACCOUNT ACTIVATION',
+                    bodyHtml
+                }),
             };
             // Send email asynchronously to prevent blocking the registration request
             transporter.sendMail(mailOptions)
@@ -235,93 +274,18 @@ const login = async (req, res) => {
             });
             return;
         }
-        const currentTokenVersion = user.tokenVersion || 0;
-        const accessToken = (0, jwt_1.generateAccessToken)({ id: user.id, role: user.role, tokenVersion: currentTokenVersion });
-        const refreshToken = (0, jwt_1.generateRefreshToken)({ id: user.id, tokenVersion: currentTokenVersion });
-        // Parse User-Agent for Device Tracking
-        const parser = new ua_parser_js_1.UAParser(req.headers['user-agent']);
-        const browser = parser.getBrowser();
-        const os = parser.getOS();
-        const device = parser.getDevice();
-        const userAgentStr = `${browser.name || 'Unknown Browser'} on ${os.name || 'Unknown OS'}`;
-        const deviceFamilyStr = device.type ? `${device.vendor || ''} ${device.type}`.trim() : 'Desktop';
-        const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
-        const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
-        // Check if this device/IP is new (Anomaly / New Device Detection)
-        const existingSessionCount = await prisma_1.default.session.count({
-            where: {
-                userId: user.id,
-                userAgent: userAgentStr,
-                ipAddress: ipAddress
-            }
-        });
-        if (existingSessionCount === 0) {
-            // 🚨 Suspicious / New Device Sign-In Alert
-            try {
-                await prisma_1.default.notification.create({
-                    data: {
-                        userId: user.id,
-                        type: 'SECURITY',
-                        title: '🚨 New Device Sign-In Detected',
-                        message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
-                        link: '/dashboard/profile'
-                    }
-                });
-                const { getIO } = await import('../socket');
-                getIO().to(user.id).emit('notification', {
-                    title: '🚨 New Device Sign-In Detected',
-                    message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
-                    type: 'security'
-                });
-            }
-            catch (e) { /* non-blocking */ }
-            try {
-                await (0, auditLogger_1.logAudit)(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
-            }
-            catch (e) { /* non-blocking */ }
+        // CHECK TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE)
+        if (user.twoFactorEnabled) {
+            const tempToken = crypto_2.default.randomBytes(32).toString('hex');
+            cache_1.default.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
+            res.status(200).json({
+                requireTwoFactor: true,
+                tempToken,
+                message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
+            });
+            return;
         }
-        // Save session in DB
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
-        await prisma_1.default.session.create({
-            data: {
-                userId: user.id,
-                refreshToken,
-                ipAddress,
-                userAgent: userAgentStr,
-                deviceFamily: deviceFamilyStr,
-                osFamily: osFamilyStr,
-                expiresAt
-            }
-        });
-        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
-        res.cookie('accessToken', accessToken, {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? 'none' : 'lax',
-            maxAge: 15 * 60 * 1000, // 15 mins
-            path: '/'
-        });
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: isProd,
-            sameSite: isProd ? 'none' : 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            path: '/'
-        });
-        res.status(200).json({
-            message: 'Logged in successfully',
-            accessToken,
-            refreshToken,
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                studentId: user.studentId, // Used to check if onboarding is complete
-            },
-        });
+        await establishUserSessionAndRespond(user, req, res);
     }
     catch (error) {
         console.error('Login error:', error);
@@ -329,6 +293,156 @@ const login = async (req, res) => {
     }
 };
 exports.login = login;
+// Helper to establish user session, device tracking, cookies and JSON response
+const establishUserSessionAndRespond = async (user, req, res, message = 'Logged in successfully') => {
+    const currentTokenVersion = user.tokenVersion || 0;
+    const accessToken = (0, jwt_1.generateAccessToken)({ id: user.id, role: user.role, tokenVersion: currentTokenVersion });
+    const refreshToken = (0, jwt_1.generateRefreshToken)({ id: user.id, tokenVersion: currentTokenVersion });
+    // Parse User-Agent for Device Tracking
+    const parser = new ua_parser_js_1.UAParser(req.headers['user-agent']);
+    const browser = parser.getBrowser();
+    const os = parser.getOS();
+    const device = parser.getDevice();
+    const userAgentStr = `${browser.name || 'Unknown Browser'} on ${os.name || 'Unknown OS'}`;
+    const deviceFamilyStr = device.type ? `${device.vendor || ''} ${device.type}`.trim() : 'Desktop';
+    const osFamilyStr = `${os.name || 'Unknown'} ${os.version || ''}`.trim();
+    const ipAddress = req.ip || req.socket.remoteAddress || 'Unknown IP';
+    // Check if this device/IP is new (Anomaly / New Device Detection)
+    const existingSessionCount = await prisma_1.default.session.count({
+        where: {
+            userId: user.id,
+            userAgent: userAgentStr,
+            ipAddress: ipAddress
+        }
+    });
+    if (existingSessionCount === 0) {
+        try {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: user.id,
+                    type: 'SECURITY',
+                    title: '🚨 New Device Sign-In Detected',
+                    message: `Your account was accessed from a new device (${userAgentStr}, IP: ${ipAddress}). If this was not you, revoke remote sessions in Security Settings immediately.`,
+                    link: '/dashboard/profile'
+                }
+            });
+            const { getIO } = await import('../socket');
+            getIO().to(user.id).emit('notification', {
+                title: '🚨 New Device Sign-In Detected',
+                message: `Account accessed from ${userAgentStr} (${ipAddress}).`,
+                type: 'security'
+            });
+        }
+        catch (e) { /* non-blocking */ }
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'NEW_DEVICE_LOGIN', 'User', user.id, null, { userAgent: userAgentStr, ipAddress }, ipAddress);
+        }
+        catch (e) { /* non-blocking */ }
+    }
+    // Save session in DB
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
+    await prisma_1.default.session.create({
+        data: {
+            userId: user.id,
+            refreshToken,
+            ipAddress,
+            userAgent: userAgentStr,
+            deviceFamily: deviceFamilyStr,
+            osFamily: osFamilyStr,
+            expiresAt
+        }
+    });
+    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+    res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: 15 * 60 * 1000, // 15 mins
+        path: '/'
+    });
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        path: '/'
+    });
+    res.status(200).json({
+        message,
+        accessToken,
+        refreshToken,
+        user: {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            studentId: user.studentId,
+            twoFactorEnabled: !!user.twoFactorEnabled,
+        },
+    });
+};
+const login2FA = async (req, res) => {
+    try {
+        const { tempToken, code } = req.body;
+        if (!tempToken || !code) {
+            res.status(400).json({ message: 'Missing temporary token or verification code' });
+            return;
+        }
+        const userId = cache_1.default.get(`2fa_pending_${tempToken}`);
+        if (!userId) {
+            res.status(401).json({ message: 'Two-factor session expired or invalid. Please sign in again.' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user || !user.twoFactorEnabled || !user.twoFactorSecret) {
+            res.status(400).json({ message: 'Two-factor authentication is not active on this account.' });
+            return;
+        }
+        const cleanCode = String(code).trim().toUpperCase();
+        let isTotpValid = false;
+        const decryptedSecret = (0, crypto_1.decryptData)(user.twoFactorSecret);
+        if (/^\d{6}$/.test(cleanCode)) {
+            isTotpValid = (0, totp_service_1.verifyTOTPCode)(cleanCode, decryptedSecret);
+        }
+        let isRecoveryValid = false;
+        let updatedRecoveryCodes = null;
+        if (!isTotpValid) {
+            const recoveryCheck = (0, totp_service_1.verifyAndConsumeRecoveryCode)(cleanCode, user.twoFactorRecoveryCodes);
+            if (recoveryCheck.valid) {
+                isRecoveryValid = true;
+                updatedRecoveryCodes = recoveryCheck.remainingHashedCodes;
+            }
+        }
+        if (!isTotpValid && !isRecoveryValid) {
+            res.status(401).json({ message: 'Invalid 2FA code or recovery code. Please try again.' });
+            return;
+        }
+        if (isRecoveryValid && updatedRecoveryCodes) {
+            await prisma_1.default.user.update({
+                where: { id: user.id },
+                data: { twoFactorRecoveryCodes: JSON.stringify(updatedRecoveryCodes) }
+            });
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, '2FA_RECOVERY_CODE_CONSUMED', 'User', user.id, null, { remainingCodes: updatedRecoveryCodes.length }, req.ip);
+            }
+            catch (e) { /* non-blocking */ }
+        }
+        // Invalidate the pending 2FA token
+        cache_1.default.del(`2fa_pending_${tempToken}`);
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'LOGIN_2FA_SUCCESS', 'User', user.id, null, { method: isRecoveryValid ? 'RECOVERY_CODE' : 'TOTP' }, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        await establishUserSessionAndRespond(user, req, res, 'Two-factor authentication verified successfully');
+    }
+    catch (error) {
+        console.error('login2FA error:', error);
+        res.status(500).json({ message: 'Internal server error during 2FA verification' });
+    }
+};
+exports.login2FA = login2FA;
 const refresh = async (req, res) => {
     try {
         let { refreshToken } = req.cookies;
@@ -668,22 +782,54 @@ const forgotPassword = async (req, res) => {
         if (transporter) {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
             const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+            const bodyHtml = `
+      <div style="margin-bottom:24px;">
+        <div style="margin-bottom:12px;">
+          ${(0, emailTemplate_1.emailBadgeHtml)({ label: 'SECURITY NOTICE', value: '15-MINUTE EXPIRATION', variant: 'gold' })}
+        </div>
+        <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
+          Account Password Recovery Protocol
+        </h2>
+        <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
+          A password reset request was initiated for your Akwaaba Homes account associated with <strong>${user.email}</strong>.
+        </p>
+        <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
+          To authorize this security request and create a new password, click the secure credential reset button below:
+        </p>
+      </div>
+
+      ${(0, emailTemplate_1.emailCardHtml)(`
+        ${(0, emailTemplate_1.emailMetaTableHtml)([
+                { label: 'Security Window', value: '15 Minutes From Request' },
+                { label: 'Target Account', value: user.email },
+                { label: 'Authentication Protocol', value: 'SHA-256 Single-Use Nonce Token' },
+                { label: 'Platform Protection', value: 'Ghana Cyber Security Authority (Act 1038) Standards' }
+            ])}
+      `, 'Security Assessment')}
+
+      ${(0, emailTemplate_1.emailButtonHtml)({
+                label: 'Reset Account Password',
+                url: resetUrl,
+                variant: 'primary'
+            })}
+
+      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:16px;margin-top:20px;">
+        <p style="color:#92400E;font-size:13px;line-height:1.6;margin:0;">
+          🔒 <strong>Did not request this?</strong> If you did not initiate this password recovery request, your account remains secure. You can safely disregard this email or notify <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;font-weight:700;">support@akwaabahomes.com</a> immediately.
+        </p>
+      </div>
+    `;
             // Send email asynchronously
             transporter.sendMail({
-                from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
+                from: `"Akwaaba Homes Security" <${process.env.SMTP_USER}>`,
                 to: user.email,
-                subject: 'Password Reset Request',
-                html: `
-        <div style="font-family: Arial, sans-serif; max-w-2xl; margin: 0 auto;">
-          <h2>Password Reset Request</h2>
-          <p>You requested a password reset for your AkwaabaHomes account.</p>
-          <p>Please click the link below to set a new password. This link will expire in 15 minutes.</p>
-          <br />
-          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
-          <br /><br />
-          <p>If you did not request this, please ignore this email.</p>
-        </div>
-      `,
+                subject: 'Security Alert: Password Reset Request — Akwaaba Homes',
+                html: (0, emailTemplate_1.renderInstitutionalEmail)({
+                    title: 'Account Password Recovery Protocol',
+                    preheader: 'Reset your Akwaaba Homes account password (valid for 15 minutes)',
+                    categoryTag: 'SECURITY VERIFICATION',
+                    bodyHtml
+                }),
             })
                 .then(() => console.log(`✉️  Password reset email successfully sent to ${user.email}`))
                 .catch((emailError) => {
@@ -746,4 +892,173 @@ const resetPassword = async (req, res) => {
     }
 };
 exports.resetPassword = resetPassword;
+// ─── TWO-FACTOR AUTHENTICATION (TOTP / RFC 6238) MANAGEMENT ───────────────────
+const get2FAStatus = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({
+            where: { id: userId },
+            select: { twoFactorEnabled: true, twoFactorRecoveryCodes: true }
+        });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        let remainingRecoveryCodes = 0;
+        if (user.twoFactorRecoveryCodes) {
+            try {
+                const parsed = JSON.parse(user.twoFactorRecoveryCodes);
+                if (Array.isArray(parsed))
+                    remainingRecoveryCodes = parsed.length;
+            }
+            catch (e) { /* ignore */ }
+        }
+        res.status(200).json({
+            twoFactorEnabled: !!user.twoFactorEnabled,
+            remainingRecoveryCodes
+        });
+    }
+    catch (error) {
+        console.error('get2FAStatus error:', error);
+        res.status(500).json({ message: 'Failed to retrieve 2FA status' });
+    }
+};
+exports.get2FAStatus = get2FAStatus;
+const setup2FA = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        const secret = (0, totp_service_1.generateTOTPSecret)();
+        const uri = (0, totp_service_1.getTOTPUri)(user.email, secret);
+        const qrCodeSvg = (0, totp_service_1.generateQRCodeSvg)(uri, 240);
+        const { rawCodes, hashedCodes } = (0, totp_service_1.generateRecoveryCodes)(8);
+        // Cache temporary setup data for 10 minutes
+        cache_1.default.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
+        res.status(200).json({
+            secret,
+            formattedSecret: (0, totp_service_1.formatSecretKey)(secret),
+            qrCodeSvg,
+            rawCodes,
+            otpauthUri: uri,
+            message: 'Scan the QR code with your authenticator app (Google Authenticator, Authy, Microsoft Authenticator) or enter the secret key manually.'
+        });
+    }
+    catch (error) {
+        console.error('setup2FA error:', error);
+        res.status(500).json({ message: 'Failed to initialize 2FA setup' });
+    }
+};
+exports.setup2FA = setup2FA;
+const enable2FA = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { code } = req.body;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (!code || typeof code !== 'string') {
+            res.status(400).json({ message: 'Verification code is required' });
+            return;
+        }
+        const setupData = cache_1.default.get(`2fa_setup_${userId}`);
+        if (!setupData) {
+            res.status(400).json({ message: '2FA setup session expired. Please start the setup process again.' });
+            return;
+        }
+        const isValid = (0, totp_service_1.verifyTOTPCode)(code.trim(), setupData.secret);
+        if (!isValid) {
+            res.status(400).json({ message: 'Invalid 6-digit code. Please verify the code displayed in your authenticator app.' });
+            return;
+        }
+        const encryptedSecret = (0, crypto_1.encryptData)(setupData.secret);
+        await prisma_1.default.user.update({
+            where: { id: userId },
+            data: {
+                twoFactorEnabled: true,
+                twoFactorSecret: encryptedSecret,
+                twoFactorRecoveryCodes: JSON.stringify(setupData.hashedCodes)
+            }
+        });
+        cache_1.default.del(`2fa_setup_${userId}`);
+        try {
+            await (0, auditLogger_1.logAudit)(userId, '2FA_ENABLED', 'User', userId, null, {}, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({
+            success: true,
+            message: 'Two-factor authentication has been successfully activated on your account!'
+        });
+    }
+    catch (error) {
+        console.error('enable2FA error:', error);
+        res.status(500).json({ message: 'Failed to enable 2FA' });
+    }
+};
+exports.enable2FA = enable2FA;
+const disable2FA = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { password, code } = req.body;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        if (!user.twoFactorEnabled) {
+            res.status(400).json({ message: '2FA is not currently enabled on your account.' });
+            return;
+        }
+        // Require either correct account password or valid current TOTP code to disable
+        let isAuthorized = false;
+        if (password) {
+            isAuthorized = await bcrypt_1.default.compare(password, user.passwordHash);
+        }
+        if (!isAuthorized && code && user.twoFactorSecret) {
+            const decryptedSecret = (0, crypto_1.decryptData)(user.twoFactorSecret);
+            isAuthorized = (0, totp_service_1.verifyTOTPCode)(String(code).trim(), decryptedSecret);
+        }
+        if (!isAuthorized) {
+            res.status(401).json({ message: 'Invalid password or verification code. Cannot disable 2FA without valid authorization.' });
+            return;
+        }
+        await prisma_1.default.user.update({
+            where: { id: userId },
+            data: {
+                twoFactorEnabled: false,
+                twoFactorSecret: null,
+                twoFactorRecoveryCodes: null
+            }
+        });
+        try {
+            await (0, auditLogger_1.logAudit)(userId, '2FA_DISABLED', 'User', userId, null, {}, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({
+            success: true,
+            message: 'Two-factor authentication has been disabled.'
+        });
+    }
+    catch (error) {
+        console.error('disable2FA error:', error);
+        res.status(500).json({ message: 'Failed to disable 2FA' });
+    }
+};
+exports.disable2FA = disable2FA;
 //# sourceMappingURL=auth.controller.js.map

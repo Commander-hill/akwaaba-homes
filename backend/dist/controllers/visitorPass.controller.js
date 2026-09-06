@@ -25,6 +25,23 @@ const createVisitorPass = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
+        // Verify tenant has an active or approved tenancy at this property
+        const userRole = req.user?.role;
+        if (userRole !== 'ADMIN') {
+            const activeBooking = await prisma_1.default.booking.findFirst({
+                where: {
+                    tenantId,
+                    propertyId,
+                    status: { in: ['COMPLETED', 'ACTIVE', 'APPROVED', 'CONFIRMED'] }
+                }
+            });
+            if (!activeBooking) {
+                res.status(403).json({
+                    message: 'Access Denied: You can only generate visitor passes for properties where you have an active or confirmed tenancy.'
+                });
+                return;
+            }
+        }
         // Generate a secure 6-digit access PIN
         const accessCode = Math.floor(100000 + Math.random() * 900000).toString();
         const validFrom = new Date();

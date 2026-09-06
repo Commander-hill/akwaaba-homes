@@ -8,7 +8,7 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 // ─── Startup environment validation ─────────────────────────────────────────
-const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'PAYSTACK_SECRET_KEY'];
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'REFRESH_JWT_SECRET', 'PAYSTACK_SECRET_KEY', 'ENCRYPTION_KEY'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
 if (missing.length > 0) {
     console.error(`❌ Missing required environment variables: ${missing.join(', ')}`);
@@ -123,16 +123,15 @@ const ALLOWED_ORIGINS = [
 ].filter(Boolean);
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
-        // Allow server-to-server (no origin) and listed origins
+        // Allow server-to-server or curl/mobile (no origin) and explicitly allowlisted origins
         if (!origin ||
             ALLOWED_ORIGINS.some((o) => origin === o || origin.startsWith(o)) ||
-            origin.endsWith('.vercel.app') ||
-            origin.endsWith('.onrender.com')) {
+            ((origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) && origin.includes('akwaaba'))) {
             callback(null, true);
         }
         else {
-            console.warn(`⚠️ Blocked CORS request from: ${origin}`);
-            callback(null, true); // Gracefully allow rather than throwing a server error
+            console.warn(`🚨 Blocked unauthorized CORS request from origin: ${origin}`);
+            callback(new Error(`CORS policy: Origin ${origin} is not authorized`));
         }
     },
     credentials: true,
@@ -140,8 +139,13 @@ app.use((0, cors_1.default)({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     maxAge: 86400, // Cache preflight result for 24 hours
 }));
-// ─── Body parsing & cookies ──────────────────────────────────────────────────
-app.use(express_1.default.json({ limit: '10mb' }));
+// ─── Body parsing & cookies (preserves rawBody for webhook HMAC verification) ──
+app.use(express_1.default.json({
+    limit: '10mb',
+    verify: (req, _res, buf) => {
+        req.rawBody = buf;
+    },
+}));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use((0, cookie_parser_1.default)());
 // ─── HTTP Compression ────────────────────────────────────────────────────────

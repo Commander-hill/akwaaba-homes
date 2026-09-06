@@ -99,12 +99,28 @@ const confirmParcelPickup = async (req, res) => {
     try {
         const { id } = req.params;
         const { pickupCode } = req.body;
-        const delivery = await prisma_1.default.packageDelivery.findUnique({ where: { id } });
+        if (!pickupCode || typeof pickupCode !== 'string' || !pickupCode.trim()) {
+            res.status(400).json({ message: '4-digit pickup OTP code is required' });
+            return;
+        }
+        const delivery = await prisma_1.default.packageDelivery.findUnique({
+            where: { id },
+            include: { property: true }
+        });
         if (!delivery) {
             res.status(404).json({ message: 'Package record not found' });
             return;
         }
-        if (pickupCode && pickupCode.trim() !== delivery.pickupCode) {
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const isRecipient = delivery.tenantId === userId;
+        const isLandlord = delivery.property?.landlordId === userId;
+        const isStaffOrAdmin = userRole === 'STAFF' || userRole === 'CARETAKER' || userRole === 'ADMIN';
+        if (!isRecipient && !isLandlord && !isStaffOrAdmin) {
+            res.status(403).json({ message: 'Forbidden: You are not authorized to confirm pickup for this package' });
+            return;
+        }
+        if (pickupCode.trim() !== delivery.pickupCode) {
             res.status(400).json({ message: 'Invalid pickup OTP code' });
             return;
         }

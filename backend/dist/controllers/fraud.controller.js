@@ -41,8 +41,22 @@ const scanFraudRisk = async (req, res) => {
         // Map image URLs to detect duplicates across different landlords
         const imageLandlordMap = {};
         const duplicateImages = new Set();
+        const getImages = (raw) => {
+            if (Array.isArray(raw))
+                return raw;
+            if (typeof raw === 'string') {
+                try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                }
+                catch {
+                    return [];
+                }
+            }
+            return [];
+        };
         properties.forEach(p => {
-            const images = Array.isArray(p.images) ? p.images : [];
+            const images = getImages(p.images);
             images.forEach(img => {
                 if (imageLandlordMap[img] && imageLandlordMap[img] !== p.landlordId) {
                     duplicateImages.add(img);
@@ -68,7 +82,7 @@ const scanFraudRisk = async (req, res) => {
                 flags.push(`Unusually High Price (GHS ${p.price} vs. ${area} Avg GHS ${Math.round(avgPrice)})`);
             }
             // 2. Duplicate Photo Signal
-            const images = Array.isArray(p.images) ? p.images : [];
+            const images = getImages(p.images);
             const hasDuplicate = images.some(img => duplicateImages.has(img));
             if (hasDuplicate) {
                 riskScore += 40;

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 export declare const register: (req: Request, res: Response) => Promise<void>;
 export declare const verifyEmail: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;
+export declare const login2FA: (req: Request, res: Response) => Promise<void>;
 export declare const refresh: (req: Request, res: Response) => Promise<void>;
 export declare const logout: (req: Request, res: Response) => Promise<void>;
 export declare const getMe: (req: Request, res: Response) => Promise<void>;
@@ -11,4 +12,8 @@ export declare const submitLandlordVerification: (req: Request, res: Response) =
 export declare const updateProfile: (req: Request, res: Response) => Promise<void>;
 export declare const forgotPassword: (req: Request, res: Response) => Promise<void>;
 export declare const resetPassword: (req: Request, res: Response) => Promise<void>;
+export declare const get2FAStatus: (req: Request, res: Response) => Promise<void>;
+export declare const setup2FA: (req: Request, res: Response) => Promise<void>;
+export declare const enable2FA: (req: Request, res: Response) => Promise<void>;
+export declare const disable2FA: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=auth.controller.d.ts.map

@@ -5,10 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
-// ─── Login brute-force guard (5 attempts per 15 mins per IP) ─────────────────
+// ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 exports.loginRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
+    max: process.env.NODE_ENV === 'production' ? 5 : 500,
     message: { error: 'Too many login attempts. Your IP has been temporarily restricted for 15 minutes to prevent brute-force attacks.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -17,7 +17,7 @@ exports.loginRateLimiter = (0, express_rate_limit_1.default)({
 // ─── General auth routes: registration & refresh guard ─────────────────────
 exports.authRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 15,
+    max: process.env.NODE_ENV === 'production' ? 15 : 500,
     message: { error: 'Too many authentication requests. Please try again in 15 minutes.' },
     standardHeaders: true,
     legacyHeaders: false,

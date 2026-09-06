@@ -32,7 +32,7 @@ exports.registerValidation = [
         .withMessage('Password must contain at least 8 characters, 1 uppercase, 1 lowercase, 1 number, and 1 special character'),
     (0, express_validator_1.body)('firstName').notEmpty().withMessage('First name is required').trim().escape(),
     (0, express_validator_1.body)('lastName').notEmpty().withMessage('Last name is required').trim().escape(),
-    (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD', 'CARETAKER', 'STAFF', 'ADMIN']).withMessage('Invalid role'),
+    (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD']).withMessage('Public registration role must be either TENANT or LANDLORD'),
 ];
 exports.loginValidation = [
     (0, express_validator_1.body)('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),

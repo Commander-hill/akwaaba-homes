@@ -31,6 +31,7 @@ router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
 // Bookings & Transactions
 router.get('/bookings', admin_controller_1.getAllBookings);
 router.get('/subscriptions', admin_controller_1.getAllSubscriptions);
+router.get('/transactions', admin_controller_1.getAllTransactions);
 router.put('/subscriptions/:id/activate', admin_controller_1.activateSubscription);
 router.put('/subscriptions/:id/revoke', admin_controller_1.revokeSubscription);
 router.get('/reviews', admin_controller_1.getAllReviews);
@@ -42,6 +43,7 @@ router.get('/config', admin_controller_1.getConfig);
 router.put('/config', admin_controller_1.updateConfig);
 // Broadcast Notifications
 router.post('/notifications/broadcast', admin_controller_1.broadcastNotification);
+router.get('/notifications/broadcasts/history', admin_controller_1.getBroadcastHistory);
 // Maintenance Tickets
 router.get('/tickets', admin_controller_1.getAllTickets);
 router.put('/tickets/:id/status', admin_controller_1.adminUpdateTicketStatus);

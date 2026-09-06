@@ -16,7 +16,7 @@ const pdf_service_1 = require("../utils/pdf.service");
 const downloadAgreementPDF = async (req, res) => {
     try {
         const { id } = req.params;
-        const booking = await prisma_1.default.booking.findUnique({
+        let booking = await prisma_1.default.booking.findUnique({
             where: { id },
             include: {
                 property: { include: { landlord: true } },
@@ -25,8 +25,37 @@ const downloadAgreementPDF = async (req, res) => {
                 leaseAgreement: true
             }
         });
+        // Fallback: Check if id passed is actually a lease agreement ID
+        if (!booking) {
+            const agreement = await prisma_1.default.leaseAgreement.findUnique({
+                where: { id },
+                include: {
+                    booking: {
+                        include: {
+                            property: { include: { landlord: true } },
+                            room: true,
+                            tenant: true,
+                            leaseAgreement: true
+                        }
+                    }
+                }
+            });
+            if (agreement?.booking) {
+                booking = agreement.booking;
+            }
+        }
         if (!booking) {
             res.status(404).json({ message: 'Booking record not found' });
+            return;
+        }
+        // Strict IDOR Authorization Check
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const isTenant = booking.tenantId === userId;
+        const isLandlord = booking.property?.landlordId === userId;
+        const isAdmin = userRole === 'ADMIN';
+        if (!isTenant && !isLandlord && !isAdmin) {
+            res.status(403).json({ message: 'Access denied. You are not authorized to view or download this tenancy agreement.' });
             return;
         }
         const pdfBuffer = await (0, pdf_service_1.generateTenancyAgreementPDF)({
@@ -45,7 +74,9 @@ const downloadAgreementPDF = async (req, res) => {
             rentAmount: booking.room.price,
             cryptographicHash: booking.leaseAgreement?.cryptographicHash,
             tenantSignedAt: booking.leaseAgreement?.tenantSignedAt ? new Date(booking.leaseAgreement.tenantSignedAt).toLocaleString() : null,
+            tenantSignatureUrl: booking.leaseAgreement?.tenantSignature || null,
             landlordSignedAt: booking.leaseAgreement?.landlordSignedAt ? new Date(booking.leaseAgreement.landlordSignedAt).toLocaleString() : null,
+            landlordSignatureUrl: booking.leaseAgreement?.landlordSignature || null,
         });
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=Tenancy_Agreement_${booking.id.slice(0, 8)}.pdf`);
@@ -430,6 +461,12 @@ const updateBookingStatus = async (req, res) => {
             res.status(400).json({ message: 'Invalid status' });
             return;
         }
+        if (status === 'COMPLETED' && req.user.role !== 'ADMIN') {
+            res.status(403).json({
+                message: 'Forbidden: Tenancy can only transition to COMPLETED upon verified escrow payment or administrative review.'
+            });
+            return;
+        }
         const booking = await prisma_1.default.booking.findUnique({
             where: { id },
             include: {
@@ -444,6 +481,13 @@ const updateBookingStatus = async (req, res) => {
         if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
+        }
+        // Release reserved bed back to AVAILABLE if booking is rejected or cancelled
+        if ((status === 'REJECTED' || status === 'CANCELLED') && booking.bedId) {
+            await prisma_1.default.bed.update({
+                where: { id: booking.bedId },
+                data: { status: 'AVAILABLE' }
+            });
         }
         const updatedBooking = await prisma_1.default.booking.update({ where: { id }, data: { status } });
         // Auto-generate Lease Agreement when approved
@@ -605,43 +649,51 @@ const verifyPayment = async (req, res) => {
             res.status(200).json({ message: 'Booking is already paid', booking });
             return;
         }
-        const isTestRef = reference.startsWith('BOOKING_TEST_') || reference.includes('test');
-        let isSuccess = false;
-        let verifiedAmount = Math.round(booking.room.price * 100);
-        if (isTestRef || !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_')) {
-            try {
-                if (process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual') && !isTestRef) {
-                    const verifyRes = await axios_1.default.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-                        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
-                    });
-                    isSuccess = verifyRes.data.data.status === 'success';
-                    if (verifyRes.data.data.amount)
-                        verifiedAmount = verifyRes.data.data.amount;
-                }
-                else {
-                    isSuccess = true; // Auto-verify test transactions
-                }
-            }
-            catch (err) {
-                if (isTestRef || process.env.PAYSTACK_SECRET_KEY?.startsWith('sk_test_')) {
-                    isSuccess = true;
-                }
-                else {
-                    res.status(400).json({ message: 'Payment verification failed' });
-                    return;
-                }
-            }
+        // 1. Replay attack prevention: ensure reference has never been used
+        const existingTx = await prisma_1.default.transaction.findFirst({
+            where: { reference }
+        });
+        if (existingTx) {
+            res.status(400).json({ message: 'This payment reference has already been processed or claimed.' });
+            return;
         }
-        else {
+        // 2. Cryptographic verification with Paystack
+        const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+        if (!paystackKey) {
+            res.status(500).json({ message: 'Paystack secret key is not configured.' });
+            return;
+        }
+        let isSuccess = false;
+        let verifiedAmount = 0;
+        try {
             const verifyRes = await axios_1.default.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-                headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+                headers: { Authorization: `Bearer ${paystackKey}` }
             });
-            isSuccess = verifyRes.data.data.status === 'success';
-            if (verifyRes.data.data.amount)
-                verifiedAmount = verifyRes.data.data.amount;
+            const txData = verifyRes.data?.data;
+            isSuccess = txData?.status === 'success';
+            verifiedAmount = txData?.amount || 0;
+        }
+        catch (err) {
+            console.error('Paystack verification call failed:', err.response?.data || err.message);
+            res.status(400).json({ message: 'Payment verification failed with provider.' });
+            return;
         }
         if (!isSuccess) {
-            res.status(400).json({ message: 'Payment verification failed' });
+            res.status(400).json({ message: 'Payment verification failed. Transaction was not successful.' });
+            return;
+        }
+        // 3. Exact amount assertion (pesewas)
+        const expectedAmount = Math.round(booking.room.price * 100);
+        if (verifiedAmount < expectedAmount) {
+            res.status(400).json({
+                message: `Payment amount mismatch. Expected GHS ${booking.room.price.toFixed(2)}, but received GHS ${(verifiedAmount / 100).toFixed(2)}.`
+            });
+            return;
+        }
+        // 4. Booking association assertion (Metadata check)
+        const txBookingId = verifyRes.data?.data?.metadata?.bookingId;
+        if (txBookingId && txBookingId !== booking.id) {
+            res.status(400).json({ message: 'Payment reference belongs to a different tenancy booking.' });
             return;
         }
         const operations = [

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.getBroadcastHistory = exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllTransactions = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
@@ -38,7 +38,11 @@ const getSystemStats = async (req, res) => {
         }
         const totalUsers = await prisma_1.default.user.count();
         const totalLandlords = await prisma_1.default.user.count({ where: { role: 'LANDLORD' } });
+        const totalTenants = await prisma_1.default.user.count({ where: { role: 'TENANT' } });
         const totalProperties = await prisma_1.default.property.count();
+        const verifiedProperties = await prisma_1.default.property.count({ where: { approvalStatus: 'APPROVED' } });
+        const verifiedUsers = await prisma_1.default.user.count({ where: { isCardVerified: true } });
+        const verifiedLandlords = await prisma_1.default.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } });
         const totalBookings = await prisma_1.default.booking.count();
         // Sum all successful transaction amounts (total platform transaction volume)
         const transactionSum = await prisma_1.default.transaction.aggregate({
@@ -61,7 +65,11 @@ const getSystemStats = async (req, res) => {
         const responseData = {
             totalUsers,
             totalLandlords,
+            totalTenants,
             totalProperties,
+            verifiedProperties,
+            verifiedUsers,
+            verifiedLandlords,
             totalBookings,
             totalRevenue,
             monthlyGrowth
@@ -77,17 +85,16 @@ const getSystemStats = async (req, res) => {
 exports.getSystemStats = getSystemStats;
 const getPlatformAnalytics = async (req, res) => {
     try {
-        const cachedAnalytics = cache_1.default.get('admin_analytics');
-        if (cachedAnalytics) {
-            res.status(200).json(cachedAnalytics);
-            return;
-        }
-        // 1. Conversion Metrics
+        // 1. Conversion Metrics (Proper real estate tenancy pipeline)
         const totalBookings = await prisma_1.default.booking.count();
-        const approvedBookings = await prisma_1.default.booking.count({ where: { status: 'APPROVED' } });
-        const paidBookings = await prisma_1.default.booking.count({ where: { status: 'COMPLETED' } });
+        const approvedBookings = await prisma_1.default.booking.count({
+            where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED'] } }
+        });
+        const paidBookings = await prisma_1.default.booking.count({
+            where: { status: { in: ['COMPLETED', 'CONFIRMED'] } }
+        });
         const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
-        // 2. Revenue Metrics
+        // 2. Revenue Metrics (Escrow volume)
         const totalTransactions = await prisma_1.default.transaction.aggregate({
             _sum: { amount: true },
             where: { status: 'SUCCESS' }
@@ -104,7 +111,7 @@ const getPlatformAnalytics = async (req, res) => {
         const landlordIds = landlordGroup.map(g => g.landlordId);
         const landlords = await prisma_1.default.user.findMany({
             where: { id: { in: landlordIds } },
-            select: { id: true, firstName: true, lastName: true, email: true }
+            select: { id: true, firstName: true, lastName: true, email: true, isVerifiedLandlord: true }
         });
         const topLandlords = landlordGroup.map((g, index) => {
             const l = landlords.find(u => u.id === g.landlordId);
@@ -113,33 +120,69 @@ const getPlatformAnalytics = async (req, res) => {
                 landlordId: g.landlordId,
                 name: l ? `${l.firstName} ${l.lastName}` : 'Landlord',
                 email: l ? l.email : 'N/A',
+                isVerified: l ? l.isVerifiedLandlord : false,
                 totalEarningsGhs: g._sum.amount || 0
             };
         });
-        // 4. Geographical Density (Properties by Location / Region)
+        // 4. Metropolitan Property Density (Ghana Prime Real Estate Regions)
         const properties = await prisma_1.default.property.findMany({
-            select: { location: true }
+            select: { location: true, type: true }
         });
-        const locationCounts = {};
+        const locationCounts = {
+            'Greater Accra': 0,
+            'Ashanti (Kumasi)': 0,
+            'Central Region': 0,
+            'Western (Takoradi)': 0,
+            'Eastern & Other': 0
+        };
+        const categoryCounts = {
+            'Apartments': 0,
+            'Executive Studios': 0,
+            'Houses & Villas': 0,
+            'Flats & Co-living': 0,
+            'Student Hostels': 0
+        };
         properties.forEach(p => {
-            let loc = p.location || 'Other Region';
-            const lower = loc.toLowerCase();
-            if (lower.includes('ucc') || lower.includes('cape coast'))
-                loc = 'UCC / Cape Coast';
-            else if (lower.includes('legon') || lower.includes('accra'))
-                loc = 'UG Legon / Accra';
-            else if (lower.includes('knust') || lower.includes('kumasi'))
-                loc = 'KNUST / Kumasi';
-            else if (lower.includes('uew') || lower.includes('winneba'))
-                loc = 'UEW / Winneba';
-            else if (lower.includes('uenr') || lower.includes('sunyani'))
-                loc = 'UENR / Sunyani';
-            locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+            const loc = (p.location || '').toLowerCase();
+            if (loc.includes('accra') || loc.includes('legon') || loc.includes('airport') || loc.includes('cantonments') || loc.includes('osu') || loc.includes('spintex') || loc.includes('tema') || loc.includes('dzorwulu')) {
+                locationCounts['Greater Accra']++;
+            }
+            else if (loc.includes('kumasi') || loc.includes('ashanti') || loc.includes('knust') || loc.includes('ahodwo') || loc.includes('asokwa')) {
+                locationCounts['Ashanti (Kumasi)']++;
+            }
+            else if (loc.includes('cape coast') || loc.includes('winneba') || loc.includes('central') || loc.includes('elmina') || loc.includes('ucc') || loc.includes('uew')) {
+                locationCounts['Central Region']++;
+            }
+            else if (loc.includes('takoradi') || loc.includes('sekondi') || loc.includes('western') || loc.includes('tarkwa')) {
+                locationCounts['Western (Takoradi)']++;
+            }
+            else {
+                locationCounts['Greater Accra']++;
+            }
+            const pType = (p.type || '').toLowerCase();
+            if (pType.includes('studio'))
+                categoryCounts['Executive Studios']++;
+            else if (pType.includes('house') || pType.includes('villa') || pType.includes('homestay'))
+                categoryCounts['Houses & Villas']++;
+            else if (pType.includes('flat') || pType.includes('roommate'))
+                categoryCounts['Flats & Co-living']++;
+            else if (pType.includes('hostel'))
+                categoryCounts['Student Hostels']++;
+            else
+                categoryCounts['Apartments']++;
         });
-        const geographicalDensity = Object.keys(locationCounts).map(region => ({
+        const geographicalDensity = Object.keys(locationCounts)
+            .map(region => ({
             region,
             propertyCount: locationCounts[region]
-        }));
+        }))
+            .filter(item => item.propertyCount > 0);
+        const categoryMix = Object.keys(categoryCounts)
+            .map(name => ({
+            name,
+            count: categoryCounts[name]
+        }))
+            .filter(item => item.count > 0);
         // 5. Monthly Signup & Growth Trends (6 months)
         const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
         const totalUsers = await prisma_1.default.user.count();
@@ -154,6 +197,10 @@ const getPlatformAnalytics = async (req, res) => {
                 revenueGhs: Math.round(totalRevenueGhs * factor)
             };
         });
+        // 6. Act 220 Tenancy Deed Compliance
+        const totalDeeds = await prisma_1.default.leaseAgreement.count();
+        const completedDeeds = await prisma_1.default.leaseAgreement.count({ where: { status: 'COMPLETED' } });
+        const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
         const analyticsData = {
             funnel: {
                 totalBookings,
@@ -164,9 +211,10 @@ const getPlatformAnalytics = async (req, res) => {
             totalRevenueGhs,
             topLandlords,
             geographicalDensity,
+            categoryMix,
+            deedExecutionRate,
             monthlyTrends
         };
-        cache_1.default.set('admin_analytics', analyticsData, 60);
         res.status(200).json(analyticsData);
     }
     catch (error) {
@@ -378,8 +426,34 @@ const getAllBookings = async (req, res) => {
     try {
         const bookings = await prisma_1.default.booking.findMany({
             include: {
-                tenant: { select: { firstName: true, lastName: true, email: true } },
-                property: { select: { title: true, landlord: { select: { firstName: true, lastName: true, email: true } } } }
+                tenant: {
+                    select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+                },
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        price: true,
+                        pricePeriod: true,
+                        type: true,
+                        landlord: {
+                            select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+                        }
+                    }
+                },
+                room: {
+                    select: { id: true, name: true, price: true, type: true }
+                },
+                roomUnit: {
+                    select: { unitNumber: true }
+                },
+                transaction: {
+                    select: { id: true, amount: true, status: true, reference: true, paymentMethod: true, createdAt: true }
+                },
+                leaseAgreement: {
+                    select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true, cryptographicHash: true }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -418,6 +492,25 @@ const getAllSubscriptions = async (req, res) => {
     }
 };
 exports.getAllSubscriptions = getAllSubscriptions;
+const getAllTransactions = async (req, res) => {
+    try {
+        const transactions = await prisma_1.default.transaction.findMany({
+            include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                property: { select: { id: true, title: true, location: true, type: true } },
+                booking: { select: { id: true, startDate: true, endDate: true, status: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json(transactions);
+    }
+    catch (error) {
+        console.error('Error fetching all transactions:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllTransactions = getAllTransactions;
 const verifyUserCard = async (req, res) => {
     try {
         const { id } = req.params;
@@ -504,8 +597,20 @@ const getAllReviews = async (req, res) => {
     try {
         const reviews = await prisma_1.default.review.findMany({
             include: {
-                author: { select: { firstName: true, lastName: true, email: true } },
-                booking: { include: { property: { select: { title: true } } } }
+                author: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                booking: {
+                    include: {
+                        property: {
+                            select: {
+                                id: true,
+                                title: true,
+                                location: true,
+                                type: true,
+                                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                            }
+                        }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -651,23 +756,213 @@ const resolveAppeal = async (req, res) => {
 exports.resolveAppeal = resolveAppeal;
 const getSystemActivity = async (req, res) => {
     try {
-        // Fetch the most recent cross-entity events to form a system activity log
-        const [recentBookings, recentUsers, recentProperties, recentSubscriptions] = await Promise.all([
+        // Fetch the most recent cross-entity events to form an executive platform telemetry stream
+        const [recentBookings, recentUsers, recentProperties, recentSubscriptions, recentTickets, recentBreaches, recentReviews] = await Promise.all([
             prisma_1.default.booking.findMany({
+                take: 12,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                    property: { select: { id: true, title: true, location: true, price: true } }
+                }
+            }),
+            prisma_1.default.user.findMany({
+                take: 12,
+                orderBy: { createdAt: 'desc' },
+                select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, isCardVerified: true, isVerifiedLandlord: true, createdAt: true }
+            }),
+            prisma_1.default.property.findMany({
+                take: 12,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                }
+            }),
+            prisma_1.default.propertySubscription.findMany({
                 take: 8,
                 orderBy: { createdAt: 'desc' },
-                include: { tenant: { select: { firstName: true, lastName: true } }, property: { select: { title: true } } }
+                include: {
+                    property: {
+                        include: {
+                            landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+                        }
+                    }
+                }
             }),
-            prisma_1.default.user.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: { firstName: true, lastName: true, role: true, createdAt: true } }),
-            prisma_1.default.property.findMany({ take: 8, orderBy: { createdAt: 'desc' }, select: { title: true, approvalStatus: true, createdAt: true } }),
-            prisma_1.default.subscription.findMany({ take: 8, orderBy: { createdAt: 'desc' }, include: { landlord: { select: { firstName: true, lastName: true } } } })
+            prisma_1.default.maintenanceTicket.findMany({
+                take: 10,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    tenant: { select: { id: true, firstName: true, lastName: true, email: true } },
+                    property: { select: { id: true, title: true, location: true } }
+                }
+            }),
+            prisma_1.default.breachReport.findMany({
+                take: 8,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    reporter: { select: { id: true, firstName: true, lastName: true, role: true } },
+                    tenant: { select: { id: true, firstName: true, lastName: true } },
+                    property: { select: { id: true, title: true } }
+                }
+            }),
+            prisma_1.default.review.findMany({
+                take: 8,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    author: { select: { id: true, firstName: true, lastName: true } },
+                    booking: {
+                        select: {
+                            property: { select: { id: true, title: true, location: true } }
+                        }
+                    }
+                }
+            })
         ]);
         const activity = [
-            ...recentBookings.map(b => ({ type: 'BOOKING', message: `${b.tenant.firstName} ${b.tenant.lastName} booked "${b.property.title}"`, status: b.status, createdAt: b.createdAt })),
-            ...recentUsers.map(u => ({ type: 'USER', message: `New ${u.role} registered: ${u.firstName} ${u.lastName}`, status: 'NEW', createdAt: u.createdAt })),
-            ...recentProperties.map(p => ({ type: 'PROPERTY', message: `Property "${p.title}" submitted (${p.approvalStatus})`, status: p.approvalStatus, createdAt: p.createdAt })),
-            ...recentSubscriptions.map(s => ({ type: 'SUBSCRIPTION', message: `${s.landlord.firstName} ${s.landlord.lastName} initiated a subscription`, status: s.paymentStatus, createdAt: s.createdAt })),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 20);
+            ...recentBookings.map(b => ({
+                id: `booking-${b.id}`,
+                type: 'BOOKING',
+                severity: b.status === 'CANCELLED' ? 'NOTICE' : (b.status === 'CONFIRMED' || b.status === 'COMPLETED' ? 'COMPLIANCE' : 'INFO'),
+                title: 'Tenancy Escrow Booking',
+                message: `${b.tenant?.firstName || 'Tenant'} ${b.tenant?.lastName || ''} booked residential lease on "${b.property?.title || 'Property'}"`,
+                actor: {
+                    name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Tenant',
+                    email: b.tenant?.email,
+                    phone: b.tenant?.phoneNumber,
+                    role: 'TENANT'
+                },
+                entity: {
+                    type: 'Property',
+                    id: b.property?.id,
+                    title: b.property?.title,
+                    location: b.property?.location,
+                    financialAmount: b.property?.price ? `GH₵ ${b.property.price.toLocaleString()}` : undefined
+                },
+                status: b.status,
+                createdAt: b.createdAt
+            })),
+            ...recentUsers.map(u => ({
+                id: `user-${u.id}`,
+                type: 'USER',
+                severity: u.isVerifiedLandlord || u.isCardVerified ? 'COMPLIANCE' : 'INFO',
+                title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Registration`,
+                message: `New verified registration: ${u.firstName} ${u.lastName} (${u.role === 'LANDLORD' ? 'Property Owner' : 'Resident'})`,
+                actor: {
+                    name: `${u.firstName} ${u.lastName}`,
+                    email: u.email,
+                    phone: u.phoneNumber,
+                    role: u.role
+                },
+                entity: {
+                    type: 'User Profile',
+                    id: u.id,
+                    title: `${u.firstName} ${u.lastName}`,
+                    location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.isCardVerified ? 'Verified Ghana Card' : 'Pending NIA KYC')
+                },
+                status: u.isCardVerified || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
+                createdAt: u.createdAt
+            })),
+            ...recentProperties.map(p => ({
+                id: `prop-${p.id}`,
+                type: 'PROPERTY',
+                severity: p.approvalStatus === 'APPROVED' ? 'COMPLIANCE' : (p.approvalStatus === 'REJECTED' ? 'CRITICAL' : 'NOTICE'),
+                title: 'Residential Listing Submission',
+                message: `Property "${p.title}" (${p.location || 'Ghana'}) submitted for statutory deed & rent cap compliance audit`,
+                actor: {
+                    name: p.landlord ? `${p.landlord.firstName} ${p.landlord.lastName}` : 'Property Owner',
+                    email: p.landlord?.email,
+                    phone: p.landlord?.phoneNumber,
+                    role: 'LANDLORD'
+                },
+                entity: {
+                    type: 'Property Listing',
+                    id: p.id,
+                    title: p.title,
+                    location: p.location,
+                    financialAmount: p.price ? `GH₵ ${p.price.toLocaleString()}` : undefined
+                },
+                status: p.approvalStatus,
+                createdAt: p.createdAt
+            })),
+            ...recentSubscriptions.map(s => ({
+                id: `sub-${s.id}`,
+                type: 'PAYMENT',
+                severity: s.paymentStatus === 'COMPLETED' ? 'COMPLIANCE' : 'NOTICE',
+                title: 'Landlord Listing License Fee',
+                message: `Annual Landlord Listing Permit transaction: GH₵ 100/yr for "${s.property?.title || 'Property'}"`,
+                actor: {
+                    name: s.property?.landlord ? `${s.property.landlord.firstName} ${s.property.landlord.lastName}` : 'Landlord',
+                    email: s.property?.landlord?.email,
+                    role: 'LANDLORD'
+                },
+                entity: {
+                    type: 'Subscription Permit',
+                    id: s.id,
+                    title: `License #${(s.paymentReference || s.id).slice(0, 8)}`,
+                    financialAmount: 'GH₵ 100'
+                },
+                status: s.paymentStatus,
+                createdAt: s.createdAt
+            })),
+            ...recentTickets.map(t => ({
+                id: `ticket-${t.id}`,
+                type: 'MAINTENANCE',
+                severity: t.priority === 'URGENT' || t.priority === 'HIGH' ? 'CRITICAL' : 'NOTICE',
+                title: `Statutory Maintenance Request`,
+                message: `[${t.priority}] Repair reported at "${t.property?.title || 'Property'}": ${t.title}`,
+                actor: {
+                    name: t.tenant ? `${t.tenant.firstName} ${t.tenant.lastName}` : 'Tenant',
+                    email: t.tenant?.email,
+                    role: 'TENANT'
+                },
+                entity: {
+                    type: 'Property',
+                    id: t.property?.id,
+                    title: t.property?.title,
+                    location: t.property?.location
+                },
+                status: t.status,
+                createdAt: t.createdAt
+            })),
+            ...recentBreaches.map(b => ({
+                id: `breach-${b.id}`,
+                type: 'SECURITY',
+                severity: 'CRITICAL',
+                title: 'Statutory Act 220 Breach Report',
+                message: `Breach claim lodged against tenant ${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''} at "${b.property?.title || 'Property'}": ${b.title}`,
+                actor: {
+                    name: b.reporter ? `${b.reporter.firstName} ${b.reporter.lastName}` : 'Complainant',
+                    role: b.reporter?.role || 'USER'
+                },
+                entity: {
+                    type: 'Breach Docket',
+                    id: b.id,
+                    title: b.title
+                },
+                status: b.status,
+                createdAt: b.createdAt
+            })),
+            ...recentReviews.map(r => ({
+                id: `review-${r.id}`,
+                type: 'REVIEW',
+                severity: r.rating <= 2 ? 'NOTICE' : 'INFO',
+                title: `Tenant Reputation Rating (${r.rating} ★)`,
+                message: `${r.author?.firstName || 'Tenant'} ${r.author?.lastName || ''} submitted a ${r.rating} ★ tenancy rating for "${r.booking?.property?.title || 'Property'}"`,
+                actor: {
+                    name: r.author ? `${r.author.firstName} ${r.author.lastName}` : 'Tenant',
+                    role: 'TENANT'
+                },
+                entity: {
+                    type: 'Property',
+                    id: r.booking?.property?.id,
+                    title: r.booking?.property?.title,
+                    location: r.booking?.property?.location
+                },
+                status: r.isFlagged ? 'FLAGGED' : 'PUBLISHED',
+                createdAt: r.createdAt
+            }))
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30);
         res.status(200).json(activity);
     }
     catch (error) {
@@ -835,7 +1130,7 @@ const broadcastNotification = async (req, res) => {
         catch (e) {
             console.error('Socket emission failed for broadcast', e);
         }
-        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS', null, { target, count: users.length, title }, req.ip || req.socket.remoteAddress);
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS', null, { target, count: users.length, title, message }, req.ip || req.socket.remoteAddress);
         res.status(200).json({ message: 'Broadcast successful', count: users.length });
     }
     catch (error) {
@@ -844,4 +1139,36 @@ const broadcastNotification = async (req, res) => {
     }
 };
 exports.broadcastNotification = broadcastNotification;
+const getBroadcastHistory = async (req, res) => {
+    try {
+        const logs = await prisma_1.default.auditLog.findMany({
+            where: { action: 'ADMIN_BROADCAST_NOTIFICATION' },
+            include: { user: { select: { firstName: true, lastName: true, email: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 15
+        });
+        const history = logs.map(log => {
+            let details = {};
+            try {
+                details = typeof log.newData === 'string' ? JSON.parse(log.newData) : log.newData || {};
+            }
+            catch (e) { }
+            return {
+                id: log.id,
+                title: details.title || 'Platform Announcement',
+                message: details.message || '',
+                target: details.target || 'ALL_USERS',
+                count: details.count || 0,
+                dispatchedBy: `${log.user?.firstName || 'Admin'} ${log.user?.lastName || ''}`.trim(),
+                createdAt: log.createdAt
+            };
+        });
+        res.status(200).json(history);
+    }
+    catch (error) {
+        console.error('Error fetching broadcast history:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getBroadcastHistory = getBroadcastHistory;
 //# sourceMappingURL=admin.controller.js.map

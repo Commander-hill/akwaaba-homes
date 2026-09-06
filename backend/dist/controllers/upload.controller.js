@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadMedia = exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = exports.isValidFileType = void 0;
+const axios_1 = __importDefault(require("axios"));
 const sharp_1 = __importDefault(require("sharp"));
 const cloudinary_1 = require("cloudinary");
 const streamifier_1 = __importDefault(require("streamifier"));
@@ -194,10 +195,26 @@ const serveSecureDocument = async (req, res) => {
             res.status(403).json({ error: verification.error || 'Access denied' });
             return;
         }
-        res.redirect(String(url));
+        const rawUrl = String(url);
+        // Security check: Only allow streaming from verified Cloudinary assets
+        if (!rawUrl.startsWith('https://res.cloudinary.com/')) {
+            res.status(400).json({ error: 'Invalid document source' });
+            return;
+        }
+        // Stream directly through backend so client never sees or stores raw Cloudinary bucket URL
+        const documentResponse = await axios_1.default.get(rawUrl, {
+            responseType: 'stream',
+            timeout: 15000
+        });
+        res.setHeader('Content-Type', documentResponse.headers['content-type'] || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        documentResponse.data.pipe(res);
     }
     catch (error) {
-        console.error('Error serving secure document:', error);
+        console.error('Error serving secure document stream:', error);
         res.status(500).json({ error: 'Internal server error serving secure document' });
     }
 };
@@ -219,9 +236,13 @@ const uploadMedia = async (req, res) => {
             folder = 'chat/audio';
             resourceType = 'video'; // Cloudinary uses resource_type video for audio
         }
-        else if (mime.includes('pdf') || mime.includes('document')) {
+        else if (mime === 'application/pdf') {
             folder = 'chat/documents';
             resourceType = 'auto';
+        }
+        else {
+            res.status(400).json({ error: 'Unsupported file format. Only images, audio files, and PDFs are permitted.' });
+            return;
         }
         const fileUrl = await streamUpload(req.file.buffer, folder, resourceType);
         res.status(200).json({ url: fileUrl, fileName: req.file.originalname, mimeType: mime });

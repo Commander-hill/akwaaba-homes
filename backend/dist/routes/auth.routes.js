@@ -9,6 +9,7 @@ const validation_middleware_1 = require("../middleware/validation.middleware");
 const router = (0, express_1.Router)();
 router.post('/register', rateLimiter_middleware_1.authRateLimiter, (0, validation_middleware_1.validate)(validation_middleware_1.registerValidation), auth_controller_1.register);
 router.post('/login', rateLimiter_middleware_1.loginRateLimiter, (0, validation_middleware_1.validate)(validation_middleware_1.loginValidation), auth_controller_1.login);
+router.post('/login/2fa', rateLimiter_middleware_1.loginRateLimiter, auth_controller_1.login2FA);
 router.post('/logout', auth_controller_1.logout);
 router.post('/refresh', rateLimiter_middleware_1.authRateLimiter, auth_controller_1.refresh);
 router.post('/verify-email', rateLimiter_middleware_1.otpRateLimiter, auth_controller_1.verifyEmail);
@@ -16,6 +17,11 @@ router.post('/ghana-card', auth_middleware_1.authenticate, auth_controller_1.sub
 router.post('/landlord-verification', auth_middleware_1.authenticate, auth_controller_1.submitLandlordVerification);
 router.post('/forgot-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.forgotPassword);
 router.post('/reset-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.resetPassword);
+// Two-Factor Authentication Management (Authenticated)
+router.get('/2fa/status', auth_middleware_1.authenticate, auth_controller_1.get2FAStatus);
+router.post('/2fa/setup', auth_middleware_1.authenticate, auth_controller_1.setup2FA);
+router.post('/2fa/enable', auth_middleware_1.authenticate, auth_controller_1.enable2FA);
+router.post('/2fa/disable', auth_middleware_1.authenticate, auth_controller_1.disable2FA);
 // Protected routes
 router.get('/me', auth_middleware_1.authenticate, auth_controller_1.getMe);
 router.put('/profile', auth_middleware_1.authenticate, auth_controller_1.updateProfile);
