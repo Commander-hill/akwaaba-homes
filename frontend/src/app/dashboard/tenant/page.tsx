@@ -4,7 +4,14 @@ import { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useRouter } from 'next/navigation';
 import api from '@/lib/axios';
-import { Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, Sparkles, Car, Package, DollarSign } from 'lucide-react';
+import { 
+  Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, 
+  AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, 
+  MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
+  Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
+  Sparkles, Car, Package, DollarSign, ShieldAlert, Shield, HeartPulse, Flame, 
+  Radio, Building2, Check, ShieldCheck 
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import NoticeBoard from '@/components/NoticeBoard';
@@ -105,6 +112,9 @@ function TenantDashboardContent() {
     studyHabits: 'QUIET',
     bio: ''
   });
+
+  // Emergency Dispatch Copy State
+  const [copiedDispatchAddress, setCopiedDispatchAddress] = useState(false);
 
   // Queries
   // Bookings load eagerly — this is the primary tab
@@ -1068,129 +1078,253 @@ function TenantDashboardContent() {
 
       {activeTab === 'safety' && (
         <div className="animate-in space-y-6">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border border-red-200 dark:border-red-900/40 bg-gradient-to-r from-red-500/10 via-amber-500/5 to-red-500/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h2 className="text-xl font-black text-red-600 dark:text-red-400 flex items-center gap-2">
-                <Siren className="w-6 h-6 animate-bounce" /> 24/7 Emergency & Tenant Safety Center
-              </h2>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                One-tap quick dials for Ghana national emergency hotlines, campus security desks, and your active property manager.
-              </p>
+          {/* Header Banner */}
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">
+                  Emergency &amp; Tenant Safety Center
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl">
+                  One-tap direct dials for Ghanaian national first responders, campus security desks, and your active residence manager.
+                </p>
+              </div>
             </div>
-            <div className="px-3 py-1.5 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-red-200 dark:border-red-800">
-              <PhoneCall className="w-3.5 h-3.5" /> 24/7 Available
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-300 text-xs font-semibold shrink-0">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>24/7 Dispatch Ready</span>
             </div>
           </div>
 
-          {/* Landlord Direct Emergency Card */}
-          {bookings.find((b: any) => b.status === 'COMPLETED' || b.status === 'APPROVED') ? (() => {
-            const activeBooking = bookings.find((b: any) => b.status === 'COMPLETED' || b.status === 'APPROVED');
-            const p = activeBooking.property;
+          {/* Residence Manager & Location Card */}
+          {(() => {
+            const activeBooking = bookings.find((b: any) => ['COMPLETED', 'APPROVED', 'CONFIRMED'].includes(b.status)) || bookings[0];
+            const p = activeBooking?.property;
             const phone = p?.landlord?.phoneNumber || '+233200000000';
             const cleanPhone = phone.replace(/[^0-9+]/g, '');
+            const fullAddress = p ? `${p.title}, ${p.location || 'Accra, Ghana'}` : 'Akwaaba Homes Residential Network';
+
+            if (!p) {
+              return (
+                <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Akwaaba Resident Support Concierge</h4>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Available 24/7 for tenant onboarding, lease safety, and general inquiries.</p>
+                    </div>
+                  </div>
+                  <a
+                    href="tel:+233302000000"
+                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                  >
+                    Call Support (+233 30 200 0000)
+                  </a>
+                </div>
+              );
+            }
 
             return (
-              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border border-amber-300 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/20 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400">My Active Property Manager</span>
-                    <h3 className="text-lg font-bold text-[var(--foreground)]">{p?.title || 'Active Hostel'}</h3>
-                    <p className="text-xs text-[var(--muted-foreground)] flex items-center gap-1 mt-0.5"><MapPin className="w-3 h-3" /> {p?.location}</p>
+              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                        My Active Residence
+                      </span>
+                      {activeBooking?.id && (
+                        <>
+                          <span className="text-xs text-zinc-300 dark:text-zinc-700">•</span>
+                          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Lease Ref #{activeBooking.id.slice(-6).toUpperCase()}</span>
+                        </>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">{p.title}</h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <span>{p.location || 'Accra, Ghana'}</span>
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[var(--foreground)]">{p?.landlord?.firstName} {p?.landlord?.lastName}</p>
-                    <p className="text-xs font-mono text-[var(--muted-foreground)]">{phone}</p>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-zinc-900 dark:text-white">
+                        {p.landlord?.firstName} {p.landlord?.lastName || 'Host'}
+                      </p>
+                      <p className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">{phone}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300 shrink-0">
+                      {(p.landlord?.firstName?.[0] || 'H')}{(p.landlord?.lastName?.[0] || 'M')}
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3 pt-2">
+                {/* Location Copy Strip for Dispatch */}
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200/70 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+                    <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <span>Emergency Dispatch Address: <strong className="text-zinc-900 dark:text-white font-semibold">{fullAddress}</strong></span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(fullAddress);
+                      setCopiedDispatchAddress(true);
+                      toast.success('Dispatch address copied to clipboard');
+                      setTimeout(() => setCopiedDispatchAddress(false), 2500);
+                    }}
+                    className="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                  >
+                    {copiedDispatchAddress ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedDispatchAddress ? 'Copied' : 'Copy Dispatch Address'}</span>
+                  </button>
+                </div>
+
+                {/* Direct Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <a
                     href={`tel:${cleanPhone}`}
-                    className="flex-1 px-4 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                    className="px-4 py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
                   >
-                    <PhoneCall className="w-4 h-4" /> Call Landlord Now
+                    <PhoneCall className="w-4 h-4" /> Call Property Manager Now
                   </a>
                   <a
                     href={`https://wa.me/${cleanPhone.replace('+', '')}?text=URGENT%20SAFETY%20ALERT:%20I%20am%20a%20tenant%20at%20${encodeURIComponent(p?.title)}%20and%20require%20immediate%20assistance.`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md"
+                    className="px-4 py-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs border border-zinc-800 dark:border-zinc-700"
                   >
-                    <MessageSquare className="w-4 h-4" /> WhatsApp Emergency
+                    <MessageSquare className="w-4 h-4" /> WhatsApp Urgent Alert
                   </a>
                 </div>
               </div>
             );
-          })() : null}
+          })()}
 
           {/* National & Campus Hotlines Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Police */}
-            <div className="p-5 rounded-2xl border bg-blue-50/80 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300 flex items-center justify-center shadow-inner">
-                <PhoneCall className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-sm text-blue-950 dark:text-blue-200">Ghana Police Service</h4>
-                <p className="text-xs text-blue-800/70 dark:text-blue-300/70 mt-0.5">National Security & Patrol Hotline</p>
-              </div>
-              <a
-                href="tel:191"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Phone className="w-3.5 h-3.5" /> Dial 191 / 112
-              </a>
+            {[
+              {
+                name: 'Ghana Police Service',
+                category: 'National Security & Crime Patrol',
+                hotline: '191 / 112',
+                dialUrl: 'tel:191',
+                description: 'Immediate response for security threats, burglary, intruder breach, and emergency patrol.',
+                icon: Shield,
+                badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40',
+              },
+              {
+                name: 'National Ambulance Service',
+                category: 'Medical Crises & Paramedic Dispatch',
+                hotline: '193 / 112',
+                dialUrl: 'tel:193',
+                description: 'Immediate paramedic ambulance dispatch, urgent medical trauma, and hospital conveyance.',
+                icon: HeartPulse,
+                badgeColor: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/40',
+              },
+              {
+                name: 'Ghana National Fire Service',
+                category: 'Fire Hazard & Rescue Operations',
+                hotline: '192 / 112',
+                dialUrl: 'tel:192',
+                description: 'Structural fires, smoke outbreaks, domestic gas leakages, and search & rescue response.',
+                icon: Flame,
+                badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/40',
+              },
+              {
+                name: 'Campus Security Desk',
+                category: 'Rapid Campus Patrol & Night Escort',
+                hotline: '+233 30 221 3820',
+                dialUrl: 'tel:+233302213820',
+                description: 'On-campus gate guards, student night patrols, and perimeter security control.',
+                icon: Radio,
+                badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50',
+              },
+            ].map((service) => {
+              const Icon = service.icon;
+              return (
+                <div
+                  key={service.name}
+                  className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-xs flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shrink-0">
+                        <Icon className="w-5 h-5 text-zinc-700 dark:text-zinc-200" />
+                      </div>
+                      <span className={clsx("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border", service.badgeColor)}>
+                        {service.hotline}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {service.name}
+                      </h4>
+                      <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        {service.category}
+                      </p>
+                    </div>
+
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      {service.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-5 mt-auto">
+                    <a
+                      href={service.dialUrl}
+                      className="w-full py-2.5 px-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs"
+                    >
+                      <Phone className="w-3.5 h-3.5" /> Call {service.hotline.split('/')[0].trim()}
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Emergency Action Guidelines & Protocols */}
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Resident Emergency Protocols &amp; Checklist</h3>
             </div>
 
-            {/* Ambulance */}
-            <div className="p-5 rounded-2xl border bg-red-50/80 dark:bg-red-950/30 border-red-100 dark:border-red-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/60 text-red-600 dark:text-red-300 flex items-center justify-center shadow-inner">
-                <Siren className="w-5 h-5" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+                <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <HeartPulse className="w-3.5 h-3.5 text-rose-500" /> Medical Emergency
+                </div>
+                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Stay calm, dial <strong>193 / 112</strong>, and clearly communicate your unit number and nearest street landmark. Keep compound gates open for paramedics.
+                </p>
               </div>
-              <div>
-                <h4 className="font-extrabold text-sm text-red-950 dark:text-red-200">National Ambulance</h4>
-                <p className="text-xs text-red-800/70 dark:text-red-300/70 mt-0.5">Medical Emergencies & Dispatch</p>
-              </div>
-              <a
-                href="tel:192"
-                className="w-full py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Phone className="w-3.5 h-3.5" /> Dial 192
-              </a>
-            </div>
 
-            {/* Fire */}
-            <div className="p-5 rounded-2xl border bg-orange-50/80 dark:bg-orange-950/30 border-orange-100 dark:border-orange-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/60 text-orange-600 dark:text-orange-300 flex items-center justify-center shadow-inner">
-                <AlertTriangle className="w-5 h-5" />
+              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+                <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <Flame className="w-3.5 h-3.5 text-amber-500" /> Fire &amp; Gas Leaks
+                </div>
+                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Evacuate immediately via stairwells — never use elevators. Pull the compound alarm if available, dial <strong>192</strong>, and assemble in the open yard.
+                </p>
               </div>
-              <div>
-                <h4 className="font-extrabold text-sm text-orange-950 dark:text-orange-200">National Fire Service</h4>
-                <p className="text-xs text-orange-800/70 dark:text-orange-300/70 mt-0.5">Fire Hazard & Outbreak Emergency</p>
-              </div>
-              <a
-                href="tel:190"
-                className="w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Phone className="w-3.5 h-3.5" /> Dial 190
-              </a>
-            </div>
 
-            {/* Campus Security */}
-            <div className="p-5 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 space-y-3 shadow-sm hover:shadow-md transition-all">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
-                <Lock className="w-5 h-5" />
+              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+                <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-blue-500" /> Intrusion &amp; Security
+                </div>
+                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Bolt your deadlocks immediately. Dial <strong>191 / 112</strong>, notify your on-site compound caretaker via WhatsApp, and remain sheltered until clearance.
+                </p>
               </div>
-              <div>
-                <h4 className="font-extrabold text-sm text-emerald-950 dark:text-emerald-200">Campus Security Desk</h4>
-                <p className="text-xs text-emerald-800/70 dark:text-emerald-300/70 mt-0.5">On-Campus Guard Dispatch</p>
-              </div>
-              <a
-                href="tel:+233332132440"
-                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Phone className="w-3.5 h-3.5" /> Dial Campus Desk
-              </a>
             </div>
           </div>
         </div>
