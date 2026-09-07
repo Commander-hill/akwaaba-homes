@@ -10,7 +10,7 @@ import {
   MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
   Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
   Sparkles, Car, Package, DollarSign, ShieldAlert, Shield, HeartPulse, Flame, 
-  Radio, Building2, Check, ShieldCheck, Trash2, Wrench, Camera 
+  Radio, Building2, Check, ShieldCheck, Trash2, Wrench, Camera, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -154,6 +154,7 @@ function TenantDashboardContent() {
   const [appealModalOpen, setAppealModalOpen] = useState(false);
   const [appealTargetId, setAppealTargetId] = useState('');
   const [appealNote, setAppealNote] = useState('');
+  const [selectedGatePassBooking, setSelectedGatePassBooking] = useState<any>(null);
 
   // Ticket State
   const [ticketModalOpen, setTicketModalOpen] = useState(false);
@@ -716,6 +717,16 @@ function TenantDashboardContent() {
                                 <Wrench className="w-3.5 h-3.5 text-emerald-500" />
                                 <span>Report Issue</span>
                               </button>
+                              {(booking.property?.type === 'Hostel' || booking.property?.targetAudience === 'Students Only' || session?.studentId) && (
+                                <button
+                                  onClick={() => setSelectedGatePassBooking(booking)}
+                                  className="text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                                  title="Digital Student Gate Pass & Move-In Clearance"
+                                >
+                                  <GraduationCap className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                  <span>Student Gate Pass</span>
+                                </button>
+                              )}
                             </>
                           )}
                           {booking.status === 'COMPLETED' && (
@@ -1734,6 +1745,116 @@ function TenantDashboardContent() {
         }}
         isSubmitting={ticketMutation.isPending}
       />
+
+      {/* Digital Student Gate Pass & Move-In Clearance Modal */}
+      {selectedGatePassBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setSelectedGatePassBooking(null)}
+              className="absolute top-5 right-5 p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                    Digital Student Gate Pass
+                  </h3>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    Verified Student 🎓
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Official move-in clearance for hostel compound security &amp; caretaker key collection.
+                </p>
+              </div>
+            </div>
+
+            {/* Pass Card */}
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs">
+              <div className="flex justify-between items-center pb-3 border-b border-zinc-200/80 dark:border-zinc-800">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Resident Name</span>
+                  <span className="font-bold text-zinc-900 dark:text-white text-sm">
+                    {session?.firstName} {session?.lastName}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Gate Pass Code</span>
+                  <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">
+                    STU-GATE-{selectedGatePassBooking.id.slice(0, 8).toUpperCase()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Institution / Campus</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{session?.campus || 'Tertiary Campus'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Student ID / Index No.</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-white">{session?.studentId || 'On-file'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Accommodation</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{selectedGatePassBooking.property?.title}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Allocated Room / Bed</span>
+                  <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                    {selectedGatePassBooking.room?.roomType || 'Standard Room'}
+                    {selectedGatePassBooking.roomUnit?.unitNumber ? ` • Unit ${selectedGatePassBooking.roomUnit.unitNumber}` : ''}
+                    {selectedGatePassBooking.bed?.bedNumber ? ` • Bed ${selectedGatePassBooking.bed.bedNumber}` : ''}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800 text-[11px] text-zinc-500 space-y-1">
+                <div>Move-In Validity: {new Date(selectedGatePassBooking.startDate).toLocaleDateString()} to {new Date(selectedGatePassBooking.endDate).toLocaleDateString()}</div>
+                <div>Emergency Contact: {session?.guardianName ? `${session?.guardianName} (${session?.guardianPhone || 'N/A'})` : 'Campus Security Desk'}</div>
+              </div>
+            </div>
+
+            {/* Check-In Protocol Instructions */}
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Caretaker Key Handover Requirement</span>
+              </div>
+              <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                Present this digital pass alongside your <strong>physical University Student ID Card</strong> to the compound caretaker. The caretaker will cross-check your Student ID against this pass before releasing your physical room keys.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <button
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.print();
+                  }
+                }}
+                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print / Save Pass</span>
+              </button>
+              <button
+                onClick={() => setSelectedGatePassBooking(null)}
+                className="flex-1 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

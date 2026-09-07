@@ -20,6 +20,12 @@ export declare function generateTenancyAgreementPDF(data: {
     tenantSignatureUrl?: string | null;
     landlordSignedAt?: string | null;
     landlordSignatureUrl?: string | null;
+    isStudentHostel?: boolean;
+    studentCampus?: string | null;
+    studentId?: string | null;
+    programmeOfStudy?: string | null;
+    guardianName?: string | null;
+    guardianPhone?: string | null;
 }): Promise<Buffer>;
 /**
  * Generate official Payment Receipt / Invoice PDF

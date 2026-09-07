@@ -76,6 +76,7 @@ export default function VerificationPage() {
   // Student verification state
   const [campus, setCampus] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [institutionalEmail, setInstitutionalEmail] = useState('');
   const [programmeOfStudy, setProgrammeOfStudy] = useState('');
   const [yearOfStudy, setYearOfStudy] = useState('');
   const [studentDoc, setStudentDoc] = useState<File | null>(null);
@@ -108,6 +109,7 @@ export default function VerificationPage() {
         studentId: activeStudentId.trim(),
         programmeOfStudy: (programmeOfStudy || session?.programmeOfStudy || '').trim(),
         yearOfStudy: (yearOfStudy || session?.yearOfStudy || '').trim(),
+        dateOfAdmission: institutionalEmail.trim() || session?.dateOfAdmission || undefined,
         studentType: studentDocUrl || 'VERIFIED'
       });
 
@@ -411,7 +413,7 @@ export default function VerificationPage() {
                 "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
               )}>
                 {isStudentVerified ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-zinc-400" />}
-                <span>{isStudentVerified ? 'STUDENT VERIFIED' : 'NOT VERIFIED'}</span>
+                <span>{isStudentVerified ? 'Verified Student 🎓' : 'NOT VERIFIED'}</span>
               </span>
             </div>
           </div>
@@ -570,6 +572,28 @@ export default function VerificationPage() {
                       <option value="Diploma/Certificate">Diploma / Certificate</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Institutional Email Option (Fast-Track) */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-zinc-900 dark:text-zinc-200 uppercase tracking-wider">
+                      University Institutional Email (Fast-Track Approval)
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                      Instant Clearance
+                    </span>
+                  </div>
+                  <input
+                    type="email"
+                    placeholder="e.g. student@st.ug.edu.gh, kwame@st.knust.edu.gh, or name@ktu.edu.gh"
+                    className="block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-mono font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] outline-none transition-all"
+                    value={institutionalEmail || (isEditingStudent ? institutionalEmail : (session?.dateOfAdmission || ''))}
+                    onChange={(e) => setInstitutionalEmail(e.target.value)}
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-500">
+                    Entering an official accredited university email (.edu.gh) verifies student status directly from your campus domain.
+                  </p>
                 </div>
 
                 <div>

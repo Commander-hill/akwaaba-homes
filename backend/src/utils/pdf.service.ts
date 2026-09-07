@@ -22,6 +22,12 @@ export async function generateTenancyAgreementPDF(data: {
   tenantSignatureUrl?: string | null;
   landlordSignedAt?: string | null;
   landlordSignatureUrl?: string | null;
+  isStudentHostel?: boolean;
+  studentCampus?: string | null;
+  studentId?: string | null;
+  programmeOfStudy?: string | null;
+  guardianName?: string | null;
+  guardianPhone?: string | null;
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 40, size: 'A4', autoFirstPage: true });
@@ -74,29 +80,46 @@ export async function generateTenancyAgreementPDF(data: {
       .text('STATUS: ✅ CERTIFIED LAND TITLE (ACT 767)', 360, 60, { align: 'right' });
 
     // Section 1: Contracting Parties
-    const startY1 = 110;
-    doc.rect(40, startY1, 515, 80).fillAndStroke('#F8FAFC', '#CBD5E1');
+    const hasStudentDetails = Boolean(data.isStudentHostel || data.studentId);
+    const startY1 = 105;
+    const s1Height = hasStudentDetails ? 94 : 80;
+    doc.rect(40, startY1, 515, s1Height).fillAndStroke('#F8FAFC', '#CBD5E1');
 
     doc
       .fillColor('#1E293B')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('1. THE CONTRACTING PARTIES', 50, startY1 + 10);
+      .text('1. THE CONTRACTING PARTIES', 50, startY1 + 8);
 
     doc
-      .fontSize(8.5)
+      .fontSize(8)
       .font('Helvetica')
       .fillColor('#0F172A')
-      .text(`LANDLORD / LESSOR: ${data.landlordName}`, 50, startY1 + 28)
+      .text(`LANDLORD / LESSOR: ${data.landlordName}`, 50, startY1 + 22)
       .fillColor('#475569')
-      .text(`Contact Phone: ${data.landlordPhone} • Identity Status: Verified Host (Ghana Card KYC on-file)`, 50, startY1 + 42)
+      .text(`Contact Phone: ${data.landlordPhone} • Identity Status: Verified Host (Ghana Card KYC on-file)`, 50, startY1 + 34)
       .fillColor('#0F172A')
-      .text(`TENANT / LESSEE: ${data.tenantName}`, 50, startY1 + 56)
+      .text(`TENANT / RESIDENT: ${data.tenantName}`, 50, startY1 + 47)
       .fillColor('#475569')
-      .text(`Contact: ${data.tenantPhone} | ${data.tenantEmail} • Identity Status: Verified Tenant`, 50, startY1 + 68);
+      .text(`Contact: ${data.tenantPhone} | ${data.tenantEmail} • Identity Status: Verified Resident`, 50, startY1 + 59);
+
+    if (hasStudentDetails) {
+      doc
+        .fillColor('#0F5132')
+        .font('Helvetica-Bold')
+        .fontSize(7.5)
+        .text(`ACADEMIC PROFILE: 🎓 ${data.studentCampus || 'Tertiary Institution'} | ID/Index: ${data.studentId || 'N/A'}${data.programmeOfStudy ? ` | Programme: ${data.programmeOfStudy}` : ''}`, 50, startY1 + 71);
+      if (data.guardianName) {
+        doc
+          .fillColor('#475569')
+          .font('Helvetica')
+          .fontSize(7.5)
+          .text(`EMERGENCY / GUARDIAN CONTACT: ${data.guardianName} (${data.guardianPhone || 'N/A'})`, 50, startY1 + 82);
+      }
+    }
 
     // Section 2: Demised Premises & Term
-    const startY2 = 200;
+    const startY2 = hasStudentDetails ? 207 : 195;
     doc.rect(40, startY2, 515, 80).fillAndStroke('#F8FAFC', '#CBD5E1');
 
     doc
@@ -382,6 +405,31 @@ export async function generateTenancyAgreementPDF(data: {
       .text('ACT 220 & ACT 772 COMPLIANT • REGISTERED TENANCY', 315, p2Y5 + 24)
       .text('SECURED VIA PAYSTACK ESCROW • AUDITED LEDGER', 315, p2Y5 + 36)
       .text(`DATE ISSUED: ${new Date().toLocaleDateString('en-GB')} • VALIDATED`, 315, p2Y5 + 48);
+
+    // Section 10: Hostel Code of Conduct & Academic Matriculation Clause (Hostels & Student Listings)
+    if (data.isStudentHostel) {
+      const p2Y6 = 608;
+      doc.rect(40, p2Y6, 515, 120).fillAndStroke('#FEF3C7', '#F59E0B');
+
+      doc
+        .fillColor('#92400E')
+        .fontSize(9.5)
+        .font('Helvetica-Bold')
+        .text('10. HOSTEL CODE OF CONDUCT & ACADEMIC MATRICULATION COVENANT (ACT 220)', 50, p2Y6 + 10);
+
+      const hostelClauses = [
+        `• Active Matriculation Status: Occupancy is granted strictly contingent upon active, bona fide matriculation at ${data.studentCampus || 'an accredited tertiary institution'} (Student ID: ${data.studentId || 'On-file'}).`,
+        '• Falsification & Immediate Lease Termination: Providing fraudulent student credentials, student impersonation, unauthorized sub-letting, or tertiary expulsion/suspension constitutes immediate material breach, triggering tenancy termination and possession recovery.',
+        '• Hostel Code & Quiet Hours: Resident covenants to strictly adhere to compound quiet hours, official visitor entry curfews, electrical safety, and sanitation protocols enforced by the landlord and caretaker.',
+        `• Emergency Contact Protocol: Landlord/Caretaker reserves the right to notify designated Parent/Guardian ${data.guardianName ? `(${data.guardianName} - ${data.guardianPhone || 'N/A'})` : ''} in the event of emergencies, misconduct, or disciplinary procedures.`
+      ];
+
+      let hClauseY = p2Y6 + 26;
+      hostelClauses.forEach((hc) => {
+        doc.fontSize(7.5).font('Helvetica').fillColor('#78350F').text(hc, 50, hClauseY, { width: 495 });
+        hClauseY += 22;
+      });
+    }
 
     // Page 2 Footer
     doc

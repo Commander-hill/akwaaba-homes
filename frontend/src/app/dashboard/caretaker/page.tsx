@@ -7,7 +7,7 @@ import {
   Building, Wrench, ShieldCheck, BellRing, Package, Key, Users, 
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
   Phone, Mail, MapPin, ExternalLink, Clock, Sparkles, Check, X,
-  FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, Fuel, Activity
+  FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, Fuel, Activity, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -35,6 +35,7 @@ function CaretakerDashboardContent() {
 
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [verifiedPhysicalCards, setVerifiedPhysicalCards] = useState<Record<string, boolean>>({});
 
   // Ticket Action Modal state
   const [ticketActionModal, setTicketActionModal] = useState<{
@@ -704,6 +705,68 @@ function CaretakerDashboardContent() {
                     <div>Dates: {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}</div>
                     <div>Phone: {b.tenant?.phoneNumber || 'N/A'}</div>
                   </div>
+
+                  {/* Student Matriculation & Physical ID Cross-Check */}
+                  {(b.tenant?.studentId || b.tenant?.campus) && (
+                    <div className="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
+                          <GraduationCap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                          <span>Student Gate Pass Cross-Check</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          Verified Student 🎓
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Campus</span>
+                          <span className="font-semibold">{b.tenant?.campus || 'Ghana Tertiary'}</span>
+                        </div>
+                        <div>
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Official Student ID</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-white">{b.tenant?.studentId || 'N/A'}</span>
+                        </div>
+                        {b.tenant?.programmeOfStudy && (
+                          <div className="col-span-2">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Programme</span>
+                            <span className="font-medium">{b.tenant?.programmeOfStudy}</span>
+                          </div>
+                        )}
+                        {b.tenant?.guardianName && (
+                          <div className="col-span-2">
+                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Guardian / Emergency</span>
+                            <span className="font-medium">{b.tenant?.guardianName} ({b.tenant?.guardianPhone || 'N/A'})</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-1.5 border-t border-amber-500/10 flex items-center justify-between">
+                        <label className="flex items-center gap-2 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(verifiedPhysicalCards[b.id])}
+                            onChange={(e) => {
+                              setVerifiedPhysicalCards(prev => ({
+                                ...prev,
+                                [b.id]: e.target.checked
+                              }));
+                              if (e.target.checked) {
+                                toast.success(`Physical ID verified for ${b.tenant?.firstName}. Room keys authorized.`);
+                              }
+                            }}
+                            className="w-4 h-4 rounded text-[#0F5132] accent-[#0F5132] cursor-pointer"
+                          />
+                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            {verifiedPhysicalCards[b.id]
+                              ? '✅ Physical Student ID Cross-Checked (Keys Authorized)'
+                              : 'Physical University ID Cross-Checked'}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                     <button

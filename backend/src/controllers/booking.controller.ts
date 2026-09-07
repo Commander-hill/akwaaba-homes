@@ -80,6 +80,12 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
       tenantSignatureUrl: booking.leaseAgreement?.tenantSignature || null,
       landlordSignedAt: booking.leaseAgreement?.landlordSignedAt ? new Date(booking.leaseAgreement.landlordSignedAt).toLocaleString() : null,
       landlordSignatureUrl: booking.leaseAgreement?.landlordSignature || null,
+      isStudentHostel: booking.property?.type === 'Hostel' || booking.property?.targetAudience === 'Students Only',
+      studentCampus: booking.tenant?.campus || null,
+      studentId: booking.tenant?.studentId || null,
+      programmeOfStudy: booking.tenant?.programmeOfStudy || null,
+      guardianName: booking.tenant?.guardianName || null,
+      guardianPhone: booking.tenant?.guardianPhone || null,
     });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -164,7 +170,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
       if (!hasStudentId || !hasCampus) {
         res.status(403).json({
-          message: 'Student Access Restricted: This accommodation is strictly reserved for verified tertiary students. Please complete your Student Profile (Campus and Student ID) to book this hostel.',
+          message: 'Student Verification Required: This property is exclusively reserved for verified students. Please complete your student profile before booking.',
           requiresStudentVerification: true,
           propertyTitle: property.title
         });
