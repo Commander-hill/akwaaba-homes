@@ -138,14 +138,6 @@ const createBooking = async (req, res) => {
             });
             return;
         }
-        const property = await prisma_1.default.property.findUnique({
-            where: { id: propertyId },
-            include: { landlord: true }
-        });
-        if (!property) {
-            res.status(404).json({ message: 'Property not found' });
-            return;
-        }
         // ── STRICT STUDENT-ONLY ACCESS GUARD ──
         const isStudentRestricted = property.type === 'Hostel' || property.targetAudience === 'Students Only';
         if (isStudentRestricted) {
@@ -159,6 +151,7 @@ const createBooking = async (req, res) => {
                 res.status(403).json({
                     message: 'Student Verification Required: This property is exclusively reserved for verified students. Please complete your student profile before booking.',
                     requiresStudentVerification: true,
+                    redirectTo: '/dashboard/profile',
                     propertyTitle: property.title
                 });
                 return;
@@ -187,8 +180,6 @@ const createBooking = async (req, res) => {
                 return;
             }
         }
-        // We do not check property.isAvailable as strictly here, we'll rely on room availability during payment,
-        // but we can still check it.
         if (!property.isAvailable) {
             res.status(400).json({ message: 'Property is currently not available for booking' });
             return;
@@ -217,22 +208,25 @@ const createBooking = async (req, res) => {
             missingFields.push('Date of Birth');
         if (!tenant?.nationality?.trim())
             missingFields.push('Country / Nationality');
-        if (!tenant?.guardianName?.trim())
-            missingFields.push('Guardian Name');
-        if (!tenant?.guardianPhone?.trim())
-            missingFields.push('Guardian Phone');
-        if (!tenant?.campus?.trim())
-            missingFields.push('Campus');
-        if (!tenant?.studentId?.trim())
-            missingFields.push('Student ID');
-        if (!tenant?.dateOfAdmission?.trim())
-            missingFields.push('Date of Admission');
-        if (!tenant?.programmeOfStudy?.trim())
-            missingFields.push('Programme of Study');
-        if (!tenant?.yearOfStudy?.trim())
-            missingFields.push('Year of Study');
-        if (!tenant?.studentType?.trim())
-            missingFields.push('Student Type');
+        // Academic & Guardian details are only required for student-restricted accommodations
+        if (isStudentRestricted) {
+            if (!tenant?.guardianName?.trim())
+                missingFields.push('Guardian Name');
+            if (!tenant?.guardianPhone?.trim())
+                missingFields.push('Guardian Phone');
+            if (!tenant?.campus?.trim())
+                missingFields.push('Campus');
+            if (!tenant?.studentId?.trim())
+                missingFields.push('Student ID');
+            if (!tenant?.dateOfAdmission?.trim())
+                missingFields.push('Date of Admission');
+            if (!tenant?.programmeOfStudy?.trim())
+                missingFields.push('Programme of Study');
+            if (!tenant?.yearOfStudy?.trim())
+                missingFields.push('Year of Study');
+            if (!tenant?.studentType?.trim())
+                missingFields.push('Student Type');
+        }
         if (missingFields.length > 0) {
             res.status(403).json({
                 message: `Profile Incomplete: You must complete all required profile details before requesting a booking. Missing: ${missingFields.join(', ')}.`,
@@ -512,6 +506,9 @@ const updateBookingStatus = async (req, res) => {
                 where: { id: booking.bedId },
                 data: { status: 'AVAILABLE' }
             });
+        }
+        if ((status === 'REJECTED' || status === 'CANCELLED') && booking.roomUnitId) {
+            await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id);
         }
         const updatedBooking = await prisma_1.default.booking.update({ where: { id }, data: { status } });
         // Auto-generate Lease Agreement when approved
@@ -898,6 +895,9 @@ const cancelPendingBooking = async (req, res) => {
                 data: { status: 'AVAILABLE' }
             });
         }
+        if (booking.roomUnitId) {
+            await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id);
+        }
         // Update booking status to CANCELLED
         const updated = await prisma_1.default.booking.update({
             where: { id },
@@ -948,6 +948,9 @@ const deleteBooking = async (req, res) => {
         await prisma_1.default.booking.delete({
             where: { id }
         });
+        if (booking.roomUnitId) {
+            await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id);
+        }
         try {
             (0, socket_1.getIO)().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
             cache_1.default.del(`bookings:tenant:${tenantId}`);

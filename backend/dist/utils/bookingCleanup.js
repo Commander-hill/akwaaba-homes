@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanupExpiredBookings = void 0;
+exports.releaseUnitGenderLockIfEmpty = exports.cleanupExpiredBookings = void 0;
 const prisma_1 = __importDefault(require("./prisma"));
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("./cache"));
@@ -39,6 +39,10 @@ const cleanupExpiredBookings = async () => {
                 where: { id: booking.id },
                 data: { status: 'CANCELLED' }
             });
+            // Release dynamic genderLock if unit is now empty
+            if (booking.roomUnitId) {
+                await (0, exports.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, booking.id);
+            }
         }
         // Clear memory caches so all clients fetch fresh capacity & status
         cache_1.default.flushAll();
@@ -61,4 +65,38 @@ const cleanupExpiredBookings = async () => {
     }
 };
 exports.cleanupExpiredBookings = cleanupExpiredBookings;
+/**
+ * Safely resets a RoomUnit's genderLock to 'UNASSIGNED' if:
+ * 1. The parent Room is mixed-gender (room.gender === 'MIXED')
+ * 2. No other active/pending bookings remain in this unit
+ */
+const releaseUnitGenderLockIfEmpty = async (roomUnitId, excludeBookingId) => {
+    try {
+        const roomUnit = await prisma_1.default.roomUnit.findUnique({
+            where: { id: roomUnitId },
+            include: { room: true }
+        });
+        if (!roomUnit || roomUnit.room?.gender !== 'MIXED') {
+            return;
+        }
+        const remainingActiveBookings = await prisma_1.default.booking.count({
+            where: {
+                roomUnitId,
+                id: excludeBookingId ? { not: excludeBookingId } : undefined,
+                status: { in: ['PENDING', 'APPROVED', 'CONFIRMED'] }
+            }
+        });
+        if (remainingActiveBookings === 0) {
+            await prisma_1.default.roomUnit.update({
+                where: { id: roomUnitId },
+                data: { genderLock: 'UNASSIGNED' }
+            });
+            console.log(`[GenderLock] Released unit ${roomUnit.unitNumber} (${roomUnitId}) back to UNASSIGNED.`);
+        }
+    }
+    catch (err) {
+        console.error(`[GenderLock] Error releasing genderLock for unit ${roomUnitId}:`, err);
+    }
+};
+exports.releaseUnitGenderLockIfEmpty = releaseUnitGenderLockIfEmpty;
 //# sourceMappingURL=bookingCleanup.js.map

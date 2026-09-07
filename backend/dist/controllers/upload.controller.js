@@ -124,11 +124,24 @@ const uploadDocument = async (req, res) => {
             res.status(400).json({ error: 'Invalid document format. Supported formats: PDF, PNG, JPEG, WebP.' });
             return;
         }
-        const processedBuffer = await (0, sharp_1.default)(req.file.buffer)
-            .resize(1200, 1200, { fit: 'inside' })
-            .webp({ quality: 85 })
-            .toBuffer();
-        const fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+        const isPdf = req.file.buffer.length >= 4 &&
+            req.file.buffer[0] === 0x25 &&
+            req.file.buffer[1] === 0x50 &&
+            req.file.buffer[2] === 0x44 &&
+            req.file.buffer[3] === 0x46;
+        let fileUrl;
+        if (isPdf) {
+            // PDF documents bypass image processing and stream directly
+            fileUrl = await streamUpload(req.file.buffer, 'documents', 'auto');
+        }
+        else {
+            // Image documents (Ghana Card, passport, certificates) get resized and optimized to WebP
+            const processedBuffer = await (0, sharp_1.default)(req.file.buffer)
+                .resize(1200, 1200, { fit: 'inside' })
+                .webp({ quality: 85 })
+                .toBuffer();
+            fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+        }
         res.status(200).json({ url: fileUrl });
     }
     catch (error) {
