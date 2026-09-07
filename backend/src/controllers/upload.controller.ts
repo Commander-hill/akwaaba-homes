@@ -135,12 +135,25 @@ export const uploadDocument = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const processedBuffer = await sharp(req.file.buffer)
-      .resize(1200, 1200, { fit: 'inside' })
-      .webp({ quality: 85 })
-      .toBuffer();
+    const isPdf = req.file.buffer.length >= 4 && 
+      req.file.buffer[0] === 0x25 && 
+      req.file.buffer[1] === 0x50 && 
+      req.file.buffer[2] === 0x44 && 
+      req.file.buffer[3] === 0x46;
 
-    const fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+    let fileUrl: string;
+    if (isPdf) {
+      // PDF documents bypass image processing and stream directly
+      fileUrl = await streamUpload(req.file.buffer, 'documents', 'auto');
+    } else {
+      // Image documents (Ghana Card, passport, certificates) get resized and optimized to WebP
+      const processedBuffer = await sharp(req.file.buffer)
+        .resize(1200, 1200, { fit: 'inside' })
+        .webp({ quality: 85 })
+        .toBuffer();
+      fileUrl = await streamUpload(processedBuffer, 'documents', 'image');
+    }
+
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error('Error uploading document:', error);

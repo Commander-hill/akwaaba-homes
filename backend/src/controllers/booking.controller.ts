@@ -8,7 +8,7 @@ import { getIO } from '../socket';
 import { safeJsonParse } from '../utils/json';
 import { getSystemConfig } from '../utils/config.service';
 import appCache from '../utils/cache';
-import { cleanupExpiredBookings } from '../utils/bookingCleanup';
+import { cleanupExpiredBookings, releaseUnitGenderLockIfEmpty } from '../utils/bookingCleanup';
 import { generateTenancyAgreementPDF } from '../utils/pdf.service';
 
 export const downloadAgreementPDF = async (req: Request, res: Response): Promise<void> => {
@@ -149,15 +149,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const property = await prisma.property.findUnique({ 
-      where: { id: propertyId },
-      include: { landlord: true } 
-    });
-    if (!property) {
-      res.status(404).json({ message: 'Property not found' });
-      return;
-    }
-
     // ── STRICT STUDENT-ONLY ACCESS GUARD ──
     const isStudentRestricted = property.type === 'Hostel' || property.targetAudience === 'Students Only';
     if (isStudentRestricted) {
@@ -172,6 +163,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         res.status(403).json({
           message: 'Student Verification Required: This property is exclusively reserved for verified students. Please complete your student profile before booking.',
           requiresStudentVerification: true,
+          redirectTo: '/dashboard/profile',
           propertyTitle: property.title
         });
         return;
@@ -206,8 +198,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       }
     }
     
-    // We do not check property.isAvailable as strictly here, we'll rely on room availability during payment,
-    // but we can still check it.
     if (!property.isAvailable) {
       res.status(400).json({ message: 'Property is currently not available for booking' });
       return;
@@ -232,14 +222,18 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     if (!tenant?.gender?.trim()) missingFields.push('Gender');
     if (!tenant?.dateOfBirth?.trim()) missingFields.push('Date of Birth');
     if (!tenant?.nationality?.trim()) missingFields.push('Country / Nationality');
-    if (!tenant?.guardianName?.trim()) missingFields.push('Guardian Name');
-    if (!tenant?.guardianPhone?.trim()) missingFields.push('Guardian Phone');
-    if (!tenant?.campus?.trim()) missingFields.push('Campus');
-    if (!tenant?.studentId?.trim()) missingFields.push('Student ID');
-    if (!tenant?.dateOfAdmission?.trim()) missingFields.push('Date of Admission');
-    if (!tenant?.programmeOfStudy?.trim()) missingFields.push('Programme of Study');
-    if (!tenant?.yearOfStudy?.trim()) missingFields.push('Year of Study');
-    if (!tenant?.studentType?.trim()) missingFields.push('Student Type');
+
+    // Academic & Guardian details are only required for student-restricted accommodations
+    if (isStudentRestricted) {
+      if (!tenant?.guardianName?.trim()) missingFields.push('Guardian Name');
+      if (!tenant?.guardianPhone?.trim()) missingFields.push('Guardian Phone');
+      if (!tenant?.campus?.trim()) missingFields.push('Campus');
+      if (!tenant?.studentId?.trim()) missingFields.push('Student ID');
+      if (!tenant?.dateOfAdmission?.trim()) missingFields.push('Date of Admission');
+      if (!tenant?.programmeOfStudy?.trim()) missingFields.push('Programme of Study');
+      if (!tenant?.yearOfStudy?.trim()) missingFields.push('Year of Study');
+      if (!tenant?.studentType?.trim()) missingFields.push('Student Type');
+    }
 
     if (missingFields.length > 0) {
       res.status(403).json({ 
@@ -547,6 +541,10 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         where: { id: booking.bedId },
         data: { status: 'AVAILABLE' }
       });
+    }
+
+    if ((status === 'REJECTED' || status === 'CANCELLED') && booking.roomUnitId) {
+      await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id);
     }
 
     const updatedBooking = await prisma.booking.update({ where: { id }, data: { status } });
@@ -983,6 +981,10 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
       });
     }
 
+    if (booking.roomUnitId) {
+      await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id);
+    }
+
     // Update booking status to CANCELLED
     const updated = await prisma.booking.update({
       where: { id },
@@ -1039,6 +1041,10 @@ export const deleteBooking = async (req: Request, res: Response): Promise<void> 
     await prisma.booking.delete({
       where: { id }
     });
+
+    if (booking.roomUnitId) {
+      await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id);
+    }
 
     try {
       getIO().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });

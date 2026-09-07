@@ -40,6 +40,11 @@ export const cleanupExpiredBookings = async (): Promise<number> => {
         where: { id: booking.id },
         data: { status: 'CANCELLED' }
       });
+
+      // Release dynamic genderLock if unit is now empty
+      if (booking.roomUnitId) {
+        await releaseUnitGenderLockIfEmpty(booking.roomUnitId, booking.id);
+      }
     }
 
     // Clear memory caches so all clients fetch fresh capacity & status
@@ -60,5 +65,41 @@ export const cleanupExpiredBookings = async (): Promise<number> => {
   } catch (error) {
     console.error('[AutoCleanup] Error cleaning up expired bookings:', error);
     return 0;
+  }
+};
+
+/**
+ * Safely resets a RoomUnit's genderLock to 'UNASSIGNED' if:
+ * 1. The parent Room is mixed-gender (room.gender === 'MIXED')
+ * 2. No other active/pending bookings remain in this unit
+ */
+export const releaseUnitGenderLockIfEmpty = async (roomUnitId: string, excludeBookingId?: string): Promise<void> => {
+  try {
+    const roomUnit = await prisma.roomUnit.findUnique({
+      where: { id: roomUnitId },
+      include: { room: true }
+    });
+
+    if (!roomUnit || roomUnit.room?.gender !== 'MIXED') {
+      return;
+    }
+
+    const remainingActiveBookings = await prisma.booking.count({
+      where: {
+        roomUnitId,
+        id: excludeBookingId ? { not: excludeBookingId } : undefined,
+        status: { in: ['PENDING', 'APPROVED', 'CONFIRMED'] }
+      }
+    });
+
+    if (remainingActiveBookings === 0) {
+      await prisma.roomUnit.update({
+        where: { id: roomUnitId },
+        data: { genderLock: 'UNASSIGNED' }
+      });
+      console.log(`[GenderLock] Released unit ${roomUnit.unitNumber} (${roomUnitId}) back to UNASSIGNED.`);
+    }
+  } catch (err) {
+    console.error(`[GenderLock] Error releasing genderLock for unit ${roomUnitId}:`, err);
   }
 };
