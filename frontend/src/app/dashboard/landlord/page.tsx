@@ -579,7 +579,7 @@ export default function LandlordDashboard() {
                           <div className="font-bold text-[var(--foreground)]">{booking.tenant.firstName} {booking.tenant.lastName}</div>
                           <div className="flex flex-col gap-1 mt-1">
                             <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                              <Star className="w-3 h-3 fill-amber-500" /> Rep: {booking.tenant.reputationScore ? (booking.tenant.reputationScore / 10).toFixed(1) : '5.0'}/5.0
+                              <Star className="w-3 h-3 fill-amber-500" /> Rep: {(booking.tenant.reputationScore ?? 5.0).toFixed(1)}/5.0
                             </span>
                             <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]"><Mail className="w-3 h-3"/> {booking.tenant.email}</span>
                             {booking.tenant.phoneNumber && (

@@ -34,6 +34,8 @@ export default function RoommatesPage() {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'matches' | 'invitations'>('matches');
+  const [campusFilter, setCampusFilter] = useState<string>('ALL');
+  const [genderFilter, setGenderFilter] = useState<string>('ALL');
   const [inviteModalUser, setInviteModalUser] = useState<any | null>(null);
   const [inviteMessage, setInviteMessage] = useState('Hi! I noticed our living habits and budget align well. Would you be interested in teaming up to co-rent a residential apartment?');
 
@@ -61,11 +63,14 @@ export default function RoommatesPage() {
     }
   }, [userResponse, router]);
 
-  // Fetch roommate profile & matches
+  // Fetch roommate profile & matches with campus and gender filters
   const { data: matchResponse, isLoading: isLoadingMatches } = useQuery({
-    queryKey: ['roommateMatches'],
+    queryKey: ['roommateMatches', campusFilter, genderFilter],
     queryFn: async () => {
-      const { data } = await api.get('/roommates/matches');
+      const params: any = {};
+      if (campusFilter !== 'ALL') params.campus = campusFilter;
+      if (genderFilter !== 'ALL') params.gender = genderFilter;
+      const { data } = await api.get('/roommates/matches', { params });
       return data;
     },
     retry: false,
@@ -357,6 +362,38 @@ export default function RoommatesPage() {
 
       {activeTab === 'matches' ? (
         <>
+          {/* Filter Controls Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl mb-4">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-500">
+              <SlidersHorizontal className="w-4 h-4 text-[#0F5132]" />
+              <span>Filter Matches:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={campusFilter}
+                onChange={(e) => setCampusFilter(e.target.value)}
+                className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none focus:border-[#0F5132]"
+              >
+                <option value="ALL">All Campuses</option>
+                <option value="KNUST">KNUST</option>
+                <option value="UG">UG Legon</option>
+                <option value="UCC">UCC</option>
+                <option value="UPSA">UPSA</option>
+                <option value="UDS">UDS</option>
+              </select>
+
+              <select
+                value={genderFilter}
+                onChange={(e) => setGenderFilter(e.target.value)}
+                className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-800 dark:text-zinc-200 outline-none focus:border-[#0F5132]"
+              >
+                <option value="ALL">All Genders</option>
+                <option value="MALE">Male Roommates</option>
+                <option value="FEMALE">Female Roommates</option>
+              </select>
+            </div>
+          </div>
+
           {matches.length === 0 ? (
             <div className="p-12 text-center border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 space-y-3">
               <Users className="w-10 h-10 text-zinc-300 mx-auto" />

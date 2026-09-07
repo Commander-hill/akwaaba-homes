@@ -7,22 +7,26 @@ exports.getMyReviews = exports.submitAppeal = exports.flagReview = exports.getPr
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
-// Helper: recalculate a tenant's reputation score from all their reviews
-const recalculateReputation = async (tenantId) => {
-    // Get all reviews for completed bookings by this tenant
+// Helper: recalculate a landlord's reputation score from all reviews across their properties
+const recalculateLandlordReputation = async (landlordId) => {
+    if (!landlordId)
+        return;
+    // Get all non-flagged reviews for completed bookings across all properties owned by this landlord
     const reviews = await prisma_1.default.review.findMany({
         where: {
-            booking: { tenantId },
+            booking: {
+                property: { landlordId }
+            },
             isFlagged: false, // Exclude flagged/moderated reviews from scoring
             isModerated: false
         },
         select: { rating: true }
     });
     if (reviews.length === 0)
-        return; // Keep default 5.0 if no reviews yet
+        return;
     const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
     await prisma_1.default.user.update({
-        where: { id: tenantId },
+        where: { id: landlordId },
         data: { reputationScore: parseFloat(avg.toFixed(2)) }
     });
 };
@@ -37,7 +41,7 @@ const createReview = async (req, res) => {
         // RULE 1: Booking must exist
         const booking = await prisma_1.default.booking.findUnique({
             where: { id: bookingId },
-            include: { tenant: true }
+            include: { tenant: true, property: true }
         });
         if (!booking) {
             res.status(404).json({ message: 'Booking not found' });
@@ -62,8 +66,10 @@ const createReview = async (req, res) => {
         const review = await prisma_1.default.review.create({
             data: { bookingId, authorId, rating, comment }
         });
-        // Auto-recalculate tenant reputation score after new review
-        await recalculateReputation(booking.tenantId);
+        // Auto-recalculate landlord reputation score after new review
+        if (booking.property?.landlordId) {
+            await recalculateLandlordReputation(booking.property.landlordId);
+        }
         try {
             (0, socket_1.getIO)().emit('review_created', review);
             (0, socket_1.getIO)().emit('property_updated', { propertyId: booking.propertyId });

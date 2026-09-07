@@ -4,23 +4,27 @@ import prisma from '../utils/prisma';
 import { getIO } from '../socket';
 import appCache from '../utils/cache';
 
-// Helper: recalculate a tenant's reputation score from all their reviews
-const recalculateReputation = async (tenantId: string) => {
-  // Get all reviews for completed bookings by this tenant
+// Helper: recalculate a landlord's reputation score from all reviews across their properties
+const recalculateLandlordReputation = async (landlordId: string) => {
+  if (!landlordId) return;
+
+  // Get all non-flagged reviews for completed bookings across all properties owned by this landlord
   const reviews = await prisma.review.findMany({
     where: {
-      booking: { tenantId },
+      booking: {
+        property: { landlordId }
+      },
       isFlagged: false,     // Exclude flagged/moderated reviews from scoring
       isModerated: false
     },
     select: { rating: true }
   });
 
-  if (reviews.length === 0) return; // Keep default 5.0 if no reviews yet
+  if (reviews.length === 0) return;
 
   const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
   await prisma.user.update({
-    where: { id: tenantId },
+    where: { id: landlordId },
     data: { reputationScore: parseFloat(avg.toFixed(2)) }
   });
 };
@@ -38,7 +42,7 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
     // RULE 1: Booking must exist
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
-      include: { tenant: true }
+      include: { tenant: true, property: true }
     });
 
     if (!booking) {
@@ -69,8 +73,10 @@ export const createReview = async (req: Request, res: Response): Promise<void> =
       data: { bookingId, authorId, rating, comment }
     });
 
-    // Auto-recalculate tenant reputation score after new review
-    await recalculateReputation(booking.tenantId);
+    // Auto-recalculate landlord reputation score after new review
+    if (booking.property?.landlordId) {
+      await recalculateLandlordReputation(booking.property.landlordId);
+    }
 
     try {
       getIO().emit('review_created', review);

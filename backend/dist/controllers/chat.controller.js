@@ -14,9 +14,14 @@ const getConversations = async (req, res) => {
             return;
         }
         const role = req.user?.role;
-        // Find all conversations where this user is either the tenant or landlord
+        // Find all conversations where this user is either participant
         const conversations = await prisma_1.default.conversation.findMany({
-            where: role === 'TENANT' ? { tenantId: userId } : { landlordId: userId },
+            where: {
+                OR: [
+                    { tenantId: userId },
+                    { landlordId: userId }
+                ]
+            },
             include: {
                 messages: {
                     orderBy: { createdAt: 'desc' },
@@ -25,11 +30,9 @@ const getConversations = async (req, res) => {
             },
             orderBy: { updatedAt: 'desc' }
         });
-        // We also need to fetch the other user's profile info (avatar, name)
-        // Since Conversation doesn't have explicit relations to User built into schema yet (only IDs), 
-        // we manually fetch the partner details.
+        // Resolve the other participant's profile dynamically regardless of role
         const formattedConversations = await Promise.all(conversations.map(async (conv) => {
-            const partnerId = role === 'TENANT' ? conv.landlordId : conv.tenantId;
+            const partnerId = conv.tenantId === userId ? conv.landlordId : conv.tenantId;
             const partner = await prisma_1.default.user.findUnique({
                 where: { id: partnerId },
                 select: { id: true, firstName: true, lastName: true, avatarUrl: true, role: true }
@@ -97,15 +100,27 @@ const createConversation = async (req, res) => {
             res.status(400).json({ message: 'Missing user or partner ID' });
             return;
         }
-        const tenantId = role === 'TENANT' ? userId : partnerId;
-        const landlordId = role === 'LANDLORD' ? userId : partnerId;
-        // Check if conversation already exists
-        let conversation = await prisma_1.default.conversation.findUnique({
+        // Check if conversation already exists in either direction
+        let conversation = await prisma_1.default.conversation.findFirst({
             where: {
-                tenantId_landlordId: { tenantId, landlordId }
+                OR: [
+                    { tenantId: userId, landlordId: partnerId },
+                    { tenantId: partnerId, landlordId: userId }
+                ]
             }
         });
         if (!conversation) {
+            const partnerUser = await prisma_1.default.user.findUnique({
+                where: { id: partnerId },
+                select: { role: true }
+            });
+            let tenantId = userId;
+            let landlordId = partnerId;
+            // Ensure proper role positioning if one is a landlord and one is a tenant
+            if (role === 'LANDLORD' || partnerUser?.role === 'TENANT') {
+                tenantId = partnerId;
+                landlordId = userId;
+            }
             conversation = await prisma_1.default.conversation.create({
                 data: { tenantId, landlordId }
             });
