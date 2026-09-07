@@ -26,17 +26,34 @@ const getPropertyCampusLandmarks = async (req, res) => {
             res.status(404).json({ message: 'Property coordinates not found' });
             return;
         }
-        // Determine nearest campus (default UCC or match by location string)
+        // Determine nearest campus accurately using GPS coordinates
         let selectedCampus = 'UCC';
-        const locLower = (property.location || '').toLowerCase();
-        if (locLower.includes('legon') || locLower.includes('accra') || locLower.includes('ug')) {
-            selectedCampus = 'UG';
+        let shortestCampusDistance = Infinity;
+        for (const [campusKey, coords] of Object.entries(gis_1.CAMPUS_COORDINATES)) {
+            const distanceToCampus = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, coords.lat, coords.lon);
+            if (distanceToCampus < shortestCampusDistance) {
+                shortestCampusDistance = distanceToCampus;
+                selectedCampus = campusKey;
+            }
         }
-        else if (locLower.includes('kumasi') || locLower.includes('knust')) {
-            selectedCampus = 'KNUST';
-        }
-        else if (locLower.includes('tamale') || locLower.includes('uds')) {
-            selectedCampus = 'UDS';
+        // Fallback if property location string provides a more specific campus hint
+        if (shortestCampusDistance > 80 && property.location) {
+            const locLower = property.location.toLowerCase();
+            if (locLower.includes('upsa') || locLower.includes('madina')) {
+                selectedCampus = 'UPSA';
+            }
+            else if (locLower.includes('legon') || locLower.includes('accra') || locLower.includes('ug')) {
+                selectedCampus = 'UG';
+            }
+            else if (locLower.includes('kumasi') || locLower.includes('knust')) {
+                selectedCampus = 'KNUST';
+            }
+            else if (locLower.includes('tamale') || locLower.includes('uds')) {
+                selectedCampus = 'UDS';
+            }
+            else if (locLower.includes('cape coast') || locLower.includes('ucc')) {
+                selectedCampus = 'UCC';
+            }
         }
         const landmarks = gis_1.CAMPUS_LANDMARKS[selectedCampus] || gis_1.CAMPUS_LANDMARKS['UCC'];
         const landmarkDistances = landmarks.map((landmark) => {

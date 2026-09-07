@@ -530,6 +530,9 @@ const verifyUserCard = async (req, res) => {
             select: { id: true, ghanaCardStatus: true }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD', 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus }, { ghanaCardStatus: status }, req.ip || req.socket.remoteAddress);
+        // Clear cached profile so dashboard and verification page immediately reflect new status
+        cache_1.default.del(`user:me:${id}`);
+        cache_1.default.flushAll();
         // Notify the user in real-time so the onboarding widget refreshes instantly
         try {
             const { getIO } = await import('../socket');

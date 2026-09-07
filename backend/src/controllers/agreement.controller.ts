@@ -251,6 +251,11 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    if (agreement.status === 'COMPLETED') {
+      res.status(400).json({ message: 'This lease agreement is already fully executed and legally sealed.' });
+      return;
+    }
+
     let updateData: any = {};
 
     const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || 'UNKNOWN';

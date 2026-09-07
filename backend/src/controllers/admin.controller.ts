@@ -588,6 +588,10 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       req.ip || req.socket.remoteAddress
     );
 
+    // Clear cached profile so dashboard and verification page immediately reflect new status
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+
     // Notify the user in real-time so the onboarding widget refreshes instantly
     try {
       const { getIO } = await import('../socket');

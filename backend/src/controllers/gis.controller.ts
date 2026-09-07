@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { CAMPUS_LANDMARKS, calculateHaversineDistance, estimateCommuteTimes } from '../utils/gis';
+import { CAMPUS_COORDINATES, CAMPUS_LANDMARKS, calculateHaversineDistance, estimateCommuteTimes } from '../utils/gis';
 import prisma from '../utils/prisma';
 
 /**
@@ -25,15 +25,37 @@ export const getPropertyCampusLandmarks = async (req: Request, res: Response): P
       return;
     }
 
-    // Determine nearest campus (default UCC or match by location string)
+    // Determine nearest campus accurately using GPS coordinates
     let selectedCampus = 'UCC';
-    const locLower = (property.location || '').toLowerCase();
-    if (locLower.includes('legon') || locLower.includes('accra') || locLower.includes('ug')) {
-      selectedCampus = 'UG';
-    } else if (locLower.includes('kumasi') || locLower.includes('knust')) {
-      selectedCampus = 'KNUST';
-    } else if (locLower.includes('tamale') || locLower.includes('uds')) {
-      selectedCampus = 'UDS';
+    let shortestCampusDistance = Infinity;
+
+    for (const [campusKey, coords] of Object.entries(CAMPUS_COORDINATES) as [string, { lat: number; lon: number }][]) {
+      const distanceToCampus = calculateHaversineDistance(
+        property.latitude,
+        property.longitude,
+        coords.lat,
+        coords.lon
+      );
+      if (distanceToCampus < shortestCampusDistance) {
+        shortestCampusDistance = distanceToCampus;
+        selectedCampus = campusKey;
+      }
+    }
+
+    // Fallback if property location string provides a more specific campus hint
+    if (shortestCampusDistance > 80 && property.location) {
+      const locLower = property.location.toLowerCase();
+      if (locLower.includes('upsa') || locLower.includes('madina')) {
+        selectedCampus = 'UPSA';
+      } else if (locLower.includes('legon') || locLower.includes('accra') || locLower.includes('ug')) {
+        selectedCampus = 'UG';
+      } else if (locLower.includes('kumasi') || locLower.includes('knust')) {
+        selectedCampus = 'KNUST';
+      } else if (locLower.includes('tamale') || locLower.includes('uds')) {
+        selectedCampus = 'UDS';
+      } else if (locLower.includes('cape coast') || locLower.includes('ucc')) {
+        selectedCampus = 'UCC';
+      }
     }
 
     const landmarks = CAMPUS_LANDMARKS[selectedCampus] || CAMPUS_LANDMARKS['UCC'];

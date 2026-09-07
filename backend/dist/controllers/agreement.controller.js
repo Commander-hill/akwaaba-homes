@@ -237,6 +237,10 @@ const signAgreement = async (req, res) => {
             res.status(404).json({ message: 'Agreement not found' });
             return;
         }
+        if (agreement.status === 'COMPLETED') {
+            res.status(400).json({ message: 'This lease agreement is already fully executed and legally sealed.' });
+            return;
+        }
         let updateData = {};
         const ipAddress = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress || 'UNKNOWN';
         const userAgent = req.headers['user-agent'] || 'UNKNOWN';

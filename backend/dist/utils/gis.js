@@ -33,6 +33,12 @@ exports.CAMPUS_LANDMARKS = {
         { name: 'Tamale Campus Central Library', type: 'LIBRARY', lat: 9.4290, lon: -0.8410 },
         { name: 'Medical School Lecture Complex', type: 'LECTURE_HALL', lat: 9.4270, lon: -0.8390 },
         { name: 'Main Campus Administration Gate', type: 'CAMPUS_GATE', lat: 9.4260, lon: -0.8420 },
+    ],
+    'UPSA': [
+        { name: 'LBC Central Library', type: 'LIBRARY', lat: 5.6565, lon: -0.1715 },
+        { name: 'Kofi Ohene-Konadu Auditorium', type: 'LECTURE_HALL', lat: 5.6550, lon: -0.1700 },
+        { name: 'UPSA Ceremonial Main Gate', type: 'CAMPUS_GATE', lat: 5.6540, lon: -0.1725 },
+        { name: 'Madina Transit / Hostel Shuttle Station', type: 'BUS_STOP', lat: 5.6580, lon: -0.1690 },
     ]
 };
 /**
