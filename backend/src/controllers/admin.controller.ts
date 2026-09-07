@@ -818,16 +818,27 @@ export const resolveAppeal = async (req: Request, res: Response): Promise<void> 
 
     await prisma.review.update({ where: { id }, data: updateData });
 
-    // Recalculate tenant reputation after appeal resolution
-    const booking = await prisma.booking.findUnique({ where: { id: review.bookingId } });
-    if (booking) {
+    // Recalculate landlord reputation after appeal resolution
+    const booking = await prisma.booking.findUnique({
+      where: { id: review.bookingId },
+      include: { property: true }
+    });
+    if (booking?.property?.landlordId) {
+      const landlordId = booking.property.landlordId;
       const allReviews = await prisma.review.findMany({
-        where: { booking: { tenantId: booking.tenantId }, isFlagged: false, isModerated: false },
+        where: {
+          booking: { property: { landlordId } },
+          isFlagged: false,
+          isModerated: false
+        },
         select: { rating: true }
       });
       if (allReviews.length > 0) {
         const avg = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length;
-        await prisma.user.update({ where: { id: booking.tenantId }, data: { reputationScore: parseFloat(avg.toFixed(2)) } });
+        await prisma.user.update({
+          where: { id: landlordId },
+          data: { reputationScore: parseFloat(avg.toFixed(2)) }
+        });
       }
     }
 

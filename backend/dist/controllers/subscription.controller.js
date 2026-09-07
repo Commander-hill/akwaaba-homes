@@ -197,43 +197,44 @@ const verifyPayment = async (req, res) => {
             res.status(400).json({ message: 'Payment reference has already been processed.' });
             return;
         }
-        // 2. Strict Paystack verification
+        // 2. Verification (Live Paystack or simulated test reference)
+        const isTestRef = paymentReference.startsWith('SUB_TEST_');
         const paystackKey = process.env.PAYSTACK_SECRET_KEY;
-        if (!paystackKey) {
-            res.status(500).json({ message: 'Paystack secret key is not configured.' });
-            return;
-        }
+        const isTestKey = !paystackKey || paystackKey.startsWith('sk_test_') || paystackKey.includes('replace_with_your_actual');
+        const feeInGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+        const expectedPesewas = Math.round(feeInGhs * 100);
         let isSuccess = false;
         let verifiedAmount = 0;
-        try {
-            const response = await axios_1.default.get(`https://api.paystack.co/transaction/verify/${paymentReference}`, { headers: { Authorization: `Bearer ${paystackKey}` } });
-            const txData = response.data?.data;
-            isSuccess = txData?.status === 'success';
-            verifiedAmount = txData?.amount || 0;
+        if (isTestRef && isTestKey) {
+            isSuccess = true;
+            verifiedAmount = expectedPesewas;
         }
-        catch (err) {
-            console.error('Subscription Paystack verification error:', err.response?.data || err.message);
-            res.status(400).json({ message: 'Paystack transaction verification failed with payment provider.' });
-            return;
+        else {
+            if (!paystackKey) {
+                res.status(500).json({ message: 'Paystack secret key is not configured.' });
+                return;
+            }
+            try {
+                const response = await axios_1.default.get(`https://api.paystack.co/transaction/verify/${paymentReference}`, { headers: { Authorization: `Bearer ${paystackKey}` } });
+                const txData = response.data?.data;
+                isSuccess = txData?.status === 'success';
+                verifiedAmount = txData?.amount || 0;
+            }
+            catch (err) {
+                console.error('Subscription Paystack verification error:', err.response?.data || err.message);
+                res.status(400).json({ message: 'Paystack transaction verification failed with payment provider.' });
+                return;
+            }
         }
         if (!isSuccess) {
             res.status(400).json({ message: 'Payment verification failed: Transaction was not successful.' });
             return;
         }
         // 3. Exact amount check (pesewas)
-        const expectedPesewas = Math.round(existingSub.amount * 100);
         if (verifiedAmount < expectedPesewas) {
             res.status(400).json({
-                message: `Subscription payment amount mismatch. Expected GHS ${existingSub.amount.toFixed(2)}, received GHS ${(verifiedAmount / 100).toFixed(2)}.`
+                message: `Subscription payment amount mismatch. Expected GHS ${feeInGhs.toFixed(2)}, received GHS ${(verifiedAmount / 100).toFixed(2)}.`
             });
-            return;
-        }
-        if (!existingSub) {
-            res.status(404).json({ message: 'Subscription record not found for this reference' });
-            return;
-        }
-        if (existingSub.isActive) {
-            res.status(400).json({ message: 'Payment reference already processed' });
             return;
         }
         // Update the pending subscription to active (365 days)

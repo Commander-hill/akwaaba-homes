@@ -138,6 +138,15 @@ export const downloadReceiptPDF = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    // Check authorization: must be tenant who paid, property landlord, or admin
+    if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId) {
+      res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
+      return;
+    }
+
     const pdfBuffer = await generateReceiptPDF({
       transactionId: transaction.id,
       reference: transaction.reference,

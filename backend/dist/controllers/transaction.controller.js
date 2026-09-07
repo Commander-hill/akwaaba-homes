@@ -128,6 +128,13 @@ const downloadReceiptPDF = async (req, res) => {
             res.status(404).json({ message: 'Transaction record not found' });
             return;
         }
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        // Check authorization: must be tenant who paid, property landlord, or admin
+        if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId) {
+            res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
+            return;
+        }
         const pdfBuffer = await (0, pdf_service_2.generateReceiptPDF)({
             transactionId: transaction.id,
             reference: transaction.reference,

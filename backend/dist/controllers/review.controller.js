@@ -114,7 +114,10 @@ const flagReview = async (req, res) => {
     try {
         const { id } = req.params;
         const { reason } = req.body;
-        const review = await prisma_1.default.review.findUnique({ where: { id } });
+        const review = await prisma_1.default.review.findUnique({
+            where: { id },
+            include: { booking: { include: { property: true } } }
+        });
         if (!review) {
             res.status(404).json({ message: 'Review not found' });
             return;
@@ -123,6 +126,10 @@ const flagReview = async (req, res) => {
             where: { id },
             data: { isFlagged: true, moderationNote: reason || 'Flagged for review' }
         });
+        // Immediately recalculate landlord reputation to exclude the flagged review
+        if (review.booking?.property?.landlordId) {
+            await recalculateLandlordReputation(review.booking.property.landlordId);
+        }
         try {
             (0, socket_1.getIO)().emit('review_updated', { id });
             cache_1.default.flushAll();
