@@ -138,6 +138,18 @@ const createBooking = async (req, res) => {
             });
             return;
         }
+        // Verify property existence and prevent self-booking
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        if (property.landlordId === tenantId) {
+            res.status(400).json({ message: 'You cannot book your own property listing.' });
+            return;
+        }
         // ── STRICT STUDENT-ONLY ACCESS GUARD ──
         const isStudentRestricted = property.type === 'Hostel' || property.targetAudience === 'Students Only';
         if (isStudentRestricted) {

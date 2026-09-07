@@ -53,11 +53,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (role === 'TENANT') {
-      if (!dateOfBirth || !guardianName || !guardianPhone) {
-        res.status(400).json({ message: 'Missing mandatory tenant details (Date of Birth, Guardian Name & Phone are required)' });
+      if (!dateOfBirth) {
+        res.status(400).json({ message: 'Missing mandatory tenant details (Date of Birth is required)' });
         return;
       }
       if (isStudent) {
+        if (!guardianName || !guardianPhone) {
+          res.status(400).json({ message: 'Missing mandatory student details (Guardian Name & Phone are required for student tenants)' });
+          return;
+        }
         if (!campus || !studentId || !dateOfAdmission || !programmeOfStudy || !yearOfStudy || !studentType) {
           res.status(400).json({ message: 'Missing mandatory school information for student tenant (Campus, Student ID, Admission Date, Programme, Year, and Student Type are required)' });
           return;
@@ -580,7 +584,10 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
 
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { refreshToken } = req.cookies;
+    let { refreshToken } = req.cookies || {};
+    if (!refreshToken && req.body?.refreshToken) {
+      refreshToken = req.body.refreshToken;
+    }
 
     if (refreshToken) {
       // Invalidate session in DB

@@ -24,7 +24,7 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
         where: {
           tenantId: req.user.id,
           propertyId,
-          status: { in: ['PENDING', 'APPROVED', 'COMPLETED', 'CONFIRMED'] } 
+          status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED'] } 
         }
       });
 

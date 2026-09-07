@@ -24,7 +24,7 @@ const createTicket = async (req, res) => {
                 where: {
                     tenantId: req.user.id,
                     propertyId,
-                    status: { in: ['PENDING', 'APPROVED', 'COMPLETED', 'CONFIRMED'] }
+                    status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED'] }
                 }
             });
             if (!activeBooking) {

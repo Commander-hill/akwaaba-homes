@@ -494,6 +494,19 @@ const deleteProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
+        // Step 0: Ensure no active or approved tenancies exist before allowing deletion
+        const activeTenanciesCount = await prisma_1.default.booking.count({
+            where: {
+                propertyId: id,
+                status: { in: ['CONFIRMED', 'APPROVED'] }
+            }
+        });
+        if (activeTenanciesCount > 0) {
+            res.status(400).json({
+                message: 'Cannot delete property with active or approved tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.'
+            });
+            return;
+        }
         // Step 1: Comprehensive bottom-up cleanup of all nested dependent entities
         try {
             const rooms = await prisma_1.default.room.findMany({ where: { propertyId: id }, select: { id: true } }).catch(() => []);

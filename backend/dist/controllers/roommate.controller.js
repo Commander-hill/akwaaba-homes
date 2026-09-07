@@ -65,15 +65,31 @@ function calculateMatchScore(p1, p2) {
 const getRoommateMatches = async (req, res) => {
     try {
         const currentUserId = req.user.id;
-        // Get current user's profile
-        const myProfile = await prisma_1.default.roommateProfile.findUnique({
-            where: { userId: currentUserId }
-        });
-        // Fetch all active profiles except current user
+        const { campus, gender } = req.query;
+        // Get current user's roommate profile and user details
+        const [myProfile, currentUser] = await Promise.all([
+            prisma_1.default.roommateProfile.findUnique({ where: { userId: currentUserId } }),
+            prisma_1.default.user.findUnique({
+                where: { id: currentUserId },
+                select: { campus: true, gender: true }
+            })
+        ]);
+        // Build filter: prioritize compatible gender and campus
+        const userFilter = {};
+        const filterGender = gender || currentUser?.gender;
+        if (filterGender && filterGender !== 'ALL') {
+            userFilter.gender = filterGender;
+        }
+        const filterCampus = campus || currentUser?.campus;
+        if (filterCampus && filterCampus !== 'ALL') {
+            userFilter.campus = filterCampus;
+        }
+        // Fetch active profiles matching compatibility criteria
         const otherProfiles = await prisma_1.default.roommateProfile.findMany({
             where: {
                 isActive: true,
-                userId: { not: currentUserId }
+                userId: { not: currentUserId },
+                ...(Object.keys(userFilter).length > 0 ? { user: userFilter } : {})
             },
             include: {
                 user: {
