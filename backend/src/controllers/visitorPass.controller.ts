@@ -34,7 +34,7 @@ export const createVisitorPass = async (req: Request, res: Response): Promise<vo
         where: {
           tenantId,
           propertyId,
-          status: { in: ['COMPLETED', 'ACTIVE', 'APPROVED', 'CONFIRMED'] }
+          status: { in: ['COMPLETED', 'ACTIVE', 'APPROVED', 'CONFIRMED', 'CHECKED_IN'] }
         }
       });
 
@@ -179,11 +179,26 @@ export const verifyGatePass = async (req: Request, res: Response): Promise<void>
       }
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: pass.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: '🚪 Visitor Cleared at Gate',
+        message: `Your guest ${pass.visitorName} has been verified and cleared for entry at "${pass.property.title}".`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
     try {
       getIO().to(pass.tenantId).emit('visitor_checked_in', {
         passId: pass.id,
         visitorName: pass.visitorName,
         checkInTime: now
+      });
+      getIO().to(pass.tenantId).emit('notification', {
+        title: '🚪 Visitor Cleared at Gate',
+        message: `Your guest ${pass.visitorName} has entered "${pass.property.title}".`,
+        type: 'visitor'
       });
     } catch (e) { /* non-blocking */ }
 
@@ -242,11 +257,26 @@ export const checkOutVisitorPass = async (req: Request, res: Response): Promise<
       }
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: pass.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: '👋 Visitor Departed Compound',
+        message: `Your guest ${pass.visitorName} has signed out and exited "${pass.property.title}".`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
     try {
       getIO().to(pass.tenantId).emit('visitor_checked_out', {
         passId: pass.id,
         visitorName: pass.visitorName,
         checkOutTime: now
+      });
+      getIO().to(pass.tenantId).emit('notification', {
+        title: '👋 Visitor Departed Compound',
+        message: `Your guest ${pass.visitorName} has signed out and exited "${pass.property.title}".`,
+        type: 'visitor'
       });
       getIO().emit('visitor_pass_updated', {
         propertyId: pass.propertyId,

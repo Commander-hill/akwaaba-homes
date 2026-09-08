@@ -23,4 +23,8 @@ export declare const getMyRoommateInvitations: (req: Request, res: Response) => 
  * Respond to Roommate Invitation (ACCEPT or REJECT)
  */
 export declare const respondToRoommateInvitation: (req: Request, res: Response) => Promise<void>;
+/**
+ * Cancel a pending roommate invitation sent by current user
+ */
+export declare const cancelRoommateInvitation: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=roommate.controller.d.ts.map

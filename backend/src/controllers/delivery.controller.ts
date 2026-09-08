@@ -24,7 +24,7 @@ export const logPackageDelivery = async (req: Request, res: Response): Promise<v
       where: { id: propertyId },
       include: {
         bookings: {
-          where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN', 'COMPLETED'] } },
+          where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN', 'ACTIVE', 'COMPLETED'] } },
           select: { tenantId: true }
         }
       }
@@ -208,6 +208,26 @@ export const confirmParcelPickup = async (req: Request, res: Response): Promise<
         collectedAt: new Date()
       }
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: delivery.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: '📦 Parcel Handed Over & Collected',
+        message: `Your package (${delivery.courierName}) at "${delivery.property?.title}" has been marked as collected.`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
+    try {
+      getIO().to(delivery.tenantId).emit('notification', {
+        title: '📦 Parcel Collected',
+        message: `Your package (${delivery.courierName}) has been collected.`,
+        type: 'package'
+      });
+      getIO().to(delivery.tenantId).emit('package_collected', { id: delivery.id });
+      getIO().emit('delivery_updated', { id: delivery.id });
+    } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: 'Parcel marked as collected ✅', delivery: updated });
   } catch (error) {

@@ -86,14 +86,14 @@ export default function AgreementPage() {
   const { booking } = agreement;
   const { property, tenant } = booking;
 
-  // Check signature status based on role
-  const isTenant = currentUser?.role === 'TENANT';
-  const isLandlord = currentUser?.role === 'LANDLORD';
-  
+  // Check signature status based on contract party identity
+  const isContractTenant = currentUser?.id === tenant?.id;
+  const isContractLandlord = currentUser?.id === property?.landlordId || currentUser?.role === 'ADMIN';
+
   const hasTenantSigned = Boolean(agreement.tenantSignature);
   const hasLandlordSigned = Boolean(agreement.landlordSignature);
 
-  const iHaveSigned = (isTenant && hasTenantSigned) || (isLandlord && hasLandlordSigned);
+  const canSign = (isContractTenant && !hasTenantSigned) || (isContractLandlord && !hasLandlordSigned);
   const isFullySigned = hasTenantSigned && hasLandlordSigned;
 
   const handleSaveSignature = (base64: string) => {
@@ -166,7 +166,7 @@ export default function AgreementPage() {
             <span>Download Official PDF</span>
           </button>
 
-          {!iHaveSigned && (
+          {canSign && (
             <button 
               onClick={() => setShowSignModal(true)}
               className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"

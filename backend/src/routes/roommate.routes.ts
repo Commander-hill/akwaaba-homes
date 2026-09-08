@@ -5,7 +5,8 @@ import {
   upsertRoommateProfile,
   sendRoommateInvitation,
   getMyRoommateInvitations,
-  respondToRoommateInvitation
+  respondToRoommateInvitation,
+  cancelRoommateInvitation
 } from '../controllers/roommate.controller';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.post('/profile', upsertRoommateProfile);
 router.post('/invite', sendRoommateInvitation);
 router.get('/invitations', getMyRoommateInvitations);
 router.put('/invitations/:id/respond', respondToRoommateInvitation);
+router.delete('/invitations/:id', cancelRoommateInvitation);
 
 export default router;

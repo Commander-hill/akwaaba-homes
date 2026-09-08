@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMyStaffAssignments = exports.removeStaff = exports.getPropertyStaff = exports.assignStaff = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const socket_1 = require("../socket");
 /**
  * Assign Staff (Caretaker/Porter/Manager) to a Property by Email
  */
@@ -67,6 +68,26 @@ const assignStaff = async (req, res) => {
                 }
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: staffUser.id,
+                type: 'ANNOUNCEMENT',
+                title: '🛡️ Property Staff Assignment',
+                message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}". You now have on-site management privileges.`,
+                link: '/dashboard/staff'
+            }
+        }).catch(() => null);
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(staffUser.id).emit('notification', {
+                title: '🛡️ Property Staff Assignment',
+                message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}".`,
+                type: 'staff'
+            });
+            io.to(staffUser.id).emit('staff_updated', { propertyId });
+            io.to(landlordId).emit('staff_updated', { propertyId });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({ message: `Staff member "${staffUser.firstName} ${staffUser.lastName}" assigned successfully!`, assignment });
     }
     catch (error) {
@@ -132,6 +153,26 @@ const removeStaff = async (req, res) => {
         await prisma_1.default.propertyStaff.delete({
             where: { id }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: assignment.userId,
+                type: 'ANNOUNCEMENT',
+                title: '🛡️ Staff Assignment Concluded',
+                message: 'Your property staff assignment has concluded.',
+                link: '/dashboard'
+            }
+        }).catch(() => null);
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(assignment.userId).emit('notification', {
+                title: '🛡️ Staff Assignment Concluded',
+                message: 'Your staff assignment has been removed by the property owner.',
+                type: 'staff'
+            });
+            io.to(assignment.userId).emit('staff_updated', { propertyId: assignment.propertyId });
+            io.to(landlordId).emit('staff_updated', { propertyId: assignment.propertyId });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({ message: 'Staff assignment removed successfully' });
     }
     catch (error) {

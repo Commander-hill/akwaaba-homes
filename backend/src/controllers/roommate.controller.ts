@@ -400,3 +400,43 @@ export const respondToRoommateInvitation = async (req: Request, res: Response): 
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Cancel a pending roommate invitation sent by current user
+ */
+export const cancelRoommateInvitation = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const senderId = req.user.id;
+    const id = req.params.id as string;
+
+    const invitation = await prisma.roommateInvitation.findUnique({
+      where: { id }
+    });
+
+    if (!invitation || invitation.senderId !== senderId) {
+      res.status(404).json({ message: 'Invitation not found or unauthorized' });
+      return;
+    }
+
+    if (invitation.status !== 'PENDING') {
+      res.status(400).json({ message: 'Only pending invitations can be cancelled' });
+      return;
+    }
+
+    await prisma.roommateInvitation.delete({
+      where: { id }
+    });
+
+    try {
+      const io = getIO();
+      io.to(invitation.receiverId).emit('roommate_invitation_cancelled', { id });
+      io.to(senderId).emit('roommate_invitation_cancelled', { id });
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({ message: 'Roommate split invitation cancelled successfully' });
+  } catch (error) {
+    console.error('Error cancelling roommate invitation:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+

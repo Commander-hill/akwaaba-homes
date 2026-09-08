@@ -103,6 +103,15 @@ export const resolveBreachReport = async (req: Request, res: Response): Promise<
           isSuspended: shouldSuspend
         }
       });
+
+      if (shouldSuspend) {
+        // Terminate all active sessions for suspended offender
+        await prisma.session.updateMany({
+          where: { userId: breach.tenantId, isValid: true },
+          data: { isValid: false }
+        });
+        appCache.del(`user:me:${breach.tenantId}`);
+      }
     }
 
     // Update Breach report status
@@ -148,6 +157,9 @@ export const resolveBreachReport = async (req: Request, res: Response): Promise<
         type: 'breach'
       });
       emitToUser(breach.tenantId, 'user_updated', { isSuspended: shouldSuspend, reputationScore: updatedReputation });
+      if (shouldSuspend) {
+        emitToUser(breach.tenantId, 'session_revoked', { reason: 'Your account has been suspended due to verified contract breaches.' });
+      }
       appCache.flushAll();
     } catch (e) { /* non-blocking */ }
 

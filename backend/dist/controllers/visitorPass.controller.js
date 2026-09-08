@@ -32,7 +32,7 @@ const createVisitorPass = async (req, res) => {
                 where: {
                     tenantId,
                     propertyId,
-                    status: { in: ['COMPLETED', 'ACTIVE', 'APPROVED', 'CONFIRMED'] }
+                    status: { in: ['COMPLETED', 'ACTIVE', 'APPROVED', 'CONFIRMED', 'CHECKED_IN'] }
                 }
             });
             if (!activeBooking) {
@@ -165,11 +165,25 @@ const verifyGatePass = async (req, res) => {
                 checkInTime: pass.checkInTime || now
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: pass.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: '🚪 Visitor Cleared at Gate',
+                message: `Your guest ${pass.visitorName} has been verified and cleared for entry at "${pass.property.title}".`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
         try {
             (0, socket_1.getIO)().to(pass.tenantId).emit('visitor_checked_in', {
                 passId: pass.id,
                 visitorName: pass.visitorName,
                 checkInTime: now
+            });
+            (0, socket_1.getIO)().to(pass.tenantId).emit('notification', {
+                title: '🚪 Visitor Cleared at Gate',
+                message: `Your guest ${pass.visitorName} has entered "${pass.property.title}".`,
+                type: 'visitor'
             });
         }
         catch (e) { /* non-blocking */ }
@@ -222,11 +236,25 @@ const checkOutVisitorPass = async (req, res) => {
                 status: 'USED'
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: pass.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: '👋 Visitor Departed Compound',
+                message: `Your guest ${pass.visitorName} has signed out and exited "${pass.property.title}".`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
         try {
             (0, socket_1.getIO)().to(pass.tenantId).emit('visitor_checked_out', {
                 passId: pass.id,
                 visitorName: pass.visitorName,
                 checkOutTime: now
+            });
+            (0, socket_1.getIO)().to(pass.tenantId).emit('notification', {
+                title: '👋 Visitor Departed Compound',
+                message: `Your guest ${pass.visitorName} has signed out and exited "${pass.property.title}".`,
+                type: 'visitor'
             });
             (0, socket_1.getIO)().emit('visitor_pass_updated', {
                 propertyId: pass.propertyId,

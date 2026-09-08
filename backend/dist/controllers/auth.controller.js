@@ -801,7 +801,8 @@ const updateProfile = async (req, res) => {
         const updatedUser = await prisma_1.default.user.update({
             where: { id: req.user.id },
             data: {
-                firstName, lastName, otherNames, phoneNumber, gender: gender ? gender.toUpperCase() : null,
+                firstName, lastName, otherNames, phoneNumber,
+                gender: gender !== undefined ? (gender ? gender.toUpperCase() : null) : existingUser.gender,
                 dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl,
                 campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
                 isProfileLocked: true // Lock profile upon hitting Save button

@@ -10,5 +10,6 @@ router.post('/profile', roommate_controller_1.upsertRoommateProfile);
 router.post('/invite', roommate_controller_1.sendRoommateInvitation);
 router.get('/invitations', roommate_controller_1.getMyRoommateInvitations);
 router.put('/invitations/:id/respond', roommate_controller_1.respondToRoommateInvitation);
+router.delete('/invitations/:id', roommate_controller_1.cancelRoommateInvitation);
 exports.default = router;
 //# sourceMappingURL=roommate.routes.js.map

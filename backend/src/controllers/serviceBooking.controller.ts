@@ -113,7 +113,7 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
     }
 
     const isStaff = await prisma.propertyStaff.findFirst({
-      where: { propertyId, userId, isActive: true }
+      where: { propertyId, userId }
     });
 
     if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
@@ -166,7 +166,7 @@ export const updateServiceBookingStatus = async (req: Request, res: Response): P
     const isTenant = booking.tenantId === userId;
     const isAdmin = userRole === 'ADMIN';
     const isStaff = await prisma.propertyStaff.findFirst({
-      where: { propertyId: booking.propertyId, userId, isActive: true }
+      where: { propertyId: booking.propertyId, userId }
     });
 
     if (!isLandlord && !isAdmin && !isStaff && (!isTenant || status !== 'CANCELLED')) {

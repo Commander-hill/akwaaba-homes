@@ -95,12 +95,11 @@ const getTransactionById = async (req, res) => {
             res.status(404).json({ message: 'Transaction not found' });
             return;
         }
-        // Ensure the user is either the tenant who made the payment, the landlord of the property, or an admin
-        if (role === 'TENANT' && transaction.tenantId !== userId) {
-            res.status(403).json({ message: 'Forbidden' });
-            return;
-        }
-        if (role === 'LANDLORD' && transaction.landlordId !== userId) {
+        // Ensure the user is either the tenant who made the payment, the landlord of the property, authorized staff, or an admin
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: transaction.propertyId, userId }
+        });
+        if (role !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
             res.status(403).json({ message: 'Forbidden' });
             return;
         }
@@ -130,8 +129,11 @@ const downloadReceiptPDF = async (req, res) => {
         }
         const userId = req.user?.id;
         const userRole = req.user?.role;
-        // Check authorization: must be tenant who paid, property landlord, or admin
-        if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId) {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: transaction.propertyId, userId }
+        });
+        // Check authorization: must be tenant who paid, property landlord, authorized property staff, or admin
+        if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
             return;
         }

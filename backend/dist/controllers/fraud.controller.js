@@ -153,6 +153,15 @@ const resolveFraudAction = async (req, res) => {
                 where: { id: propertyId },
                 data: { approvalStatus: 'REJECTED' }
             });
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'SECURITY',
+                    title: '⚠️ Listing Suspended for Safety Review',
+                    message: `Your listing "${property.title}" has been suspended pending safety review. Please contact support.`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => null);
             (0, socket_1.getIO)().to(property.landlordId).emit('notification', {
                 title: 'Listing Flagged & Suspended',
                 message: `Your listing for "${property.title}" was suspended due to a safety review. Please contact support.`,
@@ -164,16 +173,46 @@ const resolveFraudAction = async (req, res) => {
                 where: { id: property.landlordId },
                 data: { isSuspended: true }
             });
+            // Revoke all active sessions for suspended fraudulent landlord
+            await prisma_1.default.session.updateMany({
+                where: { userId: property.landlordId, isValid: true },
+                data: { isValid: false }
+            });
+            cache_1.default.del(`user:me:${property.landlordId}`);
             await prisma_1.default.property.update({
                 where: { id: propertyId },
                 data: { approvalStatus: 'REJECTED' }
             });
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'SECURITY',
+                    title: '⛔ Account Suspended for Safety Violations',
+                    message: `Your landlord account and property listings have been suspended following an anti-fraud security review.`,
+                    link: '/support'
+                }
+            }).catch(() => null);
             (0, socket_1.getIO)().to(property.landlordId).emit('user_updated', { isSuspended: true });
+            (0, socket_1.getIO)().to(property.landlordId).emit('session_revoked', { reason: 'Your landlord account has been suspended for anti-fraud policy violations.' });
         }
         else if (action === 'APPROVE') {
             await prisma_1.default.property.update({
                 where: { id: propertyId },
                 data: { approvalStatus: 'APPROVED' }
+            });
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'ANNOUNCEMENT',
+                    title: '✅ Listing Approved by Security Moderation',
+                    message: `Your listing "${property.title}" has cleared safety review and is live.`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => null);
+            (0, socket_1.getIO)().to(property.landlordId).emit('notification', {
+                title: '✅ Listing Approved',
+                message: `Your listing "${property.title}" has cleared safety review and is live.`,
+                type: 'PROPERTY'
             });
         }
         (0, socket_1.getIO)().emit('property_updated', { propertyId });

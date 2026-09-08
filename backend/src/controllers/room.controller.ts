@@ -204,14 +204,39 @@ export const deleteRoom = async (req: Request, res: Response): Promise<void> => 
     const activeBookings = await prisma.booking.count({
       where: {
         roomId: id,
-        status: { in: ['PENDING', 'APPROVED', 'COMPLETED'] }
+        status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'PAID', 'ACTIVE', 'CHECKED_IN', 'COMPLETED'] }
       }
     });
 
     if (activeBookings > 0) {
-      res.status(400).json({ message: 'Cannot delete room with active or completed bookings.' });
+      res.status(400).json({ message: 'Cannot delete room with active, checked-in, or resident bookings.' });
       return;
     }
+
+    // Clean up child room unit references to prevent foreign key errors
+    const units = await prisma.roomUnit.findMany({
+      where: { roomId: id },
+      select: { id: true }
+    });
+    const unitIds = units.map(u => u.id);
+
+    if (unitIds.length > 0) {
+      // Detach cancelled / rejected booking unit references
+      await prisma.booking.updateMany({
+        where: { roomUnitId: { in: unitIds } },
+        data: { roomUnitId: null, bedId: null }
+      });
+      // Delete any roommate invitations linked to these room units
+      await prisma.roommateInvitation.deleteMany({
+        where: { roomUnitId: { in: unitIds } }
+      });
+    }
+
+    // Detach cancelled / rejected booking room references
+    await prisma.booking.updateMany({
+      where: { roomId: id },
+      data: { roomId: null }
+    });
 
     await prisma.room.delete({ where: { id } });
 

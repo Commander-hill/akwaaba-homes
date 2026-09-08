@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.respondToRoommateInvitation = exports.getMyRoommateInvitations = exports.sendRoommateInvitation = exports.upsertRoommateProfile = exports.getRoommateMatches = void 0;
+exports.cancelRoommateInvitation = exports.respondToRoommateInvitation = exports.getMyRoommateInvitations = exports.sendRoommateInvitation = exports.upsertRoommateProfile = exports.getRoommateMatches = void 0;
 exports.calculateMatchScore = calculateMatchScore;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
@@ -383,4 +383,39 @@ const respondToRoommateInvitation = async (req, res) => {
     }
 };
 exports.respondToRoommateInvitation = respondToRoommateInvitation;
+/**
+ * Cancel a pending roommate invitation sent by current user
+ */
+const cancelRoommateInvitation = async (req, res) => {
+    try {
+        const senderId = req.user.id;
+        const id = req.params.id;
+        const invitation = await prisma_1.default.roommateInvitation.findUnique({
+            where: { id }
+        });
+        if (!invitation || invitation.senderId !== senderId) {
+            res.status(404).json({ message: 'Invitation not found or unauthorized' });
+            return;
+        }
+        if (invitation.status !== 'PENDING') {
+            res.status(400).json({ message: 'Only pending invitations can be cancelled' });
+            return;
+        }
+        await prisma_1.default.roommateInvitation.delete({
+            where: { id }
+        });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(invitation.receiverId).emit('roommate_invitation_cancelled', { id });
+            io.to(senderId).emit('roommate_invitation_cancelled', { id });
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({ message: 'Roommate split invitation cancelled successfully' });
+    }
+    catch (error) {
+        console.error('Error cancelling roommate invitation:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.cancelRoommateInvitation = cancelRoommateInvitation;
 //# sourceMappingURL=roommate.controller.js.map

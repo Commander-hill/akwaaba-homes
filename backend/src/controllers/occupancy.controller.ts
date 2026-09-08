@@ -24,7 +24,7 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
                   include: {
                     bookings: {
                       where: {
-                        status: { in: ['PENDING', 'APPROVED', 'COMPLETED', 'CONFIRMED'] }
+                        status: { in: ['PENDING', 'APPROVED', 'COMPLETED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'PAID'] }
                       },
                       include: {
                         tenant: {
@@ -93,7 +93,7 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
               if (effectiveStatus === 'MAINTENANCE') {
                 maintenanceBeds++;
               } else if (activeBooking) {
-                if (activeBooking.status === 'COMPLETED' || activeBooking.status === 'APPROVED' || activeBooking.status === 'CONFIRMED') {
+                if (['COMPLETED', 'APPROVED', 'CONFIRMED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(activeBooking.status)) {
                   effectiveStatus = 'OCCUPIED';
                   occupiedBeds++;
                 } else if (activeBooking.status === 'PENDING') {
