@@ -612,6 +612,26 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
         status
       });
 
+      // Notify landlord if caretaker performed check-in
+      if (isStaff && booking.property.landlordId !== req.user.id) {
+        await prisma.notification.create({
+          data: {
+            userId: booking.property.landlordId,
+            type: 'ANNOUNCEMENT',
+            title: '🔑 Tenant Checked In by Caretaker',
+            message: `${booking.tenant.firstName} ${booking.tenant.lastName} has been checked into ${booking.property.title} by property staff.`,
+            link: '/dashboard/landlord/bookings'
+          }
+        }).catch(() => {});
+        try {
+          getIO().to(booking.property.landlordId).emit('notification', {
+            title: '🔑 Tenant Checked In',
+            message: `${booking.tenant.firstName} ${booking.tenant.lastName} checked in by caretaker.`,
+            type: 'booking'
+          });
+        } catch (e) {}
+      }
+
       // Real-time notification to tenant & landlord status sync
       try {
         const io = getIO();
@@ -621,6 +641,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
           type: 'booking'
         });
         io.to(booking.tenant.id).emit('booking_updated', { booking: updatedBooking });
+        io.to(booking.property.landlordId).emit('booking_updated', { booking: updatedBooking });
         io.emit('booking_updated', { booking: updatedBooking });
         io.emit('property_updated', { propertyId: booking.propertyId });
         io.emit('room_updated', { roomId: booking.roomId, propertyId: booking.propertyId });
@@ -647,6 +668,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     );
 
     // Bust booking caches so landlord and tenant see fresh state
+    appCache.del(`bookings:landlord:${booking.property.landlordId}`);
     appCache.del(`bookings:landlord:${landlordId}`);
     appCache.del(`bookings:tenant:${booking.tenantId}`);
 

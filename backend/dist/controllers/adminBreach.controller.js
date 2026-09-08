@@ -132,7 +132,9 @@ const resolveBreachReport = async (req, res) => {
                     type: 'ANNOUNCEMENT',
                     title: '⚖️ Breach Dispute Verdict Issued',
                     message: `Admin issued verdict for your report on "${breach.property.title}": Status marked as ${status}.${adminNotes ? ` Note: ${adminNotes}` : ''}`,
-                    link: breach.reporter?.role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant'
+                    link: breach.reporter?.role === 'LANDLORD'
+                        ? '/dashboard/landlord'
+                        : (breach.reporter?.role === 'CARETAKER' ? '/dashboard/caretaker' : '/dashboard/tenant')
                 }
             ]
         });

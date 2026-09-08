@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.broadcastAnnouncement = exports.markAllAsRead = exports.markAsRead = exports.getMyNotifications = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
+const socket_1 = require("../socket");
 // Get current user's notifications (newest first)
 const getMyNotifications = async (req, res) => {
     try {
@@ -32,6 +33,10 @@ const markAsRead = async (req, res) => {
             where: { id, userId },
             data: { isRead: true }
         });
+        try {
+            (0, socket_1.getIO)().to(userId).emit('notifications_marked_read', { id });
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Marked as read' });
     }
     catch (error) {
@@ -44,6 +49,10 @@ const markAllAsRead = async (req, res) => {
     try {
         const userId = req.user.id;
         await prisma_1.default.notification.updateMany({ where: { userId }, data: { isRead: true } });
+        try {
+            (0, socket_1.getIO)().to(userId).emit('notifications_marked_read', { all: true });
+        }
+        catch (e) { }
         res.status(200).json({ message: 'All notifications marked as read' });
     }
     catch (error) {

@@ -65,6 +65,26 @@ export const reportBreach = async (req: Request, res: Response): Promise<void> =
       }
     }).catch(() => {});
 
+    // Notify landlord if reported by property caretaker
+    if (isStaff && property.landlordId !== reporterId) {
+      await prisma.notification.create({
+        data: {
+          userId: property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: '⚠️ Staff Logged Contract Breach',
+          message: `A breach report "${title}" was logged by your caretaker for ${property.title}. Admin will review this matter.`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => {});
+      try {
+        getIO().to(property.landlordId).emit('notification', {
+          title: '⚠️ Staff Logged Contract Breach',
+          message: `A breach report "${title}" was logged for ${property.title}.`,
+          type: 'ANNOUNCEMENT'
+        });
+      } catch (e) {}
+    }
+
     try {
       getIO().to(tenantId).emit('notification', {
         title: '⚠️ Contract Breach Report Logged',
@@ -89,11 +109,54 @@ export const getBreachReports = async (req: Request, res: Response): Promise<voi
 
     let reports;
     if (role === 'LANDLORD') {
-      reports = await prisma.breachReport.findMany({ where: { reporterId: userId }, include: { tenant: { select: { firstName: true, lastName: true, email: true } }, property: { select: { title: true } } } });
+      reports = await prisma.breachReport.findMany({
+        where: {
+          OR: [
+            { reporterId: userId },
+            { property: { landlordId: userId } }
+          ]
+        },
+        include: {
+          tenant: { select: { firstName: true, lastName: true, email: true } },
+          reporter: { select: { firstName: true, lastName: true, role: true } },
+          property: { select: { title: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    } else if (role === 'CARETAKER') {
+      const staffAssignments = await prisma.propertyStaff.findMany({
+        where: { userId },
+        select: { propertyId: true }
+      });
+      const propertyIds = staffAssignments.map(s => s.propertyId);
+      reports = await prisma.breachReport.findMany({
+        where: {
+          OR: [
+            { reporterId: userId },
+            { propertyId: { in: propertyIds } }
+          ]
+        },
+        include: {
+          tenant: { select: { firstName: true, lastName: true, email: true } },
+          reporter: { select: { firstName: true, lastName: true, role: true } },
+          property: { select: { title: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
     } else if (role === 'TENANT') {
-      reports = await prisma.breachReport.findMany({ where: { tenantId: userId }, include: { reporter: { select: { firstName: true, lastName: true } }, property: { select: { title: true } } } });
+      reports = await prisma.breachReport.findMany({
+        where: { tenantId: userId },
+        include: {
+          reporter: { select: { firstName: true, lastName: true, role: true } },
+          property: { select: { title: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
     } else if (role === 'ADMIN') {
-      reports = await prisma.breachReport.findMany({ include: { tenant: true, reporter: true, property: true } });
+      reports = await prisma.breachReport.findMany({
+        include: { tenant: true, reporter: true, property: true },
+        orderBy: { createdAt: 'desc' }
+      });
     } else {
       res.status(403).json({ message: 'Forbidden' });
       return;
@@ -118,7 +181,7 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
 
     const report: any = await prisma.breachReport.findUnique({
       where: { id },
-      include: { tenant: true, property: true }
+      include: { tenant: true, reporter: true, property: true }
     });
     if (!report) {
       res.status(404).json({ message: 'Breach report not found' });
@@ -129,6 +192,10 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
       res.status(400).json({ message: 'Breach report is already processed' });
       return;
     }
+
+    const reporterLink = report.reporter?.role === 'LANDLORD' 
+      ? '/dashboard/landlord' 
+      : (report.reporter?.role === 'CARETAKER' ? '/dashboard/caretaker' : '/dashboard/tenant');
 
     // Apply penalty if VERIFIED
     if (status === 'VERIFIED') {
@@ -146,6 +213,17 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
         })
       ]);
 
+      if (isSuspended) {
+        await prisma.session.updateMany({
+          where: { userId: report.tenantId, isValid: true },
+          data: { isValid: false }
+        }).catch(() => {});
+        appCache.del(`user:me:${report.tenantId}`);
+        try {
+          getIO().to(report.tenantId).emit('session_revoked', { reason: 'Account suspended due to contract breach penalty' });
+        } catch (e) {}
+      }
+
       // Notify both parties
       await prisma.notification.createMany({
         data: [
@@ -161,7 +239,7 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
             type: 'ANNOUNCEMENT',
             title: '⚖️ Breach Dispute Verdict Issued',
             message: `Admin verified your breach report for "${report.property?.title || 'property'}". Penalty has been applied.`,
-            link: '/dashboard/landlord'
+            link: reporterLink
           }
         ]
       }).catch(() => {});
@@ -194,15 +272,15 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
         data: {
           userId: report.reporterId,
           type: 'ANNOUNCEMENT',
-          title: '⚖️ Breach Report Dismissed',
+          title: '⚖️ Breach Dispute Dismissed',
           message: `Admin reviewed and dismissed the breach report for "${report.property?.title || 'property'}".`,
-          link: '/dashboard/landlord'
+          link: reporterLink
         }
       }).catch(() => {});
 
       try {
         getIO().to(report.reporterId).emit('notification', {
-          title: '⚖️ Breach Report Dismissed',
+          title: '⚖️ Breach Dispute Dismissed',
           message: `Your breach report was reviewed and dismissed by admin.`,
           type: 'ANNOUNCEMENT'
         });

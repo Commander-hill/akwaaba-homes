@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { notifyAdminAnnouncement } from '../utils/notification.service';
+import { getIO } from '../socket';
 
 // Get current user's notifications (newest first)
 export const getMyNotifications = async (req: Request, res: Response): Promise<void> => {
@@ -33,6 +34,10 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
       data: { isRead: true }
     });
 
+    try {
+      getIO().to(userId).emit('notifications_marked_read', { id });
+    } catch (e) {}
+
     res.status(200).json({ message: 'Marked as read' });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });
@@ -44,6 +49,11 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
   try {
     const userId = req.user.id;
     await prisma.notification.updateMany({ where: { userId }, data: { isRead: true } });
+
+    try {
+      getIO().to(userId).emit('notifications_marked_read', { all: true });
+    } catch (e) {}
+
     res.status(200).json({ message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error' });

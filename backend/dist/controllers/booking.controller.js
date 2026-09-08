@@ -566,6 +566,26 @@ const updateBookingStatus = async (req, res) => {
                 propertyTitle: booking.property.title,
                 status
             });
+            // Notify landlord if caretaker performed check-in
+            if (isStaff && booking.property.landlordId !== req.user.id) {
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: booking.property.landlordId,
+                        type: 'ANNOUNCEMENT',
+                        title: '🔑 Tenant Checked In by Caretaker',
+                        message: `${booking.tenant.firstName} ${booking.tenant.lastName} has been checked into ${booking.property.title} by property staff.`,
+                        link: '/dashboard/landlord/bookings'
+                    }
+                }).catch(() => { });
+                try {
+                    (0, socket_1.getIO)().to(booking.property.landlordId).emit('notification', {
+                        title: '🔑 Tenant Checked In',
+                        message: `${booking.tenant.firstName} ${booking.tenant.lastName} checked in by caretaker.`,
+                        type: 'booking'
+                    });
+                }
+                catch (e) { }
+            }
             // Real-time notification to tenant & landlord status sync
             try {
                 const io = (0, socket_1.getIO)();
@@ -575,6 +595,7 @@ const updateBookingStatus = async (req, res) => {
                     type: 'booking'
                 });
                 io.to(booking.tenant.id).emit('booking_updated', { booking: updatedBooking });
+                io.to(booking.property.landlordId).emit('booking_updated', { booking: updatedBooking });
                 io.emit('booking_updated', { booking: updatedBooking });
                 io.emit('property_updated', { propertyId: booking.propertyId });
                 io.emit('room_updated', { roomId: booking.roomId, propertyId: booking.propertyId });
@@ -592,6 +613,7 @@ const updateBookingStatus = async (req, res) => {
         }
         await (0, auditLogger_1.logAudit)(req.user.id, 'UPDATE_BOOKING_STATUS', 'Booking', id, { status: booking.status }, { status }, req.ip || req.socket.remoteAddress);
         // Bust booking caches so landlord and tenant see fresh state
+        cache_1.default.del(`bookings:landlord:${booking.property.landlordId}`);
         cache_1.default.del(`bookings:landlord:${landlordId}`);
         cache_1.default.del(`bookings:tenant:${booking.tenantId}`);
         res.status(200).json({ message: `Booking status updated to ${status}`, booking: updatedBooking });

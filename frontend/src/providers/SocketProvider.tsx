@@ -134,6 +134,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       roommate_invitation_cancelled: [['roommateInvitations'], ['notifications']],
       invitation_updated: [['roommateInvitations']],
       invitation_received: [['roommateInvitations'], ['notifications']],
+      notifications_marked_read: [['notifications']],
+      notification_read: [['notifications']],
       wishlist_updated: [['wishlist']],
       'activity:new': [['activities'], ['auditLogs']],
     };

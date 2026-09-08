@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
@@ -93,14 +93,16 @@ export default function LandlordPropertiesPage() {
     }
   });
 
-  if (typeof window !== 'undefined') {
+  const verifiedRef = useRef(false);
+  useEffect(() => {
     const verify = searchParams.get('verify');
     const reference = searchParams.get('reference') || searchParams.get('trxref');
     
-    if (verify === 'true' && reference && !verifyPaymentMutation.isPending && !paymentMsg) {
+    if (verify === 'true' && reference && !verifiedRef.current && !verifyPaymentMutation.isPending && !paymentMsg) {
+      verifiedRef.current = true;
       verifyPaymentMutation.mutate(reference);
     }
-  }
+  }, [searchParams, verifyPaymentMutation, paymentMsg]);
 
   // Aggregate Portfolio Stats
   const portfolioStats = useMemo(() => {
