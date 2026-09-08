@@ -177,7 +177,7 @@ const getMyStaffAssignments = async (req, res) => {
                         visitorPasses: { orderBy: { createdAt: 'desc' } },
                         packageDeliveries: { orderBy: { createdAt: 'desc' } },
                         bookings: {
-                            where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
+                            where: { status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED', 'PAID'] } },
                             include: {
                                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
                                 room: true,

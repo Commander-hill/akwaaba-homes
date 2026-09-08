@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { safeJsonParse } from '../utils/json';
 
 /**
  * Submit or Update Move-In / Move-Out Inspection Checklist
@@ -123,7 +124,15 @@ export const getBookingInspections = async (req: Request, res: Response): Promis
       return;
     }
 
-    if (booking.tenantId !== userId && booking.property.landlordId !== userId && userRole !== 'ADMIN') {
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId: booking.propertyId,
+        userId,
+        canCheckInTenants: true
+      }
+    });
+
+    if (booking.tenantId !== userId && booking.property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -140,8 +149,8 @@ export const getBookingInspections = async (req: Request, res: Response): Promis
 
     const parsedInspections = inspections.map((ins) => ({
       ...ins,
-      items: typeof ins.items === 'string' ? JSON.parse(ins.items) : ins.items,
-      photos: ins.photos ? (typeof ins.photos === 'string' ? JSON.parse(ins.photos) : ins.photos) : []
+      items: typeof ins.items === 'string' ? safeJsonParse(ins.items, []) : ins.items,
+      photos: ins.photos ? (typeof ins.photos === 'string' ? safeJsonParse(ins.photos, []) : ins.photos) : []
     }));
 
     res.status(200).json({ inspections: parsedInspections });

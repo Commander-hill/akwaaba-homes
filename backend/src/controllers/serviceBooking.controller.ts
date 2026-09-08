@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -23,6 +23,30 @@ export const createServiceBooking = async (req: Request, res: Response): Promise
     if (!propertyId || !serviceType || !preferredDate) {
       res.status(400).json({ message: 'Property ID, service type, and preferred date are required' });
       return;
+    }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    if (req.user?.role !== 'ADMIN') {
+      const activeBooking = await prisma.booking.findFirst({
+        where: {
+          tenantId,
+          propertyId,
+          status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED'] }
+        }
+      });
+
+      if (!activeBooking) {
+        res.status(403).json({ message: 'Only residents with an active or confirmed booking can request home services for this property' });
+        return;
+      }
     }
 
     const estimatedCost = ESTIMATED_RATES[serviceType] || 200;
@@ -53,6 +77,98 @@ export const createServiceBooking = async (req: Request, res: Response): Promise
     });
   } catch (error) {
     console.error('Error booking service:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get service bookings for a property (Landlord / Admin)
+ */
+export const getPropertyServiceBookings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    const bookings = await prisma.serviceBooking.findMany({
+      where: { propertyId },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+      },
+      orderBy: { preferredDate: 'desc' }
+    });
+
+    res.status(200).json({ bookings });
+  } catch (error) {
+    console.error('Error fetching property service bookings:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Update service booking status (Landlord / Admin / Technician)
+ */
+export const updateServiceBookingStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status, technicianName, technicianPhone, notes } = req.body;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+
+    const validStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+    if (!status || !validStatuses.includes(status)) {
+      res.status(400).json({ message: `Status must be one of: ${validStatuses.join(', ')}` });
+      return;
+    }
+
+    const booking = await prisma.serviceBooking.findUnique({
+      where: { id },
+      include: { property: true }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Service booking not found' });
+      return;
+    }
+
+    const isLandlord = booking.property.landlordId === userId;
+    const isTenant = booking.tenantId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isLandlord && !isAdmin && (!isTenant || status !== 'CANCELLED')) {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    const updateData: any = { status };
+    if (technicianName) updateData.technicianName = technicianName;
+    if (technicianPhone) updateData.technicianPhone = technicianPhone;
+    if (notes) updateData.notes = notes;
+    if (status === 'COMPLETED') updateData.completedAt = new Date();
+
+    const updated = await prisma.serviceBooking.update({
+      where: { id },
+      data: updateData
+    });
+
+    try {
+      getIO().to(booking.tenantId).emit('service_booking_updated', updated);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({ message: `Service booking marked as ${status}`, booking: updated });
+  } catch (error) {
+    console.error('Error updating service booking status:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

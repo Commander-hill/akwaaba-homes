@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBookingInspections = exports.createOrUpdateInspection = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
+const json_1 = require("../utils/json");
 /**
  * Submit or Update Move-In / Move-Out Inspection Checklist
  */
@@ -116,7 +117,14 @@ const getBookingInspections = async (req, res) => {
             res.status(404).json({ message: 'Booking not found' });
             return;
         }
-        if (booking.tenantId !== userId && booking.property.landlordId !== userId && userRole !== 'ADMIN') {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: {
+                propertyId: booking.propertyId,
+                userId,
+                canCheckInTenants: true
+            }
+        });
+        if (booking.tenantId !== userId && booking.property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
             res.status(403).json({ message: 'Forbidden' });
             return;
         }
@@ -131,8 +139,8 @@ const getBookingInspections = async (req, res) => {
         });
         const parsedInspections = inspections.map((ins) => ({
             ...ins,
-            items: typeof ins.items === 'string' ? JSON.parse(ins.items) : ins.items,
-            photos: ins.photos ? (typeof ins.photos === 'string' ? JSON.parse(ins.photos) : ins.photos) : []
+            items: typeof ins.items === 'string' ? (0, json_1.safeJsonParse)(ins.items, []) : ins.items,
+            photos: ins.photos ? (typeof ins.photos === 'string' ? (0, json_1.safeJsonParse)(ins.photos, []) : ins.photos) : []
         }));
         res.status(200).json({ inspections: parsedInspections });
     }

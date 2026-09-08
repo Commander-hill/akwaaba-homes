@@ -4,6 +4,14 @@ import { Request, Response } from 'express';
  */
 export declare const registerVehicle: (req: Request, res: Response) => Promise<void>;
 /**
+ * Verify vehicle license plate at estate security gatehouse
+ */
+export declare const verifyVehiclePlate: (req: Request, res: Response) => Promise<void>;
+/**
+ * Get registered vehicles for a property (Landlord / Staff / Caretaker)
+ */
+export declare const getPropertyVehicles: (req: Request, res: Response) => Promise<void>;
+/**
  * Get tenant's registered vehicles
  */
 export declare const getTenantVehicles: (req: Request, res: Response) => Promise<void>;

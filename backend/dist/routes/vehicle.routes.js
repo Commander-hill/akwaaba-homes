@@ -7,6 +7,8 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', vehicle_controller_1.registerVehicle);
 router.get('/', vehicle_controller_1.getTenantVehicles);
+router.get('/verify', vehicle_controller_1.verifyVehiclePlate);
+router.get('/property/:propertyId', vehicle_controller_1.getPropertyVehicles);
 router.delete('/:id', vehicle_controller_1.deleteVehicle);
 exports.default = router;
 //# sourceMappingURL=vehicle.routes.js.map

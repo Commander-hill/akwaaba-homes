@@ -7,6 +7,8 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', serviceBooking_controller_1.createServiceBooking);
 router.get('/', serviceBooking_controller_1.getTenantServiceBookings);
+router.get('/property/:propertyId', serviceBooking_controller_1.getPropertyServiceBookings);
+router.patch('/:id/status', serviceBooking_controller_1.updateServiceBookingStatus);
 router.patch('/:id/cancel', serviceBooking_controller_1.cancelServiceBooking);
 exports.default = router;
 //# sourceMappingURL=serviceBooking.routes.js.map
