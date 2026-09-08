@@ -227,11 +227,16 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
     }
 
     if (amenity) {
-      queryOptions.where.amenities = { contains: String(amenity) };
+      queryOptions.where.amenities = { contains: String(amenity), mode: 'insensitive' };
     }
 
     if (location) {
-      queryOptions.where.location = { contains: String(location) }; // SQLite case-insensitive contains works similarly
+      const locStr = String(location).trim();
+      queryOptions.where.OR = [
+        { location: { contains: locStr, mode: 'insensitive' } },
+        { title: { contains: locStr, mode: 'insensitive' } },
+        { description: { contains: locStr, mode: 'insensitive' } },
+      ];
     }
 
     if (minPrice || maxPrice) {

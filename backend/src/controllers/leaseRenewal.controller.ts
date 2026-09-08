@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
@@ -79,6 +79,87 @@ export const getTenantRenewals = async (req: Request, res: Response): Promise<vo
     res.status(200).json({ renewals });
   } catch (error) {
     console.error('Error fetching renewal requests:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get landlord's incoming lease renewal requests
+ */
+export const getLandlordRenewals = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user?.id;
+    const renewals = await prisma.leaseRenewalRequest.findMany({
+      where: {
+        property: { landlordId }
+      },
+      include: {
+        property: { select: { id: true, title: true, location: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+        booking: { select: { id: true, startDate: true, endDate: true, status: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ renewals });
+  } catch (error) {
+    console.error('Error fetching landlord renewal requests:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Respond to a lease renewal request (Landlord: ACCEPTED, DECLINED, NEGOTIATING)
+ */
+export const respondLeaseRenewal = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user?.id;
+    const { id } = req.params;
+    const { status, landlordResponse } = req.body;
+
+    const validStatuses = ['ACCEPTED', 'DECLINED', 'NEGOTIATING'];
+    if (!status || !validStatuses.includes(status)) {
+      res.status(400).json({ message: `Status must be one of: ${validStatuses.join(', ')}` });
+      return;
+    }
+
+    const renewal = await prisma.leaseRenewalRequest.findUnique({
+      where: { id },
+      include: { property: true }
+    });
+
+    if (!renewal) {
+      res.status(404).json({ message: 'Lease renewal request not found' });
+      return;
+    }
+
+    if (renewal.property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+      return;
+    }
+
+    const updated = await prisma.leaseRenewalRequest.update({
+      where: { id },
+      data: {
+        status,
+        landlordResponse: landlordResponse || null,
+        respondedAt: new Date()
+      },
+      include: {
+        property: { select: { id: true, title: true, location: true } }
+      }
+    });
+
+    try {
+      getIO().to(renewal.tenantId).emit('lease_renewal_updated', updated);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({
+      message: `Lease renewal status updated to ${status}`,
+      renewal: updated
+    });
+  } catch (error) {
+    console.error('Error responding to lease renewal:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

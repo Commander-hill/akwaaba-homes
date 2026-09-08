@@ -217,10 +217,15 @@ const getProperties = async (req, res) => {
             queryOptions.where.rooms = { some: { roomType: String(roomType) } };
         }
         if (amenity) {
-            queryOptions.where.amenities = { contains: String(amenity) };
+            queryOptions.where.amenities = { contains: String(amenity), mode: 'insensitive' };
         }
         if (location) {
-            queryOptions.where.location = { contains: String(location) }; // SQLite case-insensitive contains works similarly
+            const locStr = String(location).trim();
+            queryOptions.where.OR = [
+                { location: { contains: locStr, mode: 'insensitive' } },
+                { title: { contains: locStr, mode: 'insensitive' } },
+                { description: { contains: locStr, mode: 'insensitive' } },
+            ];
         }
         if (minPrice || maxPrice) {
             queryOptions.where.price = {};

@@ -5,7 +5,7 @@ import prisma from '../utils/prisma';
 export const getSessions = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { refreshToken: currentRefreshToken } = req.cookies;
+    const currentRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken || (req.headers['x-refresh-token'] as string);
 
     const sessions = await prisma.session.findMany({
       where: {
@@ -77,7 +77,7 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
 export const revokeAllOtherSessions = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { refreshToken: currentRefreshToken } = req.cookies;
+    const currentRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken || (req.headers['x-refresh-token'] as string);
 
     if (!currentRefreshToken) {
       res.status(400).json({ message: 'Current session token not found' });

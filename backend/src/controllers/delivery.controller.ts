@@ -24,7 +24,7 @@ export const logPackageDelivery = async (req: Request, res: Response): Promise<v
       where: { id: propertyId },
       include: {
         bookings: {
-          where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN'] } },
+          where: { status: { in: ['CONFIRMED', 'PAID', 'CHECKED_IN', 'COMPLETED'] } },
           select: { tenantId: true }
         }
       }
@@ -35,7 +35,11 @@ export const logPackageDelivery = async (req: Request, res: Response): Promise<v
       return;
     }
 
-    const targetTenantId = tenantId || property.bookings[0]?.tenantId || userId;
+    const targetTenantId = tenantId || (req.user?.role === 'TENANT' ? userId : null);
+    if (!targetTenantId) {
+      res.status(400).json({ message: 'Recipient tenant ID is required' });
+      return;
+    }
 
     // Generate a 4-digit pickup code
     const pickupCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -92,6 +96,53 @@ export const getTenantDeliveries = async (req: Request, res: Response): Promise<
     res.status(200).json({ deliveries });
   } catch (error) {
     console.error('Error fetching deliveries:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Get deliveries for a property (Landlord / Staff / Caretaker)
+ */
+export const getPropertyDeliveries = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const { propertyId } = req.query;
+
+    let whereClause: any = {};
+
+    if (propertyId) {
+      const property = await prisma.property.findUnique({ where: { id: String(propertyId) } });
+      if (!property) {
+        res.status(404).json({ message: 'Property not found' });
+        return;
+      }
+      if (property.landlordId !== userId && userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'CARETAKER') {
+        res.status(403).json({ message: 'Forbidden' });
+        return;
+      }
+      whereClause.propertyId = String(propertyId);
+    } else {
+      if (userRole === 'LANDLORD') {
+        whereClause.property = { landlordId: userId };
+      } else if (userRole !== 'ADMIN') {
+        res.status(403).json({ message: 'Forbidden' });
+        return;
+      }
+    }
+
+    const deliveries = await prisma.packageDelivery.findMany({
+      where: whereClause,
+      include: {
+        property: { select: { id: true, title: true, location: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ deliveries });
+  } catch (error) {
+    console.error('Error fetching property deliveries:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

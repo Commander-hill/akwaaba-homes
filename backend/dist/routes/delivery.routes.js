@@ -7,6 +7,7 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', delivery_controller_1.logPackageDelivery);
 router.get('/', delivery_controller_1.getTenantDeliveries);
+router.get('/property', delivery_controller_1.getPropertyDeliveries);
 router.patch('/:id/collect', delivery_controller_1.confirmParcelPickup);
 exports.default = router;
 //# sourceMappingURL=delivery.routes.js.map
