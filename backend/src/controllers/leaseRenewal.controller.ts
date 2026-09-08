@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 /**
  * Submit a lease renewal request
@@ -46,6 +47,16 @@ export const requestLeaseRenewal = async (req: Request, res: Response): Promise<
         property: { select: { id: true, title: true, location: true, landlordId: true } }
       }
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: booking.property.landlordId,
+        type: 'ANNOUNCEMENT',
+        title: '📑 New Lease Renewal Request',
+        message: `Tenant submitted a ${renewal.proposedDurationMonths}-month renewal request for "${booking.property.title}".`,
+        link: '/dashboard/landlord'
+      }
+    }).catch(() => null);
 
     try {
       getIO().to(booking.property.landlordId).emit('lease_renewal_requested', renewal);
@@ -149,6 +160,39 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
         property: { select: { id: true, title: true, location: true } }
       }
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: renewal.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: status === 'ACCEPTED' ? '🎉 Lease Renewal Approved!' : status === 'DECLINED' ? 'Lease Renewal Declined' : 'Lease Renewal Status Updated',
+        message: `Your landlord marked your lease renewal request as ${status} for "${updated.property.title}".`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
+    // If accepted, automatically prolong the underlying booking duration
+    if (status === 'ACCEPTED') {
+      try {
+        const currentBooking = await prisma.booking.findUnique({ where: { id: renewal.bookingId } });
+        if (currentBooking) {
+          const currentEnd = new Date(currentBooking.endDate);
+          const newEnd = new Date(currentEnd);
+          newEnd.setMonth(newEnd.getMonth() + (renewal.proposedDurationMonths || 12));
+          await prisma.booking.update({
+            where: { id: renewal.bookingId },
+            data: {
+              endDate: newEnd,
+              status: 'ACTIVE'
+            }
+          });
+          getIO().to(renewal.tenantId).emit('booking_updated', { bookingId: renewal.bookingId });
+          appCache.flushAll();
+        }
+      } catch (err) {
+        console.error('Error auto-extending booking on lease renewal:', err);
+      }
+    }
 
     try {
       getIO().to(renewal.tenantId).emit('lease_renewal_updated', updated);

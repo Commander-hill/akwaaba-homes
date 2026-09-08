@@ -60,6 +60,16 @@ export const logPackageDelivery = async (req: Request, res: Response): Promise<v
       }
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: targetTenantId,
+        type: 'ANNOUNCEMENT',
+        title: '📦 Package Delivered & Ready for Pickup',
+        message: `A parcel (${courier}) has arrived for you at ${property.title}. Pickup OTP: ${pickupCode}.`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
     try {
       getIO().to(targetTenantId).emit('package_arrived', {
         id: delivery.id,
@@ -117,7 +127,10 @@ export const getPropertyDeliveries = async (req: Request, res: Response): Promis
         res.status(404).json({ message: 'Property not found' });
         return;
       }
-      if (property.landlordId !== userId && userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'CARETAKER') {
+      const isStaff = await prisma.propertyStaff.findFirst({
+        where: { propertyId: String(propertyId), userId }
+      });
+      if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
         res.status(403).json({ message: 'Forbidden' });
         return;
       }
@@ -174,9 +187,11 @@ export const confirmParcelPickup = async (req: Request, res: Response): Promise<
     const userRole = req.user?.role;
     const isRecipient = delivery.tenantId === userId;
     const isLandlord = delivery.property?.landlordId === userId;
-    const isStaffOrAdmin = userRole === 'STAFF' || userRole === 'CARETAKER' || userRole === 'ADMIN';
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: delivery.propertyId, userId }
+    });
 
-    if (!isRecipient && !isLandlord && !isStaffOrAdmin) {
+    if (!isRecipient && !isLandlord && userRole !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You are not authorized to confirm pickup for this package' });
       return;
     }

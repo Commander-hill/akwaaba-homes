@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.respondLeaseRenewal = exports.getLandlordRenewals = exports.getTenantRenewals = exports.requestLeaseRenewal = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 /**
  * Submit a lease renewal request
  */
@@ -44,6 +45,15 @@ const requestLeaseRenewal = async (req, res) => {
                 property: { select: { id: true, title: true, location: true, landlordId: true } }
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: booking.property.landlordId,
+                type: 'ANNOUNCEMENT',
+                title: '📑 New Lease Renewal Request',
+                message: `Tenant submitted a ${renewal.proposedDurationMonths}-month renewal request for "${booking.property.title}".`,
+                link: '/dashboard/landlord'
+            }
+        }).catch(() => null);
         try {
             (0, socket_1.getIO)().to(booking.property.landlordId).emit('lease_renewal_requested', renewal);
         }
@@ -142,6 +152,38 @@ const respondLeaseRenewal = async (req, res) => {
                 property: { select: { id: true, title: true, location: true } }
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: renewal.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: status === 'ACCEPTED' ? '🎉 Lease Renewal Approved!' : status === 'DECLINED' ? 'Lease Renewal Declined' : 'Lease Renewal Status Updated',
+                message: `Your landlord marked your lease renewal request as ${status} for "${updated.property.title}".`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
+        // If accepted, automatically prolong the underlying booking duration
+        if (status === 'ACCEPTED') {
+            try {
+                const currentBooking = await prisma_1.default.booking.findUnique({ where: { id: renewal.bookingId } });
+                if (currentBooking) {
+                    const currentEnd = new Date(currentBooking.endDate);
+                    const newEnd = new Date(currentEnd);
+                    newEnd.setMonth(newEnd.getMonth() + (renewal.proposedDurationMonths || 12));
+                    await prisma_1.default.booking.update({
+                        where: { id: renewal.bookingId },
+                        data: {
+                            endDate: newEnd,
+                            status: 'ACTIVE'
+                        }
+                    });
+                    (0, socket_1.getIO)().to(renewal.tenantId).emit('booking_updated', { bookingId: renewal.bookingId });
+                    cache_1.default.flushAll();
+                }
+            }
+            catch (err) {
+                console.error('Error auto-extending booking on lease renewal:', err);
+            }
+        }
         try {
             (0, socket_1.getIO)().to(renewal.tenantId).emit('lease_renewal_updated', updated);
         }

@@ -55,6 +55,15 @@ const logPackageDelivery = async (req, res) => {
                 property: { select: { id: true, title: true, location: true } }
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: targetTenantId,
+                type: 'ANNOUNCEMENT',
+                title: '📦 Package Delivered & Ready for Pickup',
+                message: `A parcel (${courier}) has arrived for you at ${property.title}. Pickup OTP: ${pickupCode}.`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
         try {
             (0, socket_1.getIO)().to(targetTenantId).emit('package_arrived', {
                 id: delivery.id,
@@ -111,7 +120,10 @@ const getPropertyDeliveries = async (req, res) => {
                 res.status(404).json({ message: 'Property not found' });
                 return;
             }
-            if (property.landlordId !== userId && userRole !== 'ADMIN' && userRole !== 'STAFF' && userRole !== 'CARETAKER') {
+            const isStaff = await prisma_1.default.propertyStaff.findFirst({
+                where: { propertyId: String(propertyId), userId }
+            });
+            if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
                 res.status(403).json({ message: 'Forbidden' });
                 return;
             }
@@ -165,8 +177,10 @@ const confirmParcelPickup = async (req, res) => {
         const userRole = req.user?.role;
         const isRecipient = delivery.tenantId === userId;
         const isLandlord = delivery.property?.landlordId === userId;
-        const isStaffOrAdmin = userRole === 'STAFF' || userRole === 'CARETAKER' || userRole === 'ADMIN';
-        if (!isRecipient && !isLandlord && !isStaffOrAdmin) {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: delivery.propertyId, userId }
+        });
+        if (!isRecipient && !isLandlord && userRole !== 'ADMIN' && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You are not authorized to confirm pickup for this package' });
             return;
         }

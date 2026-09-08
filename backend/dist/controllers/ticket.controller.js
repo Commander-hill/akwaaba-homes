@@ -24,7 +24,7 @@ const createTicket = async (req, res) => {
                 where: {
                     tenantId: req.user.id,
                     propertyId,
-                    status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED'] }
+                    status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
                 }
             });
             if (!activeBooking) {
@@ -42,17 +42,49 @@ const createTicket = async (req, res) => {
                 imageUrl
             }
         });
-        // Notify landlord
+        // Notify landlord and assigned maintenance staff
         const property = await prisma_1.default.property.findUnique({ where: { id: propertyId } });
         if (property) {
             try {
                 const io = (0, socket_1.getIO)();
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: property.landlordId,
+                        type: 'ANNOUNCEMENT',
+                        title: `🛠️ New ${priority || 'MEDIUM'} Maintenance Ticket`,
+                        message: `Ticket "${title}" filed for ${property.title}.`,
+                        link: '/dashboard/landlord'
+                    }
+                }).catch(() => null);
                 io.to(property.landlordId).emit('notification', {
                     title: 'New Maintenance Ticket',
                     message: `A new ${priority || 'MEDIUM'} priority ticket was submitted for ${property.title}.`,
                     type: 'ticket'
                 });
                 io.to(property.landlordId).emit('ticket_created', { ticket, propertyTitle: property.title });
+                const staffMembers = await prisma_1.default.propertyStaff.findMany({
+                    where: { propertyId, canManageTickets: true },
+                    select: { userId: true }
+                });
+                if (staffMembers.length > 0) {
+                    await prisma_1.default.notification.createMany({
+                        data: staffMembers.map(s => ({
+                            userId: s.userId,
+                            type: 'ANNOUNCEMENT',
+                            title: `🛠️ New ${priority || 'MEDIUM'} Maintenance Ticket`,
+                            message: `Ticket "${title}" filed for ${property.title}.`,
+                            link: '/dashboard/caretaker'
+                        }))
+                    }).catch(() => null);
+                    for (const s of staffMembers) {
+                        io.to(s.userId).emit('notification', {
+                            title: 'New Maintenance Ticket',
+                            message: `A new ${priority || 'MEDIUM'} priority ticket was submitted for ${property.title}.`,
+                            type: 'ticket'
+                        });
+                        io.to(s.userId).emit('ticket_created', { ticket, propertyTitle: property.title });
+                    }
+                }
                 io.emit('ticket_created', { ticket, propertyTitle: property.title });
             }
             catch (e) {
@@ -183,6 +215,15 @@ const updateTicketStatus = async (req, res) => {
         // Notify tenant and landlord real-time sync
         try {
             const io = (0, socket_1.getIO)();
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: ticket.tenantId,
+                    type: 'ANNOUNCEMENT',
+                    title: `🛠️ Maintenance Ticket ${status || 'Updated'}`,
+                    message: `Your maintenance ticket "${ticket.title}" is now ${status ? status.toLowerCase() : 'updated'}.`,
+                    link: '/dashboard/tenant'
+                }
+            }).catch(() => null);
             io.to(ticket.tenantId).emit('notification', {
                 title: `Ticket ${status || 'Updated'}`,
                 message: `Your maintenance ticket "${ticket.title}" is now ${status ? status.toLowerCase() : 'updated'}.`,
