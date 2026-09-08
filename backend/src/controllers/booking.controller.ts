@@ -519,7 +519,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     let { status } = req.body;
     if (status === 'CONFIRMED') status = 'APPROVED';
 
-    const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED'];
+    const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
     if (!validStatuses.includes(status)) {
       res.status(400).json({ message: 'Invalid status' });
       return;
@@ -545,8 +545,21 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       return;
     }
 
-    if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
-      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId: booking.propertyId,
+        userId: req.user.id,
+        canCheckInTenants: true
+      }
+    });
+
+    if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
+      return;
+    }
+
+    if (isStaff && status !== 'CHECKED_IN' && booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden: Caretaker staff can only perform tenant check-in' });
       return;
     }
 
@@ -555,6 +568,14 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       await prisma.bed.update({
         where: { id: booking.bedId },
         data: { status: 'AVAILABLE' }
+      });
+    }
+
+    // Mark assigned bed as OCCUPIED upon tenant check-in
+    if (status === 'CHECKED_IN' && booking.bedId) {
+      await prisma.bed.update({
+        where: { id: booking.bedId },
+        data: { status: 'OCCUPIED' }
       });
     }
 
@@ -578,7 +599,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     }
 
     // Notify tenant about the status change
-    if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED'].includes(status)) {
+    if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'].includes(status)) {
       await notifyBookingStatusChanged({
         tenantId: booking.tenant.id,
         tenantEmail: booking.tenant.email,

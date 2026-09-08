@@ -135,6 +135,10 @@ const downloadReceiptPDF = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
             return;
         }
+        const sysConfig = await (0, config_service_1.getSystemConfig)();
+        const commissionPercent = sysConfig.platformCommissionPercent || 5.0;
+        const platformFee = (transaction.amount * commissionPercent) / 100;
+        const netAmount = transaction.amount - platformFee;
         const pdfBuffer = await (0, pdf_service_2.generateReceiptPDF)({
             transactionId: transaction.id,
             reference: transaction.reference,
@@ -144,8 +148,8 @@ const downloadReceiptPDF = async (req, res) => {
             propertyTitle: transaction.property.title,
             roomType: transaction.room?.roomType || 'Hostel Room',
             grossAmount: transaction.amount,
-            platformFee: (transaction.amount * 5.0) / 100,
-            netAmount: transaction.amount - ((transaction.amount * 5.0) / 100),
+            platformFee,
+            netAmount,
             paymentMethod: 'Paystack MoMo / Card',
             paymentStatus: transaction.status,
             paidAt: transaction.createdAt.toISOString()

@@ -486,7 +486,7 @@ const updateBookingStatus = async (req, res) => {
         let { status } = req.body;
         if (status === 'CONFIRMED')
             status = 'APPROVED';
-        const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED'];
+        const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
         if (!validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
             return;
@@ -508,8 +508,19 @@ const updateBookingStatus = async (req, res) => {
             res.status(404).json({ message: 'Booking not found' });
             return;
         }
-        if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Forbidden: You do not own this property' });
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: {
+                propertyId: booking.propertyId,
+                userId: req.user.id,
+                canCheckInTenants: true
+            }
+        });
+        if (booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
+            return;
+        }
+        if (isStaff && status !== 'CHECKED_IN' && booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Forbidden: Caretaker staff can only perform tenant check-in' });
             return;
         }
         // Release reserved bed back to AVAILABLE if booking is rejected or cancelled
@@ -517,6 +528,13 @@ const updateBookingStatus = async (req, res) => {
             await prisma_1.default.bed.update({
                 where: { id: booking.bedId },
                 data: { status: 'AVAILABLE' }
+            });
+        }
+        // Mark assigned bed as OCCUPIED upon tenant check-in
+        if (status === 'CHECKED_IN' && booking.bedId) {
+            await prisma_1.default.bed.update({
+                where: { id: booking.bedId },
+                data: { status: 'OCCUPIED' }
             });
         }
         if ((status === 'REJECTED' || status === 'CANCELLED') && booking.roomUnitId) {
@@ -536,7 +554,7 @@ const updateBookingStatus = async (req, res) => {
             }
         }
         // Notify tenant about the status change
-        if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED'].includes(status)) {
+        if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'].includes(status)) {
             await (0, notification_service_1.notifyBookingStatusChanged)({
                 tenantId: booking.tenant.id,
                 tenantEmail: booking.tenant.email,

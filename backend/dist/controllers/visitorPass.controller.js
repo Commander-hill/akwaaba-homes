@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyGatePass = exports.revokeVisitorPass = exports.getTenantVisitorPasses = exports.createVisitorPass = void 0;
+exports.getPropertyVisitorPasses = exports.checkOutVisitorPass = exports.verifyGatePass = exports.revokeVisitorPass = exports.getTenantVisitorPasses = exports.createVisitorPass = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 /**
@@ -185,4 +185,103 @@ const verifyGatePass = async (req, res) => {
     }
 };
 exports.verifyGatePass = verifyGatePass;
+/**
+ * Check out a visitor (Security Guard / Caretaker / Landlord / Resident)
+ */
+const checkOutVisitorPass = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const pass = await prisma_1.default.visitorPass.findUnique({
+            where: { id },
+            include: {
+                property: { select: { id: true, title: true, landlordId: true } },
+                tenant: { select: { id: true, firstName: true, lastName: true } }
+            }
+        });
+        if (!pass) {
+            res.status(404).json({ message: 'Visitor pass not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: pass.propertyId, userId }
+        });
+        const isLandlord = pass.property.landlordId === userId;
+        const isTenant = pass.tenantId === userId;
+        const isAdmin = userRole === 'ADMIN';
+        if (!isLandlord && !isTenant && !isAdmin && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not have permission to checkout this visitor' });
+            return;
+        }
+        const now = new Date();
+        const updated = await prisma_1.default.visitorPass.update({
+            where: { id },
+            data: {
+                checkOutTime: now,
+                status: 'USED'
+            }
+        });
+        try {
+            (0, socket_1.getIO)().to(pass.tenantId).emit('visitor_checked_out', {
+                passId: pass.id,
+                visitorName: pass.visitorName,
+                checkOutTime: now
+            });
+            (0, socket_1.getIO)().emit('visitor_pass_updated', {
+                propertyId: pass.propertyId,
+                passId: pass.id,
+                status: 'USED',
+                checkOutTime: now
+            });
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({
+            message: `${pass.visitorName} checked out successfully`,
+            pass: updated
+        });
+    }
+    catch (error) {
+        console.error('Error checking out visitor pass:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.checkOutVisitorPass = checkOutVisitorPass;
+/**
+ * Get all visitor passes for a property (Landlord, Caretaker/Staff, Admin)
+ */
+const getPropertyVisitorPasses = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
+            return;
+        }
+        const passes = await prisma_1.default.visitorPass.findMany({
+            where: { propertyId },
+            include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ passes });
+    }
+    catch (error) {
+        console.error('Error fetching property visitor passes:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPropertyVisitorPasses = getPropertyVisitorPasses;
 //# sourceMappingURL=visitorPass.controller.js.map

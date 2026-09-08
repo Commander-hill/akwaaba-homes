@@ -20,7 +20,7 @@ export const createCompoundNotice = async (req: Request, res: Response): Promise
       where: { id: propertyId },
       include: {
         bookings: {
-          where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED'] } },
+          where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] } },
           select: { tenantId: true }
         }
       }
@@ -164,7 +164,15 @@ export const deleteCompoundNotice = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (notice.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId: notice.propertyId,
+        userId: req.user?.id,
+        canPostNotices: true
+      }
+    });
+
+    if (notice.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }

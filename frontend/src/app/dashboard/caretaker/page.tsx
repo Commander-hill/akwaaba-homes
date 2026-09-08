@@ -269,6 +269,20 @@ function CaretakerDashboardContent() {
     }
   });
 
+  const checkInBookingMutation = useMutation({
+    mutationFn: async (bookingId: string) => {
+      const res = await api.patch(`/bookings/${bookingId}/status`, { status: 'CHECKED_IN' });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Resident checked in! Room keys handed over & bed marked occupied.');
+      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to check in resident');
+    }
+  });
+
   const createNoticeMutation = useMutation({
     mutationFn: async (payload: any) => {
       try {
@@ -768,12 +782,26 @@ function CaretakerDashboardContent() {
                     </div>
                   )}
 
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
+                    {b.status !== 'CHECKED_IN' && (
+                      <button
+                        onClick={() => checkInBookingMutation.mutate(b.id)}
+                        disabled={checkInBookingMutation.isPending}
+                        className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
+                      >
+                        <CheckCircle2 className="w-4 h-4" /> Check-In Resident &amp; Keys
+                      </button>
+                    )}
+                    {b.status === 'CHECKED_IN' && (
+                      <div className="flex-1 py-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4" /> Checked-In
+                      </div>
+                    )}
                     <button
                       onClick={() => setSelectedInspectionBooking(b)}
-                      className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm cursor-pointer"
+                      className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm cursor-pointer shrink-0"
                     >
-                      <ShieldCheck className="w-4 h-4" /> Conduct Inspection Checklist
+                      <ShieldCheck className="w-4 h-4" /> Inspect Room
                     </button>
                   </div>
                 </div>

@@ -7,7 +7,9 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', visitorPass_controller_1.createVisitorPass);
 router.get('/', visitorPass_controller_1.getTenantVisitorPasses);
+router.get('/property/:propertyId', visitorPass_controller_1.getPropertyVisitorPasses);
 router.patch('/:id/revoke', visitorPass_controller_1.revokeVisitorPass);
+router.patch('/:id/checkout', visitorPass_controller_1.checkOutVisitorPass);
 router.post('/verify', visitorPass_controller_1.verifyGatePass);
 exports.default = router;
 //# sourceMappingURL=visitorPass.routes.js.map

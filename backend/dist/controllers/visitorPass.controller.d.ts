@@ -15,4 +15,12 @@ export declare const revokeVisitorPass: (req: Request, res: Response) => Promise
  * Verify Gate Pass (Security Guard / Porter endpoint)
  */
 export declare const verifyGatePass: (req: Request, res: Response) => Promise<void>;
+/**
+ * Check out a visitor (Security Guard / Caretaker / Landlord / Resident)
+ */
+export declare const checkOutVisitorPass: (req: Request, res: Response) => Promise<void>;
+/**
+ * Get all visitor passes for a property (Landlord, Caretaker/Staff, Admin)
+ */
+export declare const getPropertyVisitorPasses: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=visitorPass.controller.d.ts.map

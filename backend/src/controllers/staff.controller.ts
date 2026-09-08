@@ -194,7 +194,21 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
             bookings: {
               where: { status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED', 'PAID'] } },
               include: {
-                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
+                tenant: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    phoneNumber: true,
+                    email: true,
+                    campus: true,
+                    studentId: true,
+                    programmeOfStudy: true,
+                    guardianName: true,
+                    guardianPhone: true,
+                    studentType: true
+                  }
+                },
                 room: true,
                 inspections: true,
               },
