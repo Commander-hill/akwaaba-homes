@@ -409,6 +409,8 @@ function TenantDashboardContent() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'APPROVED': return <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Approved</span>;
+      case 'ACTIVE': return <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 px-3 py-1 rounded-full text-xs font-bold border border-emerald-300 dark:border-emerald-800"><CheckCircle className="w-3 h-3" /> Active Resident</span>;
+      case 'CHECKED_IN': return <span className="inline-flex items-center gap-1 bg-teal-100 text-teal-700 dark:bg-teal-950/80 dark:text-teal-300 px-3 py-1 rounded-full text-xs font-bold border border-teal-300 dark:border-teal-800"><CheckCircle className="w-3 h-3" /> Checked In & Resident</span>;
       case 'PENDING': return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold"><Clock className="w-3 h-3" /> Pending</span>;
       case 'REJECTED': return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold"><XCircle className="w-3 h-3" /> Rejected</span>;
       case 'COMPLETED': return <span className="inline-flex items-center gap-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold"><CheckCircle className="w-3 h-3" /> Completed</span>;
@@ -432,7 +434,7 @@ function TenantDashboardContent() {
   };
 
   // Fetch Compound Broadcast Notices for Tenant's Booked Property
-  const activeBooking = activeBookings.find((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PENDING'].includes(b.status));
+  const activeBooking = activeBookings.find((b: any) => ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PENDING', 'ACTIVE', 'CHECKED_IN'].includes(b.status));
   const activePropertyId = activeBooking?.propertyId;
   const { data: compoundNoticesData } = useQuery({
     queryKey: ['compoundNotices', 'tenant', activePropertyId],
@@ -675,7 +677,7 @@ function TenantDashboardContent() {
                               Remove from List
                             </button>
                           )}
-                          {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
+                          {(['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
                             <>
                               <Link 
                                 href={`/dashboard/agreements/${booking.id}`}
@@ -729,7 +731,7 @@ function TenantDashboardContent() {
                               )}
                             </>
                           )}
-                          {booking.status === 'COMPLETED' && (
+                          {(['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
                             <button 
                               onClick={() => { setSelectedBookingId(booking.id); setReviewError(''); setReviewModalOpen(true); }}
                               className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
@@ -766,7 +768,7 @@ function TenantDashboardContent() {
                     </div>
                     
                     {/* Commute Widget */}
-                    {(booking.status === 'APPROVED' || booking.status === 'COMPLETED') && (
+                    {(['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
                       <CommuteWidget propertyId={booking.propertyId} />
                     )}
                   </div>

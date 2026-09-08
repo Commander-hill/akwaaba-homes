@@ -88,10 +88,10 @@ const getPlatformAnalytics = async (req, res) => {
         // 1. Conversion Metrics (Proper real estate tenancy pipeline)
         const totalBookings = await prisma_1.default.booking.count();
         const approvedBookings = await prisma_1.default.booking.count({
-            where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED'] } }
+            where: { status: { in: ['APPROVED', 'COMPLETED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] } }
         });
         const paidBookings = await prisma_1.default.booking.count({
-            where: { status: { in: ['COMPLETED', 'CONFIRMED'] } }
+            where: { status: { in: ['COMPLETED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] } }
         });
         const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
         // 2. Revenue Metrics (Escrow volume)
@@ -157,7 +157,7 @@ const getPlatformAnalytics = async (req, res) => {
                 locationCounts['Western (Takoradi)']++;
             }
             else {
-                locationCounts['Greater Accra']++;
+                locationCounts['Eastern & Other']++;
             }
             const pType = (p.type || '').toLowerCase();
             if (pType.includes('studio'))
@@ -529,15 +529,31 @@ const verifyUserCard = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
             return;
         }
+        const isCardVerified = status === 'VERIFIED';
         const user = await prisma_1.default.user.update({
             where: { id },
-            data: { ghanaCardStatus: status },
-            select: { id: true, ghanaCardStatus: true }
+            data: {
+                ghanaCardStatus: status,
+                isCardVerified
+            },
+            select: { id: true, ghanaCardStatus: true, isCardVerified: true }
         });
-        await (0, auditLogger_1.logAudit)(req.user.id, status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD', 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus }, { ghanaCardStatus: status }, req.ip || req.socket.remoteAddress);
+        await (0, auditLogger_1.logAudit)(req.user.id, status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD', 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus, isCardVerified: oldUser.isCardVerified }, { ghanaCardStatus: status, isCardVerified }, req.ip || req.socket.remoteAddress);
         // Clear cached profile so dashboard and verification page immediately reflect new status
         cache_1.default.del(`user:me:${id}`);
         cache_1.default.flushAll();
+        // In-app persistent notification
+        await prisma_1.default.notification.create({
+            data: {
+                userId: id,
+                type: status === 'VERIFIED' ? 'ANNOUNCEMENT' : 'SYSTEM_ALERT',
+                title: status === 'VERIFIED' ? '✅ Ghana Card Identity Verified!' : '❌ Ghana Card Verification Rejected',
+                message: status === 'VERIFIED'
+                    ? 'Your Ghana Card has been approved. You now have full access to listings and bookings.'
+                    : 'Your Ghana Card submission was rejected. Please review and re-submit your ID.',
+                link: '/dashboard/verification'
+            }
+        }).catch(() => { });
         // Notify the user in real-time so the onboarding widget refreshes instantly
         try {
             const { getIO } = await import('../socket');
@@ -548,7 +564,7 @@ const verifyUserCard = async (req, res) => {
                     : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
                 type: 'verification'
             });
-            getIO().to(id).emit('user_updated', { ghanaCardStatus: status });
+            getIO().to(id).emit('user_updated', { ghanaCardStatus: status, isCardVerified });
         }
         catch (e) { /* socket optional */ }
         res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
@@ -576,6 +592,18 @@ const verifyLandlord = async (req, res) => {
         });
         cache_1.default.del(`user:me:${id}`);
         cache_1.default.flushAll();
+        // Persistent in-app notification
+        await prisma_1.default.notification.create({
+            data: {
+                userId: user.id,
+                type: 'ANNOUNCEMENT',
+                title: isVerified ? '🛡️ Verified Landlord Badge Approved!' : 'Landlord Verification Update',
+                message: isVerified
+                    ? 'Congratulations! Your identity and ownership have been verified with the official Verified Landlord Badge.'
+                    : 'Your landlord verification request was not approved. Please review your documents or contact support.',
+                link: '/dashboard/landlord'
+            }
+        }).catch(() => { });
         try {
             const { emitToUser, emitToAll } = await import('../socket');
             emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });

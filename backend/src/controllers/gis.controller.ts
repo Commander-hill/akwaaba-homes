@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { CAMPUS_COORDINATES, CAMPUS_LANDMARKS, calculateHaversineDistance, estimateCommuteTimes } from '../utils/gis';
 import prisma from '../utils/prisma';
+import appCache from '../utils/cache';
 
 /**
  * Get Campus Landmark Distances and Transport Fares for a Property
@@ -8,6 +9,13 @@ import prisma from '../utils/prisma';
 export const getPropertyCampusLandmarks = async (req: Request, res: Response): Promise<void> => {
   try {
     const propertyId = req.params.id as string;
+    const cacheKey = `property:gis:${propertyId}`;
+
+    const cachedData = appCache.get(cacheKey);
+    if (cachedData) {
+      res.status(200).json(cachedData);
+      return;
+    }
 
     const property = await prisma.property.findUnique({
       where: { id: propertyId },
@@ -81,10 +89,15 @@ export const getPropertyCampusLandmarks = async (req: Request, res: Response): P
       };
     });
 
-    res.status(200).json({
+    const responseData = {
       campus: selectedCampus,
       landmarks: landmarkDistances
-    });
+    };
+
+    // Cache computed GIS landmarks for 1 hour (3600 seconds)
+    appCache.set(cacheKey, responseData, 3600);
+
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('Error fetching campus landmarks:', error);
     res.status(500).json({ message: 'Failed to calculate campus landmarks' });
@@ -97,6 +110,14 @@ export const getPropertyCampusLandmarks = async (req: Request, res: Response): P
 export const getCommuteInfo = async (req: Request, res: Response): Promise<void> => {
   try {
     const propertyId = req.params.propertyId as string;
+    const cacheKey = `property:commute:${propertyId}`;
+
+    const cachedCommute = appCache.get(cacheKey);
+    if (cachedCommute) {
+      res.status(200).json(cachedCommute);
+      return;
+    }
+
     const property = await prisma.property.findUnique({
       where: { id: propertyId }
     });
@@ -108,6 +129,9 @@ export const getCommuteInfo = async (req: Request, res: Response): Promise<void>
 
     const dist = calculateHaversineDistance(property.latitude, property.longitude, 5.1054, -1.2825);
     const commute = estimateCommuteTimes(dist);
+
+    // Cache computed commute calculation for 1 hour
+    appCache.set(cacheKey, commute, 3600);
 
     res.status(200).json(commute);
   } catch (error) {

@@ -595,10 +595,10 @@ export default function LandlordDashboard() {
                         <td className="p-4">
                           <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${
                             booking.status === 'PENDING' ? 'bg-amber-100 text-amber-700 font-bold' :
-                            booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-700' :
+                            ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status) ? 'bg-emerald-100 text-emerald-700' :
                             'bg-red-100 text-red-700'
                           }`}>
-                            {booking.status}
+                            {booking.status === 'CHECKED_IN' ? 'CHECKED IN' : booking.status}
                           </span>
                         </td>
                         <td className="p-4 text-right space-x-2">
@@ -620,7 +620,7 @@ export default function LandlordDashboard() {
                               </button>
                             </>
                           )}
-                          {(booking.status === 'APPROVED' || booking.status === 'CONFIRMED' || booking.status === 'COMPLETED' || booking.status === 'PAID') && (
+                          {(['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
                             <>
                               <button
                                 onClick={() => setSelectedInspectionBooking(booking)}

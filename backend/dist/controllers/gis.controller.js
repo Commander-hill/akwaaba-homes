@@ -6,12 +6,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getCommuteInfo = exports.getPropertyCampusLandmarks = void 0;
 const gis_1 = require("../utils/gis");
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const cache_1 = __importDefault(require("../utils/cache"));
 /**
  * Get Campus Landmark Distances and Transport Fares for a Property
  */
 const getPropertyCampusLandmarks = async (req, res) => {
     try {
         const propertyId = req.params.id;
+        const cacheKey = `property:gis:${propertyId}`;
+        const cachedData = cache_1.default.get(cacheKey);
+        if (cachedData) {
+            res.status(200).json(cachedData);
+            return;
+        }
         const property = await prisma_1.default.property.findUnique({
             where: { id: propertyId },
             select: {
@@ -69,10 +76,13 @@ const getPropertyCampusLandmarks = async (req, res) => {
                 okadaFareGHS: commute.okadaFareGHS
             };
         });
-        res.status(200).json({
+        const responseData = {
             campus: selectedCampus,
             landmarks: landmarkDistances
-        });
+        };
+        // Cache computed GIS landmarks for 1 hour (3600 seconds)
+        cache_1.default.set(cacheKey, responseData, 3600);
+        res.status(200).json(responseData);
     }
     catch (error) {
         console.error('Error fetching campus landmarks:', error);
@@ -86,6 +96,12 @@ exports.getPropertyCampusLandmarks = getPropertyCampusLandmarks;
 const getCommuteInfo = async (req, res) => {
     try {
         const propertyId = req.params.propertyId;
+        const cacheKey = `property:commute:${propertyId}`;
+        const cachedCommute = cache_1.default.get(cacheKey);
+        if (cachedCommute) {
+            res.status(200).json(cachedCommute);
+            return;
+        }
         const property = await prisma_1.default.property.findUnique({
             where: { id: propertyId }
         });
@@ -95,6 +111,8 @@ const getCommuteInfo = async (req, res) => {
         }
         const dist = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, 5.1054, -1.2825);
         const commute = (0, gis_1.estimateCommuteTimes)(dist);
+        // Cache computed commute calculation for 1 hour
+        cache_1.default.set(cacheKey, commute, 3600);
         res.status(200).json(commute);
     }
     catch (error) {
