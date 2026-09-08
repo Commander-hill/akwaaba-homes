@@ -127,7 +127,15 @@ export const getCommuteInfo = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const dist = calculateHaversineDistance(property.latitude, property.longitude, 5.1054, -1.2825);
+    let shortestDistance = Infinity;
+    for (const coords of Object.values(CAMPUS_COORDINATES) as { lat: number; lon: number }[]) {
+      const d = calculateHaversineDistance(property.latitude, property.longitude, coords.lat, coords.lon);
+      if (d < shortestDistance) {
+        shortestDistance = d;
+      }
+    }
+
+    const dist = shortestDistance < Infinity ? shortestDistance : calculateHaversineDistance(property.latitude, property.longitude, 5.1054, -1.2825);
     const commute = estimateCommuteTimes(dist);
 
     // Cache computed commute calculation for 1 hour

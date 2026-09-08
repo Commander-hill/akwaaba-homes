@@ -23,6 +23,7 @@ interface BillSplitParticipant {
 interface BillSplit {
   id: string;
   propertyId: string;
+  creatorId?: string;
   title: string;
   category: string;
   totalAmount: number;
@@ -56,6 +57,15 @@ export default function BillSplitterTab({ bookings = [] }: { bookings?: any[] })
   const [participants, setParticipants] = useState<Array<{ userName: string; userPhone: string; shareAmount: string }>>([
     { userName: '', userPhone: '', shareAmount: '' }
   ]);
+
+  const { data: userData } = useQuery({
+    queryKey: ['user', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data?.user || res.data;
+    }
+  });
+  const currentUserId = userData?.id;
 
   const { data: propertiesData } = useQuery({
     queryKey: ['properties', 'public-catalog'],
@@ -127,6 +137,20 @@ export default function BillSplitterTab({ bookings = [] }: { bookings?: any[] })
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update payment');
+    }
+  });
+
+  const deleteSplitMutation = useMutation({
+    mutationFn: async (splitId: string) => {
+      const res = await api.delete(`/bill-splits/${splitId}`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Bill split deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['billSplits', 'tenant'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to delete bill split');
     }
   });
 
@@ -203,12 +227,29 @@ export default function BillSplitterTab({ bookings = [] }: { bookings?: any[] })
               >
                 <div className="flex items-start justify-between">
                   <div className="space-y-0.5">
-                    <span className={clsx(
-                      "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                      isSettled ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
-                    )}>
-                      {isSettled ? 'FULLY SETTLED ✅' : 'PENDING SETTLEMENT'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={clsx(
+                        "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
+                        isSettled ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
+                      )}>
+                        {isSettled ? 'FULLY SETTLED ✅' : 'PENDING SETTLEMENT'}
+                      </span>
+                      {!isSettled && (bill.creatorId === currentUserId || bill.creator?.id === currentUserId) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Delete bill split "${bill.title}"?`)) {
+                              deleteSplitMutation.mutate(bill.id);
+                            }
+                          }}
+                          disabled={deleteSplitMutation.isPending}
+                          className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg cursor-pointer"
+                          title="Delete Split"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                     <h4 className="font-bold text-base text-slate-900 dark:text-white pt-1">{bill.title}</h4>
                     <p className="text-xs text-slate-400">{bill.property?.title} • Created by {bill.creator?.firstName}</p>
                   </div>

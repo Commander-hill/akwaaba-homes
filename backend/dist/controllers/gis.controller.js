@@ -109,7 +109,14 @@ const getCommuteInfo = async (req, res) => {
             res.status(404).json({ message: 'Property location coordinates not available' });
             return;
         }
-        const dist = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, 5.1054, -1.2825);
+        let shortestDistance = Infinity;
+        for (const coords of Object.values(gis_1.CAMPUS_COORDINATES)) {
+            const d = (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, coords.lat, coords.lon);
+            if (d < shortestDistance) {
+                shortestDistance = d;
+            }
+        }
+        const dist = shortestDistance < Infinity ? shortestDistance : (0, gis_1.calculateHaversineDistance)(property.latitude, property.longitude, 5.1054, -1.2825);
         const commute = (0, gis_1.estimateCommuteTimes)(dist);
         // Cache computed commute calculation for 1 hour
         cache_1.default.set(cacheKey, commute, 3600);

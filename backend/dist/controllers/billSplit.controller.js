@@ -159,9 +159,62 @@ const toggleParticipantPaidStatus = async (req, res) => {
                 data: { status: 'OPEN' }
             });
         }
+        const updatedBillSplit = await prisma_1.default.billSplit.findUnique({
+            where: { id: participant.billSplitId },
+            include: {
+                property: { select: { id: true, title: true, location: true } },
+                participants: true,
+                creator: { select: { id: true, firstName: true, lastName: true } }
+            }
+        });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(participant.billSplit.creatorId).emit('bill_split_updated', updatedBillSplit);
+            if (participant.userId) {
+                io.to(participant.userId).emit('bill_split_updated', updatedBillSplit);
+            }
+            if (isPaid) {
+                if (isParticipantSelf) {
+                    await prisma_1.default.notification.create({
+                        data: {
+                            userId: participant.billSplit.creatorId,
+                            type: 'ANNOUNCEMENT',
+                            title: '💸 Roommate Bill Share Settled',
+                            message: `${participant.userName} marked their share of GHS ${participant.shareAmount.toFixed(2)} as settled for "${participant.billSplit.title}".`,
+                            link: '/dashboard/roommates'
+                        }
+                    }).catch(() => null);
+                    io.to(participant.billSplit.creatorId).emit('notification', {
+                        type: 'ANNOUNCEMENT',
+                        title: '💸 Roommate Bill Share Settled',
+                        message: `${participant.userName} settled GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}".`,
+                        link: '/dashboard/roommates'
+                    });
+                }
+                else if (isCreator && participant.userId) {
+                    await prisma_1.default.notification.create({
+                        data: {
+                            userId: participant.userId,
+                            type: 'ANNOUNCEMENT',
+                            title: '✅ Bill Share Marked Paid',
+                            message: `Your share of GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}" was verified and marked paid.`,
+                            link: '/dashboard/roommates'
+                        }
+                    }).catch(() => null);
+                    io.to(participant.userId).emit('notification', {
+                        type: 'ANNOUNCEMENT',
+                        title: '✅ Bill Share Marked Paid',
+                        message: `Your share of GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}" was marked paid.`,
+                        link: '/dashboard/roommates'
+                    });
+                }
+            }
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({
             message: isPaid ? 'Marked as settled ✅' : 'Marked as pending',
-            participant: updatedParticipant
+            participant: updatedParticipant,
+            billSplit: updatedBillSplit
         });
     }
     catch (error) {
@@ -200,6 +253,16 @@ const deleteBillSplit = async (req, res) => {
         await prisma_1.default.billSplit.delete({
             where: { id }
         });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(billSplit.creatorId).emit('bill_split_deleted', { id });
+            (billSplit.participants || []).forEach((p) => {
+                if (p.userId) {
+                    io.to(p.userId).emit('bill_split_deleted', { id });
+                }
+            });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({ message: 'Bill split deleted successfully' });
     }
     catch (error) {

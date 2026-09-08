@@ -310,9 +310,30 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       data: { isAvailable: true }
     });
 
+    const property = await prisma.property.findUnique({
+      where: { id: existingSub.propertyId },
+      select: { title: true, landlordId: true }
+    });
+
+    if (property) {
+      await prisma.notification.create({
+        data: {
+          userId: property.landlordId,
+          type: 'PAYMENT_RECEIVED',
+          title: '🎉 Property Listing Activated',
+          message: `Payment received! Your listing for "${property.title}" is now active.`,
+          link: '/dashboard/landlord/properties'
+        }
+      }).catch(() => {});
+    }
+
     try {
       appCache.flushAll();
-      getIO().emit('property_updated', { propertyId: existingSub.propertyId });
+      const io = getIO();
+      io.emit('property_updated', { propertyId: existingSub.propertyId });
+      if (property) {
+        io.to(property.landlordId).emit('subscription_updated', { subscription });
+      }
     } catch (e) {
       /* non-blocking */
     }
@@ -387,12 +408,24 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
         try {
           const property = await prisma.property.findUnique({ where: { id: existingSub.propertyId } });
           if (property) {
-            getIO().to(property.landlordId).emit('notification', {
+            await prisma.notification.create({
+              data: {
+                userId: property.landlordId,
+                type: 'PAYMENT_RECEIVED',
+                title: '🎉 Property Listing Activated',
+                message: `Payment received! Your listing for "${property.title}" is now active.`,
+                link: '/dashboard/landlord/properties'
+              }
+            }).catch(() => {});
+
+            const io = getIO();
+            io.to(property.landlordId).emit('notification', {
               title: 'Property Listing Activated',
               message: `Payment received! Your listing for "${property.title}" is now active.`,
               type: 'subscription'
             });
-            getIO().emit('property_updated', { propertyId: property.id });
+            io.to(property.landlordId).emit('subscription_updated', { subscription });
+            io.emit('property_updated', { propertyId: property.id });
           }
           appCache.flushAll();
         } catch (e) {

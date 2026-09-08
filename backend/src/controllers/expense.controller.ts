@@ -27,7 +27,7 @@ export const createExpense = async (req: Request, res: Response): Promise<void> 
     }
 
     const isStaff = await prisma.propertyStaff.findFirst({
-      where: { propertyId, userId: landlordId, isActive: true }
+      where: { propertyId, userId: landlordId }
     });
 
     if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {

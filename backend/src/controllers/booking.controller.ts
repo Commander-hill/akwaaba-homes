@@ -56,7 +56,7 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
     const isLandlord = booking.property?.landlordId === userId;
     const isAdmin = userRole === 'ADMIN';
     const isStaff = await prisma.propertyStaff.findFirst({
-      where: { propertyId: booking.propertyId, userId, isActive: true }
+      where: { propertyId: booking.propertyId, userId }
     });
 
     if (!isTenant && !isLandlord && !isAdmin && !isStaff) {

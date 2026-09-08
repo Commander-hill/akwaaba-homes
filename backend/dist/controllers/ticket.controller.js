@@ -128,16 +128,22 @@ const getLandlordTickets = async (req, res) => {
             res.status(401).json({ message: 'Authentication required' });
             return;
         }
-        const role = (req.user.role || '').toUpperCase();
-        if (role !== 'LANDLORD' && role !== 'ADMIN') {
-            res.status(403).json({ message: 'Access denied: Landlord access required' });
+        const staffAssignments = await prisma_1.default.propertyStaff.findMany({
+            where: { userId: req.user.id },
+            select: { propertyId: true }
+        });
+        const staffPropertyIds = staffAssignments.map(s => s.propertyId);
+        const isStaff = staffPropertyIds.length > 0;
+        if (role !== 'LANDLORD' && role !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Access denied: Landlord or Caretaker access required' });
             return;
         }
         const tickets = await prisma_1.default.maintenanceTicket.findMany({
             where: {
-                property: {
-                    landlordId: req.user.id
-                }
+                OR: [
+                    { property: { landlordId: req.user.id } },
+                    ...(staffPropertyIds.length > 0 ? [{ propertyId: { in: staffPropertyIds } }] : [])
+                ]
             },
             include: {
                 property: {
@@ -224,6 +230,17 @@ const updateTicketStatus = async (req, res) => {
                     link: '/dashboard/tenant'
                 }
             }).catch(() => null);
+            if (req.user.id !== ticket.property.landlordId) {
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: ticket.property.landlordId,
+                        type: 'ANNOUNCEMENT',
+                        title: `🛠️ Ticket ${status || 'Updated'} by Staff`,
+                        message: `Ticket "${ticket.title}" for ${ticket.property.title} was marked as ${status ? status.toLowerCase() : 'updated'}.`,
+                        link: '/dashboard/landlord'
+                    }
+                }).catch(() => null);
+            }
             io.to(ticket.tenantId).emit('notification', {
                 title: `Ticket ${status || 'Updated'}`,
                 message: `Your maintenance ticket "${ticket.title}" is now ${status ? status.toLowerCase() : 'updated'}.`,
@@ -231,6 +248,13 @@ const updateTicketStatus = async (req, res) => {
             });
             io.to(ticket.tenantId).emit('ticket_updated', { ticket: updatedTicket });
             io.to(ticket.property.landlordId).emit('ticket_updated', { ticket: updatedTicket });
+            const staffMembers = await prisma_1.default.propertyStaff.findMany({
+                where: { propertyId: ticket.propertyId, canManageTickets: true },
+                select: { userId: true }
+            }).catch(() => []);
+            for (const s of staffMembers) {
+                io.to(s.userId).emit('ticket_updated', { ticket: updatedTicket });
+            }
             io.emit('ticket_updated', { ticket: updatedTicket });
         }
         catch (e) {
@@ -269,6 +293,56 @@ const checkAndEscalateTickets = async (req, res) => {
                     escalatedAt: new Date()
                 }
             });
+            // Dispatch real-time in-app notifications and socket alerts
+            try {
+                const io = (0, socket_1.getIO)();
+                const admins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+                for (const t of overdueTickets) {
+                    // Notify landlord
+                    await prisma_1.default.notification.create({
+                        data: {
+                            userId: t.property.landlordId,
+                            type: 'SYSTEM_ALERT',
+                            title: `⚠️ Ticket Escalated: ${t.title}`,
+                            message: `Ticket "${t.title}" (${t.priority} priority) exceeded 48h and was escalated to Admin resolution.`,
+                            link: '/dashboard/landlord'
+                        }
+                    }).catch(() => null);
+                    // Notify tenant
+                    await prisma_1.default.notification.create({
+                        data: {
+                            userId: t.tenantId,
+                            type: 'ANNOUNCEMENT',
+                            title: `🛡️ Ticket Escalated to Support Admin`,
+                            message: `Your high-priority ticket "${t.title}" was escalated to platform administrators for urgent resolution.`,
+                            link: '/dashboard/tenant'
+                        }
+                    }).catch(() => null);
+                    io.to(t.property.landlordId).emit('ticket_updated', { ticket: { ...t, status: 'ESCALATED', isEscalated: true } });
+                    io.to(t.tenantId).emit('ticket_updated', { ticket: { ...t, status: 'ESCALATED', isEscalated: true } });
+                }
+                if (admins.length > 0) {
+                    await prisma_1.default.notification.createMany({
+                        data: admins.map(a => ({
+                            userId: a.id,
+                            type: 'SYSTEM_ALERT',
+                            title: `⚠️ ${overdueTickets.length} High-Priority Ticket(s) Escalated`,
+                            message: `${overdueTickets.length} maintenance ticket(s) older than 48 hours require urgent admin resolution.`,
+                            link: '/admin/tickets'
+                        }))
+                    }).catch(() => null);
+                    admins.forEach(a => {
+                        io.to(a.id).emit('notification', {
+                            title: 'Overdue Tickets Escalated',
+                            message: `${overdueTickets.length} ticket(s) escalated to admin.`,
+                            type: 'SYSTEM_ALERT'
+                        });
+                    });
+                }
+            }
+            catch (e) {
+                console.warn('Socket emission failed during escalation:', e);
+            }
             console.log(`⚠️  [Ticket Escalation Guard] Escalated ${overdueTickets.length} unresolved high-priority ticket(s) to Admin.`);
         }
         res.status(200).json({

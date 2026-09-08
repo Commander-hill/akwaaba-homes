@@ -26,7 +26,7 @@ const createExpense = async (req, res) => {
             return;
         }
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
-            where: { propertyId, userId: landlordId, isActive: true }
+            where: { propertyId, userId: landlordId }
         });
         if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You do not have permission to log expenses for this property' });

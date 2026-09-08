@@ -1130,6 +1130,25 @@ const adminUpdateTicketStatus = async (req, res) => {
             data: { status }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_UPDATE_TICKET', 'MaintenanceTicket', id, { status: ticket.status }, { status }, req.ip || req.socket.remoteAddress);
+        // Create persistent DB notifications
+        await prisma_1.default.notification.create({
+            data: {
+                userId: ticket.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: '🛠️ Maintenance Ticket Updated by Admin',
+                message: `Your maintenance ticket "${ticket.title}" was updated to ${status.toLowerCase()} by platform admin.`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
+        await prisma_1.default.notification.create({
+            data: {
+                userId: ticket.property.landlordId,
+                type: 'ANNOUNCEMENT',
+                title: '🛠️ Ticket Status Updated by Admin',
+                message: `Admin updated ticket "${ticket.title}" for ${ticket.property.title || 'your property'} to ${status.toLowerCase()}.`,
+                link: '/dashboard/landlord'
+            }
+        }).catch(() => null);
         try {
             const { getIO } = await import('../socket');
             const io = getIO();

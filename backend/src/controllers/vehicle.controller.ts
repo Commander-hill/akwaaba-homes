@@ -183,7 +183,7 @@ export const deleteVehicle = async (req: Request, res: Response): Promise<void> 
       where: { id: vehicle.propertyId, landlordId: tenantId }
     });
     const isStaff = await prisma.propertyStaff.findFirst({
-      where: { propertyId: vehicle.propertyId, userId: tenantId, isActive: true }
+      where: { propertyId: vehicle.propertyId, userId: tenantId }
     });
 
     if (vehicle.tenantId !== tenantId && req.user?.role !== 'ADMIN' && !isLandlord && !isStaff) {

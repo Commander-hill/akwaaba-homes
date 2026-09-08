@@ -55,7 +55,7 @@ const downloadAgreementPDF = async (req, res) => {
         const isLandlord = booking.property?.landlordId === userId;
         const isAdmin = userRole === 'ADMIN';
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
-            where: { propertyId: booking.propertyId, userId, isActive: true }
+            where: { propertyId: booking.propertyId, userId }
         });
         if (!isTenant && !isLandlord && !isAdmin && !isStaff) {
             res.status(403).json({ message: 'Access denied. You are not authorized to view or download this tenancy agreement.' });

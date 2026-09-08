@@ -1240,6 +1240,27 @@ export const adminUpdateTicketStatus = async (req: Request, res: Response): Prom
       req.ip || req.socket.remoteAddress
     );
 
+    // Create persistent DB notifications
+    await prisma.notification.create({
+      data: {
+        userId: ticket.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: '🛠️ Maintenance Ticket Updated by Admin',
+        message: `Your maintenance ticket "${ticket.title}" was updated to ${status.toLowerCase()} by platform admin.`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => null);
+
+    await prisma.notification.create({
+      data: {
+        userId: ticket.property.landlordId,
+        type: 'ANNOUNCEMENT',
+        title: '🛠️ Ticket Status Updated by Admin',
+        message: `Admin updated ticket "${ticket.title}" for ${ticket.property.title || 'your property'} to ${status.toLowerCase()}.`,
+        link: '/dashboard/landlord'
+      }
+    }).catch(() => null);
+
     try {
       const { getIO } = await import('../socket');
       const io = getIO();

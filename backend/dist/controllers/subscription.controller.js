@@ -277,9 +277,28 @@ const verifyPayment = async (req, res) => {
             where: { id: existingSub.propertyId },
             data: { isAvailable: true }
         });
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: existingSub.propertyId },
+            select: { title: true, landlordId: true }
+        });
+        if (property) {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'PAYMENT_RECEIVED',
+                    title: '🎉 Property Listing Activated',
+                    message: `Payment received! Your listing for "${property.title}" is now active.`,
+                    link: '/dashboard/landlord/properties'
+                }
+            }).catch(() => { });
+        }
         try {
             cache_1.default.flushAll();
-            (0, socket_1.getIO)().emit('property_updated', { propertyId: existingSub.propertyId });
+            const io = (0, socket_1.getIO)();
+            io.emit('property_updated', { propertyId: existingSub.propertyId });
+            if (property) {
+                io.to(property.landlordId).emit('subscription_updated', { subscription });
+            }
         }
         catch (e) {
             /* non-blocking */
@@ -343,12 +362,23 @@ const handlePaystackWebhook = async (req, res) => {
                 try {
                     const property = await prisma_1.default.property.findUnique({ where: { id: existingSub.propertyId } });
                     if (property) {
-                        (0, socket_1.getIO)().to(property.landlordId).emit('notification', {
+                        await prisma_1.default.notification.create({
+                            data: {
+                                userId: property.landlordId,
+                                type: 'PAYMENT_RECEIVED',
+                                title: '🎉 Property Listing Activated',
+                                message: `Payment received! Your listing for "${property.title}" is now active.`,
+                                link: '/dashboard/landlord/properties'
+                            }
+                        }).catch(() => { });
+                        const io = (0, socket_1.getIO)();
+                        io.to(property.landlordId).emit('notification', {
                             title: 'Property Listing Activated',
                             message: `Payment received! Your listing for "${property.title}" is now active.`,
                             type: 'subscription'
                         });
-                        (0, socket_1.getIO)().emit('property_updated', { propertyId: property.id });
+                        io.to(property.landlordId).emit('subscription_updated', { subscription });
+                        io.emit('property_updated', { propertyId: property.id });
                     }
                     cache_1.default.flushAll();
                 }

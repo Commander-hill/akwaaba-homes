@@ -132,7 +132,7 @@ export const getLandlordNotices = async (req: Request, res: Response): Promise<v
 
     // Check if user is staff on any properties
     const staffAssignments = await prisma.propertyStaff.findMany({
-      where: { userId: landlordId, isActive: true },
+      where: { userId: landlordId },
       select: { propertyId: true }
     });
     const staffPropertyIds = staffAssignments.map(s => s.propertyId);
@@ -195,6 +195,7 @@ export const deleteCompoundNotice = async (req: Request, res: Response): Promise
 
     try {
       getIO().emit('notice_updated', { noticeId: id, propertyId: notice.propertyId });
+      getIO().emit('notice_deleted', { noticeId: id, propertyId: notice.propertyId });
     } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: 'Notice removed successfully' });

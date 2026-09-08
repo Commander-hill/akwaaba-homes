@@ -139,8 +139,17 @@ export const getPropertyDeliveries = async (req: Request, res: Response): Promis
       if (userRole === 'LANDLORD') {
         whereClause.property = { landlordId: userId };
       } else if (userRole !== 'ADMIN') {
-        res.status(403).json({ message: 'Forbidden' });
-        return;
+        const staffAssignments = await prisma.propertyStaff.findMany({
+          where: { userId },
+          select: { propertyId: true }
+        });
+        const staffPropertyIds = staffAssignments.map(s => s.propertyId);
+        if (staffPropertyIds.length > 0) {
+          whereClause.propertyId = { in: staffPropertyIds };
+        } else {
+          res.status(403).json({ message: 'Forbidden' });
+          return;
+        }
       }
     }
 

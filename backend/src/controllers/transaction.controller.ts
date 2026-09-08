@@ -422,6 +422,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
         const io = getIO();
         io.emit('booking_updated', { bookingId: booking.id, propertyId: booking.propertyId });
         io.emit('property_updated', { propertyId: booking.propertyId });
+        io.to(booking.property.landlordId).emit('financials_updated', { propertyId: booking.propertyId });
         appCache.flushAll();
       } catch (e) {}
 
@@ -474,9 +475,18 @@ export const getLandlordFinancialLedger = async (req: Request, res: Response): P
       }
     });
 
+    const propertyExpenses = await prisma.propertyExpense.findMany({
+      where: {
+        propertyId: { in: propertyIds },
+        date: { gte: startDate, lte: endDate }
+      }
+    });
+
     // Aggregates
     const grossRevenue = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-    const totalMaintenanceDeductions = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const totalTicketCosts = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const totalExpenseCosts = propertyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalMaintenanceDeductions = totalTicketCosts + totalExpenseCosts;
     const withholdingTax5Percent = parseFloat(((grossRevenue - totalMaintenanceDeductions) * 0.05).toFixed(2));
     const netTaxableIncome = Math.max(0, grossRevenue - totalMaintenanceDeductions - withholdingTax5Percent);
 
@@ -486,12 +496,18 @@ export const getLandlordFinancialLedger = async (req: Request, res: Response): P
         .filter((tx) => tx.propertyId === prop.id)
         .reduce((sum, tx) => sum + tx.amount, 0);
       
-      const propMaintenance = maintenanceTickets
+      const propTickets = maintenanceTickets
         .filter((t) => t.propertyId === prop.id)
         .reduce((sum, t) => sum + (t.repairCost || 0), 0);
 
+      const propExp = propertyExpenses
+        .filter((e) => e.propertyId === prop.id)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const propMaintenance = propTickets + propExp;
+
       return {
-        id: prop.id,
+        propertyId: prop.id,
         title: prop.title,
         gross: propGross,
         maintenance: propMaintenance,
@@ -562,8 +578,17 @@ export const exportGRATaxReport = async (req: Request, res: Response): Promise<v
       }
     });
 
+    const propertyExpenses = await prisma.propertyExpense.findMany({
+      where: {
+        propertyId: { in: propertyIds },
+        date: { gte: startDate, lte: endDate }
+      }
+    });
+
     const grossRevenue = transactions.reduce((sum, tx) => sum + tx.amount, 0);
-    const totalMaintenanceDeductions = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const totalTicketCosts = maintenanceTickets.reduce((sum, ticket) => sum + (ticket.repairCost || 0), 0);
+    const totalExpenseCosts = propertyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const totalMaintenanceDeductions = totalTicketCosts + totalExpenseCosts;
     const withholdingTax5Percent = parseFloat(((grossRevenue - totalMaintenanceDeductions) * 0.05).toFixed(2));
     const netTaxableIncome = Math.max(0, grossRevenue - totalMaintenanceDeductions - withholdingTax5Percent);
 
@@ -572,9 +597,15 @@ export const exportGRATaxReport = async (req: Request, res: Response): Promise<v
         .filter((tx) => tx.propertyId === prop.id)
         .reduce((sum, tx) => sum + tx.amount, 0);
       
-      const propMaintenance = maintenanceTickets
+      const propTickets = maintenanceTickets
         .filter((t) => t.propertyId === prop.id)
         .reduce((sum, t) => sum + (t.repairCost || 0), 0);
+
+      const propExp = propertyExpenses
+        .filter((e) => e.propertyId === prop.id)
+        .reduce((sum, e) => sum + e.amount, 0);
+
+      const propMaintenance = propTickets + propExp;
 
       return {
         title: prop.title,

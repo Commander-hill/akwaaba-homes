@@ -97,9 +97,17 @@ exports.getTenantRenewals = getTenantRenewals;
 const getLandlordRenewals = async (req, res) => {
     try {
         const landlordId = req.user?.id;
+        const staffAssignments = await prisma_1.default.propertyStaff.findMany({
+            where: { userId: landlordId },
+            select: { propertyId: true }
+        });
+        const staffPropertyIds = staffAssignments.map(s => s.propertyId);
         const renewals = await prisma_1.default.leaseRenewalRequest.findMany({
             where: {
-                property: { landlordId }
+                OR: [
+                    { property: { landlordId } },
+                    ...(staffPropertyIds.length > 0 ? [{ propertyId: { in: staffPropertyIds } }] : [])
+                ]
             },
             include: {
                 property: { select: { id: true, title: true, location: true } },
@@ -177,6 +185,7 @@ const respondLeaseRenewal = async (req, res) => {
                         }
                     });
                     (0, socket_1.getIO)().to(renewal.tenantId).emit('booking_updated', { bookingId: renewal.bookingId });
+                    (0, socket_1.getIO)().to(renewal.property.landlordId).emit('booking_updated', { bookingId: renewal.bookingId });
                     cache_1.default.flushAll();
                 }
             }
@@ -186,6 +195,7 @@ const respondLeaseRenewal = async (req, res) => {
         }
         try {
             (0, socket_1.getIO)().to(renewal.tenantId).emit('lease_renewal_updated', updated);
+            (0, socket_1.getIO)().to(renewal.property.landlordId).emit('lease_renewal_updated', updated);
         }
         catch (e) { /* non-blocking */ }
         res.status(200).json({
