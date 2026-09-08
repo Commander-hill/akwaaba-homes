@@ -69,6 +69,15 @@ const createReview = async (req, res) => {
         // Auto-recalculate landlord reputation score after new review
         if (booking.property?.landlordId) {
             await recalculateLandlordReputation(booking.property.landlordId);
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: booking.property.landlordId,
+                    type: 'REVIEW',
+                    title: `⭐ New ${rating}-Star Review`,
+                    message: `A tenant left a ${rating}-star review for "${booking.property.title}".`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => null);
         }
         try {
             (0, socket_1.getIO)().emit('review_created', review);

@@ -757,6 +757,15 @@ const submitStudentVerification = async (req, res) => {
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
         }
         catch (e) { /* non-blocking */ }
+        await prisma_1.default.notification.create({
+            data: {
+                userId: req.user.id,
+                type: 'ANNOUNCEMENT',
+                title: '🎓 Student Status Verified',
+                message: `Your student profile for ${campus.trim()} has been registered. Student hostels and roommate matching are now fully unlocked!`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
         const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
         await (0, auditLogger_1.logAudit)(req.user.id, 'SUBMIT_STUDENT_VERIFICATION', 'User', req.user.id, { campus: campus.trim(), studentId: studentId.trim() }, {}, ipAddress);
         res.status(200).json({

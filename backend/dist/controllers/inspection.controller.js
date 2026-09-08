@@ -79,10 +79,34 @@ const createOrUpdateInspection = async (req, res) => {
                 }
             });
         }
+        const hasCautionDeduction = type === 'MOVE_OUT' && parseFloat(cautionDepositDeduction || '0') > 0;
+        const tenantMsg = hasCautionDeduction
+            ? `Move-Out inspection for "${booking.property.title}" assessed caution deduction of GHS ${parseFloat(cautionDepositDeduction).toFixed(2)} (${deductionReason || 'Repairs'}).`
+            : `${type === 'MOVE_IN' ? 'Move-In' : 'Move-Out'} inspection for "${booking.property.title}" has been recorded.`;
+        await prisma_1.default.notification.create({
+            data: {
+                userId: booking.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: `📋 ${type === 'MOVE_IN' ? 'Move-In' : 'Move-Out'} Inspection Completed`,
+                message: tenantMsg,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => null);
+        if (inspectorId !== booking.property.landlordId) {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: booking.property.landlordId,
+                    type: 'ANNOUNCEMENT',
+                    title: `📋 ${type === 'MOVE_IN' ? 'Move-In' : 'Move-Out'} Inspection Conducted`,
+                    message: `Inspection report filed for ${booking.tenant.firstName} at "${booking.property.title}".`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => null);
+        }
         try {
             (0, socket_1.getIO)().to(booking.tenantId).emit('notification', {
                 title: `📋 ${type === 'MOVE_IN' ? 'Move-In' : 'Move-Out'} Inspection Completed`,
-                message: `Inspection report for ${booking.property.title} is now available in your dashboard.`,
+                message: tenantMsg,
                 type: 'agreement'
             });
             (0, socket_1.getIO)().emit('inspection_updated', { inspectionId: inspection.id, bookingId });

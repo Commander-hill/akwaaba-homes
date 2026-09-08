@@ -92,14 +92,16 @@ export const getAgreementByBooking = async (req: Request, res: Response): Promis
       return;
     }
 
-    // Authorization check
-    if (role === 'TENANT' && agreement.booking.tenantId !== userId) {
-      res.status(403).json({ message: 'Forbidden' });
-      return;
-    }
-    
-    if (role === 'LANDLORD' && agreement.booking.property.landlordId !== userId) {
-      res.status(403).json({ message: 'Forbidden' });
+    // Authorization check: tenant, landlord, admin, or assigned property staff
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: agreement.booking.propertyId, userId }
+    });
+    const isTenant = agreement.booking.tenantId === userId;
+    const isLandlord = agreement.booking.property.landlordId === userId;
+    const isAdmin = role === 'ADMIN';
+
+    if (!isTenant && !isLandlord && !isAdmin && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not have access to this lease agreement' });
       return;
     }
 
@@ -316,6 +318,38 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
         }
       }
     });
+
+    // In-app notifications
+    if (updateData.status === 'PENDING_LANDLORD') {
+      await prisma.notification.create({
+        data: {
+          userId: agreement.booking.property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: '✍️ Tenant Signed Lease Agreement',
+          message: `Tenant has signed the lease for "${agreement.booking.property.title}". Your countersignature is required.`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => null);
+    } else if (updateData.status === 'COMPLETED') {
+      await prisma.notification.createMany({
+        data: [
+          {
+            userId: agreement.booking.tenantId,
+            type: 'ANNOUNCEMENT',
+            title: '🎉 Tenancy Lease Executed & Sealed',
+            message: `Your tenancy agreement for "${agreement.booking.property.title}" has been countersigned and legally executed!`,
+            link: '/dashboard/tenant'
+          },
+          {
+            userId: agreement.booking.property.landlordId,
+            type: 'ANNOUNCEMENT',
+            title: '🎉 Tenancy Lease Executed & Sealed',
+            message: `The tenancy agreement for "${agreement.booking.property.title}" is now fully executed and sealed.`,
+            link: '/dashboard/landlord'
+          }
+        ]
+      }).catch(() => null);
+    }
 
     // Real-time socket sync for lease agreements
     try {
