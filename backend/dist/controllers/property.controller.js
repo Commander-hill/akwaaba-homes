@@ -503,12 +503,12 @@ const deleteProperty = async (req, res) => {
         const activeTenanciesCount = await prisma_1.default.booking.count({
             where: {
                 propertyId: id,
-                status: { in: ['CONFIRMED', 'APPROVED'] }
+                status: { in: ['CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] }
             }
         });
         if (activeTenanciesCount > 0) {
             res.status(400).json({
-                message: 'Cannot delete property with active or approved tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.'
+                message: 'Cannot delete property with active, approved, or checked-in tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.'
             });
             return;
         }
@@ -558,6 +558,14 @@ const deleteProperty = async (req, res) => {
             await prisma_1.default.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => { });
             await prisma_1.default.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => { });
             await prisma_1.default.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.compoundNotice.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.visitorPass.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.packageDelivery.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.propertyStaff.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.serviceBooking.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.vehicleRegistration.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.billSplit.deleteMany({ where: { propertyId: id } }).catch(() => { });
+            await prisma_1.default.inspectionChecklist.deleteMany({ where: { propertyId: id } }).catch(() => { });
         }
         catch (cleanupErr) {
             console.warn('⚠️ Child cleanup note during property deletion:', cleanupErr);

@@ -5,6 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.revokeAllOtherSessions = exports.revokeSession = exports.getSessions = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const cache_1 = __importDefault(require("../utils/cache"));
+const socket_1 = require("../socket");
 const getSessions = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -49,7 +51,7 @@ exports.getSessions = getSessions;
 const revokeSession = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { id } = req.params;
+        const id = String(req.params.id);
         const session = await prisma_1.default.session.findUnique({ where: { id } });
         if (!session) {
             res.status(404).json({ message: 'Session not found' });
@@ -63,6 +65,12 @@ const revokeSession = async (req, res) => {
             where: { id },
             data: { isValid: false }
         });
+        try {
+            cache_1.default.del(`user:me:${userId}`);
+            const io = (0, socket_1.getIO)();
+            io.to(userId).emit('session_revoked', { sessionId: id });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({ message: 'Session revoked successfully' });
     }
     catch (error) {
@@ -87,6 +95,12 @@ const revokeAllOtherSessions = async (req, res) => {
             },
             data: { isValid: false }
         });
+        try {
+            cache_1.default.del(`user:me:${userId}`);
+            const io = (0, socket_1.getIO)();
+            io.to(userId).emit('session_revoked', { revokedAllOthers: true });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({
             message: `Successfully logged out ${result.count} other active device(s).`,
             count: result.count

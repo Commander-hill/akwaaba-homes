@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import appCache from '../utils/cache';
+import { getIO } from '../socket';
 
 export const getSessions = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -48,7 +49,7 @@ export const getSessions = async (req: Request, res: Response): Promise<void> =>
 export const revokeSession = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
-    const { id } = req.params;
+    const id = String(req.params.id);
 
     const session = await prisma.session.findUnique({ where: { id } });
 
@@ -66,6 +67,12 @@ export const revokeSession = async (req: Request, res: Response): Promise<void> 
       where: { id },
       data: { isValid: false }
     });
+
+    try {
+      appCache.del(`user:me:${userId}`);
+      const io = getIO();
+      io.to(userId).emit('session_revoked', { sessionId: id });
+    } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: 'Session revoked successfully' });
   } catch (error) {
@@ -92,6 +99,12 @@ export const revokeAllOtherSessions = async (req: Request, res: Response): Promi
       },
       data: { isValid: false }
     });
+
+    try {
+      appCache.del(`user:me:${userId}`);
+      const io = getIO();
+      io.to(userId).emit('session_revoked', { revokedAllOthers: true });
+    } catch (e) { /* non-blocking */ }
 
     res.status(200).json({
       message: `Successfully logged out ${result.count} other active device(s).`,

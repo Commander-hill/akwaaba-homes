@@ -557,13 +557,13 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
     const activeTenanciesCount = await prisma.booking.count({
       where: {
         propertyId: id,
-        status: { in: ['CONFIRMED', 'APPROVED'] }
+        status: { in: ['CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] }
       }
     });
 
     if (activeTenanciesCount > 0) {
       res.status(400).json({ 
-        message: 'Cannot delete property with active or approved tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.' 
+        message: 'Cannot delete property with active, approved, or checked-in tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.' 
       });
       return;
     }
@@ -615,6 +615,14 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       await prisma.propertySubscription.deleteMany({ where: { propertyId: id } }).catch(() => {});
       await prisma.maintenanceTicket.deleteMany({ where: { propertyId: id } }).catch(() => {});
       await prisma.breachReport.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.compoundNotice.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.visitorPass.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.packageDelivery.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.propertyStaff.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.serviceBooking.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.vehicleRegistration.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.billSplit.deleteMany({ where: { propertyId: id } }).catch(() => {});
+      await prisma.inspectionChecklist.deleteMany({ where: { propertyId: id } }).catch(() => {});
     } catch (cleanupErr) {
       console.warn('⚠️ Child cleanup note during property deletion:', cleanupErr);
     }

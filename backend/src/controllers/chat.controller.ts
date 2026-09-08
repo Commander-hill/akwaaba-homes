@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { sendPushToUser } from '../services/push.service';
+import { getIO } from '../socket';
 
 export const getConversations = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -204,6 +205,13 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       body: previewContent.length > 70 ? `${previewContent.substring(0, 67)}...` : previewContent,
       url: `/dashboard/messages`
     }).catch(() => {});
+
+    try {
+      const io = getIO();
+      io.to(conversationId).emit('receive_message', message);
+      io.to(recipientId).emit('receive_message', message);
+      io.to(recipientId).emit('conversation_updated', { conversationId });
+    } catch (e) { /* non-blocking */ }
 
     res.status(201).json(message);
   } catch (error) {

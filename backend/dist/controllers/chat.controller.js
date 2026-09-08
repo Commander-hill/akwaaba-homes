@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendMessage = exports.createConversation = exports.getMessages = exports.getConversations = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const push_service_1 = require("../services/push.service");
+const socket_1 = require("../socket");
 const getConversations = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -182,6 +183,13 @@ const sendMessage = async (req, res) => {
             body: previewContent.length > 70 ? `${previewContent.substring(0, 67)}...` : previewContent,
             url: `/dashboard/messages`
         }).catch(() => { });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(conversationId).emit('receive_message', message);
+            io.to(recipientId).emit('receive_message', message);
+            io.to(recipientId).emit('conversation_updated', { conversationId });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(201).json(message);
     }
     catch (error) {

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
 
 /**
  * 4-Factor Roommate Compatibility Matching Algorithm
@@ -241,6 +242,17 @@ export const sendRoommateInvitation = async (req: Request, res: Response): Promi
       }
     });
 
+    try {
+      const io = getIO();
+      io.to(receiverId).emit('notification', {
+        type: 'ANNOUNCEMENT',
+        title: '🤝 New Roommate Invitation!',
+        message: `${invitation.sender.firstName} ${invitation.sender.lastName} invited you to split a room (${matchScore}% Compatible match)!`,
+        link: '/dashboard/roommates'
+      });
+      io.to(receiverId).emit('roommate_invitation_received', invitation);
+    } catch (e) { /* non-blocking */ }
+
     res.status(201).json({ message: 'Roommate split invitation sent successfully', invitation });
   } catch (error) {
     console.error('Error sending roommate invitation:', error);
@@ -330,6 +342,32 @@ export const respondToRoommateInvitation = async (req: Request, res: Response): 
       data: { status }
     });
 
+    let conversationId: string | undefined;
+    if (status === 'ACCEPTED') {
+      try {
+        let conversation = await prisma.conversation.findFirst({
+          where: {
+            OR: [
+              { tenantId: userId, landlordId: invitation.senderId },
+              { tenantId: invitation.senderId, landlordId: userId }
+            ]
+          }
+        });
+
+        if (!conversation) {
+          conversation = await prisma.conversation.create({
+            data: {
+              tenantId: userId,
+              landlordId: invitation.senderId
+            }
+          });
+        }
+        conversationId = conversation.id;
+      } catch (convErr) {
+        console.warn('⚠️ Could not auto-initialize roommate conversation:', convErr);
+      }
+    }
+
     // Notify sender
     await prisma.notification.create({
       data: {
@@ -341,7 +379,22 @@ export const respondToRoommateInvitation = async (req: Request, res: Response): 
       }
     });
 
-    res.status(200).json({ message: `Invitation ${status.toLowerCase()} successfully`, invitation: updated });
+    try {
+      const io = getIO();
+      io.to(invitation.senderId).emit('notification', {
+        type: 'ANNOUNCEMENT',
+        title: status === 'ACCEPTED' ? '🎉 Roommate Invitation Accepted!' : 'Roommate Invitation Response',
+        message: `Your roommate split invitation was ${status.toLowerCase()} by the student.`,
+        link: '/dashboard/roommates'
+      });
+      io.to(invitation.senderId).emit('roommate_invitation_responded', { invitation: updated, conversationId });
+      if (conversationId) {
+        io.to(invitation.senderId).emit('conversation_updated', { conversationId });
+        io.to(userId).emit('conversation_updated', { conversationId });
+      }
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({ message: `Invitation ${status.toLowerCase()} successfully`, invitation: updated, conversationId });
   } catch (error) {
     console.error('Error responding to invitation:', error);
     res.status(500).json({ message: 'Internal server error' });
