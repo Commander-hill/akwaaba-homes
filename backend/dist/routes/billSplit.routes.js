@@ -8,5 +8,6 @@ router.use(auth_middleware_1.authenticate);
 router.post('/', billSplit_controller_1.createBillSplit);
 router.get('/', billSplit_controller_1.getTenantBillSplits);
 router.patch('/participants/:participantId/status', billSplit_controller_1.toggleParticipantPaidStatus);
+router.delete('/:id', billSplit_controller_1.deleteBillSplit);
 exports.default = router;
 //# sourceMappingURL=billSplit.routes.js.map

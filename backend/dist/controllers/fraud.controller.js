@@ -18,6 +18,7 @@ const scanFraudRisk = async (req, res) => {
                         lastName: true,
                         email: true,
                         ghanaCardStatus: true,
+                        isVerifiedLandlord: true,
                         createdAt: true
                     }
                 },
@@ -93,7 +94,7 @@ const scanFraudRisk = async (req, res) => {
                 riskScore += 30;
                 flags.push('Landlord Ghana Card ID Verification Failed / Rejected');
             }
-            else if (p.landlord.ghanaCardStatus !== 'APPROVED') {
+            else if (p.landlord.ghanaCardStatus !== 'VERIFIED' && !p.landlord.isVerifiedLandlord) {
                 riskScore += 15;
                 flags.push('Unverified Landlord (Ghana Card Pending)');
             }

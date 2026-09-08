@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 /**
  * Get full visual Floorplan & Bed Occupancy Matrix for a property
@@ -56,8 +57,12 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
       return;
     }
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN') {
-      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
       return;
     }
 
@@ -180,7 +185,11 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
     }
 
     const property = bed.roomUnit.room.property;
-    if (property.landlordId !== userId && userRole !== 'ADMIN') {
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: property.id, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -193,6 +202,8 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
     try {
       getIO().emit('room_capacity_updated', { propertyId: property.id, bedId });
       getIO().emit('room_updated', { propertyId: property.id });
+      getIO().emit('property_updated', { propertyId: property.id });
+      appCache.flushAll();
     } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: `Bed status updated to ${status}`, bed: updatedBed });

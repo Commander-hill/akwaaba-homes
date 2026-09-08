@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toggleParticipantPaidStatus = exports.getTenantBillSplits = exports.createBillSplit = void 0;
+exports.deleteBillSplit = exports.toggleParticipantPaidStatus = exports.getTenantBillSplits = exports.createBillSplit = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 /**
@@ -48,6 +48,33 @@ const createBillSplit = async (req, res) => {
             (0, socket_1.getIO)().to(creatorId).emit('bill_split_created', billSplit);
         }
         catch (e) { /* non-blocking */ }
+        // Notify all registered roommate participants
+        const registeredParticipants = (billSplit.participants || []).filter((p) => p.userId && p.userId !== creatorId);
+        if (registeredParticipants.length > 0) {
+            try {
+                await prisma_1.default.notification.createMany({
+                    data: registeredParticipants.map((p) => ({
+                        userId: p.userId,
+                        type: 'ANNOUNCEMENT',
+                        title: `🧾 New Bill Split: ${billSplit.title}`,
+                        message: `You were added to a bill split of GHS ${p.shareAmount.toFixed(2)} for ${billSplit.title}.`,
+                        link: '/dashboard/roommates'
+                    }))
+                });
+                for (const p of registeredParticipants) {
+                    (0, socket_1.getIO)().to(p.userId).emit('notification', {
+                        type: 'ANNOUNCEMENT',
+                        title: `🧾 New Bill Split: ${billSplit.title}`,
+                        message: `You were added to a bill split of GHS ${p.shareAmount.toFixed(2)} for ${billSplit.title}.`,
+                        link: '/dashboard/roommates'
+                    });
+                    (0, socket_1.getIO)().to(p.userId).emit('bill_split_created', billSplit);
+                }
+            }
+            catch (err) {
+                console.error('Error notifying bill split participants:', err);
+            }
+        }
         res.status(201).json({
             message: 'Bill split created! Roommates can now settle their share.',
             billSplit
@@ -143,4 +170,42 @@ const toggleParticipantPaidStatus = async (req, res) => {
     }
 };
 exports.toggleParticipantPaidStatus = toggleParticipantPaidStatus;
+/**
+ * Delete a bill split (creator or admin only, if not settled)
+ */
+const deleteBillSplit = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
+        const billSplit = await prisma_1.default.billSplit.findUnique({
+            where: { id },
+            include: { participants: true }
+        });
+        if (!billSplit) {
+            res.status(404).json({ message: 'Bill split not found' });
+            return;
+        }
+        if (billSplit.creatorId !== userId && userRole !== 'ADMIN') {
+            res.status(403).json({ message: 'Forbidden: Only the creator or an admin can delete this bill split' });
+            return;
+        }
+        if (billSplit.status === 'SETTLED') {
+            res.status(400).json({ message: 'Cannot delete a settled bill split' });
+            return;
+        }
+        await prisma_1.default.billSplitParticipant.deleteMany({
+            where: { billSplitId: id }
+        });
+        await prisma_1.default.billSplit.delete({
+            where: { id }
+        });
+        res.status(200).json({ message: 'Bill split deleted successfully' });
+    }
+    catch (error) {
+        console.error('Error deleting bill split:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.deleteBillSplit = deleteBillSplit;
 //# sourceMappingURL=billSplit.controller.js.map

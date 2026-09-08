@@ -124,10 +124,25 @@ const resolveBreachReport = async (req, res) => {
                     type: 'ANNOUNCEMENT',
                     title: '⚖️ Breach Dispute Verdict Issued',
                     message: `Admin issued verdict for your report on "${breach.property.title}": Status marked as ${status}.${adminNotes ? ` Note: ${adminNotes}` : ''}`,
-                    link: '/dashboard/tenant'
+                    link: breach.reporter?.role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant'
                 }
             ]
         });
+        try {
+            (0, socket_1.emitToUser)(breach.tenantId, 'notification', {
+                title: status === 'VERIFIED' ? '🚨 Contract Breach Upheld' : 'Breach Complaint Updated',
+                message: `Admin resolved breach report for "${breach.property.title}".`,
+                type: 'breach'
+            });
+            (0, socket_1.emitToUser)(breach.reporterId, 'notification', {
+                title: '⚖️ Breach Dispute Verdict Issued',
+                message: `Status marked as ${status} for "${breach.property.title}".`,
+                type: 'breach'
+            });
+            (0, socket_1.emitToUser)(breach.tenantId, 'user_updated', { isSuspended: shouldSuspend, reputationScore: updatedReputation });
+            cache_1.default.flushAll();
+        }
+        catch (e) { /* non-blocking */ }
         res.status(200).json({
             message: `Breach report resolved as ${status}`,
             breach: updatedReport,
