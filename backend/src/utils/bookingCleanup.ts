@@ -88,7 +88,7 @@ export const releaseUnitGenderLockIfEmpty = async (roomUnitId: string, excludeBo
       where: {
         roomUnitId,
         id: excludeBookingId ? { not: excludeBookingId } : undefined,
-        status: { in: ['PENDING', 'APPROVED', 'CONFIRMED'] }
+        status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
       }
     });
 

@@ -250,7 +250,7 @@ const getProperties = async (req, res) => {
         const propertyIds = properties.map((p) => p.id);
         const completedBookingCounts = await prisma_1.default.booking.groupBy({
             by: ['propertyId'],
-            where: { propertyId: { in: propertyIds }, status: 'COMPLETED' },
+            where: { propertyId: { in: propertyIds }, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } },
             _count: { id: true }
         });
         const bookingCountMap = {};
@@ -326,7 +326,7 @@ const getPropertyById = async (req, res) => {
         const activePropertyBookings = await prisma_1.default.booking.findMany({
             where: {
                 propertyId: property.id,
-                status: { in: ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE'] }
+                status: { in: ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE', 'CHECKED_IN'] }
             },
             select: {
                 id: true,
@@ -352,13 +352,13 @@ const getPropertyById = async (req, res) => {
                     }).catch(() => { });
                     prisma_1.default.bed.update({
                         where: { id: singleBed.id },
-                        data: { status: ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status) ? 'BOOKED' : 'RESERVED' }
+                        data: { status: ['COMPLETED', 'CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'].includes(b.status) ? 'BOOKED' : 'RESERVED' }
                     }).catch(() => { });
                 }
             }
         }
         // Compute real-time remaining capacity for the whole property
-        const completedCount = activePropertyBookings.filter(b => b.status === 'COMPLETED' || b.status === 'ACTIVE').length;
+        const completedCount = activePropertyBookings.filter(b => ['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)).length;
         let totalCapacity = 0;
         if (property.rooms && Array.isArray(property.rooms)) {
             totalCapacity = property.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
@@ -367,7 +367,7 @@ const getPropertyById = async (req, res) => {
         // Compute remaining capacity for EACH room individually
         const roomBookingCounts = await prisma_1.default.booking.groupBy({
             by: ['roomId'],
-            where: { propertyId: property.id, status: { in: ['COMPLETED', 'ACTIVE'] }, roomId: { not: null } },
+            where: { propertyId: property.id, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] }, roomId: { not: null } },
             _count: { id: true }
         });
         const roomBookingMap = {};
@@ -381,7 +381,7 @@ const getPropertyById = async (req, res) => {
                 const enrichedBeds = (unit.beds || []).map((bed) => {
                     const isDirectlyBooked = activeBedIds.has(bed.id);
                     const isUnitBooked = unit.beds?.length === 1 && activeUnitIds.has(unit.id);
-                    const hasLinkedBooking = bed.bookings?.some((b) => ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE'].includes(b.status));
+                    const hasLinkedBooking = bed.bookings?.some((b) => ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE', 'CHECKED_IN'].includes(b.status));
                     let effectiveStatus = bed.status;
                     if (bed.status === 'MAINTENANCE') {
                         effectiveStatus = 'MAINTENANCE';

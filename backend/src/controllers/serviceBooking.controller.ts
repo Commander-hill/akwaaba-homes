@@ -67,8 +67,24 @@ export const createServiceBooking = async (req: Request, res: Response): Promise
       }
     });
 
+    await prisma.notification.create({
+      data: {
+        userId: property.landlordId,
+        type: 'ANNOUNCEMENT',
+        title: '🛠️ New Home Service Request',
+        message: `A resident requested ${serviceType.replace('_', ' ')} for ${property.title}.`,
+        link: '/dashboard/landlord'
+      }
+    }).catch(() => {});
+
     try {
-      getIO().to(tenantId).emit('service_booking_created', booking);
+      const io = getIO();
+      io.to(tenantId).emit('service_booking_created', booking);
+      io.to(property.landlordId).emit('notification', {
+        title: '🛠️ New Home Service Request',
+        message: `A resident requested ${serviceType.replace('_', ' ')} for ${property.title}.`,
+        type: 'service'
+      });
     } catch (e) { /* non-blocking */ }
 
     res.status(201).json({
@@ -96,7 +112,11 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
       return;
     }
 
-    if (property.landlordId !== userId && userRole !== 'ADMIN') {
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId, isActive: true }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -117,7 +137,7 @@ export const getPropertyServiceBookings = async (req: Request, res: Response): P
 };
 
 /**
- * Update service booking status (Landlord / Admin / Technician)
+ * Update service booking status (Landlord / Admin / Staff / Tenant)
  */
 export const updateServiceBookingStatus = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -145,8 +165,11 @@ export const updateServiceBookingStatus = async (req: Request, res: Response): P
     const isLandlord = booking.property.landlordId === userId;
     const isTenant = booking.tenantId === userId;
     const isAdmin = userRole === 'ADMIN';
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: booking.propertyId, userId, isActive: true }
+    });
 
-    if (!isLandlord && !isAdmin && (!isTenant || status !== 'CANCELLED')) {
+    if (!isLandlord && !isAdmin && !isStaff && (!isTenant || status !== 'CANCELLED')) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -162,8 +185,25 @@ export const updateServiceBookingStatus = async (req: Request, res: Response): P
       data: updateData
     });
 
+    // Notify tenant of service status update
+    await prisma.notification.create({
+      data: {
+        userId: booking.tenantId,
+        type: 'ANNOUNCEMENT',
+        title: `🛠️ Home Service: ${status}`,
+        message: `Your ${booking.serviceType.replace('_', ' ')} appointment is now ${status}.${technicianName ? ` Assigned: ${technicianName} (${technicianPhone || 'On-site'})` : ''}`,
+        link: '/dashboard/tenant'
+      }
+    }).catch(() => {});
+
     try {
-      getIO().to(booking.tenantId).emit('service_booking_updated', updated);
+      const io = getIO();
+      io.to(booking.tenantId).emit('service_booking_updated', updated);
+      io.to(booking.tenantId).emit('notification', {
+        title: `🛠️ Home Service: ${status}`,
+        message: `Your ${booking.serviceType.replace('_', ' ')} appointment is now ${status}.`,
+        type: 'service'
+      });
     } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: `Service booking marked as ${status}`, booking: updated });

@@ -8,7 +8,7 @@ export declare const createServiceBooking: (req: Request, res: Response) => Prom
  */
 export declare const getPropertyServiceBookings: (req: Request, res: Response) => Promise<void>;
 /**
- * Update service booking status (Landlord / Admin / Technician)
+ * Update service booking status (Landlord / Admin / Staff / Tenant)
  */
 export declare const updateServiceBookingStatus: (req: Request, res: Response) => Promise<void>;
 /**

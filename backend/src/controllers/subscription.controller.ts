@@ -42,10 +42,32 @@ export const getSubscriptionStatus = async (req: Request, res: Response): Promis
       });
       subscription.isActive = false;
       // Mark property unavailable
-      await prisma.property.update({
+      const updatedProp = await prisma.property.update({
         where: { id: propertyId as string },
-        data: { isAvailable: false }
+        data: { isAvailable: false },
+        select: { title: true }
       });
+
+      await prisma.notification.create({
+        data: {
+          userId: landlordId,
+          type: 'ANNOUNCEMENT',
+          title: '⏳ Property Subscription Expired',
+          message: `Your listing subscription for "${updatedProp.title}" has expired. The property is currently unlisted. Please renew to resume receiving booking requests.`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => {});
+
+      try {
+        appCache.flushAll();
+        const io = getIO();
+        io.emit('property_updated', { propertyId });
+        io.to(landlordId).emit('notification', {
+          title: '⏳ Property Subscription Expired',
+          message: `Your listing subscription for "${updatedProp.title}" has expired.`,
+          type: 'ANNOUNCEMENT'
+        });
+      } catch (e) { /* non-blocking */ }
     }
 
     res.status(200).json({ 
@@ -423,6 +445,27 @@ export const checkExpirations = async (req: Request, res: Response): Promise<voi
           where: { id: sub.propertyId },
           data: { isAvailable: false }
         });
+
+        await prisma.notification.create({
+          data: {
+            userId: sub.property.landlord.id,
+            type: 'ANNOUNCEMENT',
+            title: '⏳ Property Subscription Expired',
+            message: `Your listing subscription for "${sub.property.title}" has expired. The property is currently unlisted. Please renew to resume receiving booking requests.`,
+            link: '/dashboard/landlord'
+          }
+        }).catch(() => {});
+
+        try {
+          const io = getIO();
+          io.emit('property_updated', { propertyId: sub.propertyId });
+          io.to(sub.property.landlord.id).emit('notification', {
+            title: '⏳ Property Subscription Expired',
+            message: `Your listing subscription for "${sub.property.title}" has expired.`,
+            type: 'ANNOUNCEMENT'
+          });
+        } catch (e) { /* non-blocking */ }
+
         expiredCount++;
       } else if (diffDays === 7 || diffDays === 3 || diffDays === 1) {
         // Notify at 7, 3, and 1 days before expiry
@@ -435,6 +478,12 @@ export const checkExpirations = async (req: Request, res: Response): Promise<voi
         });
         notifiedCount++;
       }
+    }
+
+    if (expiredCount > 0) {
+      try {
+        appCache.flushAll();
+      } catch (e) {}
     }
 
     res.status(200).json({ 

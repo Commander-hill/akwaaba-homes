@@ -61,8 +61,23 @@ const createServiceBooking = async (req, res) => {
                 property: { select: { id: true, title: true, location: true } }
             }
         });
+        await prisma_1.default.notification.create({
+            data: {
+                userId: property.landlordId,
+                type: 'ANNOUNCEMENT',
+                title: '🛠️ New Home Service Request',
+                message: `A resident requested ${serviceType.replace('_', ' ')} for ${property.title}.`,
+                link: '/dashboard/landlord'
+            }
+        }).catch(() => { });
         try {
-            (0, socket_1.getIO)().to(tenantId).emit('service_booking_created', booking);
+            const io = (0, socket_1.getIO)();
+            io.to(tenantId).emit('service_booking_created', booking);
+            io.to(property.landlordId).emit('notification', {
+                title: '🛠️ New Home Service Request',
+                message: `A resident requested ${serviceType.replace('_', ' ')} for ${property.title}.`,
+                type: 'service'
+            });
         }
         catch (e) { /* non-blocking */ }
         res.status(201).json({
@@ -89,7 +104,10 @@ const getPropertyServiceBookings = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        if (property.landlordId !== userId && userRole !== 'ADMIN') {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId, isActive: true }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
             res.status(403).json({ message: 'Forbidden' });
             return;
         }
@@ -109,7 +127,7 @@ const getPropertyServiceBookings = async (req, res) => {
 };
 exports.getPropertyServiceBookings = getPropertyServiceBookings;
 /**
- * Update service booking status (Landlord / Admin / Technician)
+ * Update service booking status (Landlord / Admin / Staff / Tenant)
  */
 const updateServiceBookingStatus = async (req, res) => {
     try {
@@ -133,7 +151,10 @@ const updateServiceBookingStatus = async (req, res) => {
         const isLandlord = booking.property.landlordId === userId;
         const isTenant = booking.tenantId === userId;
         const isAdmin = userRole === 'ADMIN';
-        if (!isLandlord && !isAdmin && (!isTenant || status !== 'CANCELLED')) {
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: booking.propertyId, userId, isActive: true }
+        });
+        if (!isLandlord && !isAdmin && !isStaff && (!isTenant || status !== 'CANCELLED')) {
             res.status(403).json({ message: 'Forbidden' });
             return;
         }
@@ -150,8 +171,24 @@ const updateServiceBookingStatus = async (req, res) => {
             where: { id },
             data: updateData
         });
+        // Notify tenant of service status update
+        await prisma_1.default.notification.create({
+            data: {
+                userId: booking.tenantId,
+                type: 'ANNOUNCEMENT',
+                title: `🛠️ Home Service: ${status}`,
+                message: `Your ${booking.serviceType.replace('_', ' ')} appointment is now ${status}.${technicianName ? ` Assigned: ${technicianName} (${technicianPhone || 'On-site'})` : ''}`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => { });
         try {
-            (0, socket_1.getIO)().to(booking.tenantId).emit('service_booking_updated', updated);
+            const io = (0, socket_1.getIO)();
+            io.to(booking.tenantId).emit('service_booking_updated', updated);
+            io.to(booking.tenantId).emit('notification', {
+                title: `🛠️ Home Service: ${status}`,
+                message: `Your ${booking.serviceType.replace('_', ' ')} appointment is now ${status}.`,
+                type: 'service'
+            });
         }
         catch (e) { /* non-blocking */ }
         res.status(200).json({ message: `Service booking marked as ${status}`, booking: updated });

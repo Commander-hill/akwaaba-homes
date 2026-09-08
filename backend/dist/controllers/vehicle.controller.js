@@ -168,8 +168,14 @@ const deleteVehicle = async (req, res) => {
             res.status(404).json({ message: 'Vehicle record not found' });
             return;
         }
-        if (vehicle.tenantId !== tenantId && req.user?.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Forbidden' });
+        const isLandlord = await prisma_1.default.property.findFirst({
+            where: { id: vehicle.propertyId, landlordId: tenantId }
+        });
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: vehicle.propertyId, userId: tenantId, isActive: true }
+        });
+        if (vehicle.tenantId !== tenantId && req.user?.role !== 'ADMIN' && !isLandlord && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You are not authorized to deregister this vehicle' });
             return;
         }
         await prisma_1.default.vehicleRegistration.delete({ where: { id } });

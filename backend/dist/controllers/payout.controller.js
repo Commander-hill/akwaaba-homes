@@ -14,6 +14,7 @@ const crypto_2 = require("../utils/crypto");
 const totp_service_1 = require("../utils/totp.service");
 const emailTemplate_1 = require("../utils/emailTemplate");
 const auditLogger_1 = require("../utils/auditLogger");
+const socket_1 = require("../socket");
 const PAYSTACK_BASE = 'https://api.paystack.co';
 // ─── Helper: Create Paystack Recipient ──────────────────────────────────────
 async function createPaystackRecipient(type, name, accountNumber, bankOrNetwork) {
@@ -285,6 +286,28 @@ const requestPayout = async (req, res) => {
                         processedAt: status === 'SUCCESS' ? new Date() : null,
                     },
                 });
+                // In-App Notification & Real-time Socket Event
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: landlordId,
+                        type: status === 'SUCCESS' ? 'PAYMENT_RECEIVED' : 'ANNOUNCEMENT',
+                        title: status === 'SUCCESS' ? '💸 Payout Dispatched Successfully' : '⏳ Payout Processing',
+                        message: status === 'SUCCESS'
+                            ? `GHS ${amount.toFixed(2)} has been sent to your ${bankOrNetwork} account (${accountNumber}).`
+                            : `Withdrawal of GHS ${amount.toFixed(2)} to ${bankOrNetwork} is being processed. Funds will arrive shortly.`,
+                        link: '/dashboard/earnings'
+                    }
+                });
+                try {
+                    const io = (0, socket_1.getIO)();
+                    io.to(landlordId).emit('notification', {
+                        title: status === 'SUCCESS' ? '💸 Payout Dispatched' : '⏳ Payout Processing',
+                        message: `Withdrawal of GHS ${amount.toFixed(2)} to ${bankOrNetwork} (${accountNumber}) status: ${status}.`,
+                        type: 'PAYMENT_RECEIVED'
+                    });
+                    io.to(landlordId).emit('payout_updated', { payoutId: payout.id, status });
+                }
+                catch (e) { /* non-blocking */ }
                 // Trigger SMS & Email notification to landlord
                 const landlord = await prisma_1.default.user.findUnique({
                     where: { id: landlordId },
@@ -305,13 +328,33 @@ const requestPayout = async (req, res) => {
             }
             catch (transferErr) {
                 console.error('[Payout] Transfer failed:', transferErr?.response?.data || transferErr.message);
+                const failureReason = transferErr?.response?.data?.message || 'Paystack transfer failed';
                 await prisma_1.default.payoutRequest.update({
                     where: { id: payout.id },
                     data: {
                         status: 'FAILED',
-                        failureReason: transferErr?.response?.data?.message || 'Paystack transfer failed',
+                        failureReason,
                     },
                 });
+                await prisma_1.default.notification.create({
+                    data: {
+                        userId: landlordId,
+                        type: 'SYSTEM_ALERT',
+                        title: '⚠️ Payout Transfer Failed',
+                        message: `Withdrawal of GHS ${amount.toFixed(2)} could not be processed: ${failureReason}. Funds remain in your available balance.`,
+                        link: '/dashboard/earnings'
+                    }
+                });
+                try {
+                    const io = (0, socket_1.getIO)();
+                    io.to(landlordId).emit('notification', {
+                        title: '⚠️ Payout Transfer Failed',
+                        message: `Withdrawal of GHS ${amount.toFixed(2)} failed: ${failureReason}.`,
+                        type: 'SYSTEM_ALERT'
+                    });
+                    io.to(landlordId).emit('payout_updated', { payoutId: payout.id, status: 'FAILED' });
+                }
+                catch (e) { /* non-blocking */ }
             }
         });
         res.status(201).json({
@@ -404,14 +447,37 @@ const handleTransferWebhook = async (req, res) => {
                     where: { transferReference: ref },
                 });
                 if (payout) {
+                    const finalStatus = event === 'transfer.success' ? 'SUCCESS' : 'FAILED';
+                    const failureReason = event === 'transfer.failed' ? (data?.reason || 'Transfer failed') : null;
                     await prisma_1.default.payoutRequest.update({
                         where: { id: payout.id },
                         data: {
-                            status: event === 'transfer.success' ? 'SUCCESS' : 'FAILED',
-                            failureReason: event === 'transfer.failed' ? (data?.reason || 'Transfer failed') : null,
+                            status: finalStatus,
+                            failureReason,
                             processedAt: event === 'transfer.success' ? new Date() : null,
                         },
                     });
+                    await prisma_1.default.notification.create({
+                        data: {
+                            userId: payout.landlordId,
+                            type: finalStatus === 'SUCCESS' ? 'PAYMENT_RECEIVED' : 'SYSTEM_ALERT',
+                            title: finalStatus === 'SUCCESS' ? '💸 Payout Completed' : '⚠️ Payout Transfer Failed',
+                            message: finalStatus === 'SUCCESS'
+                                ? `Your withdrawal of GHS ${payout.amount.toFixed(2)} has settled successfully in your account.`
+                                : `Your withdrawal of GHS ${payout.amount.toFixed(2)} failed: ${failureReason || 'Provider rejected transfer'}. Funds returned to balance.`,
+                            link: '/dashboard/earnings'
+                        }
+                    });
+                    try {
+                        const io = (0, socket_1.getIO)();
+                        io.to(payout.landlordId).emit('notification', {
+                            title: finalStatus === 'SUCCESS' ? '💸 Payout Completed' : '⚠️ Payout Failed',
+                            message: `Withdrawal of GHS ${payout.amount.toFixed(2)}: ${finalStatus}`,
+                            type: finalStatus === 'SUCCESS' ? 'PAYMENT_RECEIVED' : 'SYSTEM_ALERT'
+                        });
+                        io.to(payout.landlordId).emit('payout_updated', { payoutId: payout.id, status: finalStatus });
+                    }
+                    catch (e) { /* non-blocking */ }
                 }
             }
         }

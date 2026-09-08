@@ -55,8 +55,11 @@ export const downloadAgreementPDF = async (req: Request, res: Response): Promise
     const isTenant = booking.tenantId === userId;
     const isLandlord = booking.property?.landlordId === userId;
     const isAdmin = userRole === 'ADMIN';
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: booking.propertyId, userId, isActive: true }
+    });
 
-    if (!isTenant && !isLandlord && !isAdmin) {
+    if (!isTenant && !isLandlord && !isAdmin && !isStaff) {
       res.status(403).json({ message: 'Access denied. You are not authorized to view or download this tenancy agreement.' });
       return;
     }
@@ -151,7 +154,8 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     // Verify property existence and prevent self-booking
     const property = await prisma.property.findUnique({
-      where: { id: propertyId }
+      where: { id: propertyId },
+      include: { landlord: true }
     });
 
     if (!property) {
@@ -692,7 +696,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
     const completedBookingsCount = await prisma.booking.count({
       where: {
         roomId: booking.roomId,
-        status: 'COMPLETED'
+        status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
       }
     });
 
@@ -877,7 +881,7 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       const completedBookings = await prisma.booking.count({
         where: {
           roomId: booking.roomId,
-          status: 'COMPLETED'
+          status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
         }
       });
 

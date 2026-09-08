@@ -378,7 +378,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
       // Auto-reject other pending bookings if capacity is full
       if (booking.roomId && booking.room) {
         const completedBookings = await prisma.booking.count({
-          where: { roomId: booking.roomId, status: 'COMPLETED' }
+          where: { roomId: booking.roomId, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } }
         });
 
         if (completedBookings >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
