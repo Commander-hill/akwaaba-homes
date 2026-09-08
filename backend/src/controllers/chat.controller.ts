@@ -211,6 +211,7 @@ export const sendMessage = async (req: Request, res: Response): Promise<void> =>
       io.to(conversationId).emit('receive_message', message);
       io.to(recipientId).emit('receive_message', message);
       io.to(recipientId).emit('conversation_updated', { conversationId });
+      io.to(userId).emit('conversation_updated', { conversationId });
     } catch (e) { /* non-blocking */ }
 
     res.status(201).json(message);

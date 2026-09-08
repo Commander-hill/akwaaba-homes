@@ -589,7 +589,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 {reviewsData?.reviews?.map((r: any) => (
                   <div key={r.id} className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/80 dark:border-zinc-800 space-y-1.5 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-zinc-900 dark:text-white">{r.authorName || 'Verified Resident'}</span>
+                      <span className="font-bold text-zinc-900 dark:text-white">
+                        {r.authorName || (r.author?.firstName ? `${r.author.firstName} ${r.author.lastName || ''}`.trim() : 'Verified Resident')}
+                      </span>
                       <div className="flex items-center gap-1 text-amber-500 font-bold">
                         <Star className="w-3 h-3 fill-amber-400" />
                         <span>{r.rating}.0</span>

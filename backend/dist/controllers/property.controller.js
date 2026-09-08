@@ -499,16 +499,16 @@ const deleteProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
-        // Step 0: Ensure no active or approved tenancies exist before allowing deletion
+        // Step 0: Ensure no pending, active, or approved tenancies exist before allowing deletion
         const activeTenanciesCount = await prisma_1.default.booking.count({
             where: {
                 propertyId: id,
-                status: { in: ['CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] }
+                status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] }
             }
         });
         if (activeTenanciesCount > 0) {
             res.status(400).json({
-                message: 'Cannot delete property with active, approved, or checked-in tenancies. Please wait until all tenancies conclude, or mark the property as unavailable.'
+                message: 'Cannot delete property with pending, active, approved, or checked-in tenancies. Please resolve or cancel all applications first, or mark the property as unavailable.'
             });
             return;
         }

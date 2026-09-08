@@ -100,21 +100,38 @@ export default function MessagesPage() {
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeConversationId || !socket || !currentUserId) return;
+    if (!newMessage.trim() || !activeConversationId || !currentUserId) return;
 
     const activeConv = conversations?.find(c => c.id === activeConversationId);
     if (!activeConv) return;
 
-    const messagePayload = {
-      conversationId: activeConversationId,
-      receiverId: activeConv.partner.id,
-      content: newMessage.trim(),
-    };
-
-    socket.emit('send_message', messagePayload);
+    const trimmed = newMessage.trim();
     setNewMessage('');
+
+    if (socket && isConnected) {
+      const messagePayload = {
+        conversationId: activeConversationId,
+        receiverId: activeConv.partner.id,
+        content: trimmed,
+      };
+      socket.emit('send_message', messagePayload);
+    } else {
+      try {
+        const res = await api.post(`/chat/${activeConversationId}/messages`, {
+          content: trimmed,
+        });
+        if (res.data) {
+          queryClient.setQueryData(['chat_messages', activeConversationId], (old: Message[] | undefined) => {
+            return old ? [...old, res.data] : [res.data];
+          });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        }
+      } catch (err) {
+        console.error('Failed to send message via REST fallback:', err);
+      }
+    }
   };
 
   const activeConversation = conversations?.find(c => c.id === activeConversationId);
@@ -275,9 +292,14 @@ export default function MessagesPage() {
                     )}>
                       {msg.content}
                     </div>
-                    <span className="text-[9px] text-zinc-400 mt-1 px-1">
-                      {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
-                    </span>
+                    <div className="flex items-center gap-1 mt-1 px-1">
+                      <span className="text-[9px] text-zinc-400">
+                        {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}
+                      </span>
+                      {isMine && (
+                        <CheckCheck className={clsx("w-3 h-3", msg.isRead ? "text-emerald-500" : "text-zinc-400")} />
+                      )}
+                    </div>
                   </div>
                 );
               })}

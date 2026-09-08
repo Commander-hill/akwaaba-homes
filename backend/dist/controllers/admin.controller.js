@@ -234,6 +234,7 @@ const getAllUsers = async (req, res) => {
                 email: true,
                 role: true,
                 phoneNumber: true,
+                gender: true,
                 campus: true,
                 studentId: true,
                 programmeOfStudy: true,
@@ -290,6 +291,12 @@ const toggleUserSuspension = async (req, res) => {
         if (targetSuspensionState) {
             // Invalidate all active sessions for suspended user immediately
             await prisma_1.default.session.deleteMany({ where: { userId: id } });
+            cache_1.default.del(`user:me:${id}`);
+            try {
+                const { getIO } = await import('../socket');
+                getIO().to(id).emit('session_revoked', { reason: 'Your account has been suspended by an administrator.' });
+            }
+            catch (e) { }
         }
         try {
             (0, socket_1.emitToAll)('user_updated', { userId: id, isSuspended: targetSuspensionState });
@@ -328,6 +335,19 @@ const toggleUserProfileLock = async (req, res) => {
             },
             select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
         });
+        // Clear user cache so /auth/me reflects fresh profile lock state immediately
+        cache_1.default.del(`user:me:${id}`);
+        await prisma_1.default.notification.create({
+            data: {
+                userId: id,
+                type: 'ANNOUNCEMENT',
+                title: targetLockState ? '🔒 Profile Locked' : '🔓 Profile Edit Access Granted',
+                message: targetLockState
+                    ? 'Your profile credentials have been locked by an administrator.'
+                    : 'An administrator has unlocked your profile. You can now update your details.',
+                link: '/dashboard/profile'
+            }
+        }).catch(() => null);
         await (0, auditLogger_1.logAudit)(req.user.id, targetLockState ? 'LOCK_USER_PROFILE' : 'UNLOCK_USER_PROFILE', 'User', id, { isProfileLocked: targetUser.isProfileLocked }, { isProfileLocked: targetLockState }, req.ip || req.socket.remoteAddress);
         // Notify user in real-time so their profile page updates without refresh
         try {

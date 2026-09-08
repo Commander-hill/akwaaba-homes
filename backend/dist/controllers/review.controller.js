@@ -52,9 +52,9 @@ const createReview = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You did not make this booking' });
             return;
         }
-        // RULE 3: Stay must be completed
-        if (booking.status !== 'COMPLETED') {
-            res.status(400).json({ message: 'Reviews can only be submitted after a completed stay' });
+        // RULE 3: Stay must be active, checked-in, or completed
+        if (!['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) {
+            res.status(400).json({ message: 'Reviews can only be submitted for active, checked-in, or completed stays' });
             return;
         }
         // RULE 4: One review per booking
@@ -107,10 +107,14 @@ const getPropertyReviews = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
+        const mappedReviews = reviews.map((r) => ({
+            ...r,
+            authorName: r.author ? `${r.author.firstName} ${r.author.lastName || ''}`.trim() : 'Verified Resident'
+        }));
         // Compute aggregate stats
         const allRatings = reviews.map(r => r.rating);
         const avgRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length) : null;
-        res.status(200).json({ reviews, avgRating, totalReviews: reviews.length });
+        res.status(200).json({ reviews: mappedReviews, avgRating, totalReviews: reviews.length });
     }
     catch (error) {
         console.error('Error fetching property reviews:', error);

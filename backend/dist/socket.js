@@ -152,6 +152,7 @@ const initializeSocket = (server) => {
                 io.to(conversationId).emit('receive_message', message);
                 io.to(receiverId).emit('receive_message', message);
                 io.to(receiverId).emit('conversation_updated', { conversationId });
+                io.to(senderId).emit('conversation_updated', { conversationId });
             }
             catch (error) {
                 console.error('Error sending message via socket:', error);

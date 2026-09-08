@@ -241,6 +241,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         email: true,
         role: true,
         phoneNumber: true,
+        gender: true,
         campus: true,
         studentId: true,
         programmeOfStudy: true,
@@ -301,6 +302,11 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
     if (targetSuspensionState) {
       // Invalidate all active sessions for suspended user immediately
       await prisma.session.deleteMany({ where: { userId: id } });
+      appCache.del(`user:me:${id}`);
+      try {
+        const { getIO } = await import('../socket');
+        getIO().to(id).emit('session_revoked', { reason: 'Your account has been suspended by an administrator.' });
+      } catch (e) {}
     }
 
     try {
@@ -350,6 +356,21 @@ export const toggleUserProfileLock = async (req: Request, res: Response): Promis
       },
       select: { id: true, firstName: true, lastName: true, email: true, role: true, isProfileLocked: true }
     });
+
+    // Clear user cache so /auth/me reflects fresh profile lock state immediately
+    appCache.del(`user:me:${id}`);
+
+    await prisma.notification.create({
+      data: {
+        userId: id,
+        type: 'ANNOUNCEMENT',
+        title: targetLockState ? '🔒 Profile Locked' : '🔓 Profile Edit Access Granted',
+        message: targetLockState 
+          ? 'Your profile credentials have been locked by an administrator.' 
+          : 'An administrator has unlocked your profile. You can now update your details.',
+        link: '/dashboard/profile'
+      }
+    }).catch(() => null);
 
     await logAudit(
       req.user.id,
