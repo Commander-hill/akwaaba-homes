@@ -945,6 +945,18 @@ const resetPassword = async (req, res) => {
                 tokenVersion: { increment: 1 } // Instantly invalidates all previous sessions / JWTs
             }
         });
+        // Invalidate all active Session records in DB
+        await prisma_1.default.session.updateMany({
+            where: { userId: user.id, isValid: true },
+            data: { isValid: false }
+        }).catch(() => { });
+        // Flush cache & emit session_revoked to all connected client sockets
+        try {
+            cache_1.default.del(`user:me:${user.id}`);
+            const io = (0, socket_1.getIO)();
+            io.to(user.id).emit('session_revoked', { reason: 'PASSWORD_RESET' });
+        }
+        catch (e) { /* non-blocking */ }
         try {
             await (0, auditLogger_1.logAudit)(user.id, 'PASSWORD_RESET_SUCCESS', 'User', user.id, null, null, req.ip);
         }

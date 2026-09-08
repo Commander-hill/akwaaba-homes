@@ -122,8 +122,19 @@ exports.getPropertyNotices = getPropertyNotices;
 const getLandlordNotices = async (req, res) => {
     try {
         const landlordId = req.user?.id;
+        // Check if user is staff on any properties
+        const staffAssignments = await prisma_1.default.propertyStaff.findMany({
+            where: { userId: landlordId, isActive: true },
+            select: { propertyId: true }
+        });
+        const staffPropertyIds = staffAssignments.map(s => s.propertyId);
         const notices = await prisma_1.default.compoundNotice.findMany({
-            where: { landlordId },
+            where: {
+                OR: [
+                    { landlordId },
+                    ...(staffPropertyIds.length > 0 ? [{ propertyId: { in: staffPropertyIds } }] : [])
+                ]
+            },
             include: {
                 property: {
                     select: { id: true, title: true, location: true }

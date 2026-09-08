@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { safeJsonParse } from '../utils/json';
+import { getIO } from '../socket';
 
 /**
  * Toggle property in user wishlist (Add if not present, remove if present)
@@ -36,6 +37,11 @@ export const toggleWishlist = async (req: Request, res: Response): Promise<void>
       await prisma.wishlist.delete({
         where: { id: existing.id }
       });
+      try {
+        const io = getIO();
+        io.to(userId).emit('wishlist_updated', { propertyId, isSaved: false });
+      } catch (e) { /* non-blocking */ }
+
       res.status(200).json({ message: 'Property removed from wishlist', isSaved: false });
       return;
     }
@@ -43,6 +49,11 @@ export const toggleWishlist = async (req: Request, res: Response): Promise<void>
     await prisma.wishlist.create({
       data: { userId, propertyId }
     });
+
+    try {
+      const io = getIO();
+      io.to(userId).emit('wishlist_updated', { propertyId, isSaved: true });
+    } catch (e) { /* non-blocking */ }
 
     res.status(201).json({ message: 'Property saved to wishlist', isSaved: true });
   } catch (error) {

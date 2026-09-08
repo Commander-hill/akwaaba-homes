@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getMyWishlist = exports.toggleWishlist = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const json_1 = require("../utils/json");
+const socket_1 = require("../socket");
 /**
  * Toggle property in user wishlist (Add if not present, remove if present)
  */
@@ -35,12 +36,22 @@ const toggleWishlist = async (req, res) => {
             await prisma_1.default.wishlist.delete({
                 where: { id: existing.id }
             });
+            try {
+                const io = (0, socket_1.getIO)();
+                io.to(userId).emit('wishlist_updated', { propertyId, isSaved: false });
+            }
+            catch (e) { /* non-blocking */ }
             res.status(200).json({ message: 'Property removed from wishlist', isSaved: false });
             return;
         }
         await prisma_1.default.wishlist.create({
             data: { userId, propertyId }
         });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.to(userId).emit('wishlist_updated', { propertyId, isSaved: true });
+        }
+        catch (e) { /* non-blocking */ }
         res.status(201).json({ message: 'Property saved to wishlist', isSaved: true });
     }
     catch (error) {

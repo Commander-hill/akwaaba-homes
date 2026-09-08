@@ -22,8 +22,11 @@ const reportBreach = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        if (property.landlordId !== reporterId && req.user.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Forbidden: You do not own this property' });
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId: reporterId }
+        });
+        if (property.landlordId !== reporterId && req.user.role !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not have permission to report a breach on this property' });
             return;
         }
         const tenantBooking = await prisma_1.default.booking.findFirst({
@@ -46,7 +49,22 @@ const reportBreach = async (req, res) => {
                 description
             }
         });
+        // In-app alert to tenant
+        await prisma_1.default.notification.create({
+            data: {
+                userId: tenantId,
+                type: 'SYSTEM_ALERT',
+                title: '⚠️ Contract Breach Report Logged',
+                message: `A breach report "${title}" was logged regarding your tenancy at ${property.title}. Akwaaba Homes admin will review this matter.`,
+                link: '/dashboard/tenant'
+            }
+        }).catch(() => { });
         try {
+            (0, socket_1.getIO)().to(tenantId).emit('notification', {
+                title: '⚠️ Contract Breach Report Logged',
+                message: `A breach report "${title}" was logged for ${property.title}.`,
+                type: 'SYSTEM_ALERT'
+            });
             (0, socket_1.getIO)().emit('breach_updated', report);
             cache_1.default.flushAll();
         }
@@ -93,7 +111,10 @@ const verifyBreach = async (req, res) => {
             res.status(400).json({ message: 'Invalid status. Must be VERIFIED or REJECTED' });
             return;
         }
-        const report = await prisma_1.default.breachReport.findUnique({ where: { id }, include: { tenant: true } });
+        const report = await prisma_1.default.breachReport.findUnique({
+            where: { id },
+            include: { tenant: true, property: true }
+        });
         if (!report) {
             res.status(404).json({ message: 'Breach report not found' });
             return;
@@ -116,7 +137,36 @@ const verifyBreach = async (req, res) => {
                     data: { reputationScore: newScore, isSuspended }
                 })
             ]);
+            // Notify both parties
+            await prisma_1.default.notification.createMany({
+                data: [
+                    {
+                        userId: report.tenantId,
+                        type: 'SYSTEM_ALERT',
+                        title: '🚨 Contract Breach Verified by Admin',
+                        message: `Admin verified the contract breach report for "${report.property?.title || 'your tenancy'}". Reputation score updated to ${newScore}/5.0.${isSuspended ? ' Account has been suspended.' : ''}`,
+                        link: '/dashboard/tenant'
+                    },
+                    {
+                        userId: report.reporterId,
+                        type: 'ANNOUNCEMENT',
+                        title: '⚖️ Breach Dispute Verdict Issued',
+                        message: `Admin verified your breach report for "${report.property?.title || 'property'}". Penalty has been applied.`,
+                        link: '/dashboard/landlord'
+                    }
+                ]
+            }).catch(() => { });
             try {
+                (0, socket_1.getIO)().to(report.tenantId).emit('notification', {
+                    title: '🚨 Contract Breach Verified',
+                    message: `Admin upheld the contract breach report.`,
+                    type: 'SYSTEM_ALERT'
+                });
+                (0, socket_1.getIO)().to(report.reporterId).emit('notification', {
+                    title: '⚖️ Breach Verdict Issued',
+                    message: `Your breach report was verified by admin.`,
+                    type: 'ANNOUNCEMENT'
+                });
                 (0, socket_1.getIO)().emit('breach_updated', { id, status: 'VERIFIED' });
                 (0, socket_1.getIO)().emit('user_updated', { userId: report.tenantId });
                 cache_1.default.flushAll();
@@ -130,7 +180,21 @@ const verifyBreach = async (req, res) => {
                 where: { id: id },
                 data: { status: 'REJECTED' }
             });
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: report.reporterId,
+                    type: 'ANNOUNCEMENT',
+                    title: '⚖️ Breach Report Dismissed',
+                    message: `Admin reviewed and dismissed the breach report for "${report.property?.title || 'property'}".`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => { });
             try {
+                (0, socket_1.getIO)().to(report.reporterId).emit('notification', {
+                    title: '⚖️ Breach Report Dismissed',
+                    message: `Your breach report was reviewed and dismissed by admin.`,
+                    type: 'ANNOUNCEMENT'
+                });
                 (0, socket_1.getIO)().emit('breach_updated', { id, status: 'REJECTED' });
                 cache_1.default.flushAll();
             }

@@ -26,15 +26,19 @@ export const createExpense = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
-      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId: landlordId, isActive: true }
+    });
+
+    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to log expenses for this property' });
       return;
     }
 
     const expense = await prisma.propertyExpense.create({
       data: {
         propertyId,
-        landlordId,
+        landlordId: property.landlordId,
         category,
         title,
         amount: parseFloat(amount),
@@ -44,8 +48,20 @@ export const createExpense = async (req: Request, res: Response): Promise<void> 
       }
     });
 
+    if (isStaff && property.landlordId !== landlordId) {
+      await prisma.notification.create({
+        data: {
+          userId: property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: '🧾 Operating Expense Logged by Staff',
+          message: `Staff logged an expense: "${title}" (GHS ${parseFloat(amount).toFixed(2)}) for ${property.title}.`,
+          link: '/dashboard/earnings'
+        }
+      }).catch(() => {});
+    }
+
     try {
-      getIO().to(landlordId).emit('financials_updated', { propertyId });
+      getIO().to(property.landlordId).emit('financials_updated', { propertyId });
     } catch (e) { /* non-blocking */ }
 
     res.status(201).json({ message: 'Expense logged successfully', expense });
@@ -152,7 +168,7 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
     // 1. Fetch Gross Revenue from Bookings
     const bookingWhere: any = {
       property: { landlordId },
-      status: { in: ['COMPLETED', 'CONFIRMED', 'APPROVED'] },
+      status: { in: ['COMPLETED', 'CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] },
       createdAt: { gte: startOfYear, lte: endOfYear }
     };
     if (propertyId && typeof propertyId === 'string') {

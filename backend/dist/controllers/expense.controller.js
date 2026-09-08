@@ -25,14 +25,17 @@ const createExpense = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Forbidden: You do not own this property' });
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId: landlordId, isActive: true }
+        });
+        if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not have permission to log expenses for this property' });
             return;
         }
         const expense = await prisma_1.default.propertyExpense.create({
             data: {
                 propertyId,
-                landlordId,
+                landlordId: property.landlordId,
                 category,
                 title,
                 amount: parseFloat(amount),
@@ -41,8 +44,19 @@ const createExpense = async (req, res) => {
                 notes: notes || null
             }
         });
+        if (isStaff && property.landlordId !== landlordId) {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'ANNOUNCEMENT',
+                    title: '🧾 Operating Expense Logged by Staff',
+                    message: `Staff logged an expense: "${title}" (GHS ${parseFloat(amount).toFixed(2)}) for ${property.title}.`,
+                    link: '/dashboard/earnings'
+                }
+            }).catch(() => { });
+        }
         try {
-            (0, socket_1.getIO)().to(landlordId).emit('financials_updated', { propertyId });
+            (0, socket_1.getIO)().to(property.landlordId).emit('financials_updated', { propertyId });
         }
         catch (e) { /* non-blocking */ }
         res.status(201).json({ message: 'Expense logged successfully', expense });
@@ -142,7 +156,7 @@ const getFinancialAnalytics = async (req, res) => {
         // 1. Fetch Gross Revenue from Bookings
         const bookingWhere = {
             property: { landlordId },
-            status: { in: ['COMPLETED', 'CONFIRMED', 'APPROVED'] },
+            status: { in: ['COMPLETED', 'CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] },
             createdAt: { gte: startOfYear, lte: endOfYear }
         };
         if (propertyId && typeof propertyId === 'string') {
