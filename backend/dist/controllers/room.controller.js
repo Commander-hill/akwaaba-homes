@@ -31,6 +31,7 @@ const createRoom = async (req, res) => {
             return;
         }
         const bedsPerRoom = (0, property_controller_1.parseBedsPerRoom)(roomType);
+        const numRooms = parseInt(numberOfRooms, 10);
         const room = await prisma_1.default.room.create({
             data: {
                 propertyId,
@@ -38,10 +39,37 @@ const createRoom = async (req, res) => {
                 gender: roomGender,
                 roomType,
                 bedsPerRoom,
-                numberOfRooms: parseInt(numberOfRooms, 10),
+                numberOfRooms: numRooms,
                 price: parseFloat(price)
             }
         });
+        // Auto-generate physical Room Units and Beds (e.g. RM 101, RM 102, Bed 1, Bed 2)
+        const existingUnitCount = await prisma_1.default.roomUnit.count({
+            where: { room: { propertyId } }
+        });
+        const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+        for (let i = 1; i <= numRooms; i++) {
+            const unitNumber = `${prefix}${existingUnitCount + 100 + i}`;
+            const roomUnit = await prisma_1.default.roomUnit.create({
+                data: {
+                    roomId: room.id,
+                    unitNumber,
+                    floor: Math.ceil((existingUnitCount + i) / 10),
+                    genderLock: roomGender !== 'MIXED' ? roomGender : 'UNASSIGNED',
+                    bedsPerRoom,
+                }
+            });
+            // Create Beds for this Room Unit
+            for (let b = 1; b <= bedsPerRoom; b++) {
+                await prisma_1.default.bed.create({
+                    data: {
+                        roomUnitId: roomUnit.id,
+                        bedNumber: `Bed ${b}`,
+                        status: 'AVAILABLE'
+                    }
+                });
+            }
+        }
         // Update property min price
         const minRoom = await prisma_1.default.room.findFirst({
             where: { propertyId },

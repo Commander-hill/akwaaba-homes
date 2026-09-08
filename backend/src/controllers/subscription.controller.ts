@@ -5,6 +5,7 @@ import { notifySubscriptionExpirySoon } from '../utils/notification.service';
 import axios from 'axios';
 import crypto from 'crypto';
 import { getIO } from '../socket';
+import appCache from '../utils/cache';
 
 export const getSubscriptionStatus = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -287,6 +288,13 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
       data: { isAvailable: true }
     });
 
+    try {
+      appCache.flushAll();
+      getIO().emit('property_updated', { propertyId: existingSub.propertyId });
+    } catch (e) {
+      /* non-blocking */
+    }
+
     res.status(200).json({ message: 'Property listed successfully', subscription });
 
   } catch (error: any) {
@@ -362,8 +370,9 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
               message: `Payment received! Your listing for "${property.title}" is now active.`,
               type: 'subscription'
             });
-            getIO().to(property.landlordId).emit('property_updated', { propertyId: property.id });
+            getIO().emit('property_updated', { propertyId: property.id });
           }
+          appCache.flushAll();
         } catch (e) {
           console.error('Socket emission failed in webhook:', e);
         }

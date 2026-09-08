@@ -8,6 +8,38 @@ export const reportBreach = async (req: Request, res: Response): Promise<void> =
     const reporterId = req.user.id;
     const { tenantId, propertyId, title, description } = req.body;
 
+    if (!tenantId || !propertyId || !title || !description) {
+      res.status(400).json({ message: 'tenantId, propertyId, title, and description are required' });
+      return;
+    }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    if (property.landlordId !== reporterId && req.user.role !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+      return;
+    }
+
+    const tenantBooking = await prisma.booking.findFirst({
+      where: {
+        propertyId,
+        tenantId,
+        status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED'] }
+      }
+    });
+
+    if (!tenantBooking && req.user.role !== 'ADMIN') {
+      res.status(400).json({ message: 'Cannot report breach: This tenant does not have an active or confirmed tenancy record for this property.' });
+      return;
+    }
+
     const report = await prisma.breachReport.create({
       data: {
         reporterId,

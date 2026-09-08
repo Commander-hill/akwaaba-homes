@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getIO } from '../socket';
+import { getSystemConfig } from '../utils/config.service';
 
 /**
  * Log a new Property Operating Expense
@@ -171,8 +172,12 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
       return sum + price;
     }, 0);
 
-    // Platform commission (10%)
-    const platformCommission = grossRevenue * 0.10;
+    // Dynamic platform commission from system config (defaults to 5.0%)
+    const sysConfig = await getSystemConfig();
+    const commissionPercent = sysConfig.platformCommissionPercent || 5.0;
+    const commissionRate = commissionPercent / 100;
+
+    const platformCommission = grossRevenue * commissionRate;
     const netRentalRevenue = grossRevenue - platformCommission;
 
     // 2. Fetch Expenses
@@ -212,7 +217,7 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
     completedBookings.forEach((b) => {
       const monthIdx = new Date(b.createdAt).getMonth();
       const amount = b.transaction?.amount || b.room?.price || 0;
-      monthlyTrends[monthIdx].revenue += amount * 0.90; // Net rent after platform fee
+      monthlyTrends[monthIdx].revenue += amount * (1 - commissionRate); // Net rent after platform fee
     });
 
     expenses.forEach((e) => {
@@ -229,6 +234,7 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
       summary: {
         grossRevenue,
         platformCommission,
+        platformCommissionPercent: commissionPercent,
         netRentalRevenue,
         totalExpenses,
         netProfit,

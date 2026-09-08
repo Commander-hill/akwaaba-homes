@@ -34,6 +34,7 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
     }
 
     const bedsPerRoom = parseBedsPerRoom(roomType);
+    const numRooms = parseInt(numberOfRooms, 10);
 
     const room = await prisma.room.create({
       data: {
@@ -42,10 +43,40 @@ export const createRoom = async (req: Request, res: Response): Promise<void> => 
         gender: roomGender,
         roomType,
         bedsPerRoom,
-        numberOfRooms: parseInt(numberOfRooms, 10),
+        numberOfRooms: numRooms,
         price: parseFloat(price)
       }
     });
+
+    // Auto-generate physical Room Units and Beds (e.g. RM 101, RM 102, Bed 1, Bed 2)
+    const existingUnitCount = await prisma.roomUnit.count({
+      where: { room: { propertyId } }
+    });
+
+    const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+    for (let i = 1; i <= numRooms; i++) {
+      const unitNumber = `${prefix}${existingUnitCount + 100 + i}`;
+      const roomUnit = await prisma.roomUnit.create({
+        data: {
+          roomId: room.id,
+          unitNumber,
+          floor: Math.ceil((existingUnitCount + i) / 10),
+          genderLock: roomGender !== 'MIXED' ? roomGender : 'UNASSIGNED',
+          bedsPerRoom,
+        }
+      });
+
+      // Create Beds for this Room Unit
+      for (let b = 1; b <= bedsPerRoom; b++) {
+        await prisma.bed.create({
+          data: {
+            roomUnitId: roomUnit.id,
+            bedNumber: `Bed ${b}`,
+            status: 'AVAILABLE'
+          }
+        });
+      }
+    }
 
     // Update property min price
     const minRoom = await prisma.room.findFirst({

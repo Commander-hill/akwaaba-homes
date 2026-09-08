@@ -9,6 +9,7 @@ const notification_service_1 = require("../utils/notification.service");
 const axios_1 = __importDefault(require("axios"));
 const crypto_1 = __importDefault(require("crypto"));
 const socket_1 = require("../socket");
+const cache_1 = __importDefault(require("../utils/cache"));
 const getSubscriptionStatus = async (req, res) => {
     try {
         const landlordId = req.user?.id;
@@ -255,6 +256,13 @@ const verifyPayment = async (req, res) => {
             where: { id: existingSub.propertyId },
             data: { isAvailable: true }
         });
+        try {
+            cache_1.default.flushAll();
+            (0, socket_1.getIO)().emit('property_updated', { propertyId: existingSub.propertyId });
+        }
+        catch (e) {
+            /* non-blocking */
+        }
         res.status(200).json({ message: 'Property listed successfully', subscription });
     }
     catch (error) {
@@ -319,8 +327,9 @@ const handlePaystackWebhook = async (req, res) => {
                             message: `Payment received! Your listing for "${property.title}" is now active.`,
                             type: 'subscription'
                         });
-                        (0, socket_1.getIO)().to(property.landlordId).emit('property_updated', { propertyId: property.id });
+                        (0, socket_1.getIO)().emit('property_updated', { propertyId: property.id });
                     }
+                    cache_1.default.flushAll();
                 }
                 catch (e) {
                     console.error('Socket emission failed in webhook:', e);

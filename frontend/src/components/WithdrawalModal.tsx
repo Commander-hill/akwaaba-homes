@@ -374,11 +374,21 @@ export default function WithdrawalModal({ onClose }: { onClose: () => void }) {
                           toast.error('Enter account number first');
                           return;
                         }
+                        if (recipientType !== 'MOMO') {
+                          toast.error('Instant name resolution is available for Mobile Money (MTN, Telecel, AirtelTigo). For bank transfers, ensure your name matches bank records.');
+                          return;
+                        }
                         try {
                           toast.loading('Verifying Payee Account Name...', { id: 'momo-ver' });
+                          const networkCode =
+                            bankOrNetwork === 'MTN'
+                              ? 'MTN'
+                              : bankOrNetwork === 'Vodafone' || bankOrNetwork === 'Telecel'
+                              ? 'VOD'
+                              : 'ATL';
                           const res = await api.post('/payouts/verify-account', {
                             accountNumber,
-                            bankCode: bankOrNetwork === 'MTN' ? 'MTN' : bankOrNetwork === 'Vodafone' ? 'VOD' : 'ATL'
+                            bankCode: networkCode
                           });
                           setAccountName(res.data.accountName);
                           toast.success(`Verified: ${res.data.accountName}`, { id: 'momo-ver' });

@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFinancialAnalytics = exports.deleteExpense = exports.getExpenses = exports.createExpense = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
+const config_service_1 = require("../utils/config.service");
 /**
  * Log a new Property Operating Expense
  */
@@ -158,8 +159,11 @@ const getFinancialAnalytics = async (req, res) => {
             const price = b.transaction?.amount || b.room?.price || 0;
             return sum + price;
         }, 0);
-        // Platform commission (10%)
-        const platformCommission = grossRevenue * 0.10;
+        // Dynamic platform commission from system config (defaults to 5.0%)
+        const sysConfig = await (0, config_service_1.getSystemConfig)();
+        const commissionPercent = sysConfig.platformCommissionPercent || 5.0;
+        const commissionRate = commissionPercent / 100;
+        const platformCommission = grossRevenue * commissionRate;
         const netRentalRevenue = grossRevenue - platformCommission;
         // 2. Fetch Expenses
         const expenseWhere = {
@@ -193,7 +197,7 @@ const getFinancialAnalytics = async (req, res) => {
         completedBookings.forEach((b) => {
             const monthIdx = new Date(b.createdAt).getMonth();
             const amount = b.transaction?.amount || b.room?.price || 0;
-            monthlyTrends[monthIdx].revenue += amount * 0.90; // Net rent after platform fee
+            monthlyTrends[monthIdx].revenue += amount * (1 - commissionRate); // Net rent after platform fee
         });
         expenses.forEach((e) => {
             const monthIdx = new Date(e.date).getMonth();
@@ -207,6 +211,7 @@ const getFinancialAnalytics = async (req, res) => {
             summary: {
                 grossRevenue,
                 platformCommission,
+                platformCommissionPercent: commissionPercent,
                 netRentalRevenue,
                 totalExpenses,
                 netProfit,
