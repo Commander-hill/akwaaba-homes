@@ -128,6 +128,7 @@ const getLandlordTickets = async (req, res) => {
             res.status(401).json({ message: 'Authentication required' });
             return;
         }
+        const role = (req.user.role || '').toUpperCase();
         const staffAssignments = await prisma_1.default.propertyStaff.findMany({
             where: { userId: req.user.id },
             select: { propertyId: true }

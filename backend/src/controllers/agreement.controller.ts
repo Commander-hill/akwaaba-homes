@@ -356,6 +356,11 @@ export const signAgreement = async (req: Request, res: Response): Promise<void> 
       const io = getIO();
       io.to(agreement.booking.tenantId).emit('agreement_updated', { agreement: updatedAgreement });
       io.to(agreement.booking.property.landlordId).emit('agreement_updated', { agreement: updatedAgreement });
+      if (updateData.status === 'COMPLETED') {
+        io.to(agreement.booking.tenantId).emit('agreement_completed', { agreement: updatedAgreement });
+        io.to(agreement.booking.property.landlordId).emit('agreement_completed', { agreement: updatedAgreement });
+        io.emit('booking_updated', { bookingId: agreement.bookingId, propertyId: agreement.booking.propertyId });
+      }
     } catch (e) {
       console.error('Socket notification failed', e);
     }

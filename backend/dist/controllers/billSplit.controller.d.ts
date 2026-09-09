@@ -12,7 +12,7 @@ export declare const getTenantBillSplits: (req: Request, res: Response) => Promi
  */
 export declare const toggleParticipantPaidStatus: (req: Request, res: Response) => Promise<void>;
 /**
- * Delete a bill split (creator or admin only, if not settled)
+ * Delete a bill split (creator or admin only, if not settled and no paid shares)
  */
 export declare const deleteBillSplit: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=billSplit.controller.d.ts.map

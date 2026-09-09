@@ -419,7 +419,10 @@ const updatePropertyApproval = async (req, res) => {
         }
         const property = await prisma_1.default.property.update({
             where: { id },
-            data: { approvalStatus },
+            data: {
+                approvalStatus,
+                ...(approvalStatus === 'REJECTED' ? { isAvailable: false } : {})
+            },
             include: { landlord: { select: { id: true, email: true, firstName: true } } }
         });
         await (0, auditLogger_1.logAudit)(req.user.id, approvalStatus === 'APPROVED' ? 'APPROVE_PROPERTY' : (approvalStatus === 'REJECTED' ? 'REJECT_PROPERTY' : 'PENDING_PROPERTY'), 'Property', id, { approvalStatus: oldProperty.approvalStatus }, { approvalStatus }, req.ip || req.socket.remoteAddress);
@@ -437,9 +440,10 @@ const updatePropertyApproval = async (req, res) => {
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
-        // Emit real-time property update to the landlord so their dashboard refreshes instantly
+        // Emit real-time property update to landlord and globally so public listings refresh
         try {
             const { getIO } = await import('../socket');
+            getIO().emit('property_updated', { propertyId: id, approvalStatus });
             getIO().to(property.landlord.id).emit('property_updated', { propertyId: id, approvalStatus });
             getIO().to(property.landlord.id).emit('notification', {
                 title: approvalStatus === 'APPROVED' ? '🎉 Property Listing Approved!' : '❌ Property Listing Rejected',

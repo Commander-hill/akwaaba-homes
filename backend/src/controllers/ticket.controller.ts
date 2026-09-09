@@ -138,6 +138,7 @@ export const getLandlordTickets = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    const role = (req.user.role || '').toUpperCase();
     const staffAssignments = await prisma.propertyStaff.findMany({
       where: { userId: req.user.id },
       select: { propertyId: true }

@@ -268,14 +268,23 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
         data: { status: 'REJECTED' }
       });
 
-      await prisma.notification.create({
-        data: {
-          userId: report.reporterId,
-          type: 'ANNOUNCEMENT',
-          title: '⚖️ Breach Dispute Dismissed',
-          message: `Admin reviewed and dismissed the breach report for "${report.property?.title || 'property'}".`,
-          link: reporterLink
-        }
+      await prisma.notification.createMany({
+        data: [
+          {
+            userId: report.reporterId,
+            type: 'ANNOUNCEMENT',
+            title: '⚖️ Breach Dispute Dismissed',
+            message: `Admin reviewed and dismissed the breach report for "${report.property?.title || 'property'}".`,
+            link: reporterLink
+          },
+          {
+            userId: report.tenantId,
+            type: 'SYSTEM_ALERT',
+            title: '⚖️ Breach Dispute Dismissed',
+            message: `Admin reviewed and dismissed the breach report for "${report.property?.title || 'your tenancy'}". No penalties or score deductions were applied.`,
+            link: '/dashboard/tenant'
+          }
+        ]
       }).catch(() => {});
 
       try {
@@ -283,6 +292,11 @@ export const verifyBreach = async (req: Request, res: Response): Promise<void> =
           title: '⚖️ Breach Dispute Dismissed',
           message: `Your breach report was reviewed and dismissed by admin.`,
           type: 'ANNOUNCEMENT'
+        });
+        getIO().to(report.tenantId).emit('notification', {
+          title: '⚖️ Breach Dispute Dismissed',
+          message: `Admin dismissed the breach report filed for "${report.property?.title || 'your tenancy'}".`,
+          type: 'SYSTEM_ALERT'
         });
         getIO().emit('breach_updated', { id, status: 'REJECTED' });
         appCache.flushAll();

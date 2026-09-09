@@ -153,8 +153,12 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
       return;
     }
 
-    if (renewal.property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
-      res.status(403).json({ message: 'Forbidden: You do not own this property' });
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: renewal.propertyId, userId: landlordId }
+    });
+
+    if (renewal.property.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to manage lease renewals for this property' });
       return;
     }
 
@@ -175,10 +179,23 @@ export const respondLeaseRenewal = async (req: Request, res: Response): Promise<
         userId: renewal.tenantId,
         type: 'ANNOUNCEMENT',
         title: status === 'ACCEPTED' ? '🎉 Lease Renewal Approved!' : status === 'DECLINED' ? 'Lease Renewal Declined' : 'Lease Renewal Status Updated',
-        message: `Your landlord marked your lease renewal request as ${status} for "${updated.property.title}".`,
+        message: `Your lease renewal request was marked as ${status} for "${updated.property.title}".`,
         link: '/dashboard/tenant'
       }
     }).catch(() => null);
+
+    // Notify landlord if staff member responded
+    if (isStaff && renewal.property.landlordId !== landlordId) {
+      await prisma.notification.create({
+        data: {
+          userId: renewal.property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: `📑 Staff Responded to Lease Renewal`,
+          message: `Your property staff marked the renewal request for "${updated.property.title}" as ${status}.`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => null);
+    }
 
     // If accepted, automatically prolong the underlying booking duration
     if (status === 'ACCEPTED') {

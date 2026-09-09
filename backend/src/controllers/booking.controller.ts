@@ -921,7 +921,15 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     }
 
     try {
-      getIO().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+      const io = getIO();
+      io.emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+      io.emit('property_updated', { propertyId: booking.propertyId });
+      io.to(booking.property.landlordId).emit('financials_updated', { propertyId: booking.propertyId });
+      io.to(booking.property.landlordId).emit('notification', {
+        title: '💰 Booking Payment Received',
+        message: `${booking.tenant?.firstName || 'Tenant'} ${booking.tenant?.lastName || ''} paid GHS ${price.toFixed(2)} for "${booking.property.title}".`,
+        type: 'payment'
+      });
       appCache.del(`bookings:tenant:${tenantId}`);
       appCache.flushAll();
     } catch (e) {
@@ -929,6 +937,16 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     }
 
     try {
+      await prisma.notification.create({
+        data: {
+          userId: booking.property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: '💰 Booking Payment Received',
+          message: `${booking.tenant?.firstName || 'Tenant'} ${booking.tenant?.lastName || ''} has completed payment of GHS ${price.toFixed(2)} for "${booking.property.title}".`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => null);
+
       await notifyBookingStatusChanged({
         tenantId: booking.tenantId,
         tenantEmail: booking.tenant.email,

@@ -61,7 +61,7 @@ export const createBillSplit = async (req: Request, res: Response): Promise<void
             type: 'ANNOUNCEMENT',
             title: `🧾 New Bill Split: ${billSplit.title}`,
             message: `You were added to a bill split of GHS ${p.shareAmount.toFixed(2)} for ${billSplit.title}.`,
-            link: '/dashboard/roommates'
+            link: '/dashboard/tenant?tab=billsplit'
           }))
         });
 
@@ -70,7 +70,7 @@ export const createBillSplit = async (req: Request, res: Response): Promise<void
             type: 'ANNOUNCEMENT',
             title: `🧾 New Bill Split: ${billSplit.title}`,
             message: `You were added to a bill split of GHS ${p.shareAmount.toFixed(2)} for ${billSplit.title}.`,
-            link: '/dashboard/roommates'
+            link: '/dashboard/tenant?tab=billsplit'
           });
           getIO().to(p.userId).emit('bill_split_created', billSplit);
         }
@@ -192,7 +192,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
               type: 'ANNOUNCEMENT',
               title: '💸 Roommate Bill Share Settled',
               message: `${participant.userName} marked their share of GHS ${participant.shareAmount.toFixed(2)} as settled for "${participant.billSplit.title}".`,
-              link: '/dashboard/roommates'
+              link: '/dashboard/tenant?tab=billsplit'
             }
           }).catch(() => null);
 
@@ -200,7 +200,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
             type: 'ANNOUNCEMENT',
             title: '💸 Roommate Bill Share Settled',
             message: `${participant.userName} settled GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}".`,
-            link: '/dashboard/roommates'
+            link: '/dashboard/tenant?tab=billsplit'
           });
         } else if (isCreator && participant.userId) {
           await prisma.notification.create({
@@ -209,7 +209,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
               type: 'ANNOUNCEMENT',
               title: '✅ Bill Share Marked Paid',
               message: `Your share of GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}" was verified and marked paid.`,
-              link: '/dashboard/roommates'
+              link: '/dashboard/tenant?tab=billsplit'
             }
           }).catch(() => null);
 
@@ -217,7 +217,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
             type: 'ANNOUNCEMENT',
             title: '✅ Bill Share Marked Paid',
             message: `Your share of GHS ${participant.shareAmount.toFixed(2)} for "${participant.billSplit.title}" was marked paid.`,
-            link: '/dashboard/roommates'
+            link: '/dashboard/tenant?tab=billsplit'
           });
         }
       }
@@ -235,7 +235,7 @@ export const toggleParticipantPaidStatus = async (req: Request, res: Response): 
 };
 
 /**
- * Delete a bill split (creator or admin only, if not settled)
+ * Delete a bill split (creator or admin only, if not settled and no paid shares)
  */
 export const deleteBillSplit = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -260,6 +260,12 @@ export const deleteBillSplit = async (req: Request, res: Response): Promise<void
 
     if (billSplit.status === 'SETTLED') {
       res.status(400).json({ message: 'Cannot delete a settled bill split' });
+      return;
+    }
+
+    const hasPaidParticipants = (billSplit.participants || []).some((p: any) => p.isPaid);
+    if (hasPaidParticipants && userRole !== 'ADMIN') {
+      res.status(400).json({ message: 'Cannot delete a bill split where roommates have already submitted paid shares. Settle or adjust the bill instead.' });
       return;
     }
 

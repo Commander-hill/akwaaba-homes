@@ -457,7 +457,10 @@ export const updatePropertyApproval = async (req: Request, res: Response): Promi
 
     const property = await prisma.property.update({
       where: { id },
-      data: { approvalStatus },
+      data: {
+        approvalStatus,
+        ...(approvalStatus === 'REJECTED' ? { isAvailable: false } : {})
+      },
       include: { landlord: { select: { id: true, email: true, firstName: true } } }
     });
 
@@ -487,9 +490,10 @@ export const updatePropertyApproval = async (req: Request, res: Response): Promi
     const propertyKeys = keys.filter(k => k.startsWith('properties_'));
     appCache.del(propertyKeys);
 
-    // Emit real-time property update to the landlord so their dashboard refreshes instantly
+    // Emit real-time property update to landlord and globally so public listings refresh
     try {
       const { getIO } = await import('../socket');
+      getIO().emit('property_updated', { propertyId: id, approvalStatus });
       getIO().to(property.landlord.id).emit('property_updated', { propertyId: id, approvalStatus });
       getIO().to(property.landlord.id).emit('notification', {
         title: approvalStatus === 'APPROVED' ? '🎉 Property Listing Approved!' : '❌ Property Listing Rejected',
