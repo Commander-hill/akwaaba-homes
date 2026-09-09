@@ -293,3 +293,50 @@ export const deleteBillSplit = async (req: Request, res: Response): Promise<void
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Get all bill splits for a property (Landlord, Caretaker, Admin)
+ */
+export const getPropertyBillSplits = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
+      return;
+    }
+
+    const billSplits = await prisma.billSplit.findMany({
+      where: { propertyId },
+      include: {
+        creator: { select: { id: true, firstName: true, lastName: true } },
+        participants: {
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ billSplits });
+  } catch (error) {
+    console.error('Error fetching property bill splits:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

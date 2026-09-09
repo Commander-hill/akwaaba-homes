@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBillSplit = exports.toggleParticipantPaidStatus = exports.getTenantBillSplits = exports.createBillSplit = void 0;
+exports.getPropertyBillSplits = exports.deleteBillSplit = exports.toggleParticipantPaidStatus = exports.getTenantBillSplits = exports.createBillSplit = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 /**
@@ -276,4 +276,46 @@ const deleteBillSplit = async (req, res) => {
     }
 };
 exports.deleteBillSplit = deleteBillSplit;
+/**
+ * Get all bill splits for a property (Landlord, Caretaker, Admin)
+ */
+const getPropertyBillSplits = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = (req.user?.role || '').toUpperCase();
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
+            return;
+        }
+        const billSplits = await prisma_1.default.billSplit.findMany({
+            where: { propertyId },
+            include: {
+                creator: { select: { id: true, firstName: true, lastName: true } },
+                participants: {
+                    include: {
+                        user: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ billSplits });
+    }
+    catch (error) {
+        console.error('Error fetching property bill splits:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPropertyBillSplits = getPropertyBillSplits;
 //# sourceMappingURL=billSplit.controller.js.map

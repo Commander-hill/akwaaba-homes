@@ -7,6 +7,7 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', billSplit_controller_1.createBillSplit);
 router.get('/', billSplit_controller_1.getTenantBillSplits);
+router.get('/property/:propertyId', billSplit_controller_1.getPropertyBillSplits);
 router.patch('/participants/:participantId/status', billSplit_controller_1.toggleParticipantPaidStatus);
 router.delete('/:id', billSplit_controller_1.deleteBillSplit);
 exports.default = router;
