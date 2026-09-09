@@ -23,6 +23,7 @@ import StaffDelegationTab from '@/components/landlord/StaffDelegationTab';
 import GateLogbookTab from '@/components/landlord/GateLogbookTab';
 import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab';
+import RoomAssetVaultTab from '@/components/landlord/RoomAssetVaultTab';
 import InspectionModal from '@/components/landlord/InspectionModal';
 import toast from 'react-hot-toast';
 
@@ -35,7 +36,7 @@ function getImageUrl(path?: string | null): string {
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'installments' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
@@ -366,7 +367,7 @@ export default function LandlordDashboard() {
               onClick={() => setActiveTab('bookings')}
               className={clsx(
                 "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
-                ['bookings', 'occupancy', 'installments', 'agreements'].includes(activeTab)
+                ['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab)
                   ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               )}
@@ -404,7 +405,7 @@ export default function LandlordDashboard() {
 
           {/* Sub-Pills for Currently Selected Workspace */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {['bookings', 'occupancy', 'installments', 'agreements'].includes(activeTab) && (
+            {['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab) && (
               <>
                 <button
                   onClick={() => setActiveTab('bookings')}
@@ -438,6 +439,17 @@ export default function LandlordDashboard() {
                   )}
                 >
                   Semester Tranches
+                </button>
+                <button
+                  onClick={() => setActiveTab('assets')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'assets'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Inventory Vault
                 </button>
                 <button
                   onClick={() => setActiveTab('agreements')}
@@ -1301,6 +1313,13 @@ export default function LandlordDashboard() {
       {activeTab === 'installments' && (
         <div>
           <AcademicInstallmentTab properties={myProperties} />
+        </div>
+      )}
+
+      {/* ─── TAB: ROOM ASSET & APPLIANCE REGISTRY ───────────────────────────── */}
+      {activeTab === 'assets' && (
+        <div>
+          <RoomAssetVaultTab properties={myProperties} bookings={bookings} />
         </div>
       )}
 
