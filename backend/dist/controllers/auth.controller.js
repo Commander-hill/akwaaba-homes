@@ -645,6 +645,19 @@ const requestProfileUnlock = async (req, res) => {
         });
         const ipAddress = req.ip || (req.socket?.remoteAddress) || 'Unknown';
         await (0, auditLogger_1.logAudit)(req.user.id, 'REQUEST_PROFILE_UNLOCK', 'User', req.user.id, { reason: reason.trim() }, {}, ipAddress);
+        // Alert admins of profile unlock request
+        const admins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        if (admins.length > 0) {
+            await prisma_1.default.notification.createMany({
+                data: admins.map(a => ({
+                    userId: a.id,
+                    type: 'SYSTEM_ALERT',
+                    title: '🔓 Profile Unlock Requested',
+                    message: `${user.firstName || 'User'} ${user.lastName || ''} requested profile unlock: "${reason.trim()}".`,
+                    link: '/admin/users'
+                }))
+            }).catch(() => null);
+        }
         res.status(200).json({ message: 'Edit request submitted successfully. An administrator will review your request.' });
     }
     catch (error) {
@@ -676,6 +689,19 @@ const submitGhanaCard = async (req, res) => {
         });
         // Bust user cache so next /auth/me returns fresh Ghana Card data
         cache_1.default.del(`user:me:${req.user.id}`);
+        // Notify admins of new KYC Ghana Card submission
+        const cardAdmins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        if (cardAdmins.length > 0) {
+            await prisma_1.default.notification.createMany({
+                data: cardAdmins.map(a => ({
+                    userId: a.id,
+                    type: 'SYSTEM_ALERT',
+                    title: '🪪 New Ghana Card KYC Submission',
+                    message: `User submitted Ghana Card for identity verification.`,
+                    link: '/admin/users'
+                }))
+            }).catch(() => null);
+        }
         try {
             (0, socket_1.emitToUser)(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
@@ -716,6 +742,19 @@ const submitLandlordVerification = async (req, res) => {
             }
         });
         cache_1.default.del(`user:me:${req.user.id}`);
+        // Notify admins of new Landlord verification document submission
+        const landlordAdmins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        if (landlordAdmins.length > 0) {
+            await prisma_1.default.notification.createMany({
+                data: landlordAdmins.map(a => ({
+                    userId: a.id,
+                    type: 'SYSTEM_ALERT',
+                    title: '🛡️ Landlord Verification Document Submitted',
+                    message: `Landlord submitted property ownership & Ghana Card for verification.`,
+                    link: '/admin/landlord-verification'
+                }))
+            }).catch(() => null);
+        }
         try {
             (0, socket_1.emitToUser)(req.user.id, 'user_updated', { landlordVerificationStatus: 'PENDING' });
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });

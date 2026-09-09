@@ -60,6 +60,45 @@ export const markAllAsRead = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+// Delete a single notification
+export const deleteNotification = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+
+    await prisma.notification.deleteMany({
+      where: { id, userId }
+    });
+
+    try {
+      getIO().to(userId).emit('notifications_marked_read', { id, deleted: true });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Notification deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// Clear all notifications for the current user
+export const clearAllNotifications = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+
+    await prisma.notification.deleteMany({
+      where: { userId }
+    });
+
+    try {
+      getIO().to(userId).emit('notifications_marked_read', { all: true, cleared: true });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'All notifications cleared' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 // Admin: Broadcast announcement to all users (or by role)
 export const broadcastAnnouncement = async (req: Request, res: Response): Promise<void> => {
   try {

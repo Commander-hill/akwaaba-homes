@@ -53,9 +53,13 @@ const createProperty = async (req, res) => {
             select: {
                 firstName: true, lastName: true, phoneNumber: true, gender: true,
                 dateOfBirth: true, nationality: true, guardianName: true, guardianPhone: true,
-                ghanaCardStatus: true
+                ghanaCardStatus: true, isSuspended: true
             }
         });
+        if (landlord?.isSuspended && req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot list new properties.' });
+            return;
+        }
         const missingFields = [];
         if (!landlord?.firstName?.trim())
             missingFields.push('First Name');
@@ -162,6 +166,19 @@ const createProperty = async (req, res) => {
         const keys = cache_1.default.keys();
         const propertyKeys = keys.filter(k => k.startsWith('properties_'));
         cache_1.default.del(propertyKeys);
+        // Alert admins of newly submitted property awaiting approval
+        const admins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        if (admins.length > 0) {
+            await prisma_1.default.notification.createMany({
+                data: admins.map(a => ({
+                    userId: a.id,
+                    type: 'SYSTEM_ALERT',
+                    title: '🏢 New Property Awaiting Approval',
+                    message: `Landlord submitted "${newProperty.title}" in ${newProperty.location} for verification.`,
+                    link: '/admin/properties'
+                }))
+            }).catch(() => null);
+        }
         // Emit real-time Socket.io events
         try {
             (0, socket_1.getIO)().to(landlordId).emit('property_created', { propertyId: newProperty.id });
@@ -190,6 +207,7 @@ const getProperties = async (req, res) => {
         const queryOptions = {
             where: {
                 approvalStatus: 'APPROVED',
+                landlord: { isSuspended: false }
             },
             skip: (Number(page) - 1) * Number(limit),
             take: Number(limit),
@@ -440,6 +458,11 @@ const updateProperty = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
+        const landlordUser = await prisma_1.default.user.findUnique({ where: { id: landlordId }, select: { isSuspended: true } });
+        if (landlordUser?.isSuspended && req.user.role !== 'ADMIN') {
+            res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot edit property details.' });
+            return;
+        }
         const updatedProperty = await prisma_1.default.property.update({
             where: { id },
             data: {
@@ -655,19 +678,32 @@ const getLandlordStats = async (req, res) => {
             include: { property: true }
         });
         const totalBookings = bookings.length;
-        const activeTenants = bookings.filter(b => b.status === 'APPROVED' || b.status === 'ACTIVE').length;
-        // Calculate expected total revenue from bookings
-        const expectedRevenue = bookings.reduce((sum, b) => sum + (b.property.price || 0), 0);
-        // Generate 6 months of historical data based on current totals for the chart
-        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-        const monthlyBookings = months.map((month, index) => {
-            const factor = (index + 1) / 6;
-            return {
-                name: month,
-                bookings: Math.round(totalBookings * factor * (0.8 + Math.random() * 0.4)),
-                revenue: Math.round(expectedRevenue * factor * (0.8 + Math.random() * 0.4))
-            };
-        });
+        const activeTenants = bookings.filter(b => ['APPROVED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED'].includes(b.status)).length;
+        // Calculate expected total revenue from confirmed, active, and completed bookings
+        const expectedRevenue = bookings
+            .filter(b => ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED'].includes(b.status))
+            .reduce((sum, b) => sum + (b.property.price || 0), 0);
+        // Generate accurate 6-month historical monthly trends based on actual bookings
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const now = new Date();
+        const monthlyBookings = [];
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const mName = monthNames[d.getMonth()];
+            const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            const inMonth = bookings.filter(b => {
+                const created = new Date(b.createdAt);
+                return created >= d && created < nextMonth;
+            });
+            const monthRevenue = inMonth
+                .filter(b => ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED'].includes(b.status))
+                .reduce((sum, b) => sum + (b.property.price || 0), 0);
+            monthlyBookings.push({
+                name: mName,
+                bookings: inMonth.length,
+                revenue: Math.round(monthRevenue)
+            });
+        }
         res.status(200).json({
             totalProperties,
             totalBookings,

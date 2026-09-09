@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.broadcastAnnouncement = exports.markAllAsRead = exports.markAsRead = exports.getMyNotifications = void 0;
+exports.broadcastAnnouncement = exports.clearAllNotifications = exports.deleteNotification = exports.markAllAsRead = exports.markAsRead = exports.getMyNotifications = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const socket_1 = require("../socket");
@@ -60,6 +60,43 @@ const markAllAsRead = async (req, res) => {
     }
 };
 exports.markAllAsRead = markAllAsRead;
+// Delete a single notification
+const deleteNotification = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { id } = req.params;
+        await prisma_1.default.notification.deleteMany({
+            where: { id, userId }
+        });
+        try {
+            (0, socket_1.getIO)().to(userId).emit('notifications_marked_read', { id, deleted: true });
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'Notification deleted' });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.deleteNotification = deleteNotification;
+// Clear all notifications for the current user
+const clearAllNotifications = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await prisma_1.default.notification.deleteMany({
+            where: { userId }
+        });
+        try {
+            (0, socket_1.getIO)().to(userId).emit('notifications_marked_read', { all: true, cleared: true });
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'All notifications cleared' });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.clearAllNotifications = clearAllNotifications;
 // Admin: Broadcast announcement to all users (or by role)
 const broadcastAnnouncement = async (req, res) => {
     try {

@@ -9,6 +9,8 @@ router.use(auth_middleware_1.authenticate);
 router.get('/', notification_controller_1.getMyNotifications);
 router.put('/:id/read', notification_controller_1.markAsRead);
 router.put('/read-all/all', notification_controller_1.markAllAsRead);
+router.delete('/clear', notification_controller_1.clearAllNotifications);
+router.delete('/:id', notification_controller_1.deleteNotification);
 // Admin-only broadcast
 router.post('/broadcast', (0, auth_middleware_1.authorizeRole)(['ADMIN']), notification_controller_1.broadcastAnnouncement);
 exports.default = router;

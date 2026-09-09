@@ -133,9 +133,11 @@ export const getPropertyReviews = async (req: Request, res: Response): Promise<v
   }
 };
 
-// Tenant flags a review for admin moderation
+// Tenant, landlord, or admin flags a review for admin moderation
 export const flagReview = async (req: Request, res: Response): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
     const { id } = req.params;
     const { reason } = req.body;
 
@@ -148,6 +150,15 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    const isAuthor = review.authorId === userId;
+    const isLandlord = review.booking?.property?.landlordId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isAuthor && !isLandlord && !isAdmin) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to flag this review' });
+      return;
+    }
+
     await prisma.review.update({
       where: { id },
       data: { isFlagged: true, moderationNote: reason || 'Flagged for review' }
@@ -156,6 +167,20 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
     // Immediately recalculate landlord reputation to exclude the flagged review
     if (review.booking?.property?.landlordId) {
       await recalculateLandlordReputation(review.booking.property.landlordId);
+    }
+
+    // Alert admins that a review is flagged for moderation
+    const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    if (admins.length > 0) {
+      await prisma.notification.createMany({
+        data: admins.map(a => ({
+          userId: a.id,
+          type: 'SYSTEM_ALERT',
+          title: '🚩 Review Flagged for Moderation',
+          message: `A review for "${review.booking?.property?.title || 'property'}" was flagged (${reason || 'Inappropriate content'}).`,
+          link: '/admin/reviews'
+        }))
+      }).catch(() => null);
     }
 
     try {

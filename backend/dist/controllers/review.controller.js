@@ -122,9 +122,11 @@ const getPropertyReviews = async (req, res) => {
     }
 };
 exports.getPropertyReviews = getPropertyReviews;
-// Tenant flags a review for admin moderation
+// Tenant, landlord, or admin flags a review for admin moderation
 const flagReview = async (req, res) => {
     try {
+        const userId = req.user?.id;
+        const userRole = req.user?.role;
         const { id } = req.params;
         const { reason } = req.body;
         const review = await prisma_1.default.review.findUnique({
@@ -135,6 +137,13 @@ const flagReview = async (req, res) => {
             res.status(404).json({ message: 'Review not found' });
             return;
         }
+        const isAuthor = review.authorId === userId;
+        const isLandlord = review.booking?.property?.landlordId === userId;
+        const isAdmin = userRole === 'ADMIN';
+        if (!isAuthor && !isLandlord && !isAdmin) {
+            res.status(403).json({ message: 'Forbidden: You do not have permission to flag this review' });
+            return;
+        }
         await prisma_1.default.review.update({
             where: { id },
             data: { isFlagged: true, moderationNote: reason || 'Flagged for review' }
@@ -142,6 +151,19 @@ const flagReview = async (req, res) => {
         // Immediately recalculate landlord reputation to exclude the flagged review
         if (review.booking?.property?.landlordId) {
             await recalculateLandlordReputation(review.booking.property.landlordId);
+        }
+        // Alert admins that a review is flagged for moderation
+        const admins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        if (admins.length > 0) {
+            await prisma_1.default.notification.createMany({
+                data: admins.map(a => ({
+                    userId: a.id,
+                    type: 'SYSTEM_ALERT',
+                    title: '🚩 Review Flagged for Moderation',
+                    message: `A review for "${review.booking?.property?.title || 'property'}" was flagged (${reason || 'Inappropriate content'}).`,
+                    link: '/admin/reviews'
+                }))
+            }).catch(() => null);
         }
         try {
             (0, socket_1.getIO)().emit('review_updated', { id });
