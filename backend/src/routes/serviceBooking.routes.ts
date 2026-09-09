@@ -13,6 +13,8 @@ router.use(authenticate);
 
 router.post('/', createServiceBooking);
 router.get('/', getTenantServiceBookings);
+router.get('/property', getPropertyServiceBookings);
+router.get('/landlord', getPropertyServiceBookings);
 router.get('/property/:propertyId', getPropertyServiceBookings);
 router.patch('/:id/status', updateServiceBookingStatus);
 router.patch('/:id/cancel', cancelServiceBooking);

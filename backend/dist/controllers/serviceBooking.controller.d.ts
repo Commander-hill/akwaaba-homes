@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
  */
 export declare const createServiceBooking: (req: Request, res: Response) => Promise<void>;
 /**
- * Get service bookings for a property (Landlord / Admin)
+ * Get service bookings for a property or portfolio (Landlord / Staff / Admin)
  */
 export declare const getPropertyServiceBookings: (req: Request, res: Response) => Promise<void>;
 /**

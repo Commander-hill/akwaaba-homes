@@ -215,8 +215,18 @@ const getMyStaffAssignments = async (req, res) => {
                             orderBy: { createdAt: 'desc' },
                         },
                         compoundNotices: { orderBy: { createdAt: 'desc' } },
-                        visitorPasses: { orderBy: { createdAt: 'desc' } },
-                        packageDeliveries: { orderBy: { createdAt: 'desc' } },
+                        visitorPasses: {
+                            include: {
+                                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+                            },
+                            orderBy: { createdAt: 'desc' }
+                        },
+                        packageDeliveries: {
+                            include: {
+                                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
+                            },
+                            orderBy: { createdAt: 'desc' }
+                        },
                         bookings: {
                             where: { status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED', 'PAID'] } },
                             include: {

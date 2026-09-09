@@ -65,12 +65,14 @@ export const createVisitorPass = async (req: Request, res: Response): Promise<vo
         status: 'ACTIVE'
       },
       include: {
-        property: { select: { id: true, title: true, location: true } }
+        property: { select: { id: true, title: true, location: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
       }
     });
 
     try {
       getIO().to(tenantId).emit('visitor_pass_created', pass);
+      getIO().emit('visitor_pass_created', pass);
     } catch (e) { /* non-blocking */ }
 
     res.status(201).json({
@@ -127,6 +129,19 @@ export const revokeVisitorPass = async (req: Request, res: Response): Promise<vo
       where: { id },
       data: { status: 'REVOKED' }
     });
+
+    try {
+      getIO().emit('visitor_pass_updated', {
+        propertyId: pass.propertyId,
+        passId: pass.id,
+        status: 'REVOKED'
+      });
+      getIO().to(pass.tenantId).emit('visitor_pass_updated', {
+        propertyId: pass.propertyId,
+        passId: pass.id,
+        status: 'REVOKED'
+      });
+    } catch (e) {}
 
     res.status(200).json({ message: 'Visitor pass revoked', pass: updated });
   } catch (error) {
@@ -199,6 +214,12 @@ export const verifyGatePass = async (req: Request, res: Response): Promise<void>
         title: '🚪 Visitor Cleared at Gate',
         message: `Your guest ${pass.visitorName} has entered "${pass.property.title}".`,
         type: 'visitor'
+      });
+      getIO().emit('visitor_pass_updated', {
+        propertyId: pass.propertyId,
+        passId: pass.id,
+        status: 'USED',
+        checkInTime: now
       });
     } catch (e) { /* non-blocking */ }
 

@@ -66,12 +66,16 @@ function CaretakerDashboardContent() {
   const [noticeCategory, setNoticeCategory] = useState('GENERAL');
   const [noticePriority, setNoticePriority] = useState('NORMAL');
 
-  // Parcel Intake Modal state
+  // Parcel Intake & Collection Modal state
   const [parcelModalOpen, setParcelModalOpen] = useState(false);
   const [parcelPropertyId, setParcelPropertyId] = useState('');
+  const [parcelTenantId, setParcelTenantId] = useState('');
   const [parcelCarrier, setParcelCarrier] = useState('DHL');
   const [parcelTracking, setParcelTracking] = useState('');
   const [parcelLocation, setParcelLocation] = useState('Front Desk Shelf A');
+  const [collectModalOpen, setCollectModalOpen] = useState(false);
+  const [collectParcel, setCollectParcel] = useState<any>(null);
+  const [collectOtp, setCollectOtp] = useState('');
 
   // Meter & Utility Logging state
   const [meterReadings, setMeterReadings] = useState<Array<{
@@ -308,21 +312,67 @@ function CaretakerDashboardContent() {
   const logParcelMutation = useMutation({
     mutationFn: async (payload: any) => {
       try {
-        const res = await api.post('/parcels', payload);
+        const res = await api.post('/deliveries', payload);
         return res.data;
       } catch (e) {
-        const res = await api.post('/deliveries', payload);
+        const res = await api.post('/parcels', payload);
         return res.data;
       }
     },
     onSuccess: () => {
-      toast.success('Parcel logged into vault & tenant alerted!');
+      toast.success('Parcel logged into vault & resident alerted with pickup OTP! 📦');
       setParcelModalOpen(false);
       setParcelTracking('');
+      setParcelTenantId('');
       queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to log parcel');
+    }
+  });
+
+  const collectParcelMutation = useMutation({
+    mutationFn: async ({ id, pickupCode }: { id: string; pickupCode: string }) => {
+      const res = await api.patch(`/deliveries/${id}/collect`, { pickupCode });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Parcel verified & handed over to resident! ✅');
+      setCollectModalOpen(false);
+      setCollectParcel(null);
+      setCollectOtp('');
+      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to verify pickup OTP');
+    }
+  });
+
+  const verifyPassMutation = useMutation({
+    mutationFn: async (accessCode: string) => {
+      const res = await api.post('/visitor-passes/verify', { accessCode });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Visitor cleared for compound entry! 🚪');
+      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to verify gate pass');
+    }
+  });
+
+  const checkoutPassMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await api.patch(`/visitor-passes/${id}/checkout`);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Visitor checked out and departed 👋');
+      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to check out visitor');
     }
   });
 
@@ -922,15 +972,32 @@ function CaretakerDashboardContent() {
                 <div key={p.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full">
-                      {p.carrier || 'Courier'}
+                      {p.courierName || p.carrier || 'Courier'}
                     </span>
-                    <span className={clsx("text-[10px] font-bold", p.status === 'ARRIVED' ? "text-amber-500" : "text-emerald-500")}>
-                      {p.status}
+                    <span className={clsx("text-[10px] font-bold", p.status === 'PENDING_PICKUP' ? "text-amber-500" : "text-emerald-500")}>
+                      {p.status === 'PENDING_PICKUP' ? 'READY FOR PICKUP' : p.status}
                     </span>
                   </div>
-                  <div className="font-bold text-sm text-slate-900 dark:text-white">Slot: {p.lockerNumber || 'Shelf A'}</div>
+                  <div className="font-bold text-sm text-slate-900 dark:text-white">
+                    {p.packageDescription || p.lockerNumber || 'Front Desk / Vault'}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                    Recipient: {p.tenant ? `${p.tenant.firstName} ${p.tenant.lastName}` : 'Resident'}
+                  </div>
                   <div className="text-xs text-slate-500">Tracking: {p.trackingNumber || 'N/A'}</div>
                   <div className="text-[10px] text-slate-400">Logged: {new Date(p.createdAt).toLocaleDateString()}</div>
+                  {p.status === 'PENDING_PICKUP' && (
+                    <button
+                      onClick={() => {
+                        setCollectParcel(p);
+                        setCollectOtp('');
+                        setCollectModalOpen(true);
+                      }}
+                      className="w-full mt-2 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Verify OTP &amp; Release
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -958,7 +1025,10 @@ function CaretakerDashboardContent() {
               {allVisitorPasses.map((v: any) => (
                 <div key={v.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
                   <div className="flex justify-between items-start">
-                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
+                    <span className={clsx("px-2 py-0.5 text-[10px] font-bold rounded-full",
+                      v.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600" :
+                      v.status === 'USED' ? "bg-blue-500/10 text-blue-600" : "bg-slate-500/10 text-slate-600"
+                    )}>
                       {v.status || 'ACTIVE'}
                     </span>
                     <span className="font-mono text-sm font-black text-indigo-600 dark:text-indigo-400">PIN: {v.accessCode}</span>
@@ -966,8 +1036,33 @@ function CaretakerDashboardContent() {
                   <div>
                     <h4 className="font-bold text-sm text-slate-900 dark:text-white">{v.visitorName}</h4>
                     <p className="text-xs text-slate-500">{v.purpose || 'Guest Visit'}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-1">
+                      Host: {v.tenant ? `${v.tenant.firstName} ${v.tenant.lastName}` : 'Resident'}
+                    </p>
                   </div>
-                  <div className="text-[10px] text-slate-400">Valid: {new Date(v.validFrom).toLocaleDateString()}</div>
+                  <div className="text-[10px] text-slate-400">
+                    Valid: {new Date(v.validFrom).toLocaleDateString()}
+                    {v.checkInTime && ` • Entered: ${new Date(v.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                    {v.checkOutTime && ` • Departed: ${new Date(v.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                  </div>
+                  {v.status === 'ACTIVE' && (
+                    <button
+                      onClick={() => verifyPassMutation.mutate(v.accessCode)}
+                      disabled={verifyPassMutation.isPending}
+                      className="w-full mt-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5" /> Clear Gate Entry
+                    </button>
+                  )}
+                  {v.status === 'USED' && !v.checkOutTime && (
+                    <button
+                      onClick={() => checkoutPassMutation.mutate(v.id)}
+                      disabled={checkoutPassMutation.isPending}
+                      className="w-full mt-2 py-2 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
+                    >
+                      <Clock className="w-3.5 h-3.5" /> Check Out &amp; Depart
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1400,7 +1495,10 @@ function CaretakerDashboardContent() {
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Property</label>
                 <select
                   value={parcelPropertyId}
-                  onChange={(e) => setParcelPropertyId(e.target.value)}
+                  onChange={(e) => {
+                    setParcelPropertyId(e.target.value);
+                    setParcelTenantId('');
+                  }}
                   className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
                 >
                   {assignedProperties.map((p: any) => (
@@ -1408,6 +1506,28 @@ function CaretakerDashboardContent() {
                   ))}
                 </select>
               </div>
+
+              {(() => {
+                const targetProp = assignedProperties.find((p: any) => p.id === (parcelPropertyId || assignedProperties[0]?.id)) || assignedProperties[0];
+                const residents = (targetProp?.bookings || []).map((b: any) => b.tenant).filter(Boolean);
+                return (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Recipient Resident *</label>
+                    <select
+                      value={parcelTenantId}
+                      onChange={(e) => setParcelTenantId(e.target.value)}
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
+                    >
+                      <option value="">-- Select Resident --</option>
+                      {residents.map((t: any) => (
+                        <option key={t.id} value={t.id}>
+                          {t.firstName} {t.lastName} ({t.phoneNumber || t.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Courier / Carrier</label>
@@ -1447,17 +1567,69 @@ function CaretakerDashboardContent() {
               <button onClick={() => setParcelModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
               <button
                 onClick={() => {
+                  const targetPropId = parcelPropertyId || assignedProperties[0]?.id;
+                  if (!parcelTenantId) {
+                    toast.error('Please select the recipient resident');
+                    return;
+                  }
                   logParcelMutation.mutate({
-                    propertyId: parcelPropertyId || assignedProperties[0]?.id,
+                    propertyId: targetPropId,
+                    tenantId: parcelTenantId,
+                    courierName: parcelCarrier,
                     carrier: parcelCarrier,
                     trackingNumber: parcelTracking,
+                    packageDescription: parcelLocation,
                     lockerNumber: parcelLocation,
                   });
                 }}
                 disabled={logParcelMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
+                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50"
               >
                 {logParcelMutation.isPending ? 'Logging...' : 'Log & Alert Tenant'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Verify & Release Parcel OTP Modal ── */}
+      {collectModalOpen && collectParcel && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Package className="w-4 h-4 text-emerald-500" /> Verify Pickup OTP
+              </h3>
+              <button onClick={() => setCollectModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+            </div>
+            <p className="text-xs text-slate-500">
+              Enter the 4-digit collection OTP presented by <strong>{collectParcel.tenant ? `${collectParcel.tenant.firstName} ${collectParcel.tenant.lastName}` : 'the resident'}</strong> to release this parcel ({collectParcel.courierName || collectParcel.carrier || 'Courier'}).
+            </p>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Resident 4-Digit OTP</label>
+              <input
+                type="text"
+                maxLength={4}
+                placeholder="e.g. 4921"
+                value={collectOtp}
+                onChange={(e) => setCollectOtp(e.target.value.trim())}
+                className="w-full p-3 text-center tracking-widest text-lg font-mono font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none"
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button onClick={() => setCollectModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
+              <button
+                onClick={() => {
+                  if (!collectOtp) {
+                    toast.error('Please enter the 4-digit pickup OTP');
+                    return;
+                  }
+                  collectParcelMutation.mutate({ id: collectParcel.id, pickupCode: collectOtp });
+                }}
+                disabled={collectParcelMutation.isPending}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50"
+              >
+                {collectParcelMutation.isPending ? 'Verifying...' : 'Confirm Release'}
               </button>
             </div>
           </div>

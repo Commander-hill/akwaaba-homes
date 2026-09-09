@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteVehicle = exports.getTenantVehicles = exports.getPropertyVehicles = exports.verifyVehiclePlate = exports.registerVehicle = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const socket_1 = require("../socket");
 /**
  * Register a resident or guest vehicle
  */
@@ -52,6 +53,12 @@ const registerVehicle = async (req, res) => {
                 property: { select: { id: true, title: true, location: true } }
             }
         });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('vehicle_created', vehicle);
+            io.to(propertyId).emit('vehicle_created', vehicle);
+        }
+        catch (e) { }
         res.status(201).json({
             message: 'Vehicle registered for security gate clearance',
             vehicle
@@ -179,6 +186,12 @@ const deleteVehicle = async (req, res) => {
             return;
         }
         await prisma_1.default.vehicleRegistration.delete({ where: { id } });
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('vehicle_updated', { id, propertyId: vehicle.propertyId, status: 'DEREGISTERED' });
+            io.to(vehicle.propertyId).emit('vehicle_updated', { id, propertyId: vehicle.propertyId, status: 'DEREGISTERED' });
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Vehicle deregistered successfully' });
     }
     catch (error) {

@@ -92,28 +92,56 @@ const createServiceBooking = async (req, res) => {
 };
 exports.createServiceBooking = createServiceBooking;
 /**
- * Get service bookings for a property (Landlord / Admin)
+ * Get service bookings for a property or portfolio (Landlord / Staff / Admin)
  */
 const getPropertyServiceBookings = async (req, res) => {
     try {
-        const { propertyId } = req.params;
+        const rawPropertyId = req.params?.propertyId || req.query?.propertyId;
+        const propertyId = rawPropertyId ? String(rawPropertyId) : null;
         const userId = req.user?.id;
         const userRole = (req.user?.role || '').toUpperCase();
-        const property = await prisma_1.default.property.findUnique({ where: { id: propertyId } });
-        if (!property) {
-            res.status(404).json({ message: 'Property not found' });
-            return;
+        const whereClause = {};
+        if (propertyId && propertyId !== 'all') {
+            const property = await prisma_1.default.property.findUnique({ where: { id: propertyId } });
+            if (!property) {
+                res.status(404).json({ message: 'Property not found' });
+                return;
+            }
+            const isStaff = await prisma_1.default.propertyStaff.findFirst({
+                where: { propertyId, userId }
+            });
+            if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+                res.status(403).json({ message: 'Forbidden' });
+                return;
+            }
+            whereClause.propertyId = propertyId;
         }
-        const isStaff = await prisma_1.default.propertyStaff.findFirst({
-            where: { propertyId, userId }
-        });
-        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
-            res.status(403).json({ message: 'Forbidden' });
-            return;
+        else {
+            if (userRole === 'LANDLORD') {
+                whereClause.property = { landlordId: userId };
+            }
+            else if (userRole === 'CARETAKER') {
+                const staffAssignments = await prisma_1.default.propertyStaff.findMany({
+                    where: { userId },
+                    select: { propertyId: true }
+                });
+                const staffPropIds = staffAssignments.map(s => s.propertyId);
+                if (staffPropIds.length > 0) {
+                    whereClause.propertyId = { in: staffPropIds };
+                }
+                else {
+                    whereClause.propertyId = '__none__';
+                }
+            }
+            else if (userRole !== 'ADMIN') {
+                res.status(403).json({ message: 'Forbidden' });
+                return;
+            }
         }
         const bookings = await prisma_1.default.serviceBooking.findMany({
-            where: { propertyId },
+            where: whereClause,
             include: {
+                property: { select: { id: true, title: true, location: true } },
                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
             },
             orderBy: { preferredDate: 'desc' }
@@ -227,7 +255,10 @@ const cancelServiceBooking = async (req, res) => {
     try {
         const tenantId = req.user?.id;
         const { id } = req.params;
-        const booking = await prisma_1.default.serviceBooking.findUnique({ where: { id } });
+        const booking = await prisma_1.default.serviceBooking.findUnique({
+            where: { id },
+            include: { property: true }
+        });
         if (!booking) {
             res.status(404).json({ message: 'Service booking not found' });
             return;
@@ -240,6 +271,23 @@ const cancelServiceBooking = async (req, res) => {
             where: { id },
             data: { status: 'CANCELLED' }
         });
+        if (booking.property?.landlordId) {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: booking.property.landlordId,
+                    type: 'ANNOUNCEMENT',
+                    title: '🛠️ Service Request Cancelled',
+                    message: `A resident cancelled their ${booking.serviceType.replace('_', ' ')} request for "${booking.property?.title}".`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => { });
+        }
+        try {
+            const io = (0, socket_1.getIO)();
+            io.emit('service_booking_updated', updated);
+            io.to(booking.tenantId).emit('service_booking_updated', updated);
+        }
+        catch (e) { }
         res.status(200).json({ message: 'Service booking cancelled', booking: updated });
     }
     catch (error) {

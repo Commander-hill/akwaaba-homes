@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import { getIO } from '../socket';
 
 /**
  * Register a resident or guest vehicle
@@ -55,6 +56,12 @@ export const registerVehicle = async (req: Request, res: Response): Promise<void
         property: { select: { id: true, title: true, location: true } }
       }
     });
+
+    try {
+      const io = getIO();
+      io.emit('vehicle_created', vehicle);
+      io.to(propertyId).emit('vehicle_created', vehicle);
+    } catch (e) {}
 
     res.status(201).json({
       message: 'Vehicle registered for security gate clearance',
@@ -192,6 +199,13 @@ export const deleteVehicle = async (req: Request, res: Response): Promise<void> 
     }
 
     await prisma.vehicleRegistration.delete({ where: { id } });
+
+    try {
+      const io = getIO();
+      io.emit('vehicle_updated', { id, propertyId: vehicle.propertyId, status: 'DEREGISTERED' });
+      io.to(vehicle.propertyId).emit('vehicle_updated', { id, propertyId: vehicle.propertyId, status: 'DEREGISTERED' });
+    } catch (e) {}
+
     res.status(200).json({ message: 'Vehicle deregistered successfully' });
   } catch (error) {
     console.error('Error deleting vehicle:', error);
