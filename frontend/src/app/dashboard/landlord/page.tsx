@@ -24,6 +24,7 @@ import GateLogbookTab from '@/components/landlord/GateLogbookTab';
 import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab';
 import RoomAssetVaultTab from '@/components/landlord/RoomAssetVaultTab';
+import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import InspectionModal from '@/components/landlord/InspectionModal';
 import toast from 'react-hot-toast';
 
@@ -36,7 +37,7 @@ function getImageUrl(path?: string | null): string {
 
 export default function LandlordDashboard() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities' | 'disciplinary'>('bookings');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
@@ -393,7 +394,7 @@ export default function LandlordDashboard() {
               onClick={() => setActiveTab('tickets')}
               className={clsx(
                 "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
-                ['tickets', 'staff', 'notices', 'gatepass', 'messages'].includes(activeTab)
+                ['tickets', 'staff', 'notices', 'gatepass', 'disciplinary', 'messages'].includes(activeTab)
                   ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               )}
@@ -514,7 +515,7 @@ export default function LandlordDashboard() {
               </>
             )}
 
-            {['tickets', 'staff', 'notices', 'gatepass', 'messages'].includes(activeTab) && (
+            {['tickets', 'staff', 'notices', 'gatepass', 'disciplinary', 'messages'].includes(activeTab) && (
               <>
                 <button
                   onClick={() => setActiveTab('tickets')}
@@ -548,6 +549,17 @@ export default function LandlordDashboard() {
                   )}
                 >
                   Porter’s Gate Logbook
+                </button>
+                <button
+                  onClick={() => setActiveTab('disciplinary')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'disciplinary'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Disciplinary Vault
                 </button>
                 <button
                   onClick={() => setActiveTab('notices')}
@@ -1355,6 +1367,13 @@ export default function LandlordDashboard() {
       {activeTab === 'gatepass' && (
         <div>
           <GateLogbookTab properties={myProperties} />
+        </div>
+      )}
+
+      {/* ─── TAB: INCIDENT & DISCIPLINARY LOGBOOK ──────────────────────────────────── */}
+      {activeTab === 'disciplinary' && (
+        <div>
+          <HostelDisciplinaryTab properties={myProperties} bookings={bookings} />
         </div>
       )}
 
