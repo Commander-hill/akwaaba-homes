@@ -60,6 +60,27 @@ export const createCompoundNotice = async (req: Request, res: Response): Promise
     // Broadcast in-app & socket alerts to all active tenants in this property
     const tenantIds = Array.from(new Set(property.bookings.map((b) => b.tenantId)));
     
+    // Notify landlord if posted by property staff
+    if (isStaff && property.landlordId !== req.user?.id) {
+      await prisma.notification.create({
+        data: {
+          userId: property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: `📢 Staff Broadcasted Notice: ${title}`,
+          message: `${property.title}: ${message.substring(0, 100)}...`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => null);
+
+      try {
+        getIO().to(property.landlordId).emit('notification', {
+          title: `📢 Notice for ${property.title}`,
+          message: `Staff posted: ${title}`,
+          type: 'announcement'
+        });
+      } catch (e) {}
+    }
+
     try {
       const io = getIO();
       for (const tId of tenantIds) {
@@ -106,7 +127,11 @@ export const getPropertyNotices = async (req: Request, res: Response): Promise<v
     const notices = await prisma.compoundNotice.findMany({
       where: {
         propertyId,
-        isActive: true
+        isActive: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } }
+        ]
       },
       include: {
         property: {

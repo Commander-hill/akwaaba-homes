@@ -303,9 +303,21 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
       // Invalidate all active sessions for suspended user immediately
       await prisma.session.deleteMany({ where: { userId: id } });
       appCache.del(`user:me:${id}`);
+
+      // Deactivate all listings if suspended user is a landlord
+      if (targetUser.role === 'LANDLORD') {
+        await prisma.property.updateMany({
+          where: { landlordId: id },
+          data: { isAvailable: false }
+        });
+      }
+
       try {
         const { getIO } = await import('../socket');
         getIO().to(id).emit('session_revoked', { reason: 'Your account has been suspended by an administrator.' });
+        if (targetUser.role === 'LANDLORD') {
+          getIO().emit('property_updated', { landlordId: id });
+        }
       } catch (e) {}
     }
 

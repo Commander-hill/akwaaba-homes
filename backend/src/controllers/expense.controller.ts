@@ -77,11 +77,26 @@ export const createExpense = async (req: Request, res: Response): Promise<void> 
 export const getExpenses = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
+    const userRole = req.user?.role;
     const { propertyId, category, startDate, endDate } = req.query;
 
-    const where: any = { landlordId };
+    const where: any = {};
 
-    if (propertyId && typeof propertyId === 'string') {
+    if (userRole === 'LANDLORD') {
+      where.landlordId = landlordId;
+    } else if (userRole === 'CARETAKER') {
+      const staffAssignments = await prisma.propertyStaff.findMany({
+        where: { userId: landlordId },
+        select: { propertyId: true }
+      });
+      const staffPropertyIds = staffAssignments.map(s => s.propertyId);
+      where.propertyId = { in: staffPropertyIds };
+    } else if (userRole !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    if (propertyId && typeof propertyId === 'string' && propertyId !== 'all') {
       where.propertyId = propertyId;
     }
     if (category && typeof category === 'string') {
@@ -133,7 +148,11 @@ export const deleteExpense = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (expense.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: expense.propertyId, userId: landlordId }
+    });
+
+    if (expense.landlordId !== landlordId && req.user?.role !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -143,7 +162,10 @@ export const deleteExpense = async (req: Request, res: Response): Promise<void> 
     });
 
     try {
-      getIO().to(landlordId).emit('financials_updated', { propertyId: expense.propertyId });
+      getIO().to(expense.landlordId).emit('financials_updated', { propertyId: expense.propertyId });
+      if (isStaff) {
+        getIO().to(landlordId).emit('financials_updated', { propertyId: expense.propertyId });
+      }
     } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: 'Expense deleted successfully' });
@@ -159,6 +181,7 @@ export const deleteExpense = async (req: Request, res: Response): Promise<void> 
 export const getFinancialAnalytics = async (req: Request, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;
+    const userRole = req.user?.role;
     const { propertyId, year } = req.query;
 
     const currentYear = year ? parseInt(String(year), 10) : new Date().getFullYear();
@@ -167,10 +190,22 @@ export const getFinancialAnalytics = async (req: Request, res: Response): Promis
 
     // 1. Fetch Gross Revenue from Bookings
     const bookingWhere: any = {
-      property: { landlordId },
       status: { in: ['COMPLETED', 'CONFIRMED', 'APPROVED', 'ACTIVE', 'CHECKED_IN'] },
       createdAt: { gte: startOfYear, lte: endOfYear }
     };
+    if (userRole === 'LANDLORD') {
+      bookingWhere.property = { landlordId };
+    } else if (userRole === 'CARETAKER') {
+      const staffAssignments = await prisma.propertyStaff.findMany({
+        where: { userId: landlordId },
+        select: { propertyId: true }
+      });
+      const staffPropertyIds = staffAssignments.map(s => s.propertyId);
+      bookingWhere.propertyId = { in: staffPropertyIds };
+    } else if (userRole !== 'ADMIN') {
+      res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
     if (propertyId && typeof propertyId === 'string') {
       bookingWhere.propertyId = propertyId;
     }

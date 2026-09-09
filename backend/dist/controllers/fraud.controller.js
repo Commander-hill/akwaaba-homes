@@ -151,7 +151,7 @@ const resolveFraudAction = async (req, res) => {
         if (action === 'SUSPEND_PROPERTY') {
             await prisma_1.default.property.update({
                 where: { id: propertyId },
-                data: { approvalStatus: 'REJECTED' }
+                data: { approvalStatus: 'REJECTED', isAvailable: false }
             });
             await prisma_1.default.notification.create({
                 data: {
@@ -179,9 +179,10 @@ const resolveFraudAction = async (req, res) => {
                 data: { isValid: false }
             });
             cache_1.default.del(`user:me:${property.landlordId}`);
-            await prisma_1.default.property.update({
-                where: { id: propertyId },
-                data: { approvalStatus: 'REJECTED' }
+            // Deactivate all listings owned by suspended fraudulent landlord
+            await prisma_1.default.property.updateMany({
+                where: { landlordId: property.landlordId },
+                data: { approvalStatus: 'REJECTED', isAvailable: false }
             });
             await prisma_1.default.notification.create({
                 data: {

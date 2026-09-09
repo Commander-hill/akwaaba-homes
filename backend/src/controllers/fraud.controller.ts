@@ -174,7 +174,7 @@ export const resolveFraudAction = async (req: Request, res: Response): Promise<v
     if (action === 'SUSPEND_PROPERTY') {
       await prisma.property.update({
         where: { id: propertyId },
-        data: { approvalStatus: 'REJECTED' }
+        data: { approvalStatus: 'REJECTED', isAvailable: false }
       });
       await prisma.notification.create({
         data: {
@@ -202,9 +202,10 @@ export const resolveFraudAction = async (req: Request, res: Response): Promise<v
       });
       appCache.del(`user:me:${property.landlordId}`);
 
-      await prisma.property.update({
-        where: { id: propertyId },
-        data: { approvalStatus: 'REJECTED' }
+      // Deactivate all listings owned by suspended fraudulent landlord
+      await prisma.property.updateMany({
+        where: { landlordId: property.landlordId },
+        data: { approvalStatus: 'REJECTED', isAvailable: false }
       });
       await prisma.notification.create({
         data: {

@@ -306,6 +306,7 @@ const requestPayout = async (req, res) => {
                         type: 'PAYMENT_RECEIVED'
                     });
                     io.to(landlordId).emit('payout_updated', { payoutId: payout.id, status });
+                    io.to(landlordId).emit('financials_updated', { landlordId });
                 }
                 catch (e) { /* non-blocking */ }
                 // Trigger SMS & Email notification to landlord
@@ -353,6 +354,7 @@ const requestPayout = async (req, res) => {
                         type: 'SYSTEM_ALERT'
                     });
                     io.to(landlordId).emit('payout_updated', { payoutId: payout.id, status: 'FAILED' });
+                    io.to(landlordId).emit('financials_updated', { landlordId });
                 }
                 catch (e) { /* non-blocking */ }
             }
@@ -476,6 +478,7 @@ const handleTransferWebhook = async (req, res) => {
                             type: finalStatus === 'SUCCESS' ? 'PAYMENT_RECEIVED' : 'SYSTEM_ALERT'
                         });
                         io.to(payout.landlordId).emit('payout_updated', { payoutId: payout.id, status: finalStatus });
+                        io.to(payout.landlordId).emit('financials_updated', { landlordId: payout.landlordId });
                     }
                     catch (e) { /* non-blocking */ }
                 }

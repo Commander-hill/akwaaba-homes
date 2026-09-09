@@ -388,6 +388,7 @@ export const respondToRoommateInvitation = async (req: Request, res: Response): 
         link: '/dashboard/roommates'
       });
       io.to(invitation.senderId).emit('roommate_invitation_responded', { invitation: updated, conversationId });
+      io.to(userId).emit('roommate_invitation_responded', { invitation: updated, conversationId });
       if (conversationId) {
         io.to(invitation.senderId).emit('conversation_updated', { conversationId });
         io.to(userId).emit('conversation_updated', { conversationId });
@@ -426,6 +427,16 @@ export const cancelRoommateInvitation = async (req: Request, res: Response): Pro
     await prisma.roommateInvitation.delete({
       where: { id }
     });
+
+    await prisma.notification.create({
+      data: {
+        userId: invitation.receiverId,
+        type: 'ANNOUNCEMENT',
+        title: '🤝 Roommate Invitation Withdrawn',
+        message: 'A pending roommate split invitation was withdrawn by the sender.',
+        link: '/dashboard/roommates'
+      }
+    }).catch(() => null);
 
     try {
       const io = getIO();
