@@ -70,6 +70,7 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
     let occupiedBeds = 0;
     let reservedBeds = 0;
     let maintenanceBeds = 0;
+    let cleaningBeds = 0;
     let availableBeds = 0;
 
     const matrix = property.rooms.map((room) => {
@@ -92,6 +93,8 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
 
               if (effectiveStatus === 'MAINTENANCE') {
                 maintenanceBeds++;
+              } else if (effectiveStatus === 'CLEANING') {
+                cleaningBeds++;
               } else if (activeBooking) {
                 if (['COMPLETED', 'APPROVED', 'CONFIRMED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(activeBooking.status)) {
                   effectiveStatus = 'OCCUPIED';
@@ -138,6 +141,7 @@ export const getPropertyOccupancyMatrix = async (req: Request, res: Response): P
         occupiedBeds,
         reservedBeds,
         maintenanceBeds,
+        cleaningBeds,
         availableBeds,
         occupancyRate
       },
@@ -159,8 +163,8 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
     const userId = req.user?.id;
     const userRole = (req.user?.role || '').toUpperCase();
 
-    if (!['AVAILABLE', 'MAINTENANCE', 'RESERVED'].includes(status)) {
-      res.status(400).json({ message: 'Invalid status. Must be AVAILABLE, MAINTENANCE, or RESERVED' });
+    if (!['AVAILABLE', 'MAINTENANCE', 'RESERVED', 'CLEANING'].includes(status)) {
+      res.status(400).json({ message: 'Invalid status. Must be AVAILABLE, MAINTENANCE, RESERVED, or CLEANING' });
       return;
     }
 

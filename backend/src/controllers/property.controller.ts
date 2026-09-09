@@ -429,8 +429,8 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
           );
 
           let effectiveStatus = bed.status;
-          if (bed.status === 'MAINTENANCE') {
-            effectiveStatus = 'MAINTENANCE';
+          if (bed.status === 'MAINTENANCE' || bed.status === 'CLEANING') {
+            effectiveStatus = bed.status;
           } else if (isDirectlyBooked || isUnitBooked || hasLinkedBooking) {
             effectiveStatus = 'BOOKED';
           }
@@ -438,7 +438,7 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
           return {
             ...bed,
             status: effectiveStatus,
-            isBooked: effectiveStatus === 'BOOKED' || effectiveStatus === 'OCCUPIED' || effectiveStatus === 'RESERVED'
+            isBooked: effectiveStatus === 'BOOKED' || effectiveStatus === 'OCCUPIED' || effectiveStatus === 'RESERVED' || effectiveStatus === 'MAINTENANCE' || effectiveStatus === 'CLEANING'
           };
         });
 

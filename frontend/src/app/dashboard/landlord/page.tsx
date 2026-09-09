@@ -1244,7 +1244,20 @@ export default function LandlordDashboard() {
       {/* ─── TAB: FLOORPLAN & BED OCCUPANCY MATRIX ────────────────────────────────── */}
       {activeTab === 'occupancy' && (
         <div>
-          <FloorplanOccupancyTab properties={myProperties} />
+          <FloorplanOccupancyTab 
+            properties={myProperties} 
+            onStartInspection={(bookingId) => {
+              const b = bookings.find((item: any) => item.id === bookingId);
+              if (b) {
+                setSelectedInspectionBooking(b);
+              } else {
+                toast.error('Booking details not found in active cache');
+              }
+            }}
+            onOpenChat={() => {
+              setActiveTab('messages');
+            }}
+          />
         </div>
       )}
 

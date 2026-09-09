@@ -401,8 +401,8 @@ const getPropertyById = async (req, res) => {
                     const isUnitBooked = unit.beds?.length === 1 && activeUnitIds.has(unit.id);
                     const hasLinkedBooking = bed.bookings?.some((b) => ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE', 'CHECKED_IN'].includes(b.status));
                     let effectiveStatus = bed.status;
-                    if (bed.status === 'MAINTENANCE') {
-                        effectiveStatus = 'MAINTENANCE';
+                    if (bed.status === 'MAINTENANCE' || bed.status === 'CLEANING') {
+                        effectiveStatus = bed.status;
                     }
                     else if (isDirectlyBooked || isUnitBooked || hasLinkedBooking) {
                         effectiveStatus = 'BOOKED';
@@ -410,7 +410,7 @@ const getPropertyById = async (req, res) => {
                     return {
                         ...bed,
                         status: effectiveStatus,
-                        isBooked: effectiveStatus === 'BOOKED' || effectiveStatus === 'OCCUPIED' || effectiveStatus === 'RESERVED'
+                        isBooked: effectiveStatus === 'BOOKED' || effectiveStatus === 'OCCUPIED' || effectiveStatus === 'RESERVED' || effectiveStatus === 'MAINTENANCE' || effectiveStatus === 'CLEANING'
                     };
                 });
                 const availableBedsCount = enrichedBeds.filter((b) => b.status === 'AVAILABLE').length;
