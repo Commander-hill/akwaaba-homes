@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, DollarSign, CheckCircle2, Clock, AlertTriangle, 
   KeyRound, Printer, Receipt, ShieldCheck, ArrowRight, 
@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import api from '@/lib/axios';
 
 interface BookingData {
   id: string;
@@ -50,7 +51,7 @@ export default function TenantPaymentScheduleTab({ bookings, onMakePayment }: Te
   // Tranche 1 is considered paid for active bookings
   const isTranche1Paid = activeBooking?.status === 'CONFIRMED' || activeBooking?.status === 'ACTIVE';
   
-  // Tranche 2 state persisted in localStorage or default pending
+  // Tranche 2 state persisted in database with localStorage offline fallback
   const storageKey = `tranche2_settled_${activeBooking?.id || 'demo'}`;
   const [isTranche2Paid, setIsTranche2Paid] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -58,11 +59,57 @@ export default function TenantPaymentScheduleTab({ bookings, onMakePayment }: Te
     }
     return false;
   });
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  const handleSimulatePayment = () => {
+  // Load tranche state from backend inspection checklist
+  useEffect(() => {
+    let isMounted = true;
+    const fetchTrancheStatus = async () => {
+      if (!activeBooking?.id) return;
+      try {
+        const res = await api.get(`/inspections/booking/${activeBooking.id}`);
+        const inspections = res.data?.inspections || [];
+        const trancheRec = inspections.find((ins: any) => ins.type === 'TRANCHE_SCHEDULE');
+        if (trancheRec && isMounted) {
+          const items = Array.isArray(trancheRec.items) ? trancheRec.items : [];
+          const tranche2 = items.find((it: any) => it.trancheNumber === 2);
+          if (tranche2?.isPaid) {
+            setIsTranche2Paid(true);
+            localStorage.setItem(storageKey, 'true');
+          }
+        }
+      } catch (e) {}
+    };
+    fetchTrancheStatus();
+    return () => { isMounted = false; };
+  }, [activeBooking?.id, storageKey]);
+
+  const handleSimulatePayment = async () => {
+    setIsProcessingPayment(true);
     localStorage.setItem(storageKey, 'true');
     setIsTranche2Paid(true);
-    toast.success('Installment payment confirmed via Mobile Money!');
+
+    if (activeBooking?.id) {
+      try {
+        const trancheItems = [
+          { trancheNumber: 1, amount: tranche1Amount, isPaid: true, paidAt: activeBooking.startDate },
+          { trancheNumber: 2, amount: tranche2Amount, isPaid: true, paidAt: new Date().toISOString() }
+        ];
+        await api.post('/inspections', {
+          bookingId: activeBooking.id,
+          type: 'TRANCHE_SCHEDULE',
+          items: trancheItems,
+          notes: `Tranche 2 settled via Mobile Money (GH₵ ${tranche2Amount.toFixed(2)}). Key clearance granted.`,
+          status: 'COMPLETED'
+        });
+        toast.success('Installment payment confirmed and synchronized with database!');
+      } catch (e) {
+        toast.success('Installment payment confirmed via Mobile Money!');
+      }
+    } else {
+      toast.success('Installment payment confirmed via Mobile Money!');
+    }
+    setIsProcessingPayment(false);
   };
 
   // Due dates

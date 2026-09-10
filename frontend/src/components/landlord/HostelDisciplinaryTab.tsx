@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import api from '@/lib/axios';
 
 export type InfractionType = 
   | 'NOISE_POLLUTION' 
@@ -139,25 +140,68 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
 
   useEffect(() => {
     if (!selectedProperty?.id) return;
+    let isMounted = true;
     const storageKey = `akwaaba_disciplinary_incidents_${selectedProperty.id}`;
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         setIncidents(JSON.parse(stored));
-        return;
       } catch (e) {
         console.error('Failed to parse incidents', e);
       }
     }
 
-    // Seed defaults
-    const initialSeed: DisciplinaryIncident[] = DEFAULT_SEEDED_INCIDENTS.map((item, idx) => ({
-      ...item,
-      id: `disc_${Date.now()}_${idx}`,
-      propertyId: selectedProperty.id
-    }));
-    setIncidents(initialSeed);
-    localStorage.setItem(storageKey, JSON.stringify(initialSeed));
+    // Query backend breach reports
+    const fetchBreaches = async () => {
+      try {
+        const res = await api.get('/breaches');
+        const reports = res.data?.reports || [];
+        const propReports = reports.filter((r: any) => !r.propertyId || r.propertyId === selectedProperty.id);
+        if (propReports.length > 0 && isMounted) {
+          const parsedBreaches: DisciplinaryIncident[] = propReports.map((r: any) => {
+            let meta: any = {};
+            try {
+              meta = JSON.parse(r.description);
+            } catch (e) {
+              meta = { description: r.description };
+            }
+            return {
+              id: r.id,
+              propertyId: r.propertyId || selectedProperty.id,
+              referenceCode: meta.referenceCode || `DISC-${r.id.substring(0, 6).toUpperCase()}`,
+              residentName: meta.residentName || `${r.tenant?.firstName || ''} ${r.tenant?.lastName || ''}`.trim() || 'Resident',
+              residentPhone: meta.residentPhone || '+233 24 000 0000',
+              roomUnit: meta.roomUnit || 'Unit',
+              infractionType: meta.infractionType || 'NOISE_POLLUTION',
+              incidentDate: meta.incidentDate || (r.createdAt ? r.createdAt.split('T')[0] : new Date().toISOString().split('T')[0]),
+              incidentTime: meta.incidentTime || '12:00',
+              strikeLevel: meta.strikeLevel || 1,
+              fineAmountGHS: meta.fineAmountGHS || 0,
+              status: meta.status || (r.status === 'VERIFIED' ? 'FINE_SETTLED' : 'WARNING_ISSUED'),
+              description: meta.description || r.title,
+              reportedBy: meta.reportedBy || (r.reporter ? `${r.reporter.firstName || ''} (${r.reporter.role || 'Staff'})` : 'Staff'),
+              witnessStatement: meta.witnessStatement || ''
+            };
+          });
+          setIncidents(parsedBreaches);
+          localStorage.setItem(storageKey, JSON.stringify(parsedBreaches));
+          return;
+        }
+      } catch (e) {}
+
+      if (!stored && isMounted) {
+        const initialSeed: DisciplinaryIncident[] = DEFAULT_SEEDED_INCIDENTS.map((item, idx) => ({
+          ...item,
+          id: `disc_${Date.now()}_${idx}`,
+          propertyId: selectedProperty.id
+        }));
+        setIncidents(initialSeed);
+        localStorage.setItem(storageKey, JSON.stringify(initialSeed));
+      }
+    };
+
+    fetchBreaches();
+    return () => { isMounted = false; };
   }, [selectedProperty?.id]);
 
   const saveIncidents = (updated: DisciplinaryIncident[]) => {
@@ -255,7 +299,28 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
 
     const updated = [newIncident, ...incidents];
     saveIncidents(updated);
-    toast.success(`Citation ${refCode} filed for ${newIncident.residentName} (Strike ${newIncident.strikeLevel})`);
+
+    // Sync with backend breach report
+    const matchedBooking = bookings?.find((b: any) => {
+      const name = `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim().toLowerCase();
+      return name === formResidentName.trim().toLowerCase();
+    });
+    const tenantId = matchedBooking?.tenantId || matchedBooking?.tenant?.id;
+
+    if (tenantId && selectedProperty?.id) {
+      api.post('/breaches/report', {
+        tenantId,
+        propertyId: selectedProperty.id,
+        title: `${formInfraction} - Strike ${formStrike}`,
+        description: JSON.stringify(newIncident)
+      }).then(() => {
+        toast.success(`Citation ${refCode} officially recorded & synced with database!`);
+      }).catch(() => {
+        toast.success(`Citation ${refCode} filed for ${newIncident.residentName} (Strike ${newIncident.strikeLevel})`);
+      });
+    } else {
+      toast.success(`Citation ${refCode} filed for ${newIncident.residentName} (Strike ${newIncident.strikeLevel})`);
+    }
     setIsLogModalOpen(false);
   };
 

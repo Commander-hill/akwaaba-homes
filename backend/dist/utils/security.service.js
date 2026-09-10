@@ -17,7 +17,10 @@ const generateSignedDocumentUrl = (rawUrl, expiresMinutes = 15) => {
         return rawUrl;
     }
     const expires = Date.now() + expiresMinutes * 60 * 1000;
-    const secret = process.env.JWT_SECRET || 'akwaaba-homes-secret-key-2026';
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'akwaaba-homes-secret-key-2026' : '');
+    if (!secret) {
+        throw new Error('JWT_SECRET must be configured to generate secure signed URLs.');
+    }
     const signature = crypto_1.default
         .createHmac('sha256', secret)
         .update(`${rawUrl}:${expires}`)
@@ -37,7 +40,10 @@ const verifySignedDocumentUrl = (url, expiresStr, signatureStr) => {
     if (isNaN(expires) || Date.now() > expires) {
         return { valid: false, error: 'Document access link has expired (15-minute expiration limit)' };
     }
-    const secret = process.env.JWT_SECRET || 'akwaaba-homes-secret-key-2026';
+    const secret = process.env.JWT_SECRET || (process.env.NODE_ENV !== 'production' ? 'akwaaba-homes-secret-key-2026' : '');
+    if (!secret) {
+        return { valid: false, error: 'Server security configuration error: JWT_SECRET not configured' };
+    }
     const expectedSignature = crypto_1.default
         .createHmac('sha256', secret)
         .update(`${url}:${expires}`)

@@ -4,8 +4,8 @@ import { reportBreach, getBreachReports, verifyBreach } from '../controllers/bre
 
 const router = Router();
 
-// Landlords can report breaches
-router.post('/report', authenticate, authorizeRole(['LANDLORD']), reportBreach);
+// Landlords, Caretakers, and Admins can report breaches/citations
+router.post('/report', authenticate, authorizeRole(['LANDLORD', 'CARETAKER', 'ADMIN']), reportBreach);
 // Landlords can view their reported breaches, Tenants can view their own breaches
 router.get('/', authenticate, getBreachReports);
 // Admins can verify/reject breaches

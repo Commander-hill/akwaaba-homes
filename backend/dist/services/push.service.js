@@ -6,12 +6,27 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendPushToUser = exports.removeSubscription = exports.saveSubscription = exports.getVapidPublicKey = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const web_push_1 = __importDefault(require("web-push"));
-// Configure Web Push VAPID keys
-// Default fallback keys for instant local & production operation
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDnAJAw9inn2x8-6K9-1c9vF-2yD-wD71xW9zV8w420M';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '7xG92kF1_8xW-vM4kL9-2xV_8kF1_2xV_8kF1_2xV_8';
+const isProduction = process.env.NODE_ENV === 'production';
+const rawPublicKey = process.env.VAPID_PUBLIC_KEY;
+const rawPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@akwaabahomes.com';
-web_push_1.default.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+let vapidConfigured = false;
+let vapidPublicKey = '';
+if (rawPublicKey && rawPrivateKey) {
+    vapidPublicKey = rawPublicKey;
+    web_push_1.default.setVapidDetails(vapidSubject, rawPublicKey, rawPrivateKey);
+    vapidConfigured = true;
+}
+else if (!isProduction) {
+    // Safe local mock keys for development and test suites only
+    vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDnAJAw9inn2x8-6K9-1c9vF-2yD-wD71xW9zV8w420M';
+    const devPrivateKey = '7xG92kF1_8xW-vM4kL9-2xV_8kF1_2xV_8kF1_2xV_8';
+    web_push_1.default.setVapidDetails(vapidSubject, vapidPublicKey, devPrivateKey);
+    vapidConfigured = true;
+}
+else {
+    console.warn('⚠️ Web Push notice: VAPID keys are not configured in production environment. Push delivery disabled.');
+}
 const getVapidPublicKey = () => {
     return vapidPublicKey;
 };
@@ -48,6 +63,9 @@ const sendPushToUser = async (userId, payload) => {
         const subscriptions = await prisma_1.default.pushSubscription.findMany({
             where: { userId },
         });
+        if (!vapidConfigured) {
+            return;
+        }
         if (!subscriptions || subscriptions.length === 0) {
             return;
         }

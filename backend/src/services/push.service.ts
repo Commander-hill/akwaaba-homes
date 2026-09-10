@@ -1,17 +1,27 @@
 import prisma from '../utils/prisma';
 import webpush from 'web-push';
 
-// Configure Web Push VAPID keys
-// Default fallback keys for instant local & production operation
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDnAJAw9inn2x8-6K9-1c9vF-2yD-wD71xW9zV8w420M';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '7xG92kF1_8xW-vM4kL9-2xV_8kF1_2xV_8kF1_2xV_8';
+const isProduction = process.env.NODE_ENV === 'production';
+const rawPublicKey = process.env.VAPID_PUBLIC_KEY;
+const rawPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:support@akwaabahomes.com';
 
-webpush.setVapidDetails(
-  vapidSubject,
-  vapidPublicKey,
-  vapidPrivateKey
-);
+let vapidConfigured = false;
+let vapidPublicKey = '';
+
+if (rawPublicKey && rawPrivateKey) {
+  vapidPublicKey = rawPublicKey;
+  webpush.setVapidDetails(vapidSubject, rawPublicKey, rawPrivateKey);
+  vapidConfigured = true;
+} else if (!isProduction) {
+  // Safe local mock keys for development and test suites only
+  vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDnAJAw9inn2x8-6K9-1c9vF-2yD-wD71xW9zV8w420M';
+  const devPrivateKey = '7xG92kF1_8xW-vM4kL9-2xV_8kF1_2xV_8kF1_2xV_8';
+  webpush.setVapidDetails(vapidSubject, vapidPublicKey, devPrivateKey);
+  vapidConfigured = true;
+} else {
+  console.warn('⚠️ Web Push notice: VAPID keys are not configured in production environment. Push delivery disabled.');
+}
 
 export const getVapidPublicKey = (): string => {
   return vapidPublicKey;
@@ -50,6 +60,10 @@ export const sendPushToUser = async (userId: string, payload: { title: string; b
     const subscriptions = await prisma.pushSubscription.findMany({
       where: { userId },
     });
+
+    if (!vapidConfigured) {
+      return;
+    }
 
     if (!subscriptions || subscriptions.length === 0) {
       return;

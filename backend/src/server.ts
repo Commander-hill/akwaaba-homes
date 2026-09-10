@@ -32,9 +32,13 @@ if (!process.env.PAYSTACK_SECRET_KEY) {
 
 if (
   process.env.NODE_ENV === 'production' &&
-  (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'akwaaba_super_secret_jwt_key_2026_dev')
+  (!process.env.JWT_SECRET ||
+    process.env.JWT_SECRET.includes('dev') ||
+    process.env.JWT_SECRET.includes('fallback') ||
+    process.env.JWT_SECRET.length < 32)
 ) {
-  console.warn('⚠️ WARNING: Using development JWT secret in production environment!');
+  console.error('❌ FATAL: Production requires a secure, high-entropy JWT_SECRET (minimum 32 characters, non-default). Terminating process.');
+  process.exit(1);
 }
 
 import cookieParser from 'cookie-parser';

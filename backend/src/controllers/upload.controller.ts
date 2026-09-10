@@ -40,7 +40,7 @@ const streamUpload = (buffer: Buffer, folder: string, resourceType: 'image' | 'v
 };
 
 // Inspect binary header bytes to prevent polyglot / extension spoofing attacks
-export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'any'): boolean => {
+export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'audio' | 'document' | 'any'): boolean => {
   if (!buffer || buffer.length < 4) return false;
 
   const isJpeg = buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
@@ -51,9 +51,17 @@ export const isValidFileType = (buffer: Buffer, type: 'image' | 'video' | 'any')
   const isMp4 = buffer.length >= 8 && buffer.subarray(4, 8).toString('ascii') === 'ftyp';
   const isWebm = buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
 
+  // Audio magic bytes: MP3 (ID3 tag or sync word), WAV (RIFF....WAVE), OGG (OggS), M4A/AAC
+  const isMp3 = (buffer[0] === 0x49 && buffer[1] === 0x44 && buffer[2] === 0x33) || (buffer[0] === 0xFF && (buffer[1] & 0xE0) === 0xE0);
+  const isWav = buffer.length >= 12 && buffer.subarray(0, 4).toString('ascii') === 'RIFF' && buffer.subarray(8, 12).toString('ascii') === 'WAVE';
+  const isOgg = buffer.subarray(0, 4).toString('ascii') === 'OggS';
+  const isAudio = isMp3 || isWav || isOgg || isMp4; // M4A shares ftyp header with mp4
+
   if (type === 'image') return isJpeg || isPng || isWebp || isGif;
   if (type === 'video') return isMp4 || isWebm;
-  return isJpeg || isPng || isWebp || isGif || isPdf || isMp4 || isWebm;
+  if (type === 'audio') return isAudio;
+  if (type === 'document') return isPdf;
+  return isJpeg || isPng || isWebp || isGif || isPdf || isMp4 || isWebm || isAudio;
 };
 
 export const uploadAvatar = async (req: Request, res: Response): Promise<void> => {
@@ -270,12 +278,24 @@ export const uploadMedia = async (req: Request, res: Response): Promise<void> =>
     let resourceType: 'image' | 'video' | 'auto' = 'auto';
 
     if (mime.startsWith('image/')) {
+      if (!isValidFileType(req.file.buffer, 'image')) {
+        res.status(400).json({ error: 'File content failed signature inspection. Not a valid image binary.' });
+        return;
+      }
       folder = 'chat/images';
       resourceType = 'image';
     } else if (mime.startsWith('audio/')) {
+      if (!isValidFileType(req.file.buffer, 'audio')) {
+        res.status(400).json({ error: 'File content failed signature inspection. Not a valid audio binary.' });
+        return;
+      }
       folder = 'chat/audio';
       resourceType = 'video'; // Cloudinary uses resource_type video for audio
     } else if (mime === 'application/pdf') {
+      if (!isValidFileType(req.file.buffer, 'document')) {
+        res.status(400).json({ error: 'File content failed signature inspection. Not a valid PDF document.' });
+        return;
+      }
       folder = 'chat/documents';
       resourceType = 'auto';
     } else {

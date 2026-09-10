@@ -7,5 +7,8 @@ const router = (0, express_1.Router)();
 router.use(auth_middleware_1.authenticate);
 router.post('/', inspection_controller_1.createOrUpdateInspection);
 router.get('/booking/:bookingId', inspection_controller_1.getBookingInspections);
+// Property Master Asset Vault routes
+router.get('/property/:propertyId/inventory', inspection_controller_1.getPropertyInventory);
+router.post('/property/:propertyId/inventory', inspection_controller_1.savePropertyInventory);
 exports.default = router;
 //# sourceMappingURL=inspection.routes.js.map

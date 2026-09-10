@@ -306,14 +306,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
           if (!targetBed || targetBed.roomUnitId !== roomUnitId) {
             throw { status: 400, message: 'Invalid bed selected' };
           }
-
-          // ATOMIC CHECK: Ensure bed slot is still AVAILABLE at the exact moment of transaction execution
-          if (targetBed.status !== 'AVAILABLE') {
-            throw { 
-              status: 409, 
-              message: `Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit.unitNumber}" was just reserved or booked by another student. Please select an available bed slot.` 
-            };
-          }
         }
 
         // Dynamic Gender Locking on Room Unit
@@ -333,12 +325,22 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
           }
         }
 
-        // Reserve selected bed slot atomically
+        // ATOMIC RESERVATION: Ensure bed slot is AVAILABLE and reserve it in a single atomic statement
         if (targetBed) {
-          await tx.bed.update({
-            where: { id: targetBed.id },
+          const updateResult = await tx.bed.updateMany({
+            where: {
+              id: targetBed.id,
+              status: 'AVAILABLE'
+            },
             data: { status: 'RESERVED' }
           });
+
+          if (updateResult.count === 0) {
+            throw { 
+              status: 409, 
+              message: `Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit?.unitNumber || ''}" was just reserved or booked by another resident. Please select an available bed slot.` 
+            };
+          }
         }
 
         // Create booking record atomically
@@ -403,10 +405,15 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
     // ── INITIALIZE PAYSTACK PAYMENT FOR EXACT ROOM PRICE ──
     const callbackUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}`;
-    const isTestMode = !process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_SECRET_KEY.startsWith('sk_test_') || process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
-    const hasPaystackKey = !!process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+    const isTestKey = !paystackKey || paystackKey.startsWith('sk_test_') || paystackKey.includes('replace_with_your_actual');
+    const isTestModeAllowed = !isProduction && isTestKey;
+    const hasPaystackKey = !!paystackKey && !paystackKey.includes('replace_with_your_actual');
     let authorizationUrl = '';
-    let reference = `BOOKING_REF_${Date.now()}`;
+    let reference = isTestModeAllowed 
+      ? `BOOKING_TEST_${Date.now()}` 
+      : `BKG_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     if (hasPaystackKey) {
       try {
@@ -420,7 +427,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
           },
           {
             headers: {
-              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              Authorization: `Bearer ${paystackKey}`,
               'Content-Type': 'application/json'
             }
           }
@@ -429,12 +436,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         reference = paystackRes.data.data.reference;
       } catch (paystackErr: any) {
         console.error('Paystack Booking Initialization Error:', paystackErr.response?.data || paystackErr.message);
-        if (isTestMode || paystackErr.response?.data?.message === 'Invalid key') {
+        if (isTestModeAllowed || (!isProduction && paystackErr.response?.data?.message === 'Invalid key')) {
           console.warn('Paystack key error or test key, using simulated test url for booking:', paystackErr.message);
+          reference = `BOOKING_TEST_${Date.now()}`;
           authorizationUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
         }
       }
-    } else {
+    } else if (isTestModeAllowed) {
       authorizationUrl = `${callbackUrl}&reference=${reference}&test_mode=true`;
     }
 
@@ -727,9 +735,13 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const hasPaystackKey = !!process.env.PAYSTACK_SECRET_KEY && !process.env.PAYSTACK_SECRET_KEY.includes('replace_with_your_actual');
+    const isProduction = process.env.NODE_ENV === 'production';
+    const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+    const isTestKey = !paystackKey || paystackKey.startsWith('sk_test_') || paystackKey.includes('replace_with_your_actual');
+    const isTestMode = !isProduction && isTestKey;
+    const hasPaystackKey = !!paystackKey && !paystackKey.includes('replace_with_your_actual');
     let authorizationUrl = '';
-    let reference = `BOOKING_TEST_${Date.now()}`;
+    let reference = isTestMode ? `BOOKING_TEST_${Date.now()}` : `BKG_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     if (hasPaystackKey) {
       try {
@@ -743,7 +755,7 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
           },
           {
             headers: {
-              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              Authorization: `Bearer ${paystackKey}`,
               'Content-Type': 'application/json'
             }
           }
@@ -752,16 +764,20 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
         reference = paystackRes.data.data.reference;
       } catch (paystackErr: any) {
         console.error('Paystack Booking Initialization Error:', paystackErr.response?.data || paystackErr.message);
-        if (isTestMode || paystackErr.response?.data?.message === 'Invalid key') {
+        if (isTestMode || (!isProduction && paystackErr.response?.data?.message === 'Invalid key')) {
           console.warn('Paystack key error or test key, using simulated test url for booking:', paystackErr.message);
+          reference = `BOOKING_TEST_${Date.now()}`;
           authorizationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}&reference=${reference}&test_mode=true`;
         } else {
           res.status(500).json({ message: paystackErr.response?.data?.message || 'Internal server error during Paystack initialization' });
           return;
         }
       }
-    } else {
+    } else if (isTestMode) {
       authorizationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant?verify=${booking.id}&reference=${reference}&test_mode=true`;
+    } else {
+      res.status(500).json({ message: 'Paystack payment provider is not configured for production.' });
+      return;
     }
 
     res.status(200).json({ authorization_url: authorizationUrl, reference, isTestMode });
@@ -811,16 +827,18 @@ export const verifyPayment = async (req: Request, res: Response): Promise<void> 
     const expectedAmount = Math.round(price * 100);
 
     // 3. Cryptographic verification with Paystack / Test mode fallback
-    const isTestRef = reference.startsWith('BOOKING_TEST_') || reference.startsWith('BOOKING_REF_');
+    const isProduction = process.env.NODE_ENV === 'production';
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
     const isTestKey = !paystackKey || paystackKey.startsWith('sk_test_') || paystackKey.includes('replace_with_your_actual');
+    const isTestModeAllowed = !isProduction && isTestKey;
+    const isTestRef = isTestModeAllowed && reference.startsWith('BOOKING_TEST_');
 
     let isSuccess = false;
     let verifiedAmount = 0;
     let verifyRes: any = null;
 
-    if (isTestRef && isTestKey) {
-      // Allow simulated test booking payment
+    if (isTestRef) {
+      // Allow simulated test booking payment only in non-production with test reference
       isSuccess = true;
       verifiedAmount = expectedAmount;
     } else {

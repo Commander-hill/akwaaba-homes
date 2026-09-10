@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBookingInspections = exports.createOrUpdateInspection = void 0;
+exports.savePropertyInventory = exports.getPropertyInventory = exports.getBookingInspections = exports.createOrUpdateInspection = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const json_1 = require("../utils/json");
@@ -174,4 +174,123 @@ const getBookingInspections = async (req, res) => {
     }
 };
 exports.getBookingInspections = getBookingInspections;
+/**
+ * Get Master Room Asset Vault Inventory for a Property
+ */
+const getPropertyInventory = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = (req.user?.role || '').toUpperCase();
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        // Tenants with a booking at this property, landlords, caretakers, and admins can read inventory
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            const tenantBooking = await prisma_1.default.booking.findFirst({
+                where: {
+                    propertyId,
+                    tenantId: userId,
+                    status: { in: ['CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED', 'APPROVED'] }
+                }
+            });
+            if (!tenantBooking) {
+                res.status(403).json({ message: 'Forbidden: You do not have access to this property inventory' });
+                return;
+            }
+        }
+        // Check CompoundNotice storage for master asset vault
+        const vaultNotice = await prisma_1.default.compoundNotice.findFirst({
+            where: {
+                propertyId,
+                title: '__MASTER_ASSET_VAULT__'
+            }
+        });
+        let items = [];
+        if (vaultNotice && vaultNotice.message) {
+            items = (0, json_1.safeJsonParse)(vaultNotice.message, []);
+        }
+        res.status(200).json({ propertyId, items });
+    }
+    catch (error) {
+        console.error('Error fetching property inventory:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPropertyInventory = getPropertyInventory;
+/**
+ * Save Master Room Asset Vault Inventory for a Property
+ */
+const savePropertyInventory = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = (req.user?.role || '').toUpperCase();
+        const { items } = req.body;
+        if (!Array.isArray(items)) {
+            res.status(400).json({ message: 'Items must be an array of asset items' });
+            return;
+        }
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can update property assets' });
+            return;
+        }
+        const existingNotice = await prisma_1.default.compoundNotice.findFirst({
+            where: {
+                propertyId,
+                title: '__MASTER_ASSET_VAULT__'
+            }
+        });
+        const itemsJson = JSON.stringify(items);
+        if (existingNotice) {
+            await prisma_1.default.compoundNotice.update({
+                where: { id: existingNotice.id },
+                data: {
+                    message: itemsJson,
+                    isActive: true
+                }
+            });
+        }
+        else {
+            await prisma_1.default.compoundNotice.create({
+                data: {
+                    propertyId,
+                    landlordId: property.landlordId,
+                    title: '__MASTER_ASSET_VAULT__',
+                    message: itemsJson,
+                    category: 'ASSET_INVENTORY',
+                    priority: 'NORMAL',
+                    isActive: true
+                }
+            });
+        }
+        try {
+            (0, socket_1.getIO)().emit('property_assets_updated', { propertyId, count: items.length });
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'Master room asset inventory saved successfully', count: items.length });
+    }
+    catch (error) {
+        console.error('Error saving property inventory:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.savePropertyInventory = savePropertyInventory;
 //# sourceMappingURL=inspection.controller.js.map

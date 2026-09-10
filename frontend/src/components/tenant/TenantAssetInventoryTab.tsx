@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import api from '@/lib/axios';
 
 interface BookingData {
   id: string;
@@ -121,52 +122,119 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
   const [isSigned, setIsSigned] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Load from property inventory or defaults
+  // Load from property inventory or defaults, then sync from server
   useEffect(() => {
-    const landlordStorageKey = `akwaaba_room_assets_${propertyId}`;
-    const savedLandlord = localStorage.getItem(landlordStorageKey);
-    let loadedItems = DEFAULT_RESIDENTIAL_FIXTURES;
+    let isMounted = true;
 
-    if (savedLandlord) {
-      try {
-        const parsed = JSON.parse(savedLandlord);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const unitMatches = parsed.filter((a: any) => !a.roomUnit || a.roomUnit === unitNumber);
-          if (unitMatches.length > 0) {
-            loadedItems = unitMatches.map((a: any) => ({
-              id: a.id,
-              name: a.name,
-              category: a.category || 'Fixtures',
-              serialTag: a.serialTag,
-              condition: a.condition || 'GOOD',
-              replacementCostGHS: a.replacementCostGHS || 300,
-              notes: a.notes,
-              residentConfirmed: true
-            }));
+    const loadData = async () => {
+      // 1. Instant local fallback
+      const landlordStorageKey = `akwaaba_room_assets_${propertyId}`;
+      const savedLandlord = localStorage.getItem(landlordStorageKey);
+      let loadedItems = DEFAULT_RESIDENTIAL_FIXTURES;
+
+      if (savedLandlord) {
+        try {
+          const parsed = JSON.parse(savedLandlord);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const unitMatches = parsed.filter((a: any) => !a.roomUnit || a.roomUnit === unitNumber);
+            if (unitMatches.length > 0) {
+              loadedItems = unitMatches.map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                category: a.category || 'Fixtures',
+                serialTag: a.serialTag,
+                condition: a.condition || 'GOOD',
+                replacementCostGHS: a.replacementCostGHS || 300,
+                notes: a.notes,
+                residentConfirmed: true
+              }));
+            }
           }
+        } catch (e) {
+          console.error('Failed to parse landlord assets', e);
         }
-      } catch (e) {
-        console.error('Failed to parse landlord assets', e);
       }
-    }
 
-    setItems(loadedItems);
+      const signoffKey = `tenant_inventory_signoff_${propertyId}_${unitNumber}`;
+      const savedSignoff = localStorage.getItem(signoffKey);
+      if (savedSignoff && isMounted) {
+        setIsSigned(true);
+        setResidentNotes(savedSignoff);
+      }
 
-    // Load signoff state
-    const signoffKey = `tenant_inventory_signoff_${propertyId}_${unitNumber}`;
-    const savedSignoff = localStorage.getItem(signoffKey);
-    if (savedSignoff) {
-      setIsSigned(true);
-      setResidentNotes(savedSignoff);
-    }
-  }, [propertyId, unitNumber]);
+      if (isMounted) setItems(loadedItems);
 
-  const handleDigitalSignoff = (e: React.FormEvent) => {
+      // 2. Query server for active booking move-in inspection
+      if (activeBooking?.id) {
+        try {
+          const res = await api.get(`/inspections/booking/${activeBooking.id}`);
+          const inspections = res.data?.inspections || [];
+          const moveIn = inspections.find((ins: any) => ins.type === 'MOVE_IN');
+          if (moveIn && isMounted) {
+            if (Array.isArray(moveIn.items) && moveIn.items.length > 0) {
+              setItems(moveIn.items);
+            }
+            if (moveIn.notes) setResidentNotes(moveIn.notes);
+            if (moveIn.signedAt || moveIn.status === 'COMPLETED') setIsSigned(true);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // 3. If no move-in inspection yet, query property master asset vault
+      if (propertyId && propertyId !== 'demo') {
+        try {
+          const res = await api.get(`/inspections/property/${propertyId}/inventory`);
+          const serverItems = res.data?.items || [];
+          if (Array.isArray(serverItems) && serverItems.length > 0 && isMounted) {
+            const unitMatches = serverItems.filter((a: any) => !a.roomUnit || a.roomUnit === unitNumber);
+            if (unitMatches.length > 0) {
+              setItems(unitMatches.map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                category: a.category || 'Fixtures',
+                serialTag: a.serialTag,
+                condition: a.condition || 'GOOD',
+                replacementCostGHS: a.replacementCostGHS || 300,
+                notes: a.notes,
+                residentConfirmed: true
+              })));
+            }
+          }
+        } catch (e) {}
+      }
+    };
+
+    loadData();
+    return () => { isMounted = false; };
+  }, [propertyId, unitNumber, activeBooking?.id]);
+
+  const [isSubmittingSignoff, setIsSubmittingSignoff] = useState(false);
+
+  const handleDigitalSignoff = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmittingSignoff(true);
     const signoffKey = `tenant_inventory_signoff_${propertyId}_${unitNumber}`;
     localStorage.setItem(signoffKey, residentNotes || 'Verified & Confirmed');
     setIsSigned(true);
-    toast.success('Move-In Fixture Inventory officially signed and verified!');
+
+    if (activeBooking?.id) {
+      try {
+        await api.post('/inspections', {
+          bookingId: activeBooking.id,
+          type: 'MOVE_IN',
+          items,
+          notes: residentNotes || 'Verified & Confirmed upon Move-In',
+          status: 'COMPLETED'
+        });
+        toast.success('Move-In Fixture Inventory officially verified & synchronized to database!');
+      } catch (err: any) {
+        toast.success('Move-In Fixture Inventory officially signed and verified!');
+      }
+    } else {
+      toast.success('Move-In Fixture Inventory officially signed and verified!');
+    }
+    setIsSubmittingSignoff(false);
   };
 
   // WhatsApp verification slip

@@ -186,3 +186,135 @@ export const getBookingInspections = async (req: Request, res: Response): Promis
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Get Master Room Asset Vault Inventory for a Property
+ */
+export const getPropertyInventory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    // Tenants with a booking at this property, landlords, caretakers, and admins can read inventory
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      const tenantBooking = await prisma.booking.findFirst({
+        where: {
+          propertyId,
+          tenantId: userId,
+          status: { in: ['CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED', 'APPROVED'] }
+        }
+      });
+      if (!tenantBooking) {
+        res.status(403).json({ message: 'Forbidden: You do not have access to this property inventory' });
+        return;
+      }
+    }
+
+    // Check CompoundNotice storage for master asset vault
+    const vaultNotice = await prisma.compoundNotice.findFirst({
+      where: {
+        propertyId,
+        title: '__MASTER_ASSET_VAULT__'
+      }
+    });
+
+    let items: any[] = [];
+    if (vaultNotice && vaultNotice.message) {
+      items = safeJsonParse(vaultNotice.message, []);
+    }
+
+    res.status(200).json({ propertyId, items });
+  } catch (error) {
+    console.error('Error fetching property inventory:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Save Master Room Asset Vault Inventory for a Property
+ */
+export const savePropertyInventory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+    const { items } = req.body;
+
+    if (!Array.isArray(items)) {
+      res.status(400).json({ message: 'Items must be an array of asset items' });
+      return;
+    }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can update property assets' });
+      return;
+    }
+
+    const existingNotice = await prisma.compoundNotice.findFirst({
+      where: {
+        propertyId,
+        title: '__MASTER_ASSET_VAULT__'
+      }
+    });
+
+    const itemsJson = JSON.stringify(items);
+
+    if (existingNotice) {
+      await prisma.compoundNotice.update({
+        where: { id: existingNotice.id },
+        data: {
+          message: itemsJson,
+          isActive: true
+        }
+      });
+    } else {
+      await prisma.compoundNotice.create({
+        data: {
+          propertyId,
+          landlordId: property.landlordId,
+          title: '__MASTER_ASSET_VAULT__',
+          message: itemsJson,
+          category: 'ASSET_INVENTORY',
+          priority: 'NORMAL',
+          isActive: true
+        }
+      });
+    }
+
+    try {
+      getIO().emit('property_assets_updated', { propertyId, count: items.length });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Master room asset inventory saved successfully', count: items.length });
+  } catch (error) {
+    console.error('Error saving property inventory:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

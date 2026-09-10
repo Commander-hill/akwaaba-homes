@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import api from '@/lib/axios';
 
 export type AssetCondition = 'PRISTINE' | 'GOOD' | 'FAIR' | 'DAMAGED' | 'MISSING';
 export type AssetCategory = 'ELECTRICAL' | 'FURNITURE' | 'DOORS_WINDOWS' | 'PLUMBING' | 'APPLIANCES' | 'KEYS_SECURITY';
@@ -152,45 +153,68 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
   const [assets, setAssets] = useState<RoomAssetItem[]>([]);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-  // Load from localStorage
+  // Load from database with localStorage instant fallback
   useEffect(() => {
     if (!selectedProperty?.id) return;
+    let isMounted = true;
     const storageKey = `akwaaba_room_assets_${selectedProperty.id}`;
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         setAssets(JSON.parse(stored));
         setIsLoaded(true);
-        return;
       } catch (e) {
         console.error('Failed to parse saved assets', e);
       }
     }
 
-    // Initial seed for this property
-    const initialSeed: RoomAssetItem[] = [];
-    roomUnitsList.forEach((unitName) => {
-      DEFAULT_ASSET_TEMPLATES.forEach((tmpl, idx) => {
-        initialSeed.push({
-          ...tmpl,
-          id: `seed_${unitName}_${idx}_${Date.now()}`,
-          propertyId: selectedProperty.id,
-          roomUnit: unitName,
-          lastAuditedDate: new Date().toISOString().split('T')[0],
-          serialTag: `${tmpl.serialTag}-${unitName.replace(/[^a-zA-Z0-9]/g, '')}`
+    // Query backend for synchronized assets
+    const fetchServerAssets = async () => {
+      try {
+        const res = await api.get(`/inspections/property/${selectedProperty.id}/inventory`);
+        const serverItems = res.data?.items;
+        if (Array.isArray(serverItems) && serverItems.length > 0 && isMounted) {
+          setAssets(serverItems);
+          localStorage.setItem(storageKey, JSON.stringify(serverItems));
+          setIsLoaded(true);
+          return;
+        }
+      } catch (err) {}
+
+      // If neither server nor local storage has assets, generate initial seed and save to server
+      if (!stored && isMounted) {
+        const initialSeed: RoomAssetItem[] = [];
+        roomUnitsList.forEach((unitName) => {
+          DEFAULT_ASSET_TEMPLATES.forEach((tmpl, idx) => {
+            initialSeed.push({
+              ...tmpl,
+              id: `seed_${unitName}_${idx}_${Date.now()}`,
+              propertyId: selectedProperty.id,
+              roomUnit: unitName,
+              lastAuditedDate: new Date().toISOString().split('T')[0],
+              serialTag: `${tmpl.serialTag}-${unitName.replace(/[^a-zA-Z0-9]/g, '')}`
+            });
+          });
         });
-      });
-    });
-    setAssets(initialSeed);
-    localStorage.setItem(storageKey, JSON.stringify(initialSeed));
-    setIsLoaded(true);
+        setAssets(initialSeed);
+        localStorage.setItem(storageKey, JSON.stringify(initialSeed));
+        setIsLoaded(true);
+        api.post(`/inspections/property/${selectedProperty.id}/inventory`, { items: initialSeed }).catch(() => {});
+      }
+    };
+
+    fetchServerAssets();
+    return () => { isMounted = false; };
   }, [selectedProperty?.id, roomUnitsList]);
 
-  // Helper to persist
+  // Helper to persist to server and local cache
   const saveAssets = (updated: RoomAssetItem[]) => {
     setAssets(updated);
     if (selectedProperty?.id) {
       localStorage.setItem(`akwaaba_room_assets_${selectedProperty.id}`, JSON.stringify(updated));
+      api.post(`/inspections/property/${selectedProperty.id}/inventory`, { items: updated }).catch((e) => {
+        console.warn('Backend inventory sync failed, cached locally', e);
+      });
     }
   };
 
