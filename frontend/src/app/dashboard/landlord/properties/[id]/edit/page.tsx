@@ -362,9 +362,9 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                   onChange={e => setFormData({...formData, furnishing: e.target.value})}
                   className="w-full bg-transparent border border-[var(--border)] rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                 >
-                  <option value="Fully Furnished">✨ Fully Furnished</option>
-                  <option value="Semi-Furnished">🛋️ Semi-Furnished</option>
-                  <option value="Unfurnished">📦 Unfurnished</option>
+                  <option value="Fully Furnished">Fully Furnished</option>
+                  <option value="Semi-Furnished">Semi-Furnished</option>
+                  <option value="Unfurnished">Unfurnished</option>
                 </select>
               </div>
 

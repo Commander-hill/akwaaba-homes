@@ -180,27 +180,25 @@ export default function AuditLogsPage() {
       <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
         
         {/* Executive Banner */}
-        <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#0a2e1d] via-[#0F5132] to-[#0a2e1d] text-white shadow-xl relative overflow-hidden border border-emerald-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D97706]/10 rounded-full blur-3xl pointer-events-none"></div>
-          
+        <div className="p-6 md:p-8 rounded-3xl bg-slate-900 text-white shadow-md relative overflow-hidden border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="relative z-10 space-y-2 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-900/60 text-emerald-200 border border-emerald-700/50">
-                <Fingerprint className="w-3.5 h-3.5 text-[#D97706]" />
-                Cryptographically Sequenced Operational Audit
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                <Fingerprint className="w-3.5 h-3.5 text-amber-500" />
+                Operational Audit Log
               </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D97706]/20 text-amber-200 border border-[#D97706]/30">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
                 Ghana Data Protection Act, 2012 (Act 843)
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-              <Database className="w-8 h-8 text-[#D97706]" />
-              Immutable Audit Trail &amp; Regulatory Ledger
+              <Database className="w-8 h-8 text-amber-500" />
+              System Audit Trail &amp; Regulatory Log
             </h1>
 
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-              Complete, tamper-evident forensic log documenting administrative status overrides, user sanctions, deed approvals, mass broadcasts, and platform security events.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Complete forensic log documenting administrative status overrides, user sanctions, deed approvals, mass broadcasts, and platform security events.
             </p>
           </div>
 
@@ -211,10 +209,10 @@ export default function AuditLogsPage() {
                 toast.success('Audit trail synced with primary database');
               }}
               disabled={isRefetching}
-              className="flex items-center justify-center gap-2 px-5 py-3 text-xs font-black bg-white/10 hover:bg-white/20 active:scale-95 text-white border border-white/20 rounded-xl transition-all shadow-md backdrop-blur-md cursor-pointer w-full md:w-auto"
+              className="flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold bg-slate-800 hover:bg-slate-700 active:scale-95 text-white border border-slate-700 rounded-xl transition-all shadow-xs cursor-pointer w-full md:w-auto"
             >
               <Loader2 className={clsx("w-3.5 h-3.5", isRefetching && "animate-spin")} />
-              {isRefetching ? 'Syncing Ledger...' : 'Sync Audit Trail'}
+              {isRefetching ? 'Syncing...' : 'Sync Audit Trail'}
             </button>
           </div>
         </div>

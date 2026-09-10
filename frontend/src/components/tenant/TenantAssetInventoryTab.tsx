@@ -271,15 +271,13 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
 
   return (
     <div className="space-y-6">
-      {/* ─── HERO BANNER ─── */}
-      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-zinc-950 rounded-3xl p-6 lg:p-8 text-white shadow-xl relative overflow-hidden border border-teal-800/30">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      {/* ─── HERO & ACTION BAR ─── */}
+      <div className="bg-slate-900 rounded-3xl p-6 lg:p-8 text-white shadow-lg relative overflow-hidden border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider border border-teal-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider border border-slate-700">
               <Armchair className="w-3.5 h-3.5" />
-              Move-In Fixture &amp; Asset Vault
+              Move-In Fixtures &amp; Inventory
             </div>
             <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
               Unit Fixture Registry &amp; Caution Protection
@@ -409,10 +407,10 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
                       item.condition === 'FAIR' && 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400',
                       item.condition === 'DAMAGED' && 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400'
                     )}>
-                      {item.condition === 'PRISTINE' && '✨ Pristine'}
-                      {item.condition === 'GOOD' && '👍 Good'}
-                      {item.condition === 'FAIR' && '⚠️ Fair'}
-                      {item.condition === 'DAMAGED' && '❌ Damaged'}
+                      {item.condition === 'PRISTINE' && 'Brand New / Pristine'}
+                      {item.condition === 'GOOD' && 'Good'}
+                      {item.condition === 'FAIR' && 'Fair'}
+                      {item.condition === 'DAMAGED' && 'Damaged'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400 text-[11px]">

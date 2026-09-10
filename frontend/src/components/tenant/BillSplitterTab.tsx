@@ -232,7 +232,7 @@ export default function BillSplitterTab({ bookings = [] }: { bookings?: any[] })
                         "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
                         isSettled ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
                       )}>
-                        {isSettled ? 'FULLY SETTLED ✅' : 'PENDING SETTLEMENT'}
+                        {isSettled ? 'FULLY SETTLED' : 'PENDING SETTLEMENT'}
                       </span>
                       {!isSettled && (bill.creatorId === currentUserId || bill.creator?.id === currentUserId) && (
                         <button
@@ -364,12 +364,12 @@ export default function BillSplitterTab({ bookings = [] }: { bookings?: any[] })
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
                   >
-                    <option value="ELECTRICITY_ECG">⚡ Electricity (ECG Units)</option>
-                    <option value="WATER_TANKER">💧 Water Tanker Delivery</option>
-                    <option value="INTERNET_WIFI">📶 High-Speed WiFi Internet</option>
-                    <option value="GAS_REFILL">🔥 Cooking Gas Cylinder</option>
-                    <option value="CLEANING">🧹 Compound Cleaning / Trash</option>
-                    <option value="OTHER">📦 Other Expense</option>
+                    <option value="ELECTRICITY_ECG">Electricity (ECG Units)</option>
+                    <option value="WATER_TANKER">Water Tanker Delivery</option>
+                    <option value="INTERNET_WIFI">High-Speed WiFi Internet</option>
+                    <option value="GAS_REFILL">Cooking Gas Cylinder</option>
+                    <option value="CLEANING">Compound Cleaning / Trash</option>
+                    <option value="OTHER">Other Expense</option>
                   </select>
                 </div>
               </div>

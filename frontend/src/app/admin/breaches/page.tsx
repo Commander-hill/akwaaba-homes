@@ -101,34 +101,32 @@ export default function AdminBreachesPage() {
       <div className="sticky top-0 z-20 bg-slate-50/95 dark:bg-[#0a0a0a]/95 backdrop-blur-md pt-2 pb-4 -mx-8 px-8 border-b border-slate-200/60 dark:border-slate-800/60 space-y-4 mb-6 shadow-xs">
         
         {/* Executive Banner */}
-        <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#0a2e1d] via-[#0F5132] to-[#0a2e1d] text-white shadow-xl relative overflow-hidden border border-emerald-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#D97706]/10 rounded-full blur-3xl pointer-events-none"></div>
-          
+        <div className="p-6 md:p-8 rounded-3xl bg-slate-900 text-white shadow-md relative overflow-hidden border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="relative z-10 space-y-2 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-red-900/60 text-red-200 border border-red-700/50">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-950/60 text-red-200 border border-red-800/50">
                 <Gavel className="w-3.5 h-3.5 text-red-400" />
-                Statutory Judicial Governance
+                Statutory Dispute Resolution
               </span>
-              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D97706]/20 text-amber-200 border border-[#D97706]/30">
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
                 Ghana Rent Act, 1963 (Act 220) Arbitration
               </span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-              <Scale className="w-8 h-8 text-[#D97706]" />
-              Tenancy Dispute &amp; Breach Command Center
+              <Scale className="w-8 h-8 text-amber-500" />
+              Tenancy Dispute &amp; Breach Review
             </h1>
 
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-              Adjudicate statutory tenancy infractions, investigate unlawful lockouts and unauthorized sublets, apply reputation penalties, and enforce institutional platform suspensions.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Review tenancy infractions, investigate unlawful lockouts and unauthorized sublets, apply reputation penalties, and enforce platform standards.
             </p>
           </div>
 
-          <div className="relative z-10 shrink-0 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-center">
-            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200 block">Arbitration Standard</span>
+          <div className="relative z-10 shrink-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-center">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">Arbitration Standard</span>
             <span className="text-sm font-black text-white">Rent Control Board SLA</span>
-            <div className="text-[10px] text-emerald-300 font-semibold mt-0.5">48h Mandated Review</div>
+            <div className="text-[10px] text-amber-400 font-semibold mt-0.5">48h Mandated Review</div>
           </div>
         </div>
 

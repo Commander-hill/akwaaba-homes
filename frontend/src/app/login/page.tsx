@@ -115,7 +115,7 @@ export default function LoginPage() {
             Sign in to Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span>
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Access your tenancy lease vault, inspections, or host dashboard.
+            Access your lease agreements, inspections, or host dashboard.
           </p>
         </div>
 

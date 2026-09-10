@@ -232,7 +232,6 @@ export default function ResetPasswordPage() {
       
       {/* Subtle Background Geometry */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       
       <Suspense fallback={
         <div className="flex flex-col items-center justify-center gap-3">

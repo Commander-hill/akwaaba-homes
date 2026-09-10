@@ -138,12 +138,10 @@ export default function TenantPaymentScheduleTab({ bookings, onMakePayment }: Te
   return (
     <div className="space-y-6">
       {/* ─── HERO BANNER ─── */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-zinc-950 rounded-3xl p-6 lg:p-8 text-white shadow-xl relative overflow-hidden border border-emerald-800/30">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
+      <div className="bg-slate-900 rounded-3xl p-6 lg:p-8 text-white shadow-lg relative overflow-hidden border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider border border-emerald-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider border border-slate-700">
               <Calendar className="w-3.5 h-3.5" />
               Rent Installment &amp; Tranche Schedule
             </div>

@@ -95,11 +95,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Operations Hub', href: '/dashboard/caretaker', icon: LayoutDashboard },
           { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets', icon: Wrench },
           { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors', icon: Key },
-          { name: 'Unit Asset Vault', href: '/dashboard/caretaker?tab=assets', icon: ClipboardCheck },
+          { name: 'Fixtures & Inventory', href: '/dashboard/caretaker?tab=assets', icon: ClipboardCheck },
           { name: 'Utility Sub-Meters', href: '/dashboard/caretaker?tab=meters', icon: Gauge },
           { name: 'Conduct Logbook', href: '/dashboard/caretaker?tab=conduct', icon: Scale },
           { name: 'Move-In Inspections', href: '/dashboard/caretaker?tab=inspections', icon: FileText },
-          { name: 'Parcel Vault', href: '/dashboard/caretaker?tab=parcels', icon: Package },
+          { name: 'Package Deliveries', href: '/dashboard/caretaker?tab=parcels', icon: Package },
           { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
         ]
       },

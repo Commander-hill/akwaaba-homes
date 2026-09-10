@@ -179,13 +179,13 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
 
   const getCategoryBadge = (cat: string) => {
     switch (cat) {
-      case 'GENERATOR_FUEL': return { label: '⛽ Generator Fuel', color: 'bg-amber-500/10 text-amber-600' };
-      case 'WATER_SUPPLY': return { label: '💧 Water Supply', color: 'bg-blue-500/10 text-blue-600' };
-      case 'MAINTENANCE_REPAIR': return { label: '🔧 Repairs & Servicing', color: 'bg-red-500/10 text-red-600' };
-      case 'CLEANING_WASTE': return { label: '🧹 Waste & Cleaning', color: 'bg-green-500/10 text-green-600' };
-      case 'SECURITY': return { label: '🔒 Security', color: 'bg-purple-500/10 text-purple-600' };
-      case 'UTILITIES': return { label: '⚡ Utilities', color: 'bg-yellow-500/10 text-yellow-600' };
-      default: return { label: '📄 Other', color: 'bg-slate-100 dark:bg-slate-800 text-slate-600' };
+      case 'GENERATOR_FUEL': return { label: 'Generator Fuel', color: 'bg-amber-500/10 text-amber-600' };
+      case 'WATER_SUPPLY': return { label: 'Water Supply', color: 'bg-blue-500/10 text-blue-600' };
+      case 'MAINTENANCE_REPAIR': return { label: 'Repairs & Servicing', color: 'bg-red-500/10 text-red-600' };
+      case 'CLEANING_WASTE': return { label: 'Waste & Cleaning', color: 'bg-green-500/10 text-green-600' };
+      case 'SECURITY': return { label: 'Security', color: 'bg-purple-500/10 text-purple-600' };
+      case 'UTILITIES': return { label: 'Utilities', color: 'bg-yellow-500/10 text-yellow-600' };
+      default: return { label: 'Other', color: 'bg-slate-100 dark:bg-slate-800 text-slate-600' };
     }
   };
 
@@ -420,14 +420,14 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
                 >
-                  <option value="GENERATOR_FUEL">⛽ Generator Fuel</option>
-                  <option value="WATER_SUPPLY">💧 Water Tanker / Borehole Servicing</option>
-                  <option value="MAINTENANCE_REPAIR">🔧 Repairs & Maintenance</option>
-                  <option value="CLEANING_WASTE">🧹 Compound Cleaning & Waste Fee</option>
-                  <option value="SECURITY">🔒 Security Guard / CCTV Servicing</option>
-                  <option value="UTILITIES">⚡ Compound Meter Electricity</option>
-                  <option value="TAX_FEES">🏛️ Municipal Assembly Taxes & Permits</option>
-                  <option value="OTHER">📄 Miscellaneous Expense</option>
+                  <option value="GENERATOR_FUEL">Generator Fuel</option>
+                  <option value="WATER_SUPPLY">Water Tanker / Borehole Servicing</option>
+                  <option value="MAINTENANCE_REPAIR">Repairs &amp; Maintenance</option>
+                  <option value="CLEANING_WASTE">Compound Cleaning &amp; Waste Fee</option>
+                  <option value="SECURITY">Security Guard / CCTV Servicing</option>
+                  <option value="UTILITIES">Compound Meter Electricity</option>
+                  <option value="TAX_FEES">Municipal Assembly Taxes &amp; Permits</option>
+                  <option value="OTHER">Miscellaneous Expense</option>
                 </select>
               </div>
 

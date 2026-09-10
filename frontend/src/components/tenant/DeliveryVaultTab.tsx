@@ -129,7 +129,7 @@ export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }
             <Package className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Gatehouse Parcel & Package Vault</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Gatehouse Parcel &amp; Deliveries</h2>
             <p className="text-xs text-slate-500">Track packages received at the compound gatehouse and present pickup OTPs</p>
           </div>
         </div>

@@ -141,7 +141,7 @@ export default function RegisterPage() {
       
       
 
-      <div className="w-full max-w-2xl z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 mt-12 mb-12">
+      <div className="w-full max-w-2xl z-10 animate-in fade-in duration-200 mt-12 mb-12">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white">

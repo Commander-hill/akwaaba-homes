@@ -1146,7 +1146,7 @@ function TenantDashboardContent() {
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-500" /> Digital Lease & Document Vault
+                <FileText className="w-5 h-5 text-indigo-500" /> Tenancy Agreements & Documents
               </h2>
               <p className="text-sm text-[var(--muted-foreground)] mt-1">
                 Access your legally binding lease agreements, tenancy terms, and official payment receipts.
@@ -1164,9 +1164,9 @@ function TenantDashboardContent() {
               <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-[var(--muted-foreground)]" />
               </div>
-              <h3 className="text-base font-black text-zinc-950 dark:text-white">Lease Agreement Vault is Empty</h3>
+              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Tenancy Agreements Yet</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mt-1 mb-4 leading-relaxed">
-                When a landlord confirms your reservation, your statutory Ghana Rent Act (Act 220) tenancy agreement with a 64-character SHA-256 tamper-proof cryptographic audit seal will appear here for signing.
+                When a landlord confirms your reservation, your statutory tenancy agreement under the Ghana Rent Act, 1963 (Act 220) will appear here for review and digital signature.
               </p>
             </div>
           ) : (

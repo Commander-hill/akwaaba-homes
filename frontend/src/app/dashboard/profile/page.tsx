@@ -760,7 +760,7 @@ export default function ProfilePage() {
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-2xl">
-                    Protect your tenant vault, landlord escrow payouts, and administrative privileges with hardware-backed or software time-based one-time passwords (Google Authenticator, Authy, Microsoft Authenticator, 1Password).
+                    Protect your tenant documents, landlord escrow payouts, and administrative privileges with time-based one-time passwords (Google Authenticator, Authy, Microsoft Authenticator, 1Password).
                   </p>
                 </div>
               </div>
@@ -1076,7 +1076,7 @@ export default function ProfilePage() {
                 </div>
               </div>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 pl-7 leading-relaxed">
-                If you lose access to your authenticator phone, each of these 8 one-time codes can log you in. Store them in a secure vault.
+                If you lose access to your authenticator phone, each of these 8 one-time codes can log you in. Store them in a secure password manager or safe location.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pl-7">
                 {setupData.rawCodes.map((code, idx) => (

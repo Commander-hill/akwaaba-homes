@@ -27,7 +27,7 @@ export default function PrivacyPage() {
               <Lock className="text-[var(--primary)]" /> 2. End-to-End Encryption & Storage
             </h2>
             <p className="text-[var(--muted-foreground)] leading-relaxed">
-              All credentials, sensitive documents, and tenancy agreements are encrypted in transit via TLS 1.3 and at rest using cryptographic AES-256 standards. Identification files are stored in private, restricted-access storage vaults accessible only by verified compliance officers.
+              All credentials, sensitive documents, and tenancy agreements are encrypted in transit via TLS 1.3 and at rest using AES-256 encryption standards. Identification files are stored in private, restricted-access secure cloud storage accessible only by authorized compliance officers.
             </p>
           </section>
 

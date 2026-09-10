@@ -59,7 +59,7 @@ export default function AgreementPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[450px] space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-        <p className="text-xs text-slate-500 font-medium">Decrypting Tenancy Vault record...</p>
+        <p className="text-xs text-slate-500 font-medium">Loading tenancy agreement...</p>
       </div>
     );
   }
@@ -213,7 +213,7 @@ export default function AgreementPage() {
             Executed pursuant to the Rent Act, 1963 (Act 220), Rent Regulations (L.I. 369), and Electronic Transactions Act, 2008 (Act 772)
           </p>
           <div className="pt-2 text-[10px] font-mono text-slate-400">
-            Vault Ref: {agreement.id.slice(0, 16).toUpperCase()} • Execution Date: {new Date(agreement.createdAt).toLocaleDateString('en-GB')}
+            Document Ref: {agreement.id.slice(0, 16).toUpperCase()} • Execution Date: {new Date(agreement.createdAt).toLocaleDateString('en-GB')}
           </div>
         </div>
 
@@ -397,18 +397,17 @@ export default function AgreementPage() {
             </div>
           </div>
 
-          {/* ── CRYPTOGRAPHIC SHA-256 AUDIT SEAL BOX ── */}
+          {/* ── ELECTRONIC SIGNATURE AUDIT TRAIL ── */}
           <div className="mt-4 p-5 rounded-2xl bg-slate-900 text-white font-mono text-[11px] space-y-2">
             <div className="flex items-center justify-between text-amber-400 font-bold">
-              <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> IMMUTABLE CRYPTOGRAPHIC SEAL</span>
+              <span className="flex items-center gap-1.5"><Lock className="w-3.5 h-3.5" /> ELECTRONIC SIGNATURE AUDIT TRAIL</span>
               <span className="text-[9px] px-2 py-0.5 rounded bg-amber-400/20">SHA-256</span>
             </div>
             <div className="break-all text-slate-300 font-semibold bg-black/40 p-3 rounded-xl border border-white/10 text-[10px]">
               {cryptographicDigest}
             </div>
             <p className="text-[10px] text-slate-400 font-sans">
-              This digital tenancy instrument is cryptographically sealed on the Akwaaba Homes Legal Ledger. 
-              Any post-signature alteration, tampering, or deletion automatically breaks this seal under Act 772 of the Republic of Ghana.
+              This agreement has been digitally executed and recorded with a tamper-evident audit record pursuant to the Electronic Transactions Act, 2008 (Act 772).
             </p>
           </div>
 

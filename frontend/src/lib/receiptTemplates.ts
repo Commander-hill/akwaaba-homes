@@ -579,7 +579,7 @@ export function printLeaseAgreementReceipt(agreement: LeaseReceiptData) {
               <div class="brand-title">AKWAABA <span>HOMES</span></div>
               <div class="doc-badge">Statutory Tenancy Lease Execution Certificate</div>
             </div>
-            <div class="verified-pill">&#x2713; Tamper-Evident SHA-256 Vault</div>
+            <div class="verified-pill">&#x2713; Certified Digital Record</div>
           </div>
 
           <div class="hero-strip">
@@ -620,17 +620,17 @@ export function printLeaseAgreementReceipt(agreement: LeaseReceiptData) {
 
             <div class="hash-card">
               <div class="hash-title">
-                <span>Cryptographic Digest (SHA-256)</span>
-                <span style="color: #0F5132; font-weight: 800;">IMMUTABLY RECORDED</span>
+                <span>Electronic Signature Verification (SHA-256)</span>
+                <span style="color: #0F5132; font-weight: 800;">VERIFIED &amp; RECORDED</span>
               </div>
               <div class="hash-val">${agreement.cryptographicHash || 'PENDING_FINALIZATION'}</div>
               <div class="hash-desc">
-                Executed under Ghana Electronic Transactions Act, 2008 (Act 772). This cryptographic hash seals the tenancy terms against post-execution modification.
+                Executed under Ghana Electronic Transactions Act, 2008 (Act 772). This document is electronically certified with a tamper-evident audit record.
               </div>
             </div>
 
             <div class="footer-note">
-              Akwaaba Homes Legal Vault &bull; Issued on ${issueDate} &bull; Document ID: ${agreement.id}
+              Akwaaba Homes Official Lease Registry &bull; Issued on ${issueDate} &bull; Document ID: ${agreement.id}
             </div>
           </div>
         </div>

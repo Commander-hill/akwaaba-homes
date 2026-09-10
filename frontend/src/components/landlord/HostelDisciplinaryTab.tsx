@@ -341,7 +341,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
   };
 
   const handleDeleteIncident = (id: string, code: string) => {
-    if (confirm(`Permanently erase citation ${code} from the vault?`)) {
+    if (confirm(`Permanently delete citation ${code}?`)) {
       const updated = incidents.filter(i => i.id !== id);
       saveIncidents(updated);
       toast.success(`Citation ${code} deleted.`);
@@ -413,14 +413,12 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
   return (
     <div className="space-y-6">
       {/* ─── HERO & ACTION BAR ─── */}
-      <div className="bg-gradient-to-r from-red-950 via-slate-900 to-zinc-950 rounded-3xl p-6 lg:p-8 text-white shadow-2xl relative overflow-hidden border border-red-700/30">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-        
+      <div className="bg-slate-900 rounded-3xl p-6 lg:p-8 text-white shadow-lg relative overflow-hidden border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider border border-red-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider border border-slate-700">
               <Scale className="w-3.5 h-3.5" />
-              Hostel Disciplinary Vault
+              Conduct &amp; Incident Logbook
             </div>
             <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
               Incident &amp; Disciplinary Logbook

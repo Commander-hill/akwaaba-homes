@@ -3,10 +3,8 @@ import { Mail, ArrowRight } from 'lucide-react';
 
 export default function PendingVerificationPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute top-0 left-0 -translate-y-12 -translate-x-1/3 w-[600px] h-[600px] bg-[var(--primary)] opacity-10 rounded-full blur-[80px] pointer-events-none" />
-      
-      <div className="max-w-md w-full space-y-8 glass-card p-10 rounded-3xl animate-in relative z-10 text-center">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-10 rounded-3xl relative z-10 text-center">
         <div className="flex justify-center">
           <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
             <Mail className="w-10 h-10 text-[var(--primary)]" />

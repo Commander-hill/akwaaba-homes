@@ -412,10 +412,10 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
         text += `- ${d.name}: GHS ${d.replacementCostGHS} (${d.notes || 'Damaged' })\n`;
       });
     } else {
-      text += `\n✨ *Clean Bill of Health:* 100% fixtures pristine and in working order. Full caution deposit refundable.\n`;
+      text += `\n*All Fixtures Verified:* 100% fixtures in good working order. Caution deposit eligible for full release.\n`;
     }
 
-    text += `\n_Signed by Caretaker / Management - Akwaaba Homes Vault_`;
+    text += `\n_Signed by Caretaker / Management - Akwaaba Homes Records_`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -428,17 +428,15 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
   return (
     <div className="space-y-6">
       {/* ─── HERO & ACTION BAR ─── */}
-      <div className="bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 rounded-3xl p-6 lg:p-8 text-white shadow-2xl relative overflow-hidden border border-teal-700/30">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        
+      <div className="bg-slate-900 rounded-3xl p-6 lg:p-8 text-white shadow-lg relative overflow-hidden border border-slate-800">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold uppercase tracking-wider border border-teal-500/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold uppercase tracking-wider border border-slate-700">
               <Armchair className="w-3.5 h-3.5" />
-              Room Asset & Appliance Registry
+              Room Asset &amp; Appliance Registry
             </div>
             <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
-              Inventory Vault & Caution Tracker
+              Fixtures &amp; Inventory Checklist
             </h2>
             <p className="text-slate-300 text-sm max-w-xl">
               Catalog room furnishings, ceiling fans, locks, study desks, and appliances per unit. 
@@ -719,11 +717,11 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
                             asset.condition === 'MISSING' && 'bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800'
                           )}
                         >
-                          <option value="PRISTINE">✨ Pristine</option>
-                          <option value="GOOD">👍 Good</option>
-                          <option value="FAIR">⚠️ Fair (Wear)</option>
-                          <option value="DAMAGED">❌ Damaged</option>
-                          <option value="MISSING">❓ Missing</option>
+                          <option value="PRISTINE">Brand New / Pristine</option>
+                          <option value="GOOD">Good Condition</option>
+                          <option value="FAIR">Fair (Normal Wear)</option>
+                          <option value="DAMAGED">Damaged</option>
+                          <option value="MISSING">Missing</option>
                         </select>
                       </td>
 
@@ -895,11 +893,11 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
                     onChange={(e) => setFormCondition(e.target.value as AssetCondition)}
                     className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
                   >
-                    <option value="PRISTINE">✨ Pristine</option>
-                    <option value="GOOD">👍 Good</option>
-                    <option value="FAIR">⚠️ Fair (Wear & Tear)</option>
-                    <option value="DAMAGED">❌ Damaged</option>
-                    <option value="MISSING">❓ Missing</option>
+                    <option value="PRISTINE">Brand New / Pristine</option>
+                    <option value="GOOD">Good Condition</option>
+                    <option value="FAIR">Fair (Normal Wear)</option>
+                    <option value="DAMAGED">Damaged</option>
+                    <option value="MISSING">Missing</option>
                   </select>
                 </div>
 

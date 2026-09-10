@@ -180,7 +180,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
       return res.data;
     },
     onSuccess: (resData) => {
-      toast.success(resData.message || 'Utility slip dispatched to residents! ⚡');
+      toast.success(resData.message || 'Utility slip dispatched to residents.');
       queryClient.invalidateQueries({ queryKey: ['propertyBillSplits', selectedPropertyId] });
     },
     onError: (err: any) => {
@@ -219,26 +219,25 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
   const copyWhatsAppSlip = (unit: RoomUnitMeter, total: number, perResident: number) => {
     const readings = meterReadings[unit.unitId] || { prev: unit.prevReading, curr: unit.currReading, meterNo: unit.meterNumber };
     const consumed = Math.max(0, readings.curr - readings.prev);
-    const label = utilityType === 'ELECTRICITY_ECG' ? '⚡ ECG PREPAID POWER' : '💧 WATER & PUMPING BILL';
+    const label = utilityType === 'ELECTRICITY_ECG' ? 'ECG PREPAID POWER STATEMENT' : 'WATER & PUMPING STATEMENT';
     const unitName = utilityType === 'ELECTRICITY_ECG' ? 'kWh' : 'm³';
 
     const text = `*AKWAABA HOMES - ${label}*\n` +
-      `🏢 Property: ${matrixData?.title || 'Residential Compound'}\n` +
-      `🚪 Unit: ${unit.unitNumber} (${unit.blockName})\n` +
-      `🔢 Meter No: ${readings.meterNo || unit.meterNumber}\n` +
-      `📊 Opening Reading: ${readings.prev} ${unitName}\n` +
-      `📊 Closing Reading: ${readings.curr} ${unitName}\n` +
-      `⚡ Units Consumed: ${consumed} ${unitName}\n` +
-      `💵 Rate: GHS ${unitRate.toFixed(2)} / ${unitName}\n` +
-      `🛠️ Fixed Compound Levy: GHS ${serviceLevy.toFixed(2)}\n` +
-      `💰 *TOTAL ROOM DUE: GHS ${total.toFixed(2)}*\n` +
-      `👥 Resident Share (${unit.occupants.length} residents): *GHS ${perResident.toFixed(2)} each*\n` +
-      `📅 Due Date: ${dueDate}\n` +
+      `Property: ${matrixData?.title || 'Residential Compound'}\n` +
+      `Unit: ${unit.unitNumber} (${unit.blockName})\n` +
+      `Meter No: ${readings.meterNo || unit.meterNumber}\n` +
+      `Opening Reading: ${readings.prev} ${unitName}\n` +
+      `Closing Reading: ${readings.curr} ${unitName}\n` +
+      `Units Consumed: ${consumed} ${unitName}\n` +
+      `Rate: GHS ${unitRate.toFixed(2)} / ${unitName}\n` +
+      `Fixed Compound Levy: GHS ${serviceLevy.toFixed(2)}\n` +
+      `*TOTAL ROOM DUE: GHS ${total.toFixed(2)}*\n` +
+      `Due Date: ${dueDate}\n` +
       `Please log in to your dashboard to settle your share via Mobile Money.`;
 
     navigator.clipboard.writeText(text);
     setCopiedRoomId(unit.unitId);
-    toast.success('WhatsApp slip copied to clipboard! 📋');
+    toast.success('Utility statement copied to clipboard.');
     setTimeout(() => setCopiedRoomId(null), 3000);
   };
 

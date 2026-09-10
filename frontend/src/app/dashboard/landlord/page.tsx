@@ -99,7 +99,7 @@ export default function LandlordDashboard() {
   });
   const myProperties = propertiesData || [];
 
-  // Fetch Landlord Agreements (Lease Vault) — only loads when agreements tab is open
+  // Fetch Landlord Agreements — only loads when agreements tab is open
   const { data: agreementsResponse, isLoading: isLoadingAgreements, refetch: refetchAgreements } = useQuery({
     queryKey: ['agreements', 'landlord'],
     queryFn: async () => {
@@ -450,7 +450,7 @@ export default function LandlordDashboard() {
                       : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
                   )}
                 >
-                  Inventory Vault
+                  Room Fixtures &amp; Inventory
                 </button>
                 <button
                   onClick={() => setActiveTab('agreements')}
@@ -461,7 +461,7 @@ export default function LandlordDashboard() {
                       : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
                   )}
                 >
-                  Lease Vault ({agreements.length})
+                  Lease Agreements ({agreements.length})
                 </button>
               </>
             )}
@@ -559,7 +559,7 @@ export default function LandlordDashboard() {
                       : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
                   )}
                 >
-                  Disciplinary Vault
+                  Conduct Logbook
                 </button>
                 <button
                   onClick={() => setActiveTab('notices')}
@@ -708,17 +708,17 @@ export default function LandlordDashboard() {
         </div>
       )}
 
-      {/* ─── TAB: LEASE VAULT (DIGITAL LEASE AGREEMENTS) ─────────────────────────── */}
+      {/* ─── TAB: LEASE AGREEMENTS (DIGITAL CONTRACTS) ─────────────────────────── */}
       {activeTab === 'agreements' && (
-        <div className="animate-in space-y-4">
+        <div className="space-y-4">
           <div className="flex justify-between items-center bg-purple-50 dark:bg-purple-950/30 p-4 rounded-2xl border border-purple-100 dark:border-purple-900/50">
             <div>
               <h3 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
                 <FileSignature className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                Digital Tenancy Lease Vault
+                Tenancy Lease Agreements
               </h3>
               <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                Review, digitally sign, and manage binding SHA-256 encrypted tenancy contracts for your properties.
+                Review, digitally sign, and manage binding residential tenancy agreements for your properties.
               </p>
             </div>
           </div>

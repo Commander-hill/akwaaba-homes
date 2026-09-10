@@ -105,32 +105,30 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
       {/* Background Graphic Effects */}
       <div className="absolute inset-0 z-0 bg-cover bg-center opacity-30 pointer-events-none filter brightness-50 contrast-125" style={{ backgroundImage: 'url(/images/sunset-bg.png)' }} />
       <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#09090B]/90 via-[#09090B]/70 to-[#09090B] pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none" />
-
-      <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-8 my-auto animate-in fade-in zoom-in-95 duration-700">
+      <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-8 my-auto">
         
         {/* Brand Header */}
         <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(91,76,255,0.4)] border border-white/20 ring-2 ring-white/10">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/20">
             <Image src="/logo.png" alt="Akwaaba Homes" width={64} height={64} className="w-full h-full object-cover" />
           </div>
-          <span style={{ background: 'linear-gradient(90deg, #6366F1, #A855F7, #F97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }} className="font-black text-2xl tracking-tight">
-            AkwaabaHomes
+          <span className="font-bold text-2xl tracking-tight text-white">
+            Akwaaba<span className="text-[#198754]">Homes</span>
           </span>
         </div>
 
         {/* Maintenance Main Title */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-widest">
             <Clock className="w-3.5 h-3.5 animate-pulse" /> Scheduled System Maintenance
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white drop-shadow-md uppercase">
-            WEBSITE <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">MAINTENANCE</span>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white uppercase">
+            System Maintenance
           </h1>
 
           <p className="text-zinc-400 text-sm sm:text-base max-w-lg mx-auto font-medium leading-relaxed">
-            We are performing scheduled system upgrades and infrastructure enhancements. We apologize for the inconvenience and will return online shortly.
+            We are performing scheduled system maintenance and infrastructure upgrades. We will return online shortly.
           </p>
         </div>
 
@@ -142,7 +140,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
             { label: 'MINUTES', value: timeLeft.minutes },
             { label: 'SECONDS', value: timeLeft.seconds },
           ].map((item, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3 sm:p-4 text-center shadow-xl">
+            <div key={idx} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 sm:p-4 text-center shadow-md">
               <div className="text-2xl sm:text-4xl font-black text-emerald-400 tracking-tight font-mono">
                 {String(item.value).padStart(2, '0')}
               </div>
@@ -154,7 +152,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
         </div>
 
         {/* Email Notification Lead Form */}
-        <div className="max-w-md mx-auto bg-white/5 backdrop-blur-xl border border-white/10 p-2 sm:p-2.5 rounded-2xl shadow-2xl">
+        <div className="max-w-md mx-auto bg-zinc-900 border border-zinc-800 p-2 sm:p-2.5 rounded-2xl shadow-md">
           {!subscribed ? (
             <form onSubmit={handleNotifySubmit} className="flex items-center gap-2">
               <div className="relative flex-1">

@@ -66,8 +66,6 @@ export default function ForgotPasswordPage() {
       
       {/* Subtle Background Geometry */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Architectural Card */}
       <div className="w-full max-w-md mx-auto relative z-10">
@@ -91,7 +89,7 @@ export default function ForgotPasswordPage() {
             Account Recovery
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 max-w-xs mx-auto leading-relaxed">
-            Regain access to your tenancy lease vault, inspection records, or property host portal.
+            Regain access to your lease agreements, inspection records, or property host portal.
           </p>
         </div>
 
@@ -222,7 +220,7 @@ export default function ForgotPasswordPage() {
 
         {/* Footer Regulatory Assurance */}
         <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-6 font-medium">
-          Protected by Akwaaba Homes Identity Vault &bull; Ghana Data Protection Act (Act 843)
+          Protected by Akwaaba Homes Identity Security &bull; Ghana Data Protection Act (Act 843)
         </p>
 
       </div>

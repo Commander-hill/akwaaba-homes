@@ -36,10 +36,8 @@ function VerifyEmailForm() {
   }, [token]);
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className={`absolute top-0 left-0 -translate-y-12 -translate-x-1/3 w-[600px] h-[600px] opacity-10 rounded-full blur-[80px] pointer-events-none ${status === 'success' ? 'bg-emerald-500' : status === 'error' ? 'bg-red-500' : 'bg-[var(--primary)]'}`} />
-      
-      <div className="max-w-md w-full glass-card p-10 rounded-3xl animate-in relative z-10 text-center flex flex-col items-center">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative">
+      <div className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm p-10 rounded-3xl relative z-10 text-center flex flex-col items-center">
         
         {status === 'loading' && (
           <>

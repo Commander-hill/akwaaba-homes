@@ -867,17 +867,15 @@ export default function AdminUsersPage() {
       {selectedUser && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in">
           <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-emerald-900/30 max-h-[92vh] flex flex-col">
-            {/* Gradient Header */}
-            <div className="px-6 py-5 bg-gradient-to-r from-[#0F5132] via-[#146c43] to-slate-900 text-white flex justify-between items-center relative overflow-hidden shadow-md">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
-              
+            {/* Header */}
+            <div className="px-6 py-5 bg-slate-900 text-white flex justify-between items-center relative overflow-hidden border-b border-slate-800">
               <div className="flex items-center gap-3.5 z-10">
-                <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-emerald-300 border border-white/10 shadow-inner">
+                <div className="w-11 h-11 rounded-2xl bg-slate-800 flex items-center justify-center text-emerald-400 border border-slate-700">
                   <BadgeCheck className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700">
                       Act 220 & Ghana Card Audit
                     </span>
                   </div>

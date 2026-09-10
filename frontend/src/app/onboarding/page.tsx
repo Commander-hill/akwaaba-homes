@@ -46,11 +46,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center p-4 overflow-hidden bg-slate-50 dark:bg-[#0a0a0a]">
       
-      {/* Decorative Background Orbs for Glassmorphism Effect */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-[var(--primary)]/20 blur-[120px]" />
-        <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-[var(--primary)]/10 blur-[100px]" />
-      </div>
+
 
       <div className="max-w-xl w-full relative z-10">
         

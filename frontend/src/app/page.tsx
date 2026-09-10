@@ -651,7 +651,7 @@ export default function Home() {
               <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Digital Room Handover Condition Checklist</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Work Order Management &amp; Repair Proof</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Front Desk Parcel Vault Logging</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Front Desk Package &amp; Delivery Logging</li>
               </ul>
             </div>
 

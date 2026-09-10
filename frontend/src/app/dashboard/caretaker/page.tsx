@@ -349,7 +349,7 @@ function CaretakerDashboardContent() {
       }
     },
     onSuccess: () => {
-      toast.success('Parcel logged into vault & resident alerted with pickup OTP! 📦');
+      toast.success('Parcel logged and resident alerted with pickup OTP code.');
       setParcelModalOpen(false);
       setParcelTracking('');
       setParcelTenantId('');
@@ -442,7 +442,7 @@ function CaretakerDashboardContent() {
             Welcome, {userName}
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Manage daily residential property maintenance, tenant move-in inspections, utility submeter logging, parcel vault, and compound broadcast notices.
+            Manage daily residential property maintenance, tenant move-in inspections, utility submeter logging, parcel deliveries, and compound broadcast notices.
           </p>
         </div>
 
@@ -552,11 +552,11 @@ function CaretakerDashboardContent() {
           { id: 'overview', label: 'Operations Overview', icon: Building },
           { id: 'tickets', label: 'Maintenance Requests (' + allTickets.filter((t: any) => t.status !== 'RESOLVED').length + ')', icon: Wrench },
           { id: 'visitors', label: 'Gatehouse & Access Logbook (' + allVisitorPasses.length + ')', icon: Key },
-          { id: 'assets', label: 'Unit Fixtures & Asset Vault', icon: ClipboardCheck },
+          { id: 'assets', label: 'Unit Fixtures & Inventory', icon: ClipboardCheck },
           { id: 'meters', label: 'Utility Sub-Meters (' + meterReadings.length + ')', icon: Gauge },
           { id: 'conduct', label: 'Conduct & Incident Logbook', icon: Scale },
           { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: FileText },
-          { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
+          { id: 'parcels', label: 'Package Deliveries (' + allParcels.length + ')', icon: Package },
           { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -958,11 +958,11 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* ── TAB: PARCEL VAULT ── */}
+      {/* ── TAB: PACKAGE DELIVERIES ── */}
       {activeTab === 'parcels' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Parcel Intake & Vault</h2>
+            <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Package Deliveries</h2>
             {assignedProperties.length > 0 && (
               <button
                 onClick={() => {
@@ -981,9 +981,9 @@ function CaretakerDashboardContent() {
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mx-auto">
                 <Package className="w-6 h-6" />
               </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">Parcel Vault Empty</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Active Deliveries</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Log incoming courier deliveries (DHL, FedEx, Ghana Post) into the front desk locker vault. Tenants receive instant alerts.
+                Log incoming courier deliveries (DHL, FedEx, Ghana Post) for front desk collection. Tenants receive instant alerts.
               </p>
               {assignedProperties.length > 0 && (
                 <button
@@ -1010,7 +1010,7 @@ function CaretakerDashboardContent() {
                     </span>
                   </div>
                   <div className="font-bold text-sm text-slate-900 dark:text-white">
-                    {p.packageDescription || p.lockerNumber || 'Front Desk / Vault'}
+                    {p.packageDescription || p.lockerNumber || 'Front Desk / Shelf'}
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
                     Recipient: {p.tenant ? `${p.tenant.firstName} ${p.tenant.lastName}` : 'Resident'}
@@ -1043,7 +1043,7 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* ── TAB: UNIT FIXTURES & ASSET VAULT ── */}
+      {/* ── TAB: UNIT FIXTURES & INVENTORY ── */}
       {activeTab === 'assets' && (
         <div className="space-y-6">
           <RoomAssetVaultTab properties={assignedProperties} bookings={allBookings} />
@@ -1539,7 +1539,7 @@ function CaretakerDashboardContent() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Vault / Locker Shelf Location</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Shelf / Locker Location</label>
                 <input
                   type="text"
                   placeholder="e.g. Front Desk Shelf A, Locker 3"

@@ -168,34 +168,32 @@ export default function AdminBroadcastPage() {
     <div className="space-y-6 pb-16 animate-in fade-in max-w-6xl mx-auto">
       
       {/* Executive Command Header */}
-      <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-r from-[#0a2e1d] via-[#0F5132] to-[#0a2e1d] text-white shadow-xl relative overflow-hidden border border-emerald-800/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#D97706]/10 rounded-full blur-3xl pointer-events-none"></div>
-        
+      <div className="p-6 md:p-8 rounded-3xl bg-slate-900 text-white shadow-md relative overflow-hidden border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="relative z-10 space-y-2 max-w-3xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-900/60 text-emerald-200 border border-emerald-700/50">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-950/60 text-emerald-200 border border-emerald-800/50">
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`}></span>
               {isConnected ? 'Real-Time Push Stream Active' : 'Fallback Push Stream'}
             </span>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#D97706]/20 text-amber-200 border border-[#D97706]/30">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
               Ghana Electronic Communications &amp; Rent Act Standards
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-white flex items-center gap-3">
-            <Radio className="w-8 h-8 text-[#D97706] animate-pulse" />
-            Mass Push Notifications &amp; Alert Engine
+            <Radio className="w-8 h-8 text-amber-500 animate-pulse" />
+            Broadcast Notifications &amp; Alerts
           </h1>
 
-          <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed">
-            Instantly dispatch high-priority push notifications and statutory tenancy alerts directly to tenant and landlord mobile devices and in-app notification centers.
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            Dispatch notifications and statutory tenancy notices directly to tenant and landlord accounts and devices.
           </p>
         </div>
 
-        <div className="relative z-10 shrink-0 bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl text-center">
-          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-200 block">Current Target Reach</span>
+        <div className="relative z-10 shrink-0 bg-slate-800 border border-slate-700 p-4 rounded-2xl text-center">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300 block">Current Target Reach</span>
           <span className="text-2xl font-black text-white">{currentAudienceCount} Users</span>
-          <div className="text-[10px] text-emerald-300 font-semibold mt-0.5">100% Instant Delivery</div>
+          <div className="text-[10px] text-emerald-400 font-semibold mt-0.5">Active Subscribers</div>
         </div>
       </div>
 
