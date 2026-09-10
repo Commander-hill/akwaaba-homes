@@ -867,8 +867,16 @@ const updateProfile = async (req, res) => {
 exports.updateProfile = updateProfile;
 const forgotPassword = async (req, res) => {
     try {
-        const { email } = req.body;
-        const user = await prisma_1.default.user.findUnique({ where: { email } });
+        const normalizedEmail = (req.body.email || '').toLowerCase().trim();
+        if (!normalizedEmail) {
+            res.status(400).json({ message: 'Email address is required' });
+            return;
+        }
+        const user = await prisma_1.default.user.findFirst({
+            where: {
+                email: { equals: normalizedEmail, mode: 'insensitive' }
+            }
+        });
         if (!user) {
             // Return 200 even if user not found to prevent email enumeration
             res.status(200).json({ message: 'If an account with that email exists, we have sent a reset link.' });

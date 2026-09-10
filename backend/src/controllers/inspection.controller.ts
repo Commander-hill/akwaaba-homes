@@ -318,3 +318,152 @@ export const savePropertyInventory = async (req: Request, res: Response): Promis
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+/**
+ * Get Utility Sub-Meter Readings Log for a Property
+ */
+export const getPropertyMeterReadings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      const tenantBooking = await prisma.booking.findFirst({
+        where: {
+          propertyId,
+          tenantId: userId,
+          status: { in: ['CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED', 'APPROVED'] }
+        }
+      });
+      if (!tenantBooking) {
+        res.status(403).json({ message: 'Forbidden' });
+        return;
+      }
+    }
+
+    const meterNotice = await prisma.compoundNotice.findFirst({
+      where: {
+        propertyId,
+        title: '__METER_READINGS_LOG__'
+      }
+    });
+
+    let readings: any[] = [];
+    if (meterNotice && meterNotice.message) {
+      readings = safeJsonParse(meterNotice.message, []);
+    }
+
+    res.status(200).json({ propertyId, readings });
+  } catch (error) {
+    console.error('Error fetching property meter readings:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * Save / Append a Utility Sub-Meter Reading for a Property
+ */
+export const savePropertyMeterReading = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyId } = req.params;
+    const userId = req.user?.id;
+    const userRole = (req.user?.role || '').toUpperCase();
+    const { reading } = req.body;
+
+    if (!reading || !reading.unitNumber || reading.currentReading === undefined) {
+      res.status(400).json({ message: 'Valid meter reading object is required' });
+      return;
+    }
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId, userId }
+    });
+
+    if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+      res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can log meter readings' });
+      return;
+    }
+
+    const existingNotice = await prisma.compoundNotice.findFirst({
+      where: {
+        propertyId,
+        title: '__METER_READINGS_LOG__'
+      }
+    });
+
+    let existingReadings: any[] = [];
+    if (existingNotice && existingNotice.message) {
+      existingReadings = safeJsonParse(existingNotice.message, []);
+    }
+
+    const updatedReadings = [reading, ...existingReadings.filter((r: any) => r.id !== reading.id)];
+    const readingsJson = JSON.stringify(updatedReadings);
+
+    if (existingNotice) {
+      await prisma.compoundNotice.update({
+        where: { id: existingNotice.id },
+        data: {
+          message: readingsJson,
+          isActive: true
+        }
+      });
+    } else {
+      await prisma.compoundNotice.create({
+        data: {
+          propertyId,
+          landlordId: property.landlordId,
+          title: '__METER_READINGS_LOG__',
+          message: readingsJson,
+          category: 'UTILITY',
+          priority: 'NORMAL',
+          isActive: true
+        }
+      });
+    }
+
+    // In-app notification to landlord if logged by caretaker
+    if (property.landlordId !== userId) {
+      await prisma.notification.create({
+        data: {
+          userId: property.landlordId,
+          type: 'ANNOUNCEMENT',
+          title: `⚡ New Sub-Meter Reading Logged`,
+          message: `Caretaker recorded ${reading.utilityType} reading for Unit ${reading.unitNumber} (${reading.currentReading} ${reading.unitOfMeasure || ''}).`,
+          link: '/dashboard/landlord'
+        }
+      }).catch(() => null);
+    }
+
+    try {
+      getIO().emit('meter_reading_logged', { propertyId, reading });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Meter reading saved successfully', reading });
+  } catch (error) {
+    console.error('Error saving meter reading:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

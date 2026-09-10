@@ -240,6 +240,31 @@ function CaretakerDashboardContent() {
 
   const assignedProperties = assignments.map((a: any) => a.property).filter(Boolean);
 
+  // Synchronize live meter readings from backend with local cache
+  useEffect(() => {
+    let isMounted = true;
+    if (assignedProperties.length > 0) {
+      const fetchAllPropertyMeters = async () => {
+        try {
+          const promises = assignedProperties.map((p: any) =>
+            api.get(`/inspections/property/${p.id}/meters`).then((res: any) => res.data?.readings || []).catch(() => [])
+          );
+          const results = await Promise.all(promises);
+          const combined = results.flat();
+          if (combined.length > 0 && isMounted) {
+            setMeterReadings((prev: any[]) => {
+              const prevIds = new Set(prev.map((m: any) => m.id));
+              const newItems = combined.filter((m: any) => !prevIds.has(m.id));
+              return [...newItems, ...prev];
+            });
+          }
+        } catch (e) {}
+      };
+      fetchAllPropertyMeters();
+    }
+    return () => { isMounted = false; };
+  }, [assignedProperties.length]);
+
   // Aggregate operations across all assigned properties
   const allTickets = assignedProperties.flatMap((p: any) => 
     (p.tickets || []).map((t: any) => ({ ...t, propertyTitle: p.title, propertyId: p.id }))
@@ -1820,6 +1845,13 @@ function CaretakerDashboardContent() {
                   setMeterReadings(prev => [newEntry, ...prev]);
                   setMeterModalOpen(false);
                   toast.success('Meter reading logged & recorded!');
+
+                  // Synchronize to backend database and alert landlord
+                  if (selectedProp?.id) {
+                    api.post(`/inspections/property/${selectedProp.id}/meters`, { reading: newEntry })
+                      .then(() => toast.success('Meter reading synchronized with database!'))
+                      .catch((err) => console.warn('Backend meter sync deferred, cached locally', err));
+                  }
                 }}
                 className="px-6 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer transition active:scale-95"
               >

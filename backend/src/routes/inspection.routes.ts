@@ -3,7 +3,9 @@ import {
   createOrUpdateInspection, 
   getBookingInspections,
   getPropertyInventory,
-  savePropertyInventory 
+  savePropertyInventory,
+  getPropertyMeterReadings,
+  savePropertyMeterReading
 } from '../controllers/inspection.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
@@ -16,5 +18,9 @@ router.get('/booking/:bookingId', getBookingInspections);
 // Property Master Asset Vault routes
 router.get('/property/:propertyId/inventory', getPropertyInventory);
 router.post('/property/:propertyId/inventory', savePropertyInventory);
+
+// Property Utility Sub-Meter Readings routes
+router.get('/property/:propertyId/meters', getPropertyMeterReadings);
+router.post('/property/:propertyId/meters', savePropertyMeterReading);
 
 export default router;

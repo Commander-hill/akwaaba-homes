@@ -132,25 +132,35 @@ app.use((req, res, next) => {
     res.setHeader('Permissions-Policy', 'geolocation=(self), camera=(), microphone=(), payment=(self)');
     next();
 });
-// ─── CORS (allowlist-based) ──────────────────────────────────────────────────
-const ALLOWED_ORIGINS = [
+// ─── CORS (strict allowlist-based) ──────────────────────────────────────────
+const ALLOWED_ORIGIN_SET = new Set([
     process.env.FRONTEND_URL,
     'http://localhost:3000',
     'http://localhost:3001',
     'https://akwaaba-homes.vercel.app',
-].filter(Boolean);
+    'https://www.akwaabahomes.com',
+    'https://akwaabahomes.com'
+]
+    .filter(Boolean)
+    .map((url) => url.replace(/\/$/, '')));
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
-        // Allow server-to-server or curl/mobile (no origin) and explicitly allowlisted origins
-        if (!origin ||
-            ALLOWED_ORIGINS.some((o) => origin === o || origin.startsWith(o)) ||
-            ((origin.endsWith('.vercel.app') || origin.endsWith('.onrender.com')) && origin.includes('akwaaba'))) {
-            callback(null, true);
+        // Allow server-to-server or curl/mobile (no origin)
+        if (!origin) {
+            return callback(null, true);
         }
-        else {
-            console.warn(`🚨 Blocked unauthorized CORS request from origin: ${origin}`);
-            callback(new Error(`CORS policy: Origin ${origin} is not authorized`));
+        const cleanOrigin = origin.replace(/\/$/, '');
+        // Explicit exact match
+        if (ALLOWED_ORIGIN_SET.has(cleanOrigin)) {
+            return callback(null, true);
         }
+        // Strictly anchored official Akwaaba Vercel preview deployments (e.g. akwaaba-homes-*.vercel.app)
+        const isOfficialVercelPreview = /^https:\/\/akwaaba-homes(-[a-z0-9-]+)?\.vercel\.app$/.test(cleanOrigin);
+        if (isOfficialVercelPreview) {
+            return callback(null, true);
+        }
+        console.warn(`🚨 Blocked unauthorized CORS request from origin: ${origin}`);
+        return callback(new Error(`CORS policy: Origin ${origin} is not authorized`));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

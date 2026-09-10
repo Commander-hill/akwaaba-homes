@@ -989,8 +989,17 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
 
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = (req.body.email || '').toLowerCase().trim();
+    if (!normalizedEmail) {
+      res.status(400).json({ message: 'Email address is required' });
+      return;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        email: { equals: normalizedEmail, mode: 'insensitive' }
+      }
+    });
 
     if (!user) {
       // Return 200 even if user not found to prevent email enumeration

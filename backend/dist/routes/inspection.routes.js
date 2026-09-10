@@ -10,5 +10,8 @@ router.get('/booking/:bookingId', inspection_controller_1.getBookingInspections)
 // Property Master Asset Vault routes
 router.get('/property/:propertyId/inventory', inspection_controller_1.getPropertyInventory);
 router.post('/property/:propertyId/inventory', inspection_controller_1.savePropertyInventory);
+// Property Utility Sub-Meter Readings routes
+router.get('/property/:propertyId/meters', inspection_controller_1.getPropertyMeterReadings);
+router.post('/property/:propertyId/meters', inspection_controller_1.savePropertyMeterReading);
 exports.default = router;
 //# sourceMappingURL=inspection.routes.js.map

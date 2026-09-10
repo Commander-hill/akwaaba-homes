@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.savePropertyInventory = exports.getPropertyInventory = exports.getBookingInspections = exports.createOrUpdateInspection = void 0;
+exports.savePropertyMeterReading = exports.getPropertyMeterReadings = exports.savePropertyInventory = exports.getPropertyInventory = exports.getBookingInspections = exports.createOrUpdateInspection = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const json_1 = require("../utils/json");
@@ -293,4 +293,138 @@ const savePropertyInventory = async (req, res) => {
     }
 };
 exports.savePropertyInventory = savePropertyInventory;
+/**
+ * Get Utility Sub-Meter Readings Log for a Property
+ */
+const getPropertyMeterReadings = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = (req.user?.role || '').toUpperCase();
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            const tenantBooking = await prisma_1.default.booking.findFirst({
+                where: {
+                    propertyId,
+                    tenantId: userId,
+                    status: { in: ['CONFIRMED', 'ACTIVE', 'CHECKED_IN', 'COMPLETED', 'APPROVED'] }
+                }
+            });
+            if (!tenantBooking) {
+                res.status(403).json({ message: 'Forbidden' });
+                return;
+            }
+        }
+        const meterNotice = await prisma_1.default.compoundNotice.findFirst({
+            where: {
+                propertyId,
+                title: '__METER_READINGS_LOG__'
+            }
+        });
+        let readings = [];
+        if (meterNotice && meterNotice.message) {
+            readings = (0, json_1.safeJsonParse)(meterNotice.message, []);
+        }
+        res.status(200).json({ propertyId, readings });
+    }
+    catch (error) {
+        console.error('Error fetching property meter readings:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPropertyMeterReadings = getPropertyMeterReadings;
+/**
+ * Save / Append a Utility Sub-Meter Reading for a Property
+ */
+const savePropertyMeterReading = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+        const userId = req.user?.id;
+        const userRole = (req.user?.role || '').toUpperCase();
+        const { reading } = req.body;
+        if (!reading || !reading.unitNumber || reading.currentReading === undefined) {
+            res.status(400).json({ message: 'Valid meter reading object is required' });
+            return;
+        }
+        const property = await prisma_1.default.property.findUnique({
+            where: { id: propertyId }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const isStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId, userId }
+        });
+        if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
+            res.status(403).json({ message: 'Forbidden: Only landlords or caretakers can log meter readings' });
+            return;
+        }
+        const existingNotice = await prisma_1.default.compoundNotice.findFirst({
+            where: {
+                propertyId,
+                title: '__METER_READINGS_LOG__'
+            }
+        });
+        let existingReadings = [];
+        if (existingNotice && existingNotice.message) {
+            existingReadings = (0, json_1.safeJsonParse)(existingNotice.message, []);
+        }
+        const updatedReadings = [reading, ...existingReadings.filter((r) => r.id !== reading.id)];
+        const readingsJson = JSON.stringify(updatedReadings);
+        if (existingNotice) {
+            await prisma_1.default.compoundNotice.update({
+                where: { id: existingNotice.id },
+                data: {
+                    message: readingsJson,
+                    isActive: true
+                }
+            });
+        }
+        else {
+            await prisma_1.default.compoundNotice.create({
+                data: {
+                    propertyId,
+                    landlordId: property.landlordId,
+                    title: '__METER_READINGS_LOG__',
+                    message: readingsJson,
+                    category: 'UTILITY',
+                    priority: 'NORMAL',
+                    isActive: true
+                }
+            });
+        }
+        // In-app notification to landlord if logged by caretaker
+        if (property.landlordId !== userId) {
+            await prisma_1.default.notification.create({
+                data: {
+                    userId: property.landlordId,
+                    type: 'ANNOUNCEMENT',
+                    title: `⚡ New Sub-Meter Reading Logged`,
+                    message: `Caretaker recorded ${reading.utilityType} reading for Unit ${reading.unitNumber} (${reading.currentReading} ${reading.unitOfMeasure || ''}).`,
+                    link: '/dashboard/landlord'
+                }
+            }).catch(() => null);
+        }
+        try {
+            (0, socket_1.getIO)().emit('meter_reading_logged', { propertyId, reading });
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'Meter reading saved successfully', reading });
+    }
+    catch (error) {
+        console.error('Error saving meter reading:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.savePropertyMeterReading = savePropertyMeterReading;
 //# sourceMappingURL=inspection.controller.js.map
