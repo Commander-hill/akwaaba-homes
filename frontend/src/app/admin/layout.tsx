@@ -7,6 +7,7 @@ import { LogOut, Loader2, ShieldCheck, Users, Building, CalendarCheck, CreditCar
 import Link from 'next/link';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
+import ThemeToggle from '@/components/ThemeToggle';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
 import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
@@ -120,6 +121,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
           </h2>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <NotificationBell />
           </div>
         </div>
