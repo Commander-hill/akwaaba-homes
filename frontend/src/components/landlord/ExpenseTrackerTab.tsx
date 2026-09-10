@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   DollarSign, Plus, Trash2, Download, TrendingUp, TrendingDown,
   PieChart, Calendar, Fuel, Droplet, Wrench, Shield, Sparkles, Receipt,
-  Building, Loader2, RefreshCw
+  Building, Loader2, RefreshCw, Printer, FileText
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import toast from 'react-hot-toast';
@@ -216,6 +216,14 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
               </option>
             ))}
           </select>
+
+          <button
+            onClick={() => window.print()}
+            className="px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center gap-1.5 hover:bg-slate-200 transition"
+            title="Print General Rental Operating P&L Statement"
+          >
+            <Printer className="w-3.5 h-3.5" /> Print Statement
+          </button>
 
           <button
             onClick={exportCSV}

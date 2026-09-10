@@ -25,6 +25,8 @@ import VehicleParkingTab from '@/components/tenant/VehicleParkingTab';
 import LeaseRenewalTab from '@/components/tenant/LeaseRenewalTab';
 import DeliveryVaultTab from '@/components/tenant/DeliveryVaultTab';
 import BillSplitterTab from '@/components/tenant/BillSplitterTab';
+import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
+import TenantAssetInventoryTab from '@/components/tenant/TenantAssetInventoryTab';
 import ReportIssueModal from '@/components/tenant/ReportIssueModal';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
@@ -34,7 +36,7 @@ import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTe
 const VALID_TENANT_TABS = [
   'bookings', 'tickets', 'reviews', 'roommates', 'documents', 'payments', 
   'safety', 'messages', 'visitors', 'services', 'vehicles', 'renewals', 
-  'deliveries', 'billsplit'
+  'deliveries', 'billsplit', 'tranches', 'inventory'
 ] as const;
 type TenantTabType = typeof VALID_TENANT_TABS[number];
 
@@ -1668,6 +1670,18 @@ function TenantDashboardContent() {
       {activeTab === 'billsplit' && (
         <div>
           <BillSplitterTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'tranches' && (
+        <div>
+          <TenantPaymentScheduleTab bookings={bookings} />
+        </div>
+      )}
+
+      {activeTab === 'inventory' && (
+        <div>
+          <TenantAssetInventoryTab bookings={bookings} />
         </div>
       )}
 

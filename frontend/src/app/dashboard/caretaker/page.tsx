@@ -13,6 +13,10 @@ import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import Link from 'next/link';
 import InspectionModal from '@/components/landlord/InspectionModal';
+import GateLogbookTab from '@/components/landlord/GateLogbookTab';
+import RoomAssetVaultTab from '@/components/landlord/RoomAssetVaultTab';
+import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
+import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 function CaretakerDashboardContent() {
@@ -21,14 +25,14 @@ function CaretakerDashboardContent() {
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get('tab') || 'overview';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors' | 'meters'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors' | 'meters' | 'assets' | 'conduct'>(
     (defaultTab as any) || 'overview'
   );
 
   // Sync tab with URL search parameter changes
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors', 'meters'].includes(tabFromUrl)) {
+    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors', 'meters', 'assets', 'conduct'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl as any);
     }
   }, [searchParams]);
@@ -522,11 +526,13 @@ function CaretakerDashboardContent() {
         {[
           { id: 'overview', label: 'Operations Overview', icon: Building },
           { id: 'tickets', label: 'Maintenance Requests (' + allTickets.filter((t: any) => t.status !== 'RESOLVED').length + ')', icon: Wrench },
-          { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: ShieldCheck },
-          { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
+          { id: 'visitors', label: 'Gatehouse & Access Logbook (' + allVisitorPasses.length + ')', icon: Key },
+          { id: 'assets', label: 'Unit Fixtures & Asset Vault', icon: ClipboardCheck },
+          { id: 'meters', label: 'Utility Sub-Meters (' + meterReadings.length + ')', icon: Gauge },
+          { id: 'conduct', label: 'Conduct & Incident Logbook', icon: ShieldCheck },
+          { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: FileText },
           { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
-          { id: 'visitors', label: 'Gate Passes (' + allVisitorPasses.length + ')', icon: Key },
-          { id: 'meters', label: 'Utility & Meters (' + meterReadings.length + ')', icon: Gauge },
+          { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1005,68 +1011,24 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* ── TAB: VISITOR PASSES ── */}
+      {/* ── TAB: VISITOR PASSES & GATEHOUSE LOGBOOK ── */}
       {activeTab === 'visitors' && (
         <div className="space-y-6">
-          <h2 className="text-lg font-black text-slate-900 dark:text-white">Gate Access & Visitor Clearance</h2>
-          
-          {allVisitorPasses.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto">
-                <Key className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Active Visitor Passes</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                When tenants generate guest access PINs or delivery passes from their app, they appear here in real time for front desk gate clearance.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {allVisitorPasses.map((v: any) => (
-                <div key={v.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
-                  <div className="flex justify-between items-start">
-                    <span className={clsx("px-2 py-0.5 text-[10px] font-bold rounded-full",
-                      v.status === 'ACTIVE' ? "bg-emerald-500/10 text-emerald-600" :
-                      v.status === 'USED' ? "bg-blue-500/10 text-blue-600" : "bg-slate-500/10 text-slate-600"
-                    )}>
-                      {v.status || 'ACTIVE'}
-                    </span>
-                    <span className="font-mono text-sm font-black text-indigo-600 dark:text-indigo-400">PIN: {v.accessCode}</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900 dark:text-white">{v.visitorName}</h4>
-                    <p className="text-xs text-slate-500">{v.purpose || 'Guest Visit'}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-1">
-                      Host: {v.tenant ? `${v.tenant.firstName} ${v.tenant.lastName}` : 'Resident'}
-                    </p>
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Valid: {new Date(v.validFrom).toLocaleDateString()}
-                    {v.checkInTime && ` • Entered: ${new Date(v.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                    {v.checkOutTime && ` • Departed: ${new Date(v.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-                  </div>
-                  {v.status === 'ACTIVE' && (
-                    <button
-                      onClick={() => verifyPassMutation.mutate(v.accessCode)}
-                      disabled={verifyPassMutation.isPending}
-                      className="w-full mt-2 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5" /> Clear Gate Entry
-                    </button>
-                  )}
-                  {v.status === 'USED' && !v.checkOutTime && (
-                    <button
-                      onClick={() => checkoutPassMutation.mutate(v.id)}
-                      disabled={checkoutPassMutation.isPending}
-                      className="w-full mt-2 py-2 px-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
-                    >
-                      <Clock className="w-3.5 h-3.5" /> Check Out &amp; Depart
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <GateLogbookTab properties={assignedProperties} />
+        </div>
+      )}
+
+      {/* ── TAB: UNIT FIXTURES & ASSET VAULT ── */}
+      {activeTab === 'assets' && (
+        <div className="space-y-6">
+          <RoomAssetVaultTab properties={assignedProperties} bookings={allBookings} />
+        </div>
+      )}
+
+      {/* ── TAB: CONDUCT & INCIDENT LOGBOOK ── */}
+      {activeTab === 'conduct' && (
+        <div className="space-y-6">
+          <HostelDisciplinaryTab properties={assignedProperties} bookings={allBookings} />
         </div>
       )}
 

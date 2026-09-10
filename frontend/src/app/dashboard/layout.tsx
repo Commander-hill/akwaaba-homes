@@ -6,7 +6,8 @@ import { useEffect, Suspense } from 'react';
 import { 
   LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, 
   ShieldCheck, Building, CreditCard, MessageSquare, Wrench, BellRing, 
-  Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator 
+  Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator,
+  Calendar, Armchair, Gauge, ClipboardCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
@@ -93,10 +94,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Operations Hub', href: '/dashboard/caretaker', icon: LayoutDashboard },
           { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets', icon: Wrench },
-          { name: 'Inspections', href: '/dashboard/caretaker?tab=inspections', icon: ShieldCheck },
-          { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
+          { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors', icon: Key },
+          { name: 'Unit Asset Vault', href: '/dashboard/caretaker?tab=assets', icon: ClipboardCheck },
+          { name: 'Utility Sub-Meters', href: '/dashboard/caretaker?tab=meters', icon: Gauge },
+          { name: 'Conduct Logbook', href: '/dashboard/caretaker?tab=conduct', icon: ShieldCheck },
+          { name: 'Move-In Inspections', href: '/dashboard/caretaker?tab=inspections', icon: FileText },
           { name: 'Parcel Vault', href: '/dashboard/caretaker?tab=parcels', icon: Package },
-          { name: 'Visitor Passes', href: '/dashboard/caretaker?tab=visitors', icon: Key },
+          { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
         ]
       },
       {
@@ -114,6 +118,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         title: 'RESIDENCE',
         links: [
           { name: 'My Bookings', href: '/dashboard/tenant', icon: LayoutDashboard },
+          { name: 'Payment Tranches', href: '/dashboard/tenant?tab=tranches', icon: Calendar },
+          { name: 'Unit Inventory', href: '/dashboard/tenant?tab=inventory', icon: Armchair },
           { name: 'Lease & Documents', href: '/dashboard/tenant?tab=documents', icon: FileText },
           { name: 'Rent & Payments', href: '/dashboard/tenant?tab=payments', icon: Receipt },
           { name: 'Maintenance & Repairs', href: '/dashboard/tenant?tab=tickets', icon: Wrench },
