@@ -132,7 +132,7 @@ export const notifyBookingCreated = async (opts: {
 
     <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;margin-top:24px;">
       <p style="color:#166534;font-size:13px;margin:0;line-height:1.6;">
-        🛡️ <strong>Akwaaba Escrow Assurance:</strong> Tenant booking funds are held safely in escrow until you sign the Tenancy Agreement and key handover occurs.
+        <strong>Akwaaba Escrow Assurance:</strong> Tenant booking funds are held safely in escrow until you sign the Tenancy Agreement and key handover occurs.
       </p>
     </div>
   `;
@@ -502,7 +502,7 @@ export const notifyAgreementCompleted = async (opts: {
 
     <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
       <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">
-        🛡️ <strong>Statutory Evidentiary Record:</strong> Under the Electronic Transactions Act, 2008 (Act 772), Section 7, the digital signatures and SHA-256 fingerprint embedded herein possess full legal validity admissible before any Ghanaian Court or Rent Tribunal.
+        <strong>Statutory Evidentiary Record:</strong> Under the Electronic Transactions Act, 2008 (Act 772), Section 7, the digital signatures and SHA-256 fingerprint embedded herein possess full legal validity admissible before any Ghanaian Court or Rent Tribunal.
       </p>
     </div>
 
@@ -693,7 +693,7 @@ export const notifyLandlordVerification = async (opts: {
     ${emailCardHtml(`
       ${emailMetaTableHtml([
         { label: 'Auditor Verdict', value: statusStr, highlight: true },
-        { label: 'Verification Badge', value: opts.isVerified ? 'VERIFIED LANDLORD 🛡️' : 'PENDING CORRECTION' },
+        { label: 'Verification Badge', value: opts.isVerified ? 'VERIFIED LANDLORD' : 'PENDING CORRECTION' },
         { label: 'Statutory Body', value: 'Lands Commission & NIA Ghana Card Protocol' }
       ])}
       ${opts.notes ? `
@@ -707,7 +707,7 @@ export const notifyLandlordVerification = async (opts: {
     ${opts.isVerified ? `
       <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
         <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">
-          🛡️ <strong>Verified Host Distinction:</strong> The official Verified Landlord seal is now prominently displayed across all your property listings, accelerating tenant trust and escrow booking requests.
+          <strong>Verified Host Distinction:</strong> The official Verified Landlord seal is now prominently displayed across all your property listings, accelerating tenant trust and escrow booking requests.
         </p>
       </div>
     ` : ''}
@@ -725,12 +725,12 @@ export const notifyLandlordVerification = async (opts: {
     recipientName: opts.landlordName,
     recipientPhone: opts.landlordPhone,
     type: 'ANNOUNCEMENT',
-    title: `Landlord Verification ${opts.isVerified ? 'Approved 🛡️' : 'Updated'}`,
+    title: `Landlord Verification ${opts.isVerified ? 'Approved' : 'Updated'}`,
     message: opts.isVerified
-      ? 'Congratulations! Your Landlord Property Deed verification was approved. You now hold the Verified Host 🛡️ badge.'
+      ? 'Congratulations! Your Landlord Property Deed verification was approved. You now hold the Verified Host badge.'
       : `Your Landlord verification requires update. Note: ${opts.notes || 'Please resubmit valid ownership deeds.'}`,
     link: '/dashboard/verification',
-    emailSubject: `Title Deed Audit: ${opts.isVerified ? 'Approved 🛡️' : 'Requires Action'} — Akwaaba Homes`,
+    emailSubject: `Title Deed Audit: ${opts.isVerified ? 'Approved' : 'Requires Action'} — Akwaaba Homes`,
     emailBodyHtml: renderInstitutionalEmail({
       title: `Landlord Deed Audit ${opts.isVerified ? 'Approved' : 'Correction Needed'}`,
       preheader: opts.isVerified ? 'Your Verified Host badge is active' : 'Please check your submitted ownership documents',

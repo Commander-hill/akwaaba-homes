@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Sparkles } from 'lucide-react';
+import { Download, X, Smartphone } from 'lucide-react';
 import Image from 'next/image';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -65,7 +65,7 @@ export default function PwaInstallPrompt() {
               <div className="flex items-center gap-1.5">
                 <h4 className="font-extrabold text-sm text-white">Install Akwaaba Homes</h4>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 flex items-center gap-0.5">
-                  <Sparkles className="w-2.5 h-2.5" /> App
+                  <Smartphone className="w-2.5 h-2.5" /> App
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-0.5">Instant booking, offline access &amp; instant alerts.</p>

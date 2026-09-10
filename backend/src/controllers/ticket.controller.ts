@@ -340,7 +340,7 @@ export const checkAndEscalateTickets = async (req: Request, res: Response): Prom
             data: {
               userId: t.tenantId,
               type: 'ANNOUNCEMENT',
-              title: `🛡️ Ticket Escalated to Support Admin`,
+              title: `Ticket Escalated to Support Admin`,
               message: `Your high-priority ticket "${t.title}" was escalated to platform administrators for urgent resolution.`,
               link: '/dashboard/tenant'
             }

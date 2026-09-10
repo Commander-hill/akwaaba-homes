@@ -157,7 +157,7 @@ export const dispatchVisitorGatePin = async (
 ) => {
   return await dispatchNotification({
     phoneNumber: recipientPhone,
-    title: '🛡️ Gatehouse Access Clearance PIN',
+    title: 'Gatehouse Access Clearance PIN',
     message: `Guest access approved for ${visitorName} at ${propertyTitle}${unitNumber ? ` (${unitNumber})` : ''}. 6-Digit Gate PIN: ${pinCode}. Valid for single authorized entry.`,
     type: 'ALERT',
     priority: 'HIGH'

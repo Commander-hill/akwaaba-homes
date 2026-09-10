@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Megaphone, Plus, Trash2, Users, AlertTriangle, ShieldCheck, 
+  Megaphone, Plus, Trash2, Users, AlertTriangle, 
   Calendar, Building, Loader2, Info, BellRing
 } from 'lucide-react';
 import toast from 'react-hot-toast';

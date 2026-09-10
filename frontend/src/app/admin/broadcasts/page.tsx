@@ -16,8 +16,6 @@ import {
   BellRing, 
   Scale, 
   CreditCard, 
-  ShieldAlert, 
-  Sparkles, 
   Clock, 
   Smartphone, 
   RotateCcw, 
@@ -265,9 +263,9 @@ export default function AdminBroadcastPage() {
       {/* 1-Click Ghana Statutory & Emergency Presets */}
       <div className="p-5 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 space-y-3 shadow-xs">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#D97706]" />
+          <BellRing className="w-4 h-4 text-[#D97706]" />
           <h3 className="text-xs font-black uppercase tracking-wider text-[var(--foreground)]">
-            1-Click Ghana Regulatory &amp; Emergency Push Presets
+            Ghana Regulatory &amp; Emergency Push Presets
           </h3>
         </div>
         <div className="flex flex-wrap gap-2">

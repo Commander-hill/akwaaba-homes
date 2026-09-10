@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
-  ShieldAlert,
-  ShieldCheck,
   AlertTriangle,
   RefreshCw,
   Building,
@@ -160,7 +158,7 @@ export default function FraudDetectionTab() {
         </div>
       ) : filteredReports.length === 0 ? (
         <div className="p-8 text-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-2">
-          <ShieldCheck className="w-8 h-8 text-[#0F5132] mx-auto" />
+          <CheckCircle2 className="w-8 h-8 text-[#0F5132] mx-auto" />
           <h3 className="text-xs font-bold text-zinc-900 dark:text-white">All Properties Comply with Platform Standards</h3>
           <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
             No active property listings currently trigger compliance or fraud flags.

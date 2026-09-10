@@ -8,13 +8,11 @@ import {
   ArrowRight, 
   Loader2, 
   CheckCircle2, 
-  ShieldCheck, 
   Clock, 
   RotateCcw, 
   ArrowLeft,
   AlertCircle,
-  Lock,
-  Sparkles
+  Lock
 } from 'lucide-react';
 import api from '@/lib/axios';
 
@@ -211,8 +209,8 @@ export default function ForgotPasswordPage() {
           {/* Trust Guarantees */}
           <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/80 grid grid-cols-2 gap-3 text-[10px] text-zinc-400">
             <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>SHA-256 Vault Token</span>
+              <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>Single-Use Secure Token</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />

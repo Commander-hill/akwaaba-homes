@@ -698,9 +698,9 @@ export const verifyLandlord = async (req: Request, res: Response): Promise<void>
       data: {
         userId: user.id,
         type: 'ANNOUNCEMENT',
-        title: isVerified ? '🛡️ Verified Landlord Badge Approved!' : 'Landlord Verification Update',
+        title: isVerified ? 'Verified Landlord Status Approved' : 'Landlord Verification Update',
         message: isVerified
-          ? 'Congratulations! Your identity and ownership have been verified with the official Verified Landlord Badge.'
+          ? 'Congratulations! Your identity and ownership documents have been verified with official Verified Landlord status.'
           : 'Your landlord verification request was not approved. Please review your documents or contact support.',
         link: '/dashboard/landlord'
       }
@@ -722,7 +722,7 @@ export const verifyLandlord = async (req: Request, res: Response): Promise<void>
     }).catch((e) => console.error('[Notification Error]', e));
 
     res.status(200).json({
-      message: `Landlord verification ${isVerified ? 'approved with Verified Blue Badge 🛡️' : 'rejected'}.`,
+      message: `Landlord verification ${isVerified ? 'approved with Verified status' : 'rejected'}.`,
       user
     });
   } catch (error) {

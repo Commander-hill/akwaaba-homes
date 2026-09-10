@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { 
   Search, SlidersHorizontal, MapPin, Filter, Loader2, Map as MapIcon,
   Grid2X2, CheckCircle2, Building, Home, Bed, 
-  Zap, Droplets, Wind, Shield, Wifi, Dumbbell, Car, UtensilsCrossed,
-  X, Sparkles, ChevronDown, Check, ArrowRight, BedDouble, AlertCircle
+  Zap, Droplets, Wind, Lock, Wifi, Dumbbell, Car, UtensilsCrossed,
+  X, ChevronDown, Check, ArrowRight, BedDouble, AlertCircle
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import api from '@/lib/axios';
@@ -44,7 +44,7 @@ const AMENITY_TAGS = [
   { label: 'Standby Generator', val: 'Generator', icon: Zap },
   { label: '24/7 Water / Polytank', val: 'Water', icon: Droplets },
   { label: 'Air Conditioning', val: 'Air Conditioning', icon: Wind },
-  { label: 'Compound Security', val: 'Security', icon: Shield },
+  { label: 'Compound Security', val: 'Security', icon: Lock },
   { label: 'Fiber WiFi', val: 'WiFi', icon: Wifi },
   { label: 'Compound Parking', val: 'Parking', icon: Car },
   { label: 'Fitted Kitchen', val: 'Kitchen', icon: UtensilsCrossed }

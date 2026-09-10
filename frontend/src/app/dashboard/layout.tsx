@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, Suspense } from 'react';
 import { 
   LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, 
-  ShieldCheck, Building, CreditCard, MessageSquare, Wrench, BellRing, 
+  BadgeCheck, Scale, Building, CreditCard, MessageSquare, Wrench, BellRing, 
   Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator,
   Calendar, Armchair, Gauge, ClipboardCheck
 } from 'lucide-react';
@@ -83,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Subscription', href: '/dashboard/landlord/subscription', icon: CreditCard },
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },
+          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];
@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors', icon: Key },
           { name: 'Unit Asset Vault', href: '/dashboard/caretaker?tab=assets', icon: ClipboardCheck },
           { name: 'Utility Sub-Meters', href: '/dashboard/caretaker?tab=meters', icon: Gauge },
-          { name: 'Conduct Logbook', href: '/dashboard/caretaker?tab=conduct', icon: ShieldCheck },
+          { name: 'Conduct Logbook', href: '/dashboard/caretaker?tab=conduct', icon: Scale },
           { name: 'Move-In Inspections', href: '/dashboard/caretaker?tab=inspections', icon: FileText },
           { name: 'Parcel Vault', href: '/dashboard/caretaker?tab=parcels', icon: Package },
           { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },
+          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];
@@ -142,7 +142,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: ShieldCheck },
+          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];

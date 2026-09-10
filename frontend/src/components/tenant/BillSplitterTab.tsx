@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   DollarSign, Plus, Trash2, CheckCircle2, Clock, Zap, Droplets, 
-  Wifi, Flame, Sparkles, Loader2, Users, Send, AlertCircle
+  Wifi, Flame, Loader2, Users, Send, AlertCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';

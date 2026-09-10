@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Calendar, DollarSign, CheckCircle2, Clock, AlertTriangle, KeyRound, 
   Send, Phone, User, Building, Search, Filter, Loader2, RefreshCw,
-  CreditCard, ShieldAlert, Check, Copy, ExternalLink, GraduationCap
+  CreditCard, Check, Copy, ExternalLink, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';

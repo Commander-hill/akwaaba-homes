@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Car, Plus, Trash2, ShieldCheck, ParkingCircle, AlertCircle, 
+  Car, Plus, Trash2, ParkingCircle, AlertCircle, 
   Loader2, CheckCircle2, Hash
 } from 'lucide-react';
 import toast from 'react-hot-toast';

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Armchair, Search, CheckCircle2, AlertTriangle, FileText, 
-  Printer, ShieldCheck, Check, DoorClosed, MessageSquare 
+  Printer, ClipboardCheck, Check, DoorClosed, MessageSquare 
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -301,7 +301,7 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
               'w-12 h-12 rounded-xl flex items-center justify-center shrink-0',
               isSigned ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
             )}>
-              {isSigned ? <ShieldCheck className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+              {isSigned ? <ClipboardCheck className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
             </div>
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider opacity-80">Checklist Standing</div>
@@ -469,7 +469,7 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="w-4 h-4" /> Sign &amp; Lock Move-In Checklist
+                  <ClipboardCheck className="w-4 h-4" /> Sign &amp; Lock Move-In Checklist
                 </>
               )}
             </button>

@@ -12,7 +12,6 @@ import {
   CheckCircle, 
   AlertCircle, 
   Clock, 
-  ShieldAlert, 
   XCircle,
   Building,
   User,
@@ -225,7 +224,7 @@ export default function AdminTicketsPage() {
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
               stats.urgent > 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
             }`}>
-              <ShieldAlert className="w-4 h-4" />
+              <AlertCircle className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-center gap-2 mb-1">
@@ -494,7 +493,7 @@ export default function AdminTicketsPage() {
                           ticket.priority === 'MEDIUM' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-900/50' :
                           'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'
                         }`}>
-                          {ticket.priority === 'URGENT' && <ShieldAlert className="w-3 h-3 text-red-600 animate-pulse" />}
+                          {ticket.priority === 'URGENT' && <AlertCircle className="w-3 h-3 text-red-600 animate-pulse" />}
                           {ticket.priority}
                         </span>
                       </td>

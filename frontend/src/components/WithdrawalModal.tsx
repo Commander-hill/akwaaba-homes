@@ -15,7 +15,6 @@ import {
   Phone,
   ChevronDown,
   RefreshCw,
-  ShieldCheck,
   KeyRound,
   Lock,
   ArrowLeft
@@ -215,7 +214,7 @@ export default function WithdrawalModal({ onClose }: { onClose: () => void }) {
               <form onSubmit={handleConfirmWithdrawal} className="space-y-4 animate-in fade-in">
                 <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-center space-y-2">
                   <div className="w-10 h-10 rounded-xl bg-[#0F5132] text-white flex items-center justify-center mx-auto shadow-xs">
-                    <ShieldCheck className="w-5 h-5" />
+                    <Lock className="w-5 h-5" />
                   </div>
                   <h4 className="text-sm font-black text-zinc-950 dark:text-white">
                     Step-Up Security Authorization
@@ -297,7 +296,7 @@ export default function WithdrawalModal({ onClose }: { onClose: () => void }) {
                     {withdrawMutation.isPending ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Authorizing...</>
                     ) : (
-                      <><ShieldCheck className="w-4 h-4" /> Confirm &amp; Disburse</>
+                      <><CheckCircle2 className="w-4 h-4" /> Confirm &amp; Disburse</>
                     )}
                   </button>
                 </div>

@@ -10,7 +10,7 @@ import {
   Home, 
   Trash2, 
   Flag, 
-  ShieldCheck, 
+  Scale, 
   MessageSquare, 
   Search, 
   Filter, 
@@ -24,8 +24,7 @@ import {
   Award,
   ThumbsUp,
   AlertCircle,
-  HelpCircle,
-  Scale
+  HelpCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDialog } from '@/providers/DialogProvider';
@@ -296,7 +295,7 @@ export default function AdminReviewsPage() {
 
       {/* ─── STREAMLINED REPUTATION METHODOLOGY ADVISORY ─────────────────── */}
       <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex items-start gap-3">
-        <ShieldCheck className="w-5 h-5 text-[#0F5132] shrink-0 mt-0.5" />
+        <Scale className="w-5 h-5 text-[#0F5132] shrink-0 mt-0.5" />
         <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           <strong className="text-slate-900 dark:text-white font-extrabold">Reputation Governance Standard:</strong> Reputation scores reflect the arithmetic average of verified ratings from completed residential tenancies. Reviews under formal dispute appeal are quarantined from landlord and tenant public scores until adjudicated by an administrator.
         </div>

@@ -14,7 +14,7 @@ import {
   Megaphone, 
   X, 
   Hash, 
-  Sparkles, 
+  Radio, 
   Type, 
   Heading2, 
   AlignLeft, 
@@ -23,15 +23,15 @@ import {
   Scale, 
   CreditCard, 
   AlertTriangle, 
-  ShieldCheck, 
+  BadgeCheck, 
   Info, 
   Clock, 
   Eye, 
   Search, 
   Wrench,
   ExternalLink,
-  ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  FileText
 } from 'lucide-react';
 import { useDialog } from '@/providers/DialogProvider';
 import toast from 'react-hot-toast';
@@ -55,7 +55,7 @@ const ICON_MAP: Record<string, { label: string; icon: React.ElementType; color: 
   CAUTION: { label: 'Caution & Warning', icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
   WARNING: { label: 'Urgent Alert', icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
   LEGAL: { label: 'Statutory & Act 220', icon: Scale, color: 'text-[#D97706]', bg: 'bg-amber-50 dark:bg-amber-950/50' },
-  SECURITY: { label: 'Security & Verification', icon: ShieldCheck, color: 'text-[#0F5132] dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
+  SECURITY: { label: 'Security & Verification', icon: BadgeCheck, color: 'text-[#0F5132] dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
   MAINTENANCE: { label: 'Maintenance & Repairs', icon: Wrench, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/50' },
   MEGAPHONE: { label: 'General Announcement', icon: Megaphone, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50' }
 };
@@ -342,8 +342,8 @@ export default function AdminNoticesPage() {
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl sm:text-3xl font-black text-[#0F5132] dark:text-emerald-400">{metrics.active}</span>
-              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">
-                Broadcasting <Sparkles className="w-3 h-3" />
+              <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                Broadcasting <Radio className="w-3 h-3 animate-pulse" />
               </span>
             </div>
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 font-medium">Currently visible on website</p>
@@ -596,7 +596,7 @@ export default function AdminNoticesPage() {
             {/* Quick Ghana Statutory Templates */}
             <div className="space-y-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#D97706]" /> 1-Click Ghana Statutory Regulatory Presets
+                <FileText className="w-3 h-3 text-[#D97706]" /> Ghana Statutory Regulatory Presets
               </span>
               <div className="flex flex-wrap gap-2">
                 {GHANA_TEMPLATES.map((tmpl) => (
@@ -678,7 +678,7 @@ export default function AdminNoticesPage() {
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
                     >
                       <option value="LEGAL">Scale (Statutory / Act 220)</option>
-                      <option value="SECURITY">Shield (KYC &amp; Ghana Card)</option>
+                      <option value="SECURITY">Identity &amp; KYC Verification</option>
                       <option value="PAYMENT">Credit Card (Escrow &amp; Permits)</option>
                       <option value="INFO">Info (General Information)</option>
                       <option value="CAUTION">Caution (Warnings &amp; Rules)</option>

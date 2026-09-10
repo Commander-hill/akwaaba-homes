@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   FileText, Plus, CheckCircle2, Clock, XCircle, AlertCircle, 
-  Loader2, Calendar, ShieldCheck, ArrowRight
+  Loader2, Calendar, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -113,7 +113,7 @@ export default function LeaseRenewalTab({ bookings = [] }: { bookings?: any[] })
         </div>
       ) : renewals.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
-          <ShieldCheck className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No Renewal Applications Yet</h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
             As your lease expiration approaches (typically 30–60 days before completion), apply here to lock in your tenancy for another academic year or lease period.

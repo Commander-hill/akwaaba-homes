@@ -13,13 +13,11 @@ import {
   CreditCard, 
   RefreshCw, 
   Zap, 
-  ShieldAlert, 
   ArrowUpRight, 
   CheckCircle2, 
   Search, 
   Filter, 
   AlertTriangle, 
-  ShieldCheck, 
   Clock, 
   FileText, 
   ExternalLink, 
@@ -30,7 +28,7 @@ import {
   Star, 
   Info,
   ChevronRight,
-  Sparkles,
+  Scale,
   MapPin,
   Phone,
   Mail,
@@ -109,7 +107,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string
     color: 'text-rose-700 dark:text-rose-300', 
     bg: 'bg-rose-50 dark:bg-rose-950/50', 
     border: 'border-rose-200 dark:border-rose-800', 
-    icon: ShieldAlert 
+    icon: Scale 
   },
   REVIEW: { 
     label: 'Tenancy Rating', 
@@ -212,7 +210,7 @@ export default function AdminActivityPage() {
         severity: 'COMPLIANCE',
         title: 'Residential Property Inventory Synced',
         message: `Residential portfolio active with ${stats?.totalProperties || 1} verified properties under Ghana Rent Act (Act 220).`,
-        actor: { name: 'Lands Registry Bot', role: 'SYSTEM' },
+        actor: { name: 'Lands Commission Registry Sync', role: 'SYSTEM' },
         entity: { type: 'Property Inventory', title: 'Greater Accra Real Estate Pool' },
         status: 'APPROVED',
         createdAt: new Date(Date.now() - 3600000).toISOString()
@@ -553,7 +551,7 @@ export default function AdminActivityPage() {
                           ) : event.actor?.role === 'TENANT' ? (
                             <Users className="w-3.5 h-3.5 text-blue-500" />
                           ) : (
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                           )}
                           <span className="truncate max-w-[140px]">{event.actor?.name || 'System Daemon'}</span>
                         </div>
@@ -733,7 +731,7 @@ export default function AdminActivityPage() {
               {/* Statutory Ghana Rent Act (Act 220) Advisory */}
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-                  <ShieldCheck className="w-4 h-4 text-[#D97706]" /> Ghana Rent Act, 1963 (Act 220) Statutory Standard
+                  <Scale className="w-4 h-4 text-[#D97706]" /> Ghana Rent Act, 1963 (Act 220) Statutory Standard
                 </div>
                 <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                   All property transactions, tenancy agreements, and advance rents must conform to Ghana Rent Act stipulations (max 6-month rent advance limit, mandatory issuance of rent receipts, and non-retaliatory dispute resolution).

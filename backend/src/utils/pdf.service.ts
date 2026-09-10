@@ -330,7 +330,7 @@ export async function generateTenancyAgreementPDF(data: {
       .text(`Status: ${data.landlordSignedAt ? 'VERIFIED HOST E-SIGNATURE' : 'PENDING STAMP'}`, 300, p2Y3 + 83)
       .fillColor('#059669')
       .font('Helvetica-Bold')
-      .text('Authentication: 🛡️ GHANA CARD HOST KYC', 300, p2Y3 + 97);
+      .text('Authentication: GHANA CARD HOST KYC VERIFIED', 300, p2Y3 + 97);
 
     // Embed Landlord Signature Canvas Image if present
     if (data.landlordSignatureUrl && data.landlordSignatureUrl.startsWith('data:image')) {

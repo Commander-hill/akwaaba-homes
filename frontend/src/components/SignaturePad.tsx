@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Eraser, CheckCircle2, ShieldCheck, PenTool } from 'lucide-react';
+import { Eraser, CheckCircle2, FileCheck, PenTool } from 'lucide-react';
 
 interface SignaturePadProps {
   onSave: (base64Signature: string) => void;
@@ -158,7 +158,7 @@ export default function SignaturePad({ onSave, label = 'Sign Below', disabled = 
 
       <div className="flex items-center justify-between text-[11px] text-slate-500 px-1">
         <span className="flex items-center gap-1 font-medium">
-          <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+          <FileCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
           Act 772 Statutory E-Signature Canvas
         </span>
         <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold">

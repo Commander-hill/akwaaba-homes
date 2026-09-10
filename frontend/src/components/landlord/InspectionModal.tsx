@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   ClipboardCheck, CheckCircle2, AlertTriangle, XCircle, 
-  DollarSign, FileSignature, Loader2, Camera, ShieldCheck
+  DollarSign, FileSignature, Loader2, Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -189,7 +189,7 @@ export default function InspectionModal({ booking, isOpen, onClose }: Inspection
             <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl space-y-3">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4" /> Caution Deposit Settlement
+                  <DollarSign className="w-4 h-4" /> Caution Deposit Settlement
                 </span>
                 <span className="font-extrabold text-slate-900 dark:text-white">
                   Deposit Held: GHS {cautionDepositAmount.toFixed(2)}

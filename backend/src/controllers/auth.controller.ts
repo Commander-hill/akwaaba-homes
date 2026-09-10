@@ -856,7 +856,7 @@ export const submitLandlordVerification = async (req: Request, res: Response): P
         data: landlordAdmins.map(a => ({
           userId: a.id,
           type: 'SYSTEM_ALERT',
-          title: '🛡️ Landlord Verification Document Submitted',
+          title: 'Landlord Verification Document Submitted',
           message: `Landlord submitted property ownership & Ghana Card for verification.`,
           link: '/admin/landlord-verification'
         }))

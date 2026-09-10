@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, Compass, HelpCircle, 
-  Building, ShieldCheck, MapPin, Search, FileText, Scale 
+  ArrowRight, ArrowLeft, CheckCircle2, X, Compass, HelpCircle, 
+  Building, BadgeCheck, FileCheck, MapPin, Search, FileText, Scale 
 } from 'lucide-react';
 
 interface TourStep {
@@ -40,7 +40,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       title: "Account Setup & Ghana Card (NIA) Verification 🆔",
       description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
       targetSelector: '#tour-progress-widget',
-      icon: ShieldCheck,
+      icon: BadgeCheck,
       badge: "Step 2 of 4 • Identity Trust",
       statutoryNote: "NIA Identity Verification Standard"
     },
@@ -71,10 +71,10 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       statutoryNote: "Ghana Real Estate Governance Standard"
     },
     {
-      title: "Title Deed & Lands Commission Audit 🛡️",
+      title: "Title Deed & Lands Commission Audit",
       description: "Upload your property title deeds, indentures, and site plans for Lands Commission verification to earn the Verified Host badge and boost tenant booking confidence.",
       targetSelector: '#tour-progress-widget',
-      icon: ShieldCheck,
+      icon: FileCheck,
       badge: "Step 2 of 4 • Title Verification",
       statutoryNote: "Lands Commission Certified Registry"
     },
@@ -261,7 +261,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
             {/* Header Badge & Close */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">
-                <Sparkles className="w-3 h-3 text-[#D97706]" />
+                <Compass className="w-3 h-3 text-[#D97706]" />
                 {current.badge}
               </span>
               <button

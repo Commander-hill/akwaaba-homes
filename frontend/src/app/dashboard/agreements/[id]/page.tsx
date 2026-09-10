@@ -6,8 +6,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, FileSignature, CheckCircle2, Printer, AlertTriangle, 
-  XCircle, ShieldCheck, Scale, Lock, Clock, FileCheck, ArrowLeft,
-  Building, UserCheck, Shield, HelpCircle
+  XCircle, Scale, Lock, Clock, FileCheck, ArrowLeft,
+  Building, UserCheck, HelpCircle
 } from 'lucide-react';
 import SignaturePad from '@/components/SignaturePad';
 import toast from 'react-hot-toast';
@@ -393,7 +393,7 @@ export default function AgreementPage() {
               </div>
             </div>
             <div className="px-3 py-1 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200 font-black text-[10px] rounded-full border border-amber-400/40 uppercase tracking-wider shrink-0">
-              🛡️ Certified Title On-File
+              Certified Title On-File
             </div>
           </div>
 

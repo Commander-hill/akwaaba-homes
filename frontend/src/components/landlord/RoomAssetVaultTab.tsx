@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Armchair, Search, Filter, Plus, Trash2, Edit3, Printer, 
-  CheckCircle2, AlertTriangle, XCircle, Info, ShieldCheck, 
+  CheckCircle2, AlertTriangle, XCircle, Info, 
   Layers, Fan, Zap, Key, Wind, FileText, RefreshCw, 
   MessageSquare, SlidersHorizontal, DoorClosed
 } from 'lucide-react';

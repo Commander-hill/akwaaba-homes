@@ -4,9 +4,9 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  ShieldCheck, Clock, User, Phone, Check, AlertCircle, Loader2, 
+  Clock, User, Phone, Check, AlertCircle, Loader2, 
   Search, RefreshCw, KeyRound, LogOut, LogIn, AlertTriangle, 
-  DoorOpen, CheckCircle2, ShieldAlert, ArrowRight, ExternalLink
+  DoorOpen, CheckCircle2, ArrowRight, ExternalLink
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -249,7 +249,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" /> Porter Station Verification
+              <DoorOpen className="w-4 h-4" /> Porter Station Verification
             </span>
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
               Verify 6-Digit Gate PIN
@@ -332,7 +332,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
 
       {/* Curfew Policy Banner */}
       <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300">
-        <ShieldAlert className="w-4 h-4 shrink-0 text-amber-600" />
+        <Clock className="w-4 h-4 shrink-0 text-amber-600" />
         <span>
           <strong>Hostel Curfew Notice:</strong> Standard visiting hours conclude at <strong>10:00 PM</strong>. Non-resident visitors remaining inside without prior caretaker authorization will be flagged for overnight checkout.
         </span>

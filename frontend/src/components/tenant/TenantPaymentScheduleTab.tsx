@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Calendar, DollarSign, CheckCircle2, Clock, AlertTriangle, 
-  KeyRound, Printer, Receipt, ShieldCheck, ArrowRight, 
+  KeyRound, Printer, Receipt, ArrowRight, 
   Lock, Unlock, MessageSquare, Building 
 } from 'lucide-react';
 import toast from 'react-hot-toast';

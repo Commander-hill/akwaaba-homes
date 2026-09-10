@@ -7,9 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { 
-  Search, MapPin, Building, Shield, Users, 
+  Search, MapPin, Building, Users, 
   ArrowRight, CheckCircle2, Lock, DollarSign, Wrench, ChevronRight,
-  GraduationCap, Clock, HelpCircle, FileText, Check, Sparkles,
+  GraduationCap, Clock, HelpCircle, FileText, Check,
   Zap, Compass, PhoneCall, AlertCircle, Eye, BedDouble, Droplet
 } from 'lucide-react';
 import WishlistButton from '@/components/WishlistButton';

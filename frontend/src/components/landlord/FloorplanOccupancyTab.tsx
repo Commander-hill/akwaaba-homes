@@ -4,9 +4,9 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Building, Layers, Users, CheckCircle, Wrench, Clock, ShieldAlert,
+  Building, Layers, Users, CheckCircle, Wrench, Clock,
   Loader2, Filter, AlertCircle, Phone, Mail, Calendar, Eye, RefreshCw,
-  Sparkles, MessageSquare, ClipboardCheck, ArrowUpRight, Check, Send
+  MessageSquare, ClipboardCheck, ArrowUpRight, Check, Send
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -297,7 +297,7 @@ export default function FloorplanOccupancyTab({
 
             <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl">
               <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" /> Turnover
+                <RefreshCw className="w-3.5 h-3.5" /> Turnover
               </span>
               <div className="text-2xl font-black text-cyan-700 dark:text-cyan-300 mt-1">{stats.cleaningBeds || 0}</div>
               <span className="text-[11px] text-cyan-500/80">Sanitizing for move-in</span>
@@ -481,7 +481,7 @@ export default function FloorplanOccupancyTab({
                                             }}
                                             className="w-full py-0.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-[9px] flex items-center justify-center gap-0.5 cursor-pointer"
                                           >
-                                            <Sparkles className="w-2.5 h-2.5" /> Clean
+                                            <RefreshCw className="w-2.5 h-2.5" /> Clean
                                           </button>
                                           <button
                                             onClick={(e) => {
@@ -534,7 +534,7 @@ export default function FloorplanOccupancyTab({
                                             }}
                                             className="w-full py-0.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded text-[9px] flex items-center justify-center gap-0.5 cursor-pointer"
                                           >
-                                            <Sparkles className="w-2.5 h-2.5" /> Clean
+                                            <RefreshCw className="w-2.5 h-2.5" /> Clean
                                           </button>
                                         </>
                                       )}

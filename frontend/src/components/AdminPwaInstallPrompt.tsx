@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, X, ShieldCheck, Sparkles } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import Image from 'next/image';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -64,7 +64,7 @@ export default function AdminPwaInstallPrompt() {
               <div className="flex items-center gap-1.5">
                 <h4 className="font-extrabold text-xs text-white">Akwaaba Admin App</h4>
                 <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-0.5 uppercase">
-                  <ShieldCheck className="w-2.5 h-2.5" /> PWA
+                  <Download className="w-2.5 h-2.5" /> PWA
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 mt-0.5">Install dedicated Admin Command Center</p>

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '@/providers/SocketProvider';
 import api from '@/lib/axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Send, Loader2, User, MessageSquare, Search, ShieldCheck, CheckCheck, Lock } from 'lucide-react';
+import { Send, Loader2, User, MessageSquare, Search, CheckCheck, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 

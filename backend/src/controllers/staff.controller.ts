@@ -78,7 +78,7 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
       data: {
         userId: staffUser.id,
         type: 'ANNOUNCEMENT',
-        title: '🛡️ Property Staff Assignment',
+        title: 'Property Staff Assignment',
         message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}". You now have on-site management privileges.`,
         link: '/dashboard/staff'
       }
@@ -87,7 +87,7 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
     try {
       const io = getIO();
       io.to(staffUser.id).emit('notification', {
-        title: '🛡️ Property Staff Assignment',
+        title: 'Property Staff Assignment',
         message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}".`,
         type: 'staff'
       });
@@ -171,7 +171,7 @@ export const removeStaff = async (req: Request, res: Response): Promise<void> =>
       data: {
         userId: assignment.userId,
         type: 'ANNOUNCEMENT',
-        title: '🛡️ Staff Assignment Concluded',
+        title: 'Staff Assignment Concluded',
         message: 'Your property staff assignment has concluded.',
         link: '/dashboard'
       }
@@ -180,7 +180,7 @@ export const removeStaff = async (req: Request, res: Response): Promise<void> =>
     try {
       const io = getIO();
       io.to(assignment.userId).emit('notification', {
-        title: '🛡️ Staff Assignment Concluded',
+        title: 'Staff Assignment Concluded',
         message: 'Your staff assignment has been removed by the property owner.',
         type: 'staff'
       });

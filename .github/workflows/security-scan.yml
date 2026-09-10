@@ -1,4 +1,4 @@
-name: 🛡️ Automated Security Audit & Vulnerability Scanning
+name: 🔒 Automated Security Audit & Vulnerability Scanning
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true
 
-      - name: 🛡️ Snyk Vulnerability Scan (Backend)
+      - name: 🔒 Snyk Vulnerability Scan (Backend)
         uses: snyk/actions/node@master
         continue-on-error: true # Prevents workflow failure if SNYK_TOKEN is unconfigured
         env:
@@ -69,7 +69,7 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true
 
-      - name: 🛡️ Snyk Vulnerability Scan (Frontend)
+      - name: 🔒 Snyk Vulnerability Scan (Frontend)
         uses: snyk/actions/node@master
         continue-on-error: true # Prevents workflow failure if SNYK_TOKEN is unconfigured
         env:

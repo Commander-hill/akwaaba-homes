@@ -2,10 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  ShieldAlert, Scale, AlertOctagon, FileWarning, Gavel, 
+  AlertTriangle, Scale, AlertOctagon, FileWarning, Gavel, 
   UserX, Flame, Volume2, Printer, Search, Filter, 
   Plus, CheckCircle, Clock, Send, FileText, Building, 
-  Phone, Trash2, Edit3, Eye, ShieldCheck
+  Phone, Trash2, Edit3, Eye, CheckCircle2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -419,7 +419,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider border border-red-500/30">
-              <ShieldAlert className="w-3.5 h-3.5" />
+              <Scale className="w-3.5 h-3.5" />
               Hostel Disciplinary Vault
             </div>
             <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
@@ -585,7 +585,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
         {filteredIncidents.length === 0 ? (
           <div className="p-12 text-center space-y-3">
             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
-              <ShieldCheck className="w-6 h-6 text-emerald-500" />
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </div>
             <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
               No disciplinary infractions found
@@ -758,7 +758,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
             <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-2xl">
-                  <ShieldAlert className="w-5 h-5" />
+                  <FileWarning className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900 dark:text-white">

@@ -4,9 +4,9 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Building, Wrench, ShieldCheck, BellRing, Package, Key, Users, 
+  Building, Wrench, Scale, BellRing, Package, Key, Users, 
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
-  Phone, Mail, MapPin, ExternalLink, Clock, Sparkles, Check, X,
+  Phone, Mail, MapPin, ExternalLink, Clock, Check, X,
   FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, Fuel, Activity, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -499,7 +499,7 @@ function CaretakerDashboardContent() {
         >
           <div className="flex items-center justify-between text-slate-500">
             <span className="text-xs font-bold uppercase">Inspections</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <ClipboardCheck className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{allBookings.length}</div>
           <div className="text-[11px] text-slate-500">Resident check-ins</div>
@@ -554,7 +554,7 @@ function CaretakerDashboardContent() {
           { id: 'visitors', label: 'Gatehouse & Access Logbook (' + allVisitorPasses.length + ')', icon: Key },
           { id: 'assets', label: 'Unit Fixtures & Asset Vault', icon: ClipboardCheck },
           { id: 'meters', label: 'Utility Sub-Meters (' + meterReadings.length + ')', icon: Gauge },
-          { id: 'conduct', label: 'Conduct & Incident Logbook', icon: ShieldCheck },
+          { id: 'conduct', label: 'Conduct & Incident Logbook', icon: Scale },
           { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: FileText },
           { id: 'parcels', label: 'Parcel Vault (' + allParcels.length + ')', icon: Package },
           { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
@@ -773,7 +773,7 @@ function CaretakerDashboardContent() {
           {allBookings.length === 0 ? (
             <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
-                <ShieldCheck className="w-6 h-6" />
+                <ClipboardCheck className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-slate-900 dark:text-white">No Pending Inspections</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -882,7 +882,7 @@ function CaretakerDashboardContent() {
                       onClick={() => setSelectedInspectionBooking(b)}
                       className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm cursor-pointer shrink-0"
                     >
-                      <ShieldCheck className="w-4 h-4" /> Inspect Room
+                      <ClipboardCheck className="w-4 h-4" /> Inspect Room
                     </button>
                   </div>
                 </div>

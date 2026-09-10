@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Package, Plus, CheckCircle2, Clock, ShieldCheck, 
+  Package, Plus, CheckCircle2, Clock, 
   Copy, Check, AlertCircle, Loader2, QrCode, Building, Truck
 } from 'lucide-react';
 import toast from 'react-hot-toast';

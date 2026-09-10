@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, 
-  Star, Info, Flag, Send, X, ShieldCheck, Lock, Clock, CheckCircle2,
-  Zap, Droplets, Shield, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
-  MessageSquare, ExternalLink, AlertCircle, Sparkles, Building2,
+  Star, Info, Flag, Send, X, Lock, Clock, CheckCircle2,
+  Zap, Droplets, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
+  MessageSquare, ExternalLink, AlertCircle, Building2,
   Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';

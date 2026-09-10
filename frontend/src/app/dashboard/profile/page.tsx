@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Loader2, ArrowLeft, Upload, Star, Save, Shield, Laptop, Smartphone, 
+  Loader2, ArrowLeft, Upload, Star, Save, Laptop, Smartphone, 
   Globe, LogOut, CheckCircle2, AlertTriangle, Clock, Lock, User, Check, Building2, GraduationCap,
   KeyRound, QrCode, Copy, Download, X
 } from 'lucide-react';
@@ -472,7 +472,7 @@ export default function ProfilePage() {
               : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
           )}
         >
-          <Shield className="w-3.5 h-3.5" />
+          <Lock className="w-3.5 h-3.5" />
           <span>Security &amp; Devices</span>
         </button>
       </div>

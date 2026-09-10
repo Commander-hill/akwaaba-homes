@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, UserCircle, LogIn, Menu, X, ShieldAlert, Sparkles, Building, ArrowRight } from 'lucide-react';
+import { Home, Search, UserCircle, LogIn, Menu, X, AlertTriangle, Building, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -75,7 +75,7 @@ export default function Navbar() {
       {/* Maintenance Mode Alert */}
       {publicConfig?.maintenanceMode && (
         <div className="bg-amber-600 text-white px-4 py-1.5 text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2">
-          <ShieldAlert className="w-4 h-4" />
+          <AlertTriangle className="w-4 h-4" />
           <span>Scheduled Maintenance Mode Active — Read-only browsing enabled.</span>
         </div>
       )}

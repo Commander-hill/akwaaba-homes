@@ -20,7 +20,7 @@ const PRESET_AMENITY_CATEGORIES = [
     ]
   },
   {
-    category: '🛡️ Security & Access',
+    category: '🔒 Security & Access',
     items: [
       { name: '24/7 Uniformed Security Guard', icon: '💂' },
       { name: 'CCTV Surveillance Cameras', icon: '📹' },
@@ -608,7 +608,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                 {/* Caution Deposit (GHS) */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-[var(--foreground)] flex justify-between items-center">
-                    <span className="flex items-center gap-1.5"><span>🛡️</span> Refundable Caution Deposit (GHS)</span>
+                    <span className="flex items-center gap-1.5">Refundable Caution Deposit (GHS)</span>
                     <span className="text-xs text-[var(--muted-foreground)] font-normal">Optional</span>
                   </label>
                   <div className="relative">
@@ -637,7 +637,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
                     { label: '🗑️ Garbage / Trash Fee Included', val: 'Garbage/Trash Service Included' },
                     { label: '🔌 Prepaid Electricity Metered per Room', val: 'Prepaid Electricity Metered per Room' },
                     { label: '🧹 Common Area Cleaning Included', val: 'Common Area Cleaning Included' },
-                    { label: '🛡️ Compound Security Fee Included', val: 'Compound Security Fee Included' },
+                    { label: '🔒 Compound Security Fee Included', val: 'Compound Security Fee Included' },
                     { label: '📶 Internet / WiFi Included', val: 'WiFi Internet Included' }
                   ].map((util, uIdx) => {
                     const isChecked = formData.includedUtilities.includes(util.val);

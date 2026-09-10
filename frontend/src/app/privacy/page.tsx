@@ -1,4 +1,4 @@
-import { ShieldCheck, Lock, Eye, Database, Server, RefreshCw } from 'lucide-react';
+import { BadgeCheck, Lock, Eye, Database, Server, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <div className="space-y-8 glass-card p-8 rounded-3xl border border-[var(--border)]">
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
-              <ShieldCheck className="text-[var(--primary)]" /> 1. Data Collection & Ghana Card Verification
+              <BadgeCheck className="text-[var(--primary)]" /> 1. Data Collection & Ghana Card Verification
             </h2>
             <p className="text-[var(--muted-foreground)] leading-relaxed">
               We collect your name, email address, phone number, university details, and Ghana Card verification records solely to verify your identity and protect accommodation seekers and property owners from fraud.

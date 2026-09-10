@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, Users, Building, CalendarCheck, CreditCard, TrendingUp, 
-  XCircle, ShieldCheck, Megaphone, Send, Activity, ArrowRight, 
+  XCircle, BadgeCheck, Megaphone, Send, Activity, ArrowRight, 
   CheckCircle2, Clock, AlertTriangle, FileCheck, Key, RefreshCw
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -272,7 +272,7 @@ export default function AdminDashboardPage() {
                 className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
               >
                 <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
+                  <BadgeCheck className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="font-bold text-zinc-900 dark:text-white">Landlord KYC &amp; Ghana Card</div>

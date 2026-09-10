@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, Users, CheckCircle, MessageSquare, Send, UserCheck, 
-  Sparkles, XCircle, ShieldCheck, ArrowRight, UserPlus, Clock, 
+  Check, XCircle, BadgeCheck, ArrowRight, UserPlus, Clock, 
   CheckCircle2, SlidersHorizontal, UserCheck2, HeartHandshake, Compass
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -313,7 +313,7 @@ export default function RoommatesPage() {
               disabled={createProfileMutation.isPending}
               className="w-full py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {createProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {createProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               <span>Save Lifestyle Profile &amp; Discover Matches</span>
             </button>
           </form>
@@ -432,7 +432,7 @@ export default function RoommatesPage() {
                       {/* Top Bar: Match Score & Verification */}
                       <div className="flex justify-between items-center mb-3">
                         <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" />
+                          <Users className="w-3 h-3" />
                           <span>{score}% Lifestyle Match</span>
                         </span>
                         

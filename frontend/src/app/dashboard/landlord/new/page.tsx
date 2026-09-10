@@ -8,7 +8,7 @@ import {
   Loader2, Lock, Building2, MapPin, UploadCloud, Info, Video, 
   Image as ImageIcon, X, Plus, Trash2, AlertCircle, ArrowLeft,
   ArrowRight, Check, CheckCircle2, Zap, Droplets,
-  Shield, Car, Wind, Wifi, Dumbbell, Clock, KeyRound, Sparkles
+  Car, Wind, Wifi, Dumbbell, Clock, KeyRound
 } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
@@ -38,7 +38,7 @@ const AMENITY_SECTIONS = [
   },
   {
     title: 'Compound Security',
-    icon: Shield,
+    icon: Lock,
     items: [
       '24/7 Security Guard',
       'CCTV Surveillance Cameras',
@@ -1012,7 +1012,7 @@ export default function NewPropertyPage() {
               disabled={createMutation.isPending}
               className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
-              {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+              {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
               <span>Publish Listing</span>
             </button>
           </div>

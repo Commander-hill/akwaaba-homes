@@ -11,7 +11,6 @@ import {
   Award, 
   MapPin, 
   ArrowUpRight, 
-  ShieldCheck, 
   RefreshCw, 
   BarChart3, 
   PieChart, 

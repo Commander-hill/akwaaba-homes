@@ -7,14 +7,14 @@ import {
   Loader2, 
   FileText, 
   User as UserIcon, 
-  Shield, 
+  BadgeCheck, 
   Clock, 
   Globe, 
   ArrowRight, 
   Search, 
   Filter, 
-  ShieldCheck, 
-  ShieldAlert, 
+  Scale, 
+  AlertTriangle, 
   Lock, 
   CheckCircle2, 
   XCircle, 
@@ -24,7 +24,6 @@ import {
   Eye, 
   ExternalLink,
   ChevronRight,
-  Sparkles,
   Database,
   Hash,
   Fingerprint
@@ -255,7 +254,7 @@ export default function AuditLogsPage() {
             <div className="flex justify-between items-start mb-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Security &amp; Sanctions</span>
               <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 border border-red-100 dark:border-red-900/40">
-                <ShieldAlert className="w-4 h-4" />
+                <AlertTriangle className="w-4 h-4" />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
@@ -401,7 +400,7 @@ export default function AuditLogsPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-bold text-[var(--foreground)] flex items-center gap-1.5">
                           {log.user?.role === 'ADMIN' ? (
-                            <Shield className="w-3.5 h-3.5 text-[#0F5132]" />
+                            <BadgeCheck className="w-3.5 h-3.5 text-[#0F5132]" />
                           ) : (
                             <UserIcon className="w-3.5 h-3.5 text-blue-500" />
                           )}
@@ -591,7 +590,7 @@ export default function AuditLogsPage() {
               {/* Statutory Disclosure Notice */}
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 space-y-1 text-xs">
                 <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 font-extrabold text-[10px] uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#D97706]" /> Legal Admissibility &amp; Data Protection
+                  <Scale className="w-3.5 h-3.5 text-[#D97706]" /> Legal Admissibility &amp; Data Protection
                 </div>
                 <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                   This record is permanently sealed in compliance with the Ghana Data Protection Act, 2012 (Act 843). Audit entries cannot be edited, retroactively purged, or deleted by any administrative account.

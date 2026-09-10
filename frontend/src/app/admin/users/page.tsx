@@ -6,12 +6,13 @@ import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { 
   Loader2, 
-  ShieldCheck, 
+  BadgeCheck, 
   User as UserIcon, 
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
-  ShieldAlert,
+  UserCog,
+  FileCheck,
   Search,
   Filter,
   Users,
@@ -26,7 +27,6 @@ import {
   Phone,
   Clock,
   AlertCircle,
-  BadgeCheck,
   Ban
 } from 'lucide-react';
 
@@ -271,7 +271,7 @@ export default function AdminUsersPage() {
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
               stats.pendingKyc > 0 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
             }`}>
-              <ShieldCheck className="w-4 h-4" />
+              <BadgeCheck className="w-4 h-4" />
             </div>
           </div>
           <div className="flex items-center gap-2 mb-1">
@@ -522,7 +522,7 @@ export default function AdminUsersPage() {
                           user.role === 'CARETAKER' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40' :
                           'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40'
                         }`}>
-                          {user.role === 'ADMIN' && <ShieldAlert className="w-3 h-3" />}
+                          {user.role === 'ADMIN' && <UserCog className="w-3 h-3" />}
                           {user.role === 'LANDLORD' && <Building2 className="w-3 h-3" />}
                           {user.role === 'TENANT' && <UserIcon className="w-3 h-3" />}
                           {user.role}
@@ -566,7 +566,7 @@ export default function AdminUsersPage() {
                                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                             }`}>
                               {user.isVerifiedLandlord && <BadgeCheck className="w-3 h-3 text-white" />}
-                              {user.isVerifiedLandlord ? 'Act 220 Verified 🛡️' : (user.landlordVerificationStatus || 'Unverified')}
+                              {user.isVerifiedLandlord ? 'Act 220 Verified' : (user.landlordVerificationStatus || 'Unverified')}
                             </span>
                             {user.landlordDocUrl && (
                               <div>
@@ -812,7 +812,7 @@ export default function AdminUsersPage() {
                   ? 'bg-red-100 text-red-600 dark:bg-red-950/50' 
                   : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50'
               }`}>
-                <ShieldAlert className="w-6 h-6" />
+                <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -873,7 +873,7 @@ export default function AdminUsersPage() {
               
               <div className="flex items-center gap-3.5 z-10">
                 <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-emerald-300 border border-white/10 shadow-inner">
-                  <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                  <BadgeCheck className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -1056,8 +1056,8 @@ export default function AdminUsersPage() {
                     disabled={processingId === selectedUser.id + 'landlord'}
                     className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5"
                   >
-                    {processingId === selectedUser.id + 'landlord' ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    Verify Landlord Deed 🛡️
+                    {processingId === selectedUser.id + 'landlord' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck className="w-4 h-4" />}
+                    Verify Landlord Deed
                   </button>
                 )}
 

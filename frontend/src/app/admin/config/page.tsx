@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Loader2, Settings, ShieldCheck, CreditCard, Users, 
-  Save, Power, Clock, AlertTriangle, CheckCircle2, ShieldAlert,
+  Loader2, Settings, BadgeCheck, CreditCard, Users, 
+  Save, Power, Clock, AlertTriangle, CheckCircle2,
   Percent, Calendar, HelpCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -107,7 +107,7 @@ export default function AdminConfigPage() {
       {/* ── SECTION 1: STATUTORY IDENTITY & KYC COMPLIANCE ── */}
       <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-xs">
         <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
-          <ShieldCheck className="w-4 h-4 text-[#0F5132]" />
+          <BadgeCheck className="w-4 h-4 text-[#0F5132]" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
             1. Identity &amp; Statutory KYC Verification (Act 220)
           </h2>

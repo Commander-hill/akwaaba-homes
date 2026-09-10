@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Zap, Droplet, Calculator, Send, CheckCircle, Clock, AlertCircle,
   Loader2, RefreshCw, Copy, Check, Users, User, Building, DollarSign,
-  Share2, ArrowRight, ShieldCheck, ChevronRight
+  Share2, ArrowRight, ChevronRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';

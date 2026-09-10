@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useRef, ReactNode } from 'react';
-import { AlertTriangle, HelpCircle, Info, CheckCircle, X, Sparkles } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Info, CheckCircle, X } from 'lucide-react';
 import clsx from 'clsx';
 
 interface ConfirmOptions {

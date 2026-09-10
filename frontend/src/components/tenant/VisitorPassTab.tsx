@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  KeyRound, Plus, Trash2, ShieldCheck, Clock, User, Phone, 
+  KeyRound, Plus, Trash2, Clock, User, Phone, 
   Copy, Check, AlertCircle, Loader2, QrCode, Share2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -149,7 +149,7 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
         </div>
       ) : passes.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
-          <ShieldCheck className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+          <KeyRound className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No Visitor Passes Generated</h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
             Pre-authorize visitors or delivery drivers by generating a secure gate PIN they can present at the security checkpoint.

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   DollarSign, Plus, Trash2, Download, TrendingUp, TrendingDown,
-  PieChart, Calendar, Fuel, Droplet, Wrench, Shield, Sparkles, Receipt,
+  PieChart, Calendar, Fuel, Droplet, Wrench, Receipt,
   Building, Loader2, RefreshCw, Printer, FileText
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -183,7 +183,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
       case 'WATER_SUPPLY': return { label: '💧 Water Supply', color: 'bg-blue-500/10 text-blue-600' };
       case 'MAINTENANCE_REPAIR': return { label: '🔧 Repairs & Servicing', color: 'bg-red-500/10 text-red-600' };
       case 'CLEANING_WASTE': return { label: '🧹 Waste & Cleaning', color: 'bg-green-500/10 text-green-600' };
-      case 'SECURITY': return { label: '🛡️ Security', color: 'bg-purple-500/10 text-purple-600' };
+      case 'SECURITY': return { label: '🔒 Security', color: 'bg-purple-500/10 text-purple-600' };
       case 'UTILITIES': return { label: '⚡ Utilities', color: 'bg-yellow-500/10 text-yellow-600' };
       default: return { label: '📄 Other', color: 'bg-slate-100 dark:bg-slate-800 text-slate-600' };
     }
@@ -424,7 +424,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
                   <option value="WATER_SUPPLY">💧 Water Tanker / Borehole Servicing</option>
                   <option value="MAINTENANCE_REPAIR">🔧 Repairs & Maintenance</option>
                   <option value="CLEANING_WASTE">🧹 Compound Cleaning & Waste Fee</option>
-                  <option value="SECURITY">🛡️ Security Guard / CCTV Servicing</option>
+                  <option value="SECURITY">🔒 Security Guard / CCTV Servicing</option>
                   <option value="UTILITIES">⚡ Compound Meter Electricity</option>
                   <option value="TAX_FEES">🏛️ Municipal Assembly Taxes & Permits</option>
                   <option value="OTHER">📄 Miscellaneous Expense</option>

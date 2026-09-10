@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
-  Sparkles, Wrench, Wind, Droplets, Zap, Bug, Plus, 
+  Brush, Wrench, Wind, Droplets, Zap, Bug, Plus, 
   Calendar, Clock, CheckCircle2, AlertCircle, Loader2, DollarSign
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -40,7 +40,7 @@ const SERVICE_CATALOG = [
   {
     type: 'DEEP_CLEANING',
     title: 'Deep Home & Move-In Cleaning',
-    icon: Sparkles,
+    icon: Brush,
     rate: 'GHS 350',
     desc: 'Thorough sanitization of bathrooms, kitchen grease degreasing & floor scrubbing.'
   },
@@ -149,7 +149,7 @@ export default function HomeServicesTab({ bookings = [] }: { bookings?: any[] })
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-blue-500/10 text-blue-600 rounded-xl">
-            <Sparkles className="w-6 h-6" />
+            <Wrench className="w-6 h-6" />
           </div>
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">Home Services Concierge</h2>

@@ -7,7 +7,6 @@ import {
   Loader2, 
   Scale, 
   Search, 
-  ShieldAlert, 
   XCircle, 
   AlertTriangle, 
   User, 
@@ -16,7 +15,6 @@ import {
   ArrowDownRight, 
   Ban, 
   CheckCircle2, 
-  ShieldCheck, 
   Gavel, 
   Phone, 
   Mail, 
@@ -171,7 +169,7 @@ export default function AdminBreachesPage() {
             <div className="flex justify-between items-start mb-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Verified &amp; Penalized</span>
               <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 border border-red-100 dark:border-red-900/40">
-                <ShieldAlert className="w-4 h-4" />
+                <Gavel className="w-4 h-4" />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
@@ -333,7 +331,7 @@ export default function AdminBreachesPage() {
                         {report.status === 'VERIFIED' ? (
                           <div className="space-y-0.5">
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400 border border-red-300 dark:border-red-800">
-                              <ShieldAlert className="w-3 h-3" /> VERIFIED &amp; PENALIZED
+                              <Gavel className="w-3 h-3" /> VERIFIED &amp; PENALIZED
                             </span>
                             <div className="text-[10px] font-bold text-red-600 dark:text-red-400 flex items-center gap-0.5">
                               <ArrowDownRight className="w-3 h-3" /> Score Deducted

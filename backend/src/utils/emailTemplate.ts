@@ -151,7 +151,7 @@ export const renderInstitutionalEmail = ({
             <td style="background-color:#F8FAFC;border-top:1px solid #E2E8F0;padding:28px 36px;text-align:center;">
               <div style="margin-bottom:14px;">
                 <span style="display:inline-block;padding:4px 10px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;color:#065F46;font-size:11px;font-weight:700;letter-spacing:0.5px;">
-                  🛡️ RENT ACT, 1963 (ACT 220) COMPLIANT
+                  RENT ACT, 1963 (ACT 220) COMPLIANT
                 </span>
                 <span style="display:inline-block;padding:4px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;color:#92400E;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-left:4px;">
                   🏛️ LANDS COMMISSION VERIFIED

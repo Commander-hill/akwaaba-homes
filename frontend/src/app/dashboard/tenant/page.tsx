@@ -9,8 +9,8 @@ import {
   AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, 
   MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
   Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
-  Sparkles, Car, Package, DollarSign, ShieldAlert, Shield, HeartPulse, Flame, 
-  Radio, Building2, Check, ShieldCheck, Trash2, Wrench, Camera, GraduationCap
+  Car, Package, DollarSign, HeartPulse, Flame, Key, AlertCircle, ClipboardCheck, BadgeCheck,
+  Radio, Building2, Check, Trash2, Wrench, Camera, GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -1389,7 +1389,7 @@ function TenantDashboardContent() {
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-start gap-3.5">
               <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center shrink-0 mt-0.5">
-                <ShieldAlert className="w-5 h-5" />
+                <AlertCircle className="w-5 h-5" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">
@@ -1524,7 +1524,7 @@ function TenantDashboardContent() {
                 hotline: '191 / 112',
                 dialUrl: 'tel:191',
                 description: 'Immediate response for security threats, burglary, intruder breach, and emergency patrol.',
-                icon: Shield,
+                icon: BadgeCheck,
                 badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40',
               },
               {
@@ -1601,7 +1601,7 @@ function TenantDashboardContent() {
           {/* Emergency Action Guidelines & Protocols */}
           <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
-              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <ClipboardCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Resident Emergency Protocols &amp; Checklist</h3>
             </div>
 
@@ -1626,7 +1626,7 @@ function TenantDashboardContent() {
 
               <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-blue-500" /> Intrusion &amp; Security
+                  <Lock className="w-3.5 h-3.5 text-blue-500" /> Intrusion &amp; Security
                 </div>
                 <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
                   Bolt your deadlocks immediately. Dial <strong>191 / 112</strong>, notify your on-site compound caretaker via WhatsApp, and remain sheltered until clearance.
@@ -1841,7 +1841,7 @@ function TenantDashboardContent() {
             {/* Check-In Protocol Instructions */}
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200 space-y-1">
               <div className="font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                <Key className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>Caretaker Key Handover Requirement</span>
               </div>
               <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mail, Clock, ShieldCheck, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
+import { Mail, Clock, Lock, ArrowRight, CheckCircle2, MessageSquare, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
 import { useQueryClient } from '@tanstack/react-query';
@@ -201,7 +201,7 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
             href="/login"
             className="text-indigo-400 hover:text-indigo-300 font-bold flex items-center gap-1 transition-colors"
           >
-            <ShieldCheck className="w-4 h-4" /> Admin Access Login
+            <Lock className="w-4 h-4" /> Admin Access Login
           </Link>
         </div>
 

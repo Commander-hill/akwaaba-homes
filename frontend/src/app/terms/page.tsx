@@ -1,4 +1,4 @@
-import { FileText, Shield, UserCheck, AlertTriangle } from 'lucide-react';
+import { FileText, Lock, UserCheck, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function TermsPage() {
@@ -15,7 +15,7 @@ export default function TermsPage() {
         <div className="space-y-8 glass-card p-8 rounded-3xl">
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
-              <Shield className="text-[var(--primary)]" /> 1. Privacy & Data Protection
+              <Lock className="text-[var(--primary)]" /> 1. Privacy &amp; Data Protection
             </h2>
             <p className="text-[var(--muted-foreground)] leading-relaxed">
               We strictly enforce the protection of your personal information. We do not collect unnecessary data, and all sensitive records (such as Ghana Card verification images) are encrypted and stored securely. Your data will never be sold or disclosed to unauthorized third parties.

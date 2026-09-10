@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { Loader2, ShieldCheck, Monitor, Smartphone, Globe, LogOut, Clock, AlertTriangle } from 'lucide-react';
+import { Loader2, Lock, Monitor, Smartphone, Globe, LogOut, Clock, AlertTriangle } from 'lucide-react';
 
 interface Session {
   id: string;
@@ -60,7 +60,7 @@ export default function SecurityPage() {
     <div className="max-w-4xl mx-auto space-y-8 pb-12">
       <div>
         <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight flex items-center gap-3">
-          <ShieldCheck className="w-8 h-8 text-[var(--primary)]" />
+          <Lock className="w-8 h-8 text-[var(--primary)]" />
           Security & Active Sessions
         </h1>
         <p className="text-[var(--muted-foreground)] mt-2">Manage your devices and secure your account.</p>

@@ -6,7 +6,7 @@ import {
   Loader2, Users, Mail, Phone, Calendar, Check, X, 
   CreditCard, Star, PenTool, CheckCircle, Clock, FileSignature, Building, 
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
-  Megaphone, UserCog, ClipboardCheck, TrendingUp, Sparkles, Wrench, Plus
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
