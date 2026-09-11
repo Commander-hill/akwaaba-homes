@@ -414,7 +414,7 @@ const establishUserSessionAndRespond = async (
     }
   });
 
-  const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+  const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
   
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
@@ -561,7 +561,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       data: { lastActive: new Date() }
     });
 
-    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
     
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
@@ -597,7 +597,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
       });
     }
 
-    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
     
     res.cookie('accessToken', '', { 
       httpOnly: true, 

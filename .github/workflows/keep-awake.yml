@@ -1,20 +1,18 @@
-name: Keep Render Awake
-
+name: Keep Backend Awake
+ 
 on:
   schedule:
-    - cron: "*/14 * * * *" # Runs every 14 minutes
+    - cron: "0 * * * *" # Runs hourly to keep Hugging Face Space active
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Frontend
+      - name: Ping Backend API
+        env:
+          HF_SPACE_URL: ${{ secrets.HF_SPACE_URL }}
         run: |
-          curl -s -o /dev/null -w "%{http_code}" https://akwaaba-homes-frontend.onrender.com
-          echo " Pinging frontend complete!"
-          
-      - name: Ping Backend
-        run: |
-          curl -s -o /dev/null -w "%{http_code}" https://akwaaba-homes-backend.onrender.com/api/health
-          echo " Pinging backend complete!"
+          TARGET_URL="${HF_SPACE_URL:-https://akwaaba-homes-api.hf.space}"
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TARGET_URL/api/health" || true)
+          echo "Pinging backend at $TARGET_URL/api/health -> HTTP $STATUS_CODE"

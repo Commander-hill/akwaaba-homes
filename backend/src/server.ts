@@ -179,8 +179,8 @@ app.use(
         return callback(null, true);
       }
 
-      // Strictly anchored official Akwaaba Vercel preview deployments (e.g. akwaaba-homes-*.vercel.app)
-      const isOfficialVercelPreview = /^https:\/\/akwaaba-homes(-[a-z0-9-]+)?\.vercel\.app$/.test(cleanOrigin);
+      // Strictly anchored official Akwaaba Vercel deployments & preview branches
+      const isOfficialVercelPreview = /^https:\/\/(akwaaba-homes[a-z0-9-]*|[a-z0-9-]+-akwaaba-homes[a-z0-9-]*)\.vercel\.app$/.test(cleanOrigin);
       if (isOfficialVercelPreview) {
         return callback(null, true);
       }
