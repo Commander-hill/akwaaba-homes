@@ -28,7 +28,7 @@ interface PackageDelivery {
   };
 }
 
-export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }) {
+export default function PackageDeliveriesTab({ bookings = [] }: { bookings?: any[] }) {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);

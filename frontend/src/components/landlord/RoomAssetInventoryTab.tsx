@@ -29,7 +29,7 @@ export interface RoomAssetItem {
   deductFromCaution?: boolean;
 }
 
-interface RoomAssetVaultTabProps {
+interface RoomAssetInventoryTabProps {
   properties: any[];
   bookings?: any[];
 }
@@ -45,31 +45,31 @@ const DEFAULT_ASSET_TEMPLATES: Array<Omit<RoomAssetItem, 'id' | 'propertyId' | '
     notes: 'Smooth rotation, wall speed regulator functional.'
   },
   {
-    name: 'High-Density Orthopedic Mattress 3.5x6ft',
+    name: 'Single Bed Frame & High-Density Mattress',
     category: 'FURNITURE',
-    brandModel: 'Ashfoam Royal Orthopedic',
-    serialTag: 'MAT-01',
+    brandModel: 'Solid Hardwood 3x6 / Ashfoam 10"',
+    serialTag: 'BED-01',
     condition: 'PRISTINE',
-    replacementCostGHS: 1200,
-    notes: 'Clean waterproof cover fitted, zero tears.'
+    replacementCostGHS: 1400,
+    notes: 'Firm base, clean orthopedic fabric cover.'
   },
   {
-    name: 'Hardwood Study Desk with Lockable Drawer',
+    name: 'Study Desk & Ergonomic Swivel Chair',
     category: 'FURNITURE',
-    brandModel: 'Wawa Timber Modular',
+    brandModel: 'Laminate 120cm / Mesh Highback',
     serialTag: 'DSK-01',
     condition: 'GOOD',
     replacementCostGHS: 850,
-    notes: 'Desk surface clean, 1 drawer key present.'
+    notes: 'Sturdy legs, smooth chair castors and gas lift.'
   },
   {
-    name: 'Ergonomic Student Mesh Chair',
+    name: '2-Door Fitted Wardrobe with Lock & Key',
     category: 'FURNITURE',
-    brandModel: 'OfficePoint Comfort Mesh',
-    serialTag: 'CHR-01',
+    brandModel: 'MDF Laminated / Union Cylinder',
+    serialTag: 'WRD-01',
     condition: 'GOOD',
-    replacementCostGHS: 450,
-    notes: 'Hydraulic lift functional, castors intact.'
+    replacementCostGHS: 1200,
+    notes: 'Hinges aligned, 2 keys verified.'
   },
   {
     name: 'Louver Window Blades (12 Blades + Mosquito Net)',
@@ -100,7 +100,7 @@ const DEFAULT_ASSET_TEMPLATES: Array<Omit<RoomAssetItem, 'id' | 'propertyId' | '
   }
 ];
 
-export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAssetVaultTabProps) {
+export default function RoomAssetInventoryTab({ properties, bookings = [] }: RoomAssetInventoryTabProps) {
   // 1. Property Selection
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(
     properties?.[0]?.id || ''

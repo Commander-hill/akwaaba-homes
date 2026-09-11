@@ -14,7 +14,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import InspectionModal from '@/components/landlord/InspectionModal';
 import GateLogbookTab from '@/components/landlord/GateLogbookTab';
-import RoomAssetVaultTab from '@/components/landlord/RoomAssetVaultTab';
+import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -1046,7 +1046,7 @@ function CaretakerDashboardContent() {
       {/* ── TAB: UNIT FIXTURES & INVENTORY ── */}
       {activeTab === 'assets' && (
         <div className="space-y-6">
-          <RoomAssetVaultTab properties={assignedProperties} bookings={allBookings} />
+          <RoomAssetInventoryTab properties={assignedProperties} bookings={allBookings} />
         </div>
       )}
 

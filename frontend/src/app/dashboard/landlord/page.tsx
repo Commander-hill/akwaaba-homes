@@ -23,7 +23,7 @@ import StaffDelegationTab from '@/components/landlord/StaffDelegationTab';
 import GateLogbookTab from '@/components/landlord/GateLogbookTab';
 import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab';
-import RoomAssetVaultTab from '@/components/landlord/RoomAssetVaultTab';
+import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import InspectionModal from '@/components/landlord/InspectionModal';
 import toast from 'react-hot-toast';
@@ -1331,7 +1331,7 @@ export default function LandlordDashboard() {
       {/* ─── TAB: ROOM ASSET & APPLIANCE REGISTRY ───────────────────────────── */}
       {activeTab === 'assets' && (
         <div>
-          <RoomAssetVaultTab properties={myProperties} bookings={bookings} />
+          <RoomAssetInventoryTab properties={myProperties} bookings={bookings} />
         </div>
       )}
 

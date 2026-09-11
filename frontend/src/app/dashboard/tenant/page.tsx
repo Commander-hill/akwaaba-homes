@@ -23,7 +23,7 @@ import VisitorPassTab from '@/components/tenant/VisitorPassTab';
 import HomeServicesTab from '@/components/tenant/HomeServicesTab';
 import VehicleParkingTab from '@/components/tenant/VehicleParkingTab';
 import LeaseRenewalTab from '@/components/tenant/LeaseRenewalTab';
-import DeliveryVaultTab from '@/components/tenant/DeliveryVaultTab';
+import PackageDeliveriesTab from '@/components/tenant/PackageDeliveriesTab';
 import BillSplitterTab from '@/components/tenant/BillSplitterTab';
 import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
 import TenantAssetInventoryTab from '@/components/tenant/TenantAssetInventoryTab';
@@ -1663,7 +1663,7 @@ function TenantDashboardContent() {
 
       {activeTab === 'deliveries' && (
         <div>
-          <DeliveryVaultTab bookings={bookings} />
+          <PackageDeliveriesTab bookings={bookings} />
         </div>
       )}
 
