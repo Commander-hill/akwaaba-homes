@@ -157,6 +157,7 @@ const ALLOWED_ORIGIN_SET = new Set(
     'http://localhost:3000',
     'http://localhost:3001',
     'https://akwaaba-homes.vercel.app',
+    'https://akwaaba-homes-three.vercel.app',
     'https://www.akwaabahomes.com',
     'https://akwaabahomes.com'
   ]
