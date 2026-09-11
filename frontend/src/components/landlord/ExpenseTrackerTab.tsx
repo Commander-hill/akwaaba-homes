@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   DollarSign, Plus, Trash2, Download, TrendingUp, TrendingDown,
   PieChart, Calendar, Fuel, Droplet, Wrench, Receipt,
-  Building, Loader2, RefreshCw, Printer, FileText
+  Building, Loader2, RefreshCw, Printer, FileText, X
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import toast from 'react-hot-toast';
@@ -392,8 +392,12 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
               <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-emerald-500" /> Log Operating Expense
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Package, Plus, CheckCircle2, Clock, 
-  Copy, Check, AlertCircle, Loader2, QrCode, Building, Truck
+  Copy, Check, AlertCircle, Loader2, QrCode, Building, Truck, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -103,7 +103,7 @@ export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Parcel collection confirmed! ✅');
+      toast.success('Parcel collection confirmed');
       queryClient.invalidateQueries({ queryKey: ['deliveries', 'tenant'] });
     },
     onError: (err: any) => {
@@ -246,8 +246,12 @@ export default function DeliveryVaultTab({ bookings = [] }: { bookings?: any[] }
               <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <Package className="w-5 h-5 text-orange-500" /> Pre-Register Inbound Parcel
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

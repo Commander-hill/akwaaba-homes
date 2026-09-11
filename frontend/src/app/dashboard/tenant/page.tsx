@@ -1780,14 +1780,14 @@ function TenantDashboardContent() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-black text-zinc-950 dark:text-white">
-                    Digital Student Gate Pass
+                    {session?.studentId ? 'Digital Student Gate Pass' : 'Resident Move-In Gate Pass'}
                   </h3>
                   <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    Verified Student 🎓
+                    {session?.studentId ? 'Verified Student' : 'Verified Resident'}
                   </span>
                 </div>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Official move-in clearance for hostel compound security &amp; caretaker key collection.
+                  Official move-in clearance for compound gate security &amp; caretaker key collection.
                 </p>
               </div>
             </div>
@@ -1804,26 +1804,26 @@ function TenantDashboardContent() {
                 <div className="text-right">
                   <span className="text-[10px] uppercase font-bold text-zinc-400 block">Gate Pass Code</span>
                   <span className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">
-                    STU-GATE-{selectedGatePassBooking.id.slice(0, 8).toUpperCase()}
+                    {session?.studentId ? 'STU-GATE-' : 'RES-GATE-'}{selectedGatePassBooking.id.slice(0, 8).toUpperCase()}
                   </span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Institution / Campus</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">{session?.campus || 'Tertiary Campus'}</span>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">{session?.studentId ? 'Institution / Campus' : 'Location Area'}</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">{session?.campus || 'Greater Accra'}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Student ID / Index No.</span>
-                  <span className="font-mono font-bold text-zinc-900 dark:text-white">{session?.studentId || 'On-file'}</span>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">{session?.studentId ? 'Student ID / Index No.' : 'Resident ID'}</span>
+                  <span className="font-mono font-bold text-zinc-900 dark:text-white">{session?.studentId || session?.ghanaCardNumber || 'On-file'}</span>
                 </div>
                 <div>
                   <span className="text-[10px] uppercase font-bold text-zinc-400 block">Accommodation</span>
                   <span className="font-bold text-zinc-900 dark:text-white">{selectedGatePassBooking.property?.title}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Allocated Room / Bed</span>
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Allocated Unit</span>
                   <span className="font-bold text-emerald-700 dark:text-emerald-400">
                     {selectedGatePassBooking.room?.roomType || 'Standard Room'}
                     {selectedGatePassBooking.roomUnit?.unitNumber ? ` • Unit ${selectedGatePassBooking.roomUnit.unitNumber}` : ''}
@@ -1834,7 +1834,7 @@ function TenantDashboardContent() {
 
               <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800 text-[11px] text-zinc-500 space-y-1">
                 <div>Move-In Validity: {new Date(selectedGatePassBooking.startDate).toLocaleDateString()} to {new Date(selectedGatePassBooking.endDate).toLocaleDateString()}</div>
-                <div>Emergency Contact: {session?.guardianName ? `${session?.guardianName} (${session?.guardianPhone || 'N/A'})` : 'Campus Security Desk'}</div>
+                <div>Emergency Contact: {session?.guardianName ? `${session?.guardianName} (${session?.guardianPhone || 'N/A'})` : 'Property Front Desk'}</div>
               </div>
             </div>
 

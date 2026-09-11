@@ -366,7 +366,7 @@ function CaretakerDashboardContent() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Parcel verified & handed over to resident! ✅');
+      toast.success('Parcel verified and handed over to resident');
       setCollectModalOpen(false);
       setCollectParcel(null);
       setCollectOtp('');
@@ -383,7 +383,7 @@ function CaretakerDashboardContent() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Visitor cleared for compound entry! 🚪');
+      toast.success('Visitor cleared for compound entry');
       queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
     },
     onError: (err: any) => {
@@ -397,7 +397,7 @@ function CaretakerDashboardContent() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Visitor checked out and departed 👋');
+      toast.success('Visitor checked out and departed');
       queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
     },
     onError: (err: any) => {
@@ -807,31 +807,31 @@ function CaretakerDashboardContent() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
                           <GraduationCap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                          <span>Student Gate Pass Cross-Check</span>
+                          <span>Resident Gate Pass Cross-Check</span>
                         </div>
                         <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          Verified Student 🎓
+                          {b.tenant?.studentId ? 'Verified Student' : 'Verified Resident'}
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
                         <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Campus</span>
-                          <span className="font-semibold">{b.tenant?.campus || 'Ghana Tertiary'}</span>
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">{b.tenant?.studentId ? 'Campus' : 'Location'}</span>
+                          <span className="font-semibold">{b.tenant?.campus || 'Greater Accra'}</span>
                         </div>
                         <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-400 block">Official Student ID</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{b.tenant?.studentId || 'N/A'}</span>
+                          <span className="text-[9px] uppercase font-bold text-slate-400 block">{b.tenant?.studentId ? 'Official Student ID' : 'Resident ID'}</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-white">{b.tenant?.studentId || b.tenant?.ghanaCardNumber || 'On-file'}</span>
                         </div>
                         {b.tenant?.programmeOfStudy && (
                           <div className="col-span-2">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Programme</span>
+                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Programme / Occupation</span>
                             <span className="font-medium">{b.tenant?.programmeOfStudy}</span>
                           </div>
                         )}
                         {b.tenant?.guardianName && (
                           <div className="col-span-2">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Guardian / Emergency</span>
+                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Emergency Contact</span>
                             <span className="font-medium">{b.tenant?.guardianName} ({b.tenant?.guardianPhone || 'N/A'})</span>
                           </div>
                         )}
@@ -855,8 +855,8 @@ function CaretakerDashboardContent() {
                           />
                           <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                             {verifiedPhysicalCards[b.id]
-                              ? '✅ Physical Student ID Cross-Checked (Keys Authorized)'
-                              : 'Physical University ID Cross-Checked'}
+                              ? 'Physical ID Cross-Checked (Keys Authorized)'
+                              : 'Physical ID Cross-Checked'}
                           </span>
                         </label>
                       </div>
@@ -1096,9 +1096,9 @@ function CaretakerDashboardContent() {
           <div className="flex flex-wrap gap-2 pt-1">
             {[
               { id: 'ALL', label: `All Utilities (${meterReadings.length})` },
-              { id: 'ECG_ELECTRICITY', label: `⚡ ECG Electricity (${meterReadings.filter(m => m.utilityType === 'ECG_ELECTRICITY').length})` },
-              { id: 'GWCL_WATER', label: `💧 GWCL Water (${meterReadings.filter(m => m.utilityType === 'GWCL_WATER').length})` },
-              { id: 'GENERATOR_DIESEL', label: `⚙️ Standby Generator (${meterReadings.filter(m => m.utilityType === 'GENERATOR_DIESEL').length})` },
+              { id: 'ECG_ELECTRICITY', label: `ECG Electricity (${meterReadings.filter(m => m.utilityType === 'ECG_ELECTRICITY').length})` },
+              { id: 'GWCL_WATER', label: `GWCL Water (${meterReadings.filter(m => m.utilityType === 'GWCL_WATER').length})` },
+              { id: 'GENERATOR_DIESEL', label: `Standby Generator (${meterReadings.filter(m => m.utilityType === 'GENERATOR_DIESEL').length})` },
             ].map((f) => (
               <button
                 key={f.id}
@@ -1166,7 +1166,7 @@ function CaretakerDashboardContent() {
                           meter.status === 'READY' ? "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-500/30" :
                           "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30"
                         )}>
-                          {meter.status === 'LOW_BALANCE' ? '⚠️ Low Credit' :
+                          {meter.status === 'LOW_BALANCE' ? 'Low Credit' :
                            meter.status === 'READY' ? 'Ready' : 'Normal'}
                         </span>
                       </div>
@@ -1282,7 +1282,7 @@ function CaretakerDashboardContent() {
                   "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md",
                   ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600" : "bg-emerald-600"
                 )}>
-                  {ticketActionModal.mode === 'SCHEDULE' ? '📅' : '🛠️'}
+                  {ticketActionModal.mode === 'SCHEDULE' ? <Calendar className="w-5 h-5 text-white" /> : <Wrench className="w-5 h-5 text-white" />}
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
@@ -1293,9 +1293,10 @@ function CaretakerDashboardContent() {
               </div>
               <button
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-slate-400 hover:text-slate-600 font-bold p-1 rounded-lg cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1400,7 +1401,13 @@ function CaretakerDashboardContent() {
               <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <BellRing className="w-5 h-5 text-sky-500" /> Post Compound Broadcast Notice
               </h3>
-              <button onClick={() => setNoticeModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+              <button 
+                onClick={() => setNoticeModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm">
@@ -1474,7 +1481,13 @@ function CaretakerDashboardContent() {
               <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <Package className="w-5 h-5 text-purple-500" /> Log Incoming Courier Parcel
               </h3>
-              <button onClick={() => setParcelModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+              <button 
+                onClick={() => setParcelModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm">
@@ -1587,7 +1600,13 @@ function CaretakerDashboardContent() {
               <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <Package className="w-4 h-4 text-emerald-500" /> Verify Pickup OTP
               </h3>
-              <button onClick={() => setCollectModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer">✕</button>
+              <button 
+                onClick={() => setCollectModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <p className="text-xs text-slate-500">
               Enter the 4-digit collection OTP presented by <strong>{collectParcel.tenant ? `${collectParcel.tenant.firstName} ${collectParcel.tenant.lastName}` : 'the resident'}</strong> to release this parcel ({collectParcel.courierName || collectParcel.carrier || 'Courier'}).
@@ -1638,9 +1657,10 @@ function CaretakerDashboardContent() {
               </div>
               <button 
                 onClick={() => setMeterModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 font-bold cursor-pointer p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1668,9 +1688,9 @@ function CaretakerDashboardContent() {
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { id: 'ECG_ELECTRICITY', label: '⚡ ECG Power', icon: Zap },
-                    { id: 'GWCL_WATER', label: '💧 Water', icon: Droplets },
-                    { id: 'GENERATOR_DIESEL', label: '⚙️ Generator', icon: Fuel },
+                    { id: 'ECG_ELECTRICITY', label: 'ECG Power', icon: Zap },
+                    { id: 'GWCL_WATER', label: 'GWCL Water', icon: Droplets },
+                    { id: 'GENERATOR_DIESEL', label: 'Generator', icon: Fuel },
                   ].map((u) => (
                     <button
                       key={u.id}

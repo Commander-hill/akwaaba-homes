@@ -203,7 +203,7 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
       `Please log in to your dashboard to complete payment via Mobile Money before the semester resumption date to clear your room key handover.`;
 
     window.open(`https://wa.me/${cleanPhone.startsWith('0') ? '233' + cleanPhone.substring(1) : cleanPhone}?text=${encodeURIComponent(text)}`, '_blank');
-    toast.success('Dispatched WhatsApp MoMo reminder! 📲');
+    toast.success('Dispatched WhatsApp payment reminder');
   };
 
   const toggleKeyClearance = (bookingId: string) => {
@@ -380,15 +380,15 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
                   )}
                   {item.isFullyCleared ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30">
-                      Academic Year Paid 🎓
+                      Full Period Paid
                     </span>
                   ) : item.isOverdue ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-600 border border-rose-500/30">
-                      2nd Sem Overdue ⚠️
+                      Tranche 2 Overdue
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600">
-                      1st Sem Paid • 2nd Sem Due ⏳
+                      Tranche 1 Paid • Tranche 2 Due
                     </span>
                   )}
                 </div>
@@ -414,7 +414,7 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
                 <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-0.5 min-w-[130px]">
                   <div className="text-[10px] uppercase font-bold text-slate-400">1st Semester ({installmentRatio}%)</div>
                   <div className="font-extrabold text-slate-900 dark:text-white">GHS {item.firstSemRequired.toLocaleString()}</div>
-                  <span className="text-[10px] font-bold text-emerald-600">Cleared ✅</span>
+                  <span className="text-[10px] font-bold text-emerald-600">Cleared</span>
                 </div>
 
                 {/* 2nd Sem */}
@@ -451,7 +451,7 @@ export default function AcademicInstallmentTab({ properties = [] }: AcademicInst
                     title={item.isKeyHandoverCleared ? "Authorized for key retrieval" : "Key release withheld until payment"}
                   >
                     <KeyRound className="w-3.5 h-3.5" />
-                    {item.isKeyHandoverCleared ? 'Key Cleared 🔑' : 'Withhold Key 🔒'}
+                    {item.isKeyHandoverCleared ? 'Key Authorized' : 'Withhold Key'}
                   </button>
 
                   {!item.isFullyCleared && (

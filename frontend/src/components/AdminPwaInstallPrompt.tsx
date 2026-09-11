@@ -49,13 +49,10 @@ export default function AdminPwaInstallPrompt() {
 
   return (
     <div className="fixed bottom-4 right-4 max-w-sm z-50 animate-in slide-in-from-bottom-5 duration-300">
-      <div className="rounded-2xl p-4 border border-purple-500/30 bg-[#0A0F1D] text-white shadow-2xl relative overflow-hidden space-y-3">
-        {/* Ambient Glow */}
-        <div className="absolute -right-10 -top-10 w-28 h-28 bg-purple-600/20 rounded-full blur-2xl pointer-events-none" />
-
+      <div className="rounded-2xl p-4 border border-slate-700 bg-[#0A0F1D] text-white shadow-xl relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 p-0.5 shadow-lg shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-purple-600 p-0.5 shadow-md shrink-0">
               <div className="w-full h-full bg-[#0A0F1D] rounded-[10px] flex items-center justify-center overflow-hidden">
                 <Image src="/logo.png" alt="Akwaaba Admin Logo" width={28} height={28} className="object-contain" />
               </div>
@@ -63,11 +60,11 @@ export default function AdminPwaInstallPrompt() {
             <div>
               <div className="flex items-center gap-1.5">
                 <h4 className="font-extrabold text-xs text-white">Akwaaba Admin App</h4>
-                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-0.5 uppercase">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-0.5 uppercase">
                   <Download className="w-2.5 h-2.5" /> PWA
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">Install dedicated Admin Command Center</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Install dedicated Admin Portal</p>
             </div>
           </div>
 

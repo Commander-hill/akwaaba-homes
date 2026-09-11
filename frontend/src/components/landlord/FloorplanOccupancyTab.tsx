@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Building, Layers, Users, CheckCircle, Wrench, Clock,
   Loader2, Filter, AlertCircle, Phone, Mail, Calendar, Eye, RefreshCw,
-  MessageSquare, ClipboardCheck, ArrowUpRight, Check, Send
+  MessageSquare, ClipboardCheck, ArrowUpRight, Check, Send, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -189,20 +189,20 @@ export default function FloorplanOccupancyTab({
     if (g.includes('FEMALE') || g === 'WOMEN' || g === 'GIRLS') {
       return (
         <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-          🚺 Female Only
+          Female Only
         </span>
       );
     }
     if (g.includes('MALE') || g === 'MEN' || g === 'BOYS') {
       return (
         <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
-          🚹 Male Only
+          Male Only
         </span>
       );
     }
     return (
       <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
-        🚻 Mixed / Co-Ed
+        Mixed / Co-Ed
       </span>
     );
   };
@@ -564,9 +564,10 @@ export default function FloorplanOccupancyTab({
               </h3>
               <button
                 onClick={() => setSelectedOccupant(null)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold cursor-pointer p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -124,11 +124,11 @@ export default function TenantPaymentScheduleTab({ bookings, onMakePayment }: Te
 
   const handleWhatsAppReceiptNotice = () => {
     const landlordPhone = activeBooking?.property?.landlord?.phoneNumber || '+233240000000';
-    let text = `🏦 *RENT INSTALLMENT PAYMENT NOTIFICATION*\n`;
-    text += `🏢 *Property:* ${activeBooking?.property?.title || 'Apartment Unit'}\n`;
-    text += `🚪 *Unit:* ${activeBooking?.roomUnit?.unitNumber || 'Self-Contain Flat'}\n`;
-    text += `💰 *Tranche Amount:* GH₵ ${tranche2Amount.toFixed(2)}\n`;
-    text += `📅 *Payment Date:* ${new Date().toLocaleDateString('en-GB')}\n`;
+    let text = `*RENT INSTALLMENT PAYMENT NOTIFICATION*\n`;
+    text += `*Property:* ${activeBooking?.property?.title || 'Apartment Unit'}\n`;
+    text += `*Unit:* ${activeBooking?.roomUnit?.unitNumber || 'Self-Contain Flat'}\n`;
+    text += `*Tranche Amount:* GH₵ ${tranche2Amount.toFixed(2)}\n`;
+    text += `*Payment Date:* ${new Date().toLocaleDateString('en-GB')}\n`;
     text += `\n_I have completed the Mobile Money rent installment transfer. Kindly confirm key clearance._`;
     
     const url = `https://wa.me/${landlordPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
@@ -169,7 +169,7 @@ export default function TenantPaymentScheduleTab({ bookings, onMakePayment }: Te
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider opacity-80">Unit Access Status</div>
               <div className="text-base font-black">
-                {isKeyCleared ? 'Keys & Access Cleared 🔑' : 'Pending Payment Clearance 🔒'}
+                {isKeyCleared ? 'Keys & Access Cleared' : 'Pending Payment Clearance'}
               </div>
               <div className="text-[11px] opacity-75">
                 {isKeyCleared ? 'All installment terms up to date' : 'Clear tranche to unlock keys'}

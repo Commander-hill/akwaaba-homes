@@ -30,44 +30,44 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
 
   const tenantSteps: TourStep[] = [
     {
-      title: "Welcome to Akwaaba Homes 🇬🇭",
-      description: "Ghana's trusted residential and commercial property tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and bank-grade rent escrow protection.",
+      title: "Welcome to Akwaaba Homes",
+      description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and secure rent escrow protection.",
       icon: Compass,
-      badge: "Step 1 of 4 • Institutional Network",
+      badge: "Step 1 of 4 • Overview",
       statutoryNote: "Ghana Rent Act, 1963 (Act 220) Compliant"
     },
     {
-      title: "Account Setup & Ghana Card (NIA) Verification 🆔",
+      title: "Account Setup & Ghana Card (NIA) Verification",
       description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
       targetSelector: '#tour-progress-widget',
       icon: BadgeCheck,
-      badge: "Step 2 of 4 • Identity Trust",
+      badge: "Step 2 of 4 • Identity Verification",
       statutoryNote: "NIA Identity Verification Standard"
     },
     {
-      title: "Verified Property Discovery & Title Deeds 📍",
-      description: "Browse verified residential apartments, family homes, and commercial spaces across Greater Accra, Ashanti, and Western regions with certified Lands Commission title deeds.",
+      title: "Verified Property Discovery & Title Deeds",
+      description: "Browse verified residential apartments, family homes, and hostel units across Greater Accra, Ashanti, and Western regions with certified Lands Commission title deeds.",
       targetSelector: '#tour-nav-properties',
       icon: Search,
       badge: "Step 3 of 4 • Verified Listings",
       statutoryNote: "Lands Commission Audited Listings"
     },
     {
-      title: "Tenancy Leases & Resident Workspaces 📜",
-      description: "Access your 3 core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit facility maintenance requests.",
+      title: "Tenancy Leases & Resident Workspaces",
+      description: "Access your core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit maintenance requests.",
       targetSelector: '#tour-tenant-workspaces',
       icon: FileText,
       badge: "Step 4 of 4 • Operations & Leases",
-      statutoryNote: "SHA-256 Digital Tenancy Agreement"
+      statutoryNote: "Electronic Transactions Act, 2008 (Act 772)"
     }
   ];
 
   const landlordSteps: TourStep[] = [
     {
-      title: "Welcome to your Landlord Hub 💼",
-      description: "Ghana's premier property asset governance platform. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor institutional yields.",
+      title: "Welcome to your Landlord Hub",
+      description: "Manage your rental properties in Ghana with confidence. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor rental returns.",
       icon: Compass,
-      badge: "Step 1 of 4 • Asset Governance",
+      badge: "Step 1 of 4 • Portfolio Management",
       statutoryNote: "Ghana Real Estate Governance Standard"
     },
     {
@@ -79,7 +79,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       statutoryNote: "Lands Commission Certified Registry"
     },
     {
-      title: "List Property with GPS Coordinates 📌",
+      title: "List Property with GPS Coordinates",
       description: "Add residential and commercial properties with Ghana Post digital addresses, interactive GPS mapping, high-resolution media galleries, and custom unit inventories.",
       targetSelector: '#tour-add-property',
       icon: MapPin,
@@ -87,11 +87,11 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       statutoryNote: "Ghana Post GPS Digital Address System"
     },
     {
-      title: "Operational Workspaces & MoMo Payouts 💳",
+      title: "Operational Workspaces & Mobile Money Payouts",
       description: "Access unified workflows for tenancy agreements, digital rent collection, instant Mobile Money withdrawals, GRA 5% tax withholding statements, and caretaker delegation.",
       targetSelector: '#tour-landlord-tabs',
       icon: Building,
-      badge: "Step 4 of 4 • Yields & Compliance",
+      badge: "Step 4 of 4 • Returns & Compliance",
       statutoryNote: "GRA 5% Withholding Tax Compliant"
     }
   ];
@@ -255,9 +255,6 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
                 : undefined
             }
           >
-            {/* Background Glow */}
-            <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-[#0F5132]/25 via-[#D97706]/15 to-transparent rounded-full blur-2xl pointer-events-none" />
-
             {/* Header Badge & Close */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 shadow-xs">

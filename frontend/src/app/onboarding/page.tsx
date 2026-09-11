@@ -52,16 +52,16 @@ export default function OnboardingPage() {
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">Complete Your Profile</h1>
-          <p className="text-[var(--muted-foreground)]">A few more details for students and resident tenants before booking.</p>
+          <p className="text-[var(--muted-foreground)]">A few more details for student and residential tenants before booking.</p>
         </div>
 
-        <div className="glass-card rounded-[24px] p-8">
+        <div className="bg-white dark:bg-[#121216] border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Student ID */}
               <div className="space-y-2">
-                <label className="text-sm font-bold text-[var(--foreground)]">Student ID <span className="text-xs font-normal text-slate-400">(Optional for residents)</span></label>
+                <label className="text-sm font-bold text-[var(--foreground)]">Student ID <span className="text-xs font-normal text-slate-400">(Optional for non-students)</span></label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input 
@@ -69,12 +69,12 @@ export default function OnboardingPage() {
                     value={formData.studentId}
                     onChange={e => setFormData({...formData, studentId: e.target.value})}
                     placeholder="e.g. 10293847 or N/A"
-                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
               </div>
 
-              {/* Campus */}
+              {/* Campus / City Area */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-[var(--foreground)]">Campus / City Area <span className="text-xs font-normal text-slate-400">(Optional)</span></label>
                 <div className="relative">
@@ -83,8 +83,8 @@ export default function OnboardingPage() {
                     type="text" 
                     value={formData.campus}
                     onChange={e => setFormData({...formData, campus: e.target.value})}
-                    placeholder="e.g. UCC / East Legon"
-                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                    placeholder="e.g. Legon / East Legon / UCC"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
               </div>
@@ -99,33 +99,34 @@ export default function OnboardingPage() {
                   type="date" 
                   value={formData.dateOfBirth}
                   onChange={e => setFormData({...formData, dateOfBirth: e.target.value})}
-                  className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-10 pr-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                 />
               </div>
             </div>
 
             <div className="border-t border-slate-200 dark:border-white/10 pt-6 mt-6">
-              <h3 className="text-lg font-bold text-[var(--foreground)] mb-4">Emergency Contact</h3>
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">Emergency Contact</h3>
+              <p className="text-xs text-[var(--muted-foreground)] mb-4">Next of kin or guardian to contact in case of emergency.</p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[var(--foreground)]">Guardian Name *</label>
+                  <label className="text-sm font-bold text-[var(--foreground)]">Contact Name *</label>
                   <input 
                     type="text" 
                     value={formData.guardianName}
                     onChange={e => setFormData({...formData, guardianName: e.target.value})}
-                    placeholder="Full Name"
-                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                    placeholder="Full Name (Next of Kin / Guardian)"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-[var(--foreground)]">Guardian Contact *</label>
+                  <label className="text-sm font-bold text-[var(--foreground)]">Contact Phone *</label>
                   <input 
                     type="text" 
                     value={formData.guardianContact}
                     onChange={e => setFormData({...formData, guardianContact: e.target.value})}
-                    placeholder="Phone Number"
-                    className="w-full bg-slate-50 dark:bg-[#2A2A2B]/60 border border-slate-200 dark:border-white/5 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
+                    placeholder="Phone Number (e.g. 0244123456)"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 px-4 text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all"
                   />
                 </div>
               </div>
@@ -134,7 +135,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="w-full mt-6 bg-[var(--primary)] text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+              className="w-full mt-6 bg-[var(--primary)] text-white py-3.5 rounded-xl font-bold shadow-md hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
             >
               {mutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <UserCheck className="w-5 h-5" />}
               {mutation.isPending ? 'Saving...' : 'Complete Profile'}

@@ -240,18 +240,18 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
   // WhatsApp verification slip
   const handleShareWhatsAppSignoff = () => {
     const landlordPhone = activeBooking?.property?.landlord?.phoneNumber || '+233240000000';
-    let text = `📋 *MOVE-IN FIXTURE INVENTORY SIGN-OFF*\n`;
-    text += `🏢 *Property:* ${activeBooking?.property?.title || 'Residential Unit'}\n`;
-    text += `🚪 *Unit:* ${unitNumber}\n`;
-    text += `📅 *Inspection Date:* ${new Date().toLocaleDateString('en-GB')}\n\n`;
+    let text = `*MOVE-IN FIXTURE INVENTORY SIGN-OFF*\n`;
+    text += `*Property:* ${activeBooking?.property?.title || 'Residential Unit'}\n`;
+    text += `*Unit:* ${unitNumber}\n`;
+    text += `*Inspection Date:* ${new Date().toLocaleDateString('en-GB')}\n\n`;
     text += `*Verified Fixtures & Appliances:*\n`;
     items.forEach((item, idx) => {
       text += `${idx + 1}. ${item.name} (${item.condition}) - Tag: ${item.serialTag || 'N/A'}\n`;
     });
     if (residentNotes) {
-      text += `\n📝 *Resident Observation Notes:*\n${residentNotes}\n`;
+      text += `\n*Resident Observation Notes:*\n${residentNotes}\n`;
     }
-    text += `\n✅ _Move-In condition verified and acknowledged by resident._`;
+    text += `\n_Move-in condition verified and acknowledged by resident._`;
 
     const url = `https://wa.me/${landlordPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
@@ -304,7 +304,7 @@ export default function TenantAssetInventoryTab({ bookings }: TenantAssetInvento
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider opacity-80">Checklist Standing</div>
               <div className="text-base font-black">
-                {isSigned ? 'Move-In Signed & Protected ✅' : 'Awaiting Resident Sign-Off'}
+                {isSigned ? 'Move-In Signed & Verified' : 'Awaiting Resident Sign-Off'}
               </div>
               <div className="text-[11px] opacity-75">
                 {isSigned ? 'Caution deposit secured' : 'Confirm fixtures to protect deposit'}

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   ClipboardCheck, CheckCircle2, AlertTriangle, XCircle, 
-  DollarSign, FileSignature, Loader2, Camera
+  DollarSign, FileSignature, Loader2, Camera, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -98,8 +98,12 @@ export default function InspectionModal({ booking, isOpen, onClose }: Inspection
             </div>
           </div>
 
-          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 font-bold rounded-xl">
-            ✕
+          <button 
+            onClick={onClose} 
+            className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 

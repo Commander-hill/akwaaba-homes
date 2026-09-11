@@ -50,10 +50,7 @@ export default function PwaInstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-in slide-in-from-bottom-5 duration-300">
-      <div className="glass-card rounded-2xl p-4 sm:p-5 border border-indigo-200 dark:border-indigo-900/60 shadow-2xl bg-gradient-to-r from-slate-900 via-[#0A1136] to-indigo-950 text-white relative overflow-hidden">
-        {/* Glow decoration */}
-        <div className="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl pointer-events-none" />
-
+      <div className="rounded-2xl p-4 sm:p-5 border border-slate-700 shadow-xl bg-slate-900 text-white relative overflow-hidden">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 p-0.5 shadow-lg flex-shrink-0">

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Car, Plus, Trash2, ParkingCircle, AlertCircle, 
-  Loader2, CheckCircle2, Hash
+  Loader2, CheckCircle2, Hash, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -210,8 +210,12 @@ export default function VehicleParkingTab({ bookings = [] }: { bookings?: any[] 
               <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <Car className="w-5 h-5 text-emerald-500" /> Register Vehicle & Parking Bay
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

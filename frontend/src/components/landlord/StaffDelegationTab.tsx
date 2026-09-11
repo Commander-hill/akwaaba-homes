@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   UserCheck, Plus, Trash2, UserCog, Mail, Phone,
-  Building, Loader2, CheckCircle2, Wrench, FileText
+  Building, Loader2, CheckCircle2, Wrench, FileText, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -120,14 +120,14 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
             <UserCog className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Caretaker & Porter Staff Delegation</h2>
-            <p className="text-xs text-slate-500">Authorize hostel porters & caretakers to handle daily tickets & check-ins without financial access</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Facility Caretaker &amp; Staff Delegation</h2>
+            <p className="text-xs text-slate-500">Authorize property caretakers &amp; facility staff to handle daily tickets &amp; check-ins without financial access</p>
           </div>
         </div>
 
         <button
           onClick={() => setModalOpen(true)}
-          className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-sm"
+          className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Assign Staff Member
         </button>
@@ -142,7 +142,7 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
           <UserCheck className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No delegated staff members assigned</h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
-            Delegate daily hostel operations to on-site porters or caretakers by entering their registered email.
+            Delegate daily property operations to on-site caretakers or facility managers by entering their registered email.
           </p>
         </div>
       ) : (
@@ -241,8 +241,12 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
               <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <UserCog className="w-5 h-5 text-blue-500" /> Assign Property Staff
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

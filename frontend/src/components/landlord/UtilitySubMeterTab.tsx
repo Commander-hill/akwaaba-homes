@@ -604,7 +604,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
                           "text-[10px] font-bold px-2 py-0.5 rounded-full",
                           isSettled ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
                         )}>
-                          {isSettled ? 'Fully Settled ✅' : `${paidCount}/${totalCount} Paid ⏳`}
+                          {isSettled ? 'Fully Settled' : `${paidCount}/${totalCount} Paid`}
                         </span>
                       </div>
                     </div>

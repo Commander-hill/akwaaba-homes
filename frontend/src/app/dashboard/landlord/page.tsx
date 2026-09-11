@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, Users, Mail, Phone, Calendar, Check, X, 
-  CreditCard, Star, PenTool, CheckCircle, Clock, FileSignature, Building, 
+  CreditCard, Star, PenTool, CheckCircle, CheckCircle2, Clock, FileSignature, Building, 
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
-  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -856,8 +856,8 @@ export default function LandlordDashboard() {
                         )}
 
                         {t.isEscalated && (
-                          <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md animate-bounce">
-                            ⚠️ Admin Escalated (48h Unresolved)
+                          <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
+                            <AlertTriangle className="w-3 h-3 text-white" /> Admin Escalated (48h Unresolved)
                           </span>
                         )}
                       </div>
@@ -891,15 +891,15 @@ export default function LandlordDashboard() {
 
                     {/* Image Attachments */}
                     {(t.imageUrl || t.completionImageUrl) && (
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex gap-3 pt-1">
                         {t.imageUrl && (
-                          <a href={getImageUrl(t.imageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-indigo-500 underline flex items-center gap-1">
-                            📷 Issue Photo
+                          <a href={getImageUrl(t.imageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 underline flex items-center gap-1">
+                            <Camera className="w-3.5 h-3.5" /> Issue Photo
                           </a>
                         )}
                         {t.completionImageUrl && (
-                          <a href={getImageUrl(t.completionImageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-500 underline flex items-center gap-1">
-                            ✅ Repair Completion Proof
+                          <a href={getImageUrl(t.completionImageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-500 hover:text-emerald-600 underline flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Repair Completion Proof
                           </a>
                         )}
                       </div>
@@ -1401,7 +1401,7 @@ export default function LandlordDashboard() {
                   "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md",
                   ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600 shadow-indigo-600/30" : "bg-emerald-600 shadow-emerald-600/30"
                 )}>
-                  {ticketActionModal.mode === 'SCHEDULE' ? '📅' : '🛠️'}
+                  {ticketActionModal.mode === 'SCHEDULE' ? <Calendar className="w-5 h-5 text-white" /> : <Wrench className="w-5 h-5 text-white" />}
                 </div>
                 <div>
                   <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
@@ -1412,9 +1412,10 @@ export default function LandlordDashboard() {
               </div>
               <button
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg transition"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

@@ -116,7 +116,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
       return res.data;
     },
     onSuccess: (resData) => {
-      toast.success(resData.message || 'Visitor cleared for entry! ✅', { duration: 4000 });
+      toast.success(resData.message || 'Visitor cleared for entry', { duration: 4000 });
       setAccessCodeInput('');
       queryClient.invalidateQueries({ queryKey: ['propertyVisitorPasses', selectedPropertyId] });
     },
@@ -132,7 +132,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
       return res.data;
     },
     onSuccess: (resData) => {
-      toast.success(resData.message || 'Visitor signed out successfully 👋');
+      toast.success(resData.message || 'Visitor signed out successfully');
       queryClient.invalidateQueries({ queryKey: ['propertyVisitorPasses', selectedPropertyId] });
     },
     onError: (err: any) => {
@@ -453,19 +453,19 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
                       </span>
                       {isCurfewBreach ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-600 border border-rose-500/30">
-                          Curfew Exceeded ⚠️
+                          Curfew Exceeded
                         </span>
                       ) : isInside ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 border border-emerald-500/30">
-                          Inside Compound 🟢
+                          Inside Compound
                         </span>
                       ) : isCheckedOut ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                          Checked Out 👋
+                          Checked Out
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600">
-                          Expected ⏳
+                          Expected
                         </span>
                       )}
                     </div>

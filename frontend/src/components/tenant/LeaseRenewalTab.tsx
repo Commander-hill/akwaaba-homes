@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   FileText, Plus, CheckCircle2, Clock, XCircle, AlertCircle, 
-  Loader2, Calendar, ArrowRight
+  Loader2, Calendar, ArrowRight, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -187,8 +187,12 @@ export default function LeaseRenewalTab({ bookings = [] }: { bookings?: any[] })
               <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-purple-500" /> Lease Renewal Application
               </h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button 
+                onClick={() => setModalOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 

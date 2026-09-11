@@ -5,7 +5,7 @@ import {
   AlertTriangle, Scale, AlertOctagon, FileWarning, Gavel, 
   UserX, Flame, Volume2, Printer, Search, Filter, 
   Plus, CheckCircle, Clock, Send, FileText, Building, 
-  Phone, Trash2, Edit3, Eye, CheckCircle2
+  Phone, Trash2, Edit3, Eye, CheckCircle2, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -352,25 +352,25 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
   const handleSendWhatsAppCitation = (inc: DisciplinaryIncident) => {
     const targetPhone = inc.residentPhone ? inc.residentPhone.replace(/[^0-9]/g, '') : '';
     
-    let msg = `⚖️ *AKWAABA HOMES - OFFICIAL DISCIPLINARY CITATION*\n`;
-    msg += `📋 *Ref Code:* ${inc.referenceCode}\n`;
-    msg += `🏢 *Property:* ${selectedProperty?.title || 'Hostel'}\n`;
-    msg += `👤 *Resident:* ${inc.residentName} (${inc.roomUnit})\n`;
-    msg += `📅 *Incident Date & Time:* ${inc.incidentDate} at ${inc.incidentTime}\n`;
-    msg += `⚠️ *Infraction Category:* ${inc.infractionType.replace('_', ' ')}\n`;
-    msg += `🚨 *Strike Assessment:* Strike ${inc.strikeLevel} of 3\n\n`;
-    msg += `📝 *Incident Summary:*\n${inc.description}\n\n`;
+    let msg = `*AKWAABA HOMES - OFFICIAL DISCIPLINARY CITATION*\n`;
+    msg += `*Ref Code:* ${inc.referenceCode}\n`;
+    msg += `*Property:* ${selectedProperty?.title || 'Hostel'}\n`;
+    msg += `*Resident:* ${inc.residentName} (${inc.roomUnit})\n`;
+    msg += `*Incident Date & Time:* ${inc.incidentDate} at ${inc.incidentTime}\n`;
+    msg += `*Infraction Category:* ${inc.infractionType.replace('_', ' ')}\n`;
+    msg += `*Strike Assessment:* Strike ${inc.strikeLevel} of 3\n\n`;
+    msg += `*Incident Summary:*\n${inc.description}\n\n`;
 
     if (inc.fineAmountGHS > 0) {
-      msg += `💰 *Disciplinary Surcharge:* GH₵ ${inc.fineAmountGHS.toFixed(2)} (Status: ${inc.status.replace('_', ' ')})\n`;
-      msg += `_Please settle penalty via the hostel MoMo portal or caretaker desk within 48 hours._\n\n`;
+      msg += `*Disciplinary Surcharge:* GH₵ ${inc.fineAmountGHS.toFixed(2)} (Status: ${inc.status.replace('_', ' ')})\n`;
+      msg += `_Please settle penalty via the property MoMo portal or caretaker desk within 48 hours._\n\n`;
     }
 
     if (inc.strikeLevel === 3) {
-      msg += `🛑 *CRITICAL NOTICE:* This is your 3rd strike. Immediate referral has been forwarded to the Dean of Student Affairs / Guardian for tenancy termination.\n\n`;
+      msg += `*CRITICAL NOTICE:* This is your 3rd strike. Immediate referral has been forwarded to the Dean of Student Affairs / Guardian for tenancy termination.\n\n`;
     }
 
-    msg += `_Issued by: ${inc.reportedBy} - Hostel Management Authority_`;
+    msg += `_Issued by: ${inc.reportedBy} - Property Management_`;
 
     const url = targetPhone 
       ? `https://wa.me/${targetPhone}?text=${encodeURIComponent(msg)}`
@@ -769,9 +769,10 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
               </div>
               <button
                 onClick={() => setIsLogModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1.5"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -987,9 +988,10 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
                 </button>
                 <button
                   onClick={() => setActiveCitationIncident(null)}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 font-bold"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                  aria-label="Close"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>

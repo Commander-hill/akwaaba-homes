@@ -5,7 +5,7 @@ import {
   Armchair, Search, Filter, Plus, Trash2, Edit3, Printer, 
   CheckCircle2, AlertTriangle, XCircle, Info, 
   Layers, Fan, Zap, Key, Wind, FileText, RefreshCw, 
-  MessageSquare, SlidersHorizontal, DoorClosed
+  MessageSquare, SlidersHorizontal, DoorClosed, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -795,9 +795,10 @@ export default function RoomAssetVaultTab({ properties, bookings = [] }: RoomAss
                   setIsAddModalOpen(false);
                   setIsEditModalOpen(false);
                 }}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold p-1.5"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
