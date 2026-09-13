@@ -7,6 +7,7 @@ import { ThemeProvider } from 'next-themes';
 import { SocketProvider } from './SocketProvider';
 import { LanguageProvider } from './LanguageContext';
 import { DialogProvider } from './DialogProvider';
+import { SessionTimeoutProvider } from './SessionTimeoutProvider';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -48,7 +49,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <SocketProvider>
           <LanguageProvider>
             <DialogProvider>
-              {children}
+              <SessionTimeoutProvider>
+                {children}
+              </SessionTimeoutProvider>
               <Toaster
                 position="top-right"
                 toastOptions={{

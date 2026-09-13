@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Lock, Mail, Loader2, ArrowRight } from 'lucide-react';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, Mail, Loader2, ArrowRight, Clock } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isTimeout = searchParams.get('reason') === 'timeout';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
@@ -101,6 +103,13 @@ export default function AdminLoginPage() {
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Admin<span className="text-[#198754]">Portal</span></h1>
           <p className="text-slate-400 mt-2 font-mono text-sm tracking-widest uppercase">Restricted Access</p>
         </div>
+
+        {isTimeout && (
+          <div className="bg-amber-950/40 border border-amber-800/60 text-amber-300 p-4 rounded-xl text-sm font-medium mb-6 flex items-start gap-3">
+            <Clock className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
+            <p>Administrative session timed out due to inactivity. Re-authenticate to access the console.</p>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-950/50 border border-red-900/50 text-red-400 p-4 rounded-xl text-sm font-medium mb-6 flex items-start gap-3">
@@ -252,5 +261,13 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0B0D12]" />}>
+      <AdminLoginForm />
+    </Suspense>
   );
 }
