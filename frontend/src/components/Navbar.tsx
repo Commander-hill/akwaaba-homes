@@ -87,12 +87,7 @@ export default function Navbar() {
           ? "bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]"
           : "bg-white dark:bg-[#0B0D12] border-zinc-200/80 dark:border-zinc-800/80"
       )}>
-        {/* Top-Left Ghana Clock: Positioned directly in the white space on top of the sidebar's AkwaabaHomes */}
-        {pathname?.startsWith('/dashboard') && (
-          <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 hidden md:flex items-center">
-            <LiveGhanaClock variant="header" />
-          </div>
-        )}
+
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-18 items-center">
@@ -152,6 +147,7 @@ export default function Navbar() {
 
             {/* Right: Quick Tools & Authentication */}
             <div className="hidden md:flex items-center space-x-3">
+              <LiveGhanaClock variant="header" />
               <LanguageSelector />
               <ThemeToggle isScrolled={true} />
 
