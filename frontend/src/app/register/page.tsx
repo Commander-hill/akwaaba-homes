@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle, Wrench } from 'lucide-react';
@@ -45,10 +45,17 @@ export default function RegisterPage() {
     acceptTerms: false
   });
 
+  const errorRef = useRef<HTMLDivElement>(null);
+
   const triggerError = (msg: string) => {
     setError(msg);
-    toast.error(msg);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const handleNext = () => {
@@ -175,7 +182,7 @@ export default function RegisterPage() {
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium flex items-start gap-3">
+            <div ref={errorRef} className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium flex items-start gap-3">
               <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
               {error}
             </div>

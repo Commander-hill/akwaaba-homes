@@ -253,7 +253,6 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       setMessage({ text: 'Profile updated successfully!', type: 'success' });
-      toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['session'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -261,12 +260,11 @@ export default function ProfilePage() {
     onError: (error: any) => {
       const errMsg = error.response?.data?.message || 'Failed to update profile';
       setMessage({ text: errMsg, type: 'error' });
-      toast.error(errMsg);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onSettled: () => {
       setIsSaving(false);
-      setTimeout(() => setMessage(null), 3000);
+      setTimeout(() => setMessage(null), 6000);
     }
   });
 

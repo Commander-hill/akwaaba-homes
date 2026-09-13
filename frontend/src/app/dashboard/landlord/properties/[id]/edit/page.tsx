@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
@@ -196,10 +196,17 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const errorRef = useRef<HTMLDivElement>(null);
+
   const triggerError = (msg: string) => {
     setError(msg);
-    toast.error(msg);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -286,7 +293,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
 
       <div className="glass-card rounded-3xl p-8 border border-[var(--border)]">
         {error && (
-          <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/50 mb-6">
+          <div ref={errorRef} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/50 mb-6">
             {error}
           </div>
         )}
