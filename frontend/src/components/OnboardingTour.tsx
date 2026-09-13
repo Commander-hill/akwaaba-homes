@@ -15,6 +15,74 @@ interface TourStep {
   statutoryNote?: string;
 }
 
+const TENANT_STEPS: TourStep[] = [
+  {
+    title: "Welcome to Akwaaba Homes",
+    description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and secure rent escrow protection.",
+    icon: Compass,
+    badge: "Step 1 of 4 • Overview",
+    statutoryNote: "Ghana Rent Act, 1963 (Act 220) Compliant"
+  },
+  {
+    title: "Account Setup & Ghana Card (NIA) Verification",
+    description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
+    targetSelector: '#tour-progress-widget',
+    icon: BadgeCheck,
+    badge: "Step 2 of 4 • Identity Verification",
+    statutoryNote: "NIA Identity Verification Standard"
+  },
+  {
+    title: "Verified Property Discovery & Title Deeds",
+    description: "Browse verified residential apartments, family homes, and hostel units across Greater Accra, Ashanti, and Western regions with certified Lands Commission title deeds.",
+    targetSelector: '#tour-nav-properties',
+    icon: Search,
+    badge: "Step 3 of 4 • Verified Listings",
+    statutoryNote: "Lands Commission Audited Listings"
+  },
+  {
+    title: "Tenancy Leases & Resident Workspaces",
+    description: "Access your core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit maintenance requests.",
+    targetSelector: '#tour-tenant-workspaces',
+    icon: FileText,
+    badge: "Step 4 of 4 • Operations & Leases",
+    statutoryNote: "Electronic Transactions Act, 2008 (Act 772)"
+  }
+];
+
+const LANDLORD_STEPS: TourStep[] = [
+  {
+    title: "Welcome to your Landlord Hub",
+    description: "Manage your rental properties in Ghana with confidence. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor rental returns.",
+    icon: Compass,
+    badge: "Step 1 of 4 • Portfolio Management",
+    statutoryNote: "Ghana Real Estate Governance Standard"
+  },
+  {
+    title: "Title Deed & Lands Commission Audit",
+    description: "Upload your property title deeds, indentures, and site plans for Lands Commission verification to earn the Verified Host badge and boost tenant booking confidence.",
+    targetSelector: '#tour-progress-widget',
+    icon: FileCheck,
+    badge: "Step 2 of 4 • Title Verification",
+    statutoryNote: "Lands Commission Certified Registry"
+  },
+  {
+    title: "List Property with GPS Coordinates",
+    description: "Add residential and commercial properties with Ghana Post digital addresses, interactive GPS mapping, high-resolution media galleries, and custom unit inventories.",
+    targetSelector: '#tour-add-property',
+    icon: MapPin,
+    badge: "Step 3 of 4 • Inventory Listing",
+    statutoryNote: "Ghana Post GPS Digital Address System"
+  },
+  {
+    title: "Operational Workspaces & Mobile Money Payouts",
+    description: "Access unified workflows for tenancy agreements, digital rent collection, instant Mobile Money withdrawals, GRA 5% tax withholding statements, and caretaker delegation.",
+    targetSelector: '#tour-landlord-tabs',
+    icon: Building,
+    badge: "Step 4 of 4 • Returns & Compliance",
+    statutoryNote: "GRA 5% Withholding Tax Compliant"
+  }
+];
+
 interface OnboardingTourProps {
   role?: string;
   user?: any;
@@ -27,76 +95,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
   const [popoverPos, setPopoverPos] = useState<{ top: number; left: number; placement: 'top' | 'bottom' | 'center' }>({ top: 0, left: 0, placement: 'center' });
 
   const isTenant = role === 'TENANT';
-
-  const tenantSteps: TourStep[] = [
-    {
-      title: "Welcome to Akwaaba Homes",
-      description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and secure rent escrow protection.",
-      icon: Compass,
-      badge: "Step 1 of 4 • Overview",
-      statutoryNote: "Ghana Rent Act, 1963 (Act 220) Compliant"
-    },
-    {
-      title: "Account Setup & Ghana Card (NIA) Verification",
-      description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
-      targetSelector: '#tour-progress-widget',
-      icon: BadgeCheck,
-      badge: "Step 2 of 4 • Identity Verification",
-      statutoryNote: "NIA Identity Verification Standard"
-    },
-    {
-      title: "Verified Property Discovery & Title Deeds",
-      description: "Browse verified residential apartments, family homes, and hostel units across Greater Accra, Ashanti, and Western regions with certified Lands Commission title deeds.",
-      targetSelector: '#tour-nav-properties',
-      icon: Search,
-      badge: "Step 3 of 4 • Verified Listings",
-      statutoryNote: "Lands Commission Audited Listings"
-    },
-    {
-      title: "Tenancy Leases & Resident Workspaces",
-      description: "Access your core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit maintenance requests.",
-      targetSelector: '#tour-tenant-workspaces',
-      icon: FileText,
-      badge: "Step 4 of 4 • Operations & Leases",
-      statutoryNote: "Electronic Transactions Act, 2008 (Act 772)"
-    }
-  ];
-
-  const landlordSteps: TourStep[] = [
-    {
-      title: "Welcome to your Landlord Hub",
-      description: "Manage your rental properties in Ghana with confidence. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor rental returns.",
-      icon: Compass,
-      badge: "Step 1 of 4 • Portfolio Management",
-      statutoryNote: "Ghana Real Estate Governance Standard"
-    },
-    {
-      title: "Title Deed & Lands Commission Audit",
-      description: "Upload your property title deeds, indentures, and site plans for Lands Commission verification to earn the Verified Host badge and boost tenant booking confidence.",
-      targetSelector: '#tour-progress-widget',
-      icon: FileCheck,
-      badge: "Step 2 of 4 • Title Verification",
-      statutoryNote: "Lands Commission Certified Registry"
-    },
-    {
-      title: "List Property with GPS Coordinates",
-      description: "Add residential and commercial properties with Ghana Post digital addresses, interactive GPS mapping, high-resolution media galleries, and custom unit inventories.",
-      targetSelector: '#tour-add-property',
-      icon: MapPin,
-      badge: "Step 3 of 4 • Inventory Listing",
-      statutoryNote: "Ghana Post GPS Digital Address System"
-    },
-    {
-      title: "Operational Workspaces & Mobile Money Payouts",
-      description: "Access unified workflows for tenancy agreements, digital rent collection, instant Mobile Money withdrawals, GRA 5% tax withholding statements, and caretaker delegation.",
-      targetSelector: '#tour-landlord-tabs',
-      icon: Building,
-      badge: "Step 4 of 4 • Returns & Compliance",
-      statutoryNote: "GRA 5% Withholding Tax Compliant"
-    }
-  ];
-
-  const steps = isTenant ? tenantSteps : landlordSteps;
+  const steps = isTenant ? TENANT_STEPS : LANDLORD_STEPS;
   const tourStorageKey = user?.id ? `akwaaba_tour_completed_${user.id}` : `akwaaba_tour_completed_${role || 'user'}`;
 
   // Auto-start ONCE per user account only
@@ -119,6 +118,18 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
     }
   }, [user?.id, tourStorageKey]);
 
+  // Dedicated effect to smoothly scroll target into view when step or tour state changes
+  useEffect(() => {
+    if (!isOpen) return;
+    const currentSelector = steps[currentStep]?.targetSelector;
+    if (!currentSelector) return;
+
+    const el = document.querySelector(currentSelector);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [isOpen, currentStep, steps]);
+
   // Recalculate target position & popover coordinates
   const updatePosition = useCallback(() => {
     if (!isOpen) return;
@@ -126,26 +137,28 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
     const currentSelector = steps[currentStep]?.targetSelector;
     if (!currentSelector) {
       setTargetRect(null);
-      setPopoverPos({ top: 0, left: 0, placement: 'center' });
+      setPopoverPos(prev => (prev.placement === 'center' ? prev : { top: 0, left: 0, placement: 'center' }));
       return;
     }
 
     const el = document.querySelector(currentSelector);
     if (!el) {
       setTargetRect(null);
-      setPopoverPos({ top: 0, left: 0, placement: 'center' });
+      setPopoverPos(prev => (prev.placement === 'center' ? prev : { top: 0, left: 0, placement: 'center' }));
       return;
     }
 
-    // Scroll into view
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
     const rect = el.getBoundingClientRect();
-    setTargetRect({
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height,
+    setTargetRect(prev => {
+      if (prev && prev.top === rect.top && prev.left === rect.left && prev.width === rect.width && prev.height === rect.height) {
+        return prev;
+      }
+      return {
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      };
     });
 
     const cardWidth = Math.min(window.innerWidth - 32, 440);
@@ -154,26 +167,36 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
     let left = rect.left + rect.width / 2 - cardWidth / 2;
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
 
+    let newPos: { top: number; left: number; placement: 'top' | 'bottom' | 'center' };
     if (rect.bottom + cardHeight + 24 < window.innerHeight) {
-      setPopoverPos({ top: rect.bottom + 16, left, placement: 'bottom' });
+      newPos = { top: rect.bottom + 16, left, placement: 'bottom' };
     } else if (rect.top - cardHeight - 24 > 0) {
-      setPopoverPos({ top: rect.top - cardHeight - 16, left, placement: 'top' });
+      newPos = { top: rect.top - cardHeight - 16, left, placement: 'top' };
     } else {
-      setPopoverPos({ top: 0, left: 0, placement: 'center' });
+      newPos = { top: 0, left: 0, placement: 'center' };
     }
+
+    setPopoverPos(prev => {
+      if (prev.top === newPos.top && prev.left === newPos.left && prev.placement === newPos.placement) {
+        return prev;
+      }
+      return newPos;
+    });
   }, [isOpen, currentStep, steps]);
 
   useEffect(() => {
     if (isOpen) {
       updatePosition();
+      const timer = setTimeout(updatePosition, 350);
       window.addEventListener('resize', updatePosition);
       window.addEventListener('scroll', updatePosition, true);
       return () => {
+        clearTimeout(timer);
         window.removeEventListener('resize', updatePosition);
         window.removeEventListener('scroll', updatePosition, true);
       };
     }
-  }, [isOpen, currentStep, updatePosition]);
+  }, [isOpen, updatePosition]);
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
