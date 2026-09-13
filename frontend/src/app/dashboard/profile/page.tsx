@@ -253,11 +253,16 @@ export default function ProfilePage() {
     },
     onSuccess: () => {
       setMessage({ text: 'Profile updated successfully!', type: 'success' });
+      toast.success('Profile updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['session'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onError: (error: any) => {
-      setMessage({ text: error.response?.data?.message || 'Failed to update profile', type: 'error' });
+      const errMsg = error.response?.data?.message || 'Failed to update profile';
+      setMessage({ text: errMsg, type: 'error' });
+      toast.error(errMsg);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     onSettled: () => {
       setIsSaving(false);

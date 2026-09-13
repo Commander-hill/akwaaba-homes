@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle, Wrench } from 'lucide-react';
 import api from '@/lib/axios';
 import PassportUpload from '@/components/PassportUpload';
+import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -44,26 +45,32 @@ export default function RegisterPage() {
     acceptTerms: false
   });
 
+  const triggerError = (msg: string) => {
+    setError(msg);
+    toast.error(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleNext = () => {
     setError('');
     
     if (currentStep === 1 && !formData.role) {
-      setError('Please select an account type.');
+      triggerError('Please select an account type.');
       return;
     }
     
     if (currentStep === 2) {
       if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
-        setError('Please fill in your name and email address.');
+        triggerError('Please fill in your name and email address.');
         return;
       }
       if (!formData.phoneNumber.trim() || !formData.gender || !formData.nationality.trim()) {
-        setError('Please fill in your Phone Number, Gender, and Country/Nationality.');
+        triggerError('Please fill in your Phone Number, Gender, and Country/Nationality.');
         return;
       }
       if (formData.role === 'TENANT') {
         if (!formData.dateOfBirth || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-          setError('Please fill in your Date of Birth and Guardian / Emergency Contact details.');
+          triggerError('Please fill in your Date of Birth and Guardian / Emergency Contact details.');
           return;
         }
       }
@@ -71,7 +78,7 @@ export default function RegisterPage() {
 
     if (currentStep === 3 && formData.isStudent) {
       if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim() || !formData.yearOfStudy || !formData.studentType) {
-        setError('Please fill in all mandatory school information fields.');
+        triggerError('Please fill in all mandatory school information fields.');
         return;
       }
     }
@@ -81,6 +88,7 @@ export default function RegisterPage() {
     } else {
       setCurrentStep((prev) => prev + 1);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
@@ -90,6 +98,7 @@ export default function RegisterPage() {
     } else {
       setCurrentStep((prev) => prev - 1);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,34 +107,35 @@ export default function RegisterPage() {
     setError('');
 
     if (!formData.acceptTerms) {
-      setError('You must agree to the Terms and Conditions.');
+      triggerError('You must agree to the Terms and Conditions.');
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      triggerError('Password must be at least 8 characters long.');
       setIsLoading(false);
       return;
     }
 
     if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password) || !/\d/.test(formData.password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
-      setError('Password must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
+      triggerError('Password must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
       setIsLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
+      triggerError('Passwords do not match.');
       setIsLoading(false);
       return;
     }
 
     try {
       await api.post('/auth/register', formData);
+      toast.success('Registration successful! Please sign in.');
       router.push('/login?registered=true');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to register. Please try again.');
+      triggerError(err.response?.data?.message || 'Failed to register. Please try again.');
       setIsLoading(false);
     }
   };

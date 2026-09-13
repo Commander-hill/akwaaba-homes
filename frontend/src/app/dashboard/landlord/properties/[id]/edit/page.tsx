@@ -7,6 +7,7 @@ import api from '@/lib/axios';
 import { Loader2, ArrowLeft, Building, MapPin, DollarSign, Image as ImageIcon, Info, CheckCircle, Video } from 'lucide-react';
 import Link from 'next/link';
 import Map from '@/components/Map';
+import toast from 'react-hot-toast';
 
 const PRESET_AMENITY_CATEGORIES = [
   {
@@ -195,12 +196,18 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     }
   };
 
+  const triggerError = (msg: string) => {
+    setError(msg);
+    toast.error(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 50 * 1024 * 1024) {
-      setError('Video exceeds 50MB limit.');
+      triggerError('Video exceeds 50MB limit.');
       return;
     }
 
@@ -218,7 +225,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
 
       setFormData(prev => ({ ...prev, videoUrl: res.data.url }));
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload video');
+      triggerError(err.response?.data?.error || 'Failed to upload video');
       setVideoFile(null);
     } finally {
       setVideoUploading(false);
@@ -231,7 +238,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
     setError('');
 
     if (videoUploading) {
-      setError('Please wait for video to finish uploading');
+      triggerError('Please wait for video to finish uploading');
       setIsLoading(false);
       return;
     }
@@ -246,12 +253,13 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
         amenities: parsedAmenities,
         images: parsedImages
       });
+      toast.success('Property updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       router.push('/dashboard/landlord/properties');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update property');
+      triggerError(err.response?.data?.message || 'Failed to update property');
       setIsLoading(false);
     }
   };

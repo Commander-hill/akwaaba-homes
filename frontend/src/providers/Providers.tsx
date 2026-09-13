@@ -53,7 +53,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 {children}
               </SessionTimeoutProvider>
               <Toaster
-                position="top-right"
+                position="top-center"
                 toastOptions={{
                   duration: 4500,
                   className: '!bg-white/95 dark:!bg-[#111116]/95 !text-slate-900 dark:!text-white !border !border-slate-200/80 dark:!border-white/10 !backdrop-blur-xl !shadow-[0_20px_50px_rgba(0,0,0,0.3)] !rounded-2xl !px-5 !py-3.5 !text-xs sm:!text-sm !font-bold',

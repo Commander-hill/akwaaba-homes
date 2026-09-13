@@ -14,6 +14,7 @@ import Link from 'next/link';
 import Map from '@/components/Map';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 
 interface RoomInput {
   id: string;
@@ -230,12 +231,18 @@ export default function NewPropertyPage() {
     }));
   };
 
+  const triggerError = (msg: string) => {
+    setError(msg);
+    toast.error(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     if (files.length + formData.images.length > 5) {
-      setError('You can upload a maximum of 5 images.');
+      triggerError('You can upload a maximum of 5 images.');
       return;
     }
 
@@ -254,7 +261,7 @@ export default function NewPropertyPage() {
 
       setFormData(prev => ({ ...prev, images: [...prev.images, ...res.data.urls] }));
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload images');
+      triggerError(err.response?.data?.error || 'Failed to upload images');
     } finally {
       setImagesUploading(false);
     }
@@ -272,7 +279,7 @@ export default function NewPropertyPage() {
     if (!file) return;
 
     if (file.size > 50 * 1024 * 1024) {
-      setError('Video exceeds 50MB limit.');
+      triggerError('Video exceeds 50MB limit.');
       return;
     }
 
@@ -290,7 +297,7 @@ export default function NewPropertyPage() {
 
       setFormData(prev => ({ ...prev, videoUrl: res.data.url }));
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload video');
+      triggerError(err.response?.data?.error || 'Failed to upload video');
       setVideoFile(null);
     } finally {
       setVideoUploading(false);
@@ -315,6 +322,7 @@ export default function NewPropertyPage() {
       return response.data;
     },
     onSuccess: () => {
+      toast.success('Property published successfully!');
       queryClient.invalidateQueries({ queryKey: ['landlord', 'properties'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -322,7 +330,7 @@ export default function NewPropertyPage() {
       router.push('/dashboard/landlord/properties');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Failed to list property');
+      triggerError(err.response?.data?.message || 'Failed to list property');
     }
   });
 
@@ -330,31 +338,31 @@ export default function NewPropertyPage() {
     setError('');
     if (step === 1) {
       if (!formData.title.trim()) {
-        setError('Please provide a property title.');
+        triggerError('Please provide a property title.');
         return false;
       }
       if (!formData.location.trim()) {
-        setError('Please enter or pin the property location.');
+        triggerError('Please enter or pin the property location.');
         return false;
       }
     } else if (step === 2) {
       if (rooms.length === 0) {
-        setError('Add at least one unit configuration.');
+        triggerError('Add at least one unit configuration.');
         return false;
       }
       for (const r of rooms) {
         if (!r.numberOfRooms || Number(r.numberOfRooms) <= 0) {
-          setError('Please provide a valid room count for each unit.');
+          triggerError('Please provide a valid room count for each unit.');
           return false;
         }
         if (!r.price || Number(r.price) <= 0) {
-          setError('Please enter the annual rate in GH₵ for all units.');
+          triggerError('Please enter the annual rate in GH₵ for all units.');
           return false;
         }
       }
     } else if (step === 4) {
       if (!formData.description.trim()) {
-        setError('Please write a brief overview description of your property.');
+        triggerError('Please write a brief overview description of your property.');
         return false;
       }
     }
