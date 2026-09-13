@@ -337,8 +337,21 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     await establishUserSessionAndRespond(user, req, res);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    const errorMsg = String(error?.message || '');
+    if (
+      errorMsg.includes('connection pool') ||
+      errorMsg.includes("Can't reach database server") ||
+      errorMsg.includes('P1001') ||
+      errorMsg.includes('ETIMEDOUT') ||
+      errorMsg.includes('ECONNREFUSED')
+    ) {
+      res.status(503).json({
+        message: 'The database is currently warming up from sleep mode. Please try signing in again in a few seconds.'
+      });
+      return;
+    }
     res.status(500).json({ message: 'Internal server error' });
   }
 };
