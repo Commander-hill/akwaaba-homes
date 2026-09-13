@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
-import { LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, Settings, Radio, FileCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, Settings, Radio, FileCheck, Menu } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
@@ -14,6 +14,7 @@ import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { data: userResponse, isLoading, error } = useQuery({
     queryKey: ['auth', 'me'],
@@ -111,22 +112,38 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
       </head>
 
-      <ModernSidebar user={user} groups={adminSidebarGroups} onLogout={handleLogout} />
+      <ModernSidebar 
+        user={user} 
+        groups={adminSidebarGroups} 
+        onLogout={handleLogout}
+        mobileOpen={mobileMenuOpen}
+        onMobileClose={() => setMobileMenuOpen(false)}
+      />
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-[#FBFBFC] dark:bg-[#0B0D12] flex flex-col">
+      <div className="flex-1 overflow-y-auto bg-[#FBFBFC] dark:bg-[#0B0D12] flex flex-col min-w-0">
         {/* Admin Header with Notification Bell */}
-        <div className="h-20 shrink-0 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-8 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md sticky top-0 z-10">
-          <h2 className="text-xl font-bold text-zinc-950 dark:text-white font-extrabold tracking-tight capitalize">
-            {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
-          </h2>
-          <div className="flex items-center gap-4">
+        <div className="h-16 md:h-20 shrink-0 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 sm:px-6 md:px-8 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-1.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              aria-label="Open admin navigation menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-zinc-950 dark:text-white font-extrabold tracking-tight capitalize truncate">
+              {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
+            </h2>
+          </div>
+          <div className="flex items-center gap-3">
             <ThemeToggle />
             <NotificationBell />
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 md:p-8">
           {children}
         </div>
       </div>

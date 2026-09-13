@@ -82,6 +82,12 @@
     border-color: var(--border);
   }
   
+  html, body {
+    max-width: 100vw;
+    overflow-x: clip;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     font-family: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: var(--background);
@@ -122,6 +128,16 @@
   }
   .animate-slide-up {
     animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }
 

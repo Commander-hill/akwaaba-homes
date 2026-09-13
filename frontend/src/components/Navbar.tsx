@@ -198,11 +198,12 @@ export default function Navbar() {
             </div>
 
             {/* Mobile menu trigger */}
-            <div className="md:hidden flex items-center gap-2">
+            <div className="md:hidden flex items-center gap-1.5">
+              {isAuthenticated && <NotificationBell />}
               <ThemeToggle isScrolled={true} />
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="p-2 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
                 aria-label="Toggle navigation menu"
               >
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -212,58 +213,86 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Slide Drawer */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white dark:bg-[#0B0D12] border-b border-zinc-200 dark:border-zinc-800 px-4 pt-3 pb-6 space-y-3 animate-in">
-            <div className="space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-bold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                >
-                  {link.name}
-                </Link>
-              ))}
-              {!pathname?.startsWith('/dashboard/tenant') && role !== 'TENANT' && (role === 'LANDLORD' || !isAuthenticated) && (
-                <Link
-                  href="/dashboard/landlord/new"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-bold text-[#0F5132] dark:text-[#198754] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                >
-                  + List a Property
-                </Link>
-              )}
-            </div>
+          <div className="md:hidden fixed inset-0 top-18 z-50 flex flex-col">
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 top-18 bg-black/50 backdrop-blur-xs transition-opacity animate-in"
+              onClick={() => setIsMenuOpen(false)}
+            />
 
-            <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2">
-              {isAuthenticated ? (
-                <Link
-                  href={dashboardHref}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-full py-2.5 text-center text-xs font-bold text-white bg-[#0F5132] rounded-xl"
-                >
-                  Open Dashboard
-                </Link>
-              ) : (
-                <>
+            {/* Content Drawer */}
+            <div className="relative bg-white dark:bg-[#0B0D12] border-b border-zinc-200 dark:border-zinc-800 px-5 pt-4 pb-8 space-y-4 shadow-2xl animate-in max-h-[calc(100vh-5rem)] overflow-y-auto">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Navigation</span>
+                <LanguageSelector />
+              </div>
+
+              <div className="space-y-1">
+                {navLinks.map((link) => (
                   <Link
-                    href="/login"
+                    key={link.name}
+                    href={link.href}
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-2.5 text-center text-xs font-bold text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-xl"
+                    className={clsx(
+                      "block px-3.5 py-2.5 rounded-xl text-sm font-bold transition-colors",
+                      pathname === link.href 
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-[#198754]" 
+                        : "text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    )}
                   >
-                    Sign In
+                    {link.name}
                   </Link>
+                ))}
+                {!pathname?.startsWith('/dashboard/tenant') && role !== 'TENANT' && (role === 'LANDLORD' || !isAuthenticated) && (
                   <Link
-                    href="/register"
+                    href="/dashboard/landlord/new"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full py-2.5 text-center text-xs font-bold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 rounded-xl"
+                    className="block px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#0F5132] dark:text-[#198754] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
                   >
-                    Create Account
+                    + List a Property
                   </Link>
-                </>
-              )}
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2.5">
+                {isAuthenticated ? (
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href={dashboardHref}
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full py-3 text-center text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] rounded-xl shadow-xs transition-colors"
+                    >
+                      Open Dashboard
+                    </Link>
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full py-2.5 text-center text-xs font-bold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 rounded-xl"
+                    >
+                      My Profile &amp; Settings
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full py-2.5 text-center text-xs font-bold text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 rounded-xl"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="w-full py-2.5 text-center text-xs font-bold text-white bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-900 rounded-xl"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -606,8 +606,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
         </div>
 
-        {/* ── RIGHT COLUMN (5 COLS / ~35%): STICKY RESERVATION & VIEWING WIDGET ── */}
-        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 space-y-4">
+        {/* ── RIGHT COLUMN: BOOKING, CLEARANCE & VERIFICATION MODULE ── */}
+        <div id="booking-widget" className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 space-y-4">
           
           <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-sm space-y-5">
             
@@ -1209,6 +1209,36 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>Proceed to Paystack</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Action Bar for One-Touch Reservation */}
+      {!myActiveBookingData && property?.isAvailable && (
+        <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase font-bold text-zinc-400">Total Price</div>
+            <div className="flex items-baseline gap-1">
+              <span className="text-base font-black text-[#0F5132] dark:text-[#198754]">
+                GH₵ {Number(currentRoom?.price || property?.price || 0).toLocaleString()}
+              </span>
+              <span className="text-[11px] text-zinc-500 font-medium">
+                /{property?.pricePeriod || 'month'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('booking-widget');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+            >
+              Reserve Room
+            </button>
           </div>
         </div>
       )}

@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
+import MobileBottomNav from '../components/MobileBottomNav';
 import PwaRegister from '../components/PwaRegister';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
 import MaintenanceGuard from '../components/MaintenanceGuard';
@@ -47,9 +48,10 @@ export default function RootLayout({
           <PwaRegister />
           <MaintenanceGuard>
             <Navbar />
-            <main className="pt-20 min-h-screen">
+            <main className="pt-18 md:pt-20 pb-16 md:pb-0 min-h-screen">
               {children}
             </main>
+            <MobileBottomNav />
           </MaintenanceGuard>
           <PwaInstallPrompt />
         </Providers>

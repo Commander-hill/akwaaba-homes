@@ -285,8 +285,8 @@ export default function LandlordDashboard() {
         hasProperty={Boolean(session?.hasProperty || session?._count?.properties > 0 || subStats.totalProperties > 0 || subProperties.length > 0)} 
       />
       
-      {/* Sticky Header Banner & Tabs Container */}
-      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
+      {/* Header Banner & Tabs Container (Static on mobile, Sticky on desktop) */}
+      <div className="static md:sticky md:top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-3 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-3">
@@ -361,13 +361,13 @@ export default function LandlordDashboard() {
         </div>
 
         {/* 3 Core Operational Workspaces */}
-        <div id="tour-landlord-tabs" className="flex flex-wrap items-center justify-between gap-3 pt-2">
+        <div id="tour-landlord-tabs" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2">
           {/* Main Workspace Navigation */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800">
+          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto scrollbar-none flex-nowrap shrink-0">
             <button
               onClick={() => setActiveTab('bookings')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
                 ['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab)
                   ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
@@ -380,7 +380,7 @@ export default function LandlordDashboard() {
             <button
               onClick={() => setActiveTab('financials')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
                 ['financials', 'expenses', 'utilities', 'subscriptions'].includes(activeTab)
                   ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
@@ -393,7 +393,7 @@ export default function LandlordDashboard() {
             <button
               onClick={() => setActiveTab('tickets')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer",
+                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
                 ['tickets', 'staff', 'notices', 'gatepass', 'disciplinary', 'messages'].includes(activeTab)
                   ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
@@ -405,7 +405,7 @@ export default function LandlordDashboard() {
           </div>
 
           {/* Sub-Pills for Currently Selected Workspace */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap py-1">
             {['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab) && (
               <>
                 <button

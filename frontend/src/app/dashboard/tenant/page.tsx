@@ -456,8 +456,8 @@ function TenantDashboardContent() {
   return (
     <div className="space-y-6">
       <OnboardingProgressWidget user={session} />
-      {/* Sticky Header Banner, Notice & Tabs Container */}
-      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
+      {/* Header Banner, Notice & Tabs Container (Static on mobile, Sticky on desktop) */}
+      <div className="static md:sticky md:top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
         <NoticeBoard />
 
         {/* Live Landlord Compound Notice Advisory */}
