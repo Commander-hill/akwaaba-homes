@@ -101,7 +101,8 @@ export const getRoommateMatches = async (req: Request, res: Response): Promise<v
             campus: true,
             programmeOfStudy: true,
             avatarUrl: true,
-            gender: true
+            gender: true,
+            ghanaCardStatus: true
           }
         }
       }

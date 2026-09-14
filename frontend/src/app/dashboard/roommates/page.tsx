@@ -456,8 +456,8 @@ export default function RoommatesPage() {
                             <h3 className="font-bold text-sm text-zinc-950 dark:text-white truncate">
                               {match.user.firstName} {match.user.lastName}
                             </h3>
-                            {match.user.ghanaCardStatus === 'APPROVED' && (
-                              <span title="Verified Resident">
+                            {(match.user.ghanaCardStatus === 'VERIFIED' || match.user.isCardVerified) && (
+                              <span title="Verified Resident (Ghana Card)">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                               </span>
                             )}

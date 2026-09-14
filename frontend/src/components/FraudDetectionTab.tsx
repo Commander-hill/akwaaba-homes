@@ -209,11 +209,11 @@ export default function FraudDetectionTab() {
                   </div>
                   <span className={clsx(
                     "text-[10px] font-bold px-2 py-0.5 rounded",
-                    report.ghanaCardStatus === 'APPROVED'
+                    report.ghanaCardStatus === 'VERIFIED'
                       ? "bg-emerald-50 text-[#0F5132] border border-emerald-200"
                       : "bg-amber-50 text-amber-700 border border-amber-200"
                   )}>
-                    {report.ghanaCardStatus === 'APPROVED' ? 'Ghana Card Verified ✓' : 'ID Pending'}
+                    {report.ghanaCardStatus === 'VERIFIED' ? 'Ghana Card Verified ✓' : 'ID Pending'}
                   </span>
                 </div>
 
