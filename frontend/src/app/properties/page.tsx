@@ -7,7 +7,8 @@ import {
   Zap, Droplets, Wind, Lock, Wifi, Dumbbell, Car, UtensilsCrossed,
   X, ChevronDown, Check, ArrowRight, BedDouble, AlertCircle
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
@@ -51,6 +52,24 @@ const AMENITY_TAGS = [
 ];
 
 export default function PropertiesPage() {
+  const router = useRouter();
+
+  // Route guard: Caretakers and on-site staff manage operations and are barred from consumer marketplace
+  const { data: session } = useQuery({
+    queryKey: ['session'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.user;
+    },
+    retry: false
+  });
+
+  useEffect(() => {
+    if (session && (session.role === 'CARETAKER' || session.role === 'STAFF')) {
+      router.replace('/dashboard/caretaker');
+    }
+  }, [session, router]);
+
   const [searchLocation, setSearchLocation] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
@@ -117,6 +136,15 @@ export default function PropertiesPage() {
     setAmenitySearch('');
     setIsAvailableOnly(true);
   };
+
+  if (session && (session.role === 'CARETAKER' || session.role === 'STAFF')) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-bold text-zinc-500">Redirecting to Caretaker Operations Hub...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FBFBFC] dark:bg-[#0B0D12] py-8 relative overflow-hidden text-zinc-900 dark:text-white">

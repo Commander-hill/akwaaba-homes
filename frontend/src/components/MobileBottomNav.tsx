@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Compass, LayoutDashboard, MessageSquare, User, Heart, Building, LogIn, Wrench } from 'lucide-react';
+import { Home, Compass, LayoutDashboard, MessageSquare, User, Heart, Building, LogIn, Wrench, Key } from 'lucide-react';
 import clsx from 'clsx';
 import api from '@/lib/axios';
 
@@ -22,71 +22,96 @@ export default function MobileBottomNav() {
 
   const user = userResponse?.user;
   const isAuthenticated = !!user;
+  const isCaretaker = user?.role === 'CARETAKER' || user?.role === 'STAFF';
 
   // Derive dashboard link
   const dashboardHref = user?.role === 'ADMIN' 
     ? '/admin/dashboard' 
     : user?.role === 'LANDLORD' 
     ? '/dashboard/landlord' 
-    : (user?.role === 'CARETAKER' || user?.role === 'STAFF')
+    : isCaretaker
     ? '/dashboard/caretaker'
     : '/dashboard/tenant';
 
   // Define nav tabs based on authentication state
   const navTabs = isAuthenticated
-    ? [
-        {
-          name: 'Explore',
-          href: '/properties',
-          icon: Compass,
-          isActive: pathname === '/properties' || pathname === '/',
-        },
-        {
-          name: (user?.role === 'CARETAKER' || user?.role === 'STAFF') ? 'Ops Hub' : 'Dashboard',
-          href: dashboardHref,
-          icon: LayoutDashboard,
-          isActive: (pathname?.startsWith('/dashboard') && !pathname?.startsWith('/dashboard/messages') && !pathname?.startsWith('/dashboard/profile') && !pathname?.startsWith('/dashboard/wishlist')) || pathname?.startsWith('/admin'),
-        },
-        {
-          name: 'Messages',
-          href: '/dashboard/messages',
-          icon: MessageSquare,
-          isActive: pathname?.startsWith('/dashboard/messages'),
-        },
-        ...(user?.role === 'LANDLORD'
-          ? [
-              {
-                name: 'Properties',
-                href: '/dashboard/landlord/properties',
-                icon: Building,
-                isActive: pathname === '/dashboard/landlord/properties',
-              },
-            ]
-          : (user?.role === 'CARETAKER' || user?.role === 'STAFF')
-          ? [
-              {
-                name: 'Tickets',
-                href: '/dashboard/caretaker?tab=tickets',
-                icon: Wrench,
-                isActive: pathname === '/dashboard/caretaker',
-              },
-            ]
-          : [
-              {
-                name: 'Saved',
-                href: '/dashboard/wishlist',
-                icon: Heart,
-                isActive: pathname === '/dashboard/wishlist',
-              },
-            ]
-        ),
-        {
-          name: 'Profile',
-          href: '/dashboard/profile',
-          icon: User,
-          isActive: pathname?.startsWith('/dashboard/profile'),
-        },
-      ]
+    ? isCaretaker
+      ? [
+          {
+            name: 'Ops Hub',
+            href: '/dashboard/caretaker',
+            icon: LayoutDashboard,
+            isActive: pathname === '/dashboard/caretaker',
+          },
+          {
+            name: 'Tickets',
+            href: '/dashboard/caretaker?tab=tickets',
+            icon: Wrench,
+            isActive: pathname === '/dashboard/caretaker',
+          },
+          {
+            name: 'Gate Log',
+            href: '/dashboard/caretaker?tab=visitors',
+            icon: Key,
+            isActive: pathname === '/dashboard/caretaker',
+          },
+          {
+            name: 'Messages',
+            href: '/dashboard/messages',
+            icon: MessageSquare,
+            isActive: pathname?.startsWith('/dashboard/messages'),
+          },
+          {
+            name: 'Profile',
+            href: '/dashboard/profile',
+            icon: User,
+            isActive: pathname?.startsWith('/dashboard/profile'),
+          },
+        ]
+      : [
+          {
+            name: 'Explore',
+            href: '/properties',
+            icon: Compass,
+            isActive: pathname === '/properties' || pathname === '/',
+          },
+          {
+            name: 'Dashboard',
+            href: dashboardHref,
+            icon: LayoutDashboard,
+            isActive: (pathname?.startsWith('/dashboard') && !pathname?.startsWith('/dashboard/messages') && !pathname?.startsWith('/dashboard/profile') && !pathname?.startsWith('/dashboard/wishlist')) || pathname?.startsWith('/admin'),
+          },
+          {
+            name: 'Messages',
+            href: '/dashboard/messages',
+            icon: MessageSquare,
+            isActive: pathname?.startsWith('/dashboard/messages'),
+          },
+          ...(user?.role === 'LANDLORD'
+            ? [
+                {
+                  name: 'Properties',
+                  href: '/dashboard/landlord/properties',
+                  icon: Building,
+                  isActive: pathname === '/dashboard/landlord/properties',
+                },
+              ]
+            : [
+                {
+                  name: 'Saved',
+                  href: '/dashboard/wishlist',
+                  icon: Heart,
+                  isActive: pathname === '/dashboard/wishlist',
+                },
+              ]
+          ),
+          {
+            name: 'Profile',
+            href: '/dashboard/profile',
+            icon: User,
+            isActive: pathname?.startsWith('/dashboard/profile'),
+          },
+        ]
     : [
         {
           name: 'Home',

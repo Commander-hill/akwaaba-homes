@@ -80,6 +80,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   );
 
   useEffect(() => {
+    if (session && (session.role === 'CARETAKER' || session.role === 'STAFF')) {
+      router.replace('/dashboard/caretaker');
+    }
+  }, [session, router]);
+
+  useEffect(() => {
     if (session?.phoneNumber && !viewingPhone) {
       setViewingPhone(session.phoneNumber);
     }
@@ -302,6 +308,15 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       setIsBooking(false);
     }
   };
+
+  if (session && (session.role === 'CARETAKER' || session.role === 'STAFF')) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-bold text-zinc-500">Redirecting to Caretaker Operations Hub...</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

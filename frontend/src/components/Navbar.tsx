@@ -53,21 +53,29 @@ export default function Navbar() {
 
   const isAuthenticated = !!userResponse?.user;
   const role = userResponse?.user?.role;
-  const dashboardHref = role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant';
+  const dashboardHref = role === 'LANDLORD' 
+    ? '/dashboard/landlord' 
+    : (role === 'CARETAKER' || role === 'STAFF')
+    ? '/dashboard/caretaker'
+    : '/dashboard/tenant';
 
   const isLandlord = role === 'LANDLORD' || pathname?.startsWith('/dashboard/landlord');
   const isStaff = role === 'CARETAKER' || role === 'STAFF' || pathname?.startsWith('/dashboard/caretaker');
 
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Browse Accommodations', href: '/properties' },
-    ...(isLandlord 
-      ? [{ name: 'My Properties', href: '/dashboard/landlord/properties' }]
-      : isStaff 
-        ? []
-        : [{ name: 'Roommate Matcher', href: '/dashboard/roommates' }]
-    ),
-  ];
+  const navLinks = isStaff
+    ? [
+        { name: 'Operations Hub', href: '/dashboard/caretaker' },
+        { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets' },
+        { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors' },
+      ]
+    : [
+        { name: 'Home', href: '/' },
+        { name: 'Browse Accommodations', href: '/properties' },
+        ...(isLandlord 
+          ? [{ name: 'My Properties', href: '/dashboard/landlord/properties' }]
+          : [{ name: 'Roommate Matcher', href: '/dashboard/roommates' }]
+        ),
+      ];
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all">
