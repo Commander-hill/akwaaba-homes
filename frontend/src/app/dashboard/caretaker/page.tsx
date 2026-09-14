@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Building, Wrench, Scale, BellRing, Package, Key, Users, 
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
   Phone, Mail, MapPin, ExternalLink, Clock, Check, X,
-  FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, Fuel, Activity, GraduationCap
+  FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, 
+  Fuel, Activity, ShieldCheck, MessageSquare, ChevronRight,
+  Eye, CheckCircle, Search, Filter, AlertCircle, Sparkles,
+  LayoutDashboard, ShieldAlert
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -18,28 +21,53 @@ import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { getImageUrl } from '@/lib/utils';
+
+// Main 4 Operational Domains
+type DomainTab = 'overview' | 'maintenance' | 'security' | 'facilities';
 
 function CaretakerDashboardContent() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get('tab') || 'overview';
+  const rawTabParam = searchParams.get('tab') || 'overview';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tickets' | 'inspections' | 'notices' | 'parcels' | 'visitors' | 'meters' | 'assets' | 'conduct'>(
-    (defaultTab as any) || 'overview'
+  // Map legacy/sidebar 9 tabs to the 4 streamlined domains
+  const initialDomain: DomainTab = useMemo(() => {
+    if (rawTabParam === 'tickets') return 'maintenance';
+    if (['visitors', 'parcels', 'conduct'].includes(rawTabParam)) return 'security';
+    if (['meters', 'assets', 'inspections', 'notices'].includes(rawTabParam)) return 'facilities';
+    return 'overview';
+  }, [rawTabParam]);
+
+  const [activeDomain, setActiveDomain] = useState<DomainTab>(initialDomain);
+  const [securitySubTab, setSecuritySubTab] = useState<'visitors' | 'parcels' | 'conduct'>(
+    ['visitors', 'parcels', 'conduct'].includes(rawTabParam) ? (rawTabParam as any) : 'visitors'
+  );
+  const [facilitiesSubTab, setFacilitiesSubTab] = useState<'meters' | 'assets' | 'inspections' | 'notices'>(
+    ['meters', 'assets', 'inspections', 'notices'].includes(rawTabParam) ? (rawTabParam as any) : 'meters'
   );
 
   // Sync tab with URL search parameter changes
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
-    if (tabFromUrl && ['overview', 'tickets', 'inspections', 'notices', 'parcels', 'visitors', 'meters', 'assets', 'conduct'].includes(tabFromUrl)) {
-      setActiveTab(tabFromUrl as any);
+    if (!tabFromUrl) return;
+
+    if (tabFromUrl === 'tickets') {
+      setActiveDomain('maintenance');
+    } else if (['visitors', 'parcels', 'conduct'].includes(tabFromUrl)) {
+      setActiveDomain('security');
+      setSecuritySubTab(tabFromUrl as any);
+    } else if (['meters', 'assets', 'inspections', 'notices'].includes(tabFromUrl)) {
+      setActiveDomain('facilities');
+      setFacilitiesSubTab(tabFromUrl as any);
+    } else if (tabFromUrl === 'overview') {
+      setActiveDomain('overview');
     }
   }, [searchParams]);
 
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [verifiedPhysicalCards, setVerifiedPhysicalCards] = useState<Record<string, boolean>>({});
 
   // Ticket Action Modal state
   const [ticketActionModal, setTicketActionModal] = useState<{
@@ -99,93 +127,77 @@ function CaretakerDashboardContent() {
     notes?: string;
   }>>(() => {
     if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('akwaaba_caretaker_meters');
-        if (saved) return JSON.parse(saved);
-      } catch (e) {}
+      const saved = localStorage.getItem('akwaaba_caretaker_meter_readings');
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
     }
     return [
       {
-        id: 'meter-1',
-        propertyId: 'prop-1',
-        propertyTitle: 'East Legon Residential Compound',
+        id: 'meter-init-1',
+        propertyId: 'mock-1',
+        propertyTitle: 'SSNIT Hostel',
         utilityType: 'ECG_ELECTRICITY',
-        unitNumber: 'Flat 101',
-        meterNumber: 'ECG-4519284902-8',
-        previousReading: 1420.5,
-        currentReading: 1585.0,
+        unitNumber: 'Block A - Main Sub-Meter',
+        meterNumber: 'ECG-7829-019',
+        previousReading: 14280,
+        currentReading: 14590,
         unitOfMeasure: 'kWh',
-        remainingCredit: 140.0,
-        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
+        remainingCredit: 245.50,
+        loggedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'NORMAL',
-        notes: 'Prepaid meter inspected, running steady.',
+        notes: 'Prepaid balance topped up with GH₵ 300 via ECG Mobile App.'
       },
       {
-        id: 'meter-2',
-        propertyId: 'prop-1',
-        propertyTitle: 'East Legon Residential Compound',
-        utilityType: 'GENERATOR_DIESEL',
-        unitNumber: 'Central Compound',
-        meterNumber: 'GEN-PERKINS-150KVA',
-        previousReading: 416.0,
-        currentReading: 428.5,
-        unitOfMeasure: 'Run Hours',
-        fuelLevelPct: 82,
-        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 18).toISOString(),
-        status: 'READY',
-        notes: 'Diesel topped up 120L, oil level checked.',
-      },
-      {
-        id: 'meter-3',
-        propertyId: 'prop-1',
-        propertyTitle: 'East Legon Residential Compound',
+        id: 'meter-init-2',
+        propertyId: 'mock-1',
+        propertyTitle: 'SSNIT Hostel',
         utilityType: 'GWCL_WATER',
-        unitNumber: 'Flat 204',
-        meterNumber: 'GWCL-ACC-88391',
-        previousReading: 84.2,
-        currentReading: 96.5,
-        unitOfMeasure: 'm³',
-        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        unitNumber: 'Reservoir Tank Polytank #1',
+        meterNumber: 'GWCL-WTR-5510',
+        previousReading: 890,
+        currentReading: 912,
+        unitOfMeasure: 'm³ (Cubic Meters)',
+        loggedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
         status: 'NORMAL',
-        notes: 'Water submeter verified, zero leakage detected.',
+        notes: 'Polytank filled to 95% from GWCL main line.'
       },
       {
-        id: 'meter-4',
-        propertyId: 'prop-1',
-        propertyTitle: 'East Legon Residential Compound',
+        id: 'meter-init-3',
+        propertyId: 'mock-1',
+        propertyTitle: 'SSNIT Hostel',
+        utilityType: 'GENERATOR_DIESEL',
+        unitNumber: 'Compound Standby Perkins 65kVA',
+        meterNumber: 'GEN-DIESEL-01',
+        previousReading: 120,
+        currentReading: 185,
+        unitOfMeasure: 'Liters / Fuel Tank %',
+        fuelLevelPct: 82,
+        loggedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'NORMAL',
+        notes: 'Filled with 100L diesel fuel before exam revision week.'
+      },
+      {
+        id: 'meter-init-4',
+        propertyId: 'mock-1',
+        propertyTitle: 'SSNIT Hostel',
         utilityType: 'ECG_ELECTRICITY',
-        unitNumber: 'Flat 302',
-        meterNumber: 'ECG-4519284903-6',
-        previousReading: 2110.0,
-        currentReading: 2340.0,
+        unitNumber: 'Block B - Executive Floor 2',
+        meterNumber: 'ECG-7829-020',
+        previousReading: 8200,
+        currentReading: 8295,
         unitOfMeasure: 'kWh',
-        remainingCredit: 28.5,
-        loggedAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+        remainingCredit: 45.00,
+        loggedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
         status: 'LOW_BALANCE',
-        notes: 'Low prepaid balance alert sent to resident.',
+        notes: 'Prepaid balance below GH₵ 50. Top-up recommended soon.'
       }
     ];
   });
 
-  const [utilityFilter, setUtilityFilter] = useState<'ALL' | 'ECG_ELECTRICITY' | 'GWCL_WATER' | 'GENERATOR_DIESEL'>('ALL');
-  const [meterModalOpen, setMeterModalOpen] = useState(false);
-  const [meterForm, setMeterForm] = useState({
-    propertyId: '',
-    utilityType: 'ECG_ELECTRICITY' as 'ECG_ELECTRICITY' | 'GWCL_WATER' | 'GENERATOR_DIESEL',
-    unitNumber: '',
-    meterNumber: '',
-    previousReading: '',
-    currentReading: '',
-    remainingCredit: '',
-    fuelLevelPct: '',
-    notes: '',
-  });
-
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('akwaaba_caretaker_meters', JSON.stringify(meterReadings));
-      } catch (e) {}
+      localStorage.setItem('akwaaba_caretaker_meter_readings', JSON.stringify(meterReadings));
     }
   }, [meterReadings]);
 
@@ -266,25 +278,25 @@ function CaretakerDashboardContent() {
   }, [assignedProperties.length]);
 
   // Aggregate operations across all assigned properties
-  const allTickets = assignedProperties.flatMap((p: any) => 
+  const allTickets = useMemo(() => assignedProperties.flatMap((p: any) => 
     (p.tickets || []).map((t: any) => ({ ...t, propertyTitle: p.title, propertyId: p.id }))
-  );
+  ), [assignedProperties]);
 
-  const allBookings = assignedProperties.flatMap((p: any) => 
+  const allBookings = useMemo(() => assignedProperties.flatMap((p: any) => 
     (p.bookings || []).map((b: any) => ({ ...b, propertyTitle: p.title, propertyId: p.id }))
-  );
+  ), [assignedProperties]);
 
-  const allNotices = assignedProperties.flatMap((p: any) => 
+  const allNotices = useMemo(() => assignedProperties.flatMap((p: any) => 
     (p.compoundNotices || p.notices || []).map((n: any) => ({ ...n, propertyTitle: p.title, propertyId: p.id }))
-  );
+  ), [assignedProperties]);
 
-  const allParcels = assignedProperties.flatMap((p: any) => 
+  const allParcels = useMemo(() => assignedProperties.flatMap((p: any) => 
     (p.packageDeliveries || p.deliveryParcels || []).map((d: any) => ({ ...d, propertyTitle: p.title, propertyId: p.id }))
-  );
+  ), [assignedProperties]);
 
-  const allVisitorPasses = assignedProperties.flatMap((p: any) => 
+  const allVisitorPasses = useMemo(() => assignedProperties.flatMap((p: any) => 
     (p.visitorPasses || []).map((v: any) => ({ ...v, propertyTitle: p.title, propertyId: p.id }))
-  );
+  ), [assignedProperties]);
 
   // Mutations
   const updateTicketMutation = useMutation({
@@ -294,7 +306,7 @@ function CaretakerDashboardContent() {
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Ticket updated successfully!');
+      toast.success('Work order updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
     },
     onError: (err: any) => {
@@ -302,51 +314,27 @@ function CaretakerDashboardContent() {
     }
   });
 
-  const checkInBookingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      const res = await api.patch(`/bookings/${bookingId}/status`, { status: 'CHECKED_IN' });
+  const createNoticeMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.post('/notices', payload);
       return res.data;
     },
     onSuccess: () => {
-      toast.success('Resident checked in! Room keys handed over & bed marked occupied.');
-      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to check in resident');
-    }
-  });
-
-  const createNoticeMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      try {
-        const res = await api.post('/compound-notices', payload);
-        return res.data;
-      } catch (e) {
-        const res = await api.post('/notices', payload);
-        return res.data;
-      }
-    },
-    onSuccess: () => {
-      toast.success('Compound notice published!');
+      toast.success('Compound notice broadcasted successfully!');
       setNoticeModalOpen(false);
       setNoticeTitle('');
       setNoticeMessage('');
       queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to publish notice');
+      toast.error(err.response?.data?.message || 'Failed to broadcast notice');
     }
   });
 
-  const logParcelMutation = useMutation({
+  const createParcelMutation = useMutation({
     mutationFn: async (payload: any) => {
-      try {
-        const res = await api.post('/deliveries', payload);
-        return res.data;
-      } catch (e) {
-        const res = await api.post('/parcels', payload);
-        return res.data;
-      }
+      const res = await api.post('/deliveries', payload);
+      return res.data;
     },
     onSuccess: () => {
       toast.success('Parcel logged and resident alerted with pickup OTP code.');
@@ -377,34 +365,6 @@ function CaretakerDashboardContent() {
     }
   });
 
-  const verifyPassMutation = useMutation({
-    mutationFn: async (accessCode: string) => {
-      const res = await api.post('/visitor-passes/verify', { accessCode });
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Visitor cleared for compound entry');
-      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to verify gate pass');
-    }
-  });
-
-  const checkoutPassMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await api.patch(`/visitor-passes/${id}/checkout`);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Visitor checked out and departed');
-      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to check out visitor');
-    }
-  });
-
   const handleCopyEmail = () => {
     if (userEmail) {
       navigator.clipboard.writeText(userEmail);
@@ -416,185 +376,351 @@ function CaretakerDashboardContent() {
     }
   };
 
-  const handleTabChange = (tabId: any) => {
-    setActiveTab(tabId);
-    router.push('/dashboard/caretaker?tab=' + tabId, { scroll: false });
+  const handleDomainChange = (domain: DomainTab) => {
+    setActiveDomain(domain);
+    let targetUrlParam: string = domain;
+    if (domain === 'maintenance') targetUrlParam = 'tickets';
+    if (domain === 'security') targetUrlParam = securitySubTab;
+    if (domain === 'facilities') targetUrlParam = facilitiesSubTab;
+    router.push('/dashboard/caretaker?tab=' + targetUrlParam, { scroll: false });
+  };
+
+  const handleSecuritySubTabChange = (tab: 'visitors' | 'parcels' | 'conduct') => {
+    setSecuritySubTab(tab);
+    router.push('/dashboard/caretaker?tab=' + tab, { scroll: false });
+  };
+
+  const handleFacilitiesSubTabChange = (tab: 'meters' | 'assets' | 'inspections' | 'notices') => {
+    setFacilitiesSubTab(tab);
+    router.push('/dashboard/caretaker?tab=' + tab, { scroll: false });
   };
 
   if (isAuthLoading || isStaffLoading) {
     return (
-      <div className="min-h-[500px] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-[var(--primary)]" />
+      <div className="min-h-[500px] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-9 h-9 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-bold text-zinc-400">Loading facility operations command...</p>
       </div>
     );
   }
 
-  return (
-    <div className="space-y-8 pb-16">
-      
-      {/* ── Header Welcome Banner ── */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-zinc-900 dark:bg-[#12151D] border border-zinc-800 text-white shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/10 border border-amber-400/20 rounded-full text-xs font-bold text-amber-400">
-            <Wrench className="w-3.5 h-3.5" /> Caretaker & Property Operations Hub
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            Welcome, {userName}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Manage daily residential property maintenance, tenant move-in inspections, utility submeter logging, parcel deliveries, and compound broadcast notices.
-          </p>
-        </div>
+  const pendingTicketsCount = allTickets.filter((t: any) => t.status !== 'RESOLVED').length;
+  const unclaimedParcelsCount = allParcels.filter((p: any) => p.status === 'ARRIVED').length;
+  const primaryProperty = assignedProperties[0] || null;
 
-        {/* Staff Email Badge with 1-Click Copy */}
-        <div className="bg-zinc-950/60 p-4 rounded-xl border border-zinc-800 space-y-2 shrink-0 w-full sm:w-auto">
-          <div className="text-[11px] font-extrabold uppercase text-slate-400">Your Registered Staff Email</div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs sm:text-sm font-bold text-white bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 break-all select-all">
-              {userEmail || 'Loading...'}
-            </span>
-            <button
-              onClick={handleCopyEmail}
-              className="p-2 bg-white/10 hover:bg-white/20 text-amber-300 rounded-xl transition border border-white/10 flex items-center gap-1 text-xs font-bold shrink-0 cursor-pointer active:scale-95"
-              title="Copy staff email for Landlord"
-            >
-              {copiedEmail ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            </button>
+  return (
+    <div className="space-y-6 pb-20 text-zinc-900 dark:text-white">
+      
+      {/* ── 1. EXECUTIVE OPERATIONS COMMAND HEADER ── */}
+      <div className="relative rounded-3xl bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 dark:from-[#0E1117] dark:via-[#12161F] dark:to-[#0B0D13] border border-zinc-800 text-white p-6 sm:p-7 shadow-xl overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-0 right-1/4 w-96 h-32 bg-[#0F5132]/25 blur-3xl pointer-events-none -z-0" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            {/* Live Operational Status Chip */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <span>Live Facility Monitor • On-Duty</span>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-800/80 border border-zinc-700/60 text-zinc-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#D97706]" />
+                <span>Ghana Rent Act (Act 220) Compliant</span>
+              </div>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+              <span>Facility Operations Command</span>
+            </h1>
+
+            <p className="text-xs sm:text-[13px] text-zinc-400 leading-relaxed">
+              On-site operations for {userName}. Oversee maintenance tickets, gatehouse vehicle & visitor access, utility sub-meters, and room asset inventories.
+            </p>
           </div>
-          <p className="text-[10px] text-slate-400">Share this email with landlords to be assigned to their properties.</p>
+
+          {/* Staff ID & Quick Primary Triggers */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-3 shrink-0">
+            {/* Staff Email Identity Chip */}
+            <div className="inline-flex items-center gap-2 bg-zinc-950/70 border border-zinc-800/80 px-3.5 py-1.5 rounded-xl text-xs backdrop-blur-md">
+              <div className="text-[10px] font-extrabold uppercase text-zinc-400">Staff ID:</div>
+              <span className="font-mono font-bold text-emerald-300 select-all">{userEmail}</span>
+              <button
+                onClick={handleCopyEmail}
+                className="p-1 hover:bg-zinc-800 rounded-md text-zinc-400 hover:text-emerald-300 transition cursor-pointer"
+                title="Copy staff email for Landlord assignment"
+              >
+                {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+
+            {/* Quick Action Ribbon */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => {
+                  setActiveDomain('security');
+                  setSecuritySubTab('visitors');
+                }}
+                className="px-3 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-750 text-white font-bold text-xs border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <Key className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Gate Pass</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setParcelPropertyId(primaryProperty?.id || '');
+                  setParcelModalOpen(true);
+                }}
+                className="px-3 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-750 text-white font-bold text-xs border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+              >
+                <Package className="w-3.5 h-3.5 text-purple-400" />
+                <span>Log Parcel</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setNoticePropertyId(primaryProperty?.id || '');
+                  setNoticeModalOpen(true);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0F5132] to-[#15803D] hover:from-[#0A3D24] hover:to-[#0F5132] text-white font-black text-xs border border-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-950/40 active:scale-95"
+              >
+                <BellRing className="w-3.5 h-3.5 text-white" />
+                <span>Broadcast Notice</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── KPI Metric Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* ── 2. 4-CARD KPI COMMAND GRID ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        {/* Metric 1: Assigned Compounds */}
         <div 
-          onClick={() => handleTabChange('overview')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-indigo-500/50 transition"
+          onClick={() => handleDomainChange('overview')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:shadow-md hover:border-emerald-500/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Properties</span>
-            <Building className="w-4 h-4 text-indigo-500" />
+          <div className="flex items-center justify-between text-zinc-500 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Assigned Facility</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Building className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">{assignedProperties.length}</div>
-          <div className="text-[11px] text-slate-500">Assigned compounds</div>
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+            {assignedProperties.length}
+          </div>
+          <div className="text-[11px] font-semibold text-zinc-500 mt-1 flex items-center gap-1">
+            <span className="truncate">{primaryProperty ? primaryProperty.title : 'None Assigned'}</span>
+          </div>
         </div>
 
+        {/* Metric 2: Open Work Orders */}
         <div 
-          onClick={() => handleTabChange('tickets')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-amber-500/50 transition"
+          onClick={() => handleDomainChange('maintenance')}
+          className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:shadow-md hover:border-amber-500/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Open Tickets</span>
-            <Wrench className="w-4 h-4 text-amber-500" />
+          <div className="flex items-center justify-between text-zinc-500 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Work Orders</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Wrench className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
-            {allTickets.filter((t: any) => t.status !== 'RESOLVED').length}
+          <div className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
+            {pendingTicketsCount}
           </div>
-          <div className="text-[11px] text-slate-500">Needing repair action</div>
+          <div className="text-[11px] font-semibold text-zinc-500 mt-1 flex items-center gap-1.5">
+            {pendingTicketsCount === 0 ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> All Repairs Cleared
+              </span>
+            ) : (
+              <span className="text-amber-600 dark:text-amber-400 font-bold">Action Required</span>
+            )}
+          </div>
         </div>
 
+        {/* Metric 3: Gatehouse & Access */}
         <div 
-          onClick={() => handleTabChange('inspections')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-emerald-500/50 transition"
+          onClick={() => {
+            handleDomainChange('security');
+            setSecuritySubTab('visitors');
+          }}
+          className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:shadow-md hover:border-blue-500/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Inspections</span>
-            <ClipboardCheck className="w-4 h-4 text-emerald-500" />
+          <div className="flex items-center justify-between text-zinc-500 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Gatehouse Access</span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Key className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{allBookings.length}</div>
-          <div className="text-[11px] text-slate-500">Resident check-ins</div>
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+            {allVisitorPasses.length}
+          </div>
+          <div className="text-[11px] font-semibold text-zinc-500 mt-1 flex items-center gap-1.5">
+            <span>Passes &amp; Check-Ins</span>
+            {unclaimedParcelsCount > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 text-[9px] font-extrabold">
+                {unclaimedParcelsCount} parcels
+              </span>
+            )}
+          </div>
         </div>
 
+        {/* Metric 4: Monitored Sub-Meters */}
         <div 
-          onClick={() => handleTabChange('notices')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-sky-500/50 transition"
+          onClick={() => {
+            handleDomainChange('facilities');
+            setFacilitiesSubTab('meters');
+          }}
+          className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800/90 shadow-xs hover:shadow-md hover:border-emerald-500/40 transition-all cursor-pointer group"
         >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Notices</span>
-            <BellRing className="w-4 h-4 text-sky-500" />
+          <div className="flex items-center justify-between text-zinc-500 mb-2">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Sub-Meters Logged</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Gauge className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-black text-sky-600 dark:text-sky-400">{allNotices.length}</div>
-          <div className="text-[11px] text-slate-500">Broadcast bulletins</div>
-        </div>
-
-        <div 
-          onClick={() => handleTabChange('parcels')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-purple-500/50 transition"
-        >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Parcels</span>
-            <Package className="w-4 h-4 text-purple-500" />
-          </div>
-          <div className="text-2xl font-black text-purple-600 dark:text-purple-400">
-            {allParcels.filter((p: any) => p.status === 'ARRIVED').length}
-          </div>
-          <div className="text-[11px] text-slate-500">Unclaimed deliveries</div>
-        </div>
-
-        <div 
-          onClick={() => handleTabChange('meters')}
-          className="p-5 rounded-2xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-1 cursor-pointer hover:border-emerald-500/50 transition"
-        >
-          <div className="flex items-center justify-between text-slate-500">
-            <span className="text-xs font-bold uppercase">Meters</span>
-            <Gauge className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-          </div>
-          <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
             {meterReadings.length}
           </div>
-          <div className="text-[11px] text-slate-500">ECG &amp; submeters</div>
+          <div className="text-[11px] font-semibold text-zinc-500 mt-1">
+            ECG Power, GWCL &amp; Gen
+          </div>
         </div>
       </div>
 
-      {/* ── Navigation Tabs ── */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-3">
-        {[
-          { id: 'overview', label: 'Operations Overview', icon: Building },
-          { id: 'tickets', label: 'Maintenance Requests (' + allTickets.filter((t: any) => t.status !== 'RESOLVED').length + ')', icon: Wrench },
-          { id: 'visitors', label: 'Gatehouse & Access Logbook (' + allVisitorPasses.length + ')', icon: Key },
-          { id: 'assets', label: 'Unit Fixtures & Inventory', icon: ClipboardCheck },
-          { id: 'meters', label: 'Utility Sub-Meters (' + meterReadings.length + ')', icon: Gauge },
-          { id: 'conduct', label: 'Conduct & Incident Logbook', icon: Scale },
-          { id: 'inspections', label: 'Move-In Inspections (' + allBookings.length + ')', icon: FileText },
-          { id: 'parcels', label: 'Package Deliveries (' + allParcels.length + ')', icon: Package },
-          { id: 'notices', label: 'Compound Notices (' + allNotices.length + ')', icon: BellRing },
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabChange(tab.id as any)}
-              className={clsx(
-                "px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer",
-                isActive 
-                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md" 
-                  : "bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800"
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* ── 3. STREAMLINED 4-DOMAIN SEGMENTED NAVIGATION ── */}
+      <div className="space-y-3">
+        <div className="bg-zinc-100 dark:bg-[#12151D] p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          {[
+            { id: 'overview', label: 'Command Overview', icon: LayoutDashboard },
+            { 
+              id: 'maintenance', 
+              label: 'Work Orders & Repairs', 
+              icon: Wrench,
+              badge: pendingTicketsCount > 0 ? pendingTicketsCount : undefined,
+              badgeColor: 'bg-amber-500 text-zinc-950'
+            },
+            { 
+              id: 'security', 
+              label: 'Gatehouse & Access', 
+              icon: Key,
+              badge: unclaimedParcelsCount > 0 ? unclaimedParcelsCount : undefined,
+              badgeColor: 'bg-purple-500 text-white'
+            },
+            { 
+              id: 'facilities', 
+              label: 'Utilities & Inventories', 
+              icon: Gauge,
+              badge: meterReadings.length > 0 ? meterReadings.length : undefined,
+              badgeColor: 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200'
+            },
+          ].map((domain) => {
+            const Icon = domain.icon;
+            const isActive = activeDomain === domain.id;
+            return (
+              <button
+                key={domain.id}
+                onClick={() => handleDomainChange(domain.id as any)}
+                className={clsx(
+                  "flex-1 min-w-[170px] py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer select-none",
+                  isActive 
+                    ? "bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-sm border border-zinc-200/80 dark:border-zinc-700" 
+                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-zinc-850"
+                )}
+              >
+                <Icon className={clsx("w-4 h-4 shrink-0", isActive ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
+                <span className="truncate">{domain.label}</span>
+                {domain.badge !== undefined && domain.badge > 0 && (
+                  <span className={clsx("px-1.5 py-0.2 rounded-full text-[10px] font-black shrink-0", domain.badgeColor)}>
+                    {domain.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Secondary Sub-Tab Bar for Security Domain */}
+        {activeDomain === 'security' && (
+          <div className="flex items-center gap-2 pl-1 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+            {[
+              { id: 'visitors', label: `Gatehouse Logbook (${allVisitorPasses.length})`, icon: Key },
+              { id: 'parcels', label: `Package Deliveries (${allParcels.length})`, icon: Package },
+              { id: 'conduct', label: 'Hostel Conduct & Disciplinary', icon: Scale },
+            ].map((sub) => {
+              const Icon = sub.icon;
+              const isSubActive = securitySubTab === sub.id;
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => handleSecuritySubTabChange(sub.id as any)}
+                  className={clsx(
+                    "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer",
+                    isSubActive 
+                      ? "bg-[#0F5132] text-white shadow-xs" 
+                      : "bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{sub.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Secondary Sub-Tab Bar for Facilities Domain */}
+        {activeDomain === 'facilities' && (
+          <div className="flex items-center gap-2 pl-1 border-b border-zinc-200 dark:border-zinc-800 pb-2 overflow-x-auto scrollbar-none">
+            {[
+              { id: 'meters', label: `Utility Sub-Meters (${meterReadings.length})`, icon: Gauge },
+              { id: 'assets', label: 'Room Fixtures & Asset Inventory', icon: ClipboardCheck },
+              { id: 'inspections', label: `Move-In Inspections (${allBookings.length})`, icon: FileText },
+              { id: 'notices', label: `Compound Notices (${allNotices.length})`, icon: BellRing },
+            ].map((sub) => {
+              const Icon = sub.icon;
+              const isSubActive = facilitiesSubTab === sub.id;
+              return (
+                <button
+                  key={sub.id}
+                  onClick={() => handleFacilitiesSubTabChange(sub.id as any)}
+                  className={clsx(
+                    "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0",
+                    isSubActive 
+                      ? "bg-[#0F5132] text-white shadow-xs" 
+                      : "bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{sub.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* ── TAB: OVERVIEW & ASSIGNED PROPERTIES ── */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
+      {/* ── 4. DOMAIN 1: COMMAND OVERVIEW ── */}
+      {activeDomain === 'overview' && (
+        <div className="space-y-6 animate-in">
           {assignedProperties.length === 0 ? (
-            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-4 shadow-sm">
+            <div className="p-8 sm:p-12 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 text-center space-y-4 shadow-xs">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
                 <Building className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white">Awaiting Property Assignment</h3>
-              <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-                Your caretaker account is ready! Please share your registered email (<strong>{userEmail || 'israelboateng5@outlook.com'}</strong>) with your Landlord or Property Manager so they can assign you to their property in their <strong>Staff & Caretakers</strong> tab.
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white">Awaiting Property Assignment</h3>
+              <p className="text-xs sm:text-sm text-zinc-500 max-w-md mx-auto leading-relaxed">
+                Your caretaker account is active! Please share your staff email (<strong>{userEmail}</strong>) with your Landlord or Property Manager so they can delegate property management privileges to you.
               </p>
               <div className="pt-2">
                 <button
                   onClick={handleCopyEmail}
-                  className="px-6 py-3 bg-[var(--primary)] text-white font-bold rounded-2xl text-xs sm:text-sm inline-flex items-center gap-2 shadow-lg shadow-[var(--primary)]/30 hover:opacity-95 transition cursor-pointer"
+                  className="px-5 py-2.5 bg-[#0F5132] text-white font-bold rounded-xl text-xs inline-flex items-center gap-2 shadow-md shadow-emerald-950/20 hover:bg-[#0A3D24] transition cursor-pointer"
                 >
                   {copiedEmail ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                   <span>{copiedEmail ? 'Email Copied!' : 'Copy Staff Email for Landlord'}</span>
@@ -603,1283 +729,862 @@ function CaretakerDashboardContent() {
             </div>
           ) : (
             <div className="space-y-6">
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">Your Assigned Properties</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {assignments.map((assignment: any) => {
-                  const prop = assignment.property;
-                  if (!prop) return null;
-                  return (
-                    <div key={assignment.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="px-2.5 py-0.5 bg-blue-500/10 text-blue-600 text-[10px] font-bold rounded-full uppercase">
-                            {assignment.role.replace('_', ' ')}
-                          </span>
-                          <h3 className="font-extrabold text-base text-slate-900 dark:text-white mt-1">{prop.title}</h3>
-                          <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-3.5 h-3.5" /> {prop.location || 'Accra, Ghana'}
-                          </p>
+              {/* Rich Assigned Facility Showcase Card */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-base sm:text-lg font-black text-zinc-950 dark:text-white tracking-tight">
+                    Your Assigned Facility
+                  </h2>
+                  <span className="text-xs font-bold text-zinc-400">
+                    {assignedProperties.length} {assignedProperties.length === 1 ? 'Compound' : 'Compounds'} Under On-Site Management
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {assignments.map((assignment: any) => {
+                    const prop = assignment.property;
+                    if (!prop) return null;
+
+                    const parsedImages = Array.isArray(prop.images) ? prop.images : (prop.images ? JSON.parse(prop.images) : []);
+                    const coverPhoto = parsedImages?.[0] ? getImageUrl(parsedImages[0]) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80';
+
+                    const totalBeds = prop.totalCapacity || 360;
+                    const remainingBeds = prop.remainingCapacity !== undefined ? prop.remainingCapacity : totalBeds;
+                    const occupiedBeds = Math.max(0, totalBeds - remainingBeds);
+                    const occupancyPct = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+
+                    return (
+                      <div 
+                        key={assignment.id} 
+                        className="rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs overflow-hidden"
+                      >
+                        <div className="grid grid-cols-1 lg:grid-cols-12">
+                          {/* Image & Facility Badge */}
+                          <div className="lg:col-span-4 relative min-h-[220px] bg-zinc-900 overflow-hidden">
+                            <img
+                              src={coverPhoto}
+                              alt={prop.title}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                            
+                            <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                              <span className="px-3 py-1 rounded-full bg-[#0F5132] text-white text-[10px] font-black uppercase tracking-wider shadow-md">
+                                {assignment.role.replace('_', ' ')}
+                              </span>
+                              <span className="px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-emerald-300 text-[10px] font-bold border border-emerald-500/30">
+                                {prop.type || 'Student Hostel'}
+                              </span>
+                            </div>
+
+                            <div className="absolute bottom-4 left-4 right-4 text-white">
+                              <h3 className="text-xl font-black tracking-tight">{prop.title}</h3>
+                              <p className="text-xs text-zinc-300 flex items-center gap-1.5 mt-0.5">
+                                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <span>{prop.location || 'Koforidua, Ghana'}</span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Facility Operational Details */}
+                          <div className="lg:col-span-8 p-6 sm:p-7 flex flex-col justify-between space-y-5">
+                            <div className="space-y-4">
+                              {/* Top Bar: Landlord Info & Contact */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-850/60 border border-zinc-200/80 dark:border-zinc-800">
+                                <div className="space-y-0.5">
+                                  <div className="text-[10px] font-extrabold uppercase text-zinc-400">
+                                    Facility Landlord / Host
+                                  </div>
+                                  <div className="text-xs sm:text-sm font-black text-zinc-900 dark:text-white flex items-center gap-1.5">
+                                    <span>{prop.landlord?.firstName} {prop.landlord?.lastName}</span>
+                                    <span className="inline-flex items-center text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                      ✓ Verified Host
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  {prop.landlord?.phoneNumber && (
+                                    <a
+                                      href={`tel:${prop.landlord.phoneNumber}`}
+                                      className="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 transition-colors flex items-center gap-1.5 shadow-xs"
+                                    >
+                                      <Phone className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                                      <span>{prop.landlord.phoneNumber}</span>
+                                    </a>
+                                  )}
+                                  <Link
+                                    href="/dashboard/messages"
+                                    className="px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                    <span>Message</span>
+                                  </Link>
+                                </div>
+                              </div>
+
+                              {/* Live Occupancy Metric Bar */}
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="font-bold text-zinc-700 dark:text-zinc-300">
+                                    Bed Occupancy &amp; Inventory
+                                  </span>
+                                  <span className="font-mono font-bold text-zinc-900 dark:text-white">
+                                    {occupiedBeds} occupied / {totalBeds} total ({remainingBeds} vacant)
+                                  </span>
+                                </div>
+                                <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-[#0F5132] to-[#15803D] rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.min(100, Math.max(occupancyPct, 2))}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Authorized Caretaker Permissions */}
+                              <div className="space-y-1.5">
+                                <div className="text-[10px] font-extrabold uppercase text-zinc-400">
+                                  Delegated On-Site Authorities
+                                </div>
+                                <div className="flex flex-wrap gap-2 text-[11px] font-bold">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Work Order Management
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60">
+                                    <CheckCircle2 className="w-3 h-3 text-indigo-600" /> Move-In Room Check-Ins
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60">
+                                    <CheckCircle2 className="w-3 h-3 text-blue-600" /> Gatehouse Access Logbook
+                                  </span>
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60">
+                                    <CheckCircle2 className="w-3 h-3 text-purple-600" /> Package Deliveries
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Operational Shortcut Buttons */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+                              <div className="text-xs text-zinc-500 font-medium">
+                                Fast Operations:
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleDomainChange('maintenance')}
+                                  className="px-3.5 py-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl transition cursor-pointer"
+                                >
+                                  Work Orders ({pendingTicketsCount})
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    handleDomainChange('security');
+                                    setSecuritySubTab('visitors');
+                                  }}
+                                  className="px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <Key className="w-3.5 h-3.5" />
+                                  <span>Gate Logbook</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-                      {/* Landlord Contact Info */}
-                      <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-2xl border border-slate-100 dark:border-slate-800/60 space-y-1 text-xs text-slate-600 dark:text-slate-400">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">
-                          Property Owner: {prop.landlord?.firstName} {prop.landlord?.lastName}
-                        </div>
-                        {prop.landlord?.phoneNumber && (
-                          <div className="flex items-center gap-1.5">
-                            <Phone className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{prop.landlord.phoneNumber}</span>
-                          </div>
-                        )}
-                        {prop.landlord?.email && (
-                          <div className="flex items-center gap-1.5">
-                            <Mail className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{prop.landlord.email}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Authorized Permissions Badges */}
-                      <div className="flex flex-wrap gap-1.5 text-[10px] font-bold">
-                        {assignment.canManageTickets && (
-                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-600 rounded-lg">✓ Maintenance Tickets</span>
-                        )}
-                        {assignment.canCheckInTenants && (
-                          <span className="px-2 py-0.5 bg-indigo-500/10 text-indigo-600 rounded-lg">✓ Move-In Inspections</span>
-                        )}
-                        {assignment.canPostNotices && (
-                          <span className="px-2 py-0.5 bg-sky-500/10 text-sky-600 rounded-lg">✓ Compound Notices</span>
-                        )}
-                      </div>
+              {/* Two-Column Urgent Operational Action Queue */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* Column 1: Pending Maintenance Queue */}
+                <div className="rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <Wrench className="w-4 h-4 text-amber-500" />
+                      <h3 className="text-sm font-black text-zinc-950 dark:text-white uppercase tracking-wider">
+                        Pending Repair Work Orders
+                      </h3>
                     </div>
-                  );
-                })}
+                    <button
+                      onClick={() => handleDomainChange('maintenance')}
+                      className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>View All</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {allTickets.filter((t: any) => t.status !== 'RESOLVED').length === 0 ? (
+                    <div className="py-8 text-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center mx-auto">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">All Work Orders Cleared</p>
+                      <p className="text-[11px] text-zinc-400">No active maintenance complaints reported by residents.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {allTickets.filter((t: any) => t.status !== 'RESOLVED').slice(0, 3).map((t: any) => (
+                        <div key={t.id} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-850/60 border border-zinc-200/80 dark:border-zinc-800 flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
+                              {t.priority || 'NORMAL'}
+                            </span>
+                            <h4 className="text-xs font-bold text-zinc-900 dark:text-white leading-snug">{t.title}</h4>
+                            <p className="text-[11px] text-zinc-500 line-clamp-1">{t.description}</p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setTicketActionModal({
+                                isOpen: true,
+                                ticketId: t.id,
+                                ticketTitle: t.title,
+                                mode: 'RESOLVE',
+                                scheduledDate: new Date().toISOString().split('T')[0],
+                                repairCost: t.cost ? String(t.cost) : '0',
+                                resolutionNotes: t.resolutionNotes || 'Repair verified on-site.',
+                                completionImageUrl: '',
+                              });
+                            }}
+                            className="px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-[11px] font-bold rounded-xl shrink-0 cursor-pointer shadow-xs"
+                          >
+                            Resolve
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Column 2: Unclaimed Courier Parcels */}
+                <div className="rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-6 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4 text-purple-500" />
+                      <h3 className="text-sm font-black text-zinc-950 dark:text-white uppercase tracking-wider">
+                        Package Intake &amp; Deliveries
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleDomainChange('security');
+                        setSecuritySubTab('parcels');
+                      }}
+                      className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>View Shelf</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {allParcels.filter((p: any) => p.status === 'ARRIVED').length === 0 ? (
+                    <div className="py-8 text-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 flex items-center justify-center mx-auto">
+                        <Package className="w-5 h-5" />
+                      </div>
+                      <p className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Front Desk Shelf Clear</p>
+                      <p className="text-[11px] text-zinc-400">All resident courier deliveries collected.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {allParcels.filter((p: any) => p.status === 'ARRIVED').slice(0, 3).map((p: any) => (
+                        <div key={p.id} className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-850/60 border border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between gap-3">
+                          <div className="space-y-0.5">
+                            <span className="font-bold text-xs text-zinc-900 dark:text-white block">
+                              {p.carrier || 'Courier Delivery'} • #{p.trackingNumber || 'PARCEL'}
+                            </span>
+                            <span className="text-[11px] text-zinc-500 block">
+                              Location: {p.location || 'Shelf A'}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setCollectParcel(p);
+                              setCollectModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold rounded-xl shrink-0 cursor-pointer shadow-xs"
+                          >
+                            Verify OTP
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* ── TAB: MAINTENANCE TICKETS ── */}
-      {activeTab === 'tickets' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Maintenance Tickets</h2>
+      {/* ── 5. DOMAIN 2: MAINTENANCE WORK ORDERS & REPAIRS ── */}
+      {activeDomain === 'maintenance' && (
+        <div className="space-y-4 animate-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+            <div>
+              <h2 className="text-lg font-black text-zinc-950 dark:text-white tracking-tight">
+                Maintenance Work Orders
+              </h2>
+              <p className="text-xs text-zinc-500">
+                Track, schedule, and resolve facility maintenance requests reported by residents.
+              </p>
+            </div>
+            <div className="text-xs font-bold text-zinc-500">
+              Total Work Orders: <span className="font-mono text-zinc-900 dark:text-white font-bold">{allTickets.length}</span>
+            </div>
           </div>
 
           {allTickets.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
-                <Wrench className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Maintenance Requests Reported</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {assignedProperties.length === 0 
-                  ? 'Once your landlord assigns you to their property, all tenant maintenance requests will appear here for you to schedule and resolve.'
-                  : 'All quiet! There are currently no pending or active repair requests from tenants on your assigned properties.'
-                }
+            <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+              <Wrench className="w-10 h-10 text-zinc-300 mx-auto" />
+              <h3 className="text-base font-bold text-zinc-900 dark:text-white">No Maintenance Requests Found</h3>
+              <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                No resident maintenance complaints have been submitted for your assigned facilities.
               </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allTickets.map((t: any) => (
-                <div key={t.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className={clsx(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                        t.status === 'RESOLVED' ? "bg-emerald-500/10 text-emerald-600" :
-                        t.status === 'IN_PROGRESS' ? "bg-blue-500/10 text-blue-600" :
-                        t.status === 'SCHEDULED' ? "bg-indigo-500/10 text-indigo-600" :
-                        "bg-amber-500/10 text-amber-600"
-                      )}>
-                        {t.status}
-                      </span>
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1.5">{t.title}</h3>
-                      <p className="text-xs text-slate-500">{t.propertyTitle} • Room {t.room?.roomNumber || 'Unit'}</p>
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-400">{t.priority} PRIORITY</span>
-                  </div>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl">
-                    {t.description}
-                  </p>
-
-                  {/* Action Buttons for Caretaker */}
-                  <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    {t.status === 'PENDING' && (
-                      <button
-                        onClick={() => {
-                          setTicketActionModal({
-                            isOpen: true,
-                            ticketId: t.id,
-                            ticketTitle: t.title,
-                            mode: 'SCHEDULE',
-                            scheduledDate: new Date().toISOString().split('T')[0],
-                            repairCost: '0',
-                            resolutionNotes: '',
-                            completionImageUrl: '',
-                          });
-                        }}
-                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
-                      >
-                        Schedule Repair
-                      </button>
-                    )}
-
-                    {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
-                      <button
-                        onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
-                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
-                      >
-                        Start Repair
-                      </button>
-                    )}
-
-                    {t.status !== 'RESOLVED' && (
-                      <button
-                        onClick={() => {
-                          setTicketActionModal({
-                            isOpen: true,
-                            ticketId: t.id,
-                            ticketTitle: t.title,
-                            mode: 'RESOLVE',
-                            scheduledDate: new Date().toISOString().split('T')[0],
-                            repairCost: '0',
-                            resolutionNotes: 'Repair completed successfully by caretaker.',
-                            completionImageUrl: '',
-                          });
-                        }}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-md shadow-emerald-500/20 cursor-pointer"
-                      >
-                        Complete & Resolve
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB: MOVE-IN / MOVE-OUT INSPECTIONS ── */}
-      {activeTab === 'inspections' && (
-        <div className="space-y-6">
-          <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Move-In & Move-Out Inspections</h2>
-          
-          {allBookings.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto">
-                <ClipboardCheck className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Pending Inspections</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Confirmed student and tenant bookings will appear here for you to conduct digital room condition checklists upon move-in and key return.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allBookings.map((b: any) => (
-                <div key={b.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="px-2.5 py-0.5 bg-emerald-500/10 text-emerald-600 text-[10px] font-bold rounded-full">
-                        {b.status}
-                      </span>
-                      <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1">
-                        {b.tenant?.firstName} {b.tenant?.lastName}
-                      </h3>
-                      <p className="text-xs text-slate-500">{b.propertyTitle} • Room {b.room?.roomNumber || 'Unit'}</p>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
-                    <div>Dates: {new Date(b.startDate).toLocaleDateString()} - {new Date(b.endDate).toLocaleDateString()}</div>
-                    <div>Phone: {b.tenant?.phoneNumber || 'N/A'}</div>
-                  </div>
-
-                  {/* Student Matriculation & Physical ID Cross-Check */}
-                  {(b.tenant?.studentId || b.tenant?.campus) && (
-                    <div className="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-200">
-                          <GraduationCap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                          <span>Resident Gate Pass Cross-Check</span>
-                        </div>
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                          {b.tenant?.studentId ? 'Verified Student' : 'Verified Resident'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-400 block">{b.tenant?.studentId ? 'Campus' : 'Location'}</span>
-                          <span className="font-semibold">{b.tenant?.campus || 'Greater Accra'}</span>
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase font-bold text-slate-400 block">{b.tenant?.studentId ? 'Official Student ID' : 'Resident ID'}</span>
-                          <span className="font-mono font-bold text-slate-900 dark:text-white">{b.tenant?.studentId || b.tenant?.ghanaCardNumber || 'On-file'}</span>
-                        </div>
-                        {b.tenant?.programmeOfStudy && (
-                          <div className="col-span-2">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Programme / Occupation</span>
-                            <span className="font-medium">{b.tenant?.programmeOfStudy}</span>
-                          </div>
-                        )}
-                        {b.tenant?.guardianName && (
-                          <div className="col-span-2">
-                            <span className="text-[9px] uppercase font-bold text-slate-400 block">Emergency Contact</span>
-                            <span className="font-medium">{b.tenant?.guardianName} ({b.tenant?.guardianPhone || 'N/A'})</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-1.5 border-t border-amber-500/10 flex items-center justify-between">
-                        <label className="flex items-center gap-2 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(verifiedPhysicalCards[b.id])}
-                            onChange={(e) => {
-                              setVerifiedPhysicalCards(prev => ({
-                                ...prev,
-                                [b.id]: e.target.checked
-                              }));
-                              if (e.target.checked) {
-                                toast.success(`Physical ID verified for ${b.tenant?.firstName}. Room keys authorized.`);
-                              }
-                            }}
-                            className="w-4 h-4 rounded text-[#0F5132] accent-[#0F5132] cursor-pointer"
-                          />
-                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                            {verifiedPhysicalCards[b.id]
-                              ? 'Physical ID Cross-Checked (Keys Authorized)'
-                              : 'Physical ID Cross-Checked'}
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2">
-                    {b.status !== 'CHECKED_IN' && (
-                      <button
-                        onClick={() => checkInBookingMutation.mutate(b.id)}
-                        disabled={checkInBookingMutation.isPending}
-                        className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
-                      >
-                        <CheckCircle2 className="w-4 h-4" /> Check-In Resident &amp; Keys
-                      </button>
-                    )}
-                    {b.status === 'CHECKED_IN' && (
-                      <div className="flex-1 py-2 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" /> Checked-In
-                      </div>
-                    )}
-                    <button
-                      onClick={() => setSelectedInspectionBooking(b)}
-                      className="py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition shadow-sm cursor-pointer shrink-0"
-                    >
-                      <ClipboardCheck className="w-4 h-4" /> Inspect Room
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB: COMPOUND NOTICES ── */}
-      {activeTab === 'notices' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Compound Broadcast Bulletins</h2>
-            {assignedProperties.length > 0 && (
-              <button
-                onClick={() => {
-                  setNoticePropertyId(assignedProperties[0]?.id || '');
-                  setNoticeModalOpen(true);
-                }}
-                className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4" /> Post New Notice
-              </button>
-            )}
-          </div>
-
-          {allNotices.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center mx-auto">
-                <BellRing className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Compound Notices Published</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {assignedProperties.length === 0
-                  ? 'Once linked to a property, you can broadcast water/power outage alerts, generator timings, and rules to all residents.'
-                  : 'No notices posted yet. Click "Post New Notice" to broadcast updates to tenants.'
-                }
-              </p>
-              {assignedProperties.length > 0 && (
-                <button
-                  onClick={() => {
-                    setNoticePropertyId(assignedProperties[0]?.id || '');
-                    setNoticeModalOpen(true);
-                  }}
-                  className="px-5 py-2.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Post First Notice
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {allNotices.map((n: any) => (
-                <div key={n.id} className="p-6 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-3">
-                  <div className="flex justify-between items-start">
-                    <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full uppercase">
-                      {n.category} • {n.priority}
-                    </span>
-                    <span className="text-[10px] text-slate-400">{new Date(n.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <h3 className="font-bold text-base text-slate-900 dark:text-white">{n.title}</h3>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-                    {n.message}
-                  </p>
-                  <div className="text-[11px] text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    Property: {n.propertyTitle}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB: PACKAGE DELIVERIES ── */}
-      {activeTab === 'parcels' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-black text-slate-900 dark:text-white">Resident Package Deliveries</h2>
-            {assignedProperties.length > 0 && (
-              <button
-                onClick={() => {
-                  setParcelPropertyId(assignedProperties[0]?.id || '');
-                  setParcelModalOpen(true);
-                }}
-                className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <Plus className="w-4 h-4" /> Log Incoming Parcel
-              </button>
-            )}
-          </div>
-
-          {allParcels.length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mx-auto">
-                <Package className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Active Deliveries</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Log incoming courier deliveries (DHL, FedEx, Ghana Post) for front desk collection. Tenants receive instant alerts.
-              </p>
-              {assignedProperties.length > 0 && (
-                <button
-                  onClick={() => {
-                    setParcelPropertyId(assignedProperties[0]?.id || '');
-                    setParcelModalOpen(true);
-                  }}
-                  className="px-5 py-2.5 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> Log Incoming Package
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {allParcels.map((p: any) => (
-                <div key={p.id} className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="px-2 py-0.5 bg-purple-500/10 text-purple-600 text-[10px] font-bold rounded-full">
-                      {p.courierName || p.carrier || 'Courier'}
-                    </span>
-                    <span className={clsx("text-[10px] font-bold", p.status === 'PENDING_PICKUP' ? "text-amber-500" : "text-emerald-500")}>
-                      {p.status === 'PENDING_PICKUP' ? 'READY FOR PICKUP' : p.status}
-                    </span>
-                  </div>
-                  <div className="font-bold text-sm text-slate-900 dark:text-white">
-                    {p.packageDescription || p.lockerNumber || 'Front Desk / Shelf'}
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
-                    Recipient: {p.tenant ? `${p.tenant.firstName} ${p.tenant.lastName}` : 'Resident'}
-                  </div>
-                  <div className="text-xs text-slate-500">Tracking: {p.trackingNumber || 'N/A'}</div>
-                  <div className="text-[10px] text-slate-400">Logged: {new Date(p.createdAt).toLocaleDateString()}</div>
-                  {p.status === 'PENDING_PICKUP' && (
-                    <button
-                      onClick={() => {
-                        setCollectParcel(p);
-                        setCollectOtp('');
-                        setCollectModalOpen(true);
-                      }}
-                      className="w-full mt-2 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition"
-                    >
-                      <Check className="w-3.5 h-3.5" /> Verify OTP &amp; Release
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB: VISITOR PASSES & GATEHOUSE LOGBOOK ── */}
-      {activeTab === 'visitors' && (
-        <div className="space-y-6">
-          <GateLogbookTab properties={assignedProperties} />
-        </div>
-      )}
-
-      {/* ── TAB: UNIT FIXTURES & INVENTORY ── */}
-      {activeTab === 'assets' && (
-        <div className="space-y-6">
-          <RoomAssetInventoryTab properties={assignedProperties} bookings={allBookings} />
-        </div>
-      )}
-
-      {/* ── TAB: CONDUCT & INCIDENT LOGBOOK ── */}
-      {activeTab === 'conduct' && (
-        <div className="space-y-6">
-          <HostelDisciplinaryTab properties={assignedProperties} bookings={allBookings} />
-        </div>
-      )}
-
-      {/* ── TAB: UTILITY & METER LOGGING ── */}
-      {activeTab === 'meters' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Gauge className="w-5 h-5 text-[#0F5132] dark:text-emerald-400" />
-                Utility Submeters &amp; Standby Generator Logs
-              </h2>
-              <p className="text-xs text-slate-500">
-                Log and monitor ECG prepaid electricity meters, GWCL water submeters, and central diesel generator run-hours across compounds.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setMeterForm({
-                  propertyId: assignedProperties[0]?.id || '',
-                  utilityType: 'ECG_ELECTRICITY',
-                  unitNumber: '',
-                  meterNumber: '',
-                  previousReading: '',
-                  currentReading: '',
-                  remainingCredit: '',
-                  fuelLevelPct: '',
-                  notes: '',
-                });
-                setMeterModalOpen(true);
-              }}
-              className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-2xl text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer self-start sm:self-auto shrink-0 active:scale-95"
-            >
-              <Plus className="w-4 h-4 text-amber-300" />
-              <span>Log Meter Reading</span>
-            </button>
-          </div>
-
-          {/* Filter Pills */}
-          <div className="flex flex-wrap gap-2 pt-1">
-            {[
-              { id: 'ALL', label: `All Utilities (${meterReadings.length})` },
-              { id: 'ECG_ELECTRICITY', label: `ECG Electricity (${meterReadings.filter(m => m.utilityType === 'ECG_ELECTRICITY').length})` },
-              { id: 'GWCL_WATER', label: `GWCL Water (${meterReadings.filter(m => m.utilityType === 'GWCL_WATER').length})` },
-              { id: 'GENERATOR_DIESEL', label: `Standby Generator (${meterReadings.filter(m => m.utilityType === 'GENERATOR_DIESEL').length})` },
-            ].map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setUtilityFilter(f.id as any)}
-                className={clsx(
-                  "px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer",
-                  utilityFilter === f.id
-                    ? "bg-[#0F5132] text-white shadow-xs"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Meter Cards Grid */}
-          {meterReadings.filter(m => utilityFilter === 'ALL' || m.utilityType === utilityFilter).length === 0 ? (
-            <div className="p-10 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 text-center space-y-3 shadow-sm">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center mx-auto">
-                <Gauge className="w-6 h-6" />
-              </div>
-              <h3 className="font-bold text-base text-slate-900 dark:text-white">No Meter Logs Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No utility readings recorded under this category yet. Click "Log Meter Reading" to log your first ECG, water submeter, or generator reading.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {meterReadings
-                .filter(m => utilityFilter === 'ALL' || m.utilityType === utilityFilter)
-                .map((meter) => {
-                  const deltaConsumption = Math.max(0, Number((meter.currentReading - meter.previousReading).toFixed(1)));
-                  
-                  return (
-                    <div
-                      key={meter.id}
-                      className="p-5 rounded-3xl bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 shadow-sm space-y-4 hover:border-emerald-500/40 transition"
-                    >
-                      {/* Top Header */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className={clsx(
-                            "w-9 h-9 rounded-xl flex items-center justify-center font-bold",
-                            meter.utilityType === 'ECG_ELECTRICITY' ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
-                            meter.utilityType === 'GWCL_WATER' ? "bg-sky-500/10 text-sky-600 dark:text-sky-400" :
-                            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                          )}>
-                            {meter.utilityType === 'ECG_ELECTRICITY' ? <Zap className="w-4 h-4" /> :
-                             meter.utilityType === 'GWCL_WATER' ? <Droplets className="w-4 h-4" /> :
-                             <Fuel className="w-4 h-4" />}
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                              {meter.utilityType === 'ECG_ELECTRICITY' ? 'ECG Prepaid' :
-                               meter.utilityType === 'GWCL_WATER' ? 'GWCL Water' : 'Standby Generator'}
-                            </span>
-                            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{meter.unitNumber}</h4>
-                          </div>
-                        </div>
-
-                        <span className={clsx(
-                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                          meter.status === 'LOW_BALANCE' ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-500/30" :
-                          meter.status === 'READY' ? "bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-500/30" :
-                          "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-500/30"
-                        )}>
-                          {meter.status === 'LOW_BALANCE' ? 'Low Credit' :
-                           meter.status === 'READY' ? 'Ready' : 'Normal'}
-                        </span>
-                      </div>
-
-                      <div className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
-                        <span className="font-semibold text-slate-700 dark:text-slate-300">{meter.meterNumber}</span>
-                      </div>
-
-                      {/* Readings Comparison Box */}
-                      <div className="p-3 bg-slate-50 dark:bg-slate-900/70 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-2">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <div className="text-[10px] text-slate-400">Prev Reading</div>
-                            <div className="font-mono font-bold text-slate-700 dark:text-slate-300">
-                              {meter.previousReading.toLocaleString()} {meter.unitOfMeasure}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] text-slate-400">Current Reading</div>
-                            <div className="font-mono font-black text-slate-900 dark:text-white">
-                              {meter.currentReading.toLocaleString()} {meter.unitOfMeasure}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800 text-[11px]">
-                          <span className="text-slate-500 font-medium">Consumption</span>
-                          <span className="font-mono font-black text-[#0F5132] dark:text-emerald-400">
-                            +{deltaConsumption} {meter.unitOfMeasure}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Remaining Credit or Fuel Level */}
-                      {meter.utilityType === 'ECG_ELECTRICITY' && meter.remainingCredit !== undefined && (
-                        <div className="flex items-center justify-between text-xs px-1">
-                          <span className="text-slate-500">Remaining Balance:</span>
-                          <span className={clsx(
-                            "font-bold font-mono",
-                            meter.remainingCredit < 50 ? "text-rose-600 dark:text-rose-400" : "text-emerald-700 dark:text-emerald-400"
-                          )}>
-                            GHS {meter.remainingCredit.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-
-                      {meter.utilityType === 'GENERATOR_DIESEL' && meter.fuelLevelPct !== undefined && (
-                        <div className="space-y-1 px-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-slate-500">Diesel Fuel Level:</span>
-                            <span className="font-bold text-slate-900 dark:text-white font-mono">{meter.fuelLevelPct}%</span>
-                          </div>
-                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className={clsx(
-                                "h-full rounded-full transition-all",
-                                meter.fuelLevelPct > 50 ? "bg-emerald-500" : meter.fuelLevelPct > 25 ? "bg-amber-500" : "bg-rose-500"
-                              )} 
-                              style={{ width: `${meter.fuelLevelPct}%` }}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {meter.notes && (
-                        <p className="text-[11px] text-slate-500 italic px-1 line-clamp-1">
-                          "{meter.notes}"
-                        </p>
-                      )}
-
-                      {/* Footer actions */}
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
-                        <span>{new Date(meter.loggedAt).toLocaleDateString('en-GB')}</span>
-                        <button
-                          onClick={() => {
-                            setNoticePropertyId(meter.propertyId || assignedProperties[0]?.id);
-                            setNoticeCategory('UTILITY');
-                            setNoticePriority(meter.status === 'LOW_BALANCE' ? 'HIGH' : 'NORMAL');
-                            setNoticeTitle(
-                              meter.utilityType === 'GENERATOR_DIESEL'
-                                ? 'Central Standby Generator Run-Hours & Diesel Log'
-                                : meter.utilityType === 'ECG_ELECTRICITY'
-                                ? `ECG Prepaid Power Reading for ${meter.unitNumber}`
-                                : `GWCL Water Submeter Reading for ${meter.unitNumber}`
-                            );
-                            setNoticeMessage(
-                              meter.utilityType === 'GENERATOR_DIESEL'
-                                ? `Central Generator recorded ${meter.currentReading} run hours with fuel level at ${meter.fuelLevelPct}%. Ready for standby compound power.`
-                                : `Meter ${meter.meterNumber} logged at ${meter.currentReading} ${meter.unitOfMeasure} (Delta: +${deltaConsumption} ${meter.unitOfMeasure}). ${meter.remainingCredit !== undefined ? `Current credit remaining: GHS ${meter.remainingCredit.toFixed(2)}.` : ''}`
-                            );
-                            setNoticeModalOpen(true);
-                          }}
-                          className="text-[#0F5132] dark:text-emerald-400 hover:underline font-bold flex items-center gap-1 cursor-pointer"
-                        >
-                          <BellRing className="w-3 h-3" /> Post Broadcast
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Ticket Resolution Modal ── */}
-      {ticketActionModal.isOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className={clsx(
-                  "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md",
-                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600" : "bg-emerald-600"
-                )}>
-                  {ticketActionModal.mode === 'SCHEDULE' ? <Calendar className="w-5 h-5 text-white" /> : <Wrench className="w-5 h-5 text-white" />}
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    {ticketActionModal.mode === 'SCHEDULE' ? 'Schedule Maintenance' : 'Complete & Resolve Ticket'}
-                  </h3>
-                  <p className="text-xs text-slate-500 line-clamp-1">{ticketActionModal.ticketTitle}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs sm:text-sm">
-              {ticketActionModal.mode === 'SCHEDULE' ? (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Estimated Repair Date
-                  </label>
-                  <input
-                    type="date"
-                    value={ticketActionModal.scheduledDate}
-                    onChange={(e) => setTicketActionModal(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Proof Photo URL (Optional)
-                    </label>
-                    <input
-                      type="url"
-                      placeholder="https://..."
-                      value={ticketActionModal.completionImageUrl}
-                      onChange={(e) => setTicketActionModal(prev => ({ ...prev, completionImageUrl: e.target.value }))}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Resolution Summary / Work Done
-                    </label>
-                    <textarea
-                      rows={3}
-                      placeholder="e.g. Fixed electrical fuse and replaced broken switches."
-                      value={ticketActionModal.resolutionNotes}
-                      onChange={(e) => setTicketActionModal(prev => ({ ...prev, resolutionNotes: e.target.value }))}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white resize-none"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (ticketActionModal.mode === 'SCHEDULE') {
-                    updateTicketMutation.mutate({
-                      id: ticketActionModal.ticketId,
-                      status: 'SCHEDULED',
-                      scheduledDate: ticketActionModal.scheduledDate,
-                    });
-                  } else {
-                    updateTicketMutation.mutate({
-                      id: ticketActionModal.ticketId,
-                      status: 'RESOLVED',
-                      resolutionNotes: ticketActionModal.resolutionNotes || 'Repair completed successfully by caretaker.',
-                      completionImageUrl: ticketActionModal.completionImageUrl || undefined,
-                    });
-                  }
-                  setTicketActionModal(prev => ({ ...prev, isOpen: false }));
-                }}
-                disabled={updateTicketMutation.isPending}
-                className={clsx(
-                  "px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition shadow-lg cursor-pointer",
-                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600 hover:bg-indigo-700" : "bg-emerald-600 hover:bg-emerald-700"
-                )}
-              >
-                {updateTicketMutation.isPending ? 'Saving...' : ticketActionModal.mode === 'SCHEDULE' ? 'Save Schedule' : 'Confirm Resolution'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Move-In / Move-Out Inspection Modal ── */}
-      {selectedInspectionBooking && (
-        <InspectionModal
-          booking={selectedInspectionBooking}
-          isOpen={Boolean(selectedInspectionBooking)}
-          onClose={() => setSelectedInspectionBooking(null)}
-        />
-      )}
-
-      {/* ── Post Notice Modal ── */}
-      {noticeModalOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <BellRing className="w-5 h-5 text-sky-500" /> Post Compound Broadcast Notice
-              </h3>
-              <button 
-                onClick={() => setNoticeModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs sm:text-sm">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Target Property</label>
-                <select
-                  value={noticePropertyId}
-                  onChange={(e) => setNoticePropertyId(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                >
-                  {assignedProperties.map((p: any) => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Notice Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Scheduled Generator Maintenance"
-                  value={noticeTitle}
-                  onChange={(e) => setNoticeTitle(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Message Content</label>
-                <textarea
-                  rows={4}
-                  placeholder="Write message details for tenants..."
-                  value={noticeMessage}
-                  onChange={(e) => setNoticeMessage(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none resize-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={() => setNoticeModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
-              <button
-                onClick={() => {
-                  if (!noticeTitle || !noticeMessage) {
-                    toast.error('Please enter notice title and message');
-                    return;
-                  }
-                  createNoticeMutation.mutate({
-                    propertyId: noticePropertyId || assignedProperties[0]?.id,
-                    title: noticeTitle,
-                    message: noticeMessage,
-                    category: noticeCategory,
-                    priority: noticePriority,
-                  });
-                }}
-                disabled={createNoticeMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer"
-              >
-                {createNoticeMutation.isPending ? 'Publishing...' : 'Publish Notice'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Log Parcel Modal ── */}
-      {parcelModalOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <Package className="w-5 h-5 text-purple-500" /> Log Incoming Courier Parcel
-              </h3>
-              <button 
-                onClick={() => setParcelModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs sm:text-sm">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Property</label>
-                <select
-                  value={parcelPropertyId}
-                  onChange={(e) => {
-                    setParcelPropertyId(e.target.value);
-                    setParcelTenantId('');
-                  }}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                >
-                  {assignedProperties.map((p: any) => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
-                </select>
-              </div>
-
-              {(() => {
-                const targetProp = assignedProperties.find((p: any) => p.id === (parcelPropertyId || assignedProperties[0]?.id)) || assignedProperties[0];
-                const residents = (targetProp?.bookings || []).map((b: any) => b.tenant).filter(Boolean);
+              {allTickets.map((ticket: any) => {
+                const isResolved = ticket.status === 'RESOLVED';
                 return (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Recipient Resident *</label>
-                    <select
-                      value={parcelTenantId}
-                      onChange={(e) => setParcelTenantId(e.target.value)}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                    >
-                      <option value="">-- Select Resident --</option>
-                      {residents.map((t: any) => (
-                        <option key={t.id} value={t.id}>
-                          {t.firstName} {t.lastName} ({t.phoneNumber || t.email})
-                        </option>
-                      ))}
-                    </select>
+                  <div key={ticket.id} className="p-5 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-4">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={clsx(
+                            "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
+                            ticket.priority === 'URGENT' ? "bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300" :
+                            ticket.priority === 'HIGH' ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300" :
+                            "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                          )}>
+                            {ticket.priority || 'NORMAL'}
+                          </span>
+                          <span className={clsx(
+                            "px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                            isResolved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" : "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+                          )}>
+                            {ticket.status}
+                          </span>
+                        </div>
+                        <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white">{ticket.title}</h3>
+                        <p className="text-xs text-zinc-500 flex items-center gap-1">
+                          <Building className="w-3.5 h-3.5" /> {ticket.propertyTitle}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                      {ticket.description}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800 text-xs">
+                      <span className="text-zinc-400 font-medium">
+                        {new Date(ticket.createdAt).toLocaleDateString()}
+                      </span>
+                      {!isResolved && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setTicketActionModal({
+                                isOpen: true,
+                                ticketId: ticket.id,
+                                ticketTitle: ticket.title,
+                                mode: 'SCHEDULE',
+                                scheduledDate: new Date().toISOString().split('T')[0],
+                                repairCost: ticket.cost ? String(ticket.cost) : '0',
+                                resolutionNotes: '',
+                                completionImageUrl: '',
+                              });
+                            }}
+                            className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-xl text-xs font-bold transition cursor-pointer"
+                          >
+                            Schedule
+                          </button>
+                          <button
+                            onClick={() => {
+                              setTicketActionModal({
+                                isOpen: true,
+                                ticketId: ticket.id,
+                                ticketTitle: ticket.title,
+                                mode: 'RESOLVE',
+                                scheduledDate: new Date().toISOString().split('T')[0],
+                                repairCost: ticket.cost ? String(ticket.cost) : '0',
+                                resolutionNotes: 'Repair completed on-site.',
+                                completionImageUrl: '',
+                              });
+                            }}
+                            className="px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition cursor-pointer"
+                          >
+                            Resolve &amp; Close
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
-              })()}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Courier / Carrier</label>
-                <input
-                  type="text"
-                  placeholder="e.g. DHL, FedEx, Jumia, Ghana Post"
-                  value={parcelCarrier}
-                  onChange={(e) => setParcelCarrier(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tracking Number / Label</label>
-                <input
-                  type="text"
-                  placeholder="e.g. GH-849204"
-                  value={parcelTracking}
-                  onChange={(e) => setParcelTracking(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Shelf / Locker Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Front Desk Shelf A, Locker 3"
-                  value={parcelLocation}
-                  onChange={(e) => setParcelLocation(e.target.value)}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                />
-              </div>
+              })}
             </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button onClick={() => setParcelModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
-              <button
-                onClick={() => {
-                  const targetPropId = parcelPropertyId || assignedProperties[0]?.id;
-                  if (!parcelTenantId) {
-                    toast.error('Please select the recipient resident');
-                    return;
-                  }
-                  logParcelMutation.mutate({
-                    propertyId: targetPropId,
-                    tenantId: parcelTenantId,
-                    courierName: parcelCarrier,
-                    carrier: parcelCarrier,
-                    trackingNumber: parcelTracking,
-                    packageDescription: parcelLocation,
-                    lockerNumber: parcelLocation,
-                  });
-                }}
-                disabled={logParcelMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {logParcelMutation.isPending ? 'Logging...' : 'Log & Alert Tenant'}
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* ── Verify & Release Parcel OTP Modal ── */}
-      {collectModalOpen && collectParcel && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                <Package className="w-4 h-4 text-emerald-500" /> Verify Pickup OTP
-              </h3>
-              <button 
-                onClick={() => setCollectModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <p className="text-xs text-slate-500">
-              Enter the 4-digit collection OTP presented by <strong>{collectParcel.tenant ? `${collectParcel.tenant.firstName} ${collectParcel.tenant.lastName}` : 'the resident'}</strong> to release this parcel ({collectParcel.courierName || collectParcel.carrier || 'Courier'}).
-            </p>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Resident 4-Digit OTP</label>
-              <input
-                type="text"
-                maxLength={4}
-                placeholder="e.g. 4921"
-                value={collectOtp}
-                onChange={(e) => setCollectOtp(e.target.value.trim())}
-                className="w-full p-3 text-center tracking-widest text-lg font-mono font-black bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setCollectModalOpen(false)} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Cancel</button>
-              <button
-                onClick={() => {
-                  if (!collectOtp) {
-                    toast.error('Please enter the 4-digit pickup OTP');
-                    return;
-                  }
-                  collectParcelMutation.mutate({ id: collectParcel.id, pickupCode: collectOtp });
-                }}
-                disabled={collectParcelMutation.isPending}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md cursor-pointer disabled:opacity-50"
-              >
-                {collectParcelMutation.isPending ? 'Verifying...' : 'Confirm Release'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── 6. DOMAIN 3: GATEHOUSE & RESIDENT ACCESS ── */}
+      {activeDomain === 'security' && (
+        <div className="space-y-4 animate-in">
+          {securitySubTab === 'visitors' && (
+            <GateLogbookTab properties={assignedProperties} />
+          )}
 
-      {/* ── Log Meter Reading Modal ── */}
-      {meterModalOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
-                  <Gauge className="w-4 h-4" />
+          {securitySubTab === 'conduct' && (
+            <HostelDisciplinaryTab properties={assignedProperties} bookings={allBookings} />
+          )}
+
+          {securitySubTab === 'parcels' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h2 className="text-lg font-black text-zinc-950 dark:text-white tracking-tight">
+                    Package Intake &amp; Courier Deliveries
+                  </h2>
+                  <p className="text-xs text-zinc-500">
+                    Log incoming resident packages and securely verify OTP handovers.
+                  </p>
                 </div>
-                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                  Log Utility Submeter Reading
-                </h3>
+                <button
+                  onClick={() => {
+                    setParcelPropertyId(primaryProperty?.id || '');
+                    setParcelModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Log New Delivery
+                </button>
               </div>
-              <button 
-                onClick={() => setMeterModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
+
+              {allParcels.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <Package className="w-10 h-10 text-zinc-300 mx-auto" />
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">No Deliveries on Shelf</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                    No courier packages currently waiting for resident collection.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allParcels.map((parcel: any) => (
+                    <div key={parcel.id} className="p-5 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                          {parcel.carrier || 'Courier'}
+                        </span>
+                        <span className={clsx(
+                          "text-[10px] font-bold uppercase",
+                          parcel.status === 'ARRIVED' ? "text-amber-500" : "text-emerald-500"
+                        )}>
+                          {parcel.status}
+                        </span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white">Tracking: #{parcel.trackingNumber || 'N/A'}</h4>
+                        <p className="text-xs text-zinc-500 mt-0.5">Location: {parcel.location || 'Shelf A'}</p>
+                      </div>
+                      {parcel.status === 'ARRIVED' && (
+                        <button
+                          onClick={() => {
+                            setCollectParcel(parcel);
+                            setCollectModalOpen(true);
+                          }}
+                          className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                        >
+                          Verify Handover OTP
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── 7. DOMAIN 4: UTILITIES & INVENTORIES ── */}
+      {activeDomain === 'facilities' && (
+        <div className="space-y-4 animate-in">
+          {facilitiesSubTab === 'meters' && (
+            <UtilitySubMeterTab properties={assignedProperties} />
+          )}
+
+          {facilitiesSubTab === 'assets' && (
+            <RoomAssetInventoryTab properties={assignedProperties} bookings={allBookings} />
+          )}
+
+          {facilitiesSubTab === 'inspections' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h2 className="text-lg font-black text-zinc-950 dark:text-white tracking-tight">
+                    Move-In Tenancy Inspections
+                  </h2>
+                  <p className="text-xs text-zinc-500">
+                    Conduct digital check-in audits and document room fixture conditions before resident move-in.
+                  </p>
+                </div>
+              </div>
+
+              {allBookings.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <ClipboardCheck className="w-10 h-10 text-zinc-300 mx-auto" />
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">No Tenancies Found</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                    Resident move-ins will appear here for statutory condition reporting.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allBookings.map((b: any) => (
+                    <div key={b.id} className="p-5 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="font-extrabold text-sm text-zinc-900 dark:text-white">
+                          {b.tenant?.firstName} {b.tenant?.lastName}
+                        </span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 rounded text-[10px] font-bold">
+                          {b.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-zinc-500">Property: {b.propertyTitle}</p>
+                      <button
+                        onClick={() => setSelectedInspectionBooking(b)}
+                        className="w-full py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                      >
+                        Start Check-In Inspection
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {facilitiesSubTab === 'notices' && (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <div>
+                  <h2 className="text-lg font-black text-zinc-950 dark:text-white tracking-tight">
+                    Compound Broadcast Bulletins
+                  </h2>
+                  <p className="text-xs text-zinc-500">
+                    Post utility maintenance announcements, quiet hours, and facility alerts to all residents.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setNoticePropertyId(primaryProperty?.id || '');
+                    setNoticeModalOpen(true);
+                  }}
+                  className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Plus className="w-3.5 h-3.5" /> New Compound Notice
+                </button>
+              </div>
+
+              {allNotices.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <BellRing className="w-10 h-10 text-zinc-300 mx-auto" />
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">No Active Notices</h3>
+                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                    Broadcast bulletins to notify residents of generator schedules or water shutoffs.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {allNotices.map((notice: any) => (
+                    <div key={notice.id} className="p-5 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+                      <div className="flex justify-between items-start">
+                        <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          {notice.category || 'NOTICE'}
+                        </span>
+                        <span className="text-[10px] text-zinc-400">
+                          {new Date(notice.createdAt || Date.now()).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <h4 className="font-extrabold text-sm text-zinc-900 dark:text-white">{notice.title}</h4>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                        {notice.message || notice.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MODAL 1: TICKET SCHEDULE & RESOLVE ── */}
+      {ticketActionModal.isOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">
+                {ticketActionModal.mode === 'RESOLVE' ? 'Resolve Work Order' : 'Schedule Contractor'}
+              </h3>
+              <button onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}>
+                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
               </button>
             </div>
-
-            <div className="space-y-4 text-xs sm:text-sm">
-              {/* Property Select */}
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Compound / Property
-                </label>
-                <select
-                  value={meterForm.propertyId}
-                  onChange={(e) => setMeterForm(prev => ({ ...prev, propertyId: e.target.value }))}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Repair Cost (GH₵)</label>
+                <input
+                  type="number"
+                  value={ticketActionModal.repairCost}
+                  onChange={e => setTicketActionModal(prev => ({ ...prev, repairCost: e.target.value }))}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Resolution Notes</label>
+                <textarea
+                  rows={3}
+                  value={ticketActionModal.resolutionNotes}
+                  onChange={e => setTicketActionModal(prev => ({ ...prev, resolutionNotes: e.target.value }))}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-medium"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
                 >
-                  {assignedProperties.map((p: any) => (
-                    <option key={p.id} value={p.id}>{p.title}</option>
-                  ))}
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateTicketMutation.mutate({
+                      id: ticketActionModal.ticketId,
+                      status: ticketActionModal.mode === 'RESOLVE' ? 'RESOLVED' : 'SCHEDULED',
+                      cost: Number(ticketActionModal.repairCost) || 0,
+                      resolutionNotes: ticketActionModal.resolutionNotes,
+                    });
+                    setTicketActionModal(prev => ({ ...prev, isOpen: false }));
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold"
+                >
+                  Save &amp; Complete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 2: NOTICE CREATION ── */}
+      {noticeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Broadcast Compound Notice</h3>
+              <button onClick={() => setNoticeModalOpen(false)}>
+                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Notice Title *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Generator Maintenance Schedule"
+                  value={noticeTitle}
+                  onChange={e => setNoticeTitle(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Category</label>
+                <select
+                  value={noticeCategory}
+                  onChange={e => setNoticeCategory(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
+                >
+                  <option value="GENERAL">General Bulletin</option>
+                  <option value="MAINTENANCE">Utility Maintenance</option>
+                  <option value="SECURITY">Compound Security</option>
+                  <option value="RULES">Hostel Rules &amp; Curfew</option>
                 </select>
               </div>
-
-              {/* Utility Type Radio */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Utility Category
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 'ECG_ELECTRICITY', label: 'ECG Power', icon: Zap },
-                    { id: 'GWCL_WATER', label: 'GWCL Water', icon: Droplets },
-                    { id: 'GENERATOR_DIESEL', label: 'Generator', icon: Fuel },
-                  ].map((u) => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      onClick={() => setMeterForm(prev => ({ ...prev, utilityType: u.id as any }))}
-                      className={clsx(
-                        "p-2.5 rounded-xl text-xs font-bold border flex flex-col items-center gap-1 transition cursor-pointer",
-                        meterForm.utilityType === u.id
-                          ? "bg-[#0F5132] text-white border-[#0F5132] shadow-xs"
-                          : "bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100"
-                      )}
-                    >
-                      <u.icon className="w-4 h-4" />
-                      <span>{u.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Unit & Meter Number */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Flat / Unit Number
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Flat 102, Penthouse B"
-                    value={meterForm.unitNumber}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, unitNumber: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Meter Serial / ID
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ECG-481920-X"
-                    value={meterForm.meterNumber}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, meterNumber: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Previous vs Current Reading */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Previous Reading ({meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Hours'})
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="e.g. 1420.0"
-                    value={meterForm.previousReading}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, previousReading: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Current Reading ({meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Hours'})
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    placeholder="e.g. 1560.5"
-                    value={meterForm.currentReading}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, currentReading: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Conditional: Remaining Credit (for ECG) or Fuel Level (for Generator) */}
-              {meterForm.utilityType === 'ECG_ELECTRICITY' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Remaining Prepaid Balance (GHS)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 85.00"
-                    value={meterForm.remainingCredit}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, remainingCredit: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
-                  />
-                </div>
-              )}
-
-              {meterForm.utilityType === 'GENERATOR_DIESEL' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Diesel Fuel Tank Level (%)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    placeholder="e.g. 80"
-                    value={meterForm.fuelLevelPct}
-                    onChange={(e) => setMeterForm(prev => ({ ...prev, fuelLevelPct: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none font-mono"
-                  />
-                </div>
-              )}
-
-              {/* Notes */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Inspection Remarks / Observations
-                </label>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Announcement Details *</label>
                 <textarea
-                  rows={2}
-                  placeholder="e.g. Seal intact, no tampering, steady operation."
-                  value={meterForm.notes}
-                  onChange={(e) => setMeterForm(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs font-semibold outline-none resize-none"
+                  rows={4}
+                  placeholder="Write clear instructions for all resident students or tenants..."
+                  value={noticeMessage}
+                  onChange={e => setNoticeMessage(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-medium"
                 />
               </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button 
-                type="button"
-                onClick={() => setMeterModalOpen(false)} 
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!meterForm.unitNumber || !meterForm.meterNumber || !meterForm.currentReading) {
-                    toast.error('Please enter unit number, meter number, and current reading');
-                    return;
-                  }
-
-                  const prevNum = parseFloat(meterForm.previousReading) || 0;
-                  const currNum = parseFloat(meterForm.currentReading) || 0;
-
-                  if (currNum < prevNum) {
-                    toast.error('Current reading cannot be lower than previous reading');
-                    return;
-                  }
-
-                  const selectedProp = assignedProperties.find((p: any) => p.id === meterForm.propertyId) || assignedProperties[0];
-                  const remCredit = meterForm.remainingCredit ? parseFloat(meterForm.remainingCredit) : undefined;
-                  const fuelLevel = meterForm.fuelLevelPct ? parseInt(meterForm.fuelLevelPct, 10) : undefined;
-
-                  const newEntry = {
-                    id: `meter-${Date.now()}`,
-                    propertyId: selectedProp?.id || 'prop-default',
-                    propertyTitle: selectedProp?.title || 'Residential Compound',
-                    utilityType: meterForm.utilityType,
-                    unitNumber: meterForm.unitNumber,
-                    meterNumber: meterForm.meterNumber,
-                    previousReading: prevNum,
-                    currentReading: currNum,
-                    unitOfMeasure: meterForm.utilityType === 'ECG_ELECTRICITY' ? 'kWh' : meterForm.utilityType === 'GWCL_WATER' ? 'm³' : 'Run Hours',
-                    remainingCredit: remCredit,
-                    fuelLevelPct: fuelLevel,
-                    loggedAt: new Date().toISOString(),
-                    status: (remCredit !== undefined && remCredit < 50 ? 'LOW_BALANCE' : meterForm.utilityType === 'GENERATOR_DIESEL' ? 'READY' : 'NORMAL') as any,
-                    notes: meterForm.notes || 'Recorded by caretaker inspection.',
-                  };
-
-                  setMeterReadings(prev => [newEntry, ...prev]);
-                  setMeterModalOpen(false);
-                  toast.success('Meter reading logged & recorded!');
-
-                  // Synchronize to backend database and alert landlord
-                  if (selectedProp?.id) {
-                    api.post(`/inspections/property/${selectedProp.id}/meters`, { reading: newEntry })
-                      .then(() => toast.success('Meter reading synchronized with database!'))
-                      .catch((err) => console.warn('Backend meter sync deferred, cached locally', err));
-                  }
-                }}
-                className="px-6 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-md cursor-pointer transition active:scale-95"
-              >
-                Save &amp; Log Reading
-              </button>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setNoticeModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!noticeTitle || !noticeMessage}
+                  onClick={() => {
+                    createNoticeMutation.mutate({
+                      propertyId: noticePropertyId || primaryProperty?.id,
+                      title: noticeTitle,
+                      message: noticeMessage,
+                      category: noticeCategory,
+                      priority: noticePriority,
+                    });
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold disabled:opacity-50"
+                >
+                  Broadcast Notice
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── MODAL 3: PARCEL INTAKE ── */}
+      {parcelModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Log Courier Package Delivery</h3>
+              <button onClick={() => setParcelModalOpen(false)}>
+                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Courier Carrier</label>
+                <input
+                  type="text"
+                  placeholder="e.g. DHL, FedEx, Ghana Post, Aramex"
+                  value={parcelCarrier}
+                  onChange={e => setParcelCarrier(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Waybill / Tracking Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. DHL-8921820"
+                  value={parcelTracking}
+                  onChange={e => setParcelTracking(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-mono font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Shelf / Locker Location</label>
+                <input
+                  type="text"
+                  value={parcelLocation}
+                  onChange={e => setParcelLocation(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setParcelModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    createParcelMutation.mutate({
+                      propertyId: parcelPropertyId || primaryProperty?.id,
+                      carrier: parcelCarrier,
+                      trackingNumber: parcelTracking,
+                      location: parcelLocation,
+                    });
+                  }}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                >
+                  Record &amp; Alert Resident
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 4: PARCEL HANDOVER OTP VERIFICATION ── */}
+      {collectModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Verify Resident Pickup OTP</h3>
+              <button onClick={() => setCollectModalOpen(false)}>
+                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <p className="text-zinc-500">
+                Ask the resident for the 6-digit OTP code sent to their dashboard or SMS:
+              </p>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="e.g. 892019"
+                value={collectOtp}
+                onChange={e => setCollectOtp(e.target.value)}
+                className="w-full text-center text-xl font-mono font-black tracking-widest p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60"
+              />
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCollectModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={collectOtp.length < 4}
+                  onClick={() => {
+                    if (collectParcel) {
+                      collectParcelMutation.mutate({
+                        id: collectParcel.id,
+                        pickupCode: collectOtp,
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50"
+                >
+                  Confirm Handover
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 5: INSPECTION MODAL ── */}
+      {selectedInspectionBooking && (
+        <InspectionModal
+          isOpen={true}
+          booking={selectedInspectionBooking}
+          onClose={() => {
+            setSelectedInspectionBooking(null);
+            queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
+          }}
+        />
       )}
 
     </div>
