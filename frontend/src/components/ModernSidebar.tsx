@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { 
   LogOut, ChevronsUpDown, PanelLeftClose, PanelLeftOpen, X, 
-  Building, Zap, Compass, ShieldCheck 
+  Building, Zap, Compass, ShieldCheck, Wrench 
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -88,6 +88,8 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
     ? { name: 'List Property', href: '/dashboard/landlord/new', icon: Zap }
     : user?.role === 'ADMIN'
     ? { name: 'Admin Hub', href: '/admin/dashboard', icon: Zap }
+    : (user?.role === 'CARETAKER' || user?.role === 'STAFF')
+    ? { name: 'Operations Hub', href: '/dashboard/caretaker', icon: Wrench }
     : { name: 'Explore Homes', href: '/properties', icon: Compass };
 
   // Inner navigation content used by both Desktop and Mobile Drawer

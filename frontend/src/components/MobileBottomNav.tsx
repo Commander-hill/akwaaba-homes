@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Compass, LayoutDashboard, MessageSquare, User, Heart, Building, LogIn } from 'lucide-react';
+import { Home, Compass, LayoutDashboard, MessageSquare, User, Heart, Building, LogIn, Wrench } from 'lucide-react';
 import clsx from 'clsx';
 import api from '@/lib/axios';
 
@@ -42,7 +42,7 @@ export default function MobileBottomNav() {
           isActive: pathname === '/properties' || pathname === '/',
         },
         {
-          name: 'Dashboard',
+          name: (user?.role === 'CARETAKER' || user?.role === 'STAFF') ? 'Ops Hub' : 'Dashboard',
           href: dashboardHref,
           icon: LayoutDashboard,
           isActive: (pathname?.startsWith('/dashboard') && !pathname?.startsWith('/dashboard/messages') && !pathname?.startsWith('/dashboard/profile') && !pathname?.startsWith('/dashboard/wishlist')) || pathname?.startsWith('/admin'),
@@ -60,6 +60,15 @@ export default function MobileBottomNav() {
                 href: '/dashboard/landlord/properties',
                 icon: Building,
                 isActive: pathname === '/dashboard/landlord/properties',
+              },
+            ]
+          : (user?.role === 'CARETAKER' || user?.role === 'STAFF')
+          ? [
+              {
+                name: 'Tickets',
+                href: '/dashboard/caretaker?tab=tickets',
+                icon: Wrench,
+                isActive: pathname === '/dashboard/caretaker',
               },
             ]
           : [

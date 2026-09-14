@@ -39,11 +39,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/login');
       } else if (user.role === 'ADMIN') {
         router.push('/admin/dashboard');
-      } else if ((user.role === 'CARETAKER' || user.role === 'STAFF') && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/landlord'))) {
+      } else if ((user.role === 'CARETAKER' || user.role === 'STAFF') && (
+        pathname.startsWith('/dashboard/tenant') || 
+        pathname.startsWith('/dashboard/landlord') ||
+        pathname.startsWith('/dashboard/roommates') ||
+        pathname.startsWith('/dashboard/wishlist')
+      )) {
         router.push('/dashboard/caretaker');
       } else if (user.role === 'TENANT' && (pathname.startsWith('/dashboard/landlord') || pathname.startsWith('/dashboard/caretaker'))) {
         router.push('/dashboard/tenant');
-      } else if (user.role === 'LANDLORD' && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/caretaker') || pathname.startsWith('/dashboard/roommates'))) {
+      } else if (user.role === 'LANDLORD' && (pathname.startsWith('/dashboard/tenant') || pathname.startsWith('/dashboard/caretaker') || pathname.startsWith('/dashboard/roommates') || pathname.startsWith('/dashboard/wishlist'))) {
         router.push('/dashboard/landlord');
       }
     }

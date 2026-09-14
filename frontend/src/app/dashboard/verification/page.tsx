@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { 
   CreditCard, Loader2, ArrowRight, FileCheck, UploadCloud, 
-  CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock, GraduationCap
+  CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock, GraduationCap,
+  Wrench, ShieldCheck
 } from 'lucide-react';
+import Link from 'next/link';
 import api from '@/lib/axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
@@ -386,8 +388,8 @@ export default function VerificationPage() {
         </div>
       </div>
 
-      {/* ── CARD 2: TERTIARY STUDENT STATUS (HOSTEL ACCESS) ── */}
-      {session?.role !== 'LANDLORD' && (
+      {/* ── CARD 2: TERTIARY STUDENT STATUS (HOSTEL ACCESS - TENANTS ONLY) ── */}
+      {session?.role === 'TENANT' && (
         <div id="student-verification" className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
             <div className="flex items-center gap-3.5">
@@ -649,6 +651,76 @@ export default function VerificationPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── CARD 2B: CARETAKER & ON-SITE STAFF OPERATIONAL CLEARANCE ── */}
+      {(session?.role === 'CARETAKER' || session?.role === 'STAFF') && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 sm:p-7 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-200/80 dark:border-zinc-800/80">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                <Wrench className="w-5 h-5 text-[#0F5132] dark:text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-zinc-950 dark:text-white">
+                  On-Site Facility Staff & Caretaker Clearance
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Statutory authorization for hostel caretakers, compound porters, and facility personnel.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <span className={clsx(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border tracking-wide",
+                isVerified
+                  ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800"
+                  : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+              )}>
+                {isVerified ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <AlertCircle className="w-3.5 h-3.5 text-amber-500" />}
+                <span>{isVerified ? 'Staff Identity Cleared ✓' : 'Pending NIA Ghana Card'}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-2">
+              <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                <span>Statutory Role & Accountability (Ghana Rent Act, 1963)</span>
+              </div>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                As on-site facility personnel, your identity clearance relies directly on your verified National Identification Authority (NIA) Ghana Card credentials (Card 1 above). Caretaker accounts operate in facility management mode and are strictly barred from tenant residential room bookings or lease applications.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-zinc-50 dark:bg-zinc-900/40 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+              <div>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase block">Designated Role</span>
+                <span className="font-bold text-zinc-900 dark:text-white capitalize">
+                  {session?.role === 'CARETAKER' ? 'Hostel Caretaker / Facility Manager' : 'Operational Staff'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-zinc-400 font-bold uppercase block">Operational Permissions</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  Maintenance Tickets, Gate Logbook, Meter Readings & Room Inventories
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href="/dashboard/caretaker"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span>Open Caretaker Operations Hub &rarr;</span>
+              </Link>
+            </div>
           </div>
         </div>
       )}

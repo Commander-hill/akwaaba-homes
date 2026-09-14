@@ -7,7 +7,8 @@ import {
   Star, Info, Flag, Send, X, Lock, Clock, CheckCircle2,
   Zap, Droplets, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
   MessageSquare, ExternalLink, AlertCircle, Building2,
-  Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle, GraduationCap
+  Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle, GraduationCap,
+  ShieldCheck, Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
@@ -74,11 +75,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
   });
 
-  useEffect(() => {
-    if (session && session.role === 'LANDLORD') {
-      router.push('/dashboard/landlord');
-    }
-  }, [session, router]);
+  const isStaffOrLandlord = Boolean(
+    session && (session.role === 'CARETAKER' || session.role === 'STAFF' || session.role === 'LANDLORD' || session.role === 'ADMIN')
+  );
 
   useEffect(() => {
     if (session?.phoneNumber && !viewingPhone) {
@@ -731,8 +730,56 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   </div>
                 )}
 
-                {/* Reservation Form */}
-                <form onSubmit={handleBooking} className="space-y-4 text-xs">
+                {/* Reservation Form or Staff Preview Mode */}
+                {isStaffOrLandlord ? (
+                  <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 space-y-3.5 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">
+                          {session?.role === 'LANDLORD' ? 'Host & Landlord Mode' : 'Facility Caretaker Mode'}
+                        </span>
+                        <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Listing Management Preview</h4>
+                      </div>
+                    </div>
+
+                    <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-[11px]">
+                      You are signed in under an operational account ({session?.role === 'LANDLORD' ? 'Landlord Hub' : 'Caretaker Ops'}). Residential bookings, student credentials, and tenancy agreements are strictly reserved for prospective tenants.
+                    </p>
+
+                    <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-700/60">
+                      {session?.role === 'LANDLORD' ? (
+                        <Link
+                          href="/dashboard/landlord/properties"
+                          className="w-full py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Building2 className="w-3.5 h-3.5" />
+                          <span>Manage Properties in Landlord Hub &rarr;</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/dashboard/caretaker"
+                          className="w-full py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Wrench className="w-3.5 h-3.5" />
+                          <span>Open Caretaker Operations &rarr;</span>
+                        </Link>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setShowViewingModal(true)}
+                        className="w-full py-2 bg-white dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <CalendarDays className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                        <span>View Inspection Schedule</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleBooking} className="space-y-4 text-xs">
                   
                   {/* Student-Only Access Clearance Banner */}
                   {isStudentRestricted && (
@@ -1054,6 +1101,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <span>Protected by MoMo escrow payment</span>
               </div>
             </form>
+          )}
           </>
         )}
       </div>
@@ -1217,7 +1265,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       {!myActiveBookingData && property?.isAvailable && (
         <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase font-bold text-zinc-400">Total Price</div>
+            <div className="text-[10px] uppercase font-bold text-zinc-400">
+              {isStaffOrLandlord ? 'Staff Preview' : 'Total Price'}
+            </div>
             <div className="flex items-baseline gap-1">
               <span className="text-base font-black text-[#0F5132] dark:text-[#198754]">
                 GH₵ {Number(currentRoom?.price || property?.price || 0).toLocaleString()}
@@ -1229,16 +1279,25 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById('booking-widget');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }}
-              className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-            >
-              Reserve Room
-            </button>
+            {isStaffOrLandlord ? (
+              <Link
+                href={session?.role === 'LANDLORD' ? '/dashboard/landlord/properties' : '/dashboard/caretaker'}
+                className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                {session?.role === 'LANDLORD' ? 'Landlord Hub' : 'Caretaker Ops'}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById('booking-widget');
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                Reserve Room
+              </button>
+            )}
           </div>
         </div>
       )}
