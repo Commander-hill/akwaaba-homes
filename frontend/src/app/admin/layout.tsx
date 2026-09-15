@@ -47,11 +47,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (pathname === '/admin/login') {
     return (
       <>
-        <head>
-          <link rel="manifest" href="/admin-manifest.json" />
-          <meta name="theme-color" content="#0A0F1D" />
-          <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
-        </head>
+        <link rel="manifest" href="/admin-manifest.json" />
+        <meta name="theme-color" content="#0A0F1D" />
+        <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
         {children}
         <AdminPwaInstallPrompt />
       </>
@@ -106,11 +104,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex h-screen w-full bg-[#FBFBFC] dark:bg-[#0B0D12] overflow-hidden -mt-20">
-      <head>
-        <link rel="manifest" href="/admin-manifest.json" />
-        <meta name="theme-color" content="#0A0F1D" />
-        <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
-      </head>
+      <link rel="manifest" href="/admin-manifest.json" />
+      <meta name="theme-color" content="#0A0F1D" />
+      <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
 
       <ModernSidebar 
         user={user} 
