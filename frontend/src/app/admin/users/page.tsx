@@ -962,7 +962,15 @@ export default function AdminUsersPage() {
                         alt="Front side of Ghana Card"
                         className="w-full max-h-[260px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
+                          const target = e.target as HTMLElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.img-error-notice')) {
+                            const notice = document.createElement('div');
+                            notice.className = 'img-error-notice text-center p-6 text-slate-400';
+                            notice.innerHTML = '<p class="text-xs font-bold text-amber-500">Document Image Unavailable</p><p class="text-[10px] text-slate-400 mt-1">Image link could not be loaded or asset was removed</p>';
+                            parent.appendChild(notice);
+                          }
                         }}
                       />
                     ) : (
@@ -998,7 +1006,15 @@ export default function AdminUsersPage() {
                         alt="Back side of Ghana Card"
                         className="w-full max-h-[260px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
                         onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
+                          const target = e.target as HTMLElement;
+                          target.style.display = 'none';
+                          const parent = target.parentElement;
+                          if (parent && !parent.querySelector('.img-error-notice')) {
+                            const notice = document.createElement('div');
+                            notice.className = 'img-error-notice text-center p-6 text-slate-400';
+                            notice.innerHTML = '<p class="text-xs font-bold text-amber-500">Document Image Unavailable</p><p class="text-[10px] text-slate-400 mt-1">Image link could not be loaded or asset was removed</p>';
+                            parent.appendChild(notice);
+                          }
                         }}
                       />
                     ) : (

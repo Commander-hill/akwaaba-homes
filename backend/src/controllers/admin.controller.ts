@@ -38,7 +38,7 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
     const totalTenants = await prisma.user.count({ where: { role: 'TENANT' } });
     const totalProperties = await prisma.property.count();
     const verifiedProperties = await prisma.property.count({ where: { approvalStatus: 'APPROVED' } });
-    const verifiedUsers = await prisma.user.count({ where: { isCardVerified: true } });
+    const verifiedUsers = await prisma.user.count({ where: { ghanaCardStatus: 'VERIFIED' } });
     const verifiedLandlords = await prisma.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } });
     const totalBookings = await prisma.booking.count();
     
@@ -614,14 +614,12 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const isCardVerified = status === 'VERIFIED';
     const user = await prisma.user.update({
       where: { id },
       data: {
-        ghanaCardStatus: status,
-        isCardVerified
+        ghanaCardStatus: status
       },
-      select: { id: true, ghanaCardStatus: true, isCardVerified: true }
+      select: { id: true, ghanaCardStatus: true }
     });
 
     await logAudit(
@@ -629,8 +627,8 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD',
       'User',
       id,
-      { ghanaCardStatus: oldUser.ghanaCardStatus, isCardVerified: oldUser.isCardVerified },
-      { ghanaCardStatus: status, isCardVerified },
+      { ghanaCardStatus: oldUser.ghanaCardStatus },
+      { ghanaCardStatus: status },
       req.ip || req.socket.remoteAddress
     );
 
@@ -661,11 +659,12 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
           : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
         type: 'verification'
       });
-      getIO().to(id).emit('user_updated', { ghanaCardStatus: status, isCardVerified });
+      getIO().to(id).emit('user_updated', { ghanaCardStatus: status });
     } catch (e) { /* socket optional */ }
 
     res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
   } catch (error) {
+    console.error('Error verifying user card:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -940,7 +939,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
       prisma.user.findMany({
         take: 12,
         orderBy: { createdAt: 'desc' },
-        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, isCardVerified: true, isVerifiedLandlord: true, createdAt: true }
+        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, ghanaCardStatus: true, isVerifiedLandlord: true, createdAt: true }
       }),
       prisma.property.findMany({
         take: 12,
@@ -1018,7 +1017,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
       ...recentUsers.map(u => ({
         id: `user-${u.id}`,
         type: 'USER',
-        severity: u.isVerifiedLandlord || u.isCardVerified ? 'COMPLIANCE' : 'INFO',
+        severity: u.isVerifiedLandlord || u.ghanaCardStatus === 'VERIFIED' ? 'COMPLIANCE' : 'INFO',
         title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Registration`,
         message: `New verified registration: ${u.firstName} ${u.lastName} (${u.role === 'LANDLORD' ? 'Property Owner' : 'Resident'})`,
         actor: {
@@ -1031,9 +1030,9 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
           type: 'User Profile',
           id: u.id,
           title: `${u.firstName} ${u.lastName}`,
-          location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.isCardVerified ? 'Verified Ghana Card' : 'Pending NIA KYC')
+          location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.ghanaCardStatus === 'VERIFIED' ? 'Verified Ghana Card' : 'Pending NIA KYC')
         },
-        status: u.isCardVerified || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
+        status: u.ghanaCardStatus === 'VERIFIED' || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
         createdAt: u.createdAt
       })),
 
