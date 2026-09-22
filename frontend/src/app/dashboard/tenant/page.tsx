@@ -27,7 +27,6 @@ import PackageDeliveriesTab from '@/components/tenant/PackageDeliveriesTab';
 import BillSplitterTab from '@/components/tenant/BillSplitterTab';
 import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
 import TenantAssetInventoryTab from '@/components/tenant/TenantAssetInventoryTab';
-import ReportIssueModal from '@/components/tenant/ReportIssueModal';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import SkeletonTable from '@/components/SkeletonTable';
@@ -158,14 +157,7 @@ function TenantDashboardContent() {
   const [appealNote, setAppealNote] = useState('');
   const [selectedGatePassBooking, setSelectedGatePassBooking] = useState<any>(null);
 
-  // Ticket State
-  const [ticketModalOpen, setTicketModalOpen] = useState(false);
-  const [ticketPropertyId, setTicketPropertyId] = useState('');
-  const [ticketPropertyTitle, setTicketPropertyTitle] = useState('');
-  const [ticketTitle, setTicketTitle] = useState('');
-  const [ticketDesc, setTicketDesc] = useState('');
-  const [ticketPriority, setTicketPriority] = useState('MEDIUM');
-  const [ticketError, setTicketError] = useState('');
+
 
   // Roommate Profile State
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -364,23 +356,7 @@ function TenantDashboardContent() {
     }
   });
 
-  const ticketMutation = useMutation({
-    mutationFn: async (ticketData: { propertyId: string; title: string; description: string; priority: string; imageUrl?: string }) => {
-      const res = await api.post('/tickets', ticketData);
-      return res.data;
-    },
-    onSuccess: () => {
-      setTicketModalOpen(false);
-      setTicketTitle('');
-      setTicketDesc('');
-      setTicketPriority('MEDIUM');
-      queryClient.invalidateQueries({ queryKey: ['tickets', 'tenant'] });
-      toast.success('Maintenance ticket submitted to property manager and caretaker!');
-    },
-    onError: (err: any) => {
-      setTicketError(err.response?.data?.message || 'Failed to submit request');
-    }
-  });
+
 
   const profileMutation = useMutation({
     mutationFn: async (profileData: any) => {
@@ -751,18 +727,13 @@ function TenantDashboardContent() {
                                   Pay Rent
                                 </button>
                               )}
-                              <button 
-                                onClick={() => { 
-                                  setTicketPropertyId(booking.propertyId); 
-                                  setTicketPropertyTitle(booking.property?.title || '');
-                                  setTicketError(''); 
-                                  setTicketModalOpen(true); 
-                                }}
+                              <Link 
+                                href={`/dashboard/tenant/tickets/new?propertyId=${booking.propertyId}`}
                                 className="text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                               >
                                 <Wrench className="w-3.5 h-3.5 text-emerald-500" />
                                 <span>Report Issue</span>
-                              </button>
+                              </Link>
                               {(booking.property?.type === 'Hostel' || booking.property?.targetAudience === 'Students Only' || session?.studentId) && (
                                 <button
                                   onClick={() => setSelectedGatePassBooking(booking)}
@@ -835,19 +806,13 @@ function TenantDashboardContent() {
               </p>
             </div>
             {activeBookings.length > 0 && (
-              <button
-                onClick={() => {
-                  const targetBooking = activeBookings.find((b: any) => ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status)) || activeBookings[0];
-                  setTicketPropertyId(targetBooking.propertyId);
-                  setTicketPropertyTitle(targetBooking.property?.title || '');
-                  setTicketError('');
-                  setTicketModalOpen(true);
-                }}
+              <Link
+                href={`/dashboard/tenant/tickets/new?propertyId=${activeBookings[0].propertyId}`}
                 className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 shrink-0 cursor-pointer"
               >
                 <Wrench className="w-3.5 h-3.5" />
                 <span>Report an Issue</span>
-              </button>
+              </Link>
             )}
           </div>
 
@@ -863,19 +828,13 @@ function TenantDashboardContent() {
                 Everything in your room is functioning properly. If you experience plumbing, electrical, or lock issues, submit a ticket to alert your caretaker.
               </p>
               {activeBookings.length > 0 && (
-                <button
-                  onClick={() => {
-                    const targetBooking = activeBookings.find((b: any) => ['COMPLETED', 'CONFIRMED', 'APPROVED'].includes(b.status)) || activeBookings[0];
-                    setTicketPropertyId(targetBooking.propertyId);
-                    setTicketPropertyTitle(targetBooking.property?.title || '');
-                    setTicketError('');
-                    setTicketModalOpen(true);
-                  }}
+                <Link
+                  href={`/dashboard/tenant/tickets/new?propertyId=${activeBookings[0].propertyId}`}
                   className="mt-5 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <Wrench className="w-3.5 h-3.5" />
                   <span>Report First Issue</span>
-                </button>
+                </Link>
               )}
             </div>
           ) : (
@@ -1792,17 +1751,7 @@ function TenantDashboardContent() {
         </div>
       )}
 
-      {/* Overhauled Modern Report Issue Modal */}
-      <ReportIssueModal
-        isOpen={ticketModalOpen}
-        onClose={() => setTicketModalOpen(false)}
-        propertyId={ticketPropertyId}
-        propertyTitle={ticketPropertyTitle}
-        onSubmit={async (ticketData) => {
-          await ticketMutation.mutateAsync(ticketData);
-        }}
-        isSubmitting={ticketMutation.isPending}
-      />
+
 
       {/* Digital Student Gate Pass & Move-In Clearance Modal */}
       {selectedGatePassBooking && (

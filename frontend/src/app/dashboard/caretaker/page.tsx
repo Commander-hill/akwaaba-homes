@@ -15,7 +15,6 @@ import {
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import Link from 'next/link';
-import InspectionModal from '@/components/landlord/InspectionModal';
 import GateLogbookTab from '@/components/landlord/GateLogbookTab';
 import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
@@ -66,7 +65,6 @@ function CaretakerDashboardContent() {
     }
   }, [searchParams]);
 
-  const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   // Ticket Action Modal state
@@ -1254,12 +1252,12 @@ function CaretakerDashboardContent() {
                         </span>
                       </div>
                       <p className="text-xs text-zinc-500">Property: {b.propertyTitle}</p>
-                      <button
-                        onClick={() => setSelectedInspectionBooking(b)}
-                        className="w-full py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                      <Link
+                        href={`/dashboard/landlord/inspections/${b.id}`}
+                        className="w-full py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
                       >
                         Start Check-In Inspection
-                      </button>
+                      </Link>
                     </div>
                   ))}
                 </div>
@@ -1575,17 +1573,7 @@ function CaretakerDashboardContent() {
         </div>
       )}
 
-      {/* ── MODAL 5: INSPECTION MODAL ── */}
-      {selectedInspectionBooking && (
-        <InspectionModal
-          isOpen={true}
-          booking={selectedInspectionBooking}
-          onClose={() => {
-            setSelectedInspectionBooking(null);
-            queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-          }}
-        />
-      )}
+
 
     </div>
   );

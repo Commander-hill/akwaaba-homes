@@ -9,14 +9,13 @@ import {
   Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera, UserCheck
 } from 'lucide-react';
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
 import MessagingTab from '@/components/MessagingTab';
-import WithdrawalModal from '@/components/WithdrawalModal';
 import FloorplanOccupancyTab from '@/components/landlord/FloorplanOccupancyTab';
 import CompoundNoticeTab from '@/components/landlord/CompoundNoticeTab';
 import ExpenseTrackerTab from '@/components/landlord/ExpenseTrackerTab';
@@ -26,7 +25,6 @@ import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab';
 import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
-import InspectionModal from '@/components/landlord/InspectionModal';
 import toast from 'react-hot-toast';
 
 function getImageUrl(path?: string | null): string {
@@ -61,9 +59,9 @@ function LandlordDashboardContent() {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
+
+  const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
-  const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
   const [ticketActionModal, setTicketActionModal] = useState<{
     isOpen: boolean;
     ticketId: string;
@@ -386,13 +384,13 @@ function LandlordDashboardContent() {
               <Plus className="w-3.5 h-3.5" />
               <span>List Property</span>
             </Link>
-            <button
-              onClick={() => setShowWithdrawalModal(true)}
+            <Link
+              href="/dashboard/landlord/withdraw"
               className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <CreditCard className="w-3.5 h-3.5" />
               <span>Request MoMo Payout</span>
-            </button>
+            </Link>
             <OnboardingTour role={session?.role} user={session} />
             {subStats.expiringSoon > 0 && (
               <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold">
@@ -786,13 +784,13 @@ function LandlordDashboardContent() {
                                   {processingId === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />} Check-In
                                 </button>
                               )}
-                              <button
-                                onClick={() => setSelectedInspectionBooking(booking)}
+                              <Link
+                                href={`/dashboard/landlord/inspections/${booking.id}`}
                                 className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all"
                                 title="Digital Move-In / Move-Out Inspection"
                               >
                                 <ClipboardCheck className="w-3.5 h-3.5" /> Inspect
-                              </button>
+                              </Link>
                               <Link
                                 href={`/dashboard/agreements/${booking.id}`}
                                 className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20"
@@ -1253,12 +1251,12 @@ function LandlordDashboardContent() {
               >
                 <Printer className="w-4 h-4 text-emerald-400" /> GRA Tax CSV
               </button>
-              <button
-                onClick={() => setShowWithdrawalModal(true)}
+              <Link
+                href="/dashboard/landlord/withdraw"
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
               >
                 <DollarSign className="w-4 h-4" /> Request Withdrawal
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -1411,12 +1409,7 @@ function LandlordDashboardContent() {
           <FloorplanOccupancyTab 
             properties={myProperties} 
             onStartInspection={(bookingId) => {
-              const b = bookings.find((item: any) => item.id === bookingId);
-              if (b) {
-                setSelectedInspectionBooking(b);
-              } else {
-                toast.error('Booking details not found in active cache');
-              }
+              router.push(`/dashboard/landlord/inspections/${bookingId}`);
             }}
             onOpenChat={() => {
               setActiveTab('messages');
@@ -1592,19 +1585,6 @@ function LandlordDashboardContent() {
         </div>
       )}
 
-      {/* ── Move-In / Move-Out Inspection Modal ── */}
-      {selectedInspectionBooking && (
-        <InspectionModal
-          booking={selectedInspectionBooking}
-          isOpen={Boolean(selectedInspectionBooking)}
-          onClose={() => setSelectedInspectionBooking(null)}
-        />
-      )}
-
-      {/* ── Withdrawal Modal ── */}
-      {showWithdrawalModal && (
-        <WithdrawalModal onClose={() => setShowWithdrawalModal(false)} />
-      )}
 
       {/* ── Ticket Action & Resolution Modal ── */}
       {ticketActionModal.isOpen && (
