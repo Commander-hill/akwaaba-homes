@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -45,15 +46,9 @@ type FilterRole = 'ALL' | 'LANDLORD' | 'TENANT' | 'CARETAKER' | 'ADMIN' | 'PENDI
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [unlockRequestUser, setUnlockRequestUser] = useState<any | null>(null);
   const [suspensionTarget, setSuspensionTarget] = useState<{ user: any; action: 'suspend' | 'unsuspend' } | null>(null);
   const [zoomedImage, setZoomedImage] = useState<{ url: string; title: string } | null>(null);
-  const [reasonModal, setReasonModal] = useState<{
-    user: any;
-    targetStatus: 'REJECTED' | 'RESUBMISSION_REQUIRED';
-    reason: string;
-  } | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,8 +120,6 @@ export default function AdminUsersPage() {
     onSuccess: (data) => {
       toast.success(data?.message || 'Ghana Card KYC status updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      setSelectedUser(null);
-      setReasonModal(null);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update KYC status');
@@ -142,7 +135,6 @@ export default function AdminUsersPage() {
     onSuccess: (data) => {
       toast.success(data?.message || 'Landlord Act 220 verification updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      setSelectedUser(null);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to verify landlord');
@@ -620,13 +612,13 @@ export default function AdminUsersPage() {
                             </span>
                             {user.landlordDocUrl && (
                               <div>
-                                <button
-                                  onClick={() => setSelectedUser(user)}
+                                <Link
+                                  href={`/admin/verifications/${user.id}`}
                                   className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                                 >
                                   <FileText className="w-3 h-3" />
                                   Inspect Title Deed
-                                </button>
+                                </Link>
                               </div>
                             )}
                           </div>
@@ -688,14 +680,14 @@ export default function AdminUsersPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Review KYC button (if submitted, under review, resubmission req, or deed exists) */}
                           {(['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'].includes(user.ghanaCardStatus) || user.ghanaCardFrontUrl || (user.role === 'LANDLORD' && user.landlordDocUrl)) && (
-                            <button
-                              onClick={() => setSelectedUser(user)}
+                            <Link
+                              href={`/admin/verifications/${user.id}`}
                               className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                               title="Audit submitted statutory documents"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               Review
-                            </button>
+                            </Link>
                           )}
 
                           {/* Quick Approve Edit Access (if requested) */}
@@ -906,413 +898,6 @@ export default function AdminUsersPage() {
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   suspensionTarget.action === 'suspend' ? 'Confirm Suspension' : 'Confirm Restore Access'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL: STATUTORY KYC & GHANA CARD AUDIT ─────────────────────── */}
-      {selectedUser && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-emerald-900/30 max-h-[92vh] flex flex-col">
-            {/* Header */}
-            <div className="px-6 py-5 bg-slate-900 text-white flex justify-between items-center relative overflow-hidden border-b border-slate-800">
-              <div className="flex items-center gap-3.5 z-10">
-                <div className="w-11 h-11 rounded-2xl bg-slate-800 flex items-center justify-center text-emerald-400 border border-slate-700">
-                  <BadgeCheck className="w-6 h-6 text-emerald-400" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-slate-800 text-emerald-400 border border-slate-700">
-                      Act 220 & Ghana Card Audit
-                    </span>
-                  </div>
-                  <h2 className="text-xl font-black text-white tracking-tight mt-0.5">
-                    Statutory ID Verification: {selectedUser.firstName} {selectedUser.lastName}
-                  </h2>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-all backdrop-blur-sm z-10"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-950/50">
-              {/* User Metadata Strip */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    Account Identity
-                  </span>
-                  <p className="font-extrabold text-base text-slate-900 dark:text-white">
-                    {selectedUser.firstName} {selectedUser.lastName}
-                  </p>
-                  <span className={`inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    selectedUser.role === 'LANDLORD' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' :
-                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                  }`}>
-                    {selectedUser.role}
-                  </span>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    Direct Contact
-                  </span>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedUser.email}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Phone: {selectedUser.phoneNumber || 'Not provided'}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    Ghana Card PIN (NIA)
-                  </span>
-                  <div>
-                    <code className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono font-black text-[#0F5132] dark:text-emerald-400 text-sm border border-emerald-200/60 dark:border-emerald-800/40 inline-block">
-                      {selectedUser.ghanaCardNumber || 'NOT PROVIDED'}
-                    </code>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    Current Status
-                  </span>
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                    selectedUser.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
-                    selectedUser.ghanaCardStatus === 'UNDER_REVIEW' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300' :
-                    selectedUser.ghanaCardStatus === 'RESUBMISSION_REQUIRED' ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300' :
-                    selectedUser.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' :
-                    selectedUser.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300' :
-                    'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                  }`}>
-                    {selectedUser.ghanaCardStatus ? selectedUser.ghanaCardStatus.replace('_', ' ') : 'NOT SUBMITTED'}
-                  </span>
-                  {selectedUser.ghanaCardReviewedAt && (
-                    <div className="text-[10px] text-slate-400 mt-1">
-                      Audited {new Date(selectedUser.ghanaCardReviewedAt).toLocaleDateString()}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Display existing rejection/resubmission feedback note if present */}
-              {selectedUser.ghanaCardRejectionReason && (
-                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wide">
-                      Compliance Audit Feedback on Record:
-                    </span>
-                    <p className="text-sm text-amber-800 dark:text-amber-300 mt-0.5 font-medium">
-                      &quot;{selectedUser.ghanaCardRejectionReason}&quot;
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* ID Document Images (Front & Back) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Front of ID */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#0F5132]" />
-                      Document 01: Ghana Card Front
-                    </h3>
-                    {selectedUser.ghanaCardFrontUrl && (
-                      <button
-                        onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.ghanaCardFrontUrl), title: 'Ghana Card (Front)' })}
-                        className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Enlarge
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="relative group border-2 border-dashed border-emerald-200 dark:border-emerald-900/50 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-xs">
-                    {selectedUser.ghanaCardFrontUrl ? (
-                      <img
-                        src={getImageUrl(selectedUser.ghanaCardFrontUrl)}
-                        alt="Front side of Ghana Card"
-                        className="w-full max-h-[260px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                          const target = e.target as HTMLElement;
-                          target.style.display = 'none';
-                          const parent = target.parentElement;
-                          if (parent && !parent.querySelector('.img-error-notice')) {
-                            const notice = document.createElement('div');
-                            notice.className = 'img-error-notice text-center p-6 text-slate-400';
-                            notice.innerHTML = '<p class="text-xs font-bold text-amber-500">Document Image Unavailable</p><p class="text-[10px] text-slate-400 mt-1">Image link could not be loaded or asset was removed</p>';
-                            parent.appendChild(notice);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center p-6 text-slate-400">
-                        <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                        <p className="text-xs font-bold">No Front ID Image Uploaded</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Back of ID */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-                      Document 02: Ghana Card Back
-                    </h3>
-                    {selectedUser.ghanaCardBackUrl && (
-                      <button
-                        onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.ghanaCardBackUrl), title: 'Ghana Card (Back)' })}
-                        className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                      >
-                        <Eye className="w-3.5 h-3.5" /> Enlarge
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="relative group border-2 border-dashed border-emerald-200 dark:border-emerald-900/50 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-xs">
-                    {selectedUser.ghanaCardBackUrl ? (
-                      <img
-                        src={getImageUrl(selectedUser.ghanaCardBackUrl)}
-                        alt="Back side of Ghana Card"
-                        className="w-full max-h-[260px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
-                        onError={(e) => {
-                          const target = e.target as HTMLElement;
-                          target.style.display = 'none';
-                          const parent = target.parentElement;
-                          if (parent && !parent.querySelector('.img-error-notice')) {
-                            const notice = document.createElement('div');
-                            notice.className = 'img-error-notice text-center p-6 text-slate-400';
-                            notice.innerHTML = '<p class="text-xs font-bold text-amber-500">Document Image Unavailable</p><p class="text-[10px] text-slate-400 mt-1">Image link could not be loaded or asset was removed</p>';
-                            parent.appendChild(notice);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center p-6 text-slate-400">
-                        <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                        <p className="text-xs font-bold">No Back ID Image Uploaded</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Landlord Property Deed / Indenture Section */}
-              {selectedUser.role === 'LANDLORD' && selectedUser.landlordDocUrl && (
-                <div className="space-y-2 pt-4 border-t border-slate-200/80 dark:border-slate-800">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                      Act 220 Landlord Document: Property Ownership Deed / Indenture 📄
-                    </h3>
-                    <button
-                      onClick={() => setZoomedImage({ url: getImageUrl(selectedUser.landlordDocUrl), title: 'Property Ownership Deed / Indenture' })}
-                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                    >
-                      <Eye className="w-3.5 h-3.5" /> Enlarge Full Document
-                    </button>
-                  </div>
-
-                  <div className="relative group border-2 border-dashed border-blue-200 dark:border-blue-900/50 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 min-h-[220px] flex items-center justify-center p-2 shadow-xs">
-                    <img
-                      src={getImageUrl(selectedUser.landlordDocUrl)}
-                      alt="Property Deed"
-                      className="w-full max-h-[280px] object-contain rounded-xl transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer Actions */}
-            <div className="p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Statutory audit under Ghana Rent Act (Act 220) and National Identification Authority (NIA) verification rules.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                {selectedUser.role === 'LANDLORD' && (
-                  <button
-                    onClick={() => handleVerifyLandlord(selectedUser.id, 'VERIFIED')}
-                    disabled={processingId === selectedUser.id + 'landlord'}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    {processingId === selectedUser.id + 'landlord' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck className="w-4 h-4" />}
-                    Verify Landlord Deed
-                  </button>
-                )}
-
-                {selectedUser.ghanaCardStatus !== 'UNDER_REVIEW' && selectedUser.ghanaCardStatus !== 'VERIFIED' && (
-                  <button
-                    onClick={() => handleVerify(selectedUser.id, 'UNDER_REVIEW')}
-                    disabled={processingId === selectedUser.id + 'verify'}
-                    className="px-4 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Clock className="w-4 h-4 text-sky-600" />
-                    Mark Under Review
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setReasonModal({ user: selectedUser, targetStatus: 'RESUBMISSION_REQUIRED', reason: '' })}
-                  disabled={processingId === selectedUser.id + 'verify'}
-                  className="px-4 py-2.5 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <AlertTriangle className="w-4 h-4 text-orange-600" />
-                  Request Resubmission
-                </button>
-
-                <button
-                  onClick={() => setReasonModal({ user: selectedUser, targetStatus: 'REJECTED', reason: '' })}
-                  disabled={processingId === selectedUser.id + 'verify'}
-                  className="px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <XCircle className="w-4 h-4" /> Reject ID
-                </button>
-
-                <button
-                  onClick={() => handleVerify(selectedUser.id, 'VERIFIED')}
-                  disabled={processingId === selectedUser.id + 'verify'}
-                  className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  {processingId === selectedUser.id + 'verify' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                  Approve Ghana Card
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── MODAL: REASON FOR REJECTION OR RESUBMISSION ───────────────────── */}
-      {reasonModal && (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-2xl ${
-                  reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
-                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-950/50 dark:text-orange-300'
-                    : 'bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-300'
-                }`}>
-                  {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED' ? (
-                    <AlertTriangle className="w-6 h-6" />
-                  ) : (
-                    <XCircle className="w-6 h-6" />
-                  )}
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Statutory Compliance Action
-                  </span>
-                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
-                    {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
-                      ? 'Request Ghana Card Resubmission'
-                      : 'Reject Ghana Card Submission'}
-                  </h3>
-                </div>
-              </div>
-              <button
-                onClick={() => setReasonModal(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
-                ? `Provide clear guidance for ${reasonModal.user.firstName} ${reasonModal.user.lastName} on what needs to be fixed before they re-upload their ID.`
-                : `Explain the statutory or fraud grounds for rejecting ${reasonModal.user.firstName} ${reasonModal.user.lastName}'s Ghana Card.`}
-            </p>
-
-            {/* Quick Suggestions */}
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Quick Preset Explanations:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  'Image is blurry or unreadable',
-                  'Corners or edges of card are cropped out',
-                  'Flash reflection obscures personal details',
-                  'PIN on photo does not match entered PIN',
-                  'Document presented has expired',
-                  'Document appears altered or non-authentic'
-                ].map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => setReasonModal(prev => prev ? { ...prev, reason: preset } : null)}
-                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors text-left cursor-pointer"
-                  >
-                    + {preset}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Reason Textarea */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                Detailed Explanation to User (Mandatory) *
-              </label>
-              <textarea
-                rows={3}
-                required
-                placeholder="e.g. The reverse side photograph is blurry and the expiration date cannot be verified. Please capture a clear, well-lit photo."
-                value={reasonModal.reason}
-                onChange={(e) => setReasonModal(prev => prev ? { ...prev, reason: e.target.value } : null)}
-                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F5132]"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={() => setReasonModal(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={!reasonModal.reason.trim() || processingId === reasonModal.user.id + 'verify'}
-                onClick={() => {
-                  handleVerify(reasonModal.user.id, reasonModal.targetStatus, reasonModal.reason);
-                }}
-                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
-                  reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
-                    ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20'
-                    : 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
-                }`}
-              >
-                {processingId === reasonModal.user.id + 'verify' ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Submit Decision
-                  </>
                 )}
               </button>
             </div>

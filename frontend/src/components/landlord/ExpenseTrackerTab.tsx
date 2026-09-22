@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import Link from 'next/link';
 import { 
   DollarSign, Plus, Trash2, Download, TrendingUp, TrendingDown,
   PieChart, Calendar, Fuel, Droplet, Wrench, Receipt,
-  Building, Loader2, RefreshCw, Printer, FileText, X
+  Building, Loader2, RefreshCw, Printer, FileText
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import toast from 'react-hot-toast';
@@ -52,7 +53,6 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
   const queryClient = useQueryClient();
   const { confirm } = useDialog();
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('ALL');
-  const [modalOpen, setModalOpen] = useState(false);
 
   // Fallback query to guarantee live landlord properties list
   const { data: propertiesData } = useQuery({
@@ -74,20 +74,6 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
     location: p.location || p.propertyLocation || ''
   })).filter((p: any) => Boolean(p.id));
 
-  // Form State
-  const [formPropertyId, setFormPropertyId] = useState('');
-  const [category, setCategory] = useState('GENERATOR_FUEL');
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
-
-  React.useEffect(() => {
-    if (!formPropertyId && propertyList.length > 0) {
-      setFormPropertyId(propertyList[0].id);
-    }
-  }, [propertyList, formPropertyId]);
-
   const { data: expensesData, isLoading: isLoadingExpenses } = useQuery<{ expenses: ExpenseRecord[]; totalExpenseAmount: number }>({
     queryKey: ['expenses', selectedPropertyId],
     queryFn: async () => {
@@ -106,24 +92,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
     }
   });
 
-  const createExpenseMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/expenses', payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Operating expense logged successfully!');
-      setModalOpen(false);
-      setTitle('');
-      setAmount('');
-      setNotes('');
-      queryClient.invalidateQueries({ queryKey: ['expenses'] });
-      queryClient.invalidateQueries({ queryKey: ['expensesAnalytics'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to log expense');
-    }
-  });
+
 
   const deleteExpenseMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -232,12 +201,12 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
             <Download className="w-3.5 h-3.5" /> Export CSV
           </button>
 
-          <button
-            onClick={() => setModalOpen(true)}
+          <Link
+            href="/dashboard/landlord/expenses/new"
             className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 hover:opacity-90 transition shadow-sm"
           >
             <Plus className="w-4 h-4" /> Log Expense
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -384,141 +353,7 @@ export default function ExpenseTrackerTab({ properties = [] }: { properties?: an
         )}
       </div>
 
-      {/* Log Expense Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800 animate-in">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-emerald-500" /> Log Operating Expense
-              </h3>
-              <button 
-                onClick={() => setModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Property</label>
-                <select
-                  value={formPropertyId}
-                  onChange={(e) => setFormPropertyId(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  {propertyList.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} {p.location ? `(${p.location})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Expense Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  <option value="GENERATOR_FUEL">Generator Fuel</option>
-                  <option value="WATER_SUPPLY">Water Tanker / Borehole Servicing</option>
-                  <option value="MAINTENANCE_REPAIR">Repairs &amp; Maintenance</option>
-                  <option value="CLEANING_WASTE">Compound Cleaning &amp; Waste Fee</option>
-                  <option value="SECURITY">Security Guard / CCTV Servicing</option>
-                  <option value="UTILITIES">Compound Meter Electricity</option>
-                  <option value="TAX_FEES">Municipal Assembly Taxes &amp; Permits</option>
-                  <option value="OTHER">Miscellaneous Expense</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Description / Title</label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. 50 Liters Diesel for Standby Generator"
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Amount (GHS)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-red-600 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Date Incurred</label>
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Notes / Receipt Ref (Optional)</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={2}
-                  placeholder="Vendor name, receipt invoice #, etc..."
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const targetPropId = formPropertyId || propertyList[0]?.id;
-                  if (!targetPropId) {
-                    toast.error('Please select or add a property first');
-                    return;
-                  }
-                  if (!title || !amount) {
-                    toast.error('Title and amount are required');
-                    return;
-                  }
-                  createExpenseMutation.mutate({
-                    propertyId: targetPropId,
-                    category,
-                    title,
-                    amount: parseFloat(amount),
-                    date,
-                    notes
-                  });
-                }}
-                disabled={createExpenseMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 shadow-sm"
-              >
-                {createExpenseMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Save Expense
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
