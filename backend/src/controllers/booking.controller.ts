@@ -221,6 +221,17 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ message: 'Property is currently not available for booking' });
       return;
     }
+
+    // Gating check: Property must have an active unexpired subscription to receive bookings
+    const activeSub = await prisma.propertySubscription.findUnique({
+      where: { propertyId }
+    });
+    if (!activeSub || !activeSub.isActive || new Date() > new Date(activeSub.endDate)) {
+      res.status(400).json({
+        message: 'This property is not currently accepting bookings because its listing subscription is inactive or expired.'
+      });
+      return;
+    }
     
     const tenant = await prisma.user.findUnique({ 
       where: { id: tenantId }, 

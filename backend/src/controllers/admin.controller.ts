@@ -802,6 +802,7 @@ export const activateSubscription = async (req: Request, res: Response): Promise
     );
 
     try {
+      appCache.flushAll();
       const { getIO } = await import('../socket');
       getIO().to(subscription.property.landlord.id).emit('notification', {
         title: 'Subscription Activated',
@@ -849,6 +850,7 @@ export const revokeSubscription = async (req: Request, res: Response): Promise<v
     );
 
     try {
+      appCache.flushAll();
       const { getIO } = await import('../socket');
       getIO().to(subscription.property.landlord.id).emit('notification', {
         title: 'Listing Subscription Revoked',

@@ -213,7 +213,11 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
     const queryOptions: any = {
       where: {
         approvalStatus: 'APPROVED',
-        landlord: { isSuspended: false }
+        landlord: { isSuspended: false },
+        subscription: {
+          isActive: true,
+          endDate: { gt: new Date() }
+        }
       },
       skip: (Number(page) - 1) * Number(limit),
       take: Number(limit),
@@ -503,6 +507,23 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
     if (landlordUser?.isSuspended && req.user.role !== 'ADMIN') {
       res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot edit property details.' });
       return;
+    }
+
+    // Strict Publication Gating: If enabling availability, require an active unexpired subscription
+    if (isAvailable === true && !property.isAvailable && req.user.role !== 'ADMIN') {
+      const activeSub = await prisma.propertySubscription.findUnique({
+        where: { propertyId: id }
+      });
+      const isSubActive = activeSub && activeSub.isActive && new Date() < new Date(activeSub.endDate);
+      if (!isSubActive) {
+        res.status(403).json({
+          success: false,
+          message: 'Publication Gated: An active annual subscription is required to publish this property. Please pay the listing fee to make this property live.',
+          requiresSubscription: true,
+          propertyId: id
+        });
+        return;
+      }
     }
 
     const updatedProperty = await prisma.property.update({

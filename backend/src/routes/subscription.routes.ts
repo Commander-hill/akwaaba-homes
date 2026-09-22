@@ -1,11 +1,20 @@
 import { Router } from 'express';
-import { getSubscriptionStatus, verifyPayment, initializePayment, handlePaystackWebhook, getLandlordSubscriptionsOverview } from '../controllers/subscription.controller';
+import { 
+  getSubscriptionStatus, 
+  verifyPayment, 
+  initializePayment, 
+  handlePaystackWebhook, 
+  handleHubtelWebhook,
+  getLandlordSubscriptionsOverview 
+} from '../controllers/subscription.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Public webhook route (Protected via Paystack HMAC SHA512 signature check)
+// Public webhook routes (Protected via HMAC signature checks)
 router.post('/webhook', handlePaystackWebhook);
+router.post('/webhook/paystack', handlePaystackWebhook);
+router.post('/webhook/hubtel', handleHubtelWebhook);
 
 // Only landlords can access protected subscription routes
 router.use(authenticate);

@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, 
   CreditCard, CheckCircle, ExternalLink, Search, Users, Bed, 
-  TrendingUp, Eye
+  TrendingUp, Eye, Smartphone, ShieldCheck, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,6 +21,11 @@ export default function LandlordPropertiesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [verifyingPropId, setVerifyingPropId] = useState<string | null>(null);
   const [paymentMsg, setPaymentMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+
+  // Subscription Checkout Modal State
+  const [selectedPropertyForPayment, setSelectedPropertyForPayment] = useState<any | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<'PAYSTACK' | 'HUBTEL'>('PAYSTACK');
+  const [momoPhoneNumber, setMomoPhoneNumber] = useState('');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DRAFT'>('ALL');
@@ -63,13 +68,14 @@ export default function LandlordPropertiesPage() {
   };
 
   const initPaymentMutation = useMutation({
-    mutationFn: async (propertyId: string) => {
-      const { data } = await api.post('/subscriptions/initialize', { propertyId });
-      return data;
+    mutationFn: async ({ propertyId, provider, phoneNumber }: { propertyId: string; provider: 'PAYSTACK' | 'HUBTEL'; phoneNumber?: string }) => {
+      const { data } = await api.post('/subscriptions/initialize', { propertyId, provider, phoneNumber });
+      return data?.data || data;
     },
     onSuccess: (data: any) => {
-      if (data.authorization_url) {
-        window.location.href = data.authorization_url;
+      const authUrl = data?.authorization_url || data?.data?.authorization_url;
+      if (authUrl) {
+        window.location.href = authUrl;
       }
     },
     onError: (error: any) => {
@@ -78,11 +84,14 @@ export default function LandlordPropertiesPage() {
   });
 
   const verifyPaymentMutation = useMutation({
-    mutationFn: async (reference: string) => {
-      const { data } = await api.post('/subscriptions/verify', { paymentReference: reference });
-      return data;
+    mutationFn: async ({ reference, provider }: { reference: string; provider?: string }) => {
+      const { data } = await api.post('/subscriptions/verify', { 
+        paymentReference: reference,
+        provider: provider || (reference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK')
+      });
+      return data?.data || data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: () => {
       setPaymentMsg({ text: 'Listing published successfully!', type: 'success' });
       refetch();
       router.replace('/dashboard/landlord/properties');
@@ -96,11 +105,12 @@ export default function LandlordPropertiesPage() {
   const verifiedRef = useRef(false);
   useEffect(() => {
     const verify = searchParams.get('verify');
-    const reference = searchParams.get('reference') || searchParams.get('trxref');
+    const reference = searchParams.get('reference') || searchParams.get('trxref') || searchParams.get('clientReference');
+    const provider = searchParams.get('provider') || undefined;
     
     if (verify === 'true' && reference && !verifiedRef.current && !verifyPaymentMutation.isPending && !paymentMsg) {
       verifiedRef.current = true;
-      verifyPaymentMutation.mutate(reference);
+      verifyPaymentMutation.mutate({ reference, provider });
     }
   }, [searchParams, verifyPaymentMutation, paymentMsg]);
 
@@ -387,20 +397,13 @@ export default function LandlordPropertiesPage() {
                       {!property.isAvailable && (
                         <button
                           onClick={() => {
-                            setVerifyingPropId(property.id);
-                            initPaymentMutation.mutate(property.id);
+                            setSelectedPropertyForPayment(property);
+                            setMomoPhoneNumber(session?.phoneNumber || '');
                           }}
-                          disabled={initPaymentMutation.isPending && verifyingPropId === property.id}
                           className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-xs cursor-pointer"
-                          title="Pay GHS 100/yr to list this property"
+                          title="Pay GH₵ 100/yr to list this property"
                         >
-                          {initPaymentMutation.isPending && verifyingPropId === property.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <>
-                              <CreditCard className="w-3 h-3" /> Publish
-                            </>
-                          )}
+                          <CreditCard className="w-3 h-3" /> Publish
                         </button>
                       )}
 
@@ -461,6 +464,158 @@ export default function LandlordPropertiesPage() {
           })
         )}
       </div>
+
+      {/* Subscription / Publication Checkout Modal */}
+      {selectedPropertyForPayment && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-900/50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-[#0F5132]/10 text-[#0F5132] dark:text-emerald-400">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">Publish Property Listing</h3>
+                  <p className="text-xs text-zinc-500">Annual Listing Subscription &amp; Search Visibility</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedPropertyForPayment(null)}
+                className="p-1.5 text-zinc-400 hover:text-zinc-700 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 text-xs">
+              {/* Selected Property Preview */}
+              <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Target Listing</div>
+                <div className="font-bold text-sm text-zinc-900 dark:text-white mt-0.5">{selectedPropertyForPayment.title}</div>
+                <div className="flex items-center text-zinc-500 mt-1">
+                  <MapPin className="w-3.5 h-3.5 mr-1 text-zinc-400" />
+                  <span>{selectedPropertyForPayment.location}</span>
+                </div>
+              </div>
+
+              {/* Fee & Period Details */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60">
+                <div>
+                  <div className="font-bold text-xs text-[#0F5132] dark:text-emerald-300">Standard Annual Plan</div>
+                  <div className="text-[11px] text-zinc-600 dark:text-zinc-400">365 Days Verified Visibility &amp; Direct Tenant Bookings</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-base font-black text-[#0F5132] dark:text-emerald-400">GH₵ 100</div>
+                  <div className="text-[10px] text-zinc-400">1 Year License</div>
+                </div>
+              </div>
+
+              {/* Payment Provider Selection */}
+              <div className="space-y-2">
+                <label className="font-bold text-zinc-800 dark:text-zinc-200 block text-xs">
+                  Select Payment Gateway
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProvider('PAYSTACK')}
+                    className={clsx(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer",
+                      selectedProvider === 'PAYSTACK'
+                        ? "border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 dark:bg-emerald-950/30 ring-2 ring-[#0F5132]/20"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#12151D]"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-zinc-950 dark:text-white text-xs">Paystack</span>
+                      <CreditCard className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                    </div>
+                    <p className="text-[10px] text-zinc-500 leading-tight">Ghana Cards, Bank, Apple Pay, MoMo</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProvider('HUBTEL')}
+                    className={clsx(
+                      "p-3 rounded-xl border text-left transition-all cursor-pointer",
+                      selectedProvider === 'HUBTEL'
+                        ? "border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 dark:bg-emerald-950/30 ring-2 ring-[#0F5132]/20"
+                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#12151D]"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-zinc-950 dark:text-white text-xs">Hubtel</span>
+                      <Smartphone className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                    </div>
+                    <p className="text-[10px] text-zinc-500 leading-tight">Instant Prompt: MTN MoMo, Telecel, AT</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Money Phone Input (If Hubtel selected) */}
+              {selectedProvider === 'HUBTEL' && (
+                <div className="space-y-1.5 animate-in fade-in">
+                  <label className="font-bold text-zinc-800 dark:text-zinc-200 block text-xs">
+                    Mobile Money Phone Number (Ghana)
+                  </label>
+                  <input
+                    type="tel"
+                    value={momoPhoneNumber}
+                    onChange={(e) => setMomoPhoneNumber(e.target.value)}
+                    placeholder="e.g. 0244123456"
+                    className="w-full px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0F5132] text-xs font-medium"
+                  />
+                  <p className="text-[10px] text-zinc-400">An authorization prompt will be pushed to this mobile number.</p>
+                </div>
+              )}
+
+              {/* Security & Verification Guarantee */}
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 text-[11px] text-zinc-500">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Idempotent server-side payment verification with SSL encryption.</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-end gap-2 bg-zinc-50 dark:bg-zinc-900/50">
+              <button
+                type="button"
+                onClick={() => setSelectedPropertyForPayment(null)}
+                disabled={initPaymentMutation.isPending}
+                className="px-4 py-2 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  initPaymentMutation.mutate({
+                    propertyId: selectedPropertyForPayment.id,
+                    provider: selectedProvider,
+                    phoneNumber: momoPhoneNumber || undefined
+                  });
+                }}
+                disabled={initPaymentMutation.isPending}
+                className="px-5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl font-bold text-xs transition-colors flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                {initPaymentMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting to {selectedProvider === 'HUBTEL' ? 'Hubtel' : 'Paystack'}...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Proceed to Pay GH₵ 100</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
