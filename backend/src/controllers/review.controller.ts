@@ -258,3 +258,32 @@ export const getMyReviews = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+// Get landlord's property reviews from tenants
+export const getLandlordReviews = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const landlordId = req.user.id;
+
+    const reviews = await prisma.review.findMany({
+      where: {
+        booking: {
+          property: { landlordId }
+        }
+      },
+      include: {
+        booking: {
+          include: {
+            property: { select: { id: true, title: true, location: true } },
+            tenant: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } }
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ reviews });
+  } catch (error) {
+    console.error('Error fetching landlord reviews:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

@@ -8,7 +8,8 @@ import {
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
   Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera, UserCheck
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
@@ -35,9 +36,31 @@ function getImageUrl(path?: string | null): string {
   return `${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
-export default function LandlordDashboard() {
+type LandlordTab = 'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities' | 'disciplinary' | 'reviews';
+
+const VALID_LANDLORD_TABS: LandlordTab[] = [
+  'bookings', 'occupancy', 'installments', 'assets', 'notices', 'expenses', 
+  'tickets', 'subscriptions', 'financials', 'messages', 'agreements', 'staff', 
+  'gatepass', 'utilities', 'disciplinary', 'reviews'
+];
+
+function LandlordDashboardContent() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities' | 'disciplinary'>('bookings');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab') as LandlordTab | null;
+
+  const [activeTab, setActiveTab] = useState<LandlordTab>(() => {
+    if (tabParam && VALID_LANDLORD_TABS.includes(tabParam)) {
+      return tabParam;
+    }
+    return 'bookings';
+  });
+
+  useEffect(() => {
+    if (tabParam && VALID_LANDLORD_TABS.includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [selectedInspectionBooking, setSelectedInspectionBooking] = useState<any>(null);
@@ -140,6 +163,22 @@ export default function LandlordDashboard() {
       }
     },
   });
+
+  // Fetch Landlord Tenant Reviews
+  const { data: landlordReviewsResponse, isLoading: isLoadingLandlordReviews } = useQuery({
+    queryKey: ['reviews', 'landlord'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/reviews/landlord');
+        return data?.reviews || [];
+      } catch (err) {
+        console.warn('Could not fetch landlord reviews:', err);
+        return [];
+      }
+    },
+    enabled: activeTab === 'reviews'
+  });
+  const landlordReviews = landlordReviewsResponse || [];
 
   // Fetch Detailed Earnings Report — only loads when financials tab is open
   const { data: earningsReport, isLoading: isLoadingEarnings, refetch: refetchEarnings } = useQuery({
@@ -447,7 +486,7 @@ export default function LandlordDashboard() {
 
           {/* Sub-Pills for Currently Selected Workspace */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap py-1">
-            {['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab) && (
+            {['bookings', 'occupancy', 'installments', 'assets', 'agreements', 'reviews'].includes(activeTab) && (
               <>
                 <button
                   onClick={() => setActiveTab('bookings')}
@@ -492,6 +531,17 @@ export default function LandlordDashboard() {
                   )}
                 >
                   Room Fixtures &amp; Inventory
+                </button>
+                <button
+                  onClick={() => setActiveTab('reviews')}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                    activeTab === 'reviews'
+                      ? "bg-[#0F5132] text-white font-bold"
+                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                  )}
+                >
+                  Tenant Reviews ({landlordReviews.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('agreements')}
@@ -1431,6 +1481,117 @@ export default function LandlordDashboard() {
         </div>
       )}
 
+      {/* ─── TAB: TENANT REVIEWS & RATINGS ────────────────────────────────────────── */}
+      {activeTab === 'reviews' && (
+        <div className="space-y-6 animate-in">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                  Resident &amp; Tenant Feedback
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Verified reviews and ratings submitted by residents across your managed properties.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-4 py-2.5 rounded-xl">
+                <span className="text-2xl font-black text-amber-700 dark:text-amber-400">
+                  {landlordReviews.length > 0 
+                    ? (landlordReviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / landlordReviews.length).toFixed(1)
+                    : '5.0'}
+                </span>
+                <div className="text-left">
+                  <div className="flex text-amber-500">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-3.5 h-3.5 fill-current" />
+                    ))}
+                  </div>
+                  <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300">
+                    {landlordReviews.length} total {landlordReviews.length === 1 ? 'review' : 'reviews'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {isLoadingLandlordReviews ? (
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="animate-pulse flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4" />
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : landlordReviews.length === 0 ? (
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center flex flex-col items-center">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center mb-3">
+                <Star className="w-7 h-7 text-amber-600" />
+              </div>
+              <h4 className="text-base font-bold text-zinc-900 dark:text-white">No Tenant Reviews Yet</h4>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm">
+                Once verified tenants move into your apartments or hostels, their ratings and reviews will be published here.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {landlordReviews.map((rev: any) => {
+                const tenantName = rev.booking?.tenant 
+                  ? `${rev.booking.tenant.firstName || ''} ${rev.booking.tenant.lastName || ''}`.trim() 
+                  : 'Verified Resident';
+                const propTitle = rev.booking?.property?.title || 'Managed Listing';
+                const propLocation = rev.booking?.property?.location || 'Ghana';
+                return (
+                  <div key={rev.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
+                            {tenantName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h5 className="text-sm font-bold text-zinc-900 dark:text-white">{tenantName}</h5>
+                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                              <Building className="w-3 h-3 text-zinc-400" />
+                              {propTitle} • {propLocation}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex text-amber-500">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star 
+                              key={s} 
+                              className={clsx(
+                                "w-3.5 h-3.5",
+                                s <= (rev.rating || 5) ? "fill-amber-500 text-amber-500" : "text-zinc-300 dark:text-zinc-700"
+                              )} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-3 leading-relaxed">
+                        "{rev.comment || 'Verified resident review.'}"
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400">
+                      <span>{new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                        <CheckCircle2 className="w-3 h-3" /> Verified Booking
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Move-In / Move-Out Inspection Modal ── */}
       {selectedInspectionBooking && (
         <InspectionModal
@@ -1576,5 +1737,17 @@ export default function LandlordDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LandlordDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[500px] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
+      </div>
+    }>
+      <LandlordDashboardContent />
+    </Suspense>
   );
 }

@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, Settings, Radio, FileCheck, Menu } from 'lucide-react';
-import Link from 'next/link';
+import { 
+  LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, 
+  CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, 
+  Settings, Radio, FileCheck, Menu, BadgeCheck, ShieldAlert 
+} from 'lucide-react';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -77,27 +80,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const adminSidebarGroups: SidebarGroup[] = [
     {
-      title: 'SYSTEM CONTROLS',
+      title: 'CORE PLATFORM',
       links: [
-        { name: 'System Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Global Config', href: '/admin/config', icon: Settings },
-        { name: 'Users', href: '/admin/users', icon: Users },
-        { name: 'Properties', href: '/admin/properties', icon: Building },
-        { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
-        { name: 'Tickets', href: '/admin/tickets', icon: Wrench },
+        { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
+        { name: 'User management', href: '/admin/users', icon: Users },
+        { name: 'Landlord verification', href: '/admin/users?filter=landlords', icon: BadgeCheck },
+        { name: 'Property approvals', href: '/admin/properties', icon: Building },
+        { name: 'Booking monitoring', href: '/admin/bookings', icon: CalendarCheck },
+        { name: 'Subscription monitoring', href: '/admin/transactions', icon: CreditCard },
       ]
     },
     {
-      title: 'MANAGEMENT',
+      title: 'GOVERNANCE & AUDIT',
       links: [
-        { name: 'Analytics & Insights', href: '/admin/analytics', icon: BarChart3 },
-        { name: 'Subscriptions', href: '/admin/transactions', icon: CreditCard },
-        { name: 'Reviews', href: '/admin/reviews', icon: Star },
-        { name: 'System Activity', href: '/admin/activity', icon: Activity },
-        { name: 'Tenant Breaches', href: '/admin/breaches', icon: Scale },
-        { name: 'Deed Audits', href: '/admin/deeds', icon: FileCheck },
-        { name: 'Dynamic Notices', href: '/admin/notices', icon: Megaphone },
-        { name: 'Push Broadcasts', href: '/admin/broadcasts', icon: Radio },
+        { name: 'Dispute management', href: '/admin/breaches', icon: Scale },
+        { name: 'Review moderation', href: '/admin/reviews', icon: Star },
+        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Audit logs', href: '/admin/audit', icon: ShieldAlert },
+        { name: 'System settings', href: '/admin/config', icon: Settings },
       ]
     }
   ];

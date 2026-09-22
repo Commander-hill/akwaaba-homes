@@ -34,7 +34,7 @@ import SkeletonTable from '@/components/SkeletonTable';
 import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTemplates';
 
 const VALID_TENANT_TABS = [
-  'bookings', 'tickets', 'reviews', 'roommates', 'documents', 'payments', 
+  'bookings', 'active-booking', 'tickets', 'reviews', 'roommates', 'documents', 'payments', 
   'safety', 'messages', 'visitors', 'services', 'vehicles', 'renewals', 
   'deliveries', 'billsplit', 'tranches', 'inventory'
 ] as const;
@@ -554,7 +554,7 @@ function TenantDashboardContent() {
         </div>
       </div>
 
-      {activeTab === 'bookings' && (
+      {(activeTab === 'bookings' || activeTab === 'active-booking') && (
         <div className="animate-in space-y-4">
           {/* Sub-tabs if there are any cancelled or active bookings */}
           {!bookingsLoading && cancelledBookings.length > 0 && (

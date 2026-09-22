@@ -7,7 +7,8 @@ import {
   LayoutDashboard, LogOut, Loader2, Home, ListTodo, User, Users, Plus, 
   BadgeCheck, Scale, Building, CreditCard, MessageSquare, Wrench, BellRing, 
   Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator,
-  Calendar, Armchair, Gauge, ClipboardCheck, Menu
+  Calendar, Armchair, Gauge, ClipboardCheck, Menu, CalendarCheck, PlusCircle, 
+  Edit3, Boxes, Inbox, Bell, Star, Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
@@ -71,26 +72,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.location.href = '/login';
   };
 
+  // Fetch unread notifications count for live badge in sidebar
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/notifications');
+        return res.data;
+      } catch {
+        return { notifications: [], unreadCount: 0 };
+      }
+    },
+    staleTime: 30000,
+  });
+  const unreadNotificationsCount = notificationsData?.unreadCount || 0;
+
   let sidebarGroups: SidebarGroup[] = [];
   
   if (user?.role === 'LANDLORD') {
     sidebarGroups = [
       {
-        title: 'MAIN',
+        title: 'MANAGEMENT',
         links: [
-          { name: 'Dashboard', href: '/dashboard/landlord', icon: ListTodo },
-          { name: 'Properties', href: '/dashboard/landlord/properties', icon: Building },
-          { name: 'Tenants', href: '/dashboard/landlord/tenants', icon: Users },
-          { name: 'List Property', href: '/dashboard/landlord/new', icon: Plus },
+          { name: 'Overview', href: '/dashboard/landlord', icon: LayoutDashboard },
+          { name: 'My properties', href: '/dashboard/landlord/properties', icon: Building },
+          { name: 'Add property', href: '/dashboard/landlord/new', icon: PlusCircle },
+          { name: 'Edit property', href: '/dashboard/landlord/properties', icon: Edit3 },
+          { name: 'Room and inventory management', href: '/dashboard/landlord?tab=assets', icon: Boxes },
+          { name: 'Booking requests', href: '/dashboard/landlord?tab=bookings', icon: Inbox },
+          { name: 'Subscription and billing', href: '/dashboard/landlord/subscription', icon: CreditCard },
+          { name: 'Verification status', href: '/dashboard/verification', icon: BadgeCheck },
+          { name: 'Tenant reviews', href: '/dashboard/landlord?tab=reviews', icon: Star },
         ]
       },
       {
-        title: 'ACCOUNT',
+        title: 'ACCOUNT & ALERTS',
         links: [
-          { name: 'Subscription', href: '/dashboard/landlord/subscription', icon: CreditCard },
-          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
+          { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
         ]
       }
     ];
@@ -115,41 +134,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
+          { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
           { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];
   } else {
+    // Tenant Dashboard
     sidebarGroups = [
       {
-        title: 'RESIDENCE',
+        title: 'MY RESIDENCE',
         links: [
-          { name: 'My Bookings', href: '/dashboard/tenant', icon: LayoutDashboard },
-          { name: 'Payment Tranches', href: '/dashboard/tenant?tab=tranches', icon: Calendar },
-          { name: 'Unit Inventory', href: '/dashboard/tenant?tab=inventory', icon: Armchair },
-          { name: 'Lease & Documents', href: '/dashboard/tenant?tab=documents', icon: FileText },
-          { name: 'Rent & Payments', href: '/dashboard/tenant?tab=payments', icon: Receipt },
-          { name: 'Maintenance & Repairs', href: '/dashboard/tenant?tab=tickets', icon: Wrench },
-          { name: 'Safety & Hotlines', href: '/dashboard/tenant?tab=safety', icon: PhoneCall },
+          { name: 'Overview', href: '/dashboard/tenant', icon: LayoutDashboard },
+          { name: 'My bookings', href: '/dashboard/tenant?tab=bookings', icon: CalendarCheck },
+          { name: 'Booking details', href: '/dashboard/tenant?tab=active-booking', icon: FileText },
+          { name: 'Saved properties', href: '/dashboard/wishlist', icon: Heart },
         ]
       },
       {
-        title: 'LIVING & COMMUNITY',
+        title: 'ACCOUNT & ALERTS',
         links: [
-          { name: 'Find Roommates', href: '/dashboard/roommates', icon: Users },
-          { name: 'Bill Splitter', href: '/dashboard/tenant?tab=billsplit', icon: Calculator },
-          { name: 'Guest Passes', href: '/dashboard/tenant?tab=visitors', icon: KeyRound },
-          { name: 'Package Deliveries', href: '/dashboard/tenant?tab=deliveries', icon: Package },
-          { name: 'Saved Wishlist', href: '/dashboard/wishlist', icon: Heart },
-          { name: 'Explore Homes', href: '/properties', icon: Compass },
-        ]
-      },
-      {
-        title: 'ACCOUNT',
-        links: [
-          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
           { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
+          { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
+          { name: 'Reviews', href: '/dashboard/tenant?tab=reviews', icon: Star },
+          { name: 'Account settings', href: '/dashboard/profile/security', icon: Settings },
         ]
       }
     ];

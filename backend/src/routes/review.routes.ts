@@ -4,7 +4,8 @@ import {
   getPropertyReviews, 
   flagReview, 
   submitAppeal, 
-  getMyReviews 
+  getMyReviews,
+  getLandlordReviews
 } from '../controllers/review.controller';
 import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
@@ -12,6 +13,9 @@ const router = Router();
 
 // Public: view approved reviews for a property
 router.get('/property/:propertyId', getPropertyReviews);
+
+// Protected: landlord views reviews for their properties
+router.get('/landlord', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordReviews);
 
 // Protected: tenant creates a review (eligibility enforced in controller)
 router.post('/', authenticate, authorizeRole(['TENANT']), createReview);
