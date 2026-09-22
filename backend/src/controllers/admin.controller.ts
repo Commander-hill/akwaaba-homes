@@ -254,6 +254,9 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         ghanaCardNumber: true,
         ghanaCardFrontUrl: true,
         ghanaCardBackUrl: true,
+        ghanaCardRejectionReason: true,
+        ghanaCardReviewedAt: true,
+        ghanaCardReviewedBy: true,
         landlordDocUrl: true,
         isVerifiedLandlord: true,
         landlordVerificationStatus: true,
@@ -601,10 +604,18 @@ export const getAllTransactions = async (req: Request, res: Response): Promise<v
 export const verifyUserCard = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { status } = req.body; // VERIFIED, REJECTED
+    const { status, reason } = req.body; // PENDING, UNDER_REVIEW, VERIFIED, REJECTED, RESUBMISSION_REQUIRED
 
-    if (!['VERIFIED', 'REJECTED'].includes(status)) {
-      res.status(400).json({ message: 'Invalid status' });
+    const validStatuses = ['PENDING', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'RESUBMISSION_REQUIRED'];
+    if (!validStatuses.includes(status)) {
+      res.status(400).json({ message: `Invalid status. Allowed values: ${validStatuses.join(', ')}` });
+      return;
+    }
+
+    if (['REJECTED', 'RESUBMISSION_REQUIRED'].includes(status) && (!reason || !String(reason).trim())) {
+      res.status(400).json({ 
+        message: 'A clear explanation/reason is required when rejecting or requesting document resubmission.' 
+      });
       return;
     }
 
@@ -614,21 +625,32 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    const trimmedReason = reason ? String(reason).trim() : null;
+
     const user = await prisma.user.update({
       where: { id },
       data: {
-        ghanaCardStatus: status
+        ghanaCardStatus: status,
+        ghanaCardRejectionReason: ['REJECTED', 'RESUBMISSION_REQUIRED'].includes(status) ? trimmedReason : null,
+        ghanaCardReviewedAt: new Date(),
+        ghanaCardReviewedBy: req.user?.id || 'ADMIN'
       },
-      select: { id: true, ghanaCardStatus: true }
+      select: { 
+        id: true, 
+        ghanaCardStatus: true,
+        ghanaCardRejectionReason: true,
+        ghanaCardReviewedAt: true,
+        ghanaCardReviewedBy: true
+      }
     });
 
     await logAudit(
       req.user.id,
-      status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD',
+      `KYC_STATUS_${status}`,
       'User',
       id,
       { ghanaCardStatus: oldUser.ghanaCardStatus },
-      { ghanaCardStatus: status },
+      { ghanaCardStatus: status, reason: trimmedReason },
       req.ip || req.socket.remoteAddress
     );
 
@@ -636,33 +658,58 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
     appCache.del(`user:me:${id}`);
     appCache.flushAll();
 
+    // Determine notification copy based on status
+    let notificationTitle = '🪪 Ghana Card Verification Update';
+    let notificationMessage = `Your Ghana Card status has been updated to ${status}.`;
+    let notifType = 'SYSTEM_ALERT';
+
+    if (status === 'VERIFIED') {
+      notificationTitle = '✅ Ghana Card Identity Verified!';
+      notificationMessage = 'Your Ghana Card has been approved. You now have full access to listings and bookings.';
+      notifType = 'ANNOUNCEMENT';
+    } else if (status === 'UNDER_REVIEW') {
+      notificationTitle = '🔍 Ghana Card Under Review';
+      notificationMessage = 'Our compliance team is currently reviewing your Ghana Card identity credentials.';
+      notifType = 'INFO';
+    } else if (status === 'RESUBMISSION_REQUIRED') {
+      notificationTitle = '⚠️ Ghana Card Resubmission Required';
+      notificationMessage = `Please re-upload your Ghana Card images: ${trimmedReason}`;
+      notifType = 'SYSTEM_ALERT';
+    } else if (status === 'REJECTED') {
+      notificationTitle = '❌ Ghana Card Verification Rejected';
+      notificationMessage = `Your Ghana Card submission was rejected: ${trimmedReason}`;
+      notifType = 'SYSTEM_ALERT';
+    }
+
     // In-app persistent notification
     await prisma.notification.create({
       data: {
         userId: id,
-        type: status === 'VERIFIED' ? 'ANNOUNCEMENT' : 'SYSTEM_ALERT',
-        title: status === 'VERIFIED' ? '✅ Ghana Card Identity Verified!' : '❌ Ghana Card Verification Rejected',
-        message: status === 'VERIFIED'
-          ? 'Your Ghana Card has been approved. You now have full access to listings and bookings.'
-          : 'Your Ghana Card submission was rejected. Please review and re-submit your ID.',
+        type: notifType,
+        title: notificationTitle,
+        message: notificationMessage,
         link: '/dashboard/verification'
       }
     }).catch(() => {});
 
-    // Notify the user in real-time so the onboarding widget refreshes instantly
+    // Notify the user in real-time
     try {
       const { getIO } = await import('../socket');
       getIO().to(id).emit('notification', {
-        title: status === 'VERIFIED' ? '✅ Identity Verified!' : '❌ Verification Rejected',
-        message: status === 'VERIFIED'
-          ? 'Your Ghana Card has been verified. You can now list properties and make bookings.'
-          : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
+        title: notificationTitle,
+        message: notificationMessage,
         type: 'verification'
       });
-      getIO().to(id).emit('user_updated', { ghanaCardStatus: status });
+      getIO().to(id).emit('user_updated', { 
+        ghanaCardStatus: status,
+        ghanaCardRejectionReason: user.ghanaCardRejectionReason
+      });
     } catch (e) { /* socket optional */ }
 
-    res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
+    res.status(200).json({ 
+      message: `User Ghana Card status updated to ${status.replace('_', ' ')} successfully`, 
+      user 
+    });
   } catch (error) {
     console.error('Error verifying user card:', error);
     res.status(500).json({ message: 'Internal server error' });

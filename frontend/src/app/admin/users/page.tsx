@@ -40,7 +40,7 @@ const getImageUrl = (url: string | null | undefined) => {
   return `${baseUrl.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
 };
 
-type FilterRole = 'ALL' | 'LANDLORD' | 'TENANT' | 'CARETAKER' | 'ADMIN' | 'PENDING_KYC' | 'UNLOCK_REQUESTS' | 'SUSPENDED';
+type FilterRole = 'ALL' | 'LANDLORD' | 'TENANT' | 'CARETAKER' | 'ADMIN' | 'PENDING_KYC' | 'UNDER_REVIEW' | 'RESUBMISSION_REQUIRED' | 'UNLOCK_REQUESTS' | 'SUSPENDED';
 
 export default function AdminUsersPage() {
   const queryClient = useQueryClient();
@@ -49,6 +49,11 @@ export default function AdminUsersPage() {
   const [unlockRequestUser, setUnlockRequestUser] = useState<any | null>(null);
   const [suspensionTarget, setSuspensionTarget] = useState<{ user: any; action: 'suspend' | 'unsuspend' } | null>(null);
   const [zoomedImage, setZoomedImage] = useState<{ url: string; title: string } | null>(null);
+  const [reasonModal, setReasonModal] = useState<{
+    user: any;
+    targetStatus: 'REJECTED' | 'RESUBMISSION_REQUIRED';
+    reason: string;
+  } | null>(null);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,17 +70,19 @@ export default function AdminUsersPage() {
   // KPI Calculations
   const stats = useMemo(() => {
     if (!users || !Array.isArray(users)) {
-      return { total: 0, landlords: 0, verifiedLandlords: 0, tenants: 0, pendingKyc: 0, unlockRequests: 0, suspended: 0 };
+      return { total: 0, landlords: 0, verifiedLandlords: 0, tenants: 0, pendingKyc: 0, underReviewKyc: 0, resubmissionKyc: 0, unlockRequests: 0, suspended: 0 };
     }
     const total = users.length;
     const landlords = users.filter((u: any) => u.role === 'LANDLORD').length;
     const verifiedLandlords = users.filter((u: any) => u.role === 'LANDLORD' && u.isVerifiedLandlord).length;
     const tenants = users.filter((u: any) => u.role === 'TENANT').length;
     const pendingKyc = users.filter((u: any) => u.ghanaCardStatus === 'PENDING').length;
+    const underReviewKyc = users.filter((u: any) => u.ghanaCardStatus === 'UNDER_REVIEW').length;
+    const resubmissionKyc = users.filter((u: any) => u.ghanaCardStatus === 'RESUBMISSION_REQUIRED').length;
     const unlockRequests = users.filter((u: any) => u.profileUnlockRequested).length;
     const suspended = users.filter((u: any) => u.isSuspended).length;
 
-    return { total, landlords, verifiedLandlords, tenants, pendingKyc, unlockRequests, suspended };
+    return { total, landlords, verifiedLandlords, tenants, pendingKyc, underReviewKyc, resubmissionKyc, unlockRequests, suspended };
   }, [users]);
 
   // Filtered and Searched Users
@@ -89,6 +96,8 @@ export default function AdminUsersPage() {
       if (activeFilter === 'CARETAKER' && u.role !== 'CARETAKER') return false;
       if (activeFilter === 'ADMIN' && u.role !== 'ADMIN') return false;
       if (activeFilter === 'PENDING_KYC' && u.ghanaCardStatus !== 'PENDING') return false;
+      if (activeFilter === 'UNDER_REVIEW' && u.ghanaCardStatus !== 'UNDER_REVIEW') return false;
+      if (activeFilter === 'RESUBMISSION_REQUIRED' && u.ghanaCardStatus !== 'RESUBMISSION_REQUIRED') return false;
       if (activeFilter === 'UNLOCK_REQUESTS' && !u.profileUnlockRequested) return false;
       if (activeFilter === 'SUSPENDED' && !u.isSuspended) return false;
 
@@ -109,14 +118,15 @@ export default function AdminUsersPage() {
 
   // Mutations
   const verifyMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
-      const res = await api.put(`/admin/verify-user/${id}`, { status });
+    mutationFn: async ({ id, status, reason }: { id: string, status: string, reason?: string }) => {
+      const res = await api.put(`/admin/verify-user/${id}`, { status, reason });
       return res.data;
     },
     onSuccess: (data) => {
       toast.success(data?.message || 'Ghana Card KYC status updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       setSelectedUser(null);
+      setReasonModal(null);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to update KYC status');
@@ -177,9 +187,9 @@ export default function AdminUsersPage() {
     onSettled: () => setProcessingId(null)
   });
 
-  const handleVerify = (id: string, status: string) => {
+  const handleVerify = (id: string, status: string, reason?: string) => {
     setProcessingId(id + 'verify');
-    verifyMutation.mutate({ id, status });
+    verifyMutation.mutate({ id, status, reason });
   };
 
   const handleToggleLock = (user: any) => {
@@ -423,6 +433,34 @@ export default function AdminUsersPage() {
           </button>
 
           <button
+            onClick={() => setActiveFilter('UNDER_REVIEW')}
+            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeFilter === 'UNDER_REVIEW'
+                ? 'bg-sky-600 text-white shadow-sm'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            Under Review ({stats.underReviewKyc})
+            {stats.underReviewKyc > 0 && (
+              <span className="w-2 h-2 rounded-full bg-sky-400" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveFilter('RESUBMISSION_REQUIRED')}
+            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+              activeFilter === 'RESUBMISSION_REQUIRED'
+                ? 'bg-orange-600 text-white shadow-sm'
+                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+            }`}
+          >
+            Resubmission Req ({stats.resubmissionKyc})
+            {stats.resubmissionKyc > 0 && (
+              <span className="w-2 h-2 rounded-full bg-orange-400" />
+            )}
+          </button>
+
+          <button
             onClick={() => setActiveFilter('UNLOCK_REQUESTS')}
             className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
               activeFilter === 'UNLOCK_REQUESTS'
@@ -534,14 +572,20 @@ export default function AdminUsersPage() {
                         <div className="space-y-1">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
                             user.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' :
+                            user.ghanaCardStatus === 'UNDER_REVIEW' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40' :
+                            user.ghanaCardStatus === 'RESUBMISSION_REQUIRED' ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300 border border-orange-200 dark:border-orange-800/40' :
                             user.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40' :
                             user.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-800/40' :
                             'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
                           }`}>
                             {user.ghanaCardStatus === 'VERIFIED' && <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
+                            {user.ghanaCardStatus === 'UNDER_REVIEW' && <Clock className="w-3 h-3 text-sky-600 dark:text-sky-400 animate-pulse" />}
+                            {user.ghanaCardStatus === 'RESUBMISSION_REQUIRED' && <AlertTriangle className="w-3 h-3 text-orange-600 dark:text-orange-400" />}
                             {user.ghanaCardStatus === 'PENDING' && <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 animate-spin" />}
                             {user.ghanaCardStatus === 'REJECTED' && <XCircle className="w-3 h-3 text-red-600 dark:text-red-400" />}
                             {user.ghanaCardStatus === 'VERIFIED' ? 'Verified' :
+                             user.ghanaCardStatus === 'UNDER_REVIEW' ? 'Under Review' :
+                             user.ghanaCardStatus === 'RESUBMISSION_REQUIRED' ? 'Resubmission Req' :
                              user.ghanaCardStatus === 'PENDING' ? 'Pending Review' :
                              user.ghanaCardStatus === 'REJECTED' ? 'Rejected' : 'Not Submitted'}
                           </span>
@@ -549,6 +593,12 @@ export default function AdminUsersPage() {
                           {user.ghanaCardNumber && (
                             <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                               {user.ghanaCardNumber}
+                            </div>
+                          )}
+
+                          {user.ghanaCardRejectionReason && (
+                            <div className="text-[10px] text-amber-700 dark:text-amber-400 max-w-[170px] truncate" title={user.ghanaCardRejectionReason}>
+                              Note: {user.ghanaCardRejectionReason}
                             </div>
                           )}
                         </div>
@@ -636,11 +686,11 @@ export default function AdminUsersPage() {
                       {/* Actions */}
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Review KYC button (if pending or deed exists) */}
-                          {(user.ghanaCardStatus === 'PENDING' || (user.role === 'LANDLORD' && user.landlordDocUrl)) && (
+                          {/* Review KYC button (if submitted, under review, resubmission req, or deed exists) */}
+                          {(['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'].includes(user.ghanaCardStatus) || user.ghanaCardFrontUrl || (user.role === 'LANDLORD' && user.landlordDocUrl)) && (
                             <button
                               onClick={() => setSelectedUser(user)}
-                              className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                              className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                               title="Audit submitted statutory documents"
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -896,7 +946,7 @@ export default function AdminUsersPage() {
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-950/50">
               {/* User Metadata Strip */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
                 <div>
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
                     Account Identity
@@ -934,7 +984,43 @@ export default function AdminUsersPage() {
                     </code>
                   </div>
                 </div>
+
+                <div>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Current Status
+                  </span>
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedUser.ghanaCardStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
+                    selectedUser.ghanaCardStatus === 'UNDER_REVIEW' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300' :
+                    selectedUser.ghanaCardStatus === 'RESUBMISSION_REQUIRED' ? 'bg-orange-100 text-orange-800 dark:bg-orange-950/60 dark:text-orange-300' :
+                    selectedUser.ghanaCardStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300' :
+                    selectedUser.ghanaCardStatus === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300' :
+                    'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                  }`}>
+                    {selectedUser.ghanaCardStatus ? selectedUser.ghanaCardStatus.replace('_', ' ') : 'NOT SUBMITTED'}
+                  </span>
+                  {selectedUser.ghanaCardReviewedAt && (
+                    <div className="text-[10px] text-slate-400 mt-1">
+                      Audited {new Date(selectedUser.ghanaCardReviewedAt).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Display existing rejection/resubmission feedback note if present */}
+              {selectedUser.ghanaCardRejectionReason && (
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wide">
+                      Compliance Audit Feedback on Record:
+                    </span>
+                    <p className="text-sm text-amber-800 dark:text-amber-300 mt-0.5 font-medium">
+                      &quot;{selectedUser.ghanaCardRejectionReason}&quot;
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* ID Document Images (Front & Back) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1060,7 +1146,7 @@ export default function AdminUsersPage() {
             {/* Modal Footer Actions */}
             <div className="p-5 bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Approving assigns verified statutory credentials under Ghana Rent Act (Act 220) and NIA standards.
+                Statutory audit under Ghana Rent Act (Act 220) and National Identification Authority (NIA) verification rules.
               </p>
 
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
@@ -1068,17 +1154,37 @@ export default function AdminUsersPage() {
                   <button
                     onClick={() => handleVerifyLandlord(selectedUser.id, 'VERIFIED')}
                     disabled={processingId === selectedUser.id + 'landlord'}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5"
+                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                   >
                     {processingId === selectedUser.id + 'landlord' ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileCheck className="w-4 h-4" />}
                     Verify Landlord Deed
                   </button>
                 )}
 
+                {selectedUser.ghanaCardStatus !== 'UNDER_REVIEW' && selectedUser.ghanaCardStatus !== 'VERIFIED' && (
+                  <button
+                    onClick={() => handleVerify(selectedUser.id, 'UNDER_REVIEW')}
+                    disabled={processingId === selectedUser.id + 'verify'}
+                    className="px-4 py-2.5 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Clock className="w-4 h-4 text-sky-600" />
+                    Mark Under Review
+                  </button>
+                )}
+
                 <button
-                  onClick={() => handleVerify(selectedUser.id, 'REJECTED')}
+                  onClick={() => setReasonModal({ user: selectedUser, targetStatus: 'RESUBMISSION_REQUIRED', reason: '' })}
                   disabled={processingId === selectedUser.id + 'verify'}
-                  className="px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:bg-orange-950/40 dark:text-orange-300 border border-orange-200 dark:border-orange-800/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                  Request Resubmission
+                </button>
+
+                <button
+                  onClick={() => setReasonModal({ user: selectedUser, targetStatus: 'REJECTED', reason: '' })}
+                  disabled={processingId === selectedUser.id + 'verify'}
+                  className="px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <XCircle className="w-4 h-4" /> Reject ID
                 </button>
@@ -1086,12 +1192,129 @@ export default function AdminUsersPage() {
                 <button
                   onClick={() => handleVerify(selectedUser.id, 'VERIFIED')}
                   disabled={processingId === selectedUser.id + 'verify'}
-                  className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   {processingId === selectedUser.id + 'verify' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                   Approve Ghana Card
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: REASON FOR REJECTION OR RESUBMISSION ───────────────────── */}
+      {reasonModal && (
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-2xl ${
+                  reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
+                    ? 'bg-orange-100 text-orange-600 dark:bg-orange-950/50 dark:text-orange-300'
+                    : 'bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-300'
+                }`}>
+                  {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED' ? (
+                    <AlertTriangle className="w-6 h-6" />
+                  ) : (
+                    <XCircle className="w-6 h-6" />
+                  )}
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    Statutory Compliance Action
+                  </span>
+                  <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
+                    {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
+                      ? 'Request Ghana Card Resubmission'
+                      : 'Reject Ghana Card Submission'}
+                  </h3>
+                </div>
+              </div>
+              <button
+                onClick={() => setReasonModal(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              {reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
+                ? `Provide clear guidance for ${reasonModal.user.firstName} ${reasonModal.user.lastName} on what needs to be fixed before they re-upload their ID.`
+                : `Explain the statutory or fraud grounds for rejecting ${reasonModal.user.firstName} ${reasonModal.user.lastName}'s Ghana Card.`}
+            </p>
+
+            {/* Quick Suggestions */}
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                Quick Preset Explanations:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  'Image is blurry or unreadable',
+                  'Corners or edges of card are cropped out',
+                  'Flash reflection obscures personal details',
+                  'PIN on photo does not match entered PIN',
+                  'Document presented has expired',
+                  'Document appears altered or non-authentic'
+                ].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => setReasonModal(prev => prev ? { ...prev, reason: preset } : null)}
+                    className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors text-left cursor-pointer"
+                  >
+                    + {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Reason Textarea */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                Detailed Explanation to User (Mandatory) *
+              </label>
+              <textarea
+                rows={3}
+                required
+                placeholder="e.g. The reverse side photograph is blurry and the expiration date cannot be verified. Please capture a clear, well-lit photo."
+                value={reasonModal.reason}
+                onChange={(e) => setReasonModal(prev => prev ? { ...prev, reason: e.target.value } : null)}
+                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F5132]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setReasonModal(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!reasonModal.reason.trim() || processingId === reasonModal.user.id + 'verify'}
+                onClick={() => {
+                  handleVerify(reasonModal.user.id, reasonModal.targetStatus, reasonModal.reason);
+                }}
+                className={`px-5 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                  reasonModal.targetStatus === 'RESUBMISSION_REQUIRED'
+                    ? 'bg-orange-600 hover:bg-orange-700 shadow-orange-500/20'
+                    : 'bg-red-600 hover:bg-red-700 shadow-red-500/20'
+                }`}
+              >
+                {processingId === reasonModal.user.id + 'verify' ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Submit Decision
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

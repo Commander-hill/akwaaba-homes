@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
-import { encryptData, decryptData } from '../utils/crypto';
+import { encryptData, decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
 import crypto from 'crypto';
@@ -676,6 +676,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         ghanaCardStatus: true,
         ghanaCardFrontUrl: true,
         ghanaCardBackUrl: true,
+        ghanaCardRejectionReason: true,
+        ghanaCardReviewedAt: true,
         landlordDocUrl: true,
         isVerifiedLandlord: true,
         landlordVerificationStatus: true,
@@ -709,7 +711,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
     }
 
     if (user.ghanaCardNumber) {
-      user.ghanaCardNumber = decryptData(user.ghanaCardNumber);
+      const decrypted = decryptData(user.ghanaCardNumber);
+      user.ghanaCardNumber = maskGhanaCardNumber(decrypted);
     }
     if (user.ghanaCardFrontUrl) {
       user.ghanaCardFrontUrl = generateSignedDocumentUrl(user.ghanaCardFrontUrl);
@@ -800,11 +803,33 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
     }
 
     if (!ghanaCardNumber || !ghanaCardFrontUrl || !ghanaCardBackUrl) {
-      res.status(400).json({ message: 'Ghana Card Number and both images are required' });
+      res.status(400).json({ message: 'Ghana Card Number and both front and reverse images are required' });
       return;
     }
 
-    const encryptedCardNumber = encryptData(ghanaCardNumber);
+    const cleanCard = String(ghanaCardNumber).trim().toUpperCase();
+    const ghanaCardRegex = /^GHA-\d{9}-\d$/;
+    if (!ghanaCardRegex.test(cleanCard)) {
+      res.status(400).json({ 
+        message: 'Invalid Ghana Card PIN format. Format must be GHA-XXXXXXXXX-X (e.g. GHA-123456789-0)' 
+      });
+      return;
+    }
+
+    const existingUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!existingUser) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (existingUser.ghanaCardStatus === 'VERIFIED') {
+      res.status(400).json({ 
+        message: 'Your identity has already been verified and locked. Contact compliance support if you need to update it.' 
+      });
+      return;
+    }
+
+    const encryptedCardNumber = encryptData(cleanCard);
 
     await prisma.user.update({
       where: { id: req.user.id },
@@ -812,7 +837,8 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
         ghanaCardNumber: encryptedCardNumber,
         ghanaCardFrontUrl,
         ghanaCardBackUrl,
-        ghanaCardStatus: 'PENDING'
+        ghanaCardStatus: 'PENDING',
+        ghanaCardRejectionReason: null,
       }
     });
 
@@ -822,19 +848,20 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
     // Notify admins of new KYC Ghana Card submission
     const cardAdmins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
     if (cardAdmins.length > 0) {
+      const masked = maskGhanaCardNumber(cleanCard);
       await prisma.notification.createMany({
         data: cardAdmins.map(a => ({
           userId: a.id,
           type: 'SYSTEM_ALERT',
           title: '🪪 New Ghana Card KYC Submission',
-          message: `User submitted Ghana Card for identity verification.`,
+          message: `${existingUser.firstName || 'User'} submitted Ghana Card (${masked}) for identity verification.`,
           link: '/admin/users'
         }))
       }).catch(() => null);
     }
 
     try {
-      emitToUser(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
+      emitToUser(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING', ghanaCardRejectionReason: null });
       emitToAll('user_updated', { userId: req.user.id });
     } catch (e) { /* non-blocking */ }
 

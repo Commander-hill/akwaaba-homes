@@ -181,6 +181,8 @@ export default function VerificationPage() {
 
   const isVerified = session.ghanaCardStatus === 'VERIFIED';
   const isPending = session.ghanaCardStatus === 'PENDING';
+  const isUnderReview = session.ghanaCardStatus === 'UNDER_REVIEW';
+  const isResubmissionRequired = session.ghanaCardStatus === 'RESUBMISSION_REQUIRED';
   const isRejected = session.ghanaCardStatus === 'REJECTED';
 
   const isLandlordVerified = session.isVerifiedLandlord === true || session.landlordVerificationStatus === 'VERIFIED';
@@ -224,11 +226,15 @@ export default function VerificationPage() {
             <span className={clsx(
               "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border tracking-wide",
               isVerified ? "bg-emerald-50 text-[#0F5132] border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800" :
+              isUnderReview ? "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/50 dark:text-sky-300 dark:border-sky-800" :
+              isResubmissionRequired ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/50 dark:text-orange-300 dark:border-orange-800" :
               isPending ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800" :
               isRejected ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800" :
               "bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"
             )}>
               {isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+              {isUnderReview && <Clock className="w-3.5 h-3.5 text-sky-600 animate-pulse" />}
+              {isResubmissionRequired && <AlertCircle className="w-3.5 h-3.5 text-orange-600" />}
               {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-600" />}
               {isRejected && <AlertCircle className="w-3.5 h-3.5 text-rose-600" />}
               <span>{session.ghanaCardStatus ? session.ghanaCardStatus.replace('_', ' ') : 'NOT SUBMITTED'}</span>
@@ -252,6 +258,38 @@ export default function VerificationPage() {
                 </p>
               </div>
             </div>
+          ) : isUnderReview ? (
+            <div className="bg-sky-50/50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800/50 rounded-xl p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400 shrink-0">
+                  <Clock className="w-4 h-4 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold text-sky-950 dark:text-sky-100">
+                    Compliance Verification Active
+                  </h3>
+                  <p className="text-xs text-sky-800 dark:text-sky-300 mt-1 leading-relaxed">
+                    An Akwaaba Homes compliance administrator is currently reviewing your Ghana Card identity credentials against statutory registry benchmarks. No further action is required from you.
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Stepper */}
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-sky-200/60 dark:border-sky-800/60">
+                <div className="text-center p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50">
+                  <div className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300">1. Submitted</div>
+                  <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Completed</div>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-sky-100 dark:bg-sky-900/50 border border-sky-300 dark:border-sky-700">
+                  <div className="text-[10px] font-bold text-sky-800 dark:text-sky-200">2. Review</div>
+                  <div className="text-[10px] text-sky-600 dark:text-sky-300 font-semibold">In Progress</div>
+                </div>
+                <div className="text-center p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400">
+                  <div className="text-[10px] font-bold">3. Certified</div>
+                  <div className="text-[10px]">Pending</div>
+                </div>
+              </div>
+            </div>
           ) : isPending ? (
             <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-4">
               <div className="flex items-start gap-3">
@@ -260,10 +298,10 @@ export default function VerificationPage() {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-zinc-900 dark:text-white">
-                    Document Submitted &amp; Awaiting Clearance
+                    Document Submitted &amp; In Audit Queue
                   </h3>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    Your Ghana Card credentials and photo proofs have been secured with SHA-256 encryption. Our compliance team is verifying the biometric match against the NIA registry.
+                    Your Ghana Card credentials and photo proofs have been secured with AES-256 encryption. Your submission is in line for compliance verification.
                   </p>
                 </div>
               </div>
@@ -275,8 +313,8 @@ export default function VerificationPage() {
                   <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Completed</div>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50">
-                  <div className="text-[10px] font-bold text-amber-700 dark:text-amber-300">2. Review</div>
-                  <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">In Progress</div>
+                  <div className="text-[10px] font-bold text-amber-700 dark:text-amber-300">2. Review Queue</div>
+                  <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">Queued</div>
                 </div>
                 <div className="text-center p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400">
                   <div className="text-[10px] font-bold">3. Certified</div>
@@ -286,6 +324,37 @@ export default function VerificationPage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Feedback banners for Resubmission Required or Rejected */}
+              {isResubmissionRequired && (
+                <div className="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-xs text-orange-900 dark:text-orange-200">
+                    <AlertCircle className="w-4 h-4 text-orange-600" />
+                    <span>Action Required: Document Resubmission Requested</span>
+                  </div>
+                  <p className="text-xs text-orange-800 dark:text-orange-300 leading-relaxed font-medium">
+                    {session.ghanaCardRejectionReason || 'Please capture clearer, glare-free photos of both sides of your card and resubmit.'}
+                  </p>
+                  <p className="text-[11px] text-orange-700/80 dark:text-orange-400/80 pt-1">
+                    Please address the compliance notes above and upload new images below.
+                  </p>
+                </div>
+              )}
+
+              {isRejected && (
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 space-y-1">
+                  <div className="flex items-center gap-2 font-bold text-xs text-rose-900 dark:text-rose-200">
+                    <AlertCircle className="w-4 h-4 text-rose-600" />
+                    <span>Previous Verification Rejected</span>
+                  </div>
+                  <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed font-medium">
+                    {session.ghanaCardRejectionReason || 'Your previous Ghana Card submission was rejected due to compliance discrepancies.'}
+                  </p>
+                  <p className="text-[11px] text-rose-700/80 dark:text-rose-400/80 pt-1">
+                    Please submit a valid national ID matching your account profile.
+                  </p>
+                </div>
+              )}
+
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs space-y-1">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 text-zinc-500" />

@@ -49,3 +49,30 @@ export const decryptData = (text: string): string => {
     return '*** ENCRYPTED DATA CORRUPTED ***';
   }
 };
+
+/**
+ * Masks a Ghana Card number for safe public display in API responses.
+ * Example: "GHA-712345678-9" -> "GHA-•••••••78-9"
+ */
+export const maskGhanaCardNumber = (card: string | null | undefined): string | null => {
+  if (!card) return null;
+  const trimmed = card.trim();
+  if (!trimmed) return null;
+
+  // Standard Ghana Card format: GHA-123456789-0
+  const match = trimmed.match(/^GHA-(\d{7})(\d{2})-(\d)$/i);
+  if (match) {
+    return `GHA-•••••••${match[2]}-${match[3]}`;
+  }
+
+  // Generic masking fallback: keep prefix and last 3 chars
+  if (trimmed.length > 7) {
+    const start = trimmed.slice(0, 4);
+    const end = trimmed.slice(-3);
+    const maskedCount = Math.min(8, trimmed.length - 7);
+    return `${start}${'•'.repeat(maskedCount)}${end}`;
+  }
+
+  return 'GHA-•••••••••';
+};
+

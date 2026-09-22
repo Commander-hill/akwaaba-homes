@@ -35,7 +35,10 @@ model User {
   ghanaCardNumber        String?
   ghanaCardFrontUrl      String?
   ghanaCardBackUrl       String?
-  ghanaCardStatus        String    @default("NOT_SUBMITTED") // SQLite does not support enums
+  ghanaCardStatus        String    @default("NOT_SUBMITTED") // NOT_SUBMITTED, PENDING, UNDER_REVIEW, VERIFIED, REJECTED, RESUBMISSION_REQUIRED
+  ghanaCardRejectionReason String?
+  ghanaCardReviewedAt    DateTime?
+  ghanaCardReviewedBy    String?
   
   // Landlord Ownership Verification
   landlordDocUrl             String?   // Ownership Proof / Deed / Business Reg
