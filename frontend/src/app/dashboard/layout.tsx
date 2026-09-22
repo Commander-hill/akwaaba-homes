@@ -33,6 +33,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const user = userResponse?.user;
 
+  // Fetch unread notifications count for live badge in sidebar (called unconditionally before returns)
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      try {
+        const res = await api.get('/notifications');
+        return res.data;
+      } catch {
+        return { notifications: [], unreadCount: 0 };
+      }
+    },
+    enabled: !!user,
+    staleTime: 30000,
+  });
+  const unreadNotificationsCount = notificationsData?.unreadCount || 0;
+
   // Protect routes and redirect correctly
   useEffect(() => {
     if (!isLoading) {
@@ -71,21 +87,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     await api.post('/auth/logout');
     window.location.href = '/login';
   };
-
-  // Fetch unread notifications count for live badge in sidebar
-  const { data: notificationsData } = useQuery({
-    queryKey: ['notifications'],
-    queryFn: async () => {
-      try {
-        const res = await api.get('/notifications');
-        return res.data;
-      } catch {
-        return { notifications: [], unreadCount: 0 };
-      }
-    },
-    staleTime: 30000,
-  });
-  const unreadNotificationsCount = notificationsData?.unreadCount || 0;
 
   let sidebarGroups: SidebarGroup[] = [];
   
