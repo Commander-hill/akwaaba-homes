@@ -561,17 +561,26 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Generate new Access Token with tokenVersion
+    // ── SECURE REFRESH-TOKEN ROTATION ──
+    // Generate fresh Access Token (15 mins) and fresh Refresh Token (7 days)
     const accessToken = generateAccessToken({ 
       id: session.user.id, 
       role: session.user.role, 
       tokenVersion: session.user.tokenVersion || 0 
     });
 
-    // Update lastActive
+    const newRefreshToken = generateRefreshToken({ 
+      id: session.user.id, 
+      tokenVersion: session.user.tokenVersion || 0 
+    });
+
+    // Atomically rotate refresh token and update session activity
     await prisma.session.update({
       where: { id: session.id },
-      data: { lastActive: new Date() }
+      data: { 
+        refreshToken: newRefreshToken,
+        lastActive: new Date() 
+      }
     });
 
     const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
@@ -584,10 +593,18 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       path: '/'
     });
 
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/'
+    });
+
     res.status(200).json({ 
-      message: 'Token refreshed successfully',
+      message: 'Token refreshed and rotated successfully',
       accessToken,
-      refreshToken // Return the same refresh token so frontend can keep it if needed
+      refreshToken: newRefreshToken
     });
   } catch (error) {
     console.error('Refresh error:', error);
