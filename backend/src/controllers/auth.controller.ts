@@ -1283,6 +1283,14 @@ export const setup2FA = async (req: Request, res: Response): Promise<void> => {
     // Refresh temporary setup data for 10 minutes
     appCache.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
 
+    const uri = getTOTPUri(user.email, secret, 'Akwaaba Homes');
+    let qrCodeSvg = '';
+    try {
+      qrCodeSvg = generateQRCodeSvg(uri, 240);
+    } catch (qrErr) {
+      console.warn('QR code generation warning:', qrErr);
+    }
+
     res.status(200).json({
       secret,
       formattedSecret: formatSecretKey(secret),

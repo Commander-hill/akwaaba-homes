@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
+import { EmeraldToastItem } from '@/components/EmeraldToast';
 import { ThemeProvider } from 'next-themes';
 import { SocketProvider } from './SocketProvider';
 import { LanguageProvider } from './LanguageContext';
@@ -54,23 +55,18 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               </SessionTimeoutProvider>
               <Toaster
                 position="top-right"
+                gutter={10}
+                containerStyle={{
+                  top: 24,
+                  right: 24,
+                  zIndex: 99999,
+                }}
                 toastOptions={{
                   duration: 4500,
-                  className: '!bg-white/95 dark:!bg-[#111116]/95 !text-slate-900 dark:!text-white !border !border-slate-200/80 dark:!border-white/10 !backdrop-blur-xl !shadow-[0_20px_50px_rgba(0,0,0,0.3)] !rounded-2xl !px-5 !py-3.5 !text-xs sm:!text-sm !font-bold',
-                  success: {
-                    iconTheme: {
-                      primary: '#10B981',
-                      secondary: '#FFFFFF',
-                    },
-                  },
-                  error: {
-                    iconTheme: {
-                      primary: '#EF4444',
-                      secondary: '#FFFFFF',
-                    },
-                  },
                 }}
-              />
+              >
+                {(t) => <EmeraldToastItem toast={t} />}
+              </Toaster>
             </DialogProvider>
           </LanguageProvider>
         </SocketProvider>
