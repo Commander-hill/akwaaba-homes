@@ -277,13 +277,55 @@ function TenantDashboardContent() {
       const { data } = await api.post(`/bookings/${bookingId}/cancel`);
       return data;
     },
+    onMutate: async (bookingId: string) => {
+      await queryClient.cancelQueries({ queryKey: ['bookings', 'tenant'] });
+      await queryClient.cancelQueries({ queryKey: ['bookings', 'my-active'] });
+
+      const prevTenantBookings = queryClient.getQueryData(['bookings', 'tenant']);
+      const prevActiveBooking = queryClient.getQueryData(['bookings', 'my-active']);
+
+      // Optimistically update tenant bookings list
+      queryClient.setQueryData(['bookings', 'tenant'], (old: any) => {
+        if (!old) return old;
+        if (Array.isArray(old)) {
+          return old.map((b: any) => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b);
+        }
+        if (old.bookings && Array.isArray(old.bookings)) {
+          return {
+            ...old,
+            bookings: old.bookings.map((b: any) => b.id === bookingId ? { ...b, status: 'CANCELLED' } : b)
+          };
+        }
+        return old;
+      });
+
+      // Optimistically update active booking
+      queryClient.setQueryData(['bookings', 'my-active'], (old: any) => {
+        if (!old) return old;
+        if (old.booking && old.booking.id === bookingId) {
+          return { ...old, booking: { ...old.booking, status: 'CANCELLED' } };
+        }
+        return old;
+      });
+
+      return { prevTenantBookings, prevActiveBooking };
+    },
+    onError: (err: any, _bookingId, context) => {
+      if (context?.prevTenantBookings !== undefined) {
+        queryClient.setQueryData(['bookings', 'tenant'], context.prevTenantBookings);
+      }
+      if (context?.prevActiveBooking !== undefined) {
+        queryClient.setQueryData(['bookings', 'my-active'], context.prevActiveBooking);
+      }
+      toast.error(err.response?.data?.message || 'Failed to cancel booking request. Changes reverted.');
+    },
     onSuccess: () => {
-      toast.success('Pending booking request cancelled.');
+      toast.success('Booking request cancelled successfully.');
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
       queryClient.invalidateQueries({ queryKey: ['bookings', 'my-active'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to cancel pending booking');
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
     }
   });
 
@@ -651,7 +693,7 @@ function TenantDashboardContent() {
                           {getStatusBadge(booking.status)}
                         </div>
                         <div className="flex flex-wrap gap-2 justify-end">
-                          {booking.status === 'PENDING' && (
+                          {['PENDING', 'APPROVED'].includes(booking.status) && (
                             <button 
                               onClick={() => cancelPendingMutation.mutate(booking.id)}
                               disabled={cancelPendingMutation.isPending}

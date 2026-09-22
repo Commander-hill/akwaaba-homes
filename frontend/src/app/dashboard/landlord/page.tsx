@@ -6,7 +6,7 @@ import {
   Loader2, Users, Mail, Phone, Calendar, Check, X, 
   CreditCard, Star, PenTool, CheckCircle, CheckCircle2, Clock, FileSignature, Building, 
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
-  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera, UserCheck
 } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -235,13 +235,19 @@ export default function LandlordDashboard() {
       const previousBookings = queryClient.getQueryData<{ bookings: any[] }>(['bookings', 'landlord']);
 
       // Optimistically update the matching booking in cache
-      if (previousBookings?.bookings) {
-        queryClient.setQueryData(['bookings', 'landlord'], {
-          ...previousBookings,
-          bookings: previousBookings.bookings.map((b: any) =>
+      if (previousBookings) {
+        if (Array.isArray(previousBookings)) {
+          queryClient.setQueryData(['bookings', 'landlord'], (previousBookings as any[]).map((b: any) =>
             b.id === id ? { ...b, status } : b
-          )
-        });
+          ));
+        } else if ((previousBookings as any).bookings && Array.isArray((previousBookings as any).bookings)) {
+          queryClient.setQueryData(['bookings', 'landlord'], {
+            ...previousBookings,
+            bookings: (previousBookings as any).bookings.map((b: any) =>
+              b.id === id ? { ...b, status } : b
+            )
+          });
+        }
       }
 
       return { previousBookings };
@@ -717,6 +723,19 @@ export default function LandlordDashboard() {
                           )}
                           {(['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
                             <>
+                              {['CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE'].includes(booking.status) && (
+                                <button
+                                  onClick={() => {
+                                    setProcessingId(booking.id);
+                                    updateStatusMutation.mutate({ id: booking.id, status: 'CHECKED_IN' });
+                                  }}
+                                  disabled={processingId === booking.id}
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all"
+                                  title="Mark Tenant as Checked-In"
+                                >
+                                  {processingId === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />} Check-In
+                                </button>
+                              )}
                               <button
                                 onClick={() => setSelectedInspectionBooking(booking)}
                                 className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all"

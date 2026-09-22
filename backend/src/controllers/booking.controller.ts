@@ -304,21 +304,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
     let booking;
     try {
       booking = await prisma.$transaction(async (tx) => {
-        let targetRoomUnit: any = null;
-        let targetBed: any = null;
-
-        if (roomUnitId && bedId) {
-          targetRoomUnit = await tx.roomUnit.findUnique({ where: { id: roomUnitId } });
-          if (!targetRoomUnit || targetRoomUnit.roomId !== roomId) {
-            throw { status: 400, message: 'Invalid room unit selected' };
-          }
-
-          targetBed = await tx.bed.findUnique({ where: { id: bedId } });
-          if (!targetBed || targetBed.roomUnitId !== roomUnitId) {
-            throw { status: 400, message: 'Invalid bed selected' };
-          }
-        }
-
         // Dynamic Gender Locking on Room Unit
         if (targetRoomUnit) {
           if (targetRoomUnit.genderLock !== 'UNASSIGNED' && targetRoomUnit.genderLock !== tenantGender) {
@@ -338,6 +323,25 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
         // ATOMIC RESERVATION: Ensure bed slot is AVAILABLE and reserve it in a single atomic statement
         if (targetBed) {
+          // Concurrency Overlap Guard: Check if an active booking exists on this bed during requested date window
+          const overlappingBooking = await tx.booking.findFirst({
+            where: {
+              bedId: targetBed.id,
+              status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] },
+              AND: [
+                { startDate: { lte: new Date(endDate) } },
+                { endDate: { gte: new Date(startDate) } }
+              ]
+            }
+          });
+
+          if (overlappingBooking) {
+            throw {
+              status: 409,
+              message: `Conflict: Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit?.unitNumber || ''}" already has an active booking during the selected dates.`
+            };
+          }
+
           const updateResult = await tx.bed.updateMany({
             where: {
               id: targetBed.id,
@@ -367,7 +371,7 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
             status: 'PENDING'
           }
         });
-      });
+      }, { maxWait: 20000, timeout: 30000 });
     } catch (txError: any) {
       if (txError.status && txError.message) {
         res.status(txError.status).json({ message: txError.message });
@@ -375,6 +379,17 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
       }
       throw txError;
     }
+
+    // Log audit trail for booking creation
+    await logAudit(
+      tenantId,
+      'CREATE_BOOKING',
+      'Booking',
+      booking.id,
+      null,
+      { propertyId, roomId, roomUnitId, bedId, startDate, endDate, status: 'PENDING' },
+      req.ip || req.socket.remoteAddress
+    );
 
     // Notify landlord via email + in-app
     await notifyBookingCreated({
@@ -540,18 +555,9 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
     const landlordId = req.user.id;
     const { id } = req.params;
     let { status } = req.body;
-    if (status === 'CONFIRMED') status = 'APPROVED';
-
-    const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
+    const validStatuses = ['APPROVED', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
     if (!validStatuses.includes(status)) {
       res.status(400).json({ message: 'Invalid status' });
-      return;
-    }
-
-    if (status === 'COMPLETED' && req.user.role !== 'ADMIN') {
-      res.status(403).json({ 
-        message: 'Forbidden: Tenancy can only transition to COMPLETED upon verified escrow payment or administrative review.' 
-      });
       return;
     }
 
@@ -581,49 +587,55 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       return;
     }
 
-    // Concurrency & Stale Data Conflict Guards
-    if (booking.status === 'CANCELLED') {
-      res.status(409).json({ 
-        message: 'Conflict: This booking has already been cancelled by the tenant.',
-        currentStatus: booking.status 
-      });
-      return;
-    }
+    // ── STRICT STATE MACHINE TRANSITION MATRIX ──
+    const allowedTransitions: Record<string, string[]> = {
+      PENDING: ['APPROVED', 'REJECTED', 'CANCELLED'],
+      APPROVED: ['CONFIRMED', 'REJECTED', 'CANCELLED'],
+      CONFIRMED: ['CHECKED_IN', 'CANCELLED'],
+      CHECKED_IN: ['COMPLETED', 'CANCELLED'],
+      COMPLETED: [],
+      REJECTED: [],
+      CANCELLED: []
+    };
 
-    if (booking.status === 'REJECTED' && status === 'APPROVED') {
-      res.status(409).json({ 
-        message: 'Conflict: This booking has already been rejected and cannot be directly approved.',
-        currentStatus: booking.status 
-      });
-      return;
-    }
+    const currentStatus = booking.status || 'PENDING';
+    const permittedNext = allowedTransitions[currentStatus] || [];
 
-    if (booking.status === 'APPROVED' && status === 'APPROVED') {
+    if (currentStatus === status) {
       res.status(200).json({ 
-        message: 'Booking is already approved.',
+        message: `Booking is already in state ${status}.`,
         booking 
       });
       return;
     }
 
+    if (!permittedNext.includes(status)) {
+      res.status(409).json({ 
+        message: `Conflict: Booking in state "${currentStatus}" cannot be transitioned to "${status}".`,
+        currentStatus,
+        allowedTransitions: permittedNext 
+      });
+      return;
+    }
+
     // Release gender lock if empty and booking is rejected/cancelled
-    if ((status === 'REJECTED' || status === 'CANCELLED') && booking.roomUnitId) {
+    if ((status === 'REJECTED' || status === 'CANCELLED' || status === 'COMPLETED') && booking.roomUnitId) {
       await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id);
     }
 
     // ── ATOMIC TRANSACTIONAL BOOKING UPDATE ──
     const { updatedBooking, newAgreement } = await prisma.$transaction(async (tx) => {
-      // Re-verify booking status inside transaction
+      // Re-verify booking status inside transaction to guard against concurrent mutations
       const current = await tx.booking.findUnique({ where: { id } });
       if (!current) throw new Error('Booking not found');
-      if (current.status === 'CANCELLED' || (current.status === 'REJECTED' && status === 'APPROVED')) {
+      if (current.status !== currentStatus) {
         const conflictErr: any = new Error(`Conflict: Booking status was concurrently updated to ${current.status}`);
         conflictErr.isConflict = true;
         throw conflictErr;
       }
 
-      // Release reserved bed back to AVAILABLE if booking is rejected or cancelled
-      if ((status === 'REJECTED' || status === 'CANCELLED') && current.bedId) {
+      // Release reserved bed back to AVAILABLE if booking is rejected, cancelled, or completed
+      if ((status === 'REJECTED' || status === 'CANCELLED' || status === 'COMPLETED') && current.bedId) {
         await tx.bed.update({
           where: { id: current.bedId },
           data: { status: 'AVAILABLE' }
@@ -670,7 +682,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
       }).catch(() => {});
 
       return { updatedBooking: updated, newAgreement: agreement };
-    });
+    }, { maxWait: 20000, timeout: 30000 });
 
     // Notify tenant about the status change via email/push
     if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'].includes(status)) {
@@ -1119,7 +1131,11 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
 
     const booking = await prisma.booking.findUnique({
       where: { id },
-      include: { bed: true }
+      include: {
+        bed: true,
+        property: { select: { id: true, title: true, landlordId: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true } }
+      }
     });
 
     if (!booking) {
@@ -1132,38 +1148,118 @@ export const cancelPendingBooking = async (req: Request, res: Response): Promise
       return;
     }
 
-    if (booking.status !== 'PENDING') {
-      res.status(400).json({ message: 'Only pending (unpaid) bookings can be cancelled by the student.' });
+    if (booking.status === 'CANCELLED') {
+      res.status(400).json({ message: 'Booking is already cancelled.' });
       return;
     }
 
-    // Release reserved bed if any
-    if (booking.bedId) {
-      await prisma.bed.update({
-        where: { id: booking.bedId },
-        data: { status: 'AVAILABLE' }
-      });
+    if (booking.status === 'REJECTED') {
+      res.status(400).json({ message: 'Booking was already rejected.' });
+      return;
     }
+
+    // Bookings that are CONFIRMED, ACTIVE, CHECKED_IN, or COMPLETED require admin/landlord intervention
+    if (!['PENDING', 'APPROVED'].includes(booking.status)) {
+      res.status(400).json({
+        message: `Bookings with status '${booking.status}' cannot be cancelled directly. Please contact support or your landlord.`
+      });
+      return;
+    }
+
+    // Atomic transaction for state transition & bed release
+    const updated = await prisma.$transaction(async (tx) => {
+      // Re-verify current status atomically
+      const current = await tx.booking.findUnique({
+        where: { id },
+        select: { id: true, status: true, bedId: true, roomUnitId: true }
+      });
+
+      if (!current || !['PENDING', 'APPROVED'].includes(current.status)) {
+        const err: any = new Error(`Conflict: Booking status changed to ${current?.status || 'unknown'}`);
+        err.isConflict = true;
+        throw err;
+      }
+
+      // Release reserved bed if any
+      if (current.bedId) {
+        await tx.bed.update({
+          where: { id: current.bedId },
+          data: { status: 'AVAILABLE' }
+        });
+      }
+
+      const updatedBooking = await tx.booking.update({
+        where: { id },
+        data: { status: 'CANCELLED' }
+      });
+
+      // Notification to landlord
+      if (booking.property?.landlordId) {
+        await tx.notification.create({
+          data: {
+            userId: booking.property.landlordId,
+            type: 'ANNOUNCEMENT',
+            title: 'Booking Cancelled by Tenant',
+            message: `${booking.tenant?.firstName || 'Tenant'} ${booking.tenant?.lastName || ''} has cancelled their booking for "${booking.property.title}".`,
+            link: '/dashboard/landlord'
+          }
+        }).catch(() => null);
+      }
+
+      return updatedBooking;
+    }, { maxWait: 20000, timeout: 30000 });
 
     if (booking.roomUnitId) {
-      await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id);
+      await releaseUnitGenderLockIfEmpty(booking.roomUnitId, id).catch(() => {});
     }
 
-    // Update booking status to CANCELLED
-    const updated = await prisma.booking.update({
-      where: { id },
-      data: { status: 'CANCELLED' }
-    });
+    // Audit log
+    await logAudit(
+      tenantId,
+      'CANCEL_BOOKING',
+      'Booking',
+      id,
+      { status: booking.status },
+      { status: 'CANCELLED' },
+      req.ip || req.socket.remoteAddress
+    );
 
+    // Real-time broadcasts
     try {
-      getIO().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+      const io = getIO();
+      io.to(booking.tenantId).emit('notification', {
+        title: 'Booking Cancelled',
+        message: `Your booking for "${booking.property?.title}" has been cancelled.`,
+        type: 'booking'
+      });
+      io.to(booking.tenantId).emit('booking_updated', { booking: updated });
+      if (booking.property?.landlordId) {
+        io.to(booking.property.landlordId).emit('booking_updated', { booking: updated });
+      }
+      io.emit('booking_updated', { bookingId: id, propertyId: booking.propertyId, status: 'CANCELLED' });
+      io.emit('property_updated', { propertyId: booking.propertyId });
+      if (booking.roomId) {
+        io.emit('room_capacity_updated', { roomId: booking.roomId, propertyId: booking.propertyId });
+      }
+      io.emit('activity:new', {
+        type: 'BOOKING',
+        status: 'CANCELLED',
+        message: `Booking for "${booking.property?.title}" was cancelled by tenant`,
+        createdAt: new Date(),
+      });
+      appCache.del(`bookings:landlord:${booking.property?.landlordId}`);
+      appCache.del(`bookings:tenant:${tenantId}`);
       appCache.flushAll();
     } catch (e) {
       /* non-blocking */
     }
 
-    res.status(200).json({ message: 'Pending booking cancelled successfully', booking: updated });
-  } catch (error) {
+    res.status(200).json({ message: 'Booking cancelled successfully', booking: updated });
+  } catch (error: any) {
+    if (error?.isConflict || error?.message?.includes('Conflict:')) {
+      res.status(409).json({ message: error.message });
+      return;
+    }
     console.error('Error cancelling pending booking:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
