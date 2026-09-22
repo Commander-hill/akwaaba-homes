@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import Link from 'next/link';
 import { 
   Loader2, 
   FileCheck, 
@@ -20,13 +21,11 @@ import {
   Mail, 
   MessageSquare, 
   Eye, 
-  X, 
   FileText, 
   Check, 
   Stamp, 
-  Maximize2,
-  MapPin,
-  IdCard,
+  MapPin, 
+  IdCard, 
   UserCheck
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -61,17 +60,6 @@ export default function AdminLandlordDeedsPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED'>('PENDING');
-  const [selectedLandlord, setSelectedLandlord] = useState<LandlordDeedRecord | null>(null);
-  const [rejectionNotes, setRejectionNotes] = useState('');
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-
-  // Verification Checklist State
-  const [checklist, setChecklist] = useState({
-    titleSearch: false,
-    sitePlan: false,
-    identityMatch: false,
-    encumbranceFree: false
-  });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-landlord-deeds', statusFilter],
@@ -80,27 +68,6 @@ export default function AdminLandlordDeedsPage() {
         params: { status: statusFilter === 'ALL' ? undefined : statusFilter }
       });
       return res.data;
-    }
-  });
-
-  const auditMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: 'VERIFIED' | 'REJECTED'; notes?: string }) => {
-      await api.put(`/admin/landlord-deeds/${id}/audit`, { status, notes });
-    },
-    onSuccess: (_, variables) => {
-      if (variables.status === 'VERIFIED') {
-        toast.success('Landlord property deed approved! Verified Landlord status granted.');
-      } else {
-        toast.success('Deed submission rejected. Feedback notification dispatched.');
-      }
-      setSelectedLandlord(null);
-      setRejectionNotes('');
-      queryClient.invalidateQueries({ queryKey: ['admin-landlord-deeds'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to update deed verification status.');
     }
   });
 
@@ -130,19 +97,6 @@ export default function AdminLandlordDeedsPage() {
       return name.includes(search) || email.includes(search) || phone.includes(search) || card.includes(search);
     });
   }, [landlords, searchTerm]);
-
-  const handleOpenInspector = (landlord: LandlordDeedRecord) => {
-    setSelectedLandlord(landlord);
-    setRejectionNotes('');
-    setChecklist({
-      titleSearch: landlord.isVerifiedLandlord,
-      sitePlan: landlord.isVerifiedLandlord,
-      identityMatch: !!landlord.ghanaCardNumber,
-      encumbranceFree: landlord.isVerifiedLandlord
-    });
-  };
-
-  const isAllChecklistPassed = checklist.titleSearch && checklist.sitePlan && checklist.identityMatch && checklist.encumbranceFree;
 
   return (
     <div className="space-y-6 pb-16 animate-in fade-in">
@@ -315,8 +269,7 @@ export default function AdminLandlordDeedsPage() {
                 {filteredLandlords.map((landlord) => (
                   <tr 
                     key={landlord.id} 
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group"
-                    onClick={() => handleOpenInspector(landlord)}
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group"
                   >
                     {/* Landlord Name & ID */}
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -407,15 +360,12 @@ export default function AdminLandlordDeedsPage() {
 
                     {/* Action */}
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenInspector(landlord);
-                        }}
+                      <Link
+                        href={`/admin/deeds/${landlord.id}`}
                         className="px-3.5 py-1.5 bg-slate-100 hover:bg-[#0F5132] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0F5132] text-[var(--foreground)] rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                       >
                         <Eye className="w-3.5 h-3.5" /> Inspect Deed
-                      </button>
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -430,227 +380,6 @@ export default function AdminLandlordDeedsPage() {
           <span>Showing {filteredLandlords.length} enrolled landlords</span>
         </div>
       </div>
-
-      {/* Deep Deed Inspector Drawer / Modal */}
-      {selectedLandlord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white dark:bg-slate-950 w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 p-6 space-y-5 max-h-[92vh] overflow-y-auto">
-            
-            {/* Drawer Header */}
-            <div className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center">
-                  <FileCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-lg text-[var(--foreground)]">Audit Landlord Property Deed</h3>
-                  <p className="text-xs text-slate-500">Verify Ghana Lands Commission conveyance indenture and title proof.</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setSelectedLandlord(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Landlord Identity Summary */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h4 className="font-extrabold text-base text-[var(--foreground)] flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-[#0F5132]" />
-                    {selectedLandlord.firstName} {selectedLandlord.lastName}
-                  </h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{selectedLandlord.email} &bull; {selectedLandlord.phoneNumber || 'No phone'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-900/40">
-                    ⭐ {(selectedLandlord.reputationScore || 5.0).toFixed(1)}/5.0
-                  </span>
-                  {selectedLandlord.phoneNumber && (
-                    <a
-                      href={`https://wa.me/${selectedLandlord.phoneNumber.replace(/[^0-9]/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-2xs"
-                    >
-                      <MessageSquare className="w-3 h-3" /> WhatsApp
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Ghana Card NIA Identity Match */}
-              <div className="p-3 bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-400 block">National Identity (NIA Ghana Card)</span>
-                  <span className="font-mono font-bold text-indigo-700 dark:text-indigo-300">
-                    {selectedLandlord.ghanaCardNumber || 'NIA Card not submitted'}
-                  </span>
-                </div>
-                <span className={clsx(
-                  "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider border",
-                  selectedLandlord.ghanaCardNumber 
-                    ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950 dark:text-indigo-300 dark:border-indigo-800"
-                    : "bg-amber-50 text-amber-700 border-amber-200"
-                )}>
-                  {selectedLandlord.ghanaCardNumber ? 'KYC Matched' : 'Pending KYC'}
-                </span>
-              </div>
-            </div>
-
-            {/* Document Preview Box */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-[11px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                  <Stamp className="w-3.5 h-3.5 text-[#D97706]" /> Submitted Property Deed / Title Document
-                </span>
-                {selectedLandlord.landlordDocUrl && (
-                  <a
-                    href={selectedLandlord.landlordDocUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1"
-                  >
-                    Open in New Tab <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-
-              {selectedLandlord.landlordDocUrl ? (
-                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-slate-900 text-center relative group">
-                  <img
-                    src={selectedLandlord.landlordDocUrl}
-                    alt="Property Deed"
-                    className="max-h-64 w-full object-contain mx-auto transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setLightboxUrl(selectedLandlord.landlordDocUrl!)}
-                      className="px-4 py-2 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-slate-100"
-                    >
-                      <Maximize2 className="w-3.5 h-3.5" /> Fullscreen Lightbox
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-8 text-center bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50 rounded-2xl space-y-2">
-                  <AlertTriangle className="w-8 h-8 mx-auto text-[#D97706]" />
-                  <p className="font-bold text-xs">No Deed Document Uploaded Yet</p>
-                  <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 max-w-sm mx-auto">
-                    The landlord enrolled via expedited registration. Please request an Indenture scan or Land Title Certificate before approving.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Statutory Ghana Lands Commission Checklist */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2.5">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
-                Statutory Audit Checklist (Ghana Lands Commission Protocol)
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklist.titleSearch}
-                    onChange={(e) => setChecklist(prev => ({ ...prev, titleSearch: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0F5132] rounded cursor-pointer"
-                  />
-                  <span className="font-medium text-[var(--foreground)]">Indenture / Title Stamp Validated</span>
-                </label>
-
-                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklist.sitePlan}
-                    onChange={(e) => setChecklist(prev => ({ ...prev, sitePlan: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0F5132] rounded cursor-pointer"
-                  />
-                  <span className="font-medium text-[var(--foreground)]">Licensed Surveyor Cadastral Plan</span>
-                </label>
-
-                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklist.identityMatch}
-                    onChange={(e) => setChecklist(prev => ({ ...prev, identityMatch: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0F5132] rounded cursor-pointer"
-                  />
-                  <span className="font-medium text-[var(--foreground)]">NIA Ghana Card Name Matches Deed</span>
-                </label>
-
-                <label className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklist.encumbranceFree}
-                    onChange={(e) => setChecklist(prev => ({ ...prev, encumbranceFree: e.target.checked }))}
-                    className="w-4 h-4 accent-[#0F5132] rounded cursor-pointer"
-                  />
-                  <span className="font-medium text-[var(--foreground)]">Clean Search (No Adverse Claims)</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Audit Notes / Rejection Reason */}
-            <div>
-              <label className="block text-[11px] font-bold text-[var(--foreground)] mb-1">
-                Audit Notes / Rejection Feedback (Recorded &amp; Dispatched to Landlord)
-              </label>
-              <input
-                type="text"
-                value={rejectionNotes}
-                onChange={(e) => setRejectionNotes(e.target.value)}
-                placeholder="e.g. Indenture requires Lands Commission stamping seal on page 2..."
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none text-[var(--foreground)]"
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-              <button
-                disabled={auditMutation.isPending}
-                onClick={() => auditMutation.mutate({ id: selectedLandlord.id, status: 'REJECTED', notes: rejectionNotes })}
-                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                {auditMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5 text-red-500" />}
-                Reject Deed Submission
-              </button>
-
-              <button
-                disabled={auditMutation.isPending || !selectedLandlord.landlordDocUrl}
-                onClick={() => auditMutation.mutate({ id: selectedLandlord.id, status: 'VERIFIED', notes: rejectionNotes })}
-                className="flex-1 py-2.5 bg-[#0F5132] hover:bg-emerald-800 active:scale-95 text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
-              >
-                {auditMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BadgeCheck className="w-3.5 h-3.5 text-[#D97706]" />}
-                Approve Deed &amp; Grant Verified Status
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* Lightbox Modal */}
-      {lightboxUrl && (
-        <div className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <button
-            onClick={() => setLightboxUrl(null)}
-            className="absolute top-6 right-6 p-2 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition-all text-sm font-bold"
-          >
-            ✕ Close
-          </button>
-          <img
-            src={lightboxUrl}
-            alt="Deed Full Preview"
-            className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-2xl"
-          />
-        </div>
-      )}
 
     </div>
   );

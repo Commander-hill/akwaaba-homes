@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import Link from 'next/link';
 import { 
   UserCheck, Plus, Trash2, UserCog, Mail, Phone,
-  Building, Loader2, CheckCircle2, Wrench, FileText, X
+  Building, Loader2, CheckCircle2, Wrench, FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -37,13 +38,6 @@ interface StaffAssignment {
 export default function StaffDelegationTab({ properties = [] }: { properties?: any[] }) {
   const queryClient = useQueryClient();
   const { confirm } = useDialog();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [propertyId, setPropertyId] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('CARETAKER');
-  const [canManageTickets, setCanManageTickets] = useState(true);
-  const [canCheckInTenants, setCanCheckInTenants] = useState(true);
-  const [canPostNotices, setCanPostNotices] = useState(true);
 
   // Fallback query to guarantee live landlord properties list
   const { data: propertiesData } = useQuery({
@@ -65,33 +59,11 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
     location: p.location || p.propertyLocation || ''
   })).filter((p: any) => Boolean(p.id));
 
-  React.useEffect(() => {
-    if (!propertyId && propertyList.length > 0) {
-      setPropertyId(propertyList[0].id);
-    }
-  }, [propertyList, propertyId]);
-
   const { data, isLoading } = useQuery<{ staff: StaffAssignment[] }>({
     queryKey: ['propertyStaff', 'landlord'],
     queryFn: async () => {
       const res = await api.get('/staff');
       return res.data;
-    }
-  });
-
-  const assignStaffMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/staff', payload);
-      return res.data;
-    },
-    onSuccess: (resData) => {
-      toast.success(resData.message || 'Staff member assigned successfully!');
-      setModalOpen(false);
-      setEmail('');
-      queryClient.invalidateQueries({ queryKey: ['propertyStaff', 'landlord'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || err.message || 'Failed to assign staff');
     }
   });
 
@@ -125,12 +97,12 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
           </div>
         </div>
 
-        <button
-          onClick={() => setModalOpen(true)}
+        <Link
+          href="/dashboard/landlord/staff/new"
           className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Assign Staff Member
-        </button>
+        </Link>
       </div>
 
       {isLoading ? (
@@ -233,136 +205,7 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
         </div>
       )}
 
-      {/* Assign Staff Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800 animate-in">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <UserCog className="w-5 h-5 text-blue-500" /> Assign Property Staff
-              </h3>
-              <button 
-                onClick={() => setModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Property</label>
-                <select
-                  value={propertyId}
-                  onChange={(e) => setPropertyId(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  {propertyList.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} {p.location ? `(${p.location})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Staff Member Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. caretaker@example.com"
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                />
-                <span className="text-[10px] text-slate-400">Must be an existing registered user on Akwaaba Homes.</span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Assigned Role</label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  <option value="CARETAKER">Hostel Caretaker</option>
-                  <option value="PORTER">Building Porter / Front Desk</option>
-                  <option value="PROPERTY_MANAGER">On-Site Property Manager</option>
-                </select>
-              </div>
-
-              <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Staff Permissions</label>
-                
-                <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={canManageTickets}
-                    onChange={(e) => setCanManageTickets(e.target.checked)}
-                    className="rounded text-[var(--primary)] focus:ring-[var(--primary)]"
-                  />
-                  <span>Can view & resolve maintenance tickets</span>
-                </label>
-
-                <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={canCheckInTenants}
-                    onChange={(e) => setCanCheckInTenants(e.target.checked)}
-                    className="rounded text-[var(--primary)] focus:ring-[var(--primary)]"
-                  />
-                  <span>Can perform Move-In & Move-Out inspections</span>
-                </label>
-
-                <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={canPostNotices}
-                    onChange={(e) => setCanPostNotices(e.target.checked)}
-                    className="rounded text-[var(--primary)] focus:ring-[var(--primary)]"
-                  />
-                  <span>Can publish compound broadcast notices</span>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const targetPropertyId = propertyId || propertyList[0]?.id;
-                  if (!targetPropertyId) {
-                    toast.error('Please select or add a property first');
-                    return;
-                  }
-                  if (!email) {
-                    toast.error('Staff email is required');
-                    return;
-                  }
-                  assignStaffMutation.mutate({
-                    propertyId: targetPropertyId,
-                    email,
-                    role,
-                    canManageTickets,
-                    canCheckInTenants,
-                    canPostNotices
-                  });
-                }}
-                disabled={assignStaffMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 shadow-sm"
-              >
-                {assignStaffMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Assign Staff
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

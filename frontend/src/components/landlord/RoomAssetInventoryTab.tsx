@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Armchair, Search, Filter, Plus, Trash2, Edit3, Printer, 
   CheckCircle2, AlertTriangle, XCircle, Info, 
@@ -467,13 +468,13 @@ export default function RoomAssetInventoryTab({ properties, bookings = [] }: Roo
               <span>Print Audit</span>
             </button>
 
-            <button
-              onClick={openAddModal}
+            <Link
+              href="/dashboard/landlord/inventory/new"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-xs font-black rounded-2xl shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
               <span>Register Fixture</span>
-            </button>
+            </Link>
           </div>
         </div>
 
