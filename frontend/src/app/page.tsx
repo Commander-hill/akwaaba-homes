@@ -10,8 +10,7 @@ import {
   Search, MapPin, Building, Users, 
   ArrowRight, CheckCircle2, Lock, DollarSign, Wrench, ChevronRight,
   GraduationCap, Clock, HelpCircle, FileText, Check,
-  Zap, Compass, PhoneCall, AlertCircle, Eye, BedDouble, Droplet,
-  ShieldCheck, Key, ArrowUpRight, Sparkles, FileCheck, Landmark
+  Zap, Compass, PhoneCall, AlertCircle, Eye, BedDouble, Droplet
 } from 'lucide-react';
 import WishlistButton from '@/components/WishlistButton';
 
@@ -48,12 +47,21 @@ const POPULAR_CAMPUSES = [
   { name: 'UENR / UDS', query: 'Sunyani', tag: 'Sunyani • Tamale Campus' },
 ];
 
+const PROPERTY_CATEGORIES = [
+  { id: 'Hostel', name: 'University Hostels', tag: 'Academic Year Billing', icon: GraduationCap, count: '140+ Halls & Hostels' },
+  { id: 'Single Room', name: 'Self-Contained Studios', tag: 'Private Kitchen & Bath', icon: BedDouble, count: '85+ Available' },
+  { id: 'Apartment', name: '1–3 Bed Residential Flats', tag: 'Professionals & Families', icon: Building, count: '62+ Units' },
+  { id: 'Homestay', name: 'Verified Room Shares', tag: 'Split Rent via Escrow', icon: Users, count: '94+ Verified Peers' },
+];
+
 export default function Home() {
   const router = useRouter();
 
   // Search State
-  const [searchTerm, setSearchTerm] = useState('');
   const [activeType, setActiveType] = useState<string>('ALL');
+  const [locationInput, setLocationInput] = useState('');
+  const [budgetTier, setBudgetTier] = useState('');
+  const [billingPeriod, setBillingPeriod] = useState('');
 
   // Fetch Featured Listings
   const { data: propertiesData, isLoading: isPropsLoading } = useQuery<{ properties: Property[] }>({
@@ -69,8 +77,15 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchTerm.trim()) params.append('location', searchTerm.trim());
+    if (locationInput.trim()) params.append('location', locationInput.trim());
     if (activeType !== 'ALL') params.append('type', activeType);
+    if (billingPeriod) params.append('pricePeriod', billingPeriod);
+    if (budgetTier) {
+      if (budgetTier === 'under2k') params.append('maxPrice', '2000');
+      if (budgetTier === '2k-5k') { params.append('minPrice', '2000'); params.append('maxPrice', '5000'); }
+      if (budgetTier === '5k-10k') { params.append('minPrice', '5000'); params.append('maxPrice', '10000'); }
+      if (budgetTier === 'above10k') params.append('minPrice', '10000');
+    }
     router.push('/properties?' + params.toString());
   };
 
@@ -79,567 +94,462 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FBFBFC] dark:bg-[#090B0E] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
+    <div className="flex flex-col min-h-screen bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
       
       {/* ════════════════════════════════════════════════════════════════
-          1. NSA-STYLE HERO SECTION (CENTERED, BOLD WITH ACCENT BADGE)
+          1. EDITORIAL HERO SECTION: GROUNDED & ARCHITECTURAL
          ════════════════════════════════════════════════════════════════ */}
-      <section className="relative pt-10 pb-12 sm:pt-16 sm:pb-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center space-y-6">
+      <section className="relative pt-12 pb-16 lg:pt-18 lg:pb-24 border-b border-zinc-200/80 dark:border-zinc-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Headline with High-Contrast Highlight Pill */}
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-zinc-950 dark:text-white tracking-tight leading-[1.12]">
-              Everything You Need <br className="hidden sm:inline" />
-              For Your{' '}
-              <span className="inline-block px-3.5 py-0.5 sm:px-5 sm:py-1 rounded-xl sm:rounded-2xl bg-[#E8590C] text-white shadow-sm align-middle tracking-normal">
-                Accommodation
-              </span>
-            </h1>
-            <p className="text-xs sm:text-sm md:text-base text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
-              Find campus hostels, verified private studios, roommate shares, and legal Act 220 lease agreements — Search or browse below.
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            {/* Left Column: Clear Editorial Messaging */}
+            <div className="lg:col-span-7 space-y-6">
+              
+              {/* Editorial Category Eyebrow */}
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide uppercase">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>Direct Landlord &amp; Hostel Network</span>
+              </div>
+
+              {/* Editorial Title */}
+              <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-zinc-950 dark:text-white tracking-tight leading-[1.12]">
+                Verified Housing in Ghana. <br />
+                <span className="text-[#0F5132] dark:text-[#198754]">
+                  Zero Roadside Agent Fees.
+                </span>
+              </h1>
+
+              {/* Sub-copy */}
+              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed">
+                Connect directly with certified property owners, landlords, and facility managers across Accra, Kumasi, Takoradi, and nationwide. 
+                Pay securely via MoMo escrow — funds are released only after on-site key handover and condition sign-off.
+              </p>
+
+              {/* ── SOLID EDITORIAL SEARCH MODULE ── */}
+              <div className="pt-2">
+                <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
+                  
+                  {/* Category Filter Pills */}
+                  <div className="flex items-center gap-1.5 pb-3 border-b border-zinc-100 dark:border-zinc-800 overflow-x-auto scrollbar-none">
+                    {[
+                      { id: 'ALL', label: 'All Listings' },
+                      { id: 'Hostel', label: 'Student Hostels' },
+                      { id: 'Single Room', label: 'Self-Contain' },
+                      { id: 'Apartment', label: 'Apartments' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveType(tab.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          activeType === tab.id
+                            ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950'
+                            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Form Inputs Grid */}
+                  <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+                    
+                    {/* Location Input */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Campus or Area
+                      </label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
+                        <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
+                        <input
+                          type="text"
+                          value={locationInput}
+                          onChange={(e) => setLocationInput(e.target.value)}
+                          placeholder="e.g. Ayeduase, East Legon..."
+                          className="w-full bg-transparent border-none outline-none text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Price Range */}
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                        Budget Range
+                      </label>
+                      <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
+                        <DollarSign className="w-4 h-4 text-zinc-400 shrink-0" />
+                        <select
+                          value={budgetTier}
+                          onChange={(e) => setBudgetTier(e.target.value)}
+                          aria-label="Select Budget Range"
+                          className="w-full bg-transparent border-none outline-none text-xs font-medium text-zinc-900 dark:text-white cursor-pointer [&>option]:bg-white [&>option]:text-zinc-900 dark:[&>option]:bg-zinc-900 dark:[&>option]:text-white"
+                        >
+                          <option value="">Any Price</option>
+                          <option value="under2k">Under GH₵ 2,000</option>
+                          <option value="2k-5k">GH₵ 2,000 – 5,000</option>
+                          <option value="5k-10k">GH₵ 5,000 – 10,000</option>
+                          <option value="above10k">Above GH₵ 10,000</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Search Trigger */}
+                    <div className="flex items-end">
+                      <button
+                        type="submit"
+                        className="w-full py-2.5 px-4 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Search className="w-4 h-4" />
+                        <span>Find Listings</span>
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </div>
+
+              {/* Quick Campus Chips */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#0F5132] dark:text-[#198754]" /> Major Hubs:
+                </span>
+                {POPULAR_CAMPUSES.map((campus) => (
+                  <button
+                    key={campus.name}
+                    type="button"
+                    onClick={() => handleCampusDirect(campus.query)}
+                    className="px-2.5 py-1 rounded-md bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-700 dark:text-zinc-300 font-medium transition-colors cursor-pointer"
+                  >
+                    {campus.name}
+                  </button>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Right Column: Architectural Photography Preview */}
+            <div className="lg:col-span-5 relative">
+              <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
+                <div className="relative h-96 w-full">
+                  <img
+                    src="/images/sunset-bg.png"
+                    alt="Verified student accommodation complex in Ghana"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
+
+                  {/* Overlaid Data Tag */}
+                  <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md flex items-center justify-between">
+                    <div>
+                      <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Direct Landlord Verified
+                      </div>
+                      <div className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">
+                        Unity Palms Student Hostel
+                      </div>
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                        Ayeduase Gate, KNUST • 400m from Campus
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-zinc-400 line-through">GH₵ 3,800</div>
+                      <div className="text-base font-black text-[#0F5132] dark:text-emerald-400">
+                        GH₵ 3,200
+                        <span className="text-[10px] font-normal text-zinc-500"> / Acad. Yr</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          2. AUDITED TRUST & STATUTORY SECURITY STRIP
+         ════════════════════════════════════════════════════════════════ */}
+      <section className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#12151D]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <Lock className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Escrow Protected</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Rent released after on-site key handover</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Identity Verified</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Verified landlord &amp; caretaker accounts</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <Zap className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Direct MoMo Payouts</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">MTN, Telecel Cash &amp; Bank Transfer</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Digital Tenancy Leases</div>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">E-signed agreements with statutory audit seals</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          3. REALITY CHECK: WHY AKWAABA BEATS ROADSIDE BROKERS
+         ════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] p-8 sm:p-10 shadow-xs">
+          
+          <div className="max-w-2xl mb-8">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0F5132] dark:text-[#198754]">
+              The Ghana Rental Reality
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1">
+              Engineered to Fix the Roadside Agent Crisis
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-2 leading-relaxed">
+              In Ghana, finding accommodation traditionally meant paying non-refundable "viewing fees" to informal roadside agents, 
+              only to be shown substandard rooms or face double-allocation scams. Here is how Akwaaba Homes changes the game:
             </p>
           </div>
 
-          {/* Minimalist Command Search Box */}
-          <div className="max-w-2xl mx-auto pt-2">
-            <form 
-              onSubmit={handleSearch}
-              className="relative flex items-center bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-1.5 sm:p-2 shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all focus-within:ring-2 focus-within:ring-[#E8590C]/20 focus-within:border-[#E8590C]"
-            >
-              <div className="pl-3 sm:pl-4 text-zinc-400">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 space-y-3">
+              <div className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
+                <AlertCircle className="w-4 h-4" /> Old Roadside Agent Model
               </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Start typing campus, area, or hall (e.g. Ayeduase, East Legon)..."
-                className="w-full py-2.5 px-3 bg-transparent text-xs sm:text-sm font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 outline-none"
-              />
-              <button
-                type="submit"
-                className="shrink-0 px-4 sm:px-6 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-950 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-              >
-                <span>Search</span>
-                <ChevronRight className="w-4 h-4 hidden sm:inline" />
-              </button>
-            </form>
-
-            {/* Quick Campus Chips */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-3 text-[11px] text-zinc-500 dark:text-zinc-400">
-              <span className="font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                <GraduationCap className="w-3.5 h-3.5 text-[#0F5132] dark:text-[#198754]" /> Hubs:
-              </span>
-              {POPULAR_CAMPUSES.map((campus) => (
-                <button
-                  key={campus.name}
-                  type="button"
-                  onClick={() => handleCampusDirect(campus.query)}
-                  className="px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 hover:border-zinc-400 dark:hover:border-zinc-600 text-zinc-700 dark:text-zinc-300 font-medium transition-colors cursor-pointer shadow-2xs"
-                >
-                  {campus.name.split('—')[0].trim()}
-                </button>
-              ))}
+              <ul className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
+                <li className="line-through">GH₵ 100–200 upfront viewing fees before inspection</li>
+                <li className="line-through">10% agent commission added onto your rent</li>
+                <li className="line-through">Unlawful demands for 2–3 years advance payment</li>
+                <li className="line-through">No written lease or statutory eviction protection</li>
+              </ul>
             </div>
-          </div>
 
-          {/* Hero Feature Banner: Clean Civic Trust Strip */}
-          <div className="pt-4 max-w-3xl mx-auto">
-            <div className="rounded-2xl border border-zinc-200/80 dark:border-zinc-800 bg-white/60 dark:bg-[#12151D]/60 backdrop-blur-xs p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Escrow Protected</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Rent released only upon verified key handover.</div>
-                </div>
+            <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-3 md:col-span-2">
+              <div className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> The Akwaaba Homes Standard
               </div>
-
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-800/40">
-                  <FileCheck className="w-4 h-4" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-700 dark:text-zinc-300">
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Zero viewing fees:</strong> Inspect photos, 360 virtual tours, and room dimensions for free online.</span>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Act 220 Leases</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Automatic statutory contracts with audit seals.</div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Direct Host Linkage:</strong> Deal directly with verified landlords and on-site caretakers.</span>
                 </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-100 dark:border-sky-800/40">
-                  <Key className="w-4 h-4" />
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Statutory Lease:</strong> Automatic Act 220 compliant tenancy agreement signed digitally.</span>
                 </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Zero Middleman Fees</div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Direct landlord contact with no roadside agent cuts.</div>
+                <div className="flex items-start gap-2">
+                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span><strong>Escrow Safeguard:</strong> Landlord receives payout only when you inspect the room and sign off.</span>
                 </div>
               </div>
             </div>
+
           </div>
 
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          2. BROWSE BY CATEGORY (NSA STYLE WITH STATUS PILLS)
+          4. BROWSE BY ACCOMMODATION TYPE (EDITORIAL TILES)
          ════════════════════════════════════════════════════════════════ */}
-      <section className="py-6 max-w-4xl mx-auto px-4 sm:px-6 w-full">
-        <div className="space-y-3">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Browse By Category
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Category 1 */}
-            <Link
-              href="/properties?type=Hostel"
-              className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group shadow-2xs hover:shadow-xs flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
-                  140+ Halls
-                </span>
-              </div>
-              <div className="pt-3">
-                <h3 className="font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                  Hostels &amp; Enrolment
-                </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  Academic year billing, student halls &amp; clusters
-                </p>
-              </div>
-            </Link>
-
-            {/* Category 2 */}
-            <Link
-              href="/properties?type=Single+Room"
-              className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group shadow-2xs hover:shadow-xs flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-800/40">
-                  <BedDouble className="w-4 h-4" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50">
-                  85+ Studios
-                </span>
-              </div>
-              <div className="pt-3">
-                <h3 className="font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                  Studios &amp; Apartments
-                </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  Self-contained rooms, private baths &amp; 1-3 bed flats
-                </p>
-              </div>
-            </Link>
-
-            {/* Category 3 */}
-            <Link
-              href="/dashboard/roommates"
-              className="p-4 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group shadow-2xs hover:shadow-xs flex flex-col justify-between"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 flex items-center justify-center border border-sky-100 dark:border-sky-800/40">
-                  <Users className="w-4 h-4" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-800/50">
-                  94+ Peers
-                </span>
-              </div>
-              <div className="pt-3">
-                <h3 className="font-extrabold text-xs sm:text-sm text-zinc-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                  Roommate Matching
-                </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                  Compatibility algorithm &amp; safe bill splitting
-                </p>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          3. POPULAR SERVICES (CHEVRON LIST CARDS)
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-6 max-w-4xl mx-auto px-4 sm:px-6 w-full">
-        <div className="space-y-3">
-          <h2 className="text-sm font-black text-zinc-950 dark:text-white">
-            Popular Services
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Service 1 */}
-            <Link
-              href="/properties?type=Hostel"
-              className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex items-center justify-between gap-3 group shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                    Campus Hostels &amp; Halls
-                  </h3>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Search KNUST, UG Legon, UCC, and UPSA hostels
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            {/* Service 2 */}
-            <Link
-              href="/lease-agreement/new"
-              className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex items-center justify-between gap-3 group shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-800/40">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                    Act 220 Tenancy Agreement
-                  </h3>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Generate statutory e-signed residential lease agreements
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            {/* Service 3 */}
-            <Link
-              href="/dashboard/roommates"
-              className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex items-center justify-between gap-3 group shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0 border border-sky-100 dark:border-sky-800/40">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                    Roommate Compatibility Matcher
-                  </h3>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Split room rent with verified student peers
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            {/* Service 4 */}
-            <Link
-              href="/properties"
-              className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex items-center justify-between gap-3 group shadow-2xs hover:shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-400 flex items-center justify-center shrink-0 border border-purple-100 dark:border-purple-800/40">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                    MoMo Escrow Rent Protection
-                  </h3>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
-                    Safe payouts released upon key handover
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          4. ALL SERVICES & DIRECTORY (GROUPED CATEGORY LISTS)
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-8 max-w-4xl mx-auto px-4 sm:px-6 w-full space-y-6">
-        <div>
-          <h2 className="text-sm sm:text-base font-black text-zinc-950 dark:text-white">
-            All Accommodations &amp; Services
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            The full housing directory, grouped by operational category.
-          </p>
-        </div>
-
-        {/* Group 1: Enrolment & Hostels */}
-        <div className="space-y-2">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5">
-            <GraduationCap className="w-3.5 h-3.5" />
-            <span>Campus &amp; Student Living</span>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl divide-y divide-zinc-100 dark:divide-zinc-800 overflow-hidden shadow-2xs">
-            <Link
-              href="/properties?type=Hostel"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                    University Hostels &amp; Enrolment Booking
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Check available beds across accredited KNUST, Legon, UCC, and UPSA hostels.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            <Link
-              href="/dashboard/roommates"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                    Student Roommate Pairing &amp; Split-Bill Agreements
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Find compatible peers to share rooms and divide semester rent expenses.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            <Link
-              href="/dashboard/verification"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <FileCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                    Tertiary Student Status Verification
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Link your student ID to access subsidized student accommodations and priority booking.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Group 2: Residential & Family Tenancies */}
-        <div className="space-y-2">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5">
-            <Building className="w-3.5 h-3.5" />
-            <span>Residential &amp; Private Rentals</span>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl divide-y divide-zinc-100 dark:divide-zinc-800 overflow-hidden shadow-2xs">
-            <Link
-              href="/properties?type=Single+Room"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <BedDouble className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                    Single Room Self-Contained Studios
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Private kitchen, bath, and individual ECG prepaid meter.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            <Link
-              href="/properties?type=Apartment"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <Building className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
-                    1–3 Bedroom Residential Apartments &amp; Flats
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Furnished and unfurnished residences for working professionals and families.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Group 3: Legal, Escrow & Statutory Tools */}
-        <div className="space-y-2">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 flex items-center gap-1.5">
-            <Landmark className="w-3.5 h-3.5" />
-            <span>Statutory Leases &amp; Compliance</span>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl divide-y divide-zinc-100 dark:divide-zinc-800 overflow-hidden shadow-2xs">
-            <Link
-              href="/dashboard/tenant"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                    Act 220 Tenancy Agreement Form
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Download copies of your certified e-signed lease agreement and rent schedule.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-
-            <Link
-              href="/dashboard/verification"
-              className="p-3.5 sm:p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
-                    Ghana Card KYC Verification
-                  </div>
-                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    Verify landlord ownership and tenant identity to unlock escrow protection.
-                  </div>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors shrink-0" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          5. FEATURED VERIFIED PROPERTIES (SHOWCASE GRID)
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-10 max-w-4xl mx-auto px-4 sm:px-6 w-full space-y-4">
-        <div className="flex items-center justify-between">
+      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-sm sm:text-base font-black text-zinc-950 dark:text-white">
-              Featured Accommodations
+            <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Accommodations by Category
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Genuine listings with real photos, transparent rates, and zero roadside agent fees.
+              Select verified rental homes, apartments, executive studios, or student accommodations.
+            </p>
+          </div>
+          <Link
+            href="/properties"
+            className="text-xs font-bold text-[#0F5132] dark:text-[#198754] hover:underline flex items-center gap-1"
+          >
+            All Listings <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PROPERTY_CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            return (
+              <Link
+                key={cat.id}
+                href={`/properties?type=${encodeURIComponent(cat.id)}`}
+                className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 transition-all group shadow-xs hover:shadow-sm"
+              >
+                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-800 dark:text-zinc-200 group-hover:bg-[#0F5132] group-hover:text-white transition-colors mb-3">
+                  <Icon className="w-5 h-5" />
+                </div>
+                <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
+                  {cat.name}
+                </h3>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
+                  {cat.tag}
+                </p>
+                <div className="mt-3 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
+                  {cat.count}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          5. FEATURED LISTINGS: DENSE WITH AUTHENTIC GHANAIAN SPECS
+         ════════════════════════════════════════════════════════════════ */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-[#0F5132] dark:text-[#198754]">
+              Pre-Inspected &amp; Available
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1">
+              Featured Verified Accommodations
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              Genuine listings with real photos, transparent billing, and zero agent surcharge.
             </p>
           </div>
 
           <Link
             href="/properties"
-            className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors shrink-0"
           >
-            <span>Explore All</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <span>Explore All Accommodations</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
+        {/* Listings Grid */}
         {isPropsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="h-64 rounded-2xl bg-zinc-200 dark:bg-zinc-800/50 animate-pulse" />
+              <div key={n} className="h-84 rounded-2xl bg-zinc-200 dark:bg-zinc-800/50 animate-pulse" />
             ))}
           </div>
         ) : featuredListings.length === 0 ? (
-          <div className="p-8 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 text-center space-y-2">
-            <Building className="w-8 h-8 text-zinc-400 mx-auto" />
-            <h3 className="text-xs font-bold text-zinc-900 dark:text-white">All Properties Currently Reserved</h3>
-            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-              New verified hostels and rental apartments are added weekly.
+          <div className="p-12 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
+            <Building className="w-10 h-10 text-zinc-400 mx-auto" />
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">All Properties Reserved</h3>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+              New verified hostels and rental apartments are inspected and onboarded weekly.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredListings.map((prop) => (
               <div 
                 key={prop.id}
-                className="group rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 overflow-hidden shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
+                className="group rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative h-44 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
+                  {/* Photo Thumbnail */}
+                  <div className="relative h-50 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                     <img 
                       src={getImageUrl(prop.images?.[0]) || '/placeholder-property.jpg'} 
                       alt={prop.title} 
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                     />
                     
-                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1 pointer-events-none">
-                      <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider bg-zinc-950/80 text-white backdrop-blur-xs">
+                    {/* Top Type Tag */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-zinc-950/80 text-white backdrop-blur-xs">
                         {prop.type}
                       </span>
                     </div>
 
-                    <div className="absolute top-2.5 right-2.5 pointer-events-auto">
+                    <div className="absolute top-3 right-3 pointer-events-auto">
                       <WishlistButton propertyId={prop.id} />
                     </div>
 
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                      <span className="px-2 py-0.5 rounded-md bg-white/95 dark:bg-zinc-900/95 text-zinc-950 dark:text-white text-xs font-black shadow-2xs">
+                    {/* Price Tag Overlay */}
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-lg bg-white/95 dark:bg-zinc-900/95 text-zinc-950 dark:text-white text-xs font-black shadow-xs">
                         GH₵ {prop.price.toLocaleString()}
-                        <span className="text-[10px] font-normal text-zinc-500"> / {prop.pricePeriod || 'Yr'}</span>
+                        <span className="text-[10px] font-normal text-zinc-500"> / {prop.pricePeriod || 'Year'}</span>
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 space-y-1.5">
+                  {/* Body Content */}
+                  <div className="p-4 space-y-2">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-bold text-xs text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
+                      <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
                         {prop.title}
                       </h3>
                       {prop.landlord?.isVerifiedLandlord && (
                         <span title="Verified Host">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                         </span>
                       )}
                     </div>
                     
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1 line-clamp-1">
-                      <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 line-clamp-1">
+                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                       <span>{prop.location}</span>
                     </p>
+
+                    {/* Ghanaian Utility & Housing Tags */}
+                    <div className="flex flex-wrap gap-1.5 pt-1.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
+                      {prop.rooms?.[0]?.roomType && (
+                        <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
+                          {prop.rooms[0].roomType}
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
+                        Prepaid ECG
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
+                        Water Storage
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-3.5 pt-0">
+                <div className="p-4 pt-0">
                   <Link
                     href={`/properties/${prop.id}`}
-                    className="w-full py-2 rounded-xl bg-zinc-100 hover:bg-[#0F5132] text-zinc-900 hover:text-white dark:bg-zinc-800 dark:hover:bg-[#0F5132] dark:text-zinc-100 dark:hover:text-white text-xs font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    className="w-full py-2 rounded-xl bg-zinc-100 hover:bg-[#0F5132] text-zinc-900 hover:text-white dark:bg-zinc-800 dark:hover:bg-[#0F5132] dark:text-zinc-100 dark:hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <span>View Details</span>
+                    <span>View Room Details</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
@@ -650,121 +560,178 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          6. SIGNATURE GREEN "GET STARTED" COMMAND CARD (NSA STYLE)
+          6. EDITORIAL ROOMMATE COMPATIBILITY SECTION
          ════════════════════════════════════════════════════════════════ */}
-      <section className="py-8 max-w-4xl mx-auto px-4 sm:px-6 w-full">
-        <div className="rounded-3xl bg-[#0F5132] text-white p-6 sm:p-8 relative overflow-hidden shadow-md">
-          {/* Subtle Watermark */}
-          <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
-            <ShieldCheck className="w-64 h-64 text-white" />
-          </div>
-
-          <div className="relative z-10 space-y-5">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-                Get Started
-              </h2>
-              <p className="text-xs sm:text-sm text-emerald-100/90 mt-1">
-                Sign in to your account, or explore verified accommodations below.
-              </p>
+      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-zinc-900 text-white p-8 sm:p-12 relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8">
+          
+          <div className="space-y-4 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 text-zinc-200 text-xs font-bold tracking-tight">
+              <Users className="w-3.5 h-3.5 text-amber-400" />
+              <span>Roommate Matcher Algorithm</span>
             </div>
-
-            {/* Elevated Primary White Card */}
-            <Link
-              href="/login"
-              className="block p-4 sm:p-5 rounded-2xl bg-white text-zinc-950 hover:bg-zinc-50 transition-all shadow-md group cursor-pointer"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#0F5132] flex items-center justify-center shrink-0 border border-emerald-100">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-zinc-950 group-hover:text-[#0F5132] transition-colors">
-                      Current Residents &amp; Landlords
-                    </h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">
-                      Log in to view active tenancies, check escrow postings, download certificates, and manage your account.
-                    </p>
-                  </div>
-                </div>
-                <div className="w-8 h-8 rounded-full bg-zinc-100 group-hover:bg-[#0F5132] group-hover:text-white flex items-center justify-center shrink-0 transition-colors">
-                  <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-white" />
-                </div>
-              </div>
-            </Link>
-
-            {/* Twin Secondary Tiles */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+              Split Campus Hostel Rent with Compatible Students.
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              Living alone off-campus is expensive. Match with vetted student peers across KNUST, Legon, and UCC based on study habits, 
+              cleanliness standards, and sleep schedules. Split the room cost in half safely through digital lease escrow.
+            </p>
+            <div className="pt-2">
               <Link
-                href="/properties?type=Hostel"
-                className="p-4 rounded-2xl bg-[#0A3D24]/70 hover:bg-[#0A3D24] border border-emerald-700/50 transition-all flex items-start gap-3 group"
+                href="/dashboard/roommates"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition-colors shadow-xs"
               >
-                <div className="w-8 h-8 rounded-lg bg-emerald-700/40 text-emerald-200 flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-emerald-200 transition-colors">
-                    Campus Accommodation
-                  </h4>
-                  <p className="text-[11px] text-emerald-200/80 mt-0.5">
-                    Check available student halls near university gates to begin enrolment.
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/dashboard/landlord/new"
-                className="p-4 rounded-2xl bg-[#0A3D24]/70 hover:bg-[#0A3D24] border border-emerald-700/50 transition-all flex items-start gap-3 group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-emerald-700/40 text-emerald-200 flex items-center justify-center shrink-0">
-                  <Building className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-emerald-200 transition-colors">
-                    Property Owners &amp; Landlords
-                  </h4>
-                  <p className="text-[11px] text-emerald-200/80 mt-0.5">
-                    Register and list your properties with zero broker fees and direct MoMo payouts.
-                  </p>
-                </div>
+                <span>Find a Compatible Roommate</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-3 w-full lg:w-auto shrink-0 text-center">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-black text-amber-400">GH₵ 1,800+</div>
+              <div className="text-[10px] text-zinc-400 mt-0.5">Average Yearly Savings</div>
+            </div>
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="text-2xl font-black text-emerald-400">100%</div>
+              <div className="text-[10px] text-zinc-400 mt-0.5">Student ID Verified</div>
+            </div>
+          </div>
+
         </div>
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
-          7. MINIMAL SLEEK FOOTER (MATCHING NSA DARK FOOTER)
+          7. DUAL PORTALS: LANDLORDS & HOSTEL CARETAKERS
          ════════════════════════════════════════════════════════════════ */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#07090C] text-zinc-500 dark:text-zinc-400 py-8 mt-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <span className="font-black text-zinc-950 dark:text-white text-base tracking-tight">
-                Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span>
-              </span>
-              <span className="text-xs text-zinc-400">• Certified National Housing Portal</span>
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          {/* Landlord Portal */}
+          <div className="p-8 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
+                <Building className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-black text-zinc-950 dark:text-white">For Property Owners &amp; Landlords</h3>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                List your residential properties, apartments, or student hostels. Fill vacancies without informal agent squabbles, manage statutory leases automatically, 
+                and receive automated MoMo payouts straight into your MTN or Telecel wallet.
+              </p>
+              <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Direct MoMo &amp; Bank Escrow Settlements</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Caretaker &amp; Porter Delegation Tools</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Digital Rent Act (Act 220) Contracts</li>
+              </ul>
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs font-medium">
-              <Link href="/" className="hover:text-zinc-950 dark:hover:text-white">Home</Link>
-              <Link href="/properties" className="hover:text-zinc-950 dark:hover:text-white">Directory</Link>
-              <Link href="/dashboard/roommates" className="hover:text-zinc-950 dark:hover:text-white">Roommates</Link>
-              <Link href="/terms" className="hover:text-zinc-950 dark:hover:text-white">Terms</Link>
-              <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white">Privacy</Link>
+            <div className="pt-2">
+              <Link
+                href="/dashboard/landlord/new"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] transition-colors"
+              >
+                <span>List a Property</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-zinc-400">
+          {/* Caretaker Portal */}
+          <div className="p-8 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-800/40">
+                <Wrench className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-black text-zinc-950 dark:text-white">For On-Site Hostel Caretakers</h3>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Conduct digital move-in condition checklists right on your phone. Record tenant signatures, track plumbing or electrical repair tickets, 
+                and log incoming packages with front-desk PIN clearance.
+              </p>
+              <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Digital Room Handover Condition Checklist</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Work Order Management &amp; Repair Proof</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Front Desk Package &amp; Delivery Logging</li>
+              </ul>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href="/dashboard/caretaker"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-zinc-900 bg-amber-400 hover:bg-amber-300 transition-colors"
+              >
+                <span>Open Caretaker Hub</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ════════════════════════════════════════════════════════════════
+          8. EDITORIAL ARCHITECTURAL FOOTER
+         ════════════════════════════════════════════════════════════════ */}
+      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0B0D12] text-zinc-500 dark:text-zinc-400 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-zinc-950 dark:text-white text-base tracking-tight">
+                  Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span>
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Ghana's certified digital rental and hostel marketplace. Escrow backed, zero middleman broker fraud, and legal Act 220 tenancy contracts.
+              </p>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Accommodations</div>
+              <ul className="space-y-1.5">
+                <li><Link href="/properties?type=Hostel" className="hover:text-zinc-950 dark:hover:text-white">University Hostels</Link></li>
+                <li><Link href="/properties?type=Single+Room" className="hover:text-zinc-950 dark:hover:text-white">Single Room Self-Contain</Link></li>
+                <li><Link href="/properties?type=Apartment" className="hover:text-zinc-950 dark:hover:text-white">Residential Apartments</Link></li>
+                <li><Link href="/dashboard/roommates" className="hover:text-zinc-950 dark:hover:text-white">Find a Roommate</Link></li>
+              </ul>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Campus Clusters</div>
+              <ul className="space-y-1.5">
+                <li><Link href="/properties?location=Ayeduase" className="hover:text-zinc-950 dark:hover:text-white">KNUST (Ayeduase / Kotei / Gaza)</Link></li>
+                <li><Link href="/properties?location=East+Legon" className="hover:text-zinc-950 dark:hover:text-white">UG Legon (East Legon / Okponglo)</Link></li>
+                <li><Link href="/properties?location=Amamoma" className="hover:text-zinc-950 dark:hover:text-white">UCC (Amamoma / Apewosika)</Link></li>
+                <li><Link href="/properties?location=Madina" className="hover:text-zinc-950 dark:hover:text-white">UPSA &amp; ATU</Link></li>
+              </ul>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Portals &amp; Legal</div>
+              <ul className="space-y-1.5">
+                <li><Link href="/login" className="hover:text-zinc-950 dark:hover:text-white">Resident &amp; Student Sign In</Link></li>
+                <li><Link href="/dashboard/landlord" className="hover:text-zinc-950 dark:hover:text-white">Landlord Command Center</Link></li>
+                <li><Link href="/dashboard/caretaker" className="hover:text-zinc-950 dark:hover:text-white">Caretaker Operations Hub</Link></li>
+                <li><Link href="/admin/login" className="text-[#0F5132] dark:text-[#198754] font-bold">Admin Security Portal</Link></li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
             <div>
               &copy; {new Date().getFullYear()} Akwaaba Homes Ghana Ltd. All rights reserved.
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
-              <span>Republic of Ghana 🇬🇭 • Escrow Secured</span>
+            <div className="flex items-center gap-4 text-zinc-500">
+              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" /> 100% MoMo Escrow Verified
+              </span>
+              <span>Accra &amp; Kumasi, Ghana 🇬🇭</span>
             </div>
           </div>
+
         </div>
       </footer>
 
