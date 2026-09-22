@@ -14,13 +14,19 @@ export const validate = (validations: ValidationChain[]) => {
 
     // Format errors strictly
     const errorList = errors.array();
-    const firstErrorMessage = errorList[0]?.msg || 'Invalid input data';
-    const extractedErrors: any[] = [];
-    errorList.forEach((err: any) => extractedErrors.push({ field: err.path || err.param, message: err.msg }));
+    const firstErrorMessage = errorList[0]?.msg || 'Validation failed';
+    const extractedErrors: any[] = errorList.map((err: any) => ({
+      field: err.path || err.param || 'field',
+      message: err.msg
+    }));
 
     res.status(400).json({
+      success: false,
       message: firstErrorMessage,
+      errorCode: 'VALIDATION_ERROR',
       errors: extractedErrors,
+      timestamp: new Date().toISOString(),
+      path: req.originalUrl || req.url
     });
   };
 };
