@@ -220,17 +220,52 @@ export default function LandlordDashboard() {
     toast.success('Refreshing dashboard data...');
   };
 
-  // Status Mutation (Bookings)
+  // Status Mutation (Bookings) with TanStack Query Optimistic Update & Snapshot Rollback
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { data } = await api.put(`/bookings/${id}/status`, { status });
       return data;
     },
-    onSuccess: () => {
-      toast.success('Booking status updated!');
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'landlord'] });
+    // Step 1: Optimistic Update before the network request resolves
+    onMutate: async ({ id, status }) => {
+      // Cancel outgoing refetches on landlord bookings so they don't overwrite our optimistic state
+      await queryClient.cancelQueries({ queryKey: ['bookings', 'landlord'] });
+
+      // Snapshot the previous state for rollback on error
+      const previousBookings = queryClient.getQueryData<{ bookings: any[] }>(['bookings', 'landlord']);
+
+      // Optimistically update the matching booking in cache
+      if (previousBookings?.bookings) {
+        queryClient.setQueryData(['bookings', 'landlord'], {
+          ...previousBookings,
+          bookings: previousBookings.bookings.map((b: any) =>
+            b.id === id ? { ...b, status } : b
+          )
+        });
+      }
+
+      return { previousBookings };
     },
-    onSettled: () => setProcessingId(null)
+    // Step 2: Rollback Cache on Error
+    onError: (err: any, _variables, context) => {
+      if (context?.previousBookings) {
+        queryClient.setQueryData(['bookings', 'landlord'], context.previousBookings);
+      }
+      const message = err.response?.data?.message || 'Failed to update booking status. Changes reverted.';
+      toast.error(message);
+    },
+    // Step 3: Success Feedback
+    onSuccess: (_data, { status }) => {
+      toast.success(`Booking ${status === 'APPROVED' ? 'approved' : status.toLowerCase()} successfully!`);
+    },
+    // Step 4: Always refetch and synchronize related state on settled
+    onSettled: () => {
+      setProcessingId(null);
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'landlord'] });
+      queryClient.invalidateQueries({ queryKey: ['properties', 'landlord', 'mine'] });
+      queryClient.invalidateQueries({ queryKey: ['agreements', 'landlord'] });
+      queryClient.invalidateQueries({ queryKey: ['landlord', 'stats'] });
+    }
   });
 
   // Ticket Status Mutation
