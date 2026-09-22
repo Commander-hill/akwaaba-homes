@@ -1,15 +1,54 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle, Wrench } from 'lucide-react';
 import api from '@/lib/axios';
 import PassportUpload from '@/components/PassportUpload';
 import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
 
 export default function RegisterPage() {
   const router = useRouter();
+
+  // Check if user is already logged in
+  const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/auth/me');
+        return data?.user || null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const redirectByRole = (user: any) => {
+    if (user.role === 'ADMIN') {
+      window.location.href = '/admin/dashboard';
+    } else if (user.role === 'LANDLORD') {
+      window.location.href = '/dashboard/landlord';
+    } else if (user.role === 'CARETAKER' || user.role === 'STAFF') {
+      window.location.href = '/dashboard/caretaker';
+    } else {
+      if (user.isStudent && !user.studentId) {
+        window.location.href = '/onboarding';
+      } else {
+        window.location.href = '/dashboard/tenant';
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (sessionData) {
+      redirectByRole(sessionData);
+    }
+  }, [sessionData]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -152,6 +191,65 @@ export default function RegisterPage() {
 
   const inputClass = "block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-all";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5";
+
+  if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token')) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-4 space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Verifying existing session...</p>
+      </div>
+    );
+  }
+
+  if (sessionData) {
+    const roleTitle = sessionData.role === 'LANDLORD' 
+      ? 'Landlord Dashboard' 
+      : sessionData.role === 'ADMIN' 
+      ? 'Admin Hub' 
+      : (sessionData.role === 'CARETAKER' || sessionData.role === 'STAFF')
+      ? 'Operations Hub' 
+      : 'Tenant Dashboard';
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-4 sm:p-6 transition-colors">
+        <div className="w-full max-w-md mx-auto">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 text-center space-y-5 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-[#0F5132] dark:text-emerald-400">
+              <CheckCircle className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-zinc-950 dark:text-white">Already Signed In</h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
+                You are currently logged in as <span className="font-bold text-zinc-900 dark:text-white">{sessionData.firstName || sessionData.email}</span> ({sessionData.role}).
+              </p>
+            </div>
+            <div className="space-y-2.5 pt-2">
+              <button
+                onClick={() => redirectByRole(sessionData)}
+                className="w-full py-3 px-4 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              >
+                <span>Go to {roleTitle}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await api.post('/auth/logout');
+                  } catch (e) {}
+                  localStorage.removeItem('akwaaba_access_token');
+                  localStorage.removeItem('akwaaba_refresh_token');
+                  window.location.reload();
+                }}
+                className="w-full py-2.5 px-4 text-xs font-semibold text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+              >
+                Sign out &amp; create new account
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 transition-colors">

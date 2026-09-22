@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, Mail, Loader2, ArrowRight, Clock } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight, Clock, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
+import { useQuery } from '@tanstack/react-query';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -12,6 +13,27 @@ function AdminLoginForm() {
   const isTimeout = searchParams.get('reason') === 'timeout';
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Check if admin is already authenticated
+  const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/auth/me');
+        return data?.user || null;
+      } catch {
+        return null;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (sessionData && sessionData.role === 'ADMIN' && !isTimeout) {
+      window.location.href = '/admin/dashboard';
+    }
+  }, [sessionData, isTimeout]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -92,6 +114,55 @@ function AdminLoginForm() {
       setIsLoading(false);
     }
   };
+
+  if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0D12] text-white p-4 space-y-3">
+        <Loader2 className="w-8 h-8 animate-spin text-[#198754]" />
+        <p className="text-xs font-mono text-zinc-400">Verifying administrative credentials...</p>
+      </div>
+    );
+  }
+
+  if (sessionData && sessionData.role === 'ADMIN' && !isTimeout) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0B0D12] text-white p-4">
+        <div className="max-w-md w-full p-8 bg-zinc-900/60 border border-zinc-800 rounded-2xl text-center space-y-5">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-950/60 border border-emerald-800/80 flex items-center justify-center mx-auto text-emerald-400">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white">Administrator Authenticated</h2>
+            <p className="text-xs text-zinc-400 mt-1.5 font-mono">
+              Active session as {sessionData.firstName || sessionData.email}.
+            </p>
+          </div>
+          <div className="space-y-2.5 pt-2">
+            <button
+              onClick={() => { window.location.href = '/admin/dashboard'; }}
+              className="w-full py-3 px-4 bg-[#198754] hover:bg-[#157347] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              <span>Open Admin Console</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await api.post('/auth/logout');
+                } catch (e) {}
+                localStorage.removeItem('akwaaba_access_token');
+                localStorage.removeItem('akwaaba_refresh_token');
+                window.location.reload();
+              }}
+              className="w-full py-2.5 px-4 text-xs font-semibold text-zinc-500 hover:text-rose-400 transition-colors cursor-pointer"
+            >
+              Sign out of administrative session
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0B0D12] relative overflow-hidden">
