@@ -125,7 +125,6 @@ function TwoFactorStudioContent() {
     const refs = isSms ? smsInputRefs : inputRefs;
 
     if (sanitized.length > 1) {
-      // Paste detected
       const digits = sanitized.slice(0, 6).split('');
       for (let i = 0; i < 6; i++) {
         targetArr[i] = digits[i] || '';
@@ -305,37 +304,38 @@ function TwoFactorStudioContent() {
   const codesToDisplay = freshRecoveryCodes || setupData?.rawCodes || [];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      {/* ── BREADCRUMB & HEADER ── */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs print:hidden">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen bg-white dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 antialiased pb-24">
+      
+      {/* ── BREADCRUMB & HEADER (Direct Canvas, Architectural) ── */}
+      <div className="border-b border-zinc-200 dark:border-zinc-800 print:hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                <Link href="/dashboard/profile" className="hover:text-emerald-600 transition-colors">
+              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-zinc-400 mb-2">
+                <Link href="/dashboard/profile" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition-colors">
                   Profile
                 </Link>
                 <span>/</span>
-                <Link href="/dashboard/profile/security" className="hover:text-emerald-600 transition-colors">
+                <Link href="/dashboard/profile/security" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition-colors">
                   Security
                 </Link>
                 <span>/</span>
-                <span className="text-slate-900 dark:text-slate-100 font-bold">Two-Factor Authentication</span>
+                <span className="text-zinc-900 dark:text-white font-semibold">Two-Factor Authentication</span>
               </div>
+              
               <div className="flex items-center gap-3">
                 <Link
                   href="/dashboard/profile/security"
-                  className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  className="p-1.5 -ml-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors"
                   title="Return to Security Center"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </Link>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                    <KeyRound className="w-6 h-6 text-emerald-600" />
-                    Two-Factor Authentication (2FA) Studio
+                  <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 dark:text-white">
+                    Two-Factor Authentication
                   </h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                     RFC 6238 TOTP Authenticator, Printable Emergency Keys &amp; Ghana SMS Fallback
                   </p>
                 </div>
@@ -343,19 +343,20 @@ function TwoFactorStudioContent() {
             </div>
 
             {/* Enrolled Status Pill */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 sm:self-center">
               {isLoadingStatus ? (
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Checking 2FA status...
+                <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0F5132] dark:text-emerald-400" />
+                  <span>Querying Security Policy...</span>
                 </div>
               ) : isEnrolled ? (
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-extrabold shadow-xs">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-full text-xs font-medium font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Account Protected</span>
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-extrabold shadow-xs">
-                  <ShieldAlert className="w-4 h-4 text-amber-600" />
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 rounded-full text-xs font-medium font-mono">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
                   <span>Setup Required</span>
                 </div>
               )}
@@ -364,672 +365,627 @@ function TwoFactorStudioContent() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* ── STATUTORY SECURITY & ESCROW ADVISORY ── */}
-        <div className="bg-emerald-950/10 dark:bg-emerald-950/30 border border-emerald-500/30 rounded-3xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 print:hidden">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 rounded-2xl shrink-0 mt-0.5">
-              <Shield className="w-6 h-6" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-10">
+        
+        {/* ── STATUTORY SECURITY & ESCROW ADVISORY (Architectural Signal Line, De-Carded) ── */}
+        <div className="border-l-2 border-[#0F5132] dark:border-emerald-500 pl-4 sm:pl-5 py-2 print:hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1 max-w-3xl">
+            <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold flex items-center gap-2">
+              <Shield className="w-3.5 h-3.5" />
+              <span>Ghana Rent Act (Act 220) &amp; Escrow Security Mandate</span>
             </div>
-            <div>
-              <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                Ghana Rent Act (Act 220) &amp; Escrow Security Mandate
-              </h2>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-3xl leading-relaxed">
-                2FA protects high-stakes actions across Akwaaba Homes: authorization of <strong>Landlord Mobile Money escrow disbursements</strong>, 
-                signing of official digital tenancy agreements, access to verified Ghana Card KYC documents, and dispute arbitration filings.
-              </p>
-            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
+              2FA protects high-stakes operations across Akwaaba Homes: authorization of <strong>Landlord Mobile Money escrow disbursements</strong>, 
+              signing of official digital tenancy agreements, access to verified Ghana Card KYC documents, and dispute arbitration filings.
+            </p>
           </div>
           <div className="shrink-0 text-right">
-            <span className="text-[10px] font-mono uppercase tracking-wider bg-white dark:bg-slate-900 border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-full font-bold">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 px-3 py-1 rounded-full">
               Standard RFC 6238 TOTP
             </span>
           </div>
         </div>
 
-        {/* ── ENROLLED STATE WORKSTATION ── */}
+        {/* ── ENROLLED STATE WORKSTATION (De-Carded Ledger) ── */}
         {isEnrolled && (
-          <div className="space-y-6 print:hidden">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
-                    <ShieldCheck className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                      Two-Factor Authentication is Active
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Your sign-ins and financial payouts require your 6-digit TOTP code or an emergency recovery key.
-                    </p>
-                  </div>
+          <div className="space-y-8 print:hidden divide-y divide-zinc-200 dark:divide-zinc-800">
+            
+            {/* Top Active Status & Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800/60 mt-0.5">
+                  <ShieldCheck className="w-5 h-5" />
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => {
-                      setRegenAuthValue('');
-                      setRegenModalOpen(true);
-                    }}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-900 dark:text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Regenerate Recovery Codes
-                  </button>
-                  <button
-                    onClick={() => {
-                      setDisableAuthValue('');
-                      setDisableModalOpen(true);
-                    }}
-                    className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />
-                    Deactivate 2FA
-                  </button>
+                <div>
+                  <h2 className="text-lg font-light tracking-tight text-zinc-900 dark:text-white">
+                    Two-Factor Authentication is Active
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                    Your sign-ins, financial withdrawals, and agreement signatures require your 6-digit TOTP authenticator code or an emergency recovery key.
+                  </p>
                 </div>
               </div>
 
-              {/* Recovery Codes Status Banner */}
-              <div className="bg-slate-50 dark:bg-slate-950/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl">
-                    <KeyRound className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <span>Emergency Recovery Keys Remaining:</span>
-                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
-                        {statusData?.remainingRecoveryCodes ?? 8} of 8
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      Each backup code is single-use. If you run out, generate 8 new keys immediately.
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => {
+                    setRegenAuthValue('');
+                    setRegenModalOpen(true);
+                  }}
+                  className="px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Regenerate Keys
+                </button>
+                <button
+                  onClick={() => {
+                    setDisableAuthValue('');
+                    setDisableModalOpen(true);
+                  }}
+                  className="px-4 py-2.5 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Deactivate 2FA
+                </button>
+              </div>
+            </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrintSheet}
-                    className="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Printer className="w-3.5 h-3.5" /> Print Backup Sheet
-                  </button>
+            {/* Recovery Codes Status Ledger */}
+            <div className="pt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6">
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 font-semibold">
+                  Emergency Recovery Access
                 </div>
+                <div className="text-sm font-medium text-zinc-900 dark:text-white flex items-center gap-2">
+                  <span>Available Recovery Keys:</span>
+                  <span className="font-mono text-[#0F5132] dark:text-emerald-400 font-bold">
+                    {statusData?.remainingRecoveryCodes ?? 8} of 8 remaining
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Each backup code is single-use. If you run low, regenerate 8 new keys immediately.
+                </p>
               </div>
 
-              {/* Newly Generated Codes Reveal if just regenerated */}
-              {freshRecoveryCodes && freshRecoveryCodes.length > 0 && (
-                <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400 font-black text-sm">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={handlePrintSheet}
+                  className="px-4 py-2.5 bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print Backup Sheet
+                </button>
+              </div>
+            </div>
+
+            {/* Newly Generated Codes Reveal */}
+            {freshRecoveryCodes && freshRecoveryCodes.length > 0 && (
+              <div className="pt-8 space-y-4">
+                <div className="border-l-2 border-amber-500 pl-4 py-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
                       <span>New Backup Codes Generated — Save These Now!</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleCopyAllCodes(freshRecoveryCodes)}
-                        className="text-xs font-bold text-amber-800 dark:text-amber-300 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        {copiedAllCodes ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                        Copy All
-                      </button>
-                      <button
-                        onClick={() => handleDownloadCodes(freshRecoveryCodes)}
-                        className="text-xs font-bold text-amber-800 dark:text-amber-300 hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Download
-                      </button>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                      Your previous recovery codes are now void. Store these 8 new codes in a secure vault or offline manager.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleCopyAllCodes(freshRecoveryCodes)}
+                      className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      {copiedAllCodes ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                      Copy All
+                    </button>
+                    <button
+                      onClick={() => handleDownloadCodes(freshRecoveryCodes)}
+                      className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Download .txt
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  {freshRecoveryCodes.map((code, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => handleCopySingleCode(code, idx)}
+                      className="p-3.5 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center font-mono font-bold text-xs text-zinc-900 dark:text-white hover:border-[#0F5132] dark:hover:border-emerald-500 cursor-pointer transition-colors relative group"
+                      title="Click to copy single code"
+                    >
+                      {copiedSingleIndex === idx ? (
+                        <span className="text-emerald-600 flex items-center justify-center gap-1 text-[11px]">
+                          <Check className="w-3 h-3" /> Copied
+                        </span>
+                      ) : (
+                        code
+                      )}
                     </div>
-                  </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                  <p className="text-xs text-amber-700 dark:text-amber-400/90 leading-relaxed">
-                    Your previous recovery codes are now void. Store these 8 new codes in a secure location:
-                  </p>
+          </div>
+        )}
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {freshRecoveryCodes.map((code, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => handleCopySingleCode(code, idx)}
-                        className="p-3 bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800/80 rounded-xl text-center font-mono font-bold text-xs text-slate-900 dark:text-white hover:border-amber-500 cursor-pointer transition-colors shadow-2xs relative group"
-                        title="Click to copy single code"
-                      >
-                        {copiedSingleIndex === idx ? (
-                          <span className="text-emerald-600 flex items-center justify-center gap-1 text-[11px]">
-                            <Check className="w-3 h-3" /> Copied
-                          </span>
-                        ) : (
-                          code
-                        )}
+        {/* ── ONBOARDING WORKSTATION (NOT ENROLLED, DE-CARDED) ── */}
+        {!isEnrolled && (
+          <div className="space-y-12 print:hidden">
+            
+            {/* Setup Progression Steps (Horizontal Architectural Flow) */}
+            <div className="border-b border-zinc-200 dark:border-zinc-800 pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                {/* Step 1 */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className={`text-left p-3 border-l-2 transition-all cursor-pointer ${
+                    currentStep === 1
+                      ? 'border-[#0F5132] dark:border-emerald-400'
+                      : 'border-zinc-200 dark:border-zinc-800 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Step 01</div>
+                  <div className="text-xs font-semibold text-zinc-900 dark:text-white mt-0.5">Scan Authenticator QR</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Link Google Authenticator or Authy</div>
+                </button>
+
+                {/* Step 2 */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(2)}
+                  className={`text-left p-3 border-l-2 transition-all cursor-pointer ${
+                    currentStep === 2
+                      ? 'border-[#0F5132] dark:border-emerald-400'
+                      : 'border-zinc-200 dark:border-zinc-800 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Step 02</div>
+                  <div className="text-xs font-semibold text-zinc-900 dark:text-white mt-0.5">Emergency Recovery Keys</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Save 8 offline backup codes</div>
+                </button>
+
+                {/* Step 3 */}
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className={`text-left p-3 border-l-2 transition-all cursor-pointer ${
+                    currentStep === 3
+                      ? 'border-[#0F5132] dark:border-emerald-400'
+                      : 'border-zinc-200 dark:border-zinc-800 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Step 03</div>
+                  <div className="text-xs font-semibold text-zinc-900 dark:text-white mt-0.5">Verify &amp; Activate</div>
+                  <div className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">Confirm with 6-digit TOTP or SMS</div>
+                </button>
+
+              </div>
+            </div>
+
+            {/* Active Stage Content (Direct Canvas) */}
+            <div>
+              {isLoadingSetup ? (
+                <div className="py-24 flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0F5132] dark:text-emerald-400" />
+                  <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">Generating cryptographic TOTP keys...</span>
+                </div>
+              ) : !setupData ? (
+                <div className="py-16 text-center space-y-4">
+                  <p className="text-xs text-rose-500 font-semibold">Failed to initialize 2FA setup session.</p>
+                  <button
+                    onClick={() => refetchSetup()}
+                    className="px-5 py-2.5 bg-[#0F5132] text-white rounded-xl text-xs font-semibold uppercase tracking-wider cursor-pointer"
+                  >
+                    Retry Initialization
+                  </button>
+                </div>
+              ) : (
+                <div className="max-w-2xl">
+                  
+                  {/* ──── STAGE 1: QR CODE & MANUAL SECRET ──── */}
+                  {currentStep === 1 && (
+                    <div className="space-y-8">
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold">
+                          Step 1 of 3 // Scan QR
+                        </div>
+                        <h2 className="text-xl font-light tracking-tight text-zinc-900 dark:text-white">
+                          Scan the QR Code with your Authenticator App
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Open Google Authenticator, Authy, or Microsoft Authenticator on your phone, tap &ldquo;+ Add Account&rdquo;, and point your camera at this QR code.
+                        </p>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* QR Code Presentation */}
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 py-2">
+                        <div className="p-4 bg-white rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-center w-[210px] h-[210px] shrink-0">
+                          {setupData.qrCodeSvg ? (
+                            <div
+                              className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
+                              dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
+                            />
+                          ) : (
+                            <QrCode className="w-16 h-16 text-zinc-300" />
+                          )}
+                        </div>
+
+                        <div className="space-y-4 text-center sm:text-left">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">Account Identity</span>
+                            <div className="text-xs font-mono font-bold text-zinc-900 dark:text-white">
+                              {userProfile?.email || 'Akwaaba Resident'}
+                            </div>
+                            <div className="text-[11px] text-[#0F5132] dark:text-emerald-400 font-medium">Issuer: Akwaaba Homes Protocol</div>
+                          </div>
+
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-sm">
+                            Once scanned, your phone will begin generating 6-digit verification codes that cycle every 30 seconds.
+                          </p>
+
+                          <div className="pt-1">
+                            <span className="text-[11px] text-zinc-400 block mb-1">Supported apps:</span>
+                            <div className="text-[11px] font-medium text-zinc-600 dark:text-zinc-300 flex flex-wrap gap-2">
+                              <span>Google Authenticator</span>
+                              <span>•</span>
+                              <span>Apple Passwords</span>
+                              <span>•</span>
+                              <span>Authy</span>
+                              <span>•</span>
+                              <span>1Password</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Manual Entry Fallback */}
+                      <div className="border-t border-zinc-100 dark:border-zinc-800/80 pt-6 space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-zinc-500 dark:text-zinc-400">
+                            Can&apos;t scan? Enter secret key manually:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCopySecret}
+                            className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedSecret ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copiedSecret ? 'Copied' : 'Copy Key'}</span>
+                          </button>
+                        </div>
+
+                        <div className="font-mono text-sm font-bold text-[#0F5132] dark:text-emerald-400 bg-zinc-50 dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 tracking-wider text-center select-all">
+                          {setupData.formattedSecret || setupData.secret}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(2)}
+                          className="px-6 py-3.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+                        >
+                          <span>Next: Save Recovery Keys</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ──── STAGE 2: 8 EMERGENCY BACKUP CODES ──── */}
+                  {currentStep === 2 && (
+                    <div className="space-y-8">
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold">
+                          Step 2 of 3 // Recovery Dossier
+                        </div>
+                        <h2 className="text-xl font-light tracking-tight text-zinc-900 dark:text-white">
+                          Save 8 Emergency Backup Recovery Keys
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          If you ever lose, damage, or reset your phone, each of these 8 one-time codes grants emergency account recovery.
+                        </p>
+                      </div>
+
+                      {/* Top Action Bar */}
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                        <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">
+                          One-Time Keys (8 total)
+                        </span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyAllCodes(setupData.rawCodes)}
+                            className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                          >
+                            {copiedAllCodes ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            Copy All
+                          </button>
+                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadCodes(setupData.rawCodes)}
+                            className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download .txt
+                          </button>
+                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                          <button
+                            type="button"
+                            onClick={handlePrintSheet}
+                            className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Printer className="w-3.5 h-3.5" /> Print Sheet
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 8 Codes Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {setupData.rawCodes.map((code, idx) => (
+                          <div
+                            key={idx}
+                            onClick={() => handleCopySingleCode(code, idx)}
+                            className="p-3 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center font-mono font-bold text-xs text-zinc-900 dark:text-white hover:border-[#0F5132] dark:hover:border-emerald-500 cursor-pointer transition-colors relative group"
+                            title="Click to copy single code"
+                          >
+                            <div className="text-[9px] font-mono text-zinc-400 mb-0.5">#{idx + 1}</div>
+                            {copiedSingleIndex === idx ? (
+                              <span className="text-emerald-600 flex items-center justify-center gap-1 text-[11px]">
+                                <Check className="w-3 h-3" /> Copied
+                              </span>
+                            ) : (
+                              code
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Confirmation Checkbox */}
+                      <div className="pt-2">
+                        <label className="flex items-start gap-3 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={savedCodesConfirmed}
+                            onChange={(e) => setSavedCodesConfirmed(e.target.checked)}
+                            className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132] cursor-pointer"
+                          />
+                          <div className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                            I confirm that I have copied, downloaded, or printed my 8 emergency backup keys and stored them safely. 
+                            I understand that Akwaaba Homes support cannot recover lost 2FA keys without these codes.
+                          </div>
+                        </label>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(1)}
+                          className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                        >
+                          &larr; Back to QR Code
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={!savedCodesConfirmed}
+                          onClick={() => setCurrentStep(3)}
+                          className="px-6 py-3.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-2 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        >
+                          <span>Next: Verify &amp; Activate</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ──── STAGE 3: VERIFY & ACTIVATE ──── */}
+                  {currentStep === 3 && (
+                    <div className="space-y-8">
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold">
+                          Step 3 of 3 // Complete Activation
+                        </div>
+                        <h2 className="text-xl font-light tracking-tight text-zinc-900 dark:text-white">
+                          Verify Code to Complete Activation
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                          Verify with your Authenticator App code or Ghana SMS OTP fallback to finalize security activation.
+                        </p>
+                      </div>
+
+                      {/* Dual Method Tabs */}
+                      <div className="flex items-center gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-2">
+                        <button
+                          type="button"
+                          onClick={() => setVerificationMethod('app')}
+                          className={`text-xs font-semibold uppercase tracking-wider pb-2 transition-all cursor-pointer flex items-center gap-2 border-b-2 -mb-2.5 ${
+                            verificationMethod === 'app'
+                              ? 'border-[#0F5132] text-[#0F5132] dark:border-emerald-400 dark:text-emerald-400'
+                              : 'border-transparent text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                          }`}
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                          Authenticator Code
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setVerificationMethod('sms')}
+                          className={`text-xs font-semibold uppercase tracking-wider pb-2 transition-all cursor-pointer flex items-center gap-2 border-b-2 -mb-2.5 ${
+                            verificationMethod === 'sms'
+                              ? 'border-[#0F5132] text-[#0F5132] dark:border-emerald-400 dark:text-emerald-400'
+                              : 'border-transparent text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
+                          }`}
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          Ghana SMS Fallback
+                        </button>
+                      </div>
+
+                      {/* ── METHOD A: AUTHENTICATOR APP INPUT ── */}
+                      {verificationMethod === 'app' && (
+                        <div className="space-y-6 pt-2">
+                          <div>
+                            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                              Enter the 6-Digit Code from your Authenticator:
+                            </label>
+
+                            <div className="flex items-center gap-2 sm:gap-3 py-2">
+                              {totpCode.map((digit, index) => (
+                                <input
+                                  key={index}
+                                  ref={(el) => {
+                                    inputRefs.current[index] = el;
+                                  }}
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={1}
+                                  value={digit}
+                                  onChange={(e) => handleDigitChange(index, e.target.value, false)}
+                                  onKeyDown={(e) => handleKeyDown(index, e, false)}
+                                  className="w-11 sm:w-13 h-13 sm:h-14 text-center text-xl sm:text-2xl font-mono font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-[#0F5132] dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-black focus:outline-none transition-all"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={totpCode.join('').length !== 6 || enableMutation.isPending}
+                            onClick={() => enableMutation.mutate(totpCode.join(''))}
+                            className="w-full py-3.5 px-5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            {enableMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" /> Verifying Code...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" /> Activate Two-Factor Authentication
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* ── METHOD B: SMS OTP FALLBACK INPUT ── */}
+                      {verificationMethod === 'sms' && (
+                        <div className="space-y-6 pt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+                            <div>
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+                                Registered Phone Number
+                              </span>
+                              <div className="text-xs font-mono font-bold text-zinc-900 dark:text-white mt-0.5">
+                                {maskedPhone || userProfile?.phoneNumber || '+233 (Registered Number)'}
+                              </div>
+                              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                                SMS gateway dispatches via Africa&apos;s Talking / Arkesel.
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={smsCooldown > 0 || sendSmsMutation.isPending}
+                              onClick={() => sendSmsMutation.mutate()}
+                              className="px-4 py-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-900 dark:text-white rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer shrink-0"
+                            >
+                              {sendSmsMutation.isPending ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              )}
+                              {smsCooldown > 0 ? `Resend (${smsCooldown}s)` : 'Send 6-Digit SMS Code'}
+                            </button>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                              Enter the 6-Digit Code received on your phone:
+                            </label>
+
+                            <div className="flex items-center gap-2 sm:gap-3 py-2">
+                              {smsCode.map((digit, index) => (
+                                <input
+                                  key={index}
+                                  ref={(el) => {
+                                    smsInputRefs.current[index] = el;
+                                  }}
+                                  type="text"
+                                  inputMode="numeric"
+                                  maxLength={1}
+                                  value={digit}
+                                  onChange={(e) => handleDigitChange(index, e.target.value, true)}
+                                  onKeyDown={(e) => handleKeyDown(index, e, true)}
+                                  className="w-11 sm:w-13 h-13 sm:h-14 text-center text-xl sm:text-2xl font-mono font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white focus:border-[#0F5132] dark:focus:border-emerald-500 focus:bg-white dark:focus:bg-black focus:outline-none transition-all"
+                                />
+                              ))}
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={smsCode.join('').length !== 6 || verifySmsMutation.isPending}
+                            onClick={() => verifySmsMutation.mutate(smsCode.join(''))}
+                            className="w-full py-3.5 px-5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            {verifySmsMutation.isPending ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" /> Verifying SMS Code...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" /> Confirm SMS Code &amp; Activate 2FA
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex justify-start pt-6 border-t border-zinc-200 dark:border-zinc-800">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(2)}
+                          className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                        >
+                          &larr; Back to Recovery Keys
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               )}
             </div>
+
           </div>
         )}
 
-        {/* ── ONBOARDING WORKSTATION (NOT ENROLLED) ── */}
-        {!isEnrolled && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 print:hidden">
-            {/* Left Steps Progress Column */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-6">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Setup Progression
-                </h3>
-
-                <div className="space-y-4">
-                  {/* Step 1 */}
-                  <div
-                    onClick={() => setCurrentStep(1)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                      currentStep === 1
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/50 text-emerald-900 dark:text-emerald-300'
-                        : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                        currentStep === 1
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      1
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">
-                        Scan Authenticator QR
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Link Google Authenticator, Authy, or Microsoft Authenticator.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div
-                    onClick={() => setCurrentStep(2)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                      currentStep === 2
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/50 text-emerald-900 dark:text-emerald-300'
-                        : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                        currentStep === 2
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      2
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">
-                        Save Emergency Keys
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Download or print 8 one-time backup recovery codes.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div
-                    onClick={() => setCurrentStep(3)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                      currentStep === 3
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-500/50 text-emerald-900 dark:text-emerald-300'
-                        : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
-                    }`}
-                  >
-                    <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${
-                        currentStep === 3
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      }`}
-                    >
-                      3
-                    </div>
-                    <div>
-                      <div className="font-bold text-xs text-slate-900 dark:text-white">
-                        Confirm &amp; Activate
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                        Verify with a 6-digit TOTP code or Ghana SMS OTP.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Supported Apps Guide Card */}
-              <div className="bg-slate-100 dark:bg-slate-900/60 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 space-y-3">
-                <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-emerald-600" />
-                  <span>Compatible Authenticator Apps</span>
-                </div>
-                <ul className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 list-disc list-inside">
-                  <li><strong>Google Authenticator</strong> (iOS &amp; Android)</li>
-                  <li><strong>Microsoft Authenticator</strong></li>
-                  <li><strong>Apple Passwords / Keychain</strong> (iOS 15+)</li>
-                  <li><strong>Twilio Authy</strong> or <strong>1Password</strong></li>
-                </ul>
-              </div>
-            </div>
-
-            {/* Right Main Stage Column */}
-            <div className="lg:col-span-8">
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs">
-                {isLoadingSetup ? (
-                  <div className="py-24 flex flex-col items-center justify-center gap-3">
-                    <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-                    <span className="text-xs font-bold text-slate-500">Generating cryptographic TOTP keys...</span>
-                  </div>
-                ) : !setupData ? (
-                  <div className="py-16 text-center space-y-4">
-                    <p className="text-xs text-rose-500 font-bold">Failed to initialize 2FA setup session.</p>
-                    <button
-                      onClick={() => refetchSetup()}
-                      className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold cursor-pointer"
-                    >
-                      Retry Initialization
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    {/* ──── STAGE 1: QR CODE & MANUAL SECRET ──── */}
-                    {currentStep === 1 && (
-                      <div className="space-y-6 animate-in">
-                        <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                            Step 1 of 3
-                          </span>
-                          <h2 className="text-lg font-black text-slate-900 dark:text-white mt-1">
-                            Scan the QR Code with Your Authenticator App
-                          </h2>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            Open your authenticator app on your phone, tap &quot;+ Add Account&quot;, and point your camera at this QR code.
-                          </p>
-                        </div>
-
-                        {/* QR Code Container */}
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-4">
-                          <div className="p-4 bg-white rounded-3xl border-2 border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center w-[230px] h-[230px]">
-                            {setupData.qrCodeSvg ? (
-                              <div
-                                className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full"
-                                dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
-                              />
-                            ) : (
-                              <QrCode className="w-16 h-16 text-slate-300" />
-                            )}
-                          </div>
-
-                          <div className="space-y-3 max-w-xs text-center sm:text-left">
-                            <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1">
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                Account Label
-                              </span>
-                              <div className="text-xs font-mono font-bold text-slate-900 dark:text-white truncate">
-                                {userProfile?.email || 'Akwaaba Resident'}
-                              </div>
-                              <div className="text-[10px] text-emerald-600 font-bold">Issuer: Akwaaba Homes</div>
-                            </div>
-
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                              Once scanned, your phone will begin generating 6-digit codes that refresh every 30 seconds.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Manual Entry Fallback Box */}
-                        <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                              Can&apos;t scan the QR code? Enter secret key manually:
-                            </span>
-                            <button
-                              type="button"
-                              onClick={handleCopySecret}
-                              className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-                            >
-                              {copiedSecret ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                              <span>{copiedSecret ? 'Copied' : 'Copy Key'}</span>
-                            </button>
-                          </div>
-
-                          <div className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60 tracking-wider text-center select-all">
-                            {setupData.formattedSecret || setupData.secret}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(2)}
-                            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer"
-                          >
-                            <span>Next: Save Recovery Keys</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ──── STAGE 2: 8 EMERGENCY BACKUP CODES ──── */}
-                    {currentStep === 2 && (
-                      <div className="space-y-6 animate-in">
-                        <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                            Step 2 of 3
-                          </span>
-                          <h2 className="text-lg font-black text-slate-900 dark:text-white mt-1">
-                            Save 8 Emergency Backup Recovery Keys
-                          </h2>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            If you ever lose, break, or reset your phone, each of these 8 one-time codes grants emergency account recovery.
-                          </p>
-                        </div>
-
-                        {/* Top Action Bar */}
-                        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                            Dossier Voucher Keys (8 total)
-                          </span>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                              type="button"
-                              onClick={() => handleCopyAllCodes(setupData.rawCodes)}
-                              className="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              {copiedAllCodes ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                              Copy All
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDownloadCodes(setupData.rawCodes)}
-                              className="px-3 py-1.5 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5" /> Download .txt
-                            </button>
-                            <button
-                              type="button"
-                              onClick={handlePrintSheet}
-                              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Printer className="w-3.5 h-3.5" /> Print Sheet
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* 8 Codes Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          {setupData.rawCodes.map((code, idx) => (
-                            <div
-                              key={idx}
-                              onClick={() => handleCopySingleCode(code, idx)}
-                              className="p-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-center font-mono font-bold text-xs text-slate-900 dark:text-white hover:border-emerald-500 cursor-pointer transition-colors shadow-2xs relative group"
-                              title="Click to copy single code"
-                            >
-                              <div className="text-[9px] font-mono text-slate-400 mb-0.5">#{idx + 1}</div>
-                              {copiedSingleIndex === idx ? (
-                                <span className="text-emerald-600 flex items-center justify-center gap-1 text-[11px]">
-                                  <Check className="w-3 h-3" /> Copied
-                                </span>
-                              ) : (
-                                code
-                              )}
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Confirmation Checkbox */}
-                        <div className="pt-2">
-                          <label className="flex items-start gap-3 p-4 bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={savedCodesConfirmed}
-                              onChange={(e) => setSavedCodesConfirmed(e.target.checked)}
-                              className="mt-0.5 w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                            />
-                            <div className="text-xs text-amber-900 dark:text-amber-300 leading-relaxed font-medium">
-                              I confirm that I have copied, downloaded, or printed my 8 emergency backup keys and stored them safely. 
-                              I understand that Akwaaba Homes support cannot recover lost 2FA keys without these codes.
-                            </div>
-                          </label>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(1)}
-                            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                          >
-                            Back to QR Code
-                          </button>
-
-                          <button
-                            type="button"
-                            disabled={!savedCodesConfirmed}
-                            onClick={() => setCurrentStep(3)}
-                            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <span>Next: Verify &amp; Activate</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ──── STAGE 3: VERIFY & ACTIVATE ──── */}
-                    {currentStep === 3 && (
-                      <div className="space-y-6 animate-in">
-                        <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                            Step 3 of 3
-                          </span>
-                          <h2 className="text-lg font-black text-slate-900 dark:text-white mt-1">
-                            Verify Code to Complete Activation
-                          </h2>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            Choose verification by Authenticator App code or Ghana SMS OTP fallback to finalize security activation.
-                          </p>
-                        </div>
-
-                        {/* Dual Method Tabs */}
-                        <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 w-fit">
-                          <button
-                            type="button"
-                            onClick={() => setVerificationMethod('app')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                              verificationMethod === 'app'
-                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                            Authenticator App Code
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setVerificationMethod('sms')}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                              verificationMethod === 'sms'
-                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
-                                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                            }`}
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            Ghana SMS OTP Fallback
-                          </button>
-                        </div>
-
-                        {/* ── METHOD A: AUTHENTICATOR APP INPUT ── */}
-                        {verificationMethod === 'app' && (
-                          <div className="space-y-6 pt-2">
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                                Enter the 6-Digit Code displayed in your Authenticator:
-                              </label>
-
-                              <div className="flex items-center justify-center gap-2 sm:gap-3 py-4">
-                                {totpCode.map((digit, index) => (
-                                  <input
-                                    key={index}
-                                    ref={(el) => {
-                                      inputRefs.current[index] = el;
-                                    }}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    value={digit}
-                                    onChange={(e) => handleDigitChange(index, e.target.value, false)}
-                                    onKeyDown={(e) => handleKeyDown(index, e, false)}
-                                    className="w-11 sm:w-13 h-13 sm:h-15 text-center text-xl sm:text-2xl font-mono font-black rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-emerald-600 focus:outline-none shadow-xs"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              disabled={totpCode.join('').length !== 6 || enableMutation.isPending}
-                              onClick={() => enableMutation.mutate(totpCode.join(''))}
-                              className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            >
-                              {enableMutation.isPending ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" /> Verifying Code...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="w-4 h-4" /> Activate Two-Factor Authentication
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
-
-                        {/* ── METHOD B: SMS OTP FALLBACK INPUT ── */}
-                        {verificationMethod === 'sms' && (
-                          <div className="space-y-6 pt-2">
-                            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                              <div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                  Registered Ghanaian Phone Number
-                                </span>
-                                <div className="text-xs font-mono font-bold text-slate-900 dark:text-white mt-0.5">
-                                  {maskedPhone || userProfile?.phoneNumber || '+233 (Registered Number)'}
-                                </div>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                                  SMS gateway dispatches via Arkesel / Hubtel / Africa&apos;s Talking.
-                                </p>
-                              </div>
-
-                              <button
-                                type="button"
-                                disabled={smsCooldown > 0 || sendSmsMutation.isPending}
-                                onClick={() => sendSmsMutation.mutate()}
-                                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer shrink-0"
-                              >
-                                {sendSmsMutation.isPending ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                  <MessageSquare className="w-3.5 h-3.5" />
-                                )}
-                                {smsCooldown > 0 ? `Resend SMS (${smsCooldown}s)` : 'Send 6-Digit SMS Code'}
-                              </button>
-                            </div>
-
-                            <div>
-                              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                                Enter the 6-Digit Code received on your phone:
-                              </label>
-
-                              <div className="flex items-center justify-center gap-2 sm:gap-3 py-4">
-                                {smsCode.map((digit, index) => (
-                                  <input
-                                    key={index}
-                                    ref={(el) => {
-                                      smsInputRefs.current[index] = el;
-                                    }}
-                                    type="text"
-                                    inputMode="numeric"
-                                    maxLength={1}
-                                    value={digit}
-                                    onChange={(e) => handleDigitChange(index, e.target.value, true)}
-                                    onKeyDown={(e) => handleKeyDown(index, e, true)}
-                                    className="w-11 sm:w-13 h-13 sm:h-15 text-center text-xl sm:text-2xl font-mono font-black rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-emerald-600 focus:outline-none shadow-xs"
-                                  />
-                                ))}
-                              </div>
-                            </div>
-
-                            <button
-                              type="button"
-                              disabled={smsCode.join('').length !== 6 || verifySmsMutation.isPending}
-                              onClick={() => verifySmsMutation.mutate(smsCode.join(''))}
-                              className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            >
-                              {verifySmsMutation.isPending ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" /> Verifying SMS Code...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="w-4 h-4" /> Confirm SMS Code &amp; Activate 2FA
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        )}
-
-                        <div className="flex justify-start pt-4 border-t border-slate-100 dark:border-slate-800">
-                          <button
-                            type="button"
-                            onClick={() => setCurrentStep(2)}
-                            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                          >
-                            Back to Recovery Keys
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── PRINTABLE VOUCHER KEY SHEET (Hidden on screen, revealed during window.print()) ── */}
-        <div className="hidden print:block font-sans p-8 space-y-6 max-w-2xl mx-auto border-2 border-dashed border-slate-400 rounded-3xl">
-          <div className="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+        {/* ── PRINTABLE VOUCHER KEY SHEET (Revealed during window.print()) ── */}
+        <div className="hidden print:block font-sans p-8 space-y-6 max-w-2xl mx-auto border-2 border-dashed border-zinc-400 rounded-2xl">
+          <div className="border-b-2 border-zinc-900 pb-4 flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-black uppercase tracking-tight text-slate-900">
+              <h1 className="text-2xl font-black uppercase tracking-tight text-zinc-900">
                 Akwaaba Homes
               </h1>
-              <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">
+              <p className="text-xs font-bold text-zinc-600 uppercase tracking-wider">
                 Emergency 2FA Recovery Keys Dossier
               </p>
             </div>
             <div className="text-right text-xs">
               <div className="font-bold">{userProfile?.email}</div>
-              <div className="text-slate-500 font-mono">{new Date().toLocaleDateString()}</div>
+              <div className="text-zinc-500 font-mono">{new Date().toLocaleDateString()}</div>
             </div>
           </div>
 
-          <div className="p-4 bg-slate-100 rounded-xl text-xs text-slate-800 space-y-1">
+          <div className="p-4 bg-zinc-100 rounded-xl text-xs text-zinc-800 space-y-1">
             <p className="font-bold">IMPORTANT INSTRUCTIONS:</p>
-            <p>1. Store this printed voucher in a secure location (fireproof safe, lockbox, or passport wallet).</p>
+            <p>1. Store this printed voucher in a secure location (fireproof safe or lockbox).</p>
             <p>2. Each code can be entered ONCE in place of your 6-digit authenticator code.</p>
             <p>3. Strike through used codes with a pen as you consume them.</p>
           </div>
@@ -1038,41 +994,42 @@ function TwoFactorStudioContent() {
             {codesToDisplay.map((code, idx) => (
               <div
                 key={idx}
-                className="p-3 border-2 border-slate-300 rounded-xl text-center font-mono font-black text-sm tracking-wider flex items-center justify-between px-4"
+                className="p-3 border-2 border-zinc-300 rounded-xl text-center font-mono font-black text-sm tracking-wider flex items-center justify-between px-4"
               >
-                <span className="text-slate-400 text-xs">#{idx + 1}</span>
-                <span className="text-slate-900">{code}</span>
-                <span className="text-slate-300 text-xs">[ ]</span>
+                <span className="text-zinc-400 text-xs">#{idx + 1}</span>
+                <span className="text-zinc-900">{code}</span>
+                <span className="text-zinc-300 text-xs">[ ]</span>
               </div>
             ))}
           </div>
 
-          <div className="border-t border-slate-200 pt-4 text-[10px] text-slate-500 text-center">
+          <div className="border-t border-zinc-200 pt-4 text-[10px] text-zinc-500 text-center">
             Ghana Rent Act Escrow &amp; Account Protection Standard • Akwaaba Homes Marketplace Ltd.
           </div>
         </div>
+
       </div>
 
       {/* ── MODAL: REGENERATE RECOVERY CODES ── */}
       {regenModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5">
-            <div className="flex items-center gap-3 text-slate-900 dark:text-white">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
+            <div className="flex items-center gap-3 text-zinc-900 dark:text-white">
               <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl">
                 <RefreshCw className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-black">Regenerate Recovery Keys</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">All previous backup codes will be voided.</p>
+                <h3 className="text-base font-semibold">Regenerate Recovery Keys</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">All previous backup codes will be voided.</p>
               </div>
             </div>
 
-            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl text-xs font-bold">
+            <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setRegenAuthType('password')}
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  regenAuthType === 'password' ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'
+                  regenAuthType === 'password' ? 'bg-white dark:bg-zinc-800 shadow-2xs' : 'text-zinc-500'
                 }`}
               >
                 Password
@@ -1081,7 +1038,7 @@ function TwoFactorStudioContent() {
                 type="button"
                 onClick={() => setRegenAuthType('code')}
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  regenAuthType === 'code' ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'
+                  regenAuthType === 'code' ? 'bg-white dark:bg-zinc-800 shadow-2xs' : 'text-zinc-500'
                 }`}
               >
                 Current 2FA Code
@@ -1089,7 +1046,7 @@ function TwoFactorStudioContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                 {regenAuthType === 'password' ? 'Enter Account Password *' : 'Enter 6-Digit Authenticator Code *'}
               </label>
               <input
@@ -1097,7 +1054,7 @@ function TwoFactorStudioContent() {
                 placeholder={regenAuthType === 'password' ? '••••••••' : '000000'}
                 value={regenAuthValue}
                 onChange={(e) => setRegenAuthValue(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold focus:border-emerald-600 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-mono font-bold focus:border-[#0F5132] focus:outline-none"
               />
             </div>
 
@@ -1105,7 +1062,7 @@ function TwoFactorStudioContent() {
               <button
                 type="button"
                 onClick={() => setRegenModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
@@ -1113,7 +1070,7 @@ function TwoFactorStudioContent() {
                 type="button"
                 disabled={!regenAuthValue.trim() || regenCodesMutation.isPending}
                 onClick={() => regenCodesMutation.mutate()}
-                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {regenCodesMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Generate 8 New Keys
@@ -1125,24 +1082,24 @@ function TwoFactorStudioContent() {
 
       {/* ── MODAL: DISABLE 2FA ── */}
       {disableModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl space-y-5">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 max-w-md w-full border border-zinc-200 dark:border-zinc-800 shadow-xl space-y-5">
             <div className="flex items-center gap-3 text-rose-600">
               <div className="p-2.5 bg-rose-500/10 text-rose-600 rounded-xl">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-black text-slate-900 dark:text-white">Deactivate 2FA</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Escrow payouts will no longer be protected.</p>
+                <h3 className="text-base font-semibold text-zinc-900 dark:text-white">Deactivate 2FA</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Escrow payouts will no longer be protected.</p>
               </div>
             </div>
 
-            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl text-xs font-bold">
+            <div className="flex gap-2 p-1 bg-zinc-100 dark:bg-zinc-900 rounded-xl text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setDisableAuthType('password')}
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  disableAuthType === 'password' ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'
+                  disableAuthType === 'password' ? 'bg-white dark:bg-zinc-800 shadow-2xs' : 'text-zinc-500'
                 }`}
               >
                 Password
@@ -1151,7 +1108,7 @@ function TwoFactorStudioContent() {
                 type="button"
                 onClick={() => setDisableAuthType('code')}
                 className={`flex-1 py-1.5 rounded-lg transition-all cursor-pointer ${
-                  disableAuthType === 'code' ? 'bg-white dark:bg-slate-900 shadow-xs' : 'text-slate-500'
+                  disableAuthType === 'code' ? 'bg-white dark:bg-zinc-800 shadow-2xs' : 'text-zinc-500'
                 }`}
               >
                 Current 2FA Code
@@ -1159,7 +1116,7 @@ function TwoFactorStudioContent() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-1.5">
                 {disableAuthType === 'password' ? 'Confirm Account Password *' : 'Enter 6-Digit Authenticator Code *'}
               </label>
               <input
@@ -1167,7 +1124,7 @@ function TwoFactorStudioContent() {
                 placeholder={disableAuthType === 'password' ? '••••••••' : '000000'}
                 value={disableAuthValue}
                 onChange={(e) => setDisableAuthValue(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-bold focus:border-rose-600 focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-mono font-bold focus:border-rose-600 focus:outline-none"
               />
             </div>
 
@@ -1175,7 +1132,7 @@ function TwoFactorStudioContent() {
               <button
                 type="button"
                 onClick={() => setDisableModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 cursor-pointer"
+                className="px-4 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
               >
                 Cancel
               </button>
@@ -1183,7 +1140,7 @@ function TwoFactorStudioContent() {
                 type="button"
                 disabled={!disableAuthValue.trim() || disableMutation.isPending}
                 onClick={() => disableMutation.mutate()}
-                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {disableMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Confirm Deactivation
@@ -1192,6 +1149,7 @@ function TwoFactorStudioContent() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -1200,8 +1158,8 @@ export default function TwoFactorStudioPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <div className="min-h-screen bg-white dark:bg-[#0B0D12] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0F5132] dark:text-emerald-400" />
         </div>
       }
     >
