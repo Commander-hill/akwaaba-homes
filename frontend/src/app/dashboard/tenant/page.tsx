@@ -143,18 +143,6 @@ function TenantDashboardContent() {
     }
   }, []);
   
-  // Review State
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState('');
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
-  const [reviewError, setReviewError] = useState('');
-  const [reviewSuccess, setReviewSuccess] = useState('');
-
-  // Appeal State
-  const [appealModalOpen, setAppealModalOpen] = useState(false);
-  const [appealTargetId, setAppealTargetId] = useState('');
-  const [appealNote, setAppealNote] = useState('');
   const [selectedGatePassBooking, setSelectedGatePassBooking] = useState<any>(null);
 
 
@@ -245,24 +233,6 @@ function TenantDashboardContent() {
   });
 
   // Mutations
-  const reviewMutation = useMutation({
-    mutationFn: async (reviewData: { bookingId: string; rating: number; comment: string }) => {
-      const res = await api.post('/reviews', reviewData);
-      return res.data;
-    },
-    onSuccess: () => {
-      setReviewModalOpen(false);
-      setComment('');
-      setRating(5);
-      setReviewSuccess('Your review was submitted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-      queryClient.invalidateQueries({ queryKey: ['myReviews'] });
-      setTimeout(() => setReviewSuccess(''), 5000);
-    },
-    onError: (err: any) => {
-      setReviewError(err.response?.data?.message || 'Failed to submit review');
-    }
-  });
 
   const cancelPendingMutation = useMutation({
     mutationFn: async (bookingId: string) => {
@@ -344,17 +314,6 @@ function TenantDashboardContent() {
     },
   });
 
-  const appealMutation = useMutation({
-    mutationFn: async ({ id, note }: { id: string; note: string }) => {
-      const res = await api.put(`/reviews/${id}/appeal`, { appealNote: note });
-      return res.data;
-    },
-    onSuccess: () => {
-      setAppealModalOpen(false);
-      setAppealNote('');
-      queryClient.invalidateQueries({ queryKey: ['myReviews'] });
-    }
-  });
 
 
 
@@ -747,12 +706,12 @@ function TenantDashboardContent() {
                             </>
                           )}
                           {(['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
-                            <button 
-                              onClick={() => { setSelectedBookingId(booking.id); setReviewError(''); setReviewModalOpen(true); }}
+                            <Link 
+                              href={`/dashboard/tenant/reviews/new?bookingId=${booking.id}`}
                               className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
                             >
                               <Star className="w-3 h-3 fill-current" /> Leave Review
-                            </button>
+                            </Link>
                           )}
                         </div>
                       </div>
@@ -915,11 +874,6 @@ function TenantDashboardContent() {
             </div>
           </div>
 
-          {reviewSuccess && (
-            <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 text-sm font-medium flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 shrink-0" /> {reviewSuccess}
-            </div>
-          )}
 
           {myReviewsLoading ? (
             <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
@@ -986,12 +940,12 @@ function TenantDashboardContent() {
                           <XCircle className="w-4 h-4" /> Appeal rejected by admin.
                         </div>
                       ) : (
-                        <button
-                          onClick={() => { setAppealTargetId(review.id); setAppealNote(''); setAppealModalOpen(true); }}
+                        <Link
+                          href={`/dashboard/tenant/appeals/new?reviewId=${review.id}`}
                           className="flex items-center gap-2 text-sm font-bold text-[var(--primary)] hover:underline"
                         >
                           <MessageSquare className="w-4 h-4" /> Submit an Appeal
-                        </button>
+                        </Link>
                       )}
                     </div>
                   )}
@@ -1686,70 +1640,6 @@ function TenantDashboardContent() {
         </div>
       )}
 
-      {/* Review Modal */}
-      {reviewModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl relative animate-in">
-            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><Star className="w-5 h-5 text-amber-400 fill-amber-400" /> Leave a Review</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-5">Your honest feedback helps other students find great accommodation.</p>
-            {reviewError && <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl text-sm font-medium">{reviewError}</div>}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2">Your Rating</label>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} onClick={() => setRating(star)} className="p-1 focus:outline-none transition-transform hover:scale-125">
-                      <Star className={`w-9 h-9 transition-colors ${rating >= star ? 'fill-amber-400 text-amber-400' : 'text-slate-200 dark:text-slate-700'}`} />
-                    </button>
-                  ))}
-                  <span className="ml-2 text-sm font-bold text-[var(--muted-foreground)]">{['','Poor','Fair','Good','Great','Excellent'][rating]}</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">Your Comment</label>
-                <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[120px] resize-none" placeholder="Describe your experience — cleanliness, landlord responsiveness, location, value for money..." value={comment} onChange={(e) => setComment(e.target.value)} />
-              </div>
-              <div className="flex justify-end gap-3 pt-2">
-                <button onClick={() => { setReviewModalOpen(false); setReviewError(''); }} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                <button
-                  onClick={() => { if (!comment.trim()) { setReviewError('Please write a comment before submitting'); return; } setReviewError(''); reviewMutation.mutate({ bookingId: selectedBookingId, rating, comment }); }}
-                  disabled={reviewMutation.isPending}
-                  className="px-6 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-                >
-                  {reviewMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : <><Star className="w-4 h-4" /> Submit Review</>}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Appeal Modal */}
-      {appealModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl animate-in">
-            <h3 className="text-xl font-bold mb-1 flex items-center gap-2"><MessageSquare className="w-5 h-5 text-[var(--primary)]" /> Submit an Appeal</h3>
-            <p className="text-sm text-[var(--muted-foreground)] mb-5">Explain why you believe this review should be reinstated. An admin will review your appeal.</p>
-            <textarea
-              value={appealNote}
-              onChange={(e) => setAppealNote(e.target.value)}
-              rows={4}
-              placeholder="Provide your justification here..."
-              className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none resize-none mb-4"
-            />
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setAppealModalOpen(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
-              <button
-                onClick={() => { if (appealNote.trim()) appealMutation.mutate({ id: appealTargetId, note: appealNote }); }}
-                disabled={appealMutation.isPending || !appealNote.trim()}
-                className="px-6 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition-opacity disabled:opacity-60"
-              >
-                {appealMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : 'Submit Appeal'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
 
 
