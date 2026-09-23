@@ -29,6 +29,7 @@ import {
   verifyAndConsumeRecoveryCode,
   generateQRCodeSvg
 } from '../utils/totp.service';
+import { sendSMS } from '../utils/sms.service';
 
 
 
@@ -1416,5 +1417,170 @@ export const disable2FA = async (req: Request, res: Response): Promise<void> => 
   } catch (error) {
     console.error('disable2FA error:', error);
     res.status(500).json({ message: 'Failed to disable 2FA' });
+  }
+};
+
+/**
+ * Send SMS OTP for 2FA Fallback Verification
+ */
+export const send2FASMS = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    if (!user.phoneNumber) {
+      res.status(400).json({ message: 'No registered Ghanaian phone number found on your account. Please update your profile with a valid phone number first.' });
+      return;
+    }
+
+    // Rate limiting: check if OTP was requested within 60 seconds
+    const existing = appCache.get(`2fa_sms_${userId}`) as { code: string; lastSentAt: number } | undefined;
+    if (existing && Date.now() - existing.lastSentAt < 60000) {
+      const waitSecs = Math.ceil((60000 - (Date.now() - existing.lastSentAt)) / 1000);
+      res.status(429).json({ message: `Please wait ${waitSecs} seconds before requesting a new SMS verification code.` });
+      return;
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    appCache.set(`2fa_sms_${userId}`, { code, lastSentAt: Date.now() }, 600);
+
+    const message = `Akwaaba Homes: Your 2FA security verification code is ${code}. Valid for 10 minutes. Do not share this code with anyone.`;
+    await sendSMS(user.phoneNumber, message);
+
+    const clean = user.phoneNumber.trim();
+    const maskedPhone = clean.length > 6 
+      ? clean.slice(0, 4) + '••••' + clean.slice(-3) 
+      : clean;
+
+    res.status(200).json({
+      success: true,
+      message: `SMS security verification code dispatched to ${maskedPhone}`,
+      maskedPhone
+    });
+  } catch (error) {
+    console.error('send2FASMS error:', error);
+    res.status(500).json({ message: 'Failed to send 2FA SMS code' });
+  }
+};
+
+/**
+ * Verify SMS OTP for 2FA Activation / Fallback
+ */
+export const verify2FASMS = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { code } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    if (!code || typeof code !== 'string') {
+      res.status(400).json({ message: '6-digit SMS verification code is required' });
+      return;
+    }
+
+    const cached = appCache.get(`2fa_sms_${userId}`) as { code: string; lastSentAt: number } | undefined;
+    if (!cached || cached.code !== code.trim()) {
+      res.status(400).json({ message: 'Invalid or expired SMS verification code.' });
+      return;
+    }
+
+    // If user has an active 2FA setup session pending, activate it
+    const setupData = appCache.get(`2fa_setup_${userId}`) as { secret: string; hashedCodes: string[]; rawCodes: string[] } | undefined;
+    if (setupData) {
+      const encryptedSecret = encryptData(setupData.secret);
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          twoFactorEnabled: true,
+          twoFactorSecret: encryptedSecret,
+          twoFactorRecoveryCodes: JSON.stringify(setupData.hashedCodes)
+        }
+      });
+      appCache.del(`2fa_setup_${userId}`);
+    }
+
+    appCache.del(`2fa_sms_${userId}`);
+
+    try {
+      await logAudit(userId, '2FA_SMS_VERIFIED', 'User', userId, null, {}, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({
+      success: true,
+      message: 'SMS verification code confirmed. Two-Factor Authentication is active.'
+    });
+  } catch (error) {
+    console.error('verify2FASMS error:', error);
+    res.status(500).json({ message: 'Failed to verify 2FA SMS code' });
+  }
+};
+
+/**
+ * Regenerate Emergency Recovery Codes for Enrolled User
+ */
+export const regenerateRecoveryCodes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { password, code } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.twoFactorEnabled) {
+      res.status(400).json({ message: 'Two-factor authentication is not active on this account.' });
+      return;
+    }
+
+    // Verify password or TOTP code for authorization
+    let isAuthorized = false;
+    if (password) {
+      isAuthorized = await bcrypt.compare(password, user.passwordHash);
+    }
+    if (!isAuthorized && code && user.twoFactorSecret) {
+      const decryptedSecret = decryptData(user.twoFactorSecret);
+      isAuthorized = verifyTOTPCode(String(code).trim(), decryptedSecret);
+    }
+
+    if (!isAuthorized) {
+      res.status(401).json({ message: 'Authorization required. Please provide your current password or 6-digit TOTP code.' });
+      return;
+    }
+
+    const { rawCodes, hashedCodes } = generateRecoveryCodes(8);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorRecoveryCodes: JSON.stringify(hashedCodes)
+      }
+    });
+
+    try {
+      await logAudit(userId, '2FA_RECOVERY_CODES_REGENERATED', 'User', userId, null, { count: 8 }, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({
+      success: true,
+      rawCodes,
+      message: '8 fresh emergency recovery codes have been generated. Previous recovery codes are now void.'
+    });
+  } catch (error) {
+    console.error('regenerateRecoveryCodes error:', error);
+    res.status(500).json({ message: 'Failed to regenerate recovery codes' });
   }
 };

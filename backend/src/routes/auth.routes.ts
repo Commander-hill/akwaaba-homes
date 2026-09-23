@@ -7,6 +7,9 @@ import {
   setup2FA,
   enable2FA,
   disable2FA,
+  send2FASMS,
+  verify2FASMS,
+  regenerateRecoveryCodes,
   logout,
   refresh,
   verifyEmail,
@@ -43,6 +46,9 @@ router.get('/2fa/status', authenticate, get2FAStatus);
 router.post('/2fa/setup', authenticate, setup2FA);
 router.post('/2fa/enable', authenticate, enable2FA);
 router.post('/2fa/disable', authenticate, disable2FA);
+router.post('/2fa/sms/send', authenticate, send2FASMS);
+router.post('/2fa/sms/verify', authenticate, verify2FASMS);
+router.post('/2fa/recovery-codes/regenerate', authenticate, regenerateRecoveryCodes);
 
 // Protected routes
 router.get('/me', authenticate, getMe);

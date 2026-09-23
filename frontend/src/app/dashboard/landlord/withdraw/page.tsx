@@ -247,6 +247,21 @@ export default function LandlordWithdrawalPage() {
       </div>
 
       {/* ── Main 2-Column Content ── */}
+      {twoFactorStatus && !twoFactorStatus.twoFactorEnabled && (
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-amber-800 dark:text-amber-300 font-medium">
+            <Lock className="w-4 h-4 shrink-0 text-amber-600" />
+            <span>Escrow payouts currently use Email OTP. Enable TOTP 2FA for instant, tamper-proof authorization.</span>
+          </div>
+          <Link
+            href="/dashboard/profile/security/2fa"
+            className="font-bold text-amber-900 dark:text-amber-200 underline hover:no-underline shrink-0"
+          >
+            Configure 2FA Studio →
+          </Link>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Form / Step-up Auth (7 cols) */}
         <div className="lg:col-span-7 space-y-6">

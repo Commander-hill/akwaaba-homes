@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { Loader2, Lock, Monitor, Smartphone, Globe, LogOut, Clock, AlertTriangle } from 'lucide-react';
@@ -72,6 +73,36 @@ export default function SecurityPage() {
           <h3 className="font-bold text-amber-800 dark:text-amber-500 text-lg">Did you notice suspicious activity?</h3>
           <p className="text-amber-700/80 dark:text-amber-500/80 mt-1">If you see a device you don't recognize, immediately revoke its access below and change your password.</p>
         </div>
+      </div>
+
+      {/* Two-Factor Authentication Quick Launch */}
+      <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <div className="p-3.5 bg-emerald-500/10 text-emerald-600 rounded-2xl shrink-0 mt-0.5">
+            <Lock className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Two-Factor Authentication &amp; Recovery Keys
+              </h2>
+              <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Studio Available
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xl leading-relaxed">
+              Configure RFC 6238 TOTP authenticator app pairing, generate printable 8-voucher emergency recovery keys, and enable Ghana SMS verification fallback.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/dashboard/profile/security/2fa"
+          className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        >
+          <span>Open 2FA Studio</span>
+          <span className="text-sm">→</span>
+        </Link>
       </div>
 
       <div className="glass-card rounded-3xl border border-[var(--border)] overflow-hidden">
