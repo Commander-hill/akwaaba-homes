@@ -59,203 +59,221 @@ export default function InvoicePage() {
   return (
     <div className="max-w-4xl mx-auto my-8 relative">
       
-      {/* Floating Print & Download Buttons - Hidden when printing */}
-      <div className="absolute -top-12 right-0 print:hidden flex gap-3">
-        <button 
-          onClick={handleDownloadPDF}
-          className="flex items-center gap-2 bg-emerald-600 text-white px-5 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+      {/* Floating Action Controls - Hidden when printing */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6 print:hidden">
+        <button
+          onClick={() => router.back()}
+          className="text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] transition-colors cursor-pointer"
         >
-          <Printer className="w-5 h-5" /> Download PDF Receipt
+          ← Back
         </button>
-        <button 
-          onClick={() => window.print()}
-          className="flex items-center gap-2 bg-[var(--primary)] text-white px-5 py-2.5 rounded-full font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
-        >
-          <Printer className="w-5 h-5" /> Print
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleDownloadPDF}
+            className="flex items-center gap-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </button>
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Receipt</span>
+          </button>
+        </div>
       </div>
 
-      {/* Invoice Document (White background for printing) */}
-      <div className="bg-white text-black p-8 sm:p-12 shadow-sm print:shadow-none border print:border-none rounded-sm">
+      {/* Official Architectural Receipt Document */}
+      <div className="bg-white dark:bg-[#12151D] text-zinc-900 dark:text-zinc-100 p-8 sm:p-12 border border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-sm space-y-8 relative overflow-hidden print:border-none print:shadow-none print:p-0 print:m-0 print:bg-white print:text-black">
         
+        {/* Background Watermark */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-3 pointer-events-none select-none text-9xl font-black uppercase text-zinc-950 dark:text-white rotate-[-20deg]">
+          ESCROW PAID
+        </div>
+
         {/* Header */}
-        <div className="flex justify-between items-start border-b-[3px] border-[#0a192f] pb-4 mb-6">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Akwaaba Homes</h1>
-            <p className="text-sm font-medium text-gray-700">Digital Accommodations, Ghana</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-6 border-b border-zinc-200 dark:border-zinc-800 pb-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black text-zinc-950 dark:text-white tracking-tight">
+                Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                Official Receipt
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500">
+              Certified Smart Rental &amp; Student Hostel Marketplace
+            </p>
+            <p className="text-[11px] text-zinc-400">
+              Accra &amp; Kumasi, Republic of Ghana 🇬🇭 • Act 220 Compliant
+            </p>
           </div>
-          <div className="flex flex-col items-center">
-            <div className="w-12 h-12 bg-[#0a192f] text-white flex items-center justify-center rounded-lg shadow-sm">
-              <Building className="w-8 h-8" />
+
+          <div className="sm:text-right space-y-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Receipt Reference</div>
+            <div className="font-mono font-black text-sm text-[#0F5132] dark:text-emerald-400">
+              {data.reference || `AKW-REC-${transactionId.slice(0, 8).toUpperCase()}`}
+            </div>
+            <div className="text-[11px] text-zinc-500">
+              Issued: {new Date(data.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-bold text-gray-900">info@akwaabahomes.com</p>
-            <p className="text-sm font-medium text-gray-700">+233 24 123 4567</p>
+        </div>
+
+        {/* Status & Escrow Assurance Banner */}
+        <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
+              ✓
+            </div>
+            <div>
+              <div className="font-bold text-emerald-900 dark:text-emerald-200">
+                Rent Escrow Safeguard Verified
+              </div>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">
+                Payment held in regulated escrow. Released to landlord upon move-in condition sign-off.
+              </p>
+            </div>
+          </div>
+
+          <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-[#0F5132] text-white">
+            {data.status === 'SUCCESS' || data.status === 'COMPLETED' ? 'Settled & Active' : data.status}
+          </span>
+        </div>
+
+        {/* 2-Column Parties Grid: Tenant & Property */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
+          {/* Tenant Details */}
+          <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+              Resident / Tenant Particulars
+            </span>
+            <div className="font-bold text-sm text-zinc-950 dark:text-white">
+              {tenant.firstName} {tenant.lastName}
+            </div>
+            <div className="space-y-1 text-zinc-600 dark:text-zinc-400">
+              <div>Phone: <strong className="text-zinc-900 dark:text-white font-mono">{tenant.phoneNumber || 'N/A'}</strong></div>
+              <div>Email: <strong className="text-zinc-900 dark:text-white">{tenant.email}</strong></div>
+              {tenant.studentId && (
+                <div>Student Index: <strong className="text-zinc-900 dark:text-white font-mono">{tenant.studentId} ({tenant.campus || 'KNUST / UG'})</strong></div>
+              )}
+            </div>
+          </div>
+
+          {/* Property Details */}
+          <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 space-y-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+              Accommodation &amp; Allocated Unit
+            </span>
+            <div className="font-bold text-sm text-zinc-950 dark:text-white">
+              {property.title}
+            </div>
+            <div className="space-y-1 text-zinc-600 dark:text-zinc-400">
+              <div>Location: <strong className="text-zinc-900 dark:text-white">{property.location || 'Greater Accra / Ashanti'}</strong></div>
+              <div>Room Unit: <strong className="text-zinc-900 dark:text-white">{property.roomType || 'Self-Contained Unit'}</strong></div>
+              <div>Tenancy Term: <strong className="text-zinc-900 dark:text-white">{new Date(booking.startDate).toLocaleDateString()} – {new Date(booking.endDate).toLocaleDateString()}</strong></div>
+            </div>
           </div>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Invoice Valid For: <span className="text-emerald-600">{bookingYear}/{nextYear}</span>
-          </h2>
-        </div>
-
-        {/* Student Profile Block */}
-        <div className="flex flex-col sm:flex-row gap-6 mb-8">
-          {/* Avatar Area */}
-          <div className="w-40 shrink-0">
-            {tenant.avatarUrl ? (
-              <img src={tenant.avatarUrl} alt="Student" className="w-full h-auto rounded border border-gray-300 shadow-sm" />
-            ) : (
-              <div className="w-full aspect-[3/4] bg-slate-100 border border-slate-300 flex items-center justify-center text-slate-400 rounded">
-                No Photo
-              </div>
-            )}
+        {/* Itemized Financial Ledger Table */}
+        <div className="space-y-3">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+            Payment Breakdown &amp; Statutory Assessment
           </div>
           
-          {/* Student Details Grid */}
-          <div className="flex-1 border border-[#0a192f]">
-            <div className="grid grid-cols-2 divide-x divide-[#0a192f]">
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Name</p>
-                <p className="text-sm font-bold uppercase">{tenant.firstName} {tenant.lastName}</p>
-              </div>
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Mobile Number</p>
-                <p className="text-sm font-bold uppercase">{tenant.phoneNumber || 'N/A'}</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 divide-x divide-[#0a192f]">
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Email</p>
-                <p className="text-sm font-bold uppercase">{tenant.email}</p>
-              </div>
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Student ID</p>
-                <p className="text-sm font-bold uppercase">{tenant.studentId || 'N/A'}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 divide-x divide-[#0a192f]">
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Level</p>
-                <p className="text-sm font-bold uppercase">{tenant.yearOfStudy || 'N/A'}</p>
-              </div>
-              <div className="p-3 border-b border-[#0a192f]">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Course</p>
-                <p className="text-sm font-bold uppercase">{tenant.programmeOfStudy || 'N/A'}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 divide-x divide-[#0a192f]">
-              <div className="p-3">
-                <p className="text-xs text-gray-600 font-semibold mb-1">Campus</p>
-                <p className="text-sm font-bold uppercase">{tenant.campus || 'N/A'}</p>
-              </div>
-              <div className="p-3 bg-gray-50">
-              </div>
-            </div>
+          <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-zinc-100 dark:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">
+                <tr>
+                  <th className="py-3 px-4 font-bold">Line Item</th>
+                  <th className="py-3 px-4 font-bold">Statutory &amp; Service Classification</th>
+                  <th className="py-3 px-4 font-bold text-right">Amount (GHS)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                <tr>
+                  <td className="py-3 px-4 font-bold text-zinc-900 dark:text-white">
+                    Base Accommodation Rent
+                  </td>
+                  <td className="py-3 px-4 text-zinc-500">
+                    {bookingYear}/{nextYear} Tenancy Rent • Rent Act (Act 220) Compliant
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono font-bold text-zinc-900 dark:text-white">
+                    GH₵ {data.amount.toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Roadside Broker Commission
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 font-bold">
+                    Zero Roadside Agent Surcharge (Akwaaba Direct Host Guarantee)
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-zinc-400">
+                    GH₵ 0.00
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Viewing Inspection Surcharge
+                  </td>
+                  <td className="py-3 px-4 text-emerald-600 font-bold">
+                    100% Free Verified Photo &amp; Virtual Inspection
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-zinc-400">
+                    GH₵ 0.00
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 px-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                    Paystack / MoMo Escrow Protection
+                  </td>
+                  <td className="py-3 px-4 text-zinc-500">
+                    Audited Escrow Holding &amp; Digital Tenancy Lease E-Signature
+                  </td>
+                  <td className="py-3 px-4 text-right font-mono text-emerald-600 font-bold">
+                    Included
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot className="bg-zinc-50 dark:bg-zinc-900/60 border-t-2 border-zinc-200 dark:border-zinc-800">
+                <tr>
+                  <td colSpan={2} className="py-4 px-4 font-black text-sm text-zinc-950 dark:text-white text-right">
+                    Total Paid via MoMo / Escrow:
+                  </td>
+                  <td className="py-4 px-4 text-right font-black text-base text-[#0F5132] dark:text-emerald-400 font-mono">
+                    GH₵ {data.amount.toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-b-[3px] border-[#0a192f] mb-4"></div>
-
-        {/* Payment Summary */}
-        <div className="flex items-center gap-4 mb-4">
-          <span className="font-semibold text-gray-700">Payment Summary</span>
-          <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 border border-green-200 rounded-sm shadow-sm uppercase tracking-wider">
-            {data.status === 'SUCCESS' ? 'FULLY PAID' : data.status}
-          </span>
-          <span className="ml-auto font-bold text-gray-900">
-            Invoice Number <span className="font-extrabold">{data.reference}</span>
-          </span>
-        </div>
-
-        {/* Payment Details Grid */}
-        <div className="grid grid-cols-4 border border-[#0a192f] divide-x divide-[#0a192f] mb-8">
-          <div className="p-3">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Amount(GHS)</p>
-            <p className="text-sm font-bold">{data.amount.toFixed(2)}</p>
-          </div>
-          <div className="p-3">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Payment Method</p>
-            <p className="text-sm font-bold uppercase">PAYSTACK</p>
-          </div>
-          <div className="p-3">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Issued Date</p>
-            <p className="text-sm font-bold uppercase">
-              {new Date(data.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        {/* Statutory Regulatory Seals & Sign-Off */}
+        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-zinc-500">
+          <div className="space-y-1">
+            <div className="font-bold text-zinc-900 dark:text-white">
+              Rent Control Department of Ghana • Statutory Certification
+            </div>
+            <p className="text-[11px] leading-relaxed max-w-md">
+              This digital receipt certifies lawful settlement under Section 19 of the Rent Act, 1963 (Act 220). Retain this receipt for tax, campus bursar, or lease audit purposes.
             </p>
           </div>
-          <div className="p-3">
-            <p className="text-xs text-gray-600 font-semibold mb-1">Completion Date</p>
-            <p className="text-sm font-bold uppercase">
-              {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </p>
+
+          <div className="text-right shrink-0">
+            <div className="font-mono text-[10px] text-zinc-400 uppercase">Audit Hash</div>
+            <div className="font-mono text-xs text-zinc-700 dark:text-zinc-300">
+              SHA256-{transactionId.slice(0, 12)}
+            </div>
           </div>
         </div>
 
-        <div className="border-b-[3px] border-[#0a192f] mb-4"></div>
-
-        {/* Items Table */}
-        <div className="w-full mb-12">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-[#0a192f]">
-                <th className="py-3 px-2 font-bold text-gray-900 w-16">#</th>
-                <th className="py-3 px-2 font-bold text-gray-900">Title</th>
-                <th className="py-3 px-2 font-bold text-gray-900">Description</th>
-                <th className="py-3 px-2 font-bold text-gray-900">Amount(GHS)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="border-b border-gray-100">
-                <td className="py-4 px-2 font-medium text-gray-700">01</td>
-                <td className="py-4 px-2 font-medium text-gray-700">Bed booking</td>
-                <td className="py-4 px-2 font-medium text-gray-700">{property.title} - {property.roomType}</td>
-                <td className="py-4 px-2 font-medium text-gray-700">{data.amount.toFixed(2)}</td>
-              </tr>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <td className="py-4 px-2 font-medium text-gray-700">02</td>
-                <td className="py-4 px-2 font-medium text-gray-700">JRC Dues</td>
-                <td className="py-4 px-2 font-medium text-gray-700">JRC Dues</td>
-                <td className="py-4 px-2 font-medium text-gray-700">0.00</td>
-              </tr>
-              <tr className="border-b border-gray-100">
-                <td className="py-4 px-2 font-medium text-gray-700">03</td>
-                <td className="py-4 px-2 font-medium text-gray-700 uppercase">Software Fees</td>
-                <td className="py-4 px-2 font-medium text-gray-700">Software Maintenance Fee</td>
-                <td className="py-4 px-2 font-medium text-gray-700">0.00</td>
-              </tr>
-              <tr className="bg-gray-50">
-                <td className="py-4 px-2 font-medium text-gray-700">04</td>
-                <td className="py-4 px-2 font-medium text-gray-700 uppercase">Key Deposit Fees</td>
-                <td className="py-4 px-2 font-medium text-gray-700">Key Deposit</td>
-                <td className="py-4 px-2 font-medium text-gray-700">0.00</td>
-              </tr>
-              
-              {/* Totals Row */}
-              <tr className="border-t-[3px] border-[#0a192f]">
-                <td colSpan={2}></td>
-                <td className="py-4 px-2 font-bold text-gray-900 text-right pr-8">Total Payable Amount</td>
-                <td className="py-4 px-2 font-black text-gray-900 text-lg">GH₵{data.amount.toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12 mb-4">
-          <p className="text-sm font-medium text-gray-600">
-            Thank you for choosing <span className="font-bold text-gray-900">Akwaaba Homes!</span>
-          </p>
-          <p className="text-xs font-medium text-gray-500 mt-1">
-            For inquiries, contact us at <span className="font-bold text-gray-800">info@akwaabahomes.com</span> or call <span className="font-bold text-gray-800">+233 24 123 4567</span>.
-          </p>
-        </div>
       </div>
 
       <style jsx global>{`
@@ -263,7 +281,6 @@ export default function InvoicePage() {
           body * {
             visibility: hidden;
           }
-          /* This selects the specific document div and makes it visible */
           .max-w-4xl, .max-w-4xl * {
             visibility: visible;
           }

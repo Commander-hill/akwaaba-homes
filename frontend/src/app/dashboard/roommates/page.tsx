@@ -475,6 +475,20 @@ export default function RoommatesPage() {
                         </p>
                       )}
 
+                      {/* Compatibility Progress Indicator */}
+                      <div className="mb-3 space-y-1">
+                        <div className="flex justify-between text-[10px] font-bold text-zinc-500">
+                          <span>Compatibility Index</span>
+                          <span className="text-[#0F5132] dark:text-emerald-400 font-extrabold">{score}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-emerald-500 to-[#0F5132] rounded-full"
+                            style={{ width: `${score}%` }}
+                          />
+                        </div>
+                      </div>
+
                       {/* 3 Lifestyle Metrics */}
                       <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                         <div className="p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
