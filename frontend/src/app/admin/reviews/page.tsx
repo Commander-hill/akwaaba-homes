@@ -159,7 +159,7 @@ export default function AdminReviewsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Act 220 Trust & Reputation
+              Community Trust &amp; Reputation
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -170,7 +170,7 @@ export default function AdminReviewsPage() {
             Review Moderation & Reputation Trust Hub
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            Institutional governance of tenant feedback, ratings fairness, dispute adjudication, and landlord appeals under Ghana Rent Act (Act 220) integrity standards.
+            Moderation and governance of tenant feedback, rating fairness, dispute resolution, and marketplace integrity.
           </p>
         </div>
 

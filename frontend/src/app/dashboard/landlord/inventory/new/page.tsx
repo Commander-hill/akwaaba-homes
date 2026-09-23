@@ -618,17 +618,17 @@ export default function NewInventoryAssetPage() {
                 </div>
               </div>
 
-              {/* Act 220 Caution Deposit Protection Legal Card */}
+              {/* Caution Deposit Protection Card */}
               <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-md space-y-3">
                 <div className="flex items-center gap-2 text-teal-400">
                   <ShieldCheck className="w-5 h-5 shrink-0" />
                   <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                    Act 220 Caution Deposit Compliance
+                    Caution Deposit Guidelines
                   </h4>
                 </div>
                 <div className="text-xs text-slate-400 space-y-2 leading-relaxed">
                   <p>
-                    Under the <strong>Ghana Rent Act 1963 (Act 220 § 19)</strong>, landlords may only deduct verifiable fixture damages beyond normal fair wear and tear from a tenant's caution deposit.
+                    Landlords may only deduct verifiable fixture damages beyond normal fair wear and tear from a tenant's caution deposit.
                   </p>
                   <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
                     <li>Documenting initial fixture condition upon check-in protects your legal right to settlement.</li>

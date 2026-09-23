@@ -89,7 +89,7 @@ export const renderInstitutionalEmail = ({
   preheader,
   categoryTag = 'OFFICIAL NOTICE',
   bodyHtml,
-  footerNote = 'This is an authentic, legally valid transactional transmission dispatched by the Akwaaba Homes Housing Platform. Under the Ghana Rent Act, 1963 (Act 220) and Electronic Transactions Act, 2008 (Act 772), this record is archived for tenancy compliance.',
+  footerNote = 'This is an official transactional message sent by Akwaaba Homes. This record is securely logged for your tenancy account records.',
 }: RenderEmailOptions): string => {
   const currentYear = new Date().getFullYear();
 
@@ -151,10 +151,10 @@ export const renderInstitutionalEmail = ({
             <td style="background-color:#F8FAFC;border-top:1px solid #E2E8F0;padding:28px 36px;text-align:center;">
               <div style="margin-bottom:14px;">
                 <span style="display:inline-block;padding:4px 10px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;color:#065F46;font-size:11px;font-weight:700;letter-spacing:0.5px;">
-                  RENT ACT, 1963 (ACT 220) COMPLIANT
+                  VERIFIED DIGITAL TENANCY
                 </span>
                 <span style="display:inline-block;padding:4px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;color:#92400E;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-left:4px;">
-                  🏛️ LANDS COMMISSION VERIFIED
+                  🏛️ VERIFIED PROPERTY STANDARDS
                 </span>
               </div>
               <p style="margin:0 0 10px;color:#64748B;font-size:12px;line-height:1.6;">

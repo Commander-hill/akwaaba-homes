@@ -474,7 +474,7 @@ export default function NewStaffAppointmentPage() {
 
             </div>
 
-            {/* Right Column: Appointment Summary & Act 220 Caretaker Responsibilities */}
+            {/* Right Column: Appointment Summary &amp; Caretaker Responsibilities */}
             <div className="space-y-6">
 
               {/* Appointment Dossier Preview Card */}
@@ -560,12 +560,12 @@ export default function NewStaffAppointmentPage() {
                 <div className="flex items-center gap-2 text-indigo-400">
                   <Info className="w-5 h-5 shrink-0" />
                   <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                    Act 220 Caretaker Mandate
+                    Caretaker Role Guidelines
                   </h4>
                 </div>
                 <div className="text-xs text-slate-400 space-y-2 leading-relaxed">
                   <p>
-                    Under the <strong>Ghana Rent Act 1963 (Act 220)</strong>, appointed caretakers represent the landlord on-site.
+                    Appointed caretakers represent the property management team on-site.
                   </p>
                   <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
                     <li>Caretakers must not infringe upon the tenant's quiet enjoyment of leased premises.</li>

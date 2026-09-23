@@ -109,7 +109,7 @@ export default function AdminBreachesPage() {
                 Statutory Dispute Resolution
               </span>
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
-                Ghana Rent Act, 1963 (Act 220) Arbitration
+                Tenancy Dispute Resolution
               </span>
             </div>
 
@@ -247,7 +247,7 @@ export default function AdminBreachesPage() {
             </div>
             <h4 className="font-extrabold text-base text-[var(--foreground)]">No Tenancy Disputes Logged</h4>
             <p className="text-xs text-slate-500 max-w-md mt-1">
-              There are currently no statutory breach reports matching status "{statusFilter.toLowerCase()}". All residential leases operate within compliant Act 220 parameters.
+              There are currently no breach reports matching status "{statusFilter.toLowerCase()}". All residential tenancies are currently in good standing.
             </p>
           </div>
         ) : (
@@ -321,7 +321,7 @@ export default function AdminBreachesPage() {
                         </div>
                         <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                           <MapPin className="w-2.5 h-2.5" />
-                          {property.location || 'Ghana (Act 220)'}
+                          {property.location || 'Ghana'}
                         </div>
                       </td>
 
@@ -370,7 +370,7 @@ export default function AdminBreachesPage() {
 
         {/* Footer info bar */}
         <div className="p-4 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-[11px] text-slate-500">
-          <span>Ghana Rent Control Division &amp; Act 220 Arbitration Framework</span>
+          <span>Platform Tenancy Dispute Resolution System</span>
           <span>Showing {filteredReports.length} recorded disputes</span>
         </div>
       </div>
@@ -388,7 +388,7 @@ export default function AdminBreachesPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-lg text-[var(--foreground)]">Arbitrate Tenancy Dispute</h3>
-                  <p className="text-xs text-slate-500">Issue binding administrative verdict under Ghana Rent Act (Act 220).</p>
+                  <p className="text-xs text-slate-500">Issue binding administrative mediation verdict.</p>
                 </div>
               </div>
               <button
@@ -532,7 +532,7 @@ export default function AdminBreachesPage() {
                     type="text"
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="e.g. Verified non-payment exceeding 30-day notice under Act 220..."
+                    placeholder="e.g. Verified non-payment exceeding 30-day notice..."
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-red-500/20 outline-none text-[var(--foreground)]"
                   />
                 </div>

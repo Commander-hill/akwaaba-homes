@@ -292,7 +292,7 @@ export default function ProfilePage() {
                 {formData.firstName} {formData.otherNames} {formData.lastName}
               </h2>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-                <Check className="w-3 h-3" /> Act 220 Verified
+                <Check className="w-3 h-3" /> Verified Account
               </span>
             </div>
 
@@ -320,7 +320,7 @@ export default function ProfilePage() {
               {session?.profileUnlockRequested ? (
                 <>Your unlock request is currently under review: <em className="text-zinc-800 dark:text-zinc-200">"{session.profileUnlockReason}"</em>. An administrator will review your requested modifications.</>
               ) : (
-                <>Identity fields are cryptographically locked for statutory compliance with Ghana Rent Act guidelines. To modify details, submit an edit access request above.</>
+                <>Verified identity details are locked to protect your account. To update your details, submit an edit access request above.</>
               )}
             </p>
           </div>

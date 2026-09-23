@@ -370,7 +370,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Statutory Lease:</strong> Automatic Act 220 compliant tenancy agreement signed digitally.</span>
+                  <span><strong>Digital Lease:</strong> Verified tenancy agreement signed electronically.</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -622,7 +622,7 @@ export default function Home() {
               <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Direct MoMo &amp; Bank Escrow Settlements</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Caretaker &amp; Porter Delegation Tools</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Digital Rent Act (Act 220) Contracts</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Digital Tenancy Agreements &amp; E-Signatures</li>
               </ul>
             </div>
 
@@ -684,7 +684,7 @@ export default function Home() {
                 </span>
               </div>
               <p className="text-xs text-zinc-500 leading-relaxed">
-                Ghana's certified digital rental and hostel marketplace. Escrow backed, zero middleman broker fraud, and legal Act 220 tenancy contracts.
+                Ghana's trusted digital rental and accommodation marketplace. Escrow backed, zero middleman broker fraud, and verified digital tenancy agreements.
               </p>
             </div>
 

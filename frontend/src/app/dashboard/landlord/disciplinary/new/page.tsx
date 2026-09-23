@@ -257,7 +257,7 @@ function NewDisciplinaryIncidentContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <Gavel className="w-3.5 h-3.5" /> Ghana Rent Act § 19 Enforceable
+                <Gavel className="w-3.5 h-3.5" /> Disciplinary Policy Framework
               </span>
             </div>
           </div>
@@ -577,16 +577,16 @@ function NewDisciplinaryIncidentContent() {
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-rose-500" /> Statutory Legal Advisory
+                <BookOpen className="w-4 h-4 text-rose-500" /> Tenancy Conduct Standards
               </h3>
 
-              {/* Legal Reference Card */}
+              {/* Conduct Reference Card */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2 text-xs text-amber-900 dark:text-amber-300">
                 <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                  <ShieldCheck className="w-4 h-4" /> Ghana Rent Act, 1963 (Act 220) § 19
+                  <ShieldCheck className="w-4 h-4" /> Quiet Enjoyment &amp; Conduct Rules
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  Under Act 220 § 19, a landlord may apply to the Rent Magistrate for an order of recovery of possession if the tenant has been guilty of conduct causing a nuisance or annoyance to adjoining occupiers.
+                  Tenancy agreements require all residents to respect communal living standards, quiet enjoyment, and facility safety regulations. Repeated violations may result in escalated disciplinary action or tenancy termination.
                 </p>
               </div>
 

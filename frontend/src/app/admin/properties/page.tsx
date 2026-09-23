@@ -143,7 +143,7 @@ export default function AdminPropertiesPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Act 220 Listing Governance
+              Property Listing Governance
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">

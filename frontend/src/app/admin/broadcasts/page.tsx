@@ -40,10 +40,10 @@ interface BroadcastRecord {
 
 const GHANA_BROADCAST_PRESETS = [
   {
-    name: 'Act 220 Statutory Rent Cap',
+    name: 'Advance Rent Policy Advisory',
     target: 'ALL_LANDLORDS' as const,
-    title: 'Statutory 6-Month Rent Advance Ceiling Enforced',
-    message: 'Ghana Rent Act (Act 220) strictly caps advance rent at 6 months for residential leases. All listing terms and escrow requests violating this limit will be suppressed.',
+    title: 'Standard Advance Rent Schedule Guidance',
+    message: 'Platform policy recommends advance rent schedules up to 6 months for residential leases. All listing terms and escrow requests should adhere to verified terms.',
     category: 'STATUTORY_ALERT'
   },
   {
@@ -176,7 +176,7 @@ export default function AdminBroadcastPage() {
               {isConnected ? 'Real-Time Push Stream Active' : 'Fallback Push Stream'}
             </span>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
-              Ghana Electronic Communications &amp; Rent Act Standards
+              Verified Notification Channels
             </span>
           </div>
 

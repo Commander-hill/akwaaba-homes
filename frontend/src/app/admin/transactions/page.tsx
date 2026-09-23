@@ -937,7 +937,7 @@ export default function AdminTransactionsPage() {
               <textarea
                 value={revokeReason}
                 onChange={(e) => setRevokeReason(e.target.value)}
-                placeholder="e.g., Landlord violated Act 220 advance rent regulations or fraudulent ownership dispute..."
+                placeholder="e.g., Landlord violated advance rent policies or unresolved ownership dispute..."
                 className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-500"
                 rows={3}
               />

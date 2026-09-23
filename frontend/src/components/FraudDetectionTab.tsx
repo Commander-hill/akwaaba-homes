@@ -78,7 +78,7 @@ export default function FraudDetectionTab() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-black text-zinc-950 dark:text-white">
-              Listing Compliance &amp; Act 220 Verification
+              Listing Compliance &amp; Verification
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-[#0F5132] dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
               Active Monitoring
@@ -249,7 +249,7 @@ export default function FraudDetectionTab() {
                     disabled={resolveMutation.isPending}
                     className="px-3 py-1 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
                   >
-                    Approve Act 220
+                    Approve Listing
                   </button>
                   <button
                     type="button"

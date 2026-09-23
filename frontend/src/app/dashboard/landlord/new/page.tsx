@@ -408,7 +408,7 @@ export default function NewPropertyPage() {
         <div className="space-y-1.5">
           <h2 className="text-xl font-black text-zinc-950 dark:text-white">Listing Studio Protected</h2>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
-            In compliance with Ghana Rent Act (Act 220), landlords must complete profile identification and submit Ghana Card KYC before publishing accommodations.
+            To protect our community and maintain marketplace trust, property owners must complete their profile and verify their Ghana Card before publishing accommodations.
           </p>
         </div>
         <div className="flex flex-wrap gap-3 justify-center pt-2">

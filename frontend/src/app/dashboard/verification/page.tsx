@@ -759,7 +759,7 @@ export default function VerificationPage() {
             <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-2">
               <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                <span>Statutory Role & Accountability (Ghana Rent Act, 1963)</span>
+                <span>Facility Role &amp; Verification Standards</span>
               </div>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 As on-site facility personnel, your identity clearance relies directly on your verified National Identification Authority (NIA) Ghana Card credentials (Card 1 above). Caretaker accounts operate in facility management mode and are strictly barred from tenant residential room bookings or lease applications.

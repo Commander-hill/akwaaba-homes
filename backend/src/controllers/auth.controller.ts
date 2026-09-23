@@ -141,7 +141,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
             { label: 'Registered Email', value: user.email },
             { label: 'Platform Role', value: user.role || 'TENANT' },
             { label: 'Identity Protection', value: 'NIA Ghana Card Protocol Ready' },
-            { label: 'Legal Compliance', value: 'Rent Act, 1963 (Act 220)' }
+            { label: 'Security Standard', value: 'Verified Digital Tenancy Platform' }
           ])}
         `, 'Account Credentials')}
 

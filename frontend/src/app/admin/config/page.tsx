@@ -90,7 +90,7 @@ export default function AdminConfigPage() {
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            Manage statutory Rent Act (Act 220) parameters, Paystack escrow rates, and operational safeguards without redeploying.
+            Manage platform policies, Paystack escrow rates, and operational safeguards without redeploying.
           </p>
         </div>
 
@@ -104,12 +104,12 @@ export default function AdminConfigPage() {
         </button>
       </div>
 
-      {/* ── SECTION 1: STATUTORY IDENTITY & KYC COMPLIANCE ── */}
+      {/* ── SECTION 1: IDENTITY & KYC COMPLIANCE ── */}
       <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-xs">
         <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <BadgeCheck className="w-4 h-4 text-[#0F5132]" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-            1. Identity &amp; Statutory KYC Verification (Act 220)
+            1. Identity &amp; KYC Verification Policy
           </h2>
         </div>
 
@@ -120,11 +120,11 @@ export default function AdminConfigPage() {
                 Enforce Mandatory Ghana Card KYC Validation
               </label>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                Statutory Compliance
+                Platform Policy
               </span>
             </div>
             <p className="text-xs text-zinc-500 max-w-xl leading-relaxed">
-              When enabled, both landlords and tenants must submit verified Ghana Card credentials before executing residential leases or receiving Paystack escrow payouts under the Ghana Rent Act, 1963 (Act 220).
+              When enabled, both landlords and tenants must submit verified Ghana Card credentials before executing leases or receiving Paystack escrow payouts.
             </p>
           </div>
 

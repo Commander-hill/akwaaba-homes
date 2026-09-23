@@ -698,7 +698,7 @@ function LandlordDashboardContent() {
                   </h3>
                 </div>
                 <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                  Review and approve to issue digital Act 220 lease agreement
+                  Review and approve to issue digital tenancy agreement
                 </span>
               </div>
 

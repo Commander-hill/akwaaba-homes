@@ -1241,7 +1241,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </div>
 
             <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-300">
-              <p>You are initiating an Act 220 residential tenancy reservation for:</p>
+              <p>You are reserving this accommodation:</p>
               <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl border font-bold text-zinc-900 dark:text-white">
                 {property.title}
                 <div className="text-xs font-medium text-zinc-500">{property.location}</div>

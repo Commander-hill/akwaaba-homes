@@ -116,12 +116,12 @@ export const notifyBookingCreated = async (opts: {
         { label: 'Property Title', value: opts.propertyTitle, highlight: true },
         { label: 'Prospective Tenant', value: opts.tenantName },
         { label: 'Booking Protocol ID', value: opts.bookingId, isMono: true },
-        { label: 'Statutory Regulatory Framework', value: 'Rent Act, 1963 (Act 220)' }
+        { label: 'Regulatory Framework', value: 'Verified Digital Tenancy' }
       ])}
     `, 'Application Metadata')}
 
     <p style="color:#475569;font-size:14px;line-height:1.7;margin:16px 0;">
-      Please inspect the tenant's profile, verification status, and move-in timeline in your Landlord Command Center. You may approve the booking to issue the statutory tenancy agreement, or decline to release the escrow hold.
+      Please inspect the tenant's profile, verification status, and move-in timeline in your Landlord Command Center. You may approve the booking to issue the digital tenancy agreement, or decline to release the escrow hold.
     </p>
 
     ${emailButtonHtml({
@@ -176,7 +176,7 @@ export const notifyPaymentReceipt = async (opts: {
         { label: 'Amount Paid (Escrowed)', value: `GHS ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, highlight: true },
         { label: 'Booking Protocol ID', value: opts.bookingId, isMono: true },
         { label: 'Escrow Status', value: 'FUNDS SECURED (HELD IN TRUST)' },
-        { label: 'Statutory Authority', value: 'Rent Act, 1963 (Act 220)' }
+        { label: 'Security Standard', value: 'Protected Escrow Protocol' }
       ])}
     `, 'Financial Itemization')}
 
@@ -250,7 +250,7 @@ export const notifyBookingStatusChanged = async (opts: {
       <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
         <h4 style="margin:0 0 8px;color:#166534;font-size:15px;font-weight:800;">🎉 Congratulations! Next: Digital Tenancy Agreement</h4>
         <p style="margin:0;color:#15803D;font-size:13px;line-height:1.6;">
-          Your tenancy is secured. Please review and countersign your statutory Tenancy Agreement under Act 220 to finalize key handover.
+          Your tenancy is confirmed. Please review and sign your digital Tenancy Agreement to finalize key handover.
         </p>
       </div>
     ` : ''}
@@ -362,15 +362,15 @@ export const notifyPropertyApproval = async (opts: {
         ${isApproved ? 'Property Listing Approved & Live' : 'Property Listing Requires Update'}
       </h2>
       <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, our statutory property audit board has concluded the review of your property listing: <strong>${opts.propertyTitle}</strong>.
+        Dear <strong>${opts.landlordName}</strong>, our verification team has concluded the review of your property listing: <strong>${opts.propertyTitle}</strong>.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
         { label: 'Property Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Compliance Status', value: isApproved ? 'STATUTORILY APPROVED' : 'RETURNED FOR REVISION' },
-        { label: 'Regulatory Framework', value: 'Rent Act, 1963 (Act 220)' }
+        { label: 'Review Status', value: isApproved ? 'APPROVED' : 'RETURNED FOR REVISION' },
+        { label: 'Verification Standard', value: 'Verified Property Listing' }
       ])}
       ${opts.reason ? `
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid #E2E8F0;">
@@ -480,7 +480,7 @@ export const notifyAgreementCompleted = async (opts: {
     <div style="margin-bottom:24px;">
       <div style="margin-bottom:12px;">
         ${emailBadgeHtml({ label: 'STATUS', value: 'FULLY EXECUTED & COUNTERSIGNED', variant: 'emerald' })}
-        ${emailBadgeHtml({ label: 'LEGAL STATUTE', value: 'ACT 220 & ACT 772', variant: 'slate' })}
+        ${emailBadgeHtml({ label: 'DOCUMENT', value: 'DIGITAL TENANCY AGREEMENT', variant: 'slate' })}
       </div>
       <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
         Official Tenancy Agreement Executed

@@ -357,7 +357,7 @@ function NewReviewContent() {
                 </div>
               </div>
 
-              {/* Ghana Rent Act Fair Review Advisory */}
+              {/* Honest Feedback Advisory */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-300 space-y-1.5">
                 <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
                   <ShieldCheck className="w-4 h-4" /> Honest Feedback Guarantee

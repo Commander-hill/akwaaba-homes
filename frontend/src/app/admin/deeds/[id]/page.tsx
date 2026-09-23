@@ -563,16 +563,16 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
               )}
             </div>
 
-            {/* Act 220 Land Title Registry Guidance */}
+            {/* Land Title Verification Guidance */}
             <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-md space-y-3">
               <div className="flex items-center gap-2 text-emerald-400">
                 <Stamp className="w-5 h-5 shrink-0" />
                 <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                  Act 220 Statutory Deed Notice
+                  Property Title Verification Notice
                 </h4>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Under Ghanaian property legislation, granting <strong>Verified Landlord</strong> status displays a public trust accreditation on all current and future listings published by this user.
+                Granting <strong>Verified Landlord</strong> status displays a public trust accreditation on all current and future listings published by this user.
               </p>
             </div>
 

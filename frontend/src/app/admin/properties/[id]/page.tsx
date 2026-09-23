@@ -121,7 +121,7 @@ export default function AdminPropertyDetailPage({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                Act 220 Listing Audit
+                Listing Quality Audit
               </span>
               <span className="text-xs font-semibold text-slate-400">•</span>
               <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${

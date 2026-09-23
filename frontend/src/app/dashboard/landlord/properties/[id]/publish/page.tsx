@@ -315,7 +315,7 @@ export default function PublishPropertyPage() {
                   Digital Tenancy Agreements
                 </div>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Automated generation of Ghana Rent Act compliant digital leases with legally binding e-signatures.
+                  Automated generation of verified digital tenancy leases with legally binding e-signatures.
                 </p>
               </div>
             </div>

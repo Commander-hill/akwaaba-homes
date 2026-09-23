@@ -326,7 +326,7 @@ async function runLaunchAudit() {
     // ──────────────────────────────────────────────────────────────────────────
     // STAGE 5: LANDLORD REVIEW & LEASE GENERATION
     // ──────────────────────────────────────────────────────────────────────────
-    console.log('\n--- STAGE 5: Landlord Review & Act 220 Agreement Generation ---');
+    console.log('\n--- STAGE 5: Landlord Review & Tenancy Agreement Generation ---');
     const stage5Start = Date.now();
 
     // Landlord approves the booking
@@ -348,7 +348,7 @@ async function runLaunchAudit() {
     recordMetric('Stage 5', 'Booking Approval & Lease Creation', 'PASSED', Date.now() - stage5Start, `LeaseAgreement ID: ${agreement.id} generated`);
 
     // ──────────────────────────────────────────────────────────────────────────
-    // STAGE 6: MUTUAL CRYPTOGRAPHIC E-SIGNATURE (ACT 220 DEED BADGE)
+    // STAGE 6: MUTUAL CRYPTOGRAPHIC E-SIGNATURE (DIGITAL LEASE SEAL)
     // ──────────────────────────────────────────────────────────────────────────
     console.log('\n--- STAGE 6: Mutual Cryptographic E-Signature ---');
     const stage6Start = Date.now();

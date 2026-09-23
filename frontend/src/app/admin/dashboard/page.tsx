@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
               Executive Operations Console
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-              Act 220 Compliant
+              Verified Platform
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
                 <span>Property Quality Moderation</span>
                 <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Audit new hostels, units, photos, and Act 220 pricing compliance.</p>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Audit new hostels, units, photos, and listing quality standards.</p>
             </div>
           </Link>
 
@@ -323,23 +323,23 @@ export default function AdminDashboardPage() {
         {/* ── RIGHT COLUMN (35%): SYSTEM BROADCAST & STATUTORY COMPLIANCE ── */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Statutory Rent Control Act 220 Compliance Guide */}
+          {/* Tenancy Standards Guide */}
           <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                Statutory Governance
+                Platform Governance
               </span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                Ghana Rent Act 1963
+                Rental Guidelines
               </span>
             </div>
 
             <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">
-              Rent Control Department Guidelines
+              Advance Rent &amp; Listing Standards
             </h3>
             
             <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              Section 19 of the Rent Act (Act 220) strictly mandates a maximum of 6 months advance rent for monthly tenancies. Ensure flagged listings conform before approving payouts.
+              Platform guidelines recommend a maximum of 6 months advance rent for residential listings. Ensure flagged listings conform before approving payouts.
             </p>
 
             <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">

@@ -146,7 +146,7 @@ export default function AdminBookingsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Act 220 Tenancy Monitor
+              Residential Tenancy Monitor
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -154,10 +154,10 @@ export default function AdminBookingsPage() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Residential Bookings & Escrow Monitor
+            Residential Bookings &amp; Escrow Monitor
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            System-wide registry of active leases, advance rent escrow deposits, Act 220 tenancy deeds, and landlord-tenant fulfillments.
+            System-wide registry of active leases, advance rent escrow deposits, digital tenancy agreements, and landlord-tenant fulfillments.
           </p>
         </div>
 
@@ -220,7 +220,7 @@ export default function AdminBookingsPage() {
             {stats.completed}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Confirmed move-ins under Act 220
+            Confirmed move-ins
           </p>
         </div>
 
@@ -348,7 +348,7 @@ export default function AdminBookingsPage() {
                 <th className="px-6 py-4 font-black tracking-wider text-white">Tenant</th>
                 <th className="px-6 py-4 font-black tracking-wider text-white">Lease Period</th>
                 <th className="px-6 py-4 font-black tracking-wider text-white">Escrow Rent</th>
-                <th className="px-6 py-4 font-black tracking-wider text-white">Act 220 Deed</th>
+                <th className="px-6 py-4 font-black tracking-wider text-white">Lease Agreement</th>
                 <th className="px-6 py-4 font-black tracking-wider text-white">Status</th>
                 <th className="px-6 py-4 font-black tracking-wider text-white text-right">Actions</th>
               </tr>
@@ -456,7 +456,7 @@ export default function AdminBookingsPage() {
                         </div>
                       </td>
 
-                      {/* Act 220 Tenancy Deed */}
+                      {/* Lease Agreement Status */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {hasDeed ? (
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
@@ -465,7 +465,7 @@ export default function AdminBookingsPage() {
                               : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200'
                           }`}>
                             <FileText className="w-3 h-3" />
-                            {isDeedCompleted ? 'Act 220 Stamped 📄' : 'Awaiting Signatures'}
+                            {isDeedCompleted ? 'Signed Agreement 📄' : 'Awaiting Signatures'}
                           </span>
                         ) : (
                           <span className="text-xs text-slate-400 dark:text-slate-500 italic">
@@ -540,7 +540,7 @@ export default function AdminBookingsPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      Act 220 Tenancy Record
+                      Tenancy Record
                     </span>
                     <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/20 text-white">
                       Ref: {selectedBooking.id.slice(0, 8).toUpperCase()}
@@ -662,7 +662,7 @@ export default function AdminBookingsPage() {
               {/* Lease Dates & Duration */}
               <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-3">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                  Lease Timeline & Act 220 Duration
+                  Lease Timeline &amp; Duration
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
@@ -688,11 +688,11 @@ export default function AdminBookingsPage() {
                 </div>
               </div>
 
-              {/* Act 220 Deed of Tenancy Status */}
+              {/* Digital Tenancy Agreement Status */}
               <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    Statutory Tenancy Agreement (Act 220)
+                    Digital Tenancy Agreement
                   </span>
                   <FileText className="w-4 h-4 text-[#0F5132]" />
                 </div>

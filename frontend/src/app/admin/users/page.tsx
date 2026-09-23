@@ -133,7 +133,7 @@ export default function AdminUsersPage() {
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || 'Landlord Act 220 verification updated');
+      toast.success(data?.message || 'Landlord deed verification updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
     onError: (err: any) => {
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Act 220 & NIA Directory
+              Identity &amp; Account Directory
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -297,7 +297,7 @@ export default function AdminUsersPage() {
           className="cursor-pointer bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-slate-400 transition-all shadow-xs group"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Act 220 Landlords</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Verified Landlords</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
               <Building2 className="w-4 h-4" />
             </div>
@@ -608,7 +608,7 @@ export default function AdminUsersPage() {
                                 : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                             }`}>
                               {user.isVerifiedLandlord && <BadgeCheck className="w-3 h-3 text-white" />}
-                              {user.isVerifiedLandlord ? 'Act 220 Verified' : (user.landlordVerificationStatus || 'Unverified')}
+                              {user.isVerifiedLandlord ? 'Deed Verified' : (user.landlordVerificationStatus || 'Unverified')}
                             </span>
                             {user.landlordDocUrl && (
                               <div>

@@ -72,7 +72,7 @@ export default function AdminAnalyticsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Ghanaian PropTech & Act 220 Insights
+              Ghanaian PropTech Insights
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -80,10 +80,10 @@ export default function AdminAnalyticsPage() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Platform Analytics & Insights Hub
+            Platform Analytics &amp; Insights Hub
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            Macroeconomic oversight of residential lease volume, tenant-to-landlord growth, Act 220 tenancy deed compliance, and regional property density across Ghana.
+            Macroeconomic oversight of residential lease volume, tenant-to-landlord growth, digital tenancy agreements, and regional property density across Ghana.
           </p>
         </div>
 
@@ -141,11 +141,11 @@ export default function AdminAnalyticsPage() {
           </p>
         </div>
 
-        {/* Act 220 Tenancy Deed Rate */}
+        {/* Lease Agreement Execution Rate */}
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <div className="flex justify-between items-center text-slate-400 mb-3">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Act 220 Deed Execution
+              Lease Agreement Execution
             </span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <FileText className="w-4 h-4" />
@@ -396,7 +396,7 @@ export default function AdminAnalyticsPage() {
                       <div className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                         <span>{landlord.name}</span>
                         {landlord.isVerified && (
-                          <span title="Act 220 Verified Landlord">
+                          <span title="Verified Landlord">
                             <BadgeCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
                           </span>
                         )}

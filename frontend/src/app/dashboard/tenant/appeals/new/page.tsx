@@ -24,8 +24,8 @@ import toast from 'react-hot-toast';
 const APPEAL_REASONS = [
   { id: 'DEPOSIT_DISPUTE', label: 'Caution Deposit Deduction Dispute', desc: 'Disputing arbitrary deductions not substantiated by move-in inspection.' },
   { id: 'DEFAMATION', label: 'Unfair Host Evaluation / Counter-Claim', desc: 'Landlord retaliation following reported maintenance breaches.' },
-  { id: 'MAINTENANCE_FAILURE', label: 'Unresolved Statutory Repairs (Act 220 § 25)', desc: 'Landlord failure to maintain electrical, plumbing, or roofing fixtures.' },
-  { id: 'ILLEGAL_INCREMENT', label: 'Unlawful Rent Surcharge', desc: 'Attempted mid-tenancy price increases without Rent Control authorization.' },
+  { id: 'MAINTENANCE_FAILURE', label: 'Unresolved Maintenance & Repairs', desc: 'Landlord failure to maintain electrical, plumbing, or essential fixtures.' },
+  { id: 'ILLEGAL_INCREMENT', label: 'Unlawful Rent Surcharge', desc: 'Attempted mid-tenancy price increases without mutual agreement.' },
   { id: 'OTHER', label: 'Other Tenancy Grievance', desc: 'General dispute requiring platform arbitration or mediation.' }
 ];
 
@@ -112,7 +112,7 @@ function NewAppealContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <Gavel className="w-3.5 h-3.5" /> Rent Act Arbitration
+                <Gavel className="w-3.5 h-3.5" /> Dispute Arbitration
               </span>
             </div>
           </div>
@@ -133,7 +133,7 @@ function NewAppealContent() {
               Submit Dispute &amp; Review Appeal
             </h1>
             <p className="text-rose-100 text-sm leading-relaxed">
-              Formally appeal unfair caution deposit deductions, retaliatory reviews, or unresolved repairs. Cases are reviewed by Akwaaba Compliance Officers in accordance with the Ghana Rent Act, 1963.
+              Formally appeal unfair caution deposit deductions, retaliatory reviews, or unresolved repairs. Cases are independently reviewed by Akwaaba Compliance Officers to ensure fair resolution.
             </p>
           </div>
         </div>
@@ -260,16 +260,16 @@ function NewAppealContent() {
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-rose-500" /> Ghana Rent Act Protections
+                <BookOpen className="w-4 h-4 text-rose-500" /> Tenant Protection Guidelines
               </h3>
 
-              {/* Act 220 Reference Card */}
+              {/* Deposit Fair Deductions Card */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-300 space-y-2">
                 <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                  <Scale className="w-4 h-4" /> Ghana Rent Act, 1963 (Act 220)
+                  <Scale className="w-4 h-4" /> Deposit Fair Deductions Policy
                 </div>
                 <p className="text-[11px] leading-relaxed">
-                  Under Act 220, tenants are protected against arbitrary deposit withholding. Deductions for normal fair wear and tear are strictly prohibited by law.
+                  Tenants are protected against arbitrary deposit withholding. Deductions for normal fair wear and tear are strictly prohibited.
                 </p>
               </div>
 

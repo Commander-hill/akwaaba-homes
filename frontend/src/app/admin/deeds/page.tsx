@@ -113,7 +113,7 @@ export default function AdminLandlordDeedsPage() {
                 Land Title Registry &amp; Indenture Verification
               </span>
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
-                Ghana Lands Commission &amp; Act 220 Standard
+                Land Title &amp; Ownership Verification
               </span>
             </div>
 

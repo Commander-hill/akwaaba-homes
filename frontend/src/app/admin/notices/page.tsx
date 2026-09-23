@@ -55,7 +55,7 @@ const ICON_MAP: Record<string, { label: string; icon: React.ElementType; color: 
   PAYMENT: { label: 'Payment & Escrow', icon: CreditCard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
   CAUTION: { label: 'Caution & Warning', icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
   WARNING: { label: 'Urgent Alert', icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
-  LEGAL: { label: 'Statutory & Act 220', icon: Scale, color: 'text-[#D97706]', bg: 'bg-amber-50 dark:bg-amber-950/50' },
+  LEGAL: { label: 'Policy & Legal', icon: Scale, color: 'text-[#D97706]', bg: 'bg-amber-50 dark:bg-amber-950/50' },
   SECURITY: { label: 'Security & Verification', icon: BadgeCheck, color: 'text-[#0F5132] dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
   MAINTENANCE: { label: 'Maintenance & Repairs', icon: Wrench, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/50' },
   MEGAPHONE: { label: 'General Announcement', icon: Megaphone, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-950/50' }
@@ -63,12 +63,12 @@ const ICON_MAP: Record<string, { label: string; icon: React.ElementType; color: 
 
 const GHANA_TEMPLATES = [
   {
-    name: 'Act 220 Rent Advance Cap',
-    topLabel: 'GHANA RENT ACT (ACT 220) COMPLIANCE',
-    title: 'Statutory 6-Month Maximum Rent Advance Enforced',
-    description: 'Under Section 25 of the Ghana Rent Act, 1963 (Act 220), landlords are strictly prohibited from demanding or receiving rent advances exceeding six (6) months for monthly tenancies. All platform escrow contracts automatically enforce this ceiling.',
-    buttonText: 'Read Act 220 Guidance',
-    buttonLink: '/legal/rent-act',
+    name: 'Rent Advance Policy',
+    topLabel: 'PLATFORM RENTAL POLICY',
+    title: 'Standard Rent Advance Schedule',
+    description: 'Landlords are encouraged to offer flexible advance rent terms with a standard 6-month advance ceiling for residential tenancies. All platform escrow arrangements adhere to these principles.',
+    buttonText: 'View Rental Policy',
+    buttonLink: '/help',
     iconType: 'LEGAL'
   },
   {
@@ -246,7 +246,7 @@ export default function AdminNoticesPage() {
     const active = notices?.filter(n => n.isActive).length || 0;
     const statutory = notices?.filter(n => {
       const str = `${n.topLabel || ''} ${n.title} ${n.description}`.toLowerCase();
-      return str.includes('act 220') || str.includes('rent act') || str.includes('kyc') || str.includes('statutory');
+      return str.includes('policy') || str.includes('guideline') || str.includes('kyc') || str.includes('legal');
     }).length || 0;
     const withCta = notices?.filter(n => !!n.buttonText && !!n.buttonLink).length || 0;
 
@@ -290,7 +290,7 @@ export default function AdminNoticesPage() {
                 Public Notices &amp; Announcements
               </span>
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
-                Ghana Rent Act (Act 220) Policy Disclosures
+                Marketplace Policy Guidelines
               </span>
             </div>
 
@@ -300,7 +300,7 @@ export default function AdminNoticesPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Compose and broadcast global announcement banners, statutory tenancy policy notices, and alerts across tenant, landlord, and public portals.
+              Compose and broadcast global announcement banners, platform policy notices, and alerts across tenant, landlord, and public portals.
             </p>
           </div>
 
@@ -350,16 +350,16 @@ export default function AdminNoticesPage() {
 
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Statutory Policy Notices</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Platform Policy Notices</span>
               <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-[#D97706] border border-amber-100 dark:border-amber-900/40">
                 <Scale className="w-4 h-4" />
               </div>
             </div>
             <div className="flex items-baseline justify-between">
               <span className="text-2xl sm:text-3xl font-black text-[#D97706]">{metrics.statutory}</span>
-              <span className="text-[10px] font-bold text-[#D97706]">Act 220 &amp; KYC</span>
+              <span className="text-[10px] font-bold text-[#D97706]">Policy &amp; KYC</span>
             </div>
-            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 font-medium">Statutory disclosures active</p>
+            <p className="text-[10px] text-[var(--muted-foreground)] mt-2 font-medium">Policy notices active</p>
           </div>
 
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">

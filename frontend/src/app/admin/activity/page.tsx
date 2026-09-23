@@ -103,7 +103,7 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string
     icon: Wrench 
   },
   SECURITY: { 
-    label: 'Act 220 Breach', 
+    label: 'Dispute / Breach', 
     color: 'text-rose-700 dark:text-rose-300', 
     bg: 'bg-rose-50 dark:bg-rose-950/50', 
     border: 'border-rose-200 dark:border-rose-800', 
@@ -209,7 +209,7 @@ export default function AdminActivityPage() {
         type: 'PROPERTY',
         severity: 'COMPLIANCE',
         title: 'Residential Property Inventory Synced',
-        message: `Residential portfolio active with ${stats?.totalProperties || 1} verified properties under Ghana Rent Act (Act 220).`,
+        message: `Residential portfolio active with ${stats?.totalProperties || 1} verified properties.`,
         actor: { name: 'Lands Commission Registry Sync', role: 'SYSTEM' },
         entity: { type: 'Property Inventory', title: 'Greater Accra Real Estate Pool' },
         status: 'APPROVED',
@@ -286,7 +286,7 @@ export default function AdminActivityPage() {
                 {isConnected ? 'Real-Time WebSocket Stream Live' : 'Polling Sync Mode Active'}
               </span>
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-200 border border-amber-500/30">
-                Ghana Rent Act, 1963 (Act 220) Telemetry
+                Platform Operations Telemetry
               </span>
             </div>
 
@@ -371,7 +371,7 @@ export default function AdminActivityPage() {
               </span>
             </div>
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 font-medium">
-              Act 220 lease deeds &amp; payment contracts
+              Verified leases &amp; escrow contracts
             </p>
           </div>
 
@@ -582,7 +582,7 @@ export default function AdminActivityPage() {
                             </div>
                             <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
                               <MapPin className="w-2.5 h-2.5" />
-                              {event.entity.location || 'Ghana (Act 220)'}
+                              {event.entity.location || 'Ghana'}
                             </div>
                           </div>
                         ) : (
@@ -726,13 +726,13 @@ export default function AdminActivityPage() {
                 </div>
               )}
 
-              {/* Statutory Ghana Rent Act (Act 220) Advisory */}
+              {/* Platform Tenancy Standard Advisory */}
               <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wider">
-                  <Scale className="w-4 h-4 text-[#D97706]" /> Ghana Rent Act, 1963 (Act 220) Statutory Standard
+                  <Scale className="w-4 h-4 text-[#D97706]" /> Platform Tenancy Standard
                 </div>
                 <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
-                  All property transactions, tenancy agreements, and advance rents must conform to Ghana Rent Act stipulations (max 6-month rent advance limit, mandatory issuance of rent receipts, and non-retaliatory dispute resolution).
+                  All property transactions, tenancy agreements, and advance rents conform to platform verification standards (standard advance schedules, instant verified receipts, and fair dispute mediation).
                 </p>
               </div>
 

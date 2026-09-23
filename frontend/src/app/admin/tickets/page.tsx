@@ -153,7 +153,7 @@ export default function AdminTicketsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Act 220 Landlord Repair Oversight
+              Landlord Repair Oversight
             </span>
             <span className="text-xs font-semibold text-slate-400">•</span>
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -161,10 +161,10 @@ export default function AdminTicketsPage() {
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Maintenance Operations & Statutory Repairs Hub
+            Maintenance Operations &amp; Repairs Hub
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            Institutional oversight of residential repairs. Ensure landlords fulfill statutory habitability duties under the Ghana Rent Act, 1963 (Act 220).
+            Oversight of residential repair tickets to ensure timely resolution and quality living conditions across all properties.
           </p>
         </div>
 

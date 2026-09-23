@@ -145,7 +145,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#1D4ED8')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('3. RENT CONSIDERATION & ESCROW PROTECTION (ACT 220 CERTIFIED)', 50, startY3 + 10);
+      .text('3. RENT CONSIDERATION & ESCROW PROTECTION', 50, startY3 + 10);
 
     doc
       .fontSize(11)
@@ -159,7 +159,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#475569')
       .text('Payment is authenticated via Paystack Escrow (MTN MoMo, Telecel Cash, AT & Bank Transfer).', 50, startY3 + 46);
 
-    // Section 4: Statutory Landlord Covenants (Act 220, Section 20)
+    // Section 4: Standard Landlord Covenants
     const startY4 = 365;
     doc.rect(40, startY4, 515, 140).fillAndStroke('#F8FAFC', '#CBD5E1');
 
@@ -167,13 +167,13 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#1E293B')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('4. STATUTORY LANDLORD COVENANTS (RENT ACT 220, SECTION 20)', 50, startY4 + 10);
+      .text('4. STANDARD LANDLORD COVENANTS', 50, startY4 + 10);
 
     const landlordCovenants = [
       '• Quiet Enjoyment: Landlord shall guarantee tenant uninterrupted, quiet enjoyment of demised premises.',
-      '• Structural Repairs: Landlord shall be strictly responsible for roof, foundation, external walls, and main plumbing.',
+      '• Structural Repairs: Landlord shall be responsible for roof, foundation, external walls, and main plumbing.',
       '• Right of Inspection: Landlord/agent must provide minimum 24-hour advance written notice before conducting inspections.',
-      '• Prohibition of Unlawful Eviction: Landlord covenants never to unlawfully eject, lockout, disconnect water or electricity, or remove roofing without an order of a competent Rent Magistrate or Court (Act 220, Sec. 17).',
+      '• Prohibition of Unlawful Eviction: Landlord covenants never to unlawfully eject, lockout, disconnect water or electricity, or remove roofing without due process of law.',
       '• Rent Receipts: Landlord shall ensure an official electronic or physical rent receipt is furnished for all payments.'
     ];
 
@@ -191,7 +191,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#1E293B')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('5. STATUTORY TENANT COVENANTS (RENT ACT 220)', 50, startY5 + 10);
+      .text('5. STANDARD TENANT COVENANTS', 50, startY5 + 10);
 
     const tenantCovenants = [
       '• Rent Punctuality: Tenant shall pay agreed rent punctually through the Akwaaba Homes verified payment gateway.',
@@ -252,7 +252,7 @@ export async function generateTenancyAgreementPDF(data: {
       .text('• Refund shall be processed within fourteen (14) calendar days following post-tenancy joint digital inspection.', 50, p2Y1 + 42)
       .text('• Deductions are strictly limited to documented physical damages beyond reasonable wear and tear.', 50, p2Y1 + 56);
 
-    // Section 7: Termination & Notice to Quit (Act 220, Section 17)
+    // Section 7: Termination & Notice to Quit
     const p2Y2 = 165;
     doc.rect(40, p2Y2, 515, 85).fillAndStroke('#F8FAFC', '#CBD5E1');
 
@@ -260,7 +260,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#1E293B')
       .fontSize(10)
       .font('Helvetica-Bold')
-      .text('7. DETERMINATION OF TENANCY & NOTICE TO QUIT (ACT 220, SEC. 17)', 50, p2Y2 + 10);
+      .text('7. DETERMINATION OF TENANCY & NOTICE TO QUIT', 50, p2Y2 + 10);
 
     doc
       .fontSize(8)
@@ -268,8 +268,8 @@ export async function generateTenancyAgreementPDF(data: {
       .fillColor('#334155')
       .text('• Monthly Tenancy: Minimum of one (1) clear calendar month notice in writing prior to expiration.', 50, p2Y2 + 28)
       .text('• Annual / Academic Lease: Minimum of three (3) clear calendar months notice prior to expiration.', 50, p2Y2 + 42)
-      .text('• Recovery of Possession: Governed strictly by the statutory grounds set out under Section 17 of Rent Act, 1963.', 50, p2Y2 + 56)
-      .text('• Breach of Covenants: Either party may seek mediation or judicial determination through Rent Control or High Court.', 50, p2Y2 + 70);
+      .text('• Recovery of Possession: Governed strictly by lawful notice periods and written lease terms.', 50, p2Y2 + 56)
+      .text('• Breach of Covenants: Either party may seek formal mediation or legal arbitration.', 50, p2Y2 + 70);
 
     // Section 8: Digital Execution & Electronic Signatures (Act 772)
     const p2Y3 = 260;
@@ -402,7 +402,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fontSize(7.5)
       .font('Helvetica')
       .fillColor('#166534')
-      .text('ACT 220 & ACT 772 COMPLIANT • REGISTERED TENANCY', 315, p2Y5 + 24)
+      .text('VERIFIED DIGITAL TENANCY • PROTECTED ESCROW', 315, p2Y5 + 24)
       .text('SECURED VIA PAYSTACK ESCROW • AUDITED LEDGER', 315, p2Y5 + 36)
       .text(`DATE ISSUED: ${new Date().toLocaleDateString('en-GB')} • VALIDATED`, 315, p2Y5 + 48);
 
@@ -415,7 +415,7 @@ export async function generateTenancyAgreementPDF(data: {
         .fillColor('#92400E')
         .fontSize(9.5)
         .font('Helvetica-Bold')
-        .text('10. HOSTEL CODE OF CONDUCT & ACADEMIC MATRICULATION COVENANT (ACT 220)', 50, p2Y6 + 10);
+        .text('10. HOSTEL CODE OF CONDUCT & ACADEMIC MATRICULATION COVENANT', 50, p2Y6 + 10);
 
       const hostelClauses = [
         `• Active Matriculation Status: Occupancy is granted strictly contingent upon active, bona fide matriculation at ${data.studentCampus || 'an accredited tertiary institution'} (Student ID: ${data.studentId || 'On-file'}).`,
@@ -575,7 +575,7 @@ export async function generateReceiptPDF(data: {
       .fontSize(8)
       .font('Helvetica-Oblique')
       .fillColor('#64748B')
-      .text('This is an official computer-generated receipt issued by the Akwaaba Homes Tenancy Platform under Act 220.', 40, footerY, { width: 515 });
+      .text('This is an official computer-generated receipt issued by the Akwaaba Homes Tenancy Platform.', 40, footerY, { width: 515 });
 
     doc
       .fontSize(8)

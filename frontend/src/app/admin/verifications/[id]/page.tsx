@@ -79,7 +79,7 @@ export default function AdminVerificationPage({
       return res.data;
     },
     onSuccess: (data) => {
-      toast.success(data?.message || 'Landlord Act 220 verification updated');
+      toast.success(data?.message || 'Landlord deed verification updated');
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
     onError: (err: any) => {
@@ -138,7 +138,7 @@ export default function AdminVerificationPage({
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                Statutory ID & Act 220 Audit
+                Identity &amp; Ownership Verification
               </span>
               <span className="text-xs font-semibold text-slate-400">•</span>
               <span className="text-xs font-mono text-slate-500">ID: {user.id}</span>
@@ -244,7 +244,7 @@ export default function AdminVerificationPage({
               <div className="flex items-center justify-between">
                 <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-                  Act 220 Landlord Document: Property Title Deed / Indenture
+                  Landlord Document: Property Title Deed / Indenture
                 </h3>
                 {user.landlordDocUrl && (
                   <button
@@ -437,7 +437,7 @@ export default function AdminVerificationPage({
                     ) : (
                       <FileCheck className="w-4 h-4" />
                     )}
-                    Verify Landlord Deed / Act 220
+                    Verify Landlord Deed
                   </button>
                 )}
 

@@ -203,7 +203,7 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
       };
     });
 
-    // 6. Act 220 Tenancy Deed Compliance
+    // 6. Digital Tenancy Agreement Compliance
     const totalDeeds = await prisma.leaseAgreement.count();
     const completedDeeds = await prisma.leaseAgreement.count({ where: { status: 'COMPLETED' } });
     const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
@@ -1154,7 +1154,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         id: `breach-${b.id}`,
         type: 'SECURITY',
         severity: 'CRITICAL',
-        title: 'Statutory Act 220 Breach Report',
+        title: 'Tenancy Dispute Report',
         message: `Breach claim lodged against tenant ${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''} at "${b.property?.title || 'Property'}": ${b.title}`,
         actor: {
           name: b.reporter ? `${b.reporter.firstName} ${b.reporter.lastName}` : 'Complainant',

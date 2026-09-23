@@ -228,7 +228,7 @@ function NewAdminNoticeContent() {
                     type="text"
                     value={topLabel}
                     onChange={(e) => setTopLabel(e.target.value)}
-                    placeholder="e.g. RENT ACT NOTICE"
+                    placeholder="e.g. POLICY ADVISORY"
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>
@@ -284,7 +284,7 @@ function NewAdminNoticeContent() {
                     type="text"
                     value={buttonText}
                     onChange={(e) => setButtonText(e.target.value)}
-                    placeholder="e.g. Read Act 220 Summary"
+                    placeholder="e.g. View Policy Guidelines"
                     className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-purple-500"
                   />
                 </div>

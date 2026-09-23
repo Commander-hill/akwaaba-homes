@@ -242,12 +242,12 @@ export default function AdminTicketDetailPage({
             </div>
           )}
 
-          {/* Statutory Ghana Rent Act 1963 Legal Reference */}
+          {/* Maintenance and Repair Standard */}
           <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/50 text-xs text-emerald-950 dark:text-emerald-300 flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div className="leading-relaxed">
-              <strong className="font-black block mb-0.5">Statutory Landlord Obligation (Ghana Rent Act 1963, Act 220):</strong>
-              Under Section 25, landlords are statutorily required to maintain rental property in tenantable repair and remedy defects that impair hygiene, safety, or access. Failure to address urgent plumbing or electrical hazards within 7 days empowers the Rent Officer to authorize tenant repairs with rent set-off.
+              <strong className="font-black block mb-0.5">Property Maintenance &amp; Repair Standard:</strong>
+              Landlords are required to maintain rental properties in tenantable repair and promptly resolve defects that affect hygiene, safety, or basic living conditions. Urgent hazards must be investigated and resolved swiftly.
             </div>
           </div>
         </div>
