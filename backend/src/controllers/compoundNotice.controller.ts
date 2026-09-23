@@ -128,6 +128,10 @@ export const getPropertyNotices = async (req: Request, res: Response): Promise<v
       where: {
         propertyId,
         isActive: true,
+        NOT: [
+          { title: { startsWith: '__' } },
+          { category: 'ASSET_INVENTORY' }
+        ],
         OR: [
           { expiresAt: null },
           { expiresAt: { gt: new Date() } }
@@ -164,6 +168,10 @@ export const getLandlordNotices = async (req: Request, res: Response): Promise<v
 
     const notices = await prisma.compoundNotice.findMany({
       where: {
+        NOT: [
+          { title: { startsWith: '__' } },
+          { category: 'ASSET_INVENTORY' }
+        ],
         OR: [
           { landlordId },
           ...(staffPropertyIds.length > 0 ? [{ propertyId: { in: staffPropertyIds } }] : [])

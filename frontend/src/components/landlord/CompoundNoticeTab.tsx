@@ -75,7 +75,9 @@ export default function CompoundNoticeTab({ properties = [] }: { properties?: an
     }
   });
 
-  const notices = data?.notices || [];
+  const notices = (data?.notices || []).filter(
+    (n: any) => n && !n.title?.startsWith('__') && n.category !== 'ASSET_INVENTORY'
+  );
 
   return (
     <div className="space-y-6">

@@ -428,7 +428,10 @@ function TenantDashboardContent() {
     },
     enabled: Boolean(activePropertyId)
   });
-  const compoundNotices = Array.isArray(compoundNoticesData?.notices) ? compoundNoticesData.notices : [];
+
+  const compoundNotices = Array.isArray(compoundNoticesData?.notices)
+    ? compoundNoticesData.notices.filter((n: any) => n && !n.title?.startsWith('__') && n.category !== 'ASSET_INVENTORY')
+    : [];
 
   return (
     <div className="space-y-6">
