@@ -61,7 +61,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fontSize(8.5)
       .font('Helvetica')
       .fillColor('#D1FAE5')
-      .text('Pursuant to Rent Act, 1963 (Act 220), Rent Regulations (L.I. 369) & Electronic Transactions Act, 2008 (Act 772)', 40, 60, { align: 'left' });
+      .text('Pursuant to the Electronic Transactions Act, 2008 (Act 772) & Standard Tenancy Guidelines', 40, 60, { align: 'left' });
 
     doc
       .fontSize(7.5)

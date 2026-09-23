@@ -380,8 +380,8 @@ function CaretakerDashboardContent() {
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-800/80 border border-zinc-700/60 text-zinc-300">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#D97706]" />
-                <span>Ghana Rent Act (Act 220) Compliant</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                <span>Verified Facility Manager</span>
               </div>
             </div>
 

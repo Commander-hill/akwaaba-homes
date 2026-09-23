@@ -274,7 +274,7 @@ export default function MessagesPage() {
             <div className="px-6 py-2 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-300">
               <span className="flex items-center gap-1.5 font-medium">
                 <Lock className="w-3 h-3 text-amber-600 shrink-0" />
-                Never send cash or direct transfers. Pay through Akwaaba Homes Escrow to guarantee Act 220 refund protection.
+                Never send cash or direct transfers. Always pay through Akwaaba Homes Escrow to guarantee your funds are protected.
               </span>
             </div>
 
@@ -323,7 +323,7 @@ export default function MessagesPage() {
                 'Is this room vacant for the next academic year?',
                 'When can I schedule a physical inspection?',
                 'Is water and prepaid ECG meter dedicated?',
-                'Can we negotiate on 6 months advance per Act 220?',
+                'Can we negotiate on a flexible advance payment schedule?',
                 'Can I pay via MTN / Telecel MoMo Escrow?'
               ].map((chip) => (
                 <button

@@ -370,7 +370,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
                   <td class="text-right font-bold">GHS ${(tx.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 </tr>
                 <tr>
-                  <td>Act 220 Statutory Tenant Escrow Protection</td>
+                  <td>Protected Tenant Escrow Coverage</td>
                   <td>Active Coverage</td>
                   <td class="text-right font-bold" style="color: #0F5132;">INCLUDED (GHS 0.00)</td>
                 </tr>

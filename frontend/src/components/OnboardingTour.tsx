@@ -18,10 +18,10 @@ interface TourStep {
 const TENANT_STEPS: TourStep[] = [
   {
     title: "Welcome to Akwaaba Homes",
-    description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, statutory Act 220 tenancy agreements, and secure rent escrow protection.",
+    description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, official digital tenancy agreements, and secure rent escrow protection.",
     icon: Compass,
     badge: "Step 1 of 4 • Overview",
-    statutoryNote: "Ghana Rent Act, 1963 (Act 220) Compliant"
+    statutoryNote: "Verified Tenancy Standard"
   },
   {
     title: "Account Setup & Ghana Card (NIA) Verification",

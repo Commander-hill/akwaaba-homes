@@ -31,8 +31,8 @@ const FAQ_DATA: FaqItem[] = [
   },
   {
     category: 'TENANTS',
-    question: 'What is the Act 220 Tenancy Agreement?',
-    answer: 'Under the Ghana Rent Act, 1963 (Act 220), tenants have statutory rights against unlawful rent advance demands and eviction without notice. Every paid booking on Akwaaba Homes automatically generates an e-signed Act 220 tenancy contract with legal audit seals.'
+    question: 'How do digital tenancy agreements work?',
+    answer: 'Every confirmed booking on Akwaaba Homes automatically generates a legally binding, e-signed tenancy agreement with secure digital audit seals, protecting both tenants and property owners.'
   },
   {
     category: 'LANDLORDS',
@@ -93,7 +93,7 @@ export default function HelpFaqPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search help questions (e.g. escrow, gender lock, Act 220)..."
+              placeholder="Search help questions (e.g. escrow, gender lock, agreements)..."
               className="w-full bg-transparent text-xs font-medium outline-none text-zinc-900 dark:text-white placeholder:text-zinc-400"
             />
           </div>

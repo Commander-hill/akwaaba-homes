@@ -130,7 +130,7 @@ export default function ContactPage() {
                   <option value="TENANCY_INQUIRY">Student Hostel / Accommodation Inquiry</option>
                   <option value="LANDLORD_ONBOARDING">Landlord Property Registration</option>
                   <option value="ESCROW_ASSISTANCE">MoMo Escrow &amp; Payment Support</option>
-                  <option value="DISPUTE_REPORT">Tenancy Dispute / Act 220 Breach</option>
+                  <option value="DISPUTE_REPORT">Tenancy or Booking Dispute</option>
                   <option value="OTHER">General Feedback</option>
                 </select>
               </div>

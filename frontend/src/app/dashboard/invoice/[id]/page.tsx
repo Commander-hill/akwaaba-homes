@@ -109,7 +109,7 @@ export default function InvoicePage() {
               Certified Smart Rental &amp; Student Hostel Marketplace
             </p>
             <p className="text-[11px] text-zinc-400">
-              Accra &amp; Kumasi, Republic of Ghana 🇬🇭 • Act 220 Compliant
+              Accra &amp; Kumasi, Republic of Ghana 🇬🇭 • Verified Receipt
             </p>
           </div>
 
@@ -201,7 +201,7 @@ export default function InvoicePage() {
                     Base Accommodation Rent
                   </td>
                   <td className="py-3 px-4 text-zinc-500">
-                    {bookingYear}/{nextYear} Tenancy Rent • Rent Act (Act 220) Compliant
+                    {bookingYear}/{nextYear} Tenancy Rent • Verified Agreement
                   </td>
                   <td className="py-3 px-4 text-right font-mono font-bold text-zinc-900 dark:text-white">
                     GH₵ {data.amount.toFixed(2)}
@@ -259,10 +259,10 @@ export default function InvoicePage() {
         <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-zinc-500">
           <div className="space-y-1">
             <div className="font-bold text-zinc-900 dark:text-white">
-              Rent Control Department of Ghana • Statutory Certification
+              Official Payment Receipt • Verified Tenancy Settlement
             </div>
             <p className="text-[11px] leading-relaxed max-w-md">
-              This digital receipt certifies lawful settlement under Section 19 of the Rent Act, 1963 (Act 220). Retain this receipt for tax, campus bursar, or lease audit purposes.
+              This digital receipt certifies lawful rent settlement through Akwaaba Homes verified escrow. Retain this receipt for campus bursar or lease audit purposes.
             </p>
           </div>
 

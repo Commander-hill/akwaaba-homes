@@ -17,7 +17,7 @@ export default function AboutPage() {
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 text-xs font-bold border border-emerald-200/60 dark:border-emerald-800/40">
             <Scale className="w-3.5 h-3.5" />
-            <span>Ghana Rent Act, 1963 (Act 220) Certified</span>
+            <span>Verified Rental &amp; Accommodation Platform</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-zinc-950 dark:text-white tracking-tight leading-tight">
             Fixing Ghana's Rental Crisis <br />
@@ -64,7 +64,7 @@ export default function AboutPage() {
               <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300">
                 <li>• Zero viewing fees — free online photo tours</li>
                 <li>• Direct landlord contact with zero agent surcharge</li>
-                <li>• Statutory Act 220 compliant lease contracts</li>
+                <li>• Legally binding digital lease agreements</li>
                 <li>• MoMo Escrow: Payout released only upon key handover</li>
               </ul>
             </div>
@@ -75,7 +75,7 @@ export default function AboutPage() {
         <div className="space-y-4">
           <div className="text-center">
             <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white">Our 4 Core Safeguards</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Built to statutory regulatory standards in Ghana.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Built to the highest reliability standards in Ghana.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -93,9 +93,9 @@ export default function AboutPage() {
               <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-800/40">
                 <Scale className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">Statutory Act 220 Agreements</h3>
+              <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">Digital Tenancy Agreements</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Every booking generates an e-signed tenancy agreement with statutory Rent Control seals, protecting tenants against sudden unlawful evictions and locking in transparent utility terms.
+                Every booking generates an e-signed tenancy agreement with secure verification seals, protecting tenants against sudden unlawful evictions and locking in transparent utility terms.
               </p>
             </div>
 

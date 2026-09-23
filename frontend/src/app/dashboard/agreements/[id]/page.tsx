@@ -110,7 +110,7 @@ export default function AgreementPage() {
 
   const handleDownloadPDF = async () => {
     try {
-      toast.loading('Generating Official Act 220 Tenancy PDF...', { id: 'pdf' });
+      toast.loading('Generating Official Tenancy Agreement PDF...', { id: 'pdf' });
       const response = await api.get(`/bookings/${bookingId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
@@ -141,7 +141,7 @@ export default function AgreementPage() {
           </button>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Statutory Tenancy Agreement
+              Residential Tenancy Agreement
             </h1>
             <span className={`px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
               isFullySigned 
@@ -152,7 +152,7 @@ export default function AgreementPage() {
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Compliant with Ghana Rent Act, 1963 (Act 220) &amp; Electronic Transactions Act, 2008 (Act 772)
+            Official digital tenancy agreement with secure cryptographic verification.
           </p>
         </div>
 
@@ -163,7 +163,7 @@ export default function AgreementPage() {
             className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4" />
-            <span>Download Official PDF</span>
+            Print Agreement
           </button>
 
           {canSign && (
@@ -178,20 +178,20 @@ export default function AgreementPage() {
         </div>
       </div>
 
-      {/* ── STATUTORY COMPLIANCE BAR ── */}
+      {/* ── COMPLIANCE BAR ── */}
       <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
           <Scale className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
           <span className="font-bold text-zinc-900 dark:text-white">
-            Republic of Ghana Rent Act, 1963 (Act 220) &amp; Electronic Transactions Act, 2008 (Act 772)
+            Official Residential Lease Agreement • Cryptographically Verified
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-zinc-500">
           <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
-            <Building className="w-3.5 h-3.5" /> Lands Commission Deed GA-2026-TITLED
+            <Building className="w-3.5 h-3.5" /> Verified Property Title Deed
           </span>
           <span>•</span>
-          <span>Sec. 17 Eviction Protection</span>
+          <span>Eviction Protection</span>
           <span>•</span>
           <span>SHA-256 Ledger Seal</span>
         </div>
@@ -207,10 +207,10 @@ export default function AgreementPage() {
             Republic of Ghana
           </h2>
           <h3 className="text-sm font-extrabold tracking-wider text-slate-700 uppercase">
-            Statutory Residential &amp; Commercial Tenancy Lease Agreement
+            Residential &amp; Commercial Tenancy Lease Agreement
           </h3>
           <p className="text-[11px] text-slate-500 font-medium italic">
-            Executed pursuant to the Rent Act, 1963 (Act 220), Rent Regulations (L.I. 369), and Electronic Transactions Act, 2008 (Act 772)
+            Executed electronically pursuant to the Electronic Transactions Act, 2008 (Act 772)
           </p>
           <div className="pt-2 text-[10px] font-mono text-slate-400">
             Document Ref: {agreement.id.slice(0, 16).toUpperCase()} • Execution Date: {new Date(agreement.createdAt).toLocaleDateString('en-GB')}
@@ -275,24 +275,24 @@ export default function AgreementPage() {
             </p>
           </div>
 
-          {/* Section 4: Landlord Covenants (Act 220) */}
+          {/* Section 4: Landlord Covenants */}
           <div className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
-              4. Landlord's Statutory Covenants (Rent Act 220, Section 20)
+              4. Landlord's Core Tenancy Covenants
             </h4>
             <p>The Landlord explicitly covenants with the Tenant as follows:</p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
               <li><strong>Quiet Enjoyment:</strong> The Tenant peacefully holding and paying agreed rent shall quietly enjoy the demised premises without unlawful eviction, harassment, or molestation.</li>
               <li><strong>Structural &amp; Roof Integrity:</strong> The Landlord shall keep the main roof, exterior walls, foundations, main electrical wiring, and plumbing in good, tenantable structural repair.</li>
               <li><strong>Inspection Notice:</strong> The Landlord or authorized agents shall provide minimum <strong>24-48 hours advance written notice</strong> before entering premises for reasonable inspection.</li>
-              <li><strong>Prohibition of Unlawful Lockout:</strong> Pursuant to Section 17 of the Rent Act (Act 220), the Landlord covenants <strong>NEVER</strong> to unlawfully eject, lockout, disconnect water or electrical supply, or remove roofing without a valid warrant from a competent Rent Magistrate or Court.</li>
+              <li><strong>Prohibition of Unlawful Lockout:</strong> The Landlord covenants <strong>NEVER</strong> to unlawfully eject, lockout, disconnect water or electrical supply, or remove roofing without due legal process and court warrant.</li>
             </ul>
           </div>
 
           {/* Section 5: Tenant Covenants */}
           <div className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
-              5. Tenant's Statutory Covenants
+              5. Tenant's Core Covenants
             </h4>
             <p>The Tenant explicitly covenants with the Landlord as follows:</p>
             <ul className="list-disc pl-5 space-y-1.5 text-xs text-slate-700">
@@ -318,10 +318,10 @@ export default function AgreementPage() {
           {/* Section 7: Notice to Quit */}
           <div className="space-y-2">
             <h4 className="font-bold text-sm text-slate-900 font-sans uppercase tracking-wider">
-              7. Determination of Tenancy &amp; Notice to Quit (Act 220, Section 17)
+              7. Determination of Tenancy &amp; Notice to Vacate
             </h4>
             <p>
-              Either party may give statutory notice to determine tenancy: minimum <strong>one (1) month</strong> for monthly leases and <strong>three (3) months</strong> for annual tenancies. Recovery of possession shall be strictly governed by the statutory provisions of Section 17 of the Rent Act, 1963 (Act 220).
+              Either party may give statutory notice to determine tenancy: minimum <strong>one (1) month</strong> for monthly leases and <strong>three (3) months</strong> for annual tenancies. Recovery of possession shall be strictly governed by lawful notice and established residential standards.
             </p>
           </div>
 
@@ -417,7 +417,7 @@ export default function AgreementPage() {
         {isFullySigned && (
           <div className="mt-10 text-center pt-6 border-t-2 border-dashed border-slate-300">
             <div className="inline-block border-4 border-emerald-600 text-emerald-700 px-6 py-2 rounded-2xl transform -rotate-3 shadow-lg bg-emerald-50/50">
-              <p className="font-black text-base uppercase tracking-widest leading-tight">ACT 220 STATUTORY SEAL</p>
+              <p className="font-black text-base uppercase tracking-widest leading-tight">AUTHENTICATED LEASE SEAL</p>
               <p className="text-[9px] font-extrabold tracking-widest text-emerald-600">AUTHENTICATED • REGISTERED TENANCY</p>
             </div>
           </div>
@@ -438,10 +438,10 @@ export default function AgreementPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                    Execute Statutory Lease
+                    Sign Tenancy Agreement
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Complies with Act 220 &amp; Electronic Transactions Act 772
+                    Legally binding digital execution
                   </p>
                 </div>
               </div>
@@ -458,7 +458,7 @@ export default function AgreementPage() {
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs leading-relaxed flex items-start gap-2.5">
                 <Scale className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                 <div>
-                  By applying your electronic signature below, you legally execute this lease contract and consent to the statutory rights and protections under the <strong>Republic of Ghana Rent Act, 1963 (Act 220)</strong>.
+                  By applying your electronic signature below, you legally execute this tenancy agreement and agree to all terms and conditions stated herein.
                 </div>
               </div>
               

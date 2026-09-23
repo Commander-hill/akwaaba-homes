@@ -267,8 +267,8 @@ function LoginForm() {
               <Check className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Act 220 Tenancy Contracts</h4>
-              <p className="text-[11px] text-emerald-200/60 mt-0.5">Instant digital lease agreements conforming to the Ghana Rent Control Act.</p>
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Verified Digital Leases</h4>
+              <p className="text-[11px] text-emerald-200/60 mt-0.5">Instant tenancy agreements signed electronically with complete transparency.</p>
             </div>
           </div>
         </div>
@@ -556,8 +556,8 @@ function LoginForm() {
         </div>
 
         {/* Bottom Security & Compliance Microcopy */}
-        <div className="w-full max-w-md mx-auto pt-8 flex items-center justify-between text-[11px] font-mono text-zinc-400 dark:text-zinc-500">
-          <span>Rent Act 220 Compliant</span>
+        <div className="w-full max-w-md mx-auto pt-8 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
+          <span>Protected Escrow Payments</span>
           <span>256-Bit SSL Encrypted</span>
         </div>
 
