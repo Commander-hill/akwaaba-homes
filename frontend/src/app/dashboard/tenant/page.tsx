@@ -436,13 +436,14 @@ function TenantDashboardContent() {
   return (
     <div className="space-y-6">
       <OnboardingProgressWidget user={session} />
-      {/* Header Banner, Notice & Tabs Container (Static on mobile, Sticky on desktop) */}
-      <div className="static md:sticky md:top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
+      
+      {/* ── WORKSPACE HEADER & ANNOUNCEMENTS (ARCHITECTURAL CANVAS LAYOUT) ── */}
+      <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800 space-y-3">
         <NoticeBoard />
 
-        {/* Live Landlord Compound Notice Advisory */}
+        {/* Live Landlord Compound Notice Advisory: Sleek Ambient Strip */}
         {compoundNotices.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {compoundNotices.map((notice: any) => {
               if (!notice) return null;
               const isEmergency = notice.priority === 'EMERGENCY';
@@ -451,21 +452,21 @@ function TenantDashboardContent() {
                 <div
                   key={notice.id}
                   className={clsx(
-                    "p-3.5 rounded-2xl border flex items-start gap-3 shadow-xs animate-in",
-                    isEmergency && "bg-red-500/10 border-red-500/40 text-red-700 dark:text-red-300",
-                    isImportant && "bg-amber-500/10 border-amber-500/40 text-amber-700 dark:text-amber-300",
-                    !isEmergency && !isImportant && "bg-purple-500/10 border-purple-500/30 text-purple-700 dark:text-purple-300"
+                    "py-2.5 px-3.5 rounded-lg border-l-3 flex items-start gap-3 text-xs transition-colors",
+                    isEmergency && "bg-red-500/5 border-l-red-600 text-red-900 dark:text-red-200 border-y border-r border-red-200/50 dark:border-red-900/40",
+                    isImportant && "bg-amber-500/5 border-l-amber-500 text-amber-900 dark:text-amber-200 border-y border-r border-amber-200/50 dark:border-amber-900/40",
+                    !isEmergency && !isImportant && "bg-purple-500/5 border-l-purple-600 text-purple-900 dark:text-purple-200 border-y border-r border-purple-200/50 dark:border-purple-900/40"
                   )}
                 >
-                  <Megaphone className="w-5 h-5 shrink-0 mt-0.5" />
-                  <div className="flex-1 text-xs">
+                  <Megaphone className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1">
                     <div className="flex items-center gap-2 font-bold flex-wrap">
-                      <span className="uppercase text-[10px] tracking-wider px-2 py-0.5 rounded-full bg-white/60 dark:bg-black/40">
+                      <span className="uppercase font-mono text-[9px] tracking-wider px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">
                         {notice.category || 'NOTICE'} • {notice.property?.title || 'Property'}
                       </span>
                       <span>{notice.title || 'Announcement'}</span>
                     </div>
-                    <p className="mt-1 font-medium opacity-90 whitespace-pre-line leading-relaxed">
+                    <p className="mt-0.5 font-medium opacity-90 whitespace-pre-line leading-relaxed">
                       {notice.message || ''}
                     </p>
                   </div>
@@ -475,17 +476,17 @@ function TenantDashboardContent() {
           </div>
         )}
 
-        <div id="tour-tenant-workspaces" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div id="tour-tenant-workspaces" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <div>
-            <h1 className="text-2xl font-extrabold text-[var(--foreground)] tracking-tight">Tenant Dashboard</h1>
-            <p className="text-[var(--muted-foreground)] text-xs sm:text-sm">Manage your residential tenancies, rent escrow payments, and maintenance requests.</p>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Tenant Portal</h1>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm">Manage your residential tenancies, rent escrow disbursements, and maintenance requests.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Link
               href="/dashboard/wishlist"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold text-sm border border-rose-200 dark:border-rose-900/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
             >
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" /> My Wishlist
+              <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> My Wishlist
             </Link>
             <OnboardingTour role={session?.role} user={session} />
           </div>
@@ -494,14 +495,12 @@ function TenantDashboardContent() {
 
       {(activeTab === 'bookings' || activeTab === 'active-booking') && (
         <div className="animate-in space-y-6">
-          {/* ── PRIORITY HERO: MY CURRENT HOME (HUMAN-CENTERED RESIDENT TRIAGE) ── */}
+          {/* ── PRIORITY RESIDENCE MASTHEAD (EDITORIAL DOSSIER, NO BUBBLY CARD) ── */}
           {activeBooking && ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(activeBooking.status) && (
-            <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/10 via-white to-white dark:from-emerald-950/30 dark:via-[#12151D] dark:to-[#12151D] p-6 sm:p-7 shadow-xs relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-                <div className="flex items-start gap-4 sm:gap-5">
-                  <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-xs">
+            <section aria-label="Current Residence Dossier" className="pb-6 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700/80">
                     {(() => {
                       try {
                         let imgs = activeBooking.property?.images;
@@ -514,45 +513,47 @@ function TenantDashboardContent() {
                     })()}
                   </div>
 
-                  <div className="space-y-1.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
-                        My Current Home
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800/60">
+                        Active Residence
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                      <span className="text-zinc-400">•</span>
+                      <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                         {activeBooking.status === 'CHECKED_IN' || activeBooking.status === 'ACTIVE' 
-                          ? 'Active Tenancy' 
+                          ? 'Tenancy Active' 
                           : 'Move-In Clearance Ready'}
                       </span>
-                      <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
-                        <Lock className="w-3 h-3 text-[#0F5132]" /> MoMo Escrow Verified
+                      <span className="text-zinc-400">•</span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-[#0F5132] dark:text-emerald-400" /> MoMo Escrow Verified
                       </span>
                     </div>
 
-                    <h2 className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white truncate">
+                    <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight truncate">
                       {activeBooking.property?.title}
                     </h2>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-zinc-600 dark:text-zinc-400">
                       <span className="flex items-center gap-1 font-medium">
                         <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                         <span className="truncate">{activeBooking.property?.location}</span>
                       </span>
-                      <span>•</span>
-                      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                      <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-200">
                         {activeBooking.room?.roomType || 'Standard Room'}
-                        {activeBooking.roomUnit?.unitNumber ? ` • Unit ${activeBooking.roomUnit.unitNumber}` : ''}
-                        {activeBooking.bed?.bedNumber ? ` • Bed ${activeBooking.bed.bedNumber}` : ''}
+                        {activeBooking.roomUnit?.unitNumber ? ` · Unit ${activeBooking.roomUnit.unitNumber}` : ''}
+                        {activeBooking.bed?.bedNumber ? ` · Bed ${activeBooking.bed.bedNumber}` : ''}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Priority Quick Actions */}
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                {/* Priority Quick Actions: Clean, tactile hairline buttons */}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <button
                     onClick={() => setSelectedGatePassBooking(activeBooking)}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold transition-all cursor-pointer shadow-xs"
                     title="Open Gate Pass QR for Security & Caretaker"
                   >
                     <GraduationCap className="w-4 h-4 text-zinc-950" />
@@ -561,15 +562,15 @@ function TenantDashboardContent() {
 
                   <Link
                     href={`/dashboard/tenant/tickets/new?propertyId=${activeBooking.propertyId}`}
-                    className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
                   >
-                    <Wrench className="w-3.5 h-3.5 text-emerald-600" />
+                    <Wrench className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Report Issue</span>
                   </Link>
 
                   <Link
                     href={`/dashboard/agreements/${activeBooking.id}`}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#12151D] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
                   >
                     <FileText className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Act 220 Lease</span>
@@ -577,7 +578,7 @@ function TenantDashboardContent() {
 
                   <button
                     onClick={() => setActiveTab('billsplit')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#12151D] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
                   >
                     <DollarSign className="w-3.5 h-3.5 text-amber-500" />
                     <span>Split Utilities</span>
@@ -585,43 +586,43 @@ function TenantDashboardContent() {
                 </div>
               </div>
 
-              {/* Tenancy Validity Bar */}
-              <div className="mt-4 pt-4 border-t border-zinc-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
-                  <span>Tenancy Term: <strong className="text-zinc-800 dark:text-zinc-200">{new Date(activeBooking.startDate).toLocaleDateString()} – {new Date(activeBooking.endDate).toLocaleDateString()}</strong></span>
+              {/* Tenancy Validity Row */}
+              <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="flex items-center gap-4 flex-wrap">
+                  <span>Tenancy Term: <strong className="text-zinc-900 dark:text-zinc-100">{new Date(activeBooking.startDate).toLocaleDateString()} – {new Date(activeBooking.endDate).toLocaleDateString()}</strong></span>
                   {activeBooking.price && (
-                    <span>Rate: <strong className="text-zinc-800 dark:text-zinc-200">GH₵ {activeBooking.price.toLocaleString()}</strong></span>
+                    <span>Rate: <strong className="text-zinc-900 dark:text-zinc-100">GH₵ {activeBooking.price.toLocaleString()}</strong></span>
                   )}
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Key Handover &amp; Room Inspection Cleared
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Room Key Handover &amp; Inspection Cleared
                   </span>
                 </div>
               </div>
-            </div>
+            </section>
           )}
 
           {/* Sub-tabs if there are any cancelled or active bookings */}
           {!bookingsLoading && cancelledBookings.length > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">
-              <div className="inline-flex items-center p-1 bg-zinc-100 dark:bg-zinc-800/70 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="inline-flex items-center gap-1">
                 <button
                   onClick={() => setBookingFilter('ACTIVE')}
                   className={clsx(
-                    "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                     bookingFilter === 'ACTIVE'
-                      ? "bg-white dark:bg-[#181B24] text-zinc-900 dark:text-white shadow-xs"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                   )}
                 >
                   <span>Active Accommodations</span>
                   <span className={clsx(
-                    "px-1.5 py-0.5 rounded-full text-[10px] font-extrabold",
+                    "px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold",
                     bookingFilter === 'ACTIVE' 
-                      ? "bg-[#0F5132]/15 text-[#0F5132] dark:bg-emerald-500/20 dark:text-emerald-400" 
-                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                      ? "bg-white/20 text-white dark:bg-black/20 dark:text-zinc-900" 
+                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
                   )}>
                     {activeBookings.length}
                   </span>
@@ -629,18 +630,18 @@ function TenantDashboardContent() {
                 <button
                   onClick={() => setBookingFilter('CANCELLED')}
                   className={clsx(
-                    "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2",
+                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                     bookingFilter === 'CANCELLED'
-                      ? "bg-white dark:bg-[#181B24] text-zinc-900 dark:text-white shadow-xs"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
                       : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                   )}
                 >
                   <span>Cancelled &amp; Past</span>
                   <span className={clsx(
-                    "px-1.5 py-0.5 rounded-full text-[10px] font-extrabold",
+                    "px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold",
                     bookingFilter === 'CANCELLED'
-                      ? "bg-red-500/15 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                      ? "bg-white/20 text-white dark:bg-black/20 dark:text-zinc-900"
+                      : "bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
                   )}>
                     {cancelledBookings.length}
                   </span>
@@ -659,203 +660,210 @@ function TenantDashboardContent() {
             <SkeletonTable rows={3} columns={4} />
           ) : displayedBookings.length === 0 ? (
             bookingFilter === 'ACTIVE' ? (
-              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-[var(--muted-foreground)]" />
+              <div className="py-14 text-center flex flex-col items-center">
+                <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                  <Calendar className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Accommodations Reserved</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
-                  Explore verified campus hostels and residential apartments across KNUST, Legon, and UCC. Your deposit is backed by MoMo escrow until physical on-site room handover.
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Active Accommodations Reserved</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto leading-relaxed">
+                  Explore verified campus hostels and residential apartments across KNUST, Legon, and UCC. Your deposit is secured in Bank of Ghana / Paystack MoMo escrow.
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Link href="/properties" className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-xs">
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  <Link href="/properties" className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors shadow-xs">
                     Browse Verified Hostels &amp; Apartments
                   </Link>
                   {cancelledBookings.length > 0 && (
                     <button
                       onClick={() => setBookingFilter('CANCELLED')}
-                      className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors border border-zinc-200 dark:border-zinc-700"
+                      className="inline-flex items-center gap-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors border border-zinc-200 dark:border-zinc-700"
                     >
-                      View Cancelled Requests ({cancelledBookings.length})
+                      View Past Requests ({cancelledBookings.length})
                     </button>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                  <XCircle className="w-8 h-8 text-zinc-400" />
+              <div className="py-14 text-center flex flex-col items-center">
+                <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                  <XCircle className="w-6 h-6" />
                 </div>
-                <h3 className="text-base font-black text-zinc-950 dark:text-white">No Cancelled Requests</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-5 max-w-md mx-auto">
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Cancelled Requests</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-4 max-w-md mx-auto">
                   You do not have any cancelled or declined room bookings.
                 </p>
                 <button
                   onClick={() => setBookingFilter('ACTIVE')}
-                  className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+                  className="inline-flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-900 px-3.5 py-2 rounded-lg text-xs font-bold transition-colors"
                 >
                   Back to Active Accommodations
                 </button>
               </div>
             )
           ) : (
-            <div className="grid gap-6">
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {displayedBookings.map((booking: any) => (
                 <div 
                   key={booking.id} 
                   className={clsx(
-                    "bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start sm:items-center transition-all",
-                    (booking.status === 'CANCELLED' || booking.status === 'REJECTED') && "opacity-90"
+                    "py-5 first:pt-1 last:pb-1 flex flex-col sm:flex-row gap-5 items-start sm:items-center transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-900/30 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-xl",
+                    (booking.status === 'CANCELLED' || booking.status === 'REJECTED') && "opacity-75"
                   )}
                 >
-                  <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700/80">
                     {(() => {
                       try {
-                        let imgs = booking.property.images;
+                        let imgs = booking.property?.images;
                         if (typeof imgs === 'string') imgs = JSON.parse(imgs);
                         if (Array.isArray(imgs) && imgs.length > 0) {
                           return <img src={getImageUrl(imgs[0])} className="w-full h-full object-cover" alt="Property" />;
                         }
                       } catch (e) {}
-                      return <div className="w-full h-full flex items-center justify-center text-[var(--muted-foreground)]"><Calendar /></div>;
+                      return <div className="w-full h-full flex items-center justify-center text-zinc-400"><Calendar className="w-6 h-6" /></div>;
                     })()}
                   </div>
                   
-                  <div className="flex-1 space-y-3 w-full">
-                    <div className="flex flex-wrap justify-between items-start gap-4">
+                  <div className="flex-1 space-y-2.5 w-full min-w-0">
+                    <div className="flex flex-wrap justify-between items-start gap-3">
                       <div>
-                        <h3 className="text-lg font-bold text-[var(--foreground)] leading-tight">{booking.property.title}</h3>
-                        <div className="flex items-center gap-1 text-sm text-[var(--muted-foreground)] mt-1">
-                          <MapPin className="w-4 h-4" /> {booking.property.location}
+                        <h3 className="text-base font-bold text-zinc-950 dark:text-white leading-tight">{booking.property?.title}</h3>
+                        <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          <span className="truncate">{booking.property?.location}</span>
+                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                          <span className="font-medium text-zinc-700 dark:text-zinc-300">{booking.room?.roomType || 'Standard Room'}</span>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="flex items-center gap-2">
-                          {booking.status === 'PENDING' && booking.createdAt && (
-                            <LiveBookingCountdown 
-                              createdAt={booking.createdAt} 
-                              onExpire={() => queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] })} 
-                            />
-                          )}
-                          {getStatusBadge(booking.status)}
-                        </div>
-                        <div className="flex flex-wrap gap-2 justify-end">
-                          {['PENDING', 'APPROVED'].includes(booking.status) && (
-                            <button 
-                              onClick={() => cancelPendingMutation.mutate(booking.id)}
-                              disabled={cancelPendingMutation.isPending}
-                              className="text-xs font-bold text-red-600 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 px-3 py-1.5 rounded-full hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors flex items-center gap-1 disabled:opacity-50"
-                            >
-                              {cancelPendingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />} Cancel Request
-                            </button>
-                          )}
-                          {(booking.status === 'CANCELLED' || booking.status === 'REJECTED') && (
-                            <button
-                              onClick={() => {
-                                if (confirm('Remove this cancelled booking from your dashboard?')) {
-                                  deleteBookingMutation.mutate(booking.id);
-                                }
-                              }}
-                              disabled={deleteBookingMutation.isPending}
-                              className="text-xs font-bold text-zinc-600 dark:text-zinc-400 bg-zinc-100 hover:bg-red-50 dark:bg-zinc-800 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-400 border border-zinc-200 dark:border-zinc-700 hover:border-red-200 dark:hover:border-red-900/50 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5 disabled:opacity-50"
-                              title="Remove from your dashboard"
-                            >
-                              {deleteBookingMutation.isPending ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Trash2 className="w-3.5 h-3.5" />
-                              )}
-                              Remove from List
-                            </button>
-                          )}
-                          {(['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
-                            <>
-                              <Link 
-                                href={`/dashboard/agreements/${booking.id}`}
-                                className="text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] px-3 py-1.5 rounded-lg transition-colors"
-                              >
-                                View Agreement
-                              </Link>
-                              {booking.status === 'APPROVED' && (
-                                <button 
-                                  onClick={() => payBookingMutation.mutate(booking.id)}
-                                  disabled={payBookingMutation.isPending || booking.leaseAgreement?.status !== 'COMPLETED'}
-                                  title={booking.leaseAgreement?.status !== 'COMPLETED' ? "Tenancy Agreement must be signed by both parties first" : "Pay Rent"}
-                                  className={clsx(
-                                    "text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1 transition-colors",
-                                    booking.leaseAgreement?.status !== 'COMPLETED'
-                                      ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 cursor-not-allowed"
-                                      : "text-emerald-700 bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
-                                  )}
-                                >
-                                  {payBookingMutation.isPending ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : booking.leaseAgreement?.status !== 'COMPLETED' ? (
-                                    <Lock className="w-3 h-3" />
-                                  ) : (
-                                    <CreditCard className="w-3 h-3" />
-                                  )}
-                                  Pay Rent
-                                </button>
-                              )}
-                              <Link 
-                                href={`/dashboard/tenant/tickets/new?propertyId=${booking.propertyId}`}
-                                className="text-xs font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                              >
-                                <Wrench className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>Report Issue</span>
-                              </Link>
-                              {(booking.property?.type === 'Hostel' || booking.property?.targetAudience === 'Students Only' || session?.studentId) && (
-                                <button
-                                  onClick={() => setSelectedGatePassBooking(booking)}
-                                  className="text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-300 dark:border-amber-700 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
-                                  title="Digital Student Gate Pass & Move-In Clearance"
-                                >
-                                  <GraduationCap className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                  <span>Student Gate Pass</span>
-                                </button>
-                              )}
-                            </>
-                          )}
-                          {(['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
-                            <Link 
-                              href={`/dashboard/tenant/reviews/new?bookingId=${booking.id}`}
-                              className="text-xs font-bold text-[var(--primary)] bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-lg dark:hover:bg-slate-700 transition-colors flex items-center gap-1"
-                            >
-                              <Star className="w-3 h-3 fill-current" /> Leave Review
-                            </Link>
-                          )}
-                        </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {booking.status === 'PENDING' && booking.createdAt && (
+                          <LiveBookingCountdown 
+                            createdAt={booking.createdAt} 
+                            onExpire={() => queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] })} 
+                          />
+                        )}
+                        {getStatusBadge(booking.status)}
                       </div>
                     </div>
 
                     {booking.status === 'CANCELLED' && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-400">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
                         <XCircle className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span>This booking request was cancelled. Any reserved room or bed hold has been released.</span>
-                      </div>
+                        <span>Booking cancelled. Reserved room hold was released.</span>
+                      </p>
                     )}
                     {booking.status === 'REJECTED' && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-xs text-red-600 dark:text-red-400">
+                      <p className="text-xs text-red-600 dark:text-red-400 flex items-center gap-1.5">
                         <AlertTriangle className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                        <span>This booking request was declined by the property owner.</span>
-                      </div>
+                        <span>Booking request was declined by the property owner.</span>
+                      </p>
                     )}
 
-                    <div className="flex flex-wrap gap-4 text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
-                      <div>
-                        <span className="text-[var(--muted-foreground)] block text-xs uppercase tracking-wide font-semibold mb-0.5">Check In</span>
-                        <span className="font-medium">{new Date(booking.startDate).toLocaleDateString()}</span>
+                    {/* Term, Rate & Action Controls (Linear Continuous Row) */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 text-xs pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+                      <div className="flex items-center gap-3 text-zinc-500 dark:text-zinc-400 flex-wrap">
+                        <span>Term: <strong className="text-zinc-800 dark:text-zinc-200">{new Date(booking.startDate).toLocaleDateString()} – {new Date(booking.endDate).toLocaleDateString()}</strong></span>
+                        {booking.price && (
+                          <>
+                            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                            <span>Rate: <strong className="text-zinc-900 dark:text-zinc-100">GH₵ {booking.price.toLocaleString()}</strong></span>
+                          </>
+                        )}
                       </div>
-                      <div>
-                        <span className="text-[var(--muted-foreground)] block text-xs uppercase tracking-wide font-semibold mb-0.5">Check Out</span>
-                        <span className="font-medium">{new Date(booking.endDate).toLocaleDateString()}</span>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {['PENDING', 'APPROVED'].includes(booking.status) && (
+                          <button 
+                            onClick={() => cancelPendingMutation.mutate(booking.id)}
+                            disabled={cancelPendingMutation.isPending}
+                            className="text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 hover:underline transition-colors flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                          >
+                            {cancelPendingMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />} Cancel Request
+                          </button>
+                        )}
+                        {(booking.status === 'CANCELLED' || booking.status === 'REJECTED') && (
+                          <button
+                            onClick={() => {
+                              if (confirm('Remove this cancelled booking from your dashboard?')) {
+                                deleteBookingMutation.mutate(booking.id);
+                              }
+                            }}
+                            disabled={deleteBookingMutation.isPending}
+                            className="text-xs font-semibold text-zinc-500 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                            title="Remove from your dashboard"
+                          >
+                            {deleteBookingMutation.isPending ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
+                            Remove
+                          </button>
+                        )}
+                        {(['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
+                          <>
+                            <Link 
+                              href={`/dashboard/agreements/${booking.id}`}
+                              className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                            >
+                              View Agreement
+                            </Link>
+                            {booking.status === 'APPROVED' && (
+                              <button 
+                                onClick={() => payBookingMutation.mutate(booking.id)}
+                                disabled={payBookingMutation.isPending || booking.leaseAgreement?.status !== 'COMPLETED'}
+                                title={booking.leaseAgreement?.status !== 'COMPLETED' ? "Tenancy Agreement must be signed by both parties first" : "Pay Rent"}
+                                className={clsx(
+                                  "text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer",
+                                  booking.leaseAgreement?.status !== 'COMPLETED'
+                                    ? "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500 cursor-not-allowed"
+                                    : "text-white bg-[#0F5132] hover:bg-[#0A3D24]"
+                                )}
+                              >
+                                {payBookingMutation.isPending ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : booking.leaseAgreement?.status !== 'COMPLETED' ? (
+                                  <Lock className="w-3 h-3" />
+                                ) : (
+                                  <CreditCard className="w-3 h-3" />
+                                )}
+                                Pay Rent
+                              </button>
+                            )}
+                            <Link 
+                              href={`/dashboard/tenant/tickets/new?propertyId=${booking.propertyId}`}
+                              className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5"
+                            >
+                              <Wrench className="w-3 h-3 text-emerald-500" />
+                              <span>Report Issue</span>
+                            </Link>
+                            {(booking.property?.type === 'Hostel' || booking.property?.targetAudience === 'Students Only' || session?.studentId) && (
+                              <button
+                                onClick={() => setSelectedGatePassBooking(booking)}
+                                className="text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-300/80 dark:border-amber-700/80 px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                                title="Digital Student Gate Pass & Move-In Clearance"
+                              >
+                                <GraduationCap className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                <span>Gate Pass</span>
+                              </button>
+                            )}
+                          </>
+                        )}
+                        {(['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
+                          <Link 
+                            href={`/dashboard/tenant/reviews/new?bookingId=${booking.id}`}
+                            className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1"
+                          >
+                            <Star className="w-3 h-3 fill-current text-amber-400" /> Review
+                          </Link>
+                        )}
                       </div>
                     </div>
                     
                     {/* Commute Widget */}
                     {(['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
-                      <CommuteWidget propertyId={booking.propertyId} />
+                      <div className="pt-1">
+                        <CommuteWidget propertyId={booking.propertyId} />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -866,20 +874,20 @@ function TenantDashboardContent() {
       )}
 
       {activeTab === 'tickets' && (
-        <div className="animate-in space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-xs">
+        <div className="animate-in space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
             <div>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Wrench className="w-5 h-5 text-emerald-500" /> Maintenance & Repair Tickets
+              <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Maintenance &amp; Repair Tickets
               </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
                 Track real-time resolution status and scheduled caretaker visits for your residence.
               </p>
             </div>
             {activeBookings.length > 0 && (
               <Link
                 href={`/dashboard/tenant/tickets/new?propertyId=${activeBookings[0].propertyId}`}
-                className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 shrink-0 cursor-pointer"
+                className="px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg shadow-xs transition-all flex items-center gap-2 shrink-0 cursor-pointer self-start sm:self-auto"
               >
                 <Wrench className="w-3.5 h-3.5" />
                 <span>Report an Issue</span>
@@ -890,18 +898,18 @@ function TenantDashboardContent() {
           {ticketsLoading ? (
             <SkeletonTable rows={3} columns={4} />
           ) : tickets.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Wrench className="w-8 h-8 text-[var(--muted-foreground)]" />
+            <div className="py-14 text-center flex flex-col items-center">
+              <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                <Wrench className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Active Maintenance Tickets</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto">
-                Everything in your room is functioning properly. If you experience plumbing, electrical, or lock issues, submit a ticket to alert your caretaker.
+              <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Active Maintenance Tickets</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto leading-relaxed">
+                Everything in your residence is functioning properly. If you experience plumbing, electrical, or lock issues, submit a ticket to alert your caretaker.
               </p>
               {activeBookings.length > 0 && (
                 <Link
                   href={`/dashboard/tenant/tickets/new?propertyId=${activeBookings[0].propertyId}`}
-                  className="mt-5 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="mt-4 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg shadow-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   <Wrench className="w-3.5 h-3.5" />
                   <span>Report First Issue</span>
@@ -909,45 +917,49 @@ function TenantDashboardContent() {
               )}
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {tickets.map((ticket: any) => (
-                <div key={ticket.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 rounded-2xl border flex flex-col justify-between gap-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <h3 className="font-bold text-base text-zinc-950 dark:text-white">{ticket.title}</h3>
+                <div key={ticket.id} className="py-5 first:pt-1 last:pb-1 flex flex-col gap-3 transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-900/30 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
                         {getPriorityBadge(ticket.priority)}
+                        <h3 className="font-bold text-base text-zinc-950 dark:text-white">{ticket.title}</h3>
                       </div>
                       <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed whitespace-pre-line">
                         {ticket.description}
                       </p>
-                      <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-zinc-500 dark:text-zinc-400 pt-1">
-                        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-emerald-500" /> {ticket.property?.title}</span>
-                        <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 pt-1">
+                        <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-zinc-400" /> {ticket.property?.title}</span>
+                        <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                        <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-zinc-400" /> {new Date(ticket.createdAt).toLocaleDateString()}</span>
                         {ticket.scheduledDate && (
-                          <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-bold">
-                            <Clock className="w-3.5 h-3.5" /> Scheduled Visit: {new Date(ticket.scheduledDate).toLocaleDateString()}
-                          </span>
+                          <>
+                            <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                            <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-semibold">
+                              <Clock className="w-3.5 h-3.5" /> Caretaker Visit: {new Date(ticket.scheduledDate).toLocaleDateString()}
+                            </span>
+                          </>
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="shrink-0 self-start sm:self-auto">
                       {getStatusBadge(ticket.status)}
                     </div>
                   </div>
 
-                  {/* Photo Proof & Completion Proof Section */}
+                  {/* Photo Proof & Resolution Attachments (Clean hairline row) */}
                   {(ticket.imageUrl || ticket.completionImageUrl || ticket.resolutionNotes) && (
-                    <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center gap-3">
+                    <div className="pt-2.5 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center gap-2.5 text-xs">
                       {ticket.imageUrl && (
                         <a 
                           href={getImageUrl(ticket.imageUrl)} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 font-semibold text-zinc-800 dark:text-zinc-200 transition-colors cursor-pointer border border-zinc-200 dark:border-zinc-700"
                         >
-                          <Camera className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>View Your Attached Photo Proof</span>
+                          <Camera className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Tenant Photo</span>
                         </a>
                       )}
                       {ticket.completionImageUrl && (
@@ -955,17 +967,16 @@ function TenantDashboardContent() {
                           href={getImageUrl(ticket.completionImageUrl)} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 text-xs font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/60 font-semibold text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                          <span>View Caretaker Completion Proof</span>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <span>Caretaker Proof</span>
                         </a>
                       )}
                       {ticket.resolutionNotes && (
-                        <div className="w-full mt-1 p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-zinc-700 dark:text-zinc-300">
-                          <span className="font-bold text-emerald-800 dark:text-emerald-400">Resolution Note: </span>
-                          <span>{ticket.resolutionNotes}</span>
-                        </div>
+                        <span className="text-zinc-600 dark:text-zinc-400">
+                          <strong className="text-zinc-900 dark:text-zinc-200 font-semibold">Note:</strong> {ticket.resolutionNotes}
+                        </span>
                       )}
                     </div>
                   )}
@@ -978,85 +989,92 @@ function TenantDashboardContent() {
 
       {/* My Reviews Tab */}
       {activeTab === 'reviews' && (
-        <div className="animate-in space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold">My Reviews</h2>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">Reviews you've submitted for completed stays. You can appeal any flagged review.</p>
-            </div>
+        <div className="animate-in space-y-5">
+          <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> My Verified Reviews &amp; Ratings
+            </h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Verified reviews submitted for completed hostel and residential stays. You can appeal any moderated rating.
+            </p>
           </div>
 
-
           {myReviewsLoading ? (
-            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+            <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-emerald-600" /></div>
           ) : myReviewsData?.reviews?.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center border border-[var(--border)]">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Star className="w-8 h-8 text-[var(--muted-foreground)]" />
+            <div className="py-14 text-center flex flex-col items-center">
+              <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                <Star className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold">No reviews yet</h3>
-              <p className="text-[var(--muted-foreground)] mt-2">Once you complete a stay, you can leave a verified review for the property.</p>
+              <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Reviews Submitted Yet</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                Once your stay is completed, you can leave verified feedback to help other Ghanaian students and residents.
+              </p>
             </div>
           ) : (
-            <div className="grid gap-5">
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {myReviewsData?.reviews?.map((review: any) => (
-                <div key={review.id} className={`bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 border ${review.isFlagged ? 'border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-900/10' : 'border-[var(--border)]'}`}>
-                  <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
+                <div key={review.id} className="py-5 first:pt-1 last:pb-1 space-y-2.5 transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-900/30 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-xl">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                      <h3 className="font-bold text-lg">{review.booking?.property?.title || 'Property'}</h3>
-                      <p className="text-sm text-[var(--muted-foreground)] flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3" /> {review.booking?.property?.location || 'Location'}
+                      <h3 className="font-bold text-base text-zinc-950 dark:text-white">{review.booking?.property?.title || 'Property'}</h3>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3.5 h-3.5 text-zinc-400" /> {review.booking?.property?.location || 'Location'}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {review.isFlagged ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-xs font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-800 dark:bg-red-950/60 dark:text-red-300 rounded text-[10px] font-mono font-bold uppercase border border-red-200 dark:border-red-900/60">
                           <Flag className="w-3 h-3" /> Flagged
                         </span>
                       ) : review.isModerated ? (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-medium">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded text-[10px] font-mono font-medium border border-zinc-200 dark:border-zinc-700">
                           <Clock className="w-3 h-3" /> Under Review
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-bold">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 rounded text-[10px] font-mono font-bold uppercase border border-emerald-200/80 dark:border-emerald-800/60">
                           <CheckCircle className="w-3 h-3" /> Published
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className={`w-5 h-5 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-slate-700'}`} />
-                    ))}
-                    <span className="text-sm text-[var(--muted-foreground)] ml-1">{new Date(review.createdAt).toLocaleDateString()}</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-zinc-300 dark:text-zinc-700'}`} />
+                      ))}
+                    </div>
+                    <span className="text-xs text-zinc-400 ml-1.5 font-mono">{new Date(review.createdAt).toLocaleDateString()}</span>
                   </div>
 
                   {review.comment && (
-                    <p className="text-sm text-[var(--muted-foreground)] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-[var(--border)] italic leading-relaxed">&quot;{review.comment}&quot;</p>
+                    <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed italic">
+                      &quot;{review.comment}&quot;
+                    </p>
                   )}
 
                   {/* Appeal Section */}
                   {(review.isFlagged || review.isModerated) && (
-                    <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                    <div className="pt-2 text-xs">
                       {review.appealStatus === 'PENDING' ? (
-                        <div className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400 font-medium">
-                          <Clock className="w-4 h-4" /> Your appeal is pending admin review.
+                        <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
+                          <Clock className="w-3.5 h-3.5" /> Appeal is pending admin review.
                         </div>
                       ) : review.appealStatus === 'ACCEPTED' ? (
-                        <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 font-medium">
-                          <CheckCircle className="w-4 h-4" /> Appeal accepted — your review is reinstated.
+                        <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-medium">
+                          <CheckCircle className="w-3.5 h-3.5" /> Appeal accepted — review reinstated.
                         </div>
                       ) : review.appealStatus === 'REJECTED' ? (
-                        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 font-medium">
-                          <XCircle className="w-4 h-4" /> Appeal rejected by admin.
+                        <div className="flex items-center gap-1.5 text-red-700 dark:text-red-400 font-medium">
+                          <XCircle className="w-3.5 h-3.5" /> Appeal rejected by moderation desk.
                         </div>
                       ) : (
                         <Link
                           href={`/dashboard/tenant/appeals/new?reviewId=${review.id}`}
-                          className="flex items-center gap-2 text-sm font-bold text-[var(--primary)] hover:underline"
+                          className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400 hover:underline"
                         >
-                          <MessageSquare className="w-4 h-4" /> Submit an Appeal
+                          <MessageSquare className="w-3.5 h-3.5" /> Submit Appeal Dossier
                         </Link>
                       )}
                     </div>
@@ -1071,133 +1089,139 @@ function TenantDashboardContent() {
       {activeTab === 'roommates' && (
         <div className="animate-in space-y-6">
           {profileLoading ? (
-            <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+            <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-emerald-600" /></div>
           ) : !hasProfile || isEditingProfile ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-8 rounded-2xl max-w-2xl border">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl">
-                  <UserPlus className="w-6 h-6 text-[var(--primary)]" />
+            <div className="pb-6 border-b border-zinc-200 dark:border-zinc-800 space-y-5 max-w-2xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-zinc-800 dark:text-zinc-200">
+                  <UserPlus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold">{hasProfile ? 'Edit' : 'Create'} Roommate Profile</h2>
-                  <p className="text-sm text-[var(--muted-foreground)]">Share your habits to find the perfect compatible roommate.</p>
+                  <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight">{hasProfile ? 'Edit' : 'Create'} Roommate Profile</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Share your living habits to find compatible roommates across your campus.</p>
                 </div>
               </div>
               
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-4 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1">Max Budget (GHS / yr)</label>
-                    <input type="number" className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.budget} onChange={(e) => setRoommateProfile({...roommateProfile, budget: Number(e.target.value)})} />
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Max Budget (GH₵ / yr)</label>
+                    <input type="number" className="w-full p-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg bg-transparent focus:ring-1 focus:ring-emerald-600 outline-none" value={roommateProfile.budget} onChange={(e) => setRoommateProfile({...roommateProfile, budget: Number(e.target.value)})} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Cleanliness</label>
-                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.cleanliness} onChange={(e) => setRoommateProfile({...roommateProfile, cleanliness: e.target.value})}>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Cleanliness</label>
+                    <select className="w-full p-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-[#12151D] focus:ring-1 focus:ring-emerald-600 outline-none" value={roommateProfile.cleanliness} onChange={(e) => setRoommateProfile({...roommateProfile, cleanliness: e.target.value})}>
                       <option value="NEAT">Very Neat</option>
                       <option value="AVERAGE">Average</option>
-                      <option value="MESSY">A bit messy</option>
+                      <option value="MESSY">A bit relaxed</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Sleep Habits</label>
-                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.sleepHabits} onChange={(e) => setRoommateProfile({...roommateProfile, sleepHabits: e.target.value})}>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Sleep Habits</label>
+                    <select className="w-full p-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-[#12151D] focus:ring-1 focus:ring-emerald-600 outline-none" value={roommateProfile.sleepHabits} onChange={(e) => setRoommateProfile({...roommateProfile, sleepHabits: e.target.value})}>
                       <option value="EARLY_BIRD">Early Bird</option>
                       <option value="NIGHT_OWL">Night Owl</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1">Study Habits</label>
-                    <select className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none" value={roommateProfile.studyHabits} onChange={(e) => setRoommateProfile({...roommateProfile, studyHabits: e.target.value})}>
-                      <option value="QUIET">Quiet & Focused</option>
-                      <option value="SOCIAL">Social & Collaborative</option>
+                    <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Study Habits</label>
+                    <select className="w-full p-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-[#12151D] focus:ring-1 focus:ring-emerald-600 outline-none" value={roommateProfile.studyHabits} onChange={(e) => setRoommateProfile({...roommateProfile, studyHabits: e.target.value})}>
+                      <option value="QUIET">Quiet &amp; Focused</option>
+                      <option value="SOCIAL">Social &amp; Collaborative</option>
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Bio (Optional)</label>
-                  <textarea className="w-full p-3 border border-[var(--border)] rounded-xl bg-transparent focus:ring-2 focus:ring-[var(--primary)] outline-none min-h-[80px]" placeholder="Tell potential roommates a bit about yourself..." value={roommateProfile.bio} onChange={(e) => setRoommateProfile({...roommateProfile, bio: e.target.value})} />
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Personal Bio</label>
+                  <textarea className="w-full p-2.5 text-xs border border-zinc-200 dark:border-zinc-700 rounded-lg bg-transparent focus:ring-1 focus:ring-emerald-600 outline-none min-h-[70px]" placeholder="Tell prospective roommates a bit about yourself..." value={roommateProfile.bio} onChange={(e) => setRoommateProfile({...roommateProfile, bio: e.target.value})} />
                 </div>
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-2.5 pt-2">
                   {hasProfile && (
-                    <button onClick={() => setIsEditingProfile(false)} className="px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">Cancel</button>
+                    <button onClick={() => setIsEditingProfile(false)} className="px-3.5 py-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white rounded-lg cursor-pointer">Cancel</button>
                   )}
-                  <button onClick={() => profileMutation.mutate(roommateProfile)} disabled={profileMutation.isPending} className="px-6 py-2 bg-[var(--primary)] text-white text-sm font-bold rounded-lg hover:opacity-90 transition-opacity flex items-center gap-2">
-                    {profileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />} Save Profile
+                  <button onClick={() => profileMutation.mutate(roommateProfile)} disabled={profileMutation.isPending} className="px-4 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer">
+                    {profileMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />} Save Profile
                   </button>
                 </div>
               </div>
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-900">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center gap-3">
-                  <HeartHandshake className="w-6 h-6 text-[var(--primary)]" />
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center justify-center text-emerald-700 dark:text-emerald-400 shrink-0">
+                    <HeartHandshake className="w-5 h-5" />
+                  </div>
                   <div>
-                    <h3 className="font-bold text-sm">Roommate Finder is Active</h3>
-                    <p className="text-xs text-[var(--muted-foreground)]">You are currently visible to other {roommateProfileResponse?.profile?.user?.gender || 'students'} at your campus.</p>
+                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white">Roommate Matcher is Active</h3>
+                    <p className="text-xs text-zinc-500">You are visible to other verified students at your campus.</p>
                   </div>
                 </div>
-                <button onClick={() => setIsEditingProfile(true)} className="px-4 py-2 text-xs font-bold bg-white dark:bg-slate-800 shadow-sm border rounded-lg hover:bg-slate-50 flex items-center gap-2">
-                  <Edit3 className="w-3 h-3" /> Edit Profile
+                <button onClick={() => setIsEditingProfile(true)} className="px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+                  <Edit3 className="w-3.5 h-3.5" /> Edit Habits
                 </button>
               </div>
 
               {matchesLoading ? (
-                <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" /></div>
+                <div className="flex justify-center p-12"><Loader2 className="w-6 h-6 animate-spin text-emerald-600" /></div>
               ) : matches.length === 0 ? (
-                <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center border">
-                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                    <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
+                <div className="py-14 text-center flex flex-col items-center">
+                  <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                    <Users className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-bold">No exact matches yet</h3>
-                  <p className="text-[var(--muted-foreground)]">Check back later as more students at your campus join.</p>
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Exact Matches Yet</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                    Check back shortly as more students from your university register their preferences.
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {matches.map((match: any) => (
-                    <div key={match.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 border flex flex-col h-full hover:border-[var(--primary)] transition-colors">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center text-indigo-700 font-bold text-lg">
-                            {match.user.firstName[0]}
+                    <div key={match.id} className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center text-zinc-800 dark:text-zinc-200 font-bold text-xs">
+                              {match.user.firstName[0]}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-sm text-zinc-950 dark:text-white">{match.user.firstName} {match.user.lastName[0]}.</h3>
+                              <p className="text-[11px] text-zinc-500">{match.user.campus}</p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-bold">{match.user.firstName} {match.user.lastName[0]}.</h3>
-                            <p className="text-xs text-[var(--muted-foreground)]">{match.user.campus}</p>
+                          {match.score > 2 && <span className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-400 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800/60">Top Match</span>}
+                        </div>
+                        
+                        <div className="space-y-1.5 text-xs text-zinc-600 dark:text-zinc-400">
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Budget:</span>
+                            <span className="font-semibold text-zinc-900 dark:text-white">GH₵ {match.budget?.toLocaleString()}</span>
                           </div>
-                        </div>
-                        {match.score > 2 && <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full">Top Match</span>}
-                      </div>
-                      
-                      <div className="space-y-2 mb-6 flex-1 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-[var(--muted-foreground)]">Budget:</span>
-                          <span className="font-bold">GHS {match.budget}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--muted-foreground)]">Cleanliness:</span>
-                          <span className="font-medium">{match.cleanliness}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--muted-foreground)]">Sleep:</span>
-                          <span className="font-medium">{match.sleepHabits.replace('_', ' ')}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-[var(--muted-foreground)]">Study:</span>
-                          <span className="font-medium">{match.studyHabits}</span>
-                        </div>
-                        {match.bio && (
-                          <div className="pt-2 mt-2 border-t text-xs text-slate-600 dark:text-slate-400 italic">
-                            "{match.bio}"
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Cleanliness:</span>
+                            <span className="font-medium">{match.cleanliness}</span>
                           </div>
-                        )}
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Schedule:</span>
+                            <span className="font-medium">{match.sleepHabits?.replace('_', ' ')}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-zinc-400">Study:</span>
+                            <span className="font-medium">{match.studyHabits}</span>
+                          </div>
+                          {match.bio && (
+                            <p className="pt-2 text-[11px] text-zinc-500 italic border-t border-zinc-100 dark:border-zinc-800/80">
+                              &quot;{match.bio}&quot;
+                            </p>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="pt-4 mt-auto border-t">
-                        <p className="text-xs font-semibold mb-2">Contact:</p>
-                        <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
-                          <div className="bg-slate-100 dark:bg-slate-800 p-2 rounded w-full text-center select-all">{match.user.email}</div>
-                        </div>
+                      <div className="pt-3 mt-3 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs">
+                        <span className="text-zinc-400">Contact</span>
+                        <a href={`mailto:${match.user.email}`} className="font-mono text-emerald-700 dark:text-emerald-400 hover:underline">
+                          {match.user.email}
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -1209,35 +1233,35 @@ function TenantDashboardContent() {
       )}
 
       {activeTab === 'documents' && (
-        <div className="animate-in space-y-6">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="animate-in space-y-5">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
             <div>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-500" /> Tenancy Agreements & Documents
+              <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-2">
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> Tenancy Agreements &amp; Legal Leases
               </h2>
-              <p className="text-sm text-[var(--muted-foreground)] mt-1">
-                Access your legally binding lease agreements, tenancy terms, and official payment receipts.
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Statutory tenancy agreements governed under the Ghana Rent Act, 1963 (Act 220) with SHA-256 cryptographic seals.
               </p>
             </div>
-            <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-700">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Verified Legal Copy
+            <div className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 rounded-md text-[11px] font-semibold flex items-center gap-1.5 border border-zinc-200 dark:border-zinc-700/80 shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Rent Act 220 Compliant
             </div>
           </div>
 
           {agreementsLoading ? (
             <SkeletonTable rows={3} columns={4} />
           ) : agreements.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <FileText className="w-8 h-8 text-[var(--muted-foreground)]" />
+            <div className="py-14 text-center flex flex-col items-center">
+              <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                <FileText className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Tenancy Agreements Yet</h3>
+              <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Tenancy Agreements Yet</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mt-1 mb-4 leading-relaxed">
                 When a landlord confirms your reservation, your statutory tenancy agreement under the Ghana Rent Act, 1963 (Act 220) will appear here for review and digital signature.
               </p>
             </div>
           ) : (
-            <div className="grid gap-6">
+            <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
               {agreements.map((agreement: any) => {
                 const b = agreement.booking;
                 const p = b?.property || {};
@@ -1245,28 +1269,30 @@ function TenantDashboardContent() {
                 const isCompleted = agreement.status === 'COMPLETED' || (Boolean(agreement.tenantSignature) && Boolean(agreement.landlordSignature));
 
                 return (
-                  <div key={agreement.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border border-[var(--border)] hover:border-sky-500/30 transition-all space-y-5">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[var(--border)] pb-4">
+                  <div key={agreement.id} className="py-5 first:pt-1 last:pb-1 space-y-3 transition-colors hover:bg-zinc-50/60 dark:hover:bg-zinc-900/30 -mx-3 px-3 sm:-mx-4 sm:px-4 rounded-xl">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-extrabold text-[var(--foreground)]">{p.title || 'Property Lease'}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-bold text-zinc-950 dark:text-white">{p.title || 'Property Lease'}</h3>
                           <span className={clsx(
-                            "px-2.5 py-0.5 rounded-full text-xs font-bold uppercase",
-                            isCompleted ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                            "px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase",
+                            isCompleted ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60" : "bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800/60"
                           )}>
-                            {isCompleted ? 'COMPLETED' : agreement.status}
+                            {isCompleted ? 'EXECUTED & COMPLETED' : agreement.status}
                           </span>
                         </div>
-                        <p className="text-xs text-[var(--muted-foreground)] mt-1 flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5" /> {p.location || 'N/A'} • Room: {b?.room?.roomType || 'Standard'}
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400" /> {p.location || 'N/A'}
+                          <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                          <span>Room: {b?.room?.roomType || 'Standard'}</span>
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 shrink-0">
                         {!isCompleted && (
                           <Link 
                             href={`/dashboard/agreements/${b.id}`}
-                            className="px-4 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                            className="px-3.5 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-xs"
                           >
                             Sign Agreement Now
                           </Link>
@@ -1274,57 +1300,48 @@ function TenantDashboardContent() {
                         {isCompleted && (
                           <button
                             onClick={() => handlePrintAgreement(agreement)}
-                            className="px-4 py-2 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-xs font-bold rounded-xl shadow-md hover:opacity-90 transition-all flex items-center gap-2"
+                            className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                           >
-                            <Printer className="w-4 h-4" /> Print / Receipt
+                            <Printer className="w-3.5 h-3.5" /> Print Official Copy
                           </button>
                         )}
                       </div>
                     </div>
 
-                    {/* Signatures & Execution Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1.5">
-                        <div className="font-bold text-[var(--muted-foreground)] uppercase text-[10px]">Tenant Signature</div>
-                        <div className="font-semibold text-sm flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="w-4 h-4" /> Signed by Tenant
-                        </div>
-                        <div className="text-[var(--muted-foreground)]">
-                          {agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString() : 'N/A'}
-                        </div>
+                    {/* Signatures & Execution Line */}
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs pt-1 border-t border-zinc-100 dark:border-zinc-800/80">
+                      <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Tenant: <strong>Signed</strong> {agreement.tenantSignedAt ? `on ${new Date(agreement.tenantSignedAt).toLocaleDateString()}` : ''}</span>
                       </div>
 
-                      <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-[var(--border)] space-y-1.5">
-                        <div className="font-bold text-[var(--muted-foreground)] uppercase text-[10px]">Landlord Signature</div>
-                        <div className="font-semibold text-sm flex items-center gap-1.5 text-sky-600 dark:text-sky-400">
-                          <CheckCircle2 className="w-4 h-4" /> Signed by {l.firstName || 'Landlord'} {l.lastName || ''}
-                        </div>
-                        <div className="text-[var(--muted-foreground)]">
-                          {agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString() : 'Pending Landlord Counter-Signature'}
-                        </div>
+                      <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                        {agreement.landlordSignedAt ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Clock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        )}
+                        <span>Landlord ({l.firstName || 'Landlord'} {l.lastName || ''}): {agreement.landlordSignedAt ? <strong>Counter-signed</strong> : <span className="text-amber-600 dark:text-amber-400 font-medium">Pending Counter-Signature</span>}</span>
                       </div>
                     </div>
 
-                    {/* Cryptographic SHA-256 Verification Seal */}
+                    {/* Cryptographic SHA-256 Verification Monospace Line */}
                     {agreement.cryptographicHash && (
-                      <div className="p-4 rounded-xl bg-slate-950 text-slate-200 border border-slate-800 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
-                            <Lock className="w-3.5 h-3.5" /> SHA-256 Cryptographic Hash Seal
-                          </span>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(agreement.cryptographicHash);
-                              toast.success('SHA-256 Hash copied to clipboard!');
-                            }}
-                            className="text-xs font-semibold text-sky-400 hover:text-white flex items-center gap-1 transition-colors"
-                          >
-                            <Copy className="w-3.5 h-3.5" /> Copy Hash
-                          </button>
+                      <div className="pt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900/40 px-3 py-1.5 rounded-md border border-zinc-200/60 dark:border-zinc-800/60">
+                        <div className="flex items-center gap-2 truncate max-w-xl">
+                          <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span className="font-semibold text-zinc-700 dark:text-zinc-300 uppercase text-[10px]">SHA-256:</span>
+                          <span className="truncate">{agreement.cryptographicHash}</span>
                         </div>
-                        <div className="font-mono text-[11px] text-sky-200/90 break-all select-all bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
-                          {agreement.cryptographicHash}
-                        </div>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(agreement.cryptographicHash);
+                            toast.success('SHA-256 Hash copied to clipboard');
+                          }}
+                          className="text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white flex items-center gap-1 cursor-pointer font-sans text-xs shrink-0"
+                        >
+                          <Copy className="w-3 h-3" /> Copy
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1337,104 +1354,95 @@ function TenantDashboardContent() {
 
       {activeTab === 'payments' && (
         <div className="animate-in space-y-6">
-          {/* Summary Financial Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-6 rounded-2xl border bg-sky-50/80 dark:bg-sky-950/30 border-sky-100 dark:border-sky-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-sky-900/70 dark:text-sky-300/80 mb-1">Total Paid Rent</p>
-                <p className="text-3xl font-black text-sky-600 dark:text-sky-400">GHS {totalPaidGhs.toLocaleString()}</p>
+          {/* ── DIRECT CANVAS FINANCIAL READOUT (STRIPE/BREX STYLE) ── */}
+          <div className="pb-6 border-b border-zinc-200 dark:border-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="space-y-1">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Total Paid Rent</p>
+                <p className="text-3xl font-black text-zinc-950 dark:text-white tabular-nums tracking-tight">GH₵ {totalPaidGhs.toLocaleString()}</p>
+                <p className="text-xs text-zinc-500">Cumulative verified tenancy disbursements</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-sky-100 dark:bg-sky-900/60 text-sky-600 dark:text-sky-300 flex items-center justify-center shadow-inner">
-                <CreditCard className="w-6 h-6" />
-              </div>
-            </div>
 
-            <div className="p-6 rounded-2xl border bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-emerald-900/70 dark:text-emerald-300/80 mb-1">Verified Receipts</p>
-                <p className="text-3xl font-black text-emerald-600 dark:text-emerald-400">{transactions.length}</p>
+              <div className="space-y-1 sm:border-l sm:border-zinc-200 dark:sm:border-zinc-800 sm:pl-6">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Verified Receipts</p>
+                <p className="text-3xl font-black text-emerald-700 dark:text-emerald-400 tabular-nums tracking-tight">{transactions.length}</p>
+                <p className="text-xs text-zinc-500">Official Rent Act § 19 tax compliant</p>
               </div>
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shadow-inner">
-                <Receipt className="w-6 h-6" />
-              </div>
-            </div>
 
-            <div className="p-6 rounded-2xl border bg-indigo-50/80 dark:bg-indigo-950/30 border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between shadow-sm transition-all hover:shadow-md">
-              <div>
-                <p className="text-xs font-extrabold uppercase tracking-wider text-indigo-900/70 dark:text-indigo-300/80 mb-1">Payment Gateway</p>
-                <p className="text-sm font-extrabold text-indigo-950 dark:text-indigo-200 mt-1">Paystack Encrypted</p>
-                <p className="text-xs text-indigo-700/70 dark:text-indigo-300/70">MoMo & Card Supported</p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shadow-inner">
-                <Lock className="w-6 h-6" />
+              <div className="space-y-1 sm:border-l sm:border-zinc-200 dark:sm:border-zinc-800 sm:pl-6">
+                <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Escrow Safeguard</p>
+                <p className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 mt-1">
+                  <Lock className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Paystack &amp; BoG Escrow
+                </p>
+                <p className="text-xs text-zinc-500">MTN MoMo, Telecel Cash &amp; Bank Cards</p>
               </div>
             </div>
           </div>
 
-          {/* Transactions Table */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl border border-[var(--border)] overflow-hidden">
-            <div className="p-5 border-b border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/50 flex justify-between items-center">
+          {/* ── FINANCIAL PAYMENT LEDGER ── */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
               <div>
-                <h3 className="text-lg font-bold text-[var(--foreground)]">Financial Payment Ledger</h3>
-                <p className="text-xs text-[var(--muted-foreground)]">Download official payment receipts for proof of tenancy.</p>
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white">Transaction History &amp; Official Receipts</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">Download itemized receipts for tax and proof of tenancy.</p>
               </div>
             </div>
 
             {transactionsLoading ? (
               <SkeletonTable rows={4} columns={5} />
             ) : transactions.length === 0 ? (
-              <div className="p-12 text-center flex flex-col items-center">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                  <Receipt className="w-8 h-8 text-[var(--muted-foreground)]" />
+              <div className="py-14 text-center flex flex-col items-center">
+                <div className="w-14 h-14 bg-zinc-100 dark:bg-zinc-900 rounded-full flex items-center justify-center mb-3 text-zinc-400">
+                  <Receipt className="w-6 h-6" />
                 </div>
-                <h4 className="text-lg font-bold text-[var(--foreground)]">No Payment History Yet</h4>
-                <p className="text-xs text-[var(--muted-foreground)] max-w-sm mt-1 mb-4">
+                <h4 className="text-base font-bold text-zinc-950 dark:text-white">No Payment History Yet</h4>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mt-1 mb-4 leading-relaxed">
                   When you complete rental payments on Paystack, your receipts and transaction histories will populate here.
                 </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead className="bg-[#0F5132] text-white">
-                    <tr>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase">Transaction Ref</th>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase">Property &amp; Room</th>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase">Amount</th>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase">Date</th>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase">Status</th>
-                      <th className="px-6 py-4 font-extrabold text-white uppercase text-right">Receipt</th>
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800 text-[10px] font-mono font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                      <th className="py-3 pr-4">Transaction Ref</th>
+                      <th className="py-3 px-4">Property &amp; Unit</th>
+                      <th className="py-3 px-4">Amount</th>
+                      <th className="py-3 px-4">Date</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 pl-4 text-right">Receipt</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
+                  <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
                     {transactions.map((tx: any) => {
                       const p = tx.property || {};
 
                       return (
-                        <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-mono font-bold text-[var(--foreground)] text-xs">{tx.reference}</div>
-                            <div className="text-[10px] text-[var(--muted-foreground)]">Paystack Direct</div>
+                        <tr key={tx.id} className="hover:bg-zinc-50/70 dark:hover:bg-zinc-900/40 transition-colors">
+                          <td className="py-3.5 pr-4">
+                            <div className="font-mono font-semibold text-zinc-950 dark:text-white text-xs">{tx.reference}</div>
+                            <div className="text-[10px] text-zinc-400">Paystack Direct</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-[var(--foreground)] text-sm">{p.title || 'Property'}</div>
-                            <div className="text-[11px] text-[var(--muted-foreground)]">Room: {tx.room?.roomType || 'Standard Room'}</div>
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-zinc-900 dark:text-zinc-200 text-xs">{p.title || 'Property'}</div>
+                            <div className="text-[11px] text-zinc-500">Room: {tx.room?.roomType || 'Standard Room'}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="font-extrabold text-sm text-sky-600 dark:text-sky-400">GHS {tx.amount?.toLocaleString()}</div>
+                          <td className="py-3.5 px-4">
+                            <div className="font-bold text-sm text-zinc-950 dark:text-white tabular-nums">GH₵ {tx.amount?.toLocaleString()}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-[var(--foreground)]">{new Date(tx.createdAt).toLocaleDateString()}</div>
-                            <div className="text-[10px] text-[var(--muted-foreground)]">{new Date(tx.createdAt).toLocaleTimeString()}</div>
+                          <td className="py-3.5 px-4">
+                            <div className="text-zinc-800 dark:text-zinc-200">{new Date(tx.createdAt).toLocaleDateString()}</div>
+                            <div className="text-[10px] text-zinc-400">{new Date(tx.createdAt).toLocaleTimeString()}</div>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                          <td className="py-3.5 px-4">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/60">
                               {tx.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="py-3.5 pl-4 text-right">
                             <button
                               onClick={() => handlePrintReceipt(tx)}
-                              className="px-3 py-1.5 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg text-xs font-bold shadow hover:opacity-90 transition-opacity inline-flex items-center gap-1.5"
+                              className="px-2.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-200 rounded-lg text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-xs"
                             >
                               <Printer className="w-3.5 h-3.5" /> Receipt
                             </button>
@@ -1452,22 +1460,17 @@ function TenantDashboardContent() {
 
       {activeTab === 'safety' && (
         <div className="animate-in space-y-6">
-          {/* Header Banner */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center shrink-0 mt-0.5">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">
-                  Emergency &amp; Tenant Safety Center
-                </h2>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-2xl">
-                  One-tap direct dials for Ghanaian national first responders, campus security desks, and your active residence manager.
-                </p>
-              </div>
+          {/* ── HEADER BANNER (CANVAS DIRECT) ── */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 pb-4 border-b border-zinc-200 dark:border-zinc-800">
+            <div>
+              <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" /> Emergency &amp; Tenant Safety Directory
+              </h2>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 max-w-2xl">
+                One-tap direct dials for Ghanaian national first responders, campus security desks, and your active residence manager.
+              </p>
             </div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-zinc-700 dark:text-zinc-300 text-xs font-semibold shrink-0">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 text-zinc-700 dark:text-zinc-300 text-xs font-semibold shrink-0">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -1476,7 +1479,7 @@ function TenantDashboardContent() {
             </div>
           </div>
 
-          {/* Residence Manager & Location Card */}
+          {/* ── ACTIVE RESIDENCE MANAGER CONTACT STRIP ── */}
           {(() => {
             const activeBooking = activeBookings.find((b: any) => ['COMPLETED', 'APPROVED', 'CONFIRMED'].includes(b.status)) || activeBookings[0] || null;
             const p = activeBooking?.property;
@@ -1486,19 +1489,19 @@ function TenantDashboardContent() {
 
             if (!p) {
               return (
-                <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl flex items-center justify-between gap-4">
+                <div className="py-4 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-300 shrink-0">
                       <Building2 className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-zinc-900 dark:text-white">Akwaaba Resident Support Concierge</h4>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">Available 24/7 for tenant onboarding, lease safety, and general inquiries.</p>
+                      <h4 className="text-sm font-bold text-zinc-950 dark:text-white">Akwaaba Resident Support Concierge</h4>
+                      <p className="text-xs text-zinc-500">Available 24/7 for tenant onboarding, lease safety, and general inquiries.</p>
                     </div>
                   </div>
                   <a
                     href="tel:+233302000000"
-                    className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                    className="px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0"
                   >
                     Call Support (+233 30 200 0000)
                   </a>
@@ -1507,22 +1510,19 @@ function TenantDashboardContent() {
             }
 
             return (
-              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-100 dark:border-zinc-800/80">
+              <div className="py-4 border-b border-zinc-200 dark:border-zinc-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
-                        My Active Residence
+                      <span className="text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60">
+                        Current Residence Manager
                       </span>
                       {activeBooking?.id && (
-                        <>
-                          <span className="text-xs text-zinc-300 dark:text-zinc-700">•</span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Lease Ref #{activeBooking.id.slice(-6).toUpperCase()}</span>
-                        </>
+                        <span className="text-xs text-zinc-400 font-mono">Lease #{activeBooking.id.slice(-6).toUpperCase()}</span>
                       )}
                     </div>
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">{p.title}</h3>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5">
+                    <h3 className="text-lg font-bold text-zinc-950 dark:text-white tracking-tight">{p.title}</h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
                       <span>{p.location || 'Accra, Ghana'}</span>
                     </p>
@@ -1535,168 +1535,173 @@ function TenantDashboardContent() {
                       </p>
                       <p className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">{phone}</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300 shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-xs font-bold text-zinc-700 dark:text-zinc-300 shrink-0">
                       {(p.landlord?.firstName?.[0] || 'H')}{(p.landlord?.lastName?.[0] || 'M')}
                     </div>
                   </div>
                 </div>
 
-                {/* Location Copy Strip for Dispatch */}
-                <div className="p-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-xl border border-zinc-200/70 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-300">
+                {/* Dispatch & Action Strip */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs pt-1">
+                  <div className="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                     <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
-                    <span>Emergency Dispatch Address: <strong className="text-zinc-900 dark:text-white font-semibold">{fullAddress}</strong></span>
+                    <span>Dispatch Address: <strong className="text-zinc-900 dark:text-white font-medium">{fullAddress}</strong></span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(fullAddress);
+                        setCopiedDispatchAddress(true);
+                        toast.success('Dispatch address copied to clipboard');
+                        setTimeout(() => setCopiedDispatchAddress(false), 2500);
+                      }}
+                      className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white inline-flex items-center gap-1 font-semibold ml-1 cursor-pointer"
+                    >
+                      {copiedDispatchAddress ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedDispatchAddress ? 'Copied' : 'Copy'}</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(fullAddress);
-                      setCopiedDispatchAddress(true);
-                      toast.success('Dispatch address copied to clipboard');
-                      setTimeout(() => setCopiedDispatchAddress(false), 2500);
-                    }}
-                    className="px-3 py-1.5 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700/60 rounded-lg font-semibold text-zinc-700 dark:text-zinc-200 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                  >
-                    {copiedDispatchAddress ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedDispatchAddress ? 'Copied' : 'Copy Dispatch Address'}</span>
-                  </button>
-                </div>
 
-                {/* Direct Action Buttons */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <a
-                    href={`tel:${cleanPhone}`}
-                    className="px-4 py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs"
-                  >
-                    <PhoneCall className="w-4 h-4" /> Call Property Manager Now
-                  </a>
-                  <a
-                    href={`https://wa.me/${cleanPhone.replace('+', '')}?text=URGENT%20SAFETY%20ALERT:%20I%20am%20a%20tenant%20at%20${encodeURIComponent(p?.title)}%20and%20require%20immediate%20assistance.`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-4 py-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs border border-zinc-800 dark:border-zinc-700"
-                  >
-                    <MessageSquare className="w-4 h-4" /> WhatsApp Urgent Alert
-                  </a>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={`tel:${cleanPhone}`}
+                      className="px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> Call Manager
+                    </a>
+                    <a
+                      href={`https://wa.me/${cleanPhone.replace('+', '')}?text=URGENT%20SAFETY%20ALERT:%20I%20am%20a%20tenant%20at%20${encodeURIComponent(p?.title)}%20and%20require%20immediate%20assistance.`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp
+                    </a>
+                  </div>
                 </div>
               </div>
             );
           })()}
 
-          {/* National & Campus Hotlines Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              {
-                name: 'Ghana Police Service',
-                category: 'National Security & Crime Patrol',
-                hotline: '191 / 112',
-                dialUrl: 'tel:191',
-                description: 'Immediate response for security threats, burglary, intruder breach, and emergency patrol.',
-                icon: BadgeCheck,
-                badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200/60 dark:border-blue-900/40',
-              },
-              {
-                name: 'National Ambulance Service',
-                category: 'Medical Crises & Paramedic Dispatch',
-                hotline: '193 / 112',
-                dialUrl: 'tel:193',
-                description: 'Immediate paramedic ambulance dispatch, urgent medical trauma, and hospital conveyance.',
-                icon: HeartPulse,
-                badgeColor: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/40',
-              },
-              {
-                name: 'Ghana National Fire Service',
-                category: 'Fire Hazard & Rescue Operations',
-                hotline: '192 / 112',
-                dialUrl: 'tel:192',
-                description: 'Structural fires, smoke outbreaks, domestic gas leakages, and search & rescue response.',
-                icon: Flame,
-                badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/40',
-              },
-              {
-                name: 'Campus Security Desk',
-                category: 'Rapid Campus Patrol & Night Escort',
-                hotline: '+233 30 221 3820',
-                dialUrl: 'tel:+233302213820',
-                description: 'On-campus gate guards, student night patrols, and perimeter security control.',
-                icon: Radio,
-                badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/50',
-              },
-            ].map((service) => {
-              const Icon = service.icon;
-              return (
-                <div
-                  key={service.name}
-                  className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all shadow-xs flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/90 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 flex items-center justify-center shrink-0">
-                        <Icon className="w-5 h-5 text-zinc-700 dark:text-zinc-200" />
-                      </div>
-                      <span className={clsx("text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border", service.badgeColor)}>
-                        {service.hotline}
-                      </span>
-                    </div>
+          {/* ── NATIONAL & CAMPUS HOTLINES DIRECTORY ── */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-wider text-[11px] font-mono">
+              National First Responders &amp; Security Hotlines
+            </h3>
 
-                    <div>
-                      <h4 className="font-bold text-sm text-zinc-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                        {service.name}
-                      </h4>
-                      <p className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        {service.category}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  name: 'Ghana Police Service',
+                  category: 'Security & Crime Patrol',
+                  hotline: '191 / 112',
+                  dialUrl: 'tel:191',
+                  description: 'Immediate response for burglary, threats, and emergency patrol.',
+                  icon: BadgeCheck,
+                  badgeColor: 'bg-blue-50 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200/80 dark:border-blue-900/60',
+                },
+                {
+                  name: 'National Ambulance',
+                  category: 'Paramedic & Trauma',
+                  hotline: '193 / 112',
+                  dialUrl: 'tel:193',
+                  description: 'Urgent medical emergencies and rapid hospital conveyance.',
+                  icon: HeartPulse,
+                  badgeColor: 'bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-200/80 dark:border-rose-900/60',
+                },
+                {
+                  name: 'National Fire Service',
+                  category: 'Fire & Gas Outbreaks',
+                  hotline: '192 / 112',
+                  dialUrl: 'tel:192',
+                  description: 'Structural fires, smoke, gas leaks, and search & rescue.',
+                  icon: Flame,
+                  badgeColor: 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-200/80 dark:border-amber-900/60',
+                },
+                {
+                  name: 'Campus Security',
+                  category: 'Night Patrol & Gating',
+                  hotline: '+233 30 221 3820',
+                  dialUrl: 'tel:+233302213820',
+                  description: 'Campus gate guards, night escort, and perimeter control.',
+                  icon: Radio,
+                  badgeColor: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60',
+                },
+              ].map((service) => {
+                const Icon = service.icon;
+                return (
+                  <div
+                    key={service.name}
+                    className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors flex flex-col justify-between"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Icon className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+                        <span className={clsx("text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border", service.badgeColor)}>
+                          {service.hotline}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-sm text-zinc-950 dark:text-white">
+                          {service.name}
+                        </h4>
+                        <p className="text-[11px] text-zinc-500">
+                          {service.category}
+                        </p>
+                      </div>
+
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                        {service.description}
                       </p>
                     </div>
 
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      {service.description}
-                    </p>
+                    <div className="pt-4 mt-auto">
+                      <a
+                        href={service.dialUrl}
+                        className="w-full py-1.5 px-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                      >
+                        <Phone className="w-3 h-3" /> Dial {service.hotline.split('/')[0].trim()}
+                      </a>
+                    </div>
                   </div>
-
-                  <div className="pt-5 mt-auto">
-                    <a
-                      href={service.dialUrl}
-                      className="w-full py-2.5 px-3 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-900 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-xs"
-                    >
-                      <Phone className="w-3.5 h-3.5" /> Call {service.hotline.split('/')[0].trim()}
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
 
-          {/* Emergency Action Guidelines & Protocols */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-zinc-100 dark:border-zinc-800/80">
+          {/* ── RESIDENT EMERGENCY PROTOCOLS (CLEAN 3-COLUMN LEDGER) ── */}
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-3">
+            <div className="flex items-center gap-2">
               <ClipboardCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">Resident Emergency Protocols &amp; Checklist</h3>
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                Resident Emergency Protocols &amp; Action Guidelines
+              </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              <div className="space-y-1">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                   <HeartPulse className="w-3.5 h-3.5 text-rose-500" /> Medical Emergency
                 </div>
-                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Stay calm, dial <strong>193 / 112</strong>, and clearly communicate your unit number and nearest street landmark. Keep compound gates open for paramedics.
+                <p>
+                  Dial <strong>193 / 112</strong> immediately. Communicate your unit number and nearest street landmark. Ensure compound gates are kept open for rapid paramedic entry.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+              <div className="space-y-1 md:border-l md:border-zinc-200 dark:md:border-zinc-800 md:pl-6">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                   <Flame className="w-3.5 h-3.5 text-amber-500" /> Fire &amp; Gas Leaks
                 </div>
-                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Evacuate immediately via stairwells — never use elevators. Pull the compound alarm if available, dial <strong>192</strong>, and assemble in the open yard.
+                <p>
+                  Evacuate via stairs — never use elevators. Dial <strong>192</strong>, pull compound alarms if available, and assemble at the designated compound open yard.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/60 space-y-1.5">
+              <div className="space-y-1 md:border-l md:border-zinc-200 dark:md:border-zinc-800 md:pl-6">
                 <div className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
                   <Lock className="w-3.5 h-3.5 text-blue-500" /> Intrusion &amp; Security
                 </div>
-                <p className="text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Bolt your deadlocks immediately. Dial <strong>191 / 112</strong>, notify your on-site compound caretaker via WhatsApp, and remain sheltered until clearance.
+                <p>
+                  Secure deadbolts immediately. Dial <strong>191 / 112</strong>, alert your compound caretaker via WhatsApp, and remain securely indoors until clearance is confirmed.
                 </p>
               </div>
             </div>
