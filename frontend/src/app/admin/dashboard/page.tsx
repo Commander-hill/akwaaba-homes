@@ -197,6 +197,74 @@ export default function AdminDashboardPage() {
 
       </div>
 
+      {/* ── HIGH-PRIORITY ACTION REQUIRED QUEUE (OPERATIONAL TRIAGE) ── */}
+      <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-amber-200 dark:border-amber-900/50 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+            <h2 className="text-xs font-black uppercase tracking-wider text-amber-950 dark:text-amber-200">
+              Immediate Operations &amp; Compliance Queue
+            </h2>
+          </div>
+          <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            Triage pending KYC documents, listings, and escrow releases
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Landlord KYC Review */}
+          <Link 
+            href="/admin/users"
+            className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 shrink-0 group-hover:scale-105 transition-transform">
+              <BadgeCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-white flex items-center gap-1">
+                <span>Landlord KYC &amp; Ghana Card</span>
+                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Audit uploaded Ghana Cards and statutory business registrations.</p>
+            </div>
+          </Link>
+
+          {/* Property Moderation */}
+          <Link 
+            href="/admin/properties"
+            className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] shrink-0 group-hover:scale-105 transition-transform">
+              <Building className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-white flex items-center gap-1">
+                <span>Property Quality Moderation</span>
+                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Audit new hostels, units, photos, and Act 220 pricing compliance.</p>
+            </div>
+          </Link>
+
+          {/* Escrow Disbursements */}
+          <Link 
+            href="/admin/transactions"
+            className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 dark:hover:border-zinc-600 transition-all group"
+          >
+            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 shrink-0 group-hover:scale-105 transition-transform">
+              <CreditCard className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-bold text-xs text-zinc-900 dark:text-white flex items-center gap-1">
+                <span>Escrow Settlements &amp; MoMo</span>
+                <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Release escrowed tenant rent following digital key handover sign-off.</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
       {/* ── 2-COLUMN OPERATIONAL WORKSPACE ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
@@ -252,62 +320,33 @@ export default function AdminDashboardPage() {
 
         </div>
 
-        {/* ── RIGHT COLUMN (35%): ACTION TRIAGE & BROADCAST ── */}
+        {/* ── RIGHT COLUMN (35%): SYSTEM BROADCAST & STATUTORY COMPLIANCE ── */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Priority Action Triage */}
-          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-xs">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center justify-between">
-              <span>Action Required Queue</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                Priority
+          {/* Statutory Rent Control Act 220 Compliance Guide */}
+          <div className="bg-white dark:bg-[#12151D] rounded-2xl p-5 border border-zinc-200 dark:border-zinc-800 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                Statutory Governance
               </span>
-            </h2>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                Ghana Rent Act 1963
+              </span>
+            </div>
 
-            <div className="space-y-2.5 text-xs">
-              
-              {/* Landlord KYC Review */}
-              <Link 
-                href="/admin/users"
-                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
-              >
-                <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 shrink-0">
-                  <BadgeCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-bold text-zinc-900 dark:text-white">Landlord KYC &amp; Ghana Card</div>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Review submitted IDs to grant Act 220 Verified status.</p>
-                </div>
-              </Link>
+            <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">
+              Rent Control Department Guidelines
+            </h3>
+            
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Section 19 of the Rent Act (Act 220) strictly mandates a maximum of 6 months advance rent for monthly tenancies. Ensure flagged listings conform before approving payouts.
+            </p>
 
-              {/* Property Moderation */}
-              <Link 
-                href="/admin/properties"
-                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
-              >
-                <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] shrink-0">
-                  <Building className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-bold text-zinc-900 dark:text-white">Property Quality Moderation</div>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Audit new listings before public publishing.</p>
-                </div>
-              </Link>
-
-              {/* Escrow Disbursements */}
-              <Link 
-                href="/admin/transactions"
-                className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700 flex items-start gap-3 hover:border-zinc-300 transition-all block"
-              >
-                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 shrink-0">
-                  <CreditCard className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="font-bold text-zinc-900 dark:text-white">Escrow Settlements &amp; MoMo</div>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Release tenant funds following key handover.</p>
-                </div>
-              </Link>
-
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-500">Rent Control Hotline:</span>
+              <a href="tel:+233302663955" className="font-mono font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">
+                +233 (0) 302 663 955
+              </a>
             </div>
           </div>
 

@@ -493,7 +493,116 @@ function TenantDashboardContent() {
       </div>
 
       {(activeTab === 'bookings' || activeTab === 'active-booking') && (
-        <div className="animate-in space-y-4">
+        <div className="animate-in space-y-6">
+          {/* ── PRIORITY HERO: MY CURRENT HOME (HUMAN-CENTERED RESIDENT TRIAGE) ── */}
+          {activeBooking && ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(activeBooking.status) && (
+            <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/10 via-white to-white dark:from-emerald-950/30 dark:via-[#12151D] dark:to-[#12151D] p-6 sm:p-7 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                <div className="flex items-start gap-4 sm:gap-5">
+                  <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-xs">
+                    {(() => {
+                      try {
+                        let imgs = activeBooking.property?.images;
+                        if (typeof imgs === 'string') imgs = JSON.parse(imgs);
+                        if (Array.isArray(imgs) && imgs.length > 0) {
+                          return <img src={getImageUrl(imgs[0])} className="w-full h-full object-cover" alt="Current Residence" />;
+                        }
+                      } catch (e) {}
+                      return <div className="w-full h-full flex items-center justify-center text-zinc-400"><Building2 className="w-7 h-7" /></div>;
+                    })()}
+                  </div>
+
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-600 text-white shadow-xs">
+                        My Current Home
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        {activeBooking.status === 'CHECKED_IN' || activeBooking.status === 'ACTIVE' 
+                          ? 'Active Tenancy' 
+                          : 'Move-In Clearance Ready'}
+                      </span>
+                      <span className="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-[#0F5132]" /> MoMo Escrow Verified
+                      </span>
+                    </div>
+
+                    <h2 className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white truncate">
+                      {activeBooking.property?.title}
+                    </h2>
+
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400">
+                      <span className="flex items-center gap-1 font-medium">
+                        <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span className="truncate">{activeBooking.property?.location}</span>
+                      </span>
+                      <span>•</span>
+                      <span className="font-bold text-emerald-700 dark:text-emerald-400">
+                        {activeBooking.room?.roomType || 'Standard Room'}
+                        {activeBooking.roomUnit?.unitNumber ? ` • Unit ${activeBooking.roomUnit.unitNumber}` : ''}
+                        {activeBooking.bed?.bedNumber ? ` • Bed ${activeBooking.bed.bedNumber}` : ''}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority Quick Actions */}
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <button
+                    onClick={() => setSelectedGatePassBooking(activeBooking)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-black shadow-xs transition-all cursor-pointer"
+                    title="Open Gate Pass QR for Security & Caretaker"
+                  >
+                    <GraduationCap className="w-4 h-4 text-zinc-950" />
+                    <span>Digital Gate Pass</span>
+                  </button>
+
+                  <Link
+                    href={`/dashboard/tenant/tickets/new?propertyId=${activeBooking.propertyId}`}
+                    className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors"
+                  >
+                    <Wrench className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Report Issue</span>
+                  </Link>
+
+                  <Link
+                    href={`/dashboard/agreements/${activeBooking.id}`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#12151D] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-zinc-500" />
+                    <span>Act 220 Lease</span>
+                  </Link>
+
+                  <button
+                    onClick={() => setActiveTab('billsplit')}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white dark:bg-[#12151D] hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-bold border border-zinc-200 dark:border-zinc-700 transition-colors cursor-pointer"
+                  >
+                    <DollarSign className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Split Utilities</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Tenancy Validity Bar */}
+              <div className="mt-4 pt-4 border-t border-zinc-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-4 text-zinc-500 dark:text-zinc-400">
+                  <span>Tenancy Term: <strong className="text-zinc-800 dark:text-zinc-200">{new Date(activeBooking.startDate).toLocaleDateString()} – {new Date(activeBooking.endDate).toLocaleDateString()}</strong></span>
+                  {activeBooking.price && (
+                    <span>Rate: <strong className="text-zinc-800 dark:text-zinc-200">GH₵ {activeBooking.price.toLocaleString()}</strong></span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Key Handover &amp; Room Inspection Cleared
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Sub-tabs if there are any cancelled or active bookings */}
           {!bookingsLoading && cancelledBookings.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-zinc-200 dark:border-zinc-800">

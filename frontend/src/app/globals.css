@@ -108,26 +108,65 @@
   .editorial-card {
     background-color: var(--card);
     border: 1px solid var(--border);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    border-radius: var(--radius);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   }
   .editorial-card:hover {
-    border-color: #A1A1AA;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.06), 0 2px 6px -2px rgb(0 0 0 / 0.04);
   }
   .dark .editorial-card:hover {
-    border-color: #3F485B;
+    border-color: #333B4F;
+    box-shadow: 0 4px 14px -2px rgb(0 0 0 / 0.35);
   }
   .hairline-border {
     border: 1px solid var(--border);
   }
+  .hairline-border-b {
+    border-bottom: 1px solid var(--border);
+  }
+  .hairline-border-t {
+    border-top: 1px solid var(--border);
+  }
   .text-editorial-title {
     letter-spacing: -0.028em;
+    font-weight: 800;
+  }
+  .btn-press {
+    transition: transform 0.1s ease, filter 0.1s ease;
+  }
+  .btn-press:active {
+    transform: scale(0.98);
+  }
+  .surface-subtle {
+    background-color: var(--muted);
+  }
+  .badge-emerald {
+    background-color: rgb(15 81 50 / 0.08);
+    color: #0F5132;
+    border: 1px solid rgb(15 81 50 / 0.2);
+  }
+  .dark .badge-emerald {
+    background-color: rgb(25 135 84 / 0.15);
+    color: #34D399;
+    border-color: rgb(25 135 84 / 0.3);
+  }
+  .badge-amber {
+    background-color: rgb(217 119 6 / 0.08);
+    color: #B45309;
+    border: 1px solid rgb(217 119 6 / 0.2);
+  }
+  .dark .badge-amber {
+    background-color: rgb(217 119 6 / 0.15);
+    color: #FBBF24;
+    border-color: rgb(217 119 6 / 0.3);
   }
   .animate-in {
-    animation: fadeIn 0.4s ease-out forwards;
+    animation: fadeIn 0.3s ease-out forwards;
   }
   .animate-slide-up {
-    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   .touch-scroll {
     -webkit-overflow-scrolling: touch;
