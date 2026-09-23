@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   AlertTriangle, Scale, AlertOctagon, FileWarning, Gavel, 
   UserX, Flame, Volume2, Printer, Search, Filter, 
@@ -212,117 +213,7 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
   };
 
   // 3. Modals State
-  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [activeCitationIncident, setActiveCitationIncident] = useState<DisciplinaryIncident | null>(null);
-
-  // Form State
-  const [formResidentName, setFormResidentName] = useState(residentOptions[0]?.name || '');
-  const [formResidentPhone, setFormResidentPhone] = useState(residentOptions[0]?.phone || '');
-  const [formRoomUnit, setFormRoomUnit] = useState(residentOptions[0]?.room || 'RM 101');
-  const [formInfraction, setFormInfraction] = useState<InfractionType>('NOISE_POLLUTION');
-  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
-  const [formTime, setFormTime] = useState('22:00');
-  const [formStrike, setFormStrike] = useState<StrikeLevel>(1);
-  const [formFine, setFormFine] = useState('0');
-  const [formStatus, setFormStatus] = useState<IncidentStatus>('WARNING_ISSUED');
-  const [formDescription, setFormDescription] = useState('');
-  const [formReportedBy, setFormReportedBy] = useState('Caretaker / Porter On Duty');
-  const [formWitness, setFormWitness] = useState('');
-
-  const openLogModal = () => {
-    const resident = residentOptions[0];
-    setFormResidentName(resident ? resident.name : '');
-    setFormResidentPhone(resident ? resident.phone : '');
-    setFormRoomUnit(resident ? resident.room : 'RM 101');
-    setFormInfraction('NOISE_POLLUTION');
-    setFormDate(new Date().toISOString().split('T')[0]);
-    setFormTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-    setFormStrike(1);
-    setFormFine('0');
-    setFormStatus('WARNING_ISSUED');
-    setFormDescription('');
-    setFormReportedBy('Caretaker / Porter On Duty');
-    setFormWitness('');
-    setIsLogModalOpen(true);
-  };
-
-  const handleSelectResidentPreset = (residentName: string) => {
-    const found = residentOptions.find(r => r.name === residentName);
-    if (found) {
-      setFormResidentName(found.name);
-      setFormResidentPhone(found.phone);
-      setFormRoomUnit(found.room);
-      
-      // Calculate previous strikes for this resident to auto-suggest next strike
-      const prevIncidents = incidents.filter(i => i.residentName.toLowerCase() === found.name.toLowerCase());
-      const nextStrike = Math.min(prevIncidents.length + 1, 3) as StrikeLevel;
-      setFormStrike(nextStrike);
-      if (nextStrike === 2) {
-        setFormFine('200');
-        setFormStatus('FINE_PENDING');
-      } else if (nextStrike === 3) {
-        setFormFine('400');
-        setFormStatus('EVICTION_PROCEEDINGS');
-      } else {
-        setFormFine('0');
-        setFormStatus('WARNING_ISSUED');
-      }
-    }
-  };
-
-  const handleCreateIncident = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formResidentName.trim() || !formDescription.trim()) {
-      toast.error('Please complete all required fields.');
-      return;
-    }
-
-    const refCode = `DISC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const newIncident: DisciplinaryIncident = {
-      id: `disc_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
-      propertyId: selectedProperty?.id || '',
-      referenceCode: refCode,
-      residentName: formResidentName.trim(),
-      residentPhone: formResidentPhone.trim(),
-      roomUnit: formRoomUnit.trim(),
-      infractionType: formInfraction,
-      incidentDate: formDate,
-      incidentTime: formTime,
-      strikeLevel: formStrike,
-      fineAmountGHS: parseFloat(formFine) || 0,
-      status: formStatus,
-      description: formDescription.trim(),
-      reportedBy: formReportedBy.trim(),
-      witnessStatement: formWitness.trim()
-    };
-
-    const updated = [newIncident, ...incidents];
-    saveIncidents(updated);
-
-    // Sync with backend breach report
-    const matchedBooking = bookings?.find((b: any) => {
-      const name = `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim().toLowerCase();
-      return name === formResidentName.trim().toLowerCase();
-    });
-    const tenantId = matchedBooking?.tenantId || matchedBooking?.tenant?.id;
-
-    if (tenantId && selectedProperty?.id) {
-      api.post('/breaches/report', {
-        tenantId,
-        propertyId: selectedProperty.id,
-        title: `${formInfraction} - Strike ${formStrike}`,
-        description: JSON.stringify(newIncident)
-      }).then(() => {
-        toast.success(`Citation ${refCode} officially recorded & synced with database!`);
-      }).catch(() => {
-        toast.success(`Citation ${refCode} filed for ${newIncident.residentName} (Strike ${newIncident.strikeLevel})`);
-      });
-    } else {
-      toast.success(`Citation ${refCode} filed for ${newIncident.residentName} (Strike ${newIncident.strikeLevel})`);
-    }
-    setIsLogModalOpen(false);
-  };
 
   const handleToggleResolved = (id: string) => {
     const updated = incidents.map(i => {
@@ -443,13 +334,13 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
               </select>
             )}
 
-            <button
-              onClick={openLogModal}
+            <Link
+              href={`/dashboard/landlord/disciplinary/new?propertyId=${selectedPropertyId || ''}`}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-black rounded-2xl shadow-lg shadow-red-600/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
               <span>Log Incident / Citation</span>
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -748,223 +639,6 @@ export default function HostelDisciplinaryTab({ properties, bookings = [] }: Hos
           </div>
         )}
       </div>
-
-      {/* ─── LOG INCIDENT MODAL ─── */}
-      {isLogModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in max-h-[90vh] flex flex-col">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-red-500/10 text-red-600 dark:text-red-400 rounded-2xl">
-                  <FileWarning className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    Log Disciplinary Infraction
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {selectedProperty?.title}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsLogModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateIncident} className="p-6 space-y-4 overflow-y-auto">
-              {/* Resident Fast Select */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Select Resident Student *
-                </label>
-                <select
-                  value={formResidentName}
-                  onChange={(e) => handleSelectResidentPreset(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white font-bold"
-                >
-                  {residentOptions.map((r, i) => (
-                    <option key={i} value={r.name}>
-                      {r.name} ({r.room})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Room Unit & Phone */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Room Unit
-                  </label>
-                  <input
-                    type="text"
-                    value={formRoomUnit}
-                    onChange={(e) => setFormRoomUnit(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Phone Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formResidentPhone}
-                    onChange={(e) => setFormResidentPhone(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Infraction Category & Strike Tier */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Infraction Category *
-                  </label>
-                  <select
-                    value={formInfraction}
-                    onChange={(e) => setFormInfraction(e.target.value as InfractionType)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  >
-                    <option value="NOISE_POLLUTION">Noise Pollution</option>
-                    <option value="PROHIBITED_APPLIANCE">Prohibited Hotplate / Coil</option>
-                    <option value="UNAUTHORIZED_GUEST">Unauthorized Overnight Guest</option>
-                    <option value="CURFEW_BREACH">Gate Curfew Breach</option>
-                    <option value="VANDALISM">Property Vandalism</option>
-                    <option value="SANITATION_NEGLECT">Sanitation / Refuse Neglect</option>
-                    <option value="ALTERCATION">Altercation / Fighting</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Strike Level Assessment
-                  </label>
-                  <select
-                    value={formStrike}
-                    onChange={(e) => setFormStrike(Number(e.target.value) as StrikeLevel)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white font-bold"
-                  >
-                    <option value="1">Strike 1: First Warning (No fine)</option>
-                    <option value="2">Strike 2: Reprimand &amp; Fine</option>
-                    <option value="3">Strike 3: Immediate Expulsion</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Incident Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formDate}
-                    onChange={(e) => setFormDate(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Incident Time
-                  </label>
-                  <input
-                    type="time"
-                    value={formTime}
-                    onChange={(e) => setFormTime(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              {/* Fine & Status */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Fine Surcharge (GH₵)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="50"
-                    value={formFine}
-                    onChange={(e) => setFormFine(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Disciplinary Status
-                  </label>
-                  <select
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as IncidentStatus)}
-                    className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                  >
-                    <option value="WARNING_ISSUED">Warning Issued</option>
-                    <option value="FINE_PENDING">Fine Pending</option>
-                    <option value="FINE_SETTLED">Fine Settled</option>
-                    <option value="EVICTION_PROCEEDINGS">Eviction Proceedings</option>
-                    <option value="RESOLVED">Resolved</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Incident Description &amp; Evidence *
-                </label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="State the observed code-of-conduct breach, seized items, or witness statements..."
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  className="w-full text-xs p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              {/* Reported By */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Reporting Official / Porter
-                </label>
-                <input
-                  type="text"
-                  value={formReportedBy}
-                  onChange={(e) => setFormReportedBy(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-red-500 text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div className="pt-3 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsLogModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white text-xs font-black rounded-xl shadow-md transition-all"
-                >
-                  File Disciplinary Citation
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ─── FORMAL CITATION LETTER / DEAN OF STUDENTS PRINT VIEW ─── */}
       {activeCitationIncident && (

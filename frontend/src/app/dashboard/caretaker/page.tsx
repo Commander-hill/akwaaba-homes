@@ -88,21 +88,7 @@ function CaretakerDashboardContent() {
     completionImageUrl: '',
   });
 
-  // Notice Creation Modal state
-  const [noticeModalOpen, setNoticeModalOpen] = useState(false);
-  const [noticePropertyId, setNoticePropertyId] = useState('');
-  const [noticeTitle, setNoticeTitle] = useState('');
-  const [noticeMessage, setNoticeMessage] = useState('');
-  const [noticeCategory, setNoticeCategory] = useState('GENERAL');
-  const [noticePriority, setNoticePriority] = useState('NORMAL');
-
-  // Parcel Intake & Collection Modal state
-  const [parcelModalOpen, setParcelModalOpen] = useState(false);
-  const [parcelPropertyId, setParcelPropertyId] = useState('');
-  const [parcelTenantId, setParcelTenantId] = useState('');
-  const [parcelCarrier, setParcelCarrier] = useState('DHL');
-  const [parcelTracking, setParcelTracking] = useState('');
-  const [parcelLocation, setParcelLocation] = useState('Front Desk Shelf A');
+  // Parcel Collection Modal state
   const [collectModalOpen, setCollectModalOpen] = useState(false);
   const [collectParcel, setCollectParcel] = useState<any>(null);
   const [collectOtp, setCollectOtp] = useState('');
@@ -312,39 +298,6 @@ function CaretakerDashboardContent() {
     }
   });
 
-  const createNoticeMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/notices', payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Compound notice broadcasted successfully!');
-      setNoticeModalOpen(false);
-      setNoticeTitle('');
-      setNoticeMessage('');
-      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to broadcast notice');
-    }
-  });
-
-  const createParcelMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/deliveries', payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Parcel logged and resident alerted with pickup OTP code.');
-      setParcelModalOpen(false);
-      setParcelTracking('');
-      setParcelTenantId('');
-      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to log parcel');
-    }
-  });
 
   const collectParcelMutation = useMutation({
     mutationFn: async ({ id, pickupCode }: { id: string; pickupCode: string }) => {
@@ -469,27 +422,21 @@ function CaretakerDashboardContent() {
                 <span>Gate Pass</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setParcelPropertyId(primaryProperty?.id || '');
-                  setParcelModalOpen(true);
-                }}
+              <Link
+                href={`/dashboard/caretaker/parcels/new?propertyId=${primaryProperty?.id || ''}`}
                 className="px-3 py-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-750 text-white font-bold text-xs border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
               >
                 <Package className="w-3.5 h-3.5 text-purple-400" />
                 <span>Log Parcel</span>
-              </button>
+              </Link>
 
-              <button
-                onClick={() => {
-                  setNoticePropertyId(primaryProperty?.id || '');
-                  setNoticeModalOpen(true);
-                }}
+              <Link
+                href={`/dashboard/landlord/notices/new?propertyId=${primaryProperty?.id || ''}`}
                 className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#0F5132] to-[#15803D] hover:from-[#0A3D24] hover:to-[#0F5132] text-white font-black text-xs border border-emerald-500/40 transition-all flex items-center gap-1.5 cursor-pointer shadow-md shadow-emerald-950/40 active:scale-95"
               >
                 <BellRing className="w-3.5 h-3.5 text-white" />
                 <span>Broadcast Notice</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -1149,15 +1096,12 @@ function CaretakerDashboardContent() {
                     Log incoming resident packages and securely verify OTP handovers.
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setParcelPropertyId(primaryProperty?.id || '');
-                    setParcelModalOpen(true);
-                  }}
+                <Link
+                  href={`/dashboard/caretaker/parcels/new?propertyId=${primaryProperty?.id || ''}`}
                   className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" /> Log New Delivery
-                </button>
+                </Link>
               </div>
 
               {allParcels.length === 0 ? (
@@ -1276,15 +1220,12 @@ function CaretakerDashboardContent() {
                     Post utility maintenance announcements, quiet hours, and facility alerts to all residents.
                   </p>
                 </div>
-                <button
-                  onClick={() => {
-                    setNoticePropertyId(primaryProperty?.id || '');
-                    setNoticeModalOpen(true);
-                  }}
+                <Link
+                  href={`/dashboard/landlord/notices/new?propertyId=${primaryProperty?.id || ''}`}
                   className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" /> New Compound Notice
-                </button>
+                </Link>
               </div>
 
               {allNotices.length === 0 ? (
@@ -1373,148 +1314,6 @@ function CaretakerDashboardContent() {
                   className="px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold"
                 >
                   Save &amp; Complete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL 2: NOTICE CREATION ── */}
-      {noticeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
-              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Broadcast Compound Notice</h3>
-              <button onClick={() => setNoticeModalOpen(false)}>
-                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
-              </button>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Notice Title *</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Generator Maintenance Schedule"
-                  value={noticeTitle}
-                  onChange={e => setNoticeTitle(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Category</label>
-                <select
-                  value={noticeCategory}
-                  onChange={e => setNoticeCategory(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
-                >
-                  <option value="GENERAL">General Bulletin</option>
-                  <option value="MAINTENANCE">Utility Maintenance</option>
-                  <option value="SECURITY">Compound Security</option>
-                  <option value="RULES">Hostel Rules &amp; Curfew</option>
-                </select>
-              </div>
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Announcement Details *</label>
-                <textarea
-                  rows={4}
-                  placeholder="Write clear instructions for all resident students or tenants..."
-                  value={noticeMessage}
-                  onChange={e => setNoticeMessage(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-medium"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setNoticeModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={!noticeTitle || !noticeMessage}
-                  onClick={() => {
-                    createNoticeMutation.mutate({
-                      propertyId: noticePropertyId || primaryProperty?.id,
-                      title: noticeTitle,
-                      message: noticeMessage,
-                      category: noticeCategory,
-                      priority: noticePriority,
-                    });
-                  }}
-                  className="px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold disabled:opacity-50"
-                >
-                  Broadcast Notice
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL 3: PARCEL INTAKE ── */}
-      {parcelModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#12151D] rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-3">
-              <h3 className="font-bold text-sm text-zinc-900 dark:text-white">Log Courier Package Delivery</h3>
-              <button onClick={() => setParcelModalOpen(false)}>
-                <X className="w-4 h-4 text-zinc-400 hover:text-zinc-600" />
-              </button>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Courier Carrier</label>
-                <input
-                  type="text"
-                  placeholder="e.g. DHL, FedEx, Ghana Post, Aramex"
-                  value={parcelCarrier}
-                  onChange={e => setParcelCarrier(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Waybill / Tracking Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g. DHL-8921820"
-                  value={parcelTracking}
-                  onChange={e => setParcelTracking(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-mono font-semibold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">Shelf / Locker Location</label>
-                <input
-                  type="text"
-                  value={parcelLocation}
-                  onChange={e => setParcelLocation(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/60 font-semibold"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setParcelModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 font-bold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    createParcelMutation.mutate({
-                      propertyId: parcelPropertyId || primaryProperty?.id,
-                      carrier: parcelCarrier,
-                      trackingNumber: parcelTracking,
-                      location: parcelLocation,
-                    });
-                  }}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold"
-                >
-                  Record &amp; Alert Resident
                 </button>
               </div>
             </div>

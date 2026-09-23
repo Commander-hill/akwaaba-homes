@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   KeyRound, Plus, Trash2, Clock, User, Phone, 
-  Copy, Check, AlertCircle, Loader2, QrCode, Share2, X
+  Copy, Check, AlertCircle, Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -31,70 +32,13 @@ interface VisitorPass {
 
 export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) {
   const queryClient = useQueryClient();
-  const [modalOpen, setModalOpen] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Form State
-  const [propertyId, setPropertyId] = useState('');
-  const [visitorName, setVisitorName] = useState('');
-  const [visitorPhone, setVisitorPhone] = useState('');
-  const [purpose, setPurpose] = useState('Guest Visit');
-  const [durationHours, setDurationHours] = useState('12');
-
-  const { data: propertiesData } = useQuery({
-    queryKey: ['properties', 'public-catalog'],
-    queryFn: async () => {
-      const res = await api.get('/properties');
-      return res.data;
-    }
-  });
-
-  const rawBookingProps = (bookings || [])
-    .map((b: any) => ({
-      id: b.propertyId || b.property?.id,
-      title: b.property?.title || 'Residential Compound',
-      location: b.property?.location || ''
-    }))
-    .filter((p: any) => Boolean(p.id));
-
-  const fallbackProps = (propertiesData?.properties || propertiesData?.data || [])
-    .map((p: any) => ({
-      id: p.id,
-      title: p.title || 'Residential Residence',
-      location: p.location || ''
-    }))
-    .filter((p: any) => Boolean(p.id));
-
-  const activeProperties = rawBookingProps.length > 0 ? rawBookingProps : fallbackProps;
-
-  useEffect(() => {
-    if (!propertyId && activeProperties.length > 0) {
-      setPropertyId(activeProperties[0].id);
-    }
-  }, [activeProperties, propertyId]);
 
   const { data, isLoading } = useQuery<{ passes: VisitorPass[] }>({
     queryKey: ['visitorPasses', 'tenant'],
     queryFn: async () => {
       const res = await api.get('/visitor-passes');
       return res.data;
-    }
-  });
-
-  const createPassMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await api.post('/visitor-passes', payload);
-      return res.data;
-    },
-    onSuccess: () => {
-      toast.success('Visitor gate pass generated! Share PIN with your guest.');
-      setModalOpen(false);
-      setVisitorName('');
-      setVisitorPhone('');
-      queryClient.invalidateQueries({ queryKey: ['visitorPasses', 'tenant'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to generate pass');
     }
   });
 
@@ -135,12 +79,12 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
           </div>
         </div>
 
-        <button
-          onClick={() => setModalOpen(true)}
-          className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-xs"
+        <Link
+          href="/dashboard/tenant/visitors/new"
+          className="px-4 py-2.5 bg-[var(--primary)] text-white text-sm font-bold rounded-xl flex items-center gap-2 hover:opacity-90 transition shadow-xs w-fit"
         >
           <Plus className="w-4 h-4" /> Generate Gate Pass
-        </button>
+        </Link>
       </div>
 
       {isLoading ? (
@@ -151,9 +95,15 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
           <KeyRound className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">No Visitor Passes Generated</h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
+          <p className="text-sm text-slate-500 max-w-md mx-auto mt-1 mb-6">
             Pre-authorize visitors or delivery drivers by generating a secure gate PIN they can present at the security checkpoint.
           </p>
+          <Link
+            href="/dashboard/tenant/visitors/new"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-500 transition shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Generate First Gate Pass
+          </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -189,7 +139,7 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
                     <button
                       onClick={() => revokePassMutation.mutate(pass.id)}
                       disabled={revokePassMutation.isPending}
-                      className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs"
+                      className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs cursor-pointer"
                       title="Revoke pass"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -208,7 +158,7 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
 
                   <button
                     onClick={() => handleCopyCode(pass.accessCode, pass.id)}
-                    className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-600 shadow-xs"
+                    className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-amber-600 shadow-xs cursor-pointer"
                   >
                     {copiedId === pass.id ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copiedId === pass.id ? 'Copied' : 'Copy PIN'}
@@ -234,130 +184,6 @@ export default function VisitorPassTab({ bookings = [] }: { bookings?: any[] }) 
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Generate Pass Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 border border-slate-200 dark:border-slate-800 animate-in">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-amber-500" /> Create Visitor Gate Pass
-              </h3>
-              <button 
-                onClick={() => setModalOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Residence</label>
-                <select
-                  value={propertyId}
-                  onChange={(e) => setPropertyId(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  {activeProperties.map((p: any) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title} {p.location ? `(${p.location})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Visitor / Driver Full Name</label>
-                <input
-                  type="text"
-                  value={visitorName}
-                  onChange={(e) => setVisitorName(e.target.value)}
-                  placeholder="e.g. Kwame Mensah (Uber Driver)"
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Visitor Phone (Optional)</label>
-                  <input
-                    type="tel"
-                    value={visitorPhone}
-                    onChange={(e) => setVisitorPhone(e.target.value)}
-                    placeholder="054 XXX XXXX"
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Duration Validity</label>
-                  <select
-                    value={durationHours}
-                    onChange={(e) => setDurationHours(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                  >
-                    <option value="2">2 Hours (Quick Delivery / Pickup)</option>
-                    <option value="6">6 Hours (Day Visit)</option>
-                    <option value="12">12 Hours (Full Day)</option>
-                    <option value="24">24 Hours (Overnight)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Visit Purpose</label>
-                <select
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold outline-none"
-                >
-                  <option value="Guest Visit">Guest / Friend Visit</option>
-                  <option value="Delivery / Courier">Delivery / Courier (Food/Jumia)</option>
-                  <option value="Domestic Staff / Cleaner">Domestic Staff / Cleaner</option>
-                  <option value="Artisan / Contractor">Artisan / Contractor</option>
-                  <option value="Family Member">Family Member</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const targetPropertyId = propertyId || activeProperties[0]?.id;
-                  if (!targetPropertyId) {
-                    toast.error('Active tenancy required to generate gate passes');
-                    return;
-                  }
-                  if (!visitorName) {
-                    toast.error('Visitor name is required');
-                    return;
-                  }
-                  createPassMutation.mutate({
-                    propertyId: targetPropertyId,
-                    visitorName,
-                    visitorPhone,
-                    purpose,
-                    durationHours
-                  });
-                }}
-                disabled={createPassMutation.isPending}
-                className="px-6 py-2 bg-[var(--primary)] text-white text-xs font-bold rounded-xl flex items-center gap-2 hover:opacity-90 shadow-sm"
-              >
-                {createPassMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                Generate PIN
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
