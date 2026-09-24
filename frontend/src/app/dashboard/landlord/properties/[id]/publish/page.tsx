@@ -271,61 +271,88 @@ export default function PublishPropertyPage() {
             </div>
           </div>
 
-          {/* Included Features & License Privileges */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-            <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-              What is Included in Your Annual Listing License
-            </h3>
+          {/* Included Features & Annual Plan Benefits */}
+          <div className="space-y-4 pt-1">
+            <div>
+              <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                Everything Included with Your Listing
+              </h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                Verified tools to showcase your property, attract quality tenants, and protect your rental income.
+              </p>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
-              <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 space-y-1">
-                <div className="flex items-center gap-2 font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                  <Search className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                  Marketplace Search Discovery
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Feature 1 */}
+              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Search className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Full indexing across student search filters for KNUST, Legon, UCC, and regional Accra &amp; Kumasi directories.
-                </p>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                    Campus &amp; Citywide Reach
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Prominently showcased to thousands of verified students across KNUST, Legon, and UCC, plus prime residential directories in Accra and Kumasi.
+                  </p>
+                </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 space-y-1">
-                <div className="flex items-center gap-2 font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                  Verified Landlord Badge
+              {/* Feature 2 */}
+              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Displays official Ghana Card verified authenticity mark, increasing tenant trust and booking conversion.
-                </p>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                    Verified Landlord Trust Badge
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Displays your official Ghana Card authenticity seal on every listing, establishing instant trust so tenants book with total confidence.
+                  </p>
+                </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 space-y-1">
-                <div className="flex items-center gap-2 font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                  MoMo Escrow Protection
+              {/* Feature 3 */}
+              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Tenant security deposits and semester payments are held safely until room inspection and key handover.
-                </p>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                    Protected Rent &amp; Escrow
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Tenant security deposits and rent installments are safeguarded via secure Mobile Money escrow and disbursed reliably upon room handover.
+                  </p>
+                </div>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-900/40 space-y-1">
-                <div className="flex items-center gap-2 font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                  <FileText className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                  Digital Tenancy Agreements
+              {/* Feature 4 */}
+              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
+                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Automated generation of verified digital tenancy leases with legally binding e-signatures.
-                </p>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
+                    Instant Digital Tenancy Leases
+                  </h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    Auto-generated, standardized tenancy agreements with enforceable digital signatures for hassle-free move-ins.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Regulatory & Tax Deduction Notice */}
-            <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/80 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1">
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300 block">
-                Official Business Expense &amp; Tax Deductibility:
+            {/* Official Tax & Expense Notice */}
+            <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 flex items-start sm:items-center gap-3">
+              <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#0F5132] text-white font-extrabold text-[10px] tracking-wide uppercase">
+                Tax Benefit
               </span>
-              Listing subscription fees are 100% tax-deductible property management expenses under Ghana Revenue Authority guidelines. An official VAT invoice receipt is automatically generated upon completion.
+              <p className="text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed">
+                Listing fees qualify as 100% tax-deductible property management expenses under GRA guidelines. An official VAT invoice receipt is generated automatically for your records.
+              </p>
             </div>
           </div>
 
