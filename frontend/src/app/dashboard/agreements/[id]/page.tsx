@@ -218,7 +218,7 @@ export default function AgreementPage() {
         </div>
 
         {/* Agreement Body Clauses */}
-        <div className="space-y-8 pt-8 text-xs sm:text-sm leading-relaxed text-slate-800 font-serif">
+        <div className="space-y-8 pt-8 text-xs sm:text-sm leading-relaxed text-slate-800 font-sans">
           
           {/* Intro Recital */}
           <p className="leading-relaxed">
