@@ -13,13 +13,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-
-function getImageUrl(path?: string | null): string {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  return `${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-}
+import { getImageUrl } from '@/lib/utils';
 
 export default function PublishPropertyPage() {
   const params = useParams();
@@ -51,15 +45,17 @@ export default function PublishPropertyPage() {
     }
   }, [session, phonePrefilled, momoPhoneNumber]);
 
-  // 2. Fetch Property Details
-  const { data: property, isLoading: isLoadingProperty, refetch: refetchProperty } = useQuery({
+  // 2. Fetch Property Details (safely unwrap { property } from backend)
+  const { data: rawPropertyData, isLoading: isLoadingProperty, refetch: refetchProperty } = useQuery({
     queryKey: ['property', propertyId],
     queryFn: async () => {
       const res = await api.get(`/properties/${propertyId}`);
-      return res.data?.data || res.data;
+      return res.data?.property || res.data?.data || res.data;
     },
     enabled: Boolean(propertyId)
   });
+
+  const property = rawPropertyData?.property || rawPropertyData;
 
   // 3. Initialize Payment Mutation
   const initPaymentMutation = useMutation({
@@ -151,9 +147,28 @@ export default function PublishPropertyPage() {
     );
   }
 
-  const isAlreadyActive = property.isAvailable && property.subscription?.isActive;
-  const coverImage = property.images && property.images.length > 0 ? getImageUrl(property.images[0]) : '';
-  const totalRooms = property.rooms?.length || 0;
+  const isAlreadyActive = property?.isAvailable && property?.subscription?.isActive;
+
+  const parsedImages = React.useMemo(() => {
+    if (!property?.images) return [];
+    if (Array.isArray(property.images)) return property.images;
+    if (typeof property.images === 'string') {
+      try {
+        const parsed = JSON.parse(property.images);
+        return Array.isArray(parsed) ? parsed : [property.images];
+      } catch {
+        return [property.images];
+      }
+    }
+    return [];
+  }, [property?.images]);
+
+  const coverImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : '';
+
+  const totalRooms = React.useMemo(() => {
+    if (!property?.rooms || !Array.isArray(property.rooms)) return 0;
+    return property.rooms.reduce((acc: number, r: any) => acc + (Number(r.numberOfRooms) || 1), 0);
+  }, [property?.rooms]);
 
   return (
     <div className="w-full max-w-6xl mx-auto pb-16 space-y-8 animate-in fade-in duration-300">
@@ -169,7 +184,7 @@ export default function PublishPropertyPage() {
           </Link>
           <span>/</span>
           <span className="text-zinc-900 dark:text-white font-medium truncate max-w-[200px]">
-            {property.title}
+            {property?.title || 'Listing'}
           </span>
           <span>/</span>
           <span className="text-[#0F5132] dark:text-emerald-400 font-bold">Publish Listing</span>
@@ -190,7 +205,7 @@ export default function PublishPropertyPage() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 pl-11">
-              Activate your 365-day annual listing license for verified marketplace visibility and direct tenant reservations.
+              Publish your listing for 365 days of verified marketplace visibility, tenant inquiries, and automated bookings.
             </p>
           </div>
 
@@ -409,13 +424,13 @@ export default function PublishPropertyPage() {
             <div className="bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-6">
               <div>
                 <h3 className="text-base font-bold text-zinc-950 dark:text-white">Order Summary</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">365 Days Verified Listing License</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">365 Days Verified Listing Access</p>
               </div>
 
               {/* Price Breakdown */}
               <div className="space-y-3 pb-4 border-b border-zinc-100 dark:border-zinc-800 text-xs">
                 <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
-                  <span>Annual Listing License (365 Days)</span>
+                  <span>Annual Listing Subscription (365 Days)</span>
                   <span className="font-bold text-zinc-900 dark:text-white">GH₵ 100.00</span>
                 </div>
                 <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">

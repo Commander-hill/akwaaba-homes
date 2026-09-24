@@ -1,10 +1,10 @@
-export const getImageUrl = (url: string) => {
+export const getImageUrl = (url?: string | null) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
   
   // Get the base API URL and strip the /api/v1 part to get the root domain
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-  const rootUrl = apiUrl.replace('/api/v1', '');
+  const rootUrl = apiUrl.replace('/api/v1', '').replace(/\/$/, '');
   
-  return `${rootUrl}${url}`;
+  return `${rootUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 };
