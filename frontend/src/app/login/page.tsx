@@ -7,30 +7,28 @@ import {
   Mail,
   Lock,
   ArrowRight,
-  ArrowLeft,
   Loader2,
   CheckCircle2,
   Clock,
   Eye,
   EyeOff,
   Building2,
-  Sparkles,
-  Check,
-  Radio,
   GraduationCap,
-  QrCode,
-  Wifi,
-  FileText,
-  Key
+  Key,
+  ChevronRight
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 
+type Persona = 'TENANT' | 'LANDLORD';
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isTimeout = searchParams.get('reason') === 'timeout';
+  
+  const [persona, setPersona] = useState<Persona>('TENANT');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -135,15 +133,17 @@ function LoginForm() {
     }
   };
 
+  // Active session loading spinner
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
         <p className="text-xs font-mono tracking-widest uppercase text-zinc-400">Verifying Active Session</p>
       </div>
     );
   }
 
+  // Active session already verified
   if (sessionData && !isTimeout) {
     const roleTitle = sessionData.role === 'LANDLORD' 
       ? 'Landlord Dashboard' 
@@ -154,26 +154,26 @@ function LoginForm() {
       : 'Tenant Dashboard';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-6 sm:p-12">
-        <div className="w-full max-w-lg space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 rounded-full text-xs font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Active Session Detected
+      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 p-4 sm:p-6">
+        <div className="w-full max-w-md bg-white dark:bg-[#11161B] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 text-center space-y-6 shadow-xl shadow-zinc-950/5 relative overflow-hidden">
+          <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-[#0F5132] absolute top-0 left-0" />
+          
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-[#0F5132] dark:text-emerald-400">
+            <CheckCircle2 className="w-7 h-7" />
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-3xl font-light tracking-tight text-zinc-900 dark:text-white">
-              Welcome back, <span className="font-semibold">{sessionData.firstName || sessionData.email}</span>
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              You are currently authenticated as <span className="font-mono text-xs uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-semibold">{sessionData.role}</span>.
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-bold text-zinc-950 dark:text-white">Active Session Detected</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Welcome back, <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span>. You are logged in as{' '}
+              <span className="font-mono text-xs uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-semibold">{sessionData.role}</span>.
             </p>
           </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row gap-3">
+          <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -187,7 +187,7 @@ function LoginForm() {
                 localStorage.removeItem('akwaaba_refresh_token');
                 window.location.reload();
               }}
-              className="inline-flex items-center justify-center px-5 py-3.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
+              className="w-full inline-flex items-center justify-center px-5 py-3 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
             >
               Sign out &amp; switch account
             </button>
@@ -198,267 +198,107 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center px-4 sm:px-6 py-8 sm:py-12 relative overflow-hidden bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
-      {/* ── Left Editorial & Product Artifact Showcase (Desktop 42%) ── */}
-      <div className="relative hidden lg:flex lg:w-5/12 flex-col justify-between p-10 xl:p-14 bg-[#05150E] text-white overflow-hidden border-r border-emerald-950/80">
+      {/* ── Ambient Radial Atmosphere ── */}
+      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gradient-to-b from-emerald-500/10 via-emerald-600/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[600px] h-[260px] bg-emerald-950/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ── Main Centered Card Container ── */}
+      <div className="w-full max-w-[460px] mx-auto relative z-10 animate-in fade-in zoom-in-95 duration-300">
         
-        {/* Subtle Ambient Radial Glow */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-tr from-emerald-600/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-emerald-950/60 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Top Brand Header */}
-        <div className="relative z-10 space-y-5">
-          <Link href="/" className="inline-flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-400/40 shadow-xs bg-emerald-950 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Image
-                src="/logo.png"
-                alt="Akwaaba Homes"
-                width={40}
-                height={40}
-                className="w-full h-full object-cover"
-                priority
-              />
-            </div>
-            <div>
-              <span className="text-lg font-bold tracking-tight text-white">Akwaaba<span className="text-emerald-400">Homes</span></span>
-              <span className="block text-[11px] font-mono tracking-wider uppercase text-emerald-300/80">Ghana PropTech Marketplace</span>
-            </div>
-          </Link>
-
-          <div className="pt-2 space-y-2 max-w-sm">
-            <h2 className="text-2xl xl:text-[26px] font-bold tracking-tight text-white leading-tight">
-              One secure credential for your tenancy, keys, and payments.
-            </h2>
-            <p className="text-xs text-emerald-200/70 leading-relaxed font-normal">
-              Every verified booking issues an encrypted digital lease agreement, automated escrow hold, and gatehouse check-in pass.
-            </p>
-          </div>
-        </div>
-
-        {/* ── Multi-Artifact Product Wallet Showcase ── */}
-        <div className="relative z-10 my-auto py-3 space-y-3.5 max-w-sm mx-auto w-full">
+        {/* Card Surface */}
+        <div className="bg-white/95 dark:bg-[#11161B]/95 backdrop-blur-xl border border-zinc-200/90 dark:border-zinc-800/90 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] p-6 sm:p-9 relative overflow-hidden">
           
-          {/* ──── ARTIFACT 1: The Resident Digital Access Pass (Primary Card) ──── */}
-          <div className="w-full rounded-2xl bg-gradient-to-br from-[#0D281C] via-[#091F16] to-[#040D08] border border-emerald-500/35 p-5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group">
+          {/* Top Hairline Emerald Accent */}
+          <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-[#0F5132] absolute top-0 left-0" />
+
+          {/* Header Monogram & Title */}
+          <div className="text-center space-y-3 mb-6">
+            <Link href="/" className="inline-block group">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-900 via-[#0F5132] to-[#072417] p-2 shadow-md flex items-center justify-center mx-auto border border-emerald-500/30 group-hover:scale-105 transition-transform duration-200">
+                <Image
+                  src="/logo.png"
+                  alt="Akwaaba Homes"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                  priority
+                />
+              </div>
+            </Link>
             
-            {/* Holographic foil sweep line */}
-            <div className="absolute -inset-full bg-gradient-to-r from-transparent via-emerald-400/10 to-transparent rotate-45 pointer-events-none group-hover:translate-x-full transition-transform duration-1000" />
-
-            {/* Card Top: Chip & NFC Contactless */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-emerald-900/50">
-              <div className="flex items-center gap-2.5">
-                {/* Gold Smart Microchip Graphic */}
-                <div className="w-9 h-6 rounded bg-gradient-to-tr from-amber-600/90 via-amber-400 to-amber-200/90 border border-amber-300/60 relative overflow-hidden shadow-xs">
-                  <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-[1px] opacity-40">
-                    <div className="border-r border-b border-amber-950" />
-                    <div className="border-b border-amber-950" />
-                    <div className="border-r border-amber-950" />
-                    <div />
-                  </div>
-                </div>
-                {/* Contactless Wifi Icon */}
-                <Wifi className="w-3.5 h-3.5 text-emerald-400/80 rotate-90" />
-              </div>
-
-              <div className="text-right">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold block">
-                  RESIDENT KEYCARD
-                </span>
-                <span className="text-[9px] font-mono text-emerald-200/50 tracking-wider">
-                  SECURE TENANCY PASS
-                </span>
-              </div>
-            </div>
-
-            {/* Card Middle: Resident Credentials */}
-            <div className="py-3.5 space-y-2.5">
-              <div>
-                <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Verified Resident</span>
-                <div className="text-sm font-bold text-white tracking-wide">
-                  Nana Kwabena Osei
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Campus Hub</span>
-                  <div className="font-semibold text-emerald-100 text-[11px] truncate">
-                    KNUST // Ayeduase
-                  </div>
-                </div>
-                <div>
-                  <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Assigned Unit</span>
-                  <div className="font-semibold text-emerald-100 text-[11px]">
-                    Studio Room 14B
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card Security Strip */}
-            <div className="py-2 px-2.5 rounded-lg bg-emerald-950/70 border border-emerald-800/40 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[9.5px] font-mono font-bold text-emerald-300 tracking-wider">
-                  ESCROW ACTIVE • CHECK-IN READY
-                </span>
-              </div>
-              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-            </div>
-
-            {/* Card Bottom: Verification Hash & QR */}
-            <div className="pt-2.5 flex items-center justify-between text-[9px] font-mono text-emerald-200/50 border-t border-emerald-900/40 mt-2.5">
-              <div>
-                <span className="block text-emerald-300/70 font-bold tracking-wider">ID: GH-AKW-2026-8941</span>
-                <span>ISSUED: AKWAABA TRUST PROTOCOL</span>
-              </div>
-              <div className="w-6 h-6 rounded bg-white p-0.5 flex items-center justify-center shrink-0">
-                <QrCode className="w-full h-full text-zinc-950" />
-              </div>
-            </div>
-
-          </div>
-
-          {/* ──── ARTIFACT 2: The Digital Tenancy Lease & Escrow Receipt ──── */}
-          <div className="w-full rounded-xl bg-[#071F15]/90 border border-emerald-600/25 p-3.5 shadow-lg backdrop-blur-xs relative overflow-hidden space-y-2 transform hover:scale-[1.01] transition-transform duration-300">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-md bg-emerald-900/60 border border-emerald-700/40 flex items-center justify-center text-emerald-400">
-                  <FileText className="w-3.5 h-3.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono uppercase font-bold text-emerald-300 tracking-wider block">
-                    Digital Tenancy Lease
-                  </span>
-                  <span className="text-[9px] font-mono text-emerald-200/50">LEGAL INSTRUMENT #ACT-772</span>
-                </div>
-              </div>
-              <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-300 border border-emerald-700/40">
-                COUNTERSIGNED
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-900/40 text-[11px]">
-              <div>
-                <span className="text-[9px] uppercase font-mono text-emerald-300/60 block">Advance Rent Escrow</span>
-                <span className="font-bold text-white">GH₵ 8,400.00 / yr</span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-mono text-emerald-300/60 block">Escrow Release Condition</span>
-                <span className="font-semibold text-emerald-200/90 text-[10px]">Physical Key Handover</span>
-              </div>
-            </div>
-
-            <div className="pt-1.5 flex items-center justify-between text-[9px] font-mono text-emerald-300/60 border-t border-emerald-900/30">
-              <div className="flex items-center gap-1 text-emerald-400">
-                <Lock className="w-2.5 h-2.5" />
-                <span>SHA-256 Validated Signature</span>
-              </div>
-              <span>Paystack Escrow Trust</span>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
+                Welcome back
+              </h1>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {persona === 'TENANT' 
+                  ? 'Access your verified tenancy, escrow keys & hostel passes'
+                  : 'Manage properties, rent disbursements & caretaker operations'}
+              </p>
             </div>
           </div>
 
-          {/* ──── ARTIFACT 3: Live Gatehouse Check-In Pass / Key Receipt ──── */}
-          <div className="w-full rounded-lg bg-emerald-950/60 border border-emerald-800/30 px-3.5 py-2 flex items-center justify-between shadow-xs">
-            <div className="flex items-center gap-2.5">
-              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <Key className="w-3 h-3" />
-              </div>
-              <div className="text-[10.5px]">
-                <span className="font-semibold text-white block leading-tight">Key Handover Protocol Active</span>
-                <span className="text-[9px] font-mono text-emerald-300/60">Gatehouse Caretaker On-Duty: Ayeduase</span>
-              </div>
+          {/* Persona Segmented Switcher */}
+          {!requireTwoFactor && (
+            <div className="mb-6 p-1 bg-zinc-100 dark:bg-zinc-900/80 rounded-2xl grid grid-cols-2 gap-1 border border-zinc-200/70 dark:border-zinc-800/80 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setPersona('TENANT')}
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl transition-all cursor-pointer ${
+                  persona === 'TENANT'
+                    ? 'bg-white dark:bg-[#161C23] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/50 dark:border-zinc-700/50 font-bold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <GraduationCap className={`w-3.5 h-3.5 ${persona === 'TENANT' ? 'text-[#0F5132] dark:text-emerald-400' : ''}`} />
+                <span>Tenant &amp; Student</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPersona('LANDLORD')}
+                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl transition-all cursor-pointer ${
+                  persona === 'LANDLORD'
+                    ? 'bg-white dark:bg-[#161C23] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/50 dark:border-zinc-700/50 font-bold'
+                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                }`}
+              >
+                <Building2 className={`w-3.5 h-3.5 ${persona === 'LANDLORD' ? 'text-[#0F5132] dark:text-emerald-400' : ''}`} />
+                <span>Landlord &amp; Partner</span>
+              </button>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          </div>
+          )}
 
-        </div>
-
-        {/* Bottom Platform Proof Footnote */}
-        <div className="relative z-10 pt-4 border-t border-emerald-900/50 flex items-center justify-between text-[11px] text-emerald-300/70 font-mono">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>1,200+ Verified Rooms Active</span>
-          </div>
-          <span>UG • KNUST • UCC • ATU</span>
-        </div>
-
-      </div>
-
-      {/* ── Right Authentication Surface (Direct Canvas, De-Carded) ── */}
-      <div className="flex-1 flex flex-col justify-between p-6 sm:p-12 lg:p-16 xl:p-20 overflow-y-auto">
-        
-        {/* Top Minimal Navigation Bar */}
-        <div className="flex items-center justify-between w-full max-w-md mx-auto mb-8 sm:mb-12">
-          {/* Mobile Brand Logo */}
-          <Link href="/" className="lg:hidden inline-flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shadow-xs">
-              <Image
-                src="/logo.png"
-                alt="Akwaaba Homes"
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-                priority
-              />
-            </div>
-            <span className="font-bold text-sm tracking-tight text-zinc-900 dark:text-white">
-              Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
-            </span>
-          </Link>
-
-          {/* Desktop/Tablet Back to Marketplace Link */}
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors ml-auto group"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-            <span>Marketplace</span>
-          </Link>
-        </div>
-
-        {/* Central Authentication Form (Centered & Balanced) */}
-        <div className="w-full max-w-md mx-auto my-auto py-4">
-          
-          {/* Header Typography */}
-          <div className="space-y-1.5 mb-8">
-            <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-bold">
-              Authentication // Secure Sign In
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
-              Sign in to your account
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-              Enter your credentials to access your tenancy ledger, landlord bookings, or operations desk.
-            </p>
-          </div>
-
-          {/* De-carded Architectural Status Indicators */}
+          {/* Session Inactivity Timeout Banner */}
           {isTimeout && (
-            <div className="mb-6 border-l-2 border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 pl-4 pr-3 py-3 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5 rounded-r-xl">
+            <div className="mb-5 border-l-2 border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 pl-3.5 pr-3 py-2.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5 rounded-r-xl">
               <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-              <div className="space-y-0.5">
-                <div className="font-semibold">Session Expired</div>
-                <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80">Your session was safely closed due to inactivity. Please authenticate to resume.</div>
+              <div>
+                <div className="font-semibold text-[11.5px]">Session Expired</div>
+                <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
+                  Safely closed due to inactivity. Please sign in to resume.
+                </div>
               </div>
             </div>
           )}
 
+          {/* Error Banner */}
           {error && (
-            <div className={`mb-6 border-l-2 ${
+            <div className={`mb-5 border-l-2 ${
               error.includes('warming up') 
-                ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200' 
-                : 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/20 text-rose-900 dark:text-rose-200'
-            } pl-4 pr-3 py-3 text-xs flex items-start gap-2.5 transition-all rounded-r-xl`}>
+                ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200' 
+                : 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200'
+            } pl-3.5 pr-3 py-2.5 text-xs flex items-start gap-2.5 transition-all rounded-r-xl`}>
               <Lock className={`w-4 h-4 shrink-0 mt-0.5 ${
                 error.includes('warming up') ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
               }`} />
               <div className="space-y-0.5">
-                <div className="font-semibold uppercase tracking-wider text-[11px]">
+                <div className="font-semibold uppercase tracking-wider text-[10.5px]">
                   {error.includes('warming up') ? 'Database Initializing' : 'Authentication Notice'}
                 </div>
-                <div className="text-[11px] leading-relaxed opacity-90">{error}</div>
+                <div className="text-[11px] leading-relaxed opacity-95">{error}</div>
               </div>
             </div>
           )}
@@ -467,7 +307,7 @@ function LoginForm() {
           {requireTwoFactor ? (
             /* 2FA Challenge Form */
             <form onSubmit={handle2FASubmit} className="space-y-5">
-              <div className="border-b border-zinc-100 dark:border-zinc-800 pb-4 space-y-1">
+              <div className="border-b border-zinc-100 dark:border-zinc-800/80 pb-4 space-y-1">
                 <div className="text-xs font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">
                   Two-Factor Verification Required
                 </div>
@@ -478,8 +318,8 @@ function LoginForm() {
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-semibold">
                   {useRecoveryCode ? 'Emergency Recovery Key' : '6-Digit Security Token'}
                 </label>
                 <div className="relative">
@@ -513,7 +353,7 @@ function LoginForm() {
                 </button>
               </div>
 
-              <div className="space-y-3 pt-2">
+              <div className="space-y-2.5 pt-2">
                 <button
                   type="submit"
                   disabled={isLoading || !twoFactorCode.trim()}
@@ -540,12 +380,12 @@ function LoginForm() {
               </div>
             </form>
           ) : (
-            /* Standard Login Form */
-            <form onSubmit={handleSubmit} className="space-y-5">
+            /* Standard Email/Password Login Form */
+            <form onSubmit={handleSubmit} className="space-y-4">
               
               {/* Email Address */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   Email Address
                 </label>
                 <div className="relative">
@@ -557,7 +397,7 @@ function LoginForm() {
                     required 
                     autoComplete="email"
                     className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all" 
-                    placeholder="student@st.ug.edu.gh or name@gmail.com" 
+                    placeholder={persona === 'TENANT' ? 'student@st.ug.edu.gh or personal@email.com' : 'landlord@estate.com.gh or personal@email.com'} 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                   />
@@ -565,9 +405,9 @@ function LoginForm() {
               </div>
 
               {/* Password */}
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                     Password
                   </label>
                   <Link 
@@ -602,7 +442,7 @@ function LoginForm() {
               </div>
 
               {/* Keep me signed in */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-0.5">
                 <label className="inline-flex items-center gap-2 cursor-pointer select-none">
                   <input 
                     id="remember-me" 
@@ -618,17 +458,20 @@ function LoginForm() {
                 </label>
               </div>
 
-              {/* Submit CTA */}
+              {/* Primary Submit CTA */}
               <div className="pt-2">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl text-white bg-[#0F5132] hover:bg-[#0A3D24] text-xs font-semibold uppercase tracking-wider focus:outline-none transition-colors shadow-xs active:scale-[0.99] disabled:opacity-60 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl text-white bg-gradient-to-b from-[#146c43] to-[#0F5132] hover:from-[#0F5132] hover:to-[#0A3D24] text-xs font-semibold uppercase tracking-wider focus:outline-none transition-all shadow-xs active:scale-[0.99] disabled:opacity-60 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>Sign in to Account <ArrowRight className="w-3.5 h-3.5" /></>
+                    <>
+                      <span>Sign in as {persona === 'TENANT' ? 'Tenant' : 'Landlord'}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
                   )}
                 </button>
               </div>
@@ -637,27 +480,34 @@ function LoginForm() {
           )}
 
           {/* Switch to Registration */}
-          <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-            <span>Don&apos;t have an account yet?</span>
+          <div className="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+            <span>New to AkwaabaHomes?</span>
             <Link 
               href="/register" 
-              className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
+              className="inline-flex items-center gap-1 font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
             >
-              Create an account &rarr;
+              <span>Create an account</span>
+              <ChevronRight className="w-3 h-3" />
             </Link>
           </div>
 
         </div>
 
-        {/* Bottom Security & Compliance Microcopy (Refined Trust Chips) */}
-        <div className="w-full max-w-md mx-auto pt-6 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
+        {/* Anchored Trust Footnote */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-zinc-400 dark:text-zinc-500">
           <div className="inline-flex items-center gap-1.5">
             <Lock className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Protected Escrow Payments</span>
+            <span>256-Bit SSL Encrypted</span>
           </div>
+          <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
           <div className="inline-flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">256-Bit SSL Encrypted</span>
+            <span>Paystack Escrow Protected</span>
+          </div>
+          <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
+          <div className="inline-flex items-center gap-1.5">
+            <Key className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Digital Keycard Ready</span>
           </div>
         </div>
 
@@ -669,7 +519,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white dark:bg-[#0B0D12]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF9] dark:bg-[#090C0E]" />}>
       <LoginForm />
     </Suspense>
   );
