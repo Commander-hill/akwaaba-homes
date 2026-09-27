@@ -16,7 +16,8 @@ import {
   Building2,
   Sparkles,
   Check,
-  Radio
+  Radio,
+  GraduationCap
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -197,19 +198,24 @@ function LoginForm() {
       
       {/* ── Left Editorial & Trust Ledger Panel (Desktop 42%) ── */}
       <div className="relative hidden lg:flex lg:w-5/12 flex-col justify-between p-12 xl:p-16 bg-[#071E14] text-white overflow-hidden border-r border-[#0E3524]">
-        {/* Subtle geometric grid background pattern */}
+        {/* Architectural photography background with deep emerald overlay */}
         <div 
-          className="absolute inset-0 opacity-[0.04] pointer-events-none"
+          className="absolute inset-0 bg-cover bg-center pointer-events-none scale-105 transition-transform duration-1000 ease-out opacity-25"
           style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)`,
-            backgroundSize: '24px 24px'
+            backgroundImage: `url('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80')`,
           }}
         />
+        {/* Multi-layered gradient overlay ensuring 100% text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#041A10] via-[#072619]/95 to-[#093823]/90 pointer-events-none" />
+
+        {/* Ambient radial lighting accents */}
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
         
         {/* Top Brand & Purpose */}
         <div className="relative z-10 space-y-6">
           <Link href="/" className="inline-flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-400/30 shadow-xs bg-emerald-950 flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-400/40 shadow-xs bg-emerald-950 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
@@ -221,33 +227,33 @@ function LoginForm() {
             </div>
             <div>
               <span className="text-lg font-bold tracking-tight text-white">Akwaaba<span className="text-emerald-400">Homes</span></span>
-              <span className="block text-[11px] font-mono tracking-wider uppercase text-emerald-300/70">Rental Marketplace</span>
+              <span className="block text-[11px] font-mono tracking-wider uppercase text-emerald-300/80">Ghana PropTech Marketplace</span>
             </div>
           </Link>
 
-          <div className="pt-8 space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-900/60 border border-emerald-700/40 text-[11px] font-mono text-emerald-300">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>Campus &amp; Residential Trust Protocol</span>
+          <div className="pt-6 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/70 border border-emerald-700/50 text-[11px] font-medium text-emerald-200 backdrop-blur-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Campus &amp; Residential Housing Network</span>
             </div>
-            <h2 className="text-2xl xl:text-3xl font-light tracking-tight text-white leading-snug">
+            <h2 className="text-2xl xl:text-3xl font-bold tracking-tight text-white leading-snug">
               Secure, verified accommodation across Ghana&apos;s leading university hubs.
             </h2>
-            <p className="text-xs text-emerald-200/70 leading-relaxed font-normal max-w-sm">
-              Connecting students and long-term residents to verified properties with institutional escrow protection and digitally enforced tenancy agreements.
+            <p className="text-xs text-emerald-200/80 leading-relaxed font-normal max-w-sm">
+              Connecting students and long-term residents to verified properties with Paystack escrow protection and legally enforceable digital tenancy agreements.
             </p>
           </div>
         </div>
 
         {/* Mid Architectural Trust Columns */}
-        <div className="relative z-10 py-10 space-y-5 border-y border-emerald-900/60 my-auto">
+        <div className="relative z-10 py-8 space-y-4.5 border-y border-emerald-900/60 my-auto">
           <div className="flex items-start gap-3.5">
             <div className="w-7 h-7 rounded-lg bg-emerald-900/80 border border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-              <Building2 className="w-4 h-4" />
+              <GraduationCap className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Direct Campus Networks</h4>
-              <p className="text-[11px] text-emerald-200/60 mt-0.5">Verified housing across UCC, KNUST, UG Legon, and ATU vicinities.</p>
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Direct University Hubs</h4>
+              <p className="text-[11px] text-emerald-200/70 mt-0.5">Verified housing across UCC, KNUST, UG Legon, ATU, and UPSA vicinities.</p>
             </div>
           </div>
 
@@ -256,8 +262,8 @@ function LoginForm() {
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Paystack Escrow Security</h4>
-              <p className="text-[11px] text-emerald-200/60 mt-0.5">Funds are held in secure escrow until physical move-in check-in is verified.</p>
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Paystack &amp; Mobile Money Escrow</h4>
+              <p className="text-[11px] text-emerald-200/70 mt-0.5">Advance rent remains held safely in escrow until you inspect and receive room keys.</p>
             </div>
           </div>
 
@@ -266,27 +272,28 @@ function LoginForm() {
               <Check className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Verified Digital Leases</h4>
-              <p className="text-[11px] text-emerald-200/60 mt-0.5">Instant tenancy agreements signed electronically with complete transparency.</p>
+              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Verified Digital Tenancy</h4>
+              <p className="text-[11px] text-emerald-200/70 mt-0.5">Cryptographically signed digital leases valid across all Ghanaian jurisdictions.</p>
             </div>
           </div>
         </div>
 
         {/* Bottom Student Testimonial & Live Status */}
-        <div className="relative z-10 space-y-5 pt-4">
-          <blockquote className="text-xs italic text-emerald-200/80 border-l-2 border-emerald-500/50 pl-3 leading-relaxed">
+        <div className="relative z-10 space-y-4 pt-3">
+          <blockquote className="text-xs italic text-emerald-200/90 border-l-2 border-emerald-400 pl-3 leading-relaxed">
             &ldquo;Securing my hostel unit before semester reopening took minutes. Everything from inventory inspection to payment receipts was right there on my phone.&rdquo;
-            <footer className="mt-2 text-[11px] not-italic font-mono text-emerald-400/90 font-medium">
-              — Stephen D., UCC Resident
+            <footer className="mt-1.5 text-[11px] not-italic text-emerald-400 font-semibold flex items-center gap-2">
+              <span>Stephen D., UCC Resident (Cape Coast)</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/80 text-emerald-300 font-mono">VERIFIED TENANT</span>
             </footer>
           </blockquote>
 
-          <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-emerald-400/70 border-t border-emerald-900/40">
+          <div className="pt-2 flex items-center justify-between text-[11px] font-medium text-emerald-300/80 border-t border-emerald-900/50">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Neon DB Active • 99.98% SLA</span>
+              <span>1,200+ Verified Rooms Active</span>
             </div>
-            <span>v2.4.1</span>
+            <span className="text-emerald-400/90">Accra • Kumasi • Cape Coast</span>
           </div>
         </div>
       </div>
@@ -323,15 +330,15 @@ function LoginForm() {
           </Link>
         </div>
 
-        {/* Central Authentication Form (No outer card container) */}
-        <div className="w-full max-w-md mx-auto my-auto py-2">
+        {/* Central Authentication Form (Centered & Balanced) */}
+        <div className="w-full max-w-md mx-auto my-auto py-4">
           
           {/* Header Typography */}
-          <div className="space-y-2 mb-8">
-            <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold">
+          <div className="space-y-1.5 mb-8">
+            <div className="text-[11px] font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-bold">
               Authentication // Secure Sign In
             </div>
-            <h1 className="text-2xl sm:text-3xl font-light tracking-tight text-zinc-900 dark:text-white">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
               Sign in to your account
             </h1>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -341,7 +348,7 @@ function LoginForm() {
 
           {/* De-carded Architectural Status Indicators */}
           {isTimeout && (
-            <div className="mb-6 border-l-2 border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 pl-4 pr-3 py-3 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+            <div className="mb-6 border-l-2 border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 pl-4 pr-3 py-3 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5 rounded-r-xl">
               <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <div className="space-y-0.5">
                 <div className="font-semibold">Session Expired</div>
@@ -355,7 +362,7 @@ function LoginForm() {
               error.includes('warming up') 
                 ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200' 
                 : 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/20 text-rose-900 dark:text-rose-200'
-            } pl-4 pr-3 py-3 text-xs flex items-start gap-2.5 transition-all`}>
+            } pl-4 pr-3 py-3 text-xs flex items-start gap-2.5 transition-all rounded-r-xl`}>
               <Lock className={`w-4 h-4 shrink-0 mt-0.5 ${
                 error.includes('warming up') ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
               }`} />
@@ -396,7 +403,7 @@ function LoginForm() {
                     required
                     maxLength={useRecoveryCode ? 10 : 6}
                     autoFocus
-                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-600 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-1 focus:ring-[#0F5132] outline-none transition-all"
+                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-600 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all"
                     placeholder={useRecoveryCode ? 'XXXX-XXXX' : '000000'}
                     value={twoFactorCode}
                     onChange={(e) => setTwoFactorCode(e.target.value)}
@@ -450,7 +457,7 @@ function LoginForm() {
               
               {/* Email Address */}
               <div className="space-y-2">
-                <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                   Email Address
                 </label>
                 <div className="relative">
@@ -461,18 +468,44 @@ function LoginForm() {
                     type="email" 
                     required 
                     autoComplete="email"
-                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-1 focus:ring-[#0F5132] outline-none transition-all" 
-                    placeholder="student@st.knust.edu.gh / name@mail.com" 
+                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all" 
+                    placeholder="student@st.ug.edu.gh or name@gmail.com" 
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                   />
+                </div>
+
+                {/* Campus Email Quick-Fill Tags */}
+                <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">Quick student suffix:</span>
+                  {[
+                    '@st.ug.edu.gh',
+                    '@st.knust.edu.gh',
+                    '@ucc.edu.gh'
+                  ].map((domain) => (
+                    <button
+                      key={domain}
+                      type="button"
+                      onClick={() => {
+                        if (!email.includes('@')) {
+                          setEmail(prev => (prev ? prev.trim() + domain : ''));
+                        } else {
+                          const username = email.split('@')[0];
+                          setEmail(username + domain);
+                        }
+                      }}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 hover:text-[#0F5132] dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-zinc-200 dark:border-zinc-700/60 transition-colors cursor-pointer"
+                    >
+                      {domain}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
                     Password
                   </label>
                   <Link 
@@ -490,7 +523,7 @@ function LoginForm() {
                     type={showPassword ? 'text' : 'password'} 
                     required 
                     autoComplete="current-password"
-                    className="block w-full pl-10 pr-10 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-1 focus:ring-[#0F5132] outline-none transition-all" 
+                    className="block w-full pl-10 pr-10 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all" 
                     placeholder="••••••••••••" 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
@@ -554,10 +587,16 @@ function LoginForm() {
 
         </div>
 
-        {/* Bottom Security & Compliance Microcopy */}
-        <div className="w-full max-w-md mx-auto pt-8 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
-          <span>Protected Escrow Payments</span>
-          <span>256-Bit SSL Encrypted</span>
+        {/* Bottom Security & Compliance Microcopy (Refined Trust Chips) */}
+        <div className="w-full max-w-md mx-auto pt-6 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
+          <div className="inline-flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Protected Escrow Payments</span>
+          </div>
+          <div className="inline-flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400">256-Bit SSL Encrypted</span>
+          </div>
         </div>
 
       </div>
