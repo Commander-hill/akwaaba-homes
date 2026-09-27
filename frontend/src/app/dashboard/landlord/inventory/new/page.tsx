@@ -6,24 +6,23 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
-import { 
-  Armchair, 
-  ArrowLeft, 
-  Building, 
-  Layers, 
-  Zap, 
-  Key, 
-  Wind, 
-  Fan, 
-  FileText, 
-  CheckCircle2, 
-  AlertCircle, 
-  Loader2, 
-  Info, 
-  Plus, 
-  Tag, 
+import {
+  Armchair,
+  ArrowLeft,
+  Building,
+  Layers,
+  Zap,
+  Key,
+  Wind,
+  Fan,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Info,
+  Plus,
+  Tag,
   DollarSign,
-  ShieldCheck,
   DoorClosed,
   Wrench,
   Sparkles
@@ -621,7 +620,7 @@ export default function NewInventoryAssetPage() {
               {/* Caution Deposit Protection Card */}
               <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-md space-y-3">
                 <div className="flex items-center gap-2 text-teal-400">
-                  <ShieldCheck className="w-5 h-5 shrink-0" />
+                  <CheckCircle2 className="w-5 h-5 shrink-0" />
                   <h4 className="font-extrabold text-xs uppercase tracking-wider">
                     Caution Deposit Guidelines
                   </h4>

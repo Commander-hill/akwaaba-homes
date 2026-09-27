@@ -6,8 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import { 
-  ArrowLeft, CreditCard, CheckCircle2, ShieldCheck, 
-  MapPin, Building, Calendar, Search, FileText, 
+  ArrowLeft, CreditCard, CheckCircle2, MapPin, Building, Calendar, Search, FileText, 
   Bell, ExternalLink, Loader2, Sparkles, Check, 
   Smartphone, AlertCircle, RefreshCw, Printer
 } from 'lucide-react';
@@ -317,7 +316,7 @@ export default function PublishPropertyPage() {
               {/* Feature 2 */}
               <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
                 <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-4 h-4" />
+                  <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
@@ -570,7 +569,7 @@ export default function PublishPropertyPage() {
 
               {/* Security Badge */}
               <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Bank of Ghana licensed payment gateways with 256-bit encryption</span>
               </div>
             </div>

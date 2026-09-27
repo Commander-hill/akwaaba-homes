@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   ArrowLeft,
   ChevronRight,
-  ShieldCheck,
   Send,
   Loader2,
   Lock,
@@ -183,7 +182,7 @@ function CaretakerParcelContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <ShieldCheck className="w-3.5 h-3.5" /> 4-Digit Pickup OTP Protection
+                <CheckCircle2 className="w-3.5 h-3.5" /> 4-Digit Pickup OTP Protection
               </span>
             </div>
           </div>

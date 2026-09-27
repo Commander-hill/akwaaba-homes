@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
-  ShieldCheck,
+  CheckCircle2,
   KeyRound,
   QrCode,
   Copy,
@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   RefreshCw,
   XCircle,
-  CheckCircle2,
   Loader2,
   MessageSquare
 } from 'lucide-react';
@@ -368,7 +367,7 @@ function TwoFactorStudioContent() {
             <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800/60 mt-0.5">
-                  <ShieldCheck className="w-5 h-5" />
+                  <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-base font-semibold text-zinc-900 dark:text-white">

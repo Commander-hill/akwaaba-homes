@@ -6,7 +6,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { 
   Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building, 
-  MapPin, Smartphone, ShieldCheck, X, ExternalLink
+  MapPin, Smartphone, X, ExternalLink
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';

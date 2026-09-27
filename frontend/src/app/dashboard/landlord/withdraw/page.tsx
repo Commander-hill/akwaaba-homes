@@ -19,7 +19,6 @@ import {
   RefreshCw,
   Lock,
   ArrowLeft,
-  ShieldCheck,
   Building2,
   Info,
   Check,
@@ -561,7 +560,7 @@ export default function LandlordWithdrawalPage() {
           {/* Real-Time Settlement Summary */}
           <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200 dark:border-zinc-800 p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
               Settlement Calculation
             </h3>
 

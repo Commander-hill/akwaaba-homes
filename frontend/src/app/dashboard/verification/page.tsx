@@ -1,10 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  CreditCard, Loader2, ArrowRight, FileCheck, UploadCloud, 
-  CheckCircle2, AlertCircle, FileText, Lock, Building2, Check, Clock, GraduationCap,
-  Wrench, ShieldCheck
+import {
+  CreditCard,
+  Loader2,
+  ArrowRight,
+  FileCheck,
+  UploadCloud,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Lock,
+  Building2,
+  Check,
+  Clock,
+  GraduationCap,
+  Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
@@ -758,7 +769,7 @@ export default function VerificationPage() {
           <div className="space-y-4">
             <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 space-y-2">
               <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
                 <span>Facility Role &amp; Verification Standards</span>
               </div>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">

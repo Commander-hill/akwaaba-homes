@@ -19,7 +19,6 @@ import {
   Clock,
   User,
   Mail,
-  ShieldCheck,
   Check,
   ZoomIn,
   Loader2,

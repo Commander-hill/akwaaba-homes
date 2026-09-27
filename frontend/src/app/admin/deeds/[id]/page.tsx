@@ -30,7 +30,6 @@ import {
   MapPin, 
   IdCard, 
   Loader2, 
-  ShieldCheck, 
   FileText,
   Clock,
   X

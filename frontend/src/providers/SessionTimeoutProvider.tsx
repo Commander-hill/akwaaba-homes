@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { ShieldAlert, Clock, LogOut, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Clock, LogOut, CheckCircle2 } from 'lucide-react';
 import api from '@/lib/axios';
 
 const STORAGE_KEY = 'akwaaba_last_active';
@@ -214,7 +214,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
             className="w-full max-w-md bg-white dark:bg-[#121216] border border-amber-200 dark:border-amber-900/60 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6 text-center"
           >
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
-              <ShieldAlert className="w-7 h-7" />
+              <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">

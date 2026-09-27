@@ -13,7 +13,6 @@ import {
   Clock,
   Eye,
   EyeOff,
-  ShieldCheck,
   Building2,
   Sparkles,
   Check,
@@ -254,7 +253,7 @@ function LoginForm() {
 
           <div className="flex items-start gap-3.5">
             <div className="w-7 h-7 rounded-lg bg-emerald-900/80 border border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-              <ShieldCheck className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4" />
             </div>
             <div>
               <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Paystack Escrow Security</h4>

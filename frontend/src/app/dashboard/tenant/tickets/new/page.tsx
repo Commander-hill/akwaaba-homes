@@ -22,7 +22,6 @@ import {
   Loader2,
   ArrowLeft,
   ChevronRight,
-  ShieldAlert,
   Calendar,
   X,
   User,

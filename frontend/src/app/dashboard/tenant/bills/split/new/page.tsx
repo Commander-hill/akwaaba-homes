@@ -20,7 +20,6 @@ import {
   Phone,
   ArrowLeft,
   ChevronRight,
-  ShieldCheck,
   Send,
   Loader2,
   Calculator,
@@ -265,7 +264,7 @@ function BillSplitterContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600">
-                <ShieldCheck className="w-3.5 h-3.5" /> Fair Roommate Settlement
+                <CheckCircle2 className="w-3.5 h-3.5" /> Fair Roommate Settlement
               </span>
             </div>
           </div>

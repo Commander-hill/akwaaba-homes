@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { 
   LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, 
   CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, 
-  Settings, Radio, FileCheck, Menu, BadgeCheck, ShieldAlert 
+  Settings, Radio, FileCheck, Menu, BadgeCheck, FileText 
 } from 'lucide-react';
 import api from '@/lib/axios';
 import NotificationBell from '@/components/NotificationBell';
@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         { name: 'Dispute management', href: '/admin/breaches', icon: Scale },
         { name: 'Review moderation', href: '/admin/reviews', icon: Star },
         { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-        { name: 'Audit logs', href: '/admin/audit', icon: ShieldAlert },
+        { name: 'Audit logs', href: '/admin/audit', icon: FileText },
         { name: 'System settings', href: '/admin/config', icon: Settings },
       ]
     }

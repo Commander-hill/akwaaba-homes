@@ -7,9 +7,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
   Scale,
-  ShieldAlert,
-  FileText,
   AlertCircle,
+  FileText,
   Building,
   CheckCircle2,
   ArrowLeft,
@@ -177,7 +176,7 @@ function NewAppealContent() {
             {/* 2. Dispute Reason Presets */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-rose-500" />
+                <AlertCircle className="w-5 h-5 text-rose-500" />
                 Primary Ground for Appeal
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

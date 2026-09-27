@@ -8,7 +8,7 @@ import api from '@/lib/axios';
 import {
   Star,
   Building,
-  ShieldCheck,
+  CheckCircle2,
   Droplets,
   Zap,
   Lock,
@@ -18,7 +18,6 @@ import {
   ChevronRight,
   Send,
   Loader2,
-  CheckCircle2,
   Calendar,
   Sparkles
 } from 'lucide-react';
@@ -146,7 +145,7 @@ function NewReviewContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <ShieldCheck className="w-3.5 h-3.5" /> Verified Tenant Review
+                <CheckCircle2 className="w-3.5 h-3.5" /> Verified Tenant Review
               </span>
             </div>
           </div>
@@ -340,7 +339,7 @@ function NewReviewContent() {
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-500" /> Community Standards
+                <CheckCircle2 className="w-4 h-4 text-amber-500" /> Community Standards
               </h3>
 
               {/* Verified Stay Card */}
@@ -360,7 +359,7 @@ function NewReviewContent() {
               {/* Honest Feedback Advisory */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-900 dark:text-amber-300 space-y-1.5">
                 <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                  <ShieldCheck className="w-4 h-4" /> Honest Feedback Guarantee
+                  <CheckCircle2 className="w-4 h-4" /> Honest Feedback Guarantee
                 </div>
                 <p className="text-[11px] leading-relaxed">
                   Akwaaba Homes safeguards tenant freedom of expression. Authentic reviews reflecting actual tenancy conditions cannot be suppressed by property owners.

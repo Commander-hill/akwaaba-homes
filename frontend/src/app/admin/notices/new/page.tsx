@@ -14,7 +14,6 @@ import {
   Flame,
   ArrowLeft,
   ChevronRight,
-  ShieldCheck,
   Send,
   Loader2,
   ExternalLink,

@@ -23,7 +23,7 @@ import {
   Loader2,
   ExternalLink,
   MessageSquare,
-  ShieldCheck,
+  CheckCircle2,
   Check,
   ZoomIn
 } from 'lucide-react';
@@ -214,7 +214,7 @@ export default function AdminTicketDetailPage({
           {(ticket.resolutionNotes || ticket.completionImageUrl) && (
             <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-emerald-200 dark:border-emerald-900/50 p-6 sm:p-7 shadow-xs space-y-4">
               <h2 className="text-base font-extrabold text-slate-950 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" /> Resolution Audit Records
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Resolution Audit Records
               </h2>
 
               {ticket.resolutionNotes && (

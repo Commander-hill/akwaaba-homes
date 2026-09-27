@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Bell, Check, CheckCheck, Loader2, Megaphone, Home, CreditCard, 
-  CalendarCheck, MessageSquare, AlertTriangle, ShieldCheck, Trash2, ArrowRight
+  CalendarCheck, MessageSquare, AlertTriangle, CheckCircle2, Trash2, ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import clsx from 'clsx';
@@ -77,7 +77,7 @@ export default function NotificationsPage() {
       case 'SUBSCRIPTION':
         return <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
       case 'SECURITY':
-        return <ShieldCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
+        return <CheckCircle2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
       case 'MESSAGE':
         return <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       default:

@@ -2,13 +2,44 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { 
-  Loader2, MapPin, CheckCircle, Bed, ArrowLeft, Calendar, Home, Users, 
-  Star, Info, Flag, Send, X, Lock, Clock, CheckCircle2,
-  Zap, Droplets, Wind, Wifi, Car, UtensilsCrossed, Dumbbell,
-  MessageSquare, ExternalLink, AlertCircle, Building2,
-  Share2, Video, CalendarDays, Phone, Copy, Check, PenTool, AlertTriangle, GraduationCap,
-  ShieldCheck, Wrench
+import {
+  Loader2,
+  MapPin,
+  CheckCircle,
+  Bed,
+  ArrowLeft,
+  Calendar,
+  Home,
+  Users,
+  Star,
+  Info,
+  Flag,
+  Send,
+  X,
+  Lock,
+  Clock,
+  CheckCircle2,
+  Zap,
+  Droplets,
+  Wind,
+  Wifi,
+  Car,
+  UtensilsCrossed,
+  Dumbbell,
+  MessageSquare,
+  ExternalLink,
+  AlertCircle,
+  Building2,
+  Share2,
+  Video,
+  CalendarDays,
+  Phone,
+  Copy,
+  Check,
+  PenTool,
+  AlertTriangle,
+  GraduationCap,
+  Wrench
 } from 'lucide-react';
 import Link from 'next/link';
 import { getImageUrl } from '@/lib/utils';
@@ -750,7 +781,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 space-y-3.5 text-xs">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                        <ShieldCheck className="w-4 h-4" />
+                        <CheckCircle2 className="w-4 h-4" />
                       </div>
                       <div>
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-400 block">

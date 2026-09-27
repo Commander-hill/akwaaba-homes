@@ -8,9 +8,9 @@ import {
   Calendar, CheckCircle2, AlertTriangle, Loader2, Copy, Plus, 
   Phone, Mail, MapPin, ExternalLink, Clock, Check, X,
   FileText, ClipboardCheck, ArrowRight, Gauge, Zap, Droplets, 
-  Fuel, Activity, ShieldCheck, MessageSquare, ChevronRight,
+  Fuel, Activity, MessageSquare, ChevronRight,
   Eye, CheckCircle, Search, Filter, AlertCircle, Sparkles,
-  LayoutDashboard, ShieldAlert
+  LayoutDashboard
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -380,7 +380,7 @@ function CaretakerDashboardContent() {
               </div>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-800/80 border border-zinc-700/60 text-zinc-300">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
                 <span>Verified Facility Manager</span>
               </div>
             </div>

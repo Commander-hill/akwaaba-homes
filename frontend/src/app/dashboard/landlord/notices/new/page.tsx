@@ -13,7 +13,7 @@ import {
   Zap, 
   Droplet, 
   Wrench, 
-  ShieldAlert, 
+  Lock, 
   Calendar, 
   AlertTriangle, 
   CheckCircle2, 
@@ -370,7 +370,7 @@ export default function NewCompoundNoticePage() {
                     {[
                       { id: 'UTILITY', label: '⚡ Utility & Power / Water', icon: Zap },
                       { id: 'MAINTENANCE', label: '🛠️ Repairs & Sanitation', icon: Wrench },
-                      { id: 'SECURITY', label: '🔐 Compound Security & Gate', icon: ShieldAlert },
+                      { id: 'SECURITY', label: '🔐 Compound Security & Gate', icon: Lock },
                       { id: 'EVENT', label: '📅 Community Gathering / Event', icon: Calendar },
                       { id: 'GENERAL', label: '📢 General Housekeeping', icon: Info },
                     ].map((cat) => {

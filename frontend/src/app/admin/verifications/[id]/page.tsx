@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
   BadgeCheck,
-  ShieldAlert,
+  AlertCircle,
   ArrowLeft,
   ChevronRight,
   User as UserIcon,
@@ -26,7 +26,6 @@ import {
   ExternalLink,
   ZoomIn,
   X,
-  AlertCircle,
   FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -196,7 +195,7 @@ export default function AdminVerificationPage({
                 />
               ) : (
                 <div className="text-center py-10 text-slate-400 text-xs">
-                  <ShieldAlert className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   No front photo uploaded
                 </div>
               )}
@@ -231,7 +230,7 @@ export default function AdminVerificationPage({
                 />
               ) : (
                 <div className="text-center py-10 text-slate-400 text-xs">
-                  <ShieldAlert className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   No back photo uploaded
                 </div>
               )}

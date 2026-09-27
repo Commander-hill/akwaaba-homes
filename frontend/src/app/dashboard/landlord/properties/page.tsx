@@ -6,7 +6,7 @@ import api from '@/lib/axios';
 import { 
   Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, 
   CreditCard, CheckCircle, ExternalLink, Search, Users, Bed, 
-  TrendingUp, Eye, Smartphone, ShieldCheck, X
+  TrendingUp, Eye, Smartphone, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';

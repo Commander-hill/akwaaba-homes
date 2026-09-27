@@ -2,10 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { 
-  LogOut, ChevronLeft, ChevronRight, X, 
-  Building, Compass, ShieldCheck, User as UserIcon,
-  Sparkles, CheckCircle2, Home
+import {
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Building,
+  Compass,
+  CheckCircle2,
+  User as UserIcon,
+  Sparkles,
+  Home
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -68,7 +75,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
   };
 
   const portalConfig = user?.role === 'ADMIN' 
-    ? { name: 'Admin Console', badge: 'SuperAdmin', icon: ShieldCheck, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' }
+    ? { name: 'Admin Console', badge: 'SuperAdmin', icon: CheckCircle2, color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' }
     : user?.role === 'LANDLORD' 
     ? { name: 'Landlord Hub', badge: 'Host & Landlord', icon: Building, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' }
     : (user?.role === 'CARETAKER' || user?.role === 'STAFF') 

@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
-  ShieldAlert,
   AlertTriangle,
   FileText,
   Building,
@@ -23,7 +22,7 @@ import {
   DoorClosed,
   ArrowLeft,
   ChevronRight,
-  ShieldCheck,
+  CheckCircle2,
   Send,
   Loader2,
   Gavel,
@@ -268,7 +267,7 @@ function NewDisciplinaryIncidentContent() {
         {/* Page Hero */}
         <div className="bg-gradient-to-r from-rose-700 via-red-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8">
           <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pointer-events-none pr-8">
-            <ShieldAlert className="w-72 h-72" />
+            <AlertTriangle className="w-72 h-72" />
           </div>
           <div className="relative z-10 max-w-2xl space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider">
@@ -320,7 +319,7 @@ function NewDisciplinaryIncidentContent() {
             {/* 2. Infraction Category */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-rose-500" />
+                <AlertTriangle className="w-5 h-5 text-rose-500" />
                 Select Violation Category
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -583,7 +582,7 @@ function NewDisciplinaryIncidentContent() {
               {/* Conduct Reference Card */}
               <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2 text-xs text-amber-900 dark:text-amber-300">
                 <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                  <ShieldCheck className="w-4 h-4" /> Quiet Enjoyment &amp; Conduct Rules
+                  <CheckCircle2 className="w-4 h-4" /> Quiet Enjoyment &amp; Conduct Rules
                 </div>
                 <p className="text-[11px] leading-relaxed">
                   Tenancy agreements require all residents to respect communal living standards, quiet enjoyment, and facility safety regulations. Repeated violations may result in escalated disciplinary action or tenancy termination.

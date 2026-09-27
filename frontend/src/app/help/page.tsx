@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   HelpCircle, ChevronDown, ChevronUp, Search, 
-  ShieldCheck, FileText, Users, Building, ArrowRight
+  FileText, Users, Building, ArrowRight
 } from 'lucide-react';
 
 interface FaqItem {

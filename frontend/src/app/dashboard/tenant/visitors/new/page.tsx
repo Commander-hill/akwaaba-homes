@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
   KeyRound,
-  Shield,
+  Lock,
   Clock,
   User,
   Phone,
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   ArrowLeft,
   ChevronRight,
-  ShieldCheck,
   Send,
   Loader2,
   Copy,
@@ -203,7 +202,7 @@ function NewVisitorPassContent() {
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <ShieldCheck className="w-3.5 h-3.5" /> Security Desk Clearance
+                <CheckCircle2 className="w-3.5 h-3.5" /> Security Desk Clearance
               </span>
             </div>
           </div>
@@ -218,7 +217,7 @@ function NewVisitorPassContent() {
           </div>
           <div className="relative z-10 max-w-2xl space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider">
-              <Shield className="w-3.5 h-3.5" /> Automated Security Clearance
+              <Lock className="w-3.5 h-3.5" /> Automated Security Clearance
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               Generate Digital Gate Pass
@@ -405,7 +404,7 @@ function NewVisitorPassContent() {
           <div className="lg:col-span-4 space-y-6">
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-amber-500" /> Digital Gate Pass Card
+                <CheckCircle2 className="w-4 h-4 text-amber-500" /> Digital Gate Pass Card
               </h3>
 
               {/* Holographic Security Pass Simulation */}

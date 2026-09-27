@@ -2,10 +2,18 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { 
-  Building, ShieldCheck, Scale, Users, 
-  CheckCircle2, ArrowRight, Lock, MapPin, 
-  GraduationCap, Check, HeartHandshake, Eye
+import {
+  Building,
+  CheckCircle2,
+  Scale,
+  Users,
+  ArrowRight,
+  Lock,
+  MapPin,
+  GraduationCap,
+  Check,
+  HeartHandshake,
+  Eye
 } from 'lucide-react';
 
 export default function AboutPage() {
@@ -81,7 +89,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2.5">
               <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
-                <ShieldCheck className="w-5 h-5" />
+                <CheckCircle2 className="w-5 h-5" />
               </div>
               <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">MoMo Escrow Settlement</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
