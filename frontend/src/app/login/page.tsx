@@ -504,32 +504,6 @@ function LoginForm() {
                     onChange={(e) => setEmail(e.target.value)} 
                   />
                 </div>
-
-                {/* Campus Email Quick-Fill Tags */}
-                <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
-                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">Quick student suffix:</span>
-                  {[
-                    '@st.ug.edu.gh',
-                    '@st.knust.edu.gh',
-                    '@ucc.edu.gh'
-                  ].map((domain) => (
-                    <button
-                      key={domain}
-                      type="button"
-                      onClick={() => {
-                        if (!email.includes('@')) {
-                          setEmail(prev => (prev ? prev.trim() + domain : ''));
-                        } else {
-                          const username = email.split('@')[0];
-                          setEmail(username + domain);
-                        }
-                      }}
-                      className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 hover:text-[#0F5132] dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 border border-zinc-200 dark:border-zinc-700/60 transition-colors cursor-pointer"
-                    >
-                      {domain}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Password */}
