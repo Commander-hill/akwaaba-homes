@@ -17,7 +17,9 @@ import {
   Sparkles,
   Check,
   Radio,
-  GraduationCap
+  GraduationCap,
+  QrCode,
+  Wifi
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -196,24 +198,15 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
-      {/* ── Left Editorial & Trust Ledger Panel (Desktop 42%) ── */}
-      <div className="relative hidden lg:flex lg:w-5/12 flex-col justify-between p-12 xl:p-16 bg-[#071E14] text-white overflow-hidden border-r border-[#0E3524]">
-        {/* Architectural photography background with deep emerald overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center pointer-events-none scale-105 transition-transform duration-1000 ease-out opacity-25"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1600&q=80')`,
-          }}
-        />
-        {/* Multi-layered gradient overlay ensuring 100% text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#041A10] via-[#072619]/95 to-[#093823]/90 pointer-events-none" />
-
-        {/* Ambient radial lighting accents */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+      {/* ── Left Editorial & Product Artifact Showcase (Desktop 42%) ── */}
+      <div className="relative hidden lg:flex lg:w-5/12 flex-col justify-between p-10 xl:p-14 bg-[#05150E] text-white overflow-hidden border-r border-emerald-950/80">
         
-        {/* Top Brand & Purpose */}
-        <div className="relative z-10 space-y-6">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-tr from-emerald-600/15 via-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-emerald-950/60 rounded-full blur-2xl pointer-events-none" />
+
+        {/* Top Brand Header */}
+        <div className="relative z-10 space-y-5">
           <Link href="/" className="inline-flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl overflow-hidden border border-emerald-400/40 shadow-xs bg-emerald-950 flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
@@ -231,71 +224,108 @@ function LoginForm() {
             </div>
           </Link>
 
-          <div className="pt-6 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-900/70 border border-emerald-700/50 text-[11px] font-medium text-emerald-200 backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Campus &amp; Residential Housing Network</span>
-            </div>
-            <h2 className="text-2xl xl:text-3xl font-bold tracking-tight text-white leading-snug">
-              Secure, verified accommodation across Ghana&apos;s leading university hubs.
+          <div className="pt-2 space-y-2 max-w-sm">
+            <h2 className="text-2xl xl:text-[26px] font-bold tracking-tight text-white leading-tight">
+              One secure credential for your tenancy, keys, and payments.
             </h2>
-            <p className="text-xs text-emerald-200/80 leading-relaxed font-normal max-w-sm">
-              Connecting students and long-term residents to verified properties with Paystack escrow protection and legally enforceable digital tenancy agreements.
+            <p className="text-xs text-emerald-200/70 leading-relaxed font-normal">
+              Every verified booking issues an encrypted digital lease agreement, automated escrow hold, and gatehouse check-in pass.
             </p>
           </div>
         </div>
 
-        {/* Mid Architectural Trust Columns */}
-        <div className="relative z-10 py-8 space-y-4.5 border-y border-emerald-900/60 my-auto">
-          <div className="flex items-start gap-3.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-900/80 border border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-              <GraduationCap className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Direct University Hubs</h4>
-              <p className="text-[11px] text-emerald-200/70 mt-0.5">Verified housing across UCC, KNUST, UG Legon, ATU, and UPSA vicinities.</p>
-            </div>
-          </div>
+        {/* ── The Human-Engineered Product Artifact: Digital Resident Keycard ── */}
+        <div className="relative z-10 my-auto py-6 flex justify-center">
+          <div className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-[#0D281C] via-[#091F16] to-[#040D08] border border-emerald-500/35 p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden backdrop-blur-md transform -rotate-1 hover:rotate-0 transition-transform duration-500 group">
+            
+            {/* Holographic foil sweep line */}
+            <div className="absolute -inset-full bg-gradient-to-r from-transparent via-emerald-400/10 to-transparent rotate-45 pointer-events-none group-hover:translate-x-full transition-transform duration-1000" />
 
-          <div className="flex items-start gap-3.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-900/80 border border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Paystack &amp; Mobile Money Escrow</h4>
-              <p className="text-[11px] text-emerald-200/70 mt-0.5">Advance rent remains held safely in escrow until you inspect and receive room keys.</p>
-            </div>
-          </div>
+            {/* Card Top: Chip & NFC Contactless */}
+            <div className="flex items-center justify-between pb-5 border-b border-emerald-900/50">
+              <div className="flex items-center gap-3">
+                {/* Gold Smart Microchip Graphic */}
+                <div className="w-10 h-7 rounded-md bg-gradient-to-tr from-amber-600/90 via-amber-400 to-amber-200/90 border border-amber-300/60 relative overflow-hidden shadow-xs">
+                  <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-[1px] opacity-40">
+                    <div className="border-r border-b border-amber-950" />
+                    <div className="border-b border-amber-950" />
+                    <div className="border-r border-amber-950" />
+                    <div />
+                  </div>
+                </div>
+                {/* Contactless Wifi Icon */}
+                <Wifi className="w-4 h-4 text-emerald-400/80 rotate-90" />
+              </div>
 
-          <div className="flex items-start gap-3.5">
-            <div className="w-7 h-7 rounded-lg bg-emerald-900/80 border border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-400 mt-0.5">
-              <Check className="w-4 h-4" />
+              <div className="text-right">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold block">
+                  RESIDENT KEYCARD
+                </span>
+                <span className="text-[9px] font-mono text-emerald-200/50 tracking-wider">
+                  SECURE TENANCY PASS
+                </span>
+              </div>
             </div>
-            <div>
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Verified Digital Tenancy</h4>
-              <p className="text-[11px] text-emerald-200/70 mt-0.5">Cryptographically signed digital leases valid across all Ghanaian jurisdictions.</p>
+
+            {/* Card Middle: Resident Credentials */}
+            <div className="py-4 space-y-3">
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-300/60 block">Verified Resident</span>
+                <div className="text-base font-bold text-white tracking-wide mt-0.5">
+                  Nana Kwabena Osei
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+                <div>
+                  <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Campus Hub</span>
+                  <div className="font-semibold text-emerald-100 text-[12px] truncate">
+                    KNUST // Ayeduase
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Assigned Unit</span>
+                  <div className="font-semibold text-emerald-100 text-[12px]">
+                    Studio Room 14B
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Card Security Strip */}
+            <div className="py-2 px-3 rounded-xl bg-emerald-950/70 border border-emerald-800/40 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-mono font-bold text-emerald-300 tracking-wider">
+                  ESCROW ACTIVE • CHECK-IN READY
+                </span>
+              </div>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+            </div>
+
+            {/* Card Bottom: Verification Hash & QR */}
+            <div className="pt-3.5 flex items-center justify-between text-[10px] font-mono text-emerald-200/50 border-t border-emerald-900/40 mt-3">
+              <div>
+                <span className="block text-emerald-300/70 font-bold tracking-wider">ID: GH-AKW-2026-8941</span>
+                <span className="text-[9px]">ISSUED: AKWAABA TRUST PROTOCOL</span>
+              </div>
+              <div className="w-7 h-7 rounded-md bg-white p-1 flex items-center justify-center shrink-0">
+                <QrCode className="w-full h-full text-zinc-950" />
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* Bottom Student Testimonial & Live Status */}
-        <div className="relative z-10 space-y-4 pt-3">
-          <blockquote className="text-xs italic text-emerald-200/90 border-l-2 border-emerald-400 pl-3 leading-relaxed">
-            &ldquo;Securing my hostel unit before semester reopening took minutes. Everything from inventory inspection to payment receipts was right there on my phone.&rdquo;
-            <footer className="mt-1.5 text-[11px] not-italic text-emerald-400 font-semibold flex items-center gap-2">
-              <span>Stephen D., UCC Resident (Cape Coast)</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/80 text-emerald-300 font-mono">VERIFIED TENANT</span>
-            </footer>
-          </blockquote>
-
-          <div className="pt-2 flex items-center justify-between text-[11px] font-medium text-emerald-300/80 border-t border-emerald-900/50">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>1,200+ Verified Rooms Active</span>
-            </div>
-            <span className="text-emerald-400/90">Accra • Kumasi • Cape Coast</span>
+        {/* Bottom Platform Proof Footnote */}
+        <div className="relative z-10 pt-4 border-t border-emerald-900/50 flex items-center justify-between text-[11px] text-emerald-300/70 font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>1,200+ Verified Rooms Active</span>
           </div>
+          <span>UG • KNUST • UCC • ATU</span>
         </div>
+
       </div>
 
       {/* ── Right Authentication Surface (Direct Canvas, De-Carded) ── */}
