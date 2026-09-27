@@ -54,14 +54,14 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 {children}
               </SessionTimeoutProvider>
               <Toaster
-                position="top-center"
-                gutter={10}
+                position="bottom-center"
+                gutter={8}
                 containerStyle={{
-                  top: 24,
+                  bottom: 24,
                   zIndex: 99999,
                 }}
                 toastOptions={{
-                  duration: 4000,
+                  duration: 2800,
                 }}
               >
                 {(t) => <EmeraldToastItem toast={t} />}
