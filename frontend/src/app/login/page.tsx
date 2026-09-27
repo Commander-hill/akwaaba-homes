@@ -19,7 +19,9 @@ import {
   Radio,
   GraduationCap,
   QrCode,
-  Wifi
+  Wifi,
+  FileText,
+  Key
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -234,18 +236,20 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* ── The Human-Engineered Product Artifact: Digital Resident Keycard ── */}
-        <div className="relative z-10 my-auto py-6 flex justify-center">
-          <div className="w-full max-w-sm rounded-2xl bg-gradient-to-br from-[#0D281C] via-[#091F16] to-[#040D08] border border-emerald-500/35 p-6 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden backdrop-blur-md transform -rotate-1 hover:rotate-0 transition-transform duration-500 group">
+        {/* ── Multi-Artifact Product Wallet Showcase ── */}
+        <div className="relative z-10 my-auto py-3 space-y-3.5 max-w-sm mx-auto w-full">
+          
+          {/* ──── ARTIFACT 1: The Resident Digital Access Pass (Primary Card) ──── */}
+          <div className="w-full rounded-2xl bg-gradient-to-br from-[#0D281C] via-[#091F16] to-[#040D08] border border-emerald-500/35 p-5 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.7)] relative overflow-hidden backdrop-blur-md transform hover:scale-[1.01] transition-transform duration-300 group">
             
             {/* Holographic foil sweep line */}
             <div className="absolute -inset-full bg-gradient-to-r from-transparent via-emerald-400/10 to-transparent rotate-45 pointer-events-none group-hover:translate-x-full transition-transform duration-1000" />
 
             {/* Card Top: Chip & NFC Contactless */}
-            <div className="flex items-center justify-between pb-5 border-b border-emerald-900/50">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between pb-3.5 border-b border-emerald-900/50">
+              <div className="flex items-center gap-2.5">
                 {/* Gold Smart Microchip Graphic */}
-                <div className="w-10 h-7 rounded-md bg-gradient-to-tr from-amber-600/90 via-amber-400 to-amber-200/90 border border-amber-300/60 relative overflow-hidden shadow-xs">
+                <div className="w-9 h-6 rounded bg-gradient-to-tr from-amber-600/90 via-amber-400 to-amber-200/90 border border-amber-300/60 relative overflow-hidden shadow-xs">
                   <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-[1px] opacity-40">
                     <div className="border-r border-b border-amber-950" />
                     <div className="border-b border-amber-950" />
@@ -254,7 +258,7 @@ function LoginForm() {
                   </div>
                 </div>
                 {/* Contactless Wifi Icon */}
-                <Wifi className="w-4 h-4 text-emerald-400/80 rotate-90" />
+                <Wifi className="w-3.5 h-3.5 text-emerald-400/80 rotate-90" />
               </div>
 
               <div className="text-right">
@@ -268,24 +272,24 @@ function LoginForm() {
             </div>
 
             {/* Card Middle: Resident Credentials */}
-            <div className="py-4 space-y-3">
+            <div className="py-3.5 space-y-2.5">
               <div>
-                <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-300/60 block">Verified Resident</span>
-                <div className="text-base font-bold text-white tracking-wide mt-0.5">
+                <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Verified Resident</span>
+                <div className="text-sm font-bold text-white tracking-wide">
                   Nana Kwabena Osei
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Campus Hub</span>
-                  <div className="font-semibold text-emerald-100 text-[12px] truncate">
+                  <div className="font-semibold text-emerald-100 text-[11px] truncate">
                     KNUST // Ayeduase
                   </div>
                 </div>
                 <div>
                   <span className="text-[9px] uppercase font-mono tracking-wider text-emerald-300/60 block">Assigned Unit</span>
-                  <div className="font-semibold text-emerald-100 text-[12px]">
+                  <div className="font-semibold text-emerald-100 text-[11px]">
                     Studio Room 14B
                   </div>
                 </div>
@@ -293,28 +297,82 @@ function LoginForm() {
             </div>
 
             {/* Card Security Strip */}
-            <div className="py-2 px-3 rounded-xl bg-emerald-950/70 border border-emerald-800/40 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-mono font-bold text-emerald-300 tracking-wider">
+            <div className="py-2 px-2.5 rounded-lg bg-emerald-950/70 border border-emerald-800/40 flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[9.5px] font-mono font-bold text-emerald-300 tracking-wider">
                   ESCROW ACTIVE • CHECK-IN READY
                 </span>
               </div>
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
             </div>
 
             {/* Card Bottom: Verification Hash & QR */}
-            <div className="pt-3.5 flex items-center justify-between text-[10px] font-mono text-emerald-200/50 border-t border-emerald-900/40 mt-3">
+            <div className="pt-2.5 flex items-center justify-between text-[9px] font-mono text-emerald-200/50 border-t border-emerald-900/40 mt-2.5">
               <div>
                 <span className="block text-emerald-300/70 font-bold tracking-wider">ID: GH-AKW-2026-8941</span>
-                <span className="text-[9px]">ISSUED: AKWAABA TRUST PROTOCOL</span>
+                <span>ISSUED: AKWAABA TRUST PROTOCOL</span>
               </div>
-              <div className="w-7 h-7 rounded-md bg-white p-1 flex items-center justify-center shrink-0">
+              <div className="w-6 h-6 rounded bg-white p-0.5 flex items-center justify-center shrink-0">
                 <QrCode className="w-full h-full text-zinc-950" />
               </div>
             </div>
 
           </div>
+
+          {/* ──── ARTIFACT 2: The Digital Tenancy Lease & Escrow Receipt ──── */}
+          <div className="w-full rounded-xl bg-[#071F15]/90 border border-emerald-600/25 p-3.5 shadow-lg backdrop-blur-xs relative overflow-hidden space-y-2 transform hover:scale-[1.01] transition-transform duration-300">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-emerald-900/60 border border-emerald-700/40 flex items-center justify-center text-emerald-400">
+                  <FileText className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono uppercase font-bold text-emerald-300 tracking-wider block">
+                    Digital Tenancy Lease
+                  </span>
+                  <span className="text-[9px] font-mono text-emerald-200/50">LEGAL INSTRUMENT #ACT-772</span>
+                </div>
+              </div>
+              <span className="text-[9px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-900/80 text-emerald-300 border border-emerald-700/40">
+                COUNTERSIGNED
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-900/40 text-[11px]">
+              <div>
+                <span className="text-[9px] uppercase font-mono text-emerald-300/60 block">Advance Rent Escrow</span>
+                <span className="font-bold text-white">GH₵ 8,400.00 / yr</span>
+              </div>
+              <div>
+                <span className="text-[9px] uppercase font-mono text-emerald-300/60 block">Escrow Release Condition</span>
+                <span className="font-semibold text-emerald-200/90 text-[10px]">Physical Key Handover</span>
+              </div>
+            </div>
+
+            <div className="pt-1.5 flex items-center justify-between text-[9px] font-mono text-emerald-300/60 border-t border-emerald-900/30">
+              <div className="flex items-center gap-1 text-emerald-400">
+                <Lock className="w-2.5 h-2.5" />
+                <span>SHA-256 Validated Signature</span>
+              </div>
+              <span>Paystack Escrow Trust</span>
+            </div>
+          </div>
+
+          {/* ──── ARTIFACT 3: Live Gatehouse Check-In Pass / Key Receipt ──── */}
+          <div className="w-full rounded-lg bg-emerald-950/60 border border-emerald-800/30 px-3.5 py-2 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <Key className="w-3 h-3" />
+              </div>
+              <div className="text-[10.5px]">
+                <span className="font-semibold text-white block leading-tight">Key Handover Protocol Active</span>
+                <span className="text-[9px] font-mono text-emerald-300/60">Gatehouse Caretaker On-Duty: Ayeduase</span>
+              </div>
+            </div>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+          </div>
+
         </div>
 
         {/* Bottom Platform Proof Footnote */}
