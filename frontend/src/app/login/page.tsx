@@ -4,31 +4,24 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Mail,
-  Lock,
   ArrowRight,
   Loader2,
   CheckCircle2,
   Clock,
   Eye,
   EyeOff,
-  Building2,
-  GraduationCap,
-  Key,
-  ChevronRight
+  AlertCircle
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
-
-type Persona = 'TENANT' | 'LANDLORD';
+import toast from 'react-hot-toast';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isTimeout = searchParams.get('reason') === 'timeout';
-  
-  const [persona, setPersona] = useState<Persona>('TENANT');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -133,12 +126,19 @@ function LoginForm() {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    toast('Google sign-in is being enabled for your region. Please sign in with your email and password.', {
+      icon: 'ℹ️',
+      duration: 4000,
+    });
+  };
+
   // Active session loading spinner
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
     return (
-      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-        <p className="text-xs font-mono tracking-widest uppercase text-zinc-400">Verifying Active Session</p>
+      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
+        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-500" />
+        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
     );
   }
@@ -154,26 +154,23 @@ function LoginForm() {
       : 'Tenant Dashboard';
 
     return (
-      <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 p-4 sm:p-6">
-        <div className="w-full max-w-md bg-white dark:bg-[#11161B] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 text-center space-y-6 shadow-xl shadow-zinc-950/5 relative overflow-hidden">
-          <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-[#0F5132] absolute top-0 left-0" />
-          
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-[#0F5132] dark:text-emerald-400">
-            <CheckCircle2 className="w-7 h-7" />
+      <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6">
+        <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
 
-          <div className="space-y-1.5">
-            <h2 className="text-xl font-bold text-zinc-950 dark:text-white">Active Session Detected</h2>
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Active Session Detected</h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Welcome back, <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span>. You are logged in as{' '}
-              <span className="font-mono text-xs uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 font-semibold">{sessionData.role}</span>.
+              You are signed in as <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span>.
             </p>
           </div>
 
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -187,7 +184,7 @@ function LoginForm() {
                 localStorage.removeItem('akwaaba_refresh_token');
                 window.location.reload();
               }}
-              className="w-full inline-flex items-center justify-center px-5 py-3 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-semibold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-xs font-semibold text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
             >
               Sign out &amp; switch account
             </button>
@@ -198,320 +195,336 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex flex-col justify-center items-center px-4 sm:px-6 py-8 sm:py-12 relative overflow-hidden bg-[#FAFAF9] dark:bg-[#090C0E] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
-      {/* ── Ambient Radial Atmosphere ── */}
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-gradient-to-b from-emerald-500/10 via-emerald-600/5 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-[600px] h-[260px] bg-emerald-950/20 rounded-full blur-3xl pointer-events-none" />
+      {/* ── Minimal Purpose-Built Header ── */}
+      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
+        <Link href="/" className="inline-flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+            <Image
+              src="/logo.png"
+              alt="AkwabaHomes"
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
+            Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+          </span>
+        </Link>
 
-      {/* ── Main Centered Card Container ── */}
-      <div className="w-full max-w-[460px] mx-auto relative z-10 animate-in fade-in zoom-in-95 duration-300">
-        
-        {/* Card Surface */}
-        <div className="bg-white/95 dark:bg-[#11161B]/95 backdrop-blur-xl border border-zinc-200/90 dark:border-zinc-800/90 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.6)] p-6 sm:p-9 relative overflow-hidden">
+        <Link 
+          href="/properties" 
+          className="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
+        >
+          Explore accommodations &rarr;
+        </Link>
+      </header>
+
+      {/* ── Main Asymmetric Workspace ── */}
+      <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
+        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-center">
           
-          {/* Top Hairline Emerald Accent */}
-          <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-[#0F5132] absolute top-0 left-0" />
-
-          {/* Header Monogram & Title */}
-          <div className="text-center space-y-3 mb-6">
-            <Link href="/" className="inline-block group">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-900 via-[#0F5132] to-[#072417] p-2 shadow-md flex items-center justify-center mx-auto border border-emerald-500/30 group-hover:scale-105 transition-transform duration-200">
-                <Image
-                  src="/logo.png"
-                  alt="Akwaaba Homes"
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-contain"
-                  priority
-                />
-              </div>
-            </Link>
+          {/* ──── Left Column: Dominant Authentication Form (58%) ──── */}
+          <div className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto lg:mx-0">
             
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                Welcome back
+            {/* Title & Editorial Framing */}
+            <div className="space-y-1.5 mb-7">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+                Sign in to your account
               </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                {persona === 'TENANT' 
-                  ? 'Access your verified tenancy, escrow keys & hostel passes'
-                  : 'Manage properties, rent disbursements & caretaker operations'}
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                Enter your details to access your tenancy ledger, hostel bookings, or property management desk.
               </p>
             </div>
-          </div>
 
-          {/* Persona Segmented Switcher */}
-          {!requireTwoFactor && (
-            <div className="mb-6 p-1 bg-zinc-100 dark:bg-zinc-900/80 rounded-2xl grid grid-cols-2 gap-1 border border-zinc-200/70 dark:border-zinc-800/80 text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setPersona('TENANT')}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl transition-all cursor-pointer ${
-                  persona === 'TENANT'
-                    ? 'bg-white dark:bg-[#161C23] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/50 dark:border-zinc-700/50 font-bold'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-                }`}
-              >
-                <GraduationCap className={`w-3.5 h-3.5 ${persona === 'TENANT' ? 'text-[#0F5132] dark:text-emerald-400' : ''}`} />
-                <span>Tenant &amp; Student</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPersona('LANDLORD')}
-                className={`flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl transition-all cursor-pointer ${
-                  persona === 'LANDLORD'
-                    ? 'bg-white dark:bg-[#161C23] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/50 dark:border-zinc-700/50 font-bold'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
-                }`}
-              >
-                <Building2 className={`w-3.5 h-3.5 ${persona === 'LANDLORD' ? 'text-[#0F5132] dark:text-emerald-400' : ''}`} />
-                <span>Landlord &amp; Partner</span>
-              </button>
-            </div>
-          )}
-
-          {/* Session Inactivity Timeout Banner */}
-          {isTimeout && (
-            <div className="mb-5 border-l-2 border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 pl-3.5 pr-3 py-2.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5 rounded-r-xl">
-              <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-              <div>
-                <div className="font-semibold text-[11.5px]">Session Expired</div>
-                <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                  Safely closed due to inactivity. Please sign in to resume.
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Error Banner */}
-          {error && (
-            <div className={`mb-5 border-l-2 ${
-              error.includes('warming up') 
-                ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200' 
-                : 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200'
-            } pl-3.5 pr-3 py-2.5 text-xs flex items-start gap-2.5 transition-all rounded-r-xl`}>
-              <Lock className={`w-4 h-4 shrink-0 mt-0.5 ${
-                error.includes('warming up') ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'
-              }`} />
-              <div className="space-y-0.5">
-                <div className="font-semibold uppercase tracking-wider text-[10.5px]">
-                  {error.includes('warming up') ? 'Database Initializing' : 'Authentication Notice'}
-                </div>
-                <div className="text-[11px] leading-relaxed opacity-95">{error}</div>
-              </div>
-            </div>
-          )}
-
-          {/* Form Content */}
-          {requireTwoFactor ? (
-            /* 2FA Challenge Form */
-            <form onSubmit={handle2FASubmit} className="space-y-5">
-              <div className="border-b border-zinc-100 dark:border-zinc-800/80 pb-4 space-y-1">
-                <div className="text-xs font-semibold text-zinc-900 dark:text-white uppercase tracking-wider">
-                  Two-Factor Verification Required
-                </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  {useRecoveryCode
-                    ? 'Enter an unused 8-character recovery code (e.g. XXXX-XXXX).'
-                    : 'Enter the 6-digit code from Google Authenticator, Authy, or Microsoft Authenticator.'}
-                </p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-400 font-semibold">
-                  {useRecoveryCode ? 'Emergency Recovery Key' : '6-Digit Security Token'}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-zinc-400" />
+            {/* Inactivity Timeout Notice */}
+            {isTimeout && (
+              <div className="mb-5 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
+                <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="font-semibold">Session expired</div>
+                  <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80">
+                    Your session timed out due to inactivity. Please sign in to resume.
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Error Notice */}
+            {error && (
+              <div className="mb-5 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/70 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                <div className="text-xs leading-relaxed">{error}</div>
+              </div>
+            )}
+
+            {/* Two-Factor Verification Challenge */}
+            {requireTwoFactor ? (
+              <form onSubmit={handle2FASubmit} className="space-y-5">
+                <div className="space-y-1 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
+                    Two-Factor Authentication
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {useRecoveryCode
+                      ? 'Enter your 8-character emergency recovery code.'
+                      : 'Enter the 6-digit code from your authenticator app.'}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                    {useRecoveryCode ? 'Emergency recovery key' : '6-digit verification code'}
+                  </label>
                   <input
                     type="text"
                     required
                     maxLength={useRecoveryCode ? 10 : 6}
                     autoFocus
-                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-600 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all"
+                    className="w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-600 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors"
                     placeholder={useRecoveryCode ? 'XXXX-XXXX' : '000000'}
                     value={twoFactorCode}
                     onChange={(e) => setTwoFactorCode(e.target.value)}
                   />
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseRecoveryCode(!useRecoveryCode);
-                    setTwoFactorCode('');
-                    setError('');
-                  }}
-                  className="text-[11px] font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
-                >
-                  {useRecoveryCode ? 'Use 6-digit authenticator code' : 'Lost device? Use emergency recovery key'}
-                </button>
-              </div>
-
-              <div className="space-y-2.5 pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading || !twoFactorCode.trim()}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-xl text-white bg-[#0F5132] hover:bg-[#0A3D24] text-xs font-semibold uppercase tracking-wider focus:outline-none transition-colors shadow-xs active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>Verify &amp; Enter Portal <ArrowRight className="w-3.5 h-3.5" /></>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequireTwoFactor(false);
-                    setTwoFactorCode('');
-                    setError('');
-                  }}
-                  className="w-full text-center text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 font-medium cursor-pointer py-1"
-                >
-                  &larr; Back to email and password
-                </button>
-              </div>
-            </form>
-          ) : (
-            /* Standard Email/Password Login Form */
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Email Address */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-zinc-400" />
-                  </div>
-                  <input 
-                    type="email" 
-                    required 
-                    autoComplete="email"
-                    className="block w-full pl-10 pr-3.5 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all" 
-                    placeholder={persona === 'TENANT' ? 'student@st.ug.edu.gh or personal@email.com' : 'landlord@estate.com.gh or personal@email.com'} 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                    Password
-                  </label>
-                  <Link 
-                    href="/forgot-password" 
-                    className="text-[11px] font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-zinc-400" />
-                  </div>
-                  <input 
-                    type={showPassword ? 'text' : 'password'} 
-                    required 
-                    autoComplete="current-password"
-                    className="block w-full pl-10 pr-10 py-3 bg-zinc-50/70 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-black focus:border-[#0F5132] dark:focus:border-emerald-500 focus:ring-2 focus:ring-[#0F5132]/15 outline-none transition-all" 
-                    placeholder="••••••••••••" 
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
-                  />
+                <div className="text-xs">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                    onClick={() => {
+                      setUseRecoveryCode(!useRecoveryCode);
+                      setTwoFactorCode('');
+                      setError('');
+                    }}
+                    className="text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {useRecoveryCode ? 'Use 6-digit authenticator code' : 'Lost device? Use emergency recovery key'}
                   </button>
+                </div>
+
+                <div className="space-y-2 pt-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading || !twoFactorCode.trim()}
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify and continue'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequireTwoFactor(false);
+                      setTwoFactorCode('');
+                      setError('');
+                    }}
+                    className="w-full text-center text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer py-1"
+                  >
+                    &larr; Back to sign in
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* Standard Sign-In Form */
+              <div className="space-y-5">
+                
+                {/* Optional Clean Google Sign-in */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  className="w-full h-11 flex items-center justify-center gap-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#14181E] text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  <span>Continue with Google</span>
+                </button>
+
+                {/* Subtle Divider */}
+                <div className="relative flex items-center justify-center my-4">
+                  <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+                  <span className="absolute bg-[#FBFBF9] dark:bg-[#0D0F12] px-3 text-[11px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                    or continue with email
+                  </span>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  
+                  {/* Email Input */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                      Email address
+                    </label>
+                    <input 
+                      type="email" 
+                      required 
+                      autoComplete="email"
+                      className="w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors" 
+                      placeholder="e.g. kwame@st.ug.edu.gh or personal@email.com" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                    />
+                  </div>
+
+                  {/* Password Input */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                        Password
+                      </label>
+                      <Link 
+                        href="/forgot-password" 
+                        className="text-xs text-[#0F5132] dark:text-emerald-400 hover:underline font-medium"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? 'text' : 'password'} 
+                        required 
+                        autoComplete="current-password"
+                        className="w-full h-11 pl-3.5 pr-10 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors" 
+                        placeholder="••••••••••••" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Keep me signed in */}
+                  <div className="pt-0.5">
+                    <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                      <input 
+                        id="remember-me" 
+                        name="remember-me" 
+                        type="checkbox" 
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132]" 
+                      />
+                      <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                        Keep me signed in on this device
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Primary Submit Button */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <span>Sign in</span>
+                      )}
+                    </button>
+                  </div>
+
+                </form>
+
+                {/* Secondary Registration Link */}
+                <div className="pt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  Don&apos;t have an account?{' '}
+                  <Link 
+                    href="/register" 
+                    className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  >
+                    Create an account
+                  </Link>
+                </div>
+
+              </div>
+            )}
+
+          </div>
+
+          {/* ──── Right Column: Restrained Editorial Brand Visual (42%) ──── */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-6">
+            <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group">
+              
+              {/* Authentic Ghanaian Student & Residential Complex Photo */}
+              <Image
+                src="/images/auth-bg.png"
+                alt="Nkrumah Residence Ghanaian student and apartment community"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                priority
+              />
+
+              {/* Gentle Vignette Gradient for Legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+
+              {/* Editorial Caption Card */}
+              <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 text-white space-y-2">
+                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
+                  Verified Housing // Accra • Kumasi • Cape Coast
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
+                  Nkrumah Residence &amp; Executive Suites
+                </h3>
+                <p className="text-xs text-zinc-200/80 leading-relaxed font-normal max-w-sm">
+                  Verified student hostels and residential tenancies with transparent terms, escrow protection, and direct landlord connections.
+                </p>
+                <div className="pt-2 flex items-center gap-2 text-[11px] text-zinc-300/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>Ayeduase Hub • KNUST &amp; Legon Campus Portals</span>
                 </div>
               </div>
 
-              {/* Keep me signed in */}
-              <div className="flex items-center justify-between pt-0.5">
-                <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                  <input 
-                    id="remember-me" 
-                    name="remember-me" 
-                    type="checkbox" 
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132]" 
-                  />
-                  <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
-                    Keep me signed in on this device
-                  </span>
-                </label>
-              </div>
-
-              {/* Primary Submit CTA */}
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-5 rounded-xl text-white bg-gradient-to-b from-[#146c43] to-[#0F5132] hover:from-[#0F5132] hover:to-[#0A3D24] text-xs font-semibold uppercase tracking-wider focus:outline-none transition-all shadow-xs active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Sign in as {persona === 'TENANT' ? 'Tenant' : 'Landlord'}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-              
-            </form>
-          )}
-
-          {/* Switch to Registration */}
-          <div className="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-            <span>New to AkwaabaHomes?</span>
-            <Link 
-              href="/register" 
-              className="inline-flex items-center gap-1 font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
-            >
-              <span>Create an account</span>
-              <ChevronRight className="w-3 h-3" />
-            </Link>
+            </div>
           </div>
 
         </div>
+      </main>
 
-        {/* Anchored Trust Footnote */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-zinc-400 dark:text-zinc-500">
-          <div className="inline-flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span>256-Bit SSL Encrypted</span>
-          </div>
-          <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
-          <div className="inline-flex items-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span>Paystack Escrow Protected</span>
-          </div>
-          <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">•</span>
-          <div className="inline-flex items-center gap-1.5">
-            <Key className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span>Digital Keycard Ready</span>
-          </div>
+      {/* ── Restrained Footer ── */}
+      <footer className="w-full px-6 sm:px-10 lg:px-16 py-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 dark:text-zinc-500 gap-2">
+        <div>
+          &copy; {new Date().getFullYear()} AkwaabaHomes Ghana. All rights reserved.
         </div>
-
-      </div>
+        <div className="flex items-center gap-4">
+          <Link href="/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Privacy
+          </Link>
+          <Link href="/help" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Support
+          </Link>
+        </div>
+      </footer>
 
     </div>
   );
@@ -519,7 +532,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FAFAF9] dark:bg-[#090C0E]" />}>
+    <Suspense fallback={<div className="-mt-18 md:-mt-20 min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12]" />}>
       <LoginForm />
     </Suspense>
   );

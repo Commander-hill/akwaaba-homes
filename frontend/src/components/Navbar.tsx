@@ -17,8 +17,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  // Do not render public Navbar on Admin portal routes
-  if (pathname?.startsWith('/admin')) {
+  // Do not render public Navbar on Admin portal and dedicated auth routes
+  if (pathname?.startsWith('/admin') || pathname === '/login') {
     return null;
   }
 
