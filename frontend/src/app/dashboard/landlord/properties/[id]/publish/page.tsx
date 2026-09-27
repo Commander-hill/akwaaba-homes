@@ -117,6 +117,27 @@ export default function PublishPropertyPage() {
     }
   }, [searchParams, verifyPaymentMutation]);
 
+  // Automated background polling while waiting for Hubtel Mobile Money authorization
+  const isAlreadyActive = Boolean(property?.isAvailable && property?.subscription?.isActive);
+
+  useEffect(() => {
+    if (!waitingForMomo || isAlreadyActive) return;
+
+    const interval = setInterval(async () => {
+      const res = await refetchProperty();
+      const updatedProp = res.data?.property || res.data?.data || res.data;
+      if (updatedProp?.isAvailable && updatedProp?.subscription?.isActive) {
+        setWaitingForMomo(false);
+        toast.success('Payment verified! Your listing is now live.');
+        queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+        queryClient.invalidateQueries({ queryKey: ['properties', 'landlord', 'mine'] });
+        queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [waitingForMomo, isAlreadyActive, refetchProperty, queryClient, propertyId]);
+
   // Loading state
   if (isLoadingProperty) {
     return (
@@ -145,8 +166,6 @@ export default function PublishPropertyPage() {
       </div>
     );
   }
-
-  const isAlreadyActive = property?.isAvailable && property?.subscription?.isActive;
 
   const parsedImages = React.useMemo(() => {
     if (!property?.images) return [];
@@ -529,14 +548,36 @@ export default function PublishPropertyPage() {
 
               {/* Waiting for MoMo Push Prompt Notification */}
               {waitingForMomo && (
-                <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-2 animate-in fade-in">
-                  <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                    Authorization Prompt Pushed
+                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                      Awaiting Mobile Money Approval
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/90 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full">
+                      Auto-Checking
+                    </span>
                   </div>
                   <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                    Please check your mobile phone and approve the USSD prompt for GH₵ 100.00. Once approved, this page will update automatically.
+                    A USSD prompt for <strong>GH₵ 100.00</strong> was sent to <strong>{momoPhoneNumber}</strong>. Please enter your mobile money PIN to confirm. This page will update automatically once authorized.
                   </p>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const res = await refetchProperty();
+                      const updatedProp = res.data?.property || res.data?.data || res.data;
+                      if (updatedProp?.isAvailable && updatedProp?.subscription?.isActive) {
+                        setWaitingForMomo(false);
+                        toast.success('Listing verified and live!');
+                      } else {
+                        toast('Payment still pending authorization. Please approve on your phone.', { icon: '⏳' });
+                      }
+                    }}
+                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Check Approval Status Now</span>
+                  </button>
                 </div>
               )}
 

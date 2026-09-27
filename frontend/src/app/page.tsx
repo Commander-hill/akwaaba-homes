@@ -484,8 +484,12 @@ export default function Home() {
                   {/* Photo Thumbnail */}
                   <div className="relative h-50 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
                     <img 
-                      src={getImageUrl(prop.images?.[0]) || '/placeholder-property.jpg'} 
+                      src={getImageUrl(prop.images?.[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
                       alt={prop.title} 
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                      }}
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                     />
                     

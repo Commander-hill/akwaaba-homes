@@ -531,6 +531,10 @@ export default function PropertiesPage() {
                             <img 
                               src={getImageUrl(property.images[0])} 
                               alt={property.title} 
+                              onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                              }}
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                           ) : (

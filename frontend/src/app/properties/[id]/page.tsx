@@ -424,28 +424,76 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
       <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 shadow-xs">
         {validImages.length <= 1 ? (
           <div className="h-[360px] sm:h-[460px] w-full overflow-hidden relative">
-            <img src={mainImage} alt={property.title} className="w-full h-full object-cover" />
+            <img 
+              src={mainImage} 
+              alt={property.title} 
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+              }}
+              className="w-full h-full object-cover" 
+            />
           </div>
         ) : validImages.length === 2 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-1.5 h-[360px] sm:h-[460px]">
             <div className="h-full overflow-hidden">
-              <img src={getImageUrl(validImages[0])} alt={property.title} className="w-full h-full object-cover" />
+              <img 
+                src={getImageUrl(validImages[0])} 
+                alt={property.title} 
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                }}
+                className="w-full h-full object-cover" 
+              />
             </div>
             <div className="h-full overflow-hidden">
-              <img src={getImageUrl(validImages[1])} alt={property.title} className="w-full h-full object-cover" />
+              <img 
+                src={getImageUrl(validImages[1])} 
+                alt={property.title} 
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                }}
+                className="w-full h-full object-cover" 
+              />
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 h-[360px] sm:h-[460px]">
             <div className="md:col-span-2 h-full overflow-hidden">
-              <img src={getImageUrl(validImages[0])} alt={property.title} className="w-full h-full object-cover" />
+              <img 
+                src={getImageUrl(validImages[0])} 
+                alt={property.title} 
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                }}
+                className="w-full h-full object-cover" 
+              />
             </div>
             <div className="hidden md:flex flex-col gap-1.5 h-full">
               <div className="flex-1 overflow-hidden">
-                <img src={getImageUrl(validImages[1])} alt={property.title} className="w-full h-full object-cover" />
+                <img 
+                  src={getImageUrl(validImages[1])} 
+                  alt={property.title} 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                  }}
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <div className="flex-1 overflow-hidden relative">
-                <img src={getImageUrl(validImages[2])} alt={property.title} className="w-full h-full object-cover" />
+                <img 
+                  src={getImageUrl(validImages[2])} 
+                  alt={property.title} 
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                  }}
+                  className="w-full h-full object-cover" 
+                />
                 {validImages.length > 3 && (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
                     <span className="text-white font-black text-xs">+{validImages.length - 3} Photos</span>
