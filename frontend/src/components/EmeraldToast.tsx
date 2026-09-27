@@ -48,12 +48,11 @@ export function EmeraldToastItem({ toast }: EmeraldToastItemProps) {
       onClick={() => hotToast.dismiss(toast.id)}
       className={clsx(
         "flex items-center gap-2.5 min-w-[280px] max-w-[92vw] sm:max-w-lg px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-full sm:rounded-2xl border transition-all duration-200 ease-out pointer-events-auto cursor-pointer select-none",
-        "mb-16 md:mb-0", // Offsets above MobileBottomNav on mobile devices
-        "hover:opacity-20 transition-opacity duration-150", // Peek-through: instantly fades on hover so text underneath is never blocked
+        "hover:opacity-25 transition-opacity duration-150", // Peek-through: softens on hover so any text underneath is visible
         config.wrapper,
         toast.visible
           ? "opacity-100 translate-y-0 scale-100"
-          : "opacity-0 translate-y-3 scale-95 pointer-events-none"
+          : "opacity-0 -translate-y-3 scale-95 pointer-events-none"
       )}
       style={{
         ...toast.style,
