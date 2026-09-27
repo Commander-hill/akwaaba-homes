@@ -54,11 +54,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                 {children}
               </SessionTimeoutProvider>
               <Toaster
-                position="top-right"
-                gutter={8}
+                position="top-center"
+                gutter={10}
                 containerStyle={{
-                  top: 20,
-                  right: 20,
+                  top: 24,
                   zIndex: 99999,
                 }}
                 toastOptions={{

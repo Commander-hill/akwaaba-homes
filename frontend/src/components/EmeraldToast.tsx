@@ -13,30 +13,44 @@ export function EmeraldToastItem({ toast }: EmeraldToastItemProps) {
   const message = resolveValue(toast.message, toast);
   const type = toast.type;
 
-  // Linear / Stripe minimalist icon mapping
-  const icon = (() => {
+  // Semantically styled pill banner matching the platform's alert aesthetic
+  const config = (() => {
     switch (type) {
-      case 'success':
-        return <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />;
       case 'error':
-        return <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />;
+        return {
+          wrapper: "bg-rose-50 dark:bg-rose-950/70 border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300",
+          icon: <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />,
+          closeHover: "hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300",
+        };
+      case 'success':
+        return {
+          wrapper: "bg-emerald-50 dark:bg-emerald-950/70 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300",
+          icon: <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />,
+          closeHover: "hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300",
+        };
       case 'loading':
-        return <Loader2 className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 animate-spin" />;
+        return {
+          wrapper: "bg-zinc-50 dark:bg-zinc-900/90 border-zinc-200 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200",
+          icon: <Loader2 className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0 animate-spin" />,
+          closeHover: "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200",
+        };
       default:
-        return <Info className="w-4 h-4 text-zinc-600 dark:text-zinc-300 shrink-0" />;
+        return {
+          wrapper: "bg-sky-50 dark:bg-sky-950/70 border-sky-200 dark:border-sky-800/60 text-sky-800 dark:text-sky-300",
+          icon: <Info className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />,
+          closeHover: "hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-300",
+        };
     }
   })();
 
   return (
     <div
       className={clsx(
-        "flex items-center gap-2.5 min-w-[280px] max-w-[420px] px-3.5 py-2.5 rounded-xl border transition-all duration-200 ease-out pointer-events-auto",
-        "bg-white/95 dark:bg-[#12141A]/95 text-zinc-900 dark:text-zinc-100",
-        "border-zinc-200/90 dark:border-zinc-800/90",
-        "backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.45)]",
+        "flex items-center gap-2.5 min-w-[300px] max-w-[92vw] sm:max-w-xl px-4 py-3 sm:px-5 sm:py-3.5 rounded-xl sm:rounded-2xl border transition-all duration-200 ease-out pointer-events-auto backdrop-blur-xs shadow-xs",
+        config.wrapper,
         toast.visible
           ? "opacity-100 translate-y-0 scale-100"
-          : "opacity-0 -translate-y-2 scale-95 pointer-events-none"
+          : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
       )}
       style={{
         ...toast.style,
@@ -45,18 +59,21 @@ export function EmeraldToastItem({ toast }: EmeraldToastItemProps) {
       aria-live="polite"
     >
       {/* Status Icon */}
-      {icon}
+      {config.icon}
 
       {/* Message Text */}
-      <span className="flex-1 text-[13px] font-medium leading-snug break-words">
+      <span className="flex-1 text-xs sm:text-[13.5px] font-bold tracking-tight leading-snug break-words">
         {message}
       </span>
 
       {/* Dismiss Button */}
       <button
         onClick={() => hotToast.dismiss(toast.id)}
-        className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 p-0.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/80 transition-colors ml-1 cursor-pointer shrink-0"
-        aria-label="Dismiss"
+        className={clsx(
+          "p-1 rounded-lg opacity-60 hover:opacity-100 transition-opacity ml-1.5 cursor-pointer shrink-0",
+          config.closeHover
+        )}
+        aria-label="Dismiss notification"
       >
         <X className="w-3.5 h-3.5" />
       </button>
