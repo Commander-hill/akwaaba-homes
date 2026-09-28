@@ -104,8 +104,8 @@ export default function ForgotPasswordPage() {
               
               {/* Tasteful Ghanaian Student & Residential Photo */}
               <Image
-                src="/images/auth-bg.png"
-                alt="Modern Ghanaian residential community"
+                src="/images/auth-recovery.jpg"
+                alt="Authentic Ghanaian resident verifying account recovery"
                 fill
                 sizes="(max-width: 1024px) 100vw, 45vw"
                 className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
