@@ -8,7 +8,7 @@ import {
   BadgeCheck, Scale, Building, CreditCard, MessageSquare, Wrench, BellRing, 
   Package, Key, FileText, Receipt, PhoneCall, KeyRound, Heart, Compass, Calculator,
   Calendar, Armchair, Gauge, ClipboardCheck, Menu, CalendarCheck, PlusCircle, 
-  Edit3, Boxes, Inbox, Bell, Star, Settings
+  Edit3, Boxes, Inbox, Bell, Star, Settings, Building2
 } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/axios';
@@ -139,24 +139,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     ];
   } else {
-    // Tenant Dashboard
+    // Tenant Dashboard: 5 Cohesive Resident Pillars
     sidebarGroups = [
       {
-        title: 'MY RESIDENCE',
+        title: 'RESIDENT PILLARS',
         links: [
-          { name: 'Overview', href: '/dashboard/tenant', icon: LayoutDashboard },
-          { name: 'My bookings', href: '/dashboard/tenant?tab=bookings', icon: CalendarCheck },
-          { name: 'Booking details', href: '/dashboard/tenant?tab=active-booking', icon: FileText },
-          { name: 'Saved properties', href: '/dashboard/wishlist', icon: Heart },
+          { name: 'Residence & Lease', href: '/dashboard/tenant?tab=residence', icon: Building2 },
+          { name: 'Escrow & Payments', href: '/dashboard/tenant?tab=payments', icon: CreditCard },
+          { name: 'Repairs & Maintenance', href: '/dashboard/tenant?tab=maintenance', icon: Wrench },
+          { name: 'Living & Amenities', href: '/dashboard/tenant?tab=living', icon: KeyRound },
+          { name: 'Community & Roommates', href: '/dashboard/tenant?tab=community', icon: Users },
         ]
       },
       {
-        title: 'ACCOUNT & ALERTS',
+        title: 'EXPLORE & SAVED',
         links: [
-          { name: 'Profile', href: '/dashboard/profile', icon: User },
+          { name: 'Browse Properties', href: '/properties', icon: Home },
+          { name: 'Saved Wishlist', href: '/dashboard/wishlist', icon: Heart },
+        ]
+      },
+      {
+        title: 'ACCOUNT & SAFETY',
+        links: [
           { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
-          { name: 'Reviews', href: '/dashboard/tenant?tab=reviews', icon: Star },
-          { name: 'Account settings', href: '/dashboard/profile/security', icon: Settings },
+          { name: 'Profile & Security', href: '/dashboard/profile', icon: User },
+          { name: 'Ghana Card ID', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];

@@ -153,9 +153,25 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                 const linkTab = linkQuery ? new URLSearchParams(linkQuery).get('tab') : null;
                 const currentTab = searchParams ? searchParams.get('tab') : null;
 
+                const PILLAR_TAB_GROUPS: Record<string, string[]> = {
+                  residence: ['residence', 'bookings', 'active-booking', 'documents', 'renewals', 'inventory'],
+                  payments: ['payments', 'tranches', 'billsplit'],
+                  maintenance: ['maintenance', 'tickets', 'safety'],
+                  living: ['living', 'visitors', 'deliveries', 'vehicles', 'services'],
+                  community: ['community', 'roommates', 'messages', 'reviews', 'notices'],
+                };
+
                 let isActive = false;
                 if (linkTab) {
-                  isActive = pathname === linkPath && currentTab === linkTab;
+                  if (pathname === linkPath) {
+                    if (currentTab === linkTab) {
+                      isActive = true;
+                    } else if (!currentTab && linkTab === 'residence') {
+                      isActive = true;
+                    } else if (currentTab && PILLAR_TAB_GROUPS[linkTab]?.includes(currentTab)) {
+                      isActive = true;
+                    }
+                  }
                 } else if (pathname === linkPath) {
                   isActive = !currentTab;
                 }
