@@ -741,7 +741,7 @@ export default function RegisterPage() {
                       required 
                       checked={formData.acceptTerms} 
                       onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })} 
-                      className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132]" 
+                      className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132] cursor-pointer" 
                     />
                     <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       I agree to the{' '}
@@ -770,8 +770,8 @@ export default function RegisterPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading}
-                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+                    disabled={isLoading || !formData.acceptTerms}
+                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0F5132] cursor-pointer shadow-xs disabled:shadow-none"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
