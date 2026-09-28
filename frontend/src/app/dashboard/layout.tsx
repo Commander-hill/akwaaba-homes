@@ -74,11 +74,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // While loading or unauthenticated, show a loading placeholder while redirect happens
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <div className="h-1 w-full bg-[var(--primary)] animate-pulse" />
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)] opacity-50" />
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        <span className="text-xs font-medium text-zinc-500 mt-2.5">Preparing dashboard...</span>
       </div>
     );
   }
@@ -165,9 +163,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-5rem)] w-full bg-slate-50 dark:bg-[#0a0a0a] overflow-hidden">
+    <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-5rem)] w-full bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased overflow-hidden">
       {/* Mobile Dashboard Top Header */}
-      <div className="md:hidden flex items-center justify-between px-4 py-2.5 bg-white dark:bg-[#0B0D12] border-b border-zinc-200 dark:border-zinc-800 shrink-0 z-20">
+      <div className="md:hidden flex items-center justify-between px-4 py-2.5 bg-white dark:bg-[#14181E] border-b border-zinc-200 dark:border-zinc-800 shrink-0 z-20">
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -192,7 +190,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </div>
 
-      <Suspense fallback={<div className="hidden md:block w-64 bg-[#0B0D12]" />}>
+      <Suspense fallback={<div className="hidden md:block w-64 bg-[#0D0F14]" />}>
         <ModernSidebar 
           user={user} 
           groups={sidebarGroups} 
@@ -203,7 +201,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </Suspense>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-[#0a0a0a] min-w-0">
+      <div className="flex-1 overflow-y-auto bg-[#FBFBF9] dark:bg-[#0D0F12] min-w-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 min-h-full">
           {children}
         </div>

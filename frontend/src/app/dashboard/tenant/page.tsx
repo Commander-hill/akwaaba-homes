@@ -438,7 +438,7 @@ function TenantDashboardContent() {
       <OnboardingProgressWidget user={session} />
       
       {/* ── WORKSPACE HEADER & ANNOUNCEMENTS (ARCHITECTURAL CANVAS LAYOUT) ── */}
-      <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800 space-y-3">
+      <div className="pb-4 border-b border-zinc-200 dark:border-zinc-800 space-y-4">
         <NoticeBoard />
 
         {/* Live Landlord Compound Notice Advisory: Sleek Ambient Strip */}
@@ -455,7 +455,7 @@ function TenantDashboardContent() {
                     "py-2.5 px-3.5 rounded-lg border-l-3 flex items-start gap-3 text-xs transition-colors",
                     isEmergency && "bg-red-500/5 border-l-red-600 text-red-900 dark:text-red-200 border-y border-r border-red-200/50 dark:border-red-900/40",
                     isImportant && "bg-amber-500/5 border-l-amber-500 text-amber-900 dark:text-amber-200 border-y border-r border-amber-200/50 dark:border-amber-900/40",
-                    !isEmergency && !isImportant && "bg-purple-500/5 border-l-purple-600 text-purple-900 dark:text-purple-200 border-y border-r border-purple-200/50 dark:border-purple-900/40"
+                    !isEmergency && !isImportant && "bg-emerald-500/5 border-l-[#0F5132] text-emerald-950 dark:text-emerald-200 border-y border-r border-emerald-200/50 dark:border-emerald-900/40"
                   )}
                 >
                   <Megaphone className="w-4 h-4 shrink-0 mt-0.5" />
@@ -478,18 +478,193 @@ function TenantDashboardContent() {
 
         <div id="tour-tenant-workspaces" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           <div>
-            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Tenant Portal</h1>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Resident Portal</h1>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs sm:text-sm">Manage your residential tenancies, rent escrow disbursements, and maintenance requests.</p>
           </div>
           <div className="flex items-center gap-2.5">
             <Link
               href="/dashboard/wishlist"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
             >
               <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> My Wishlist
             </Link>
             <OnboardingTour role={session?.role} user={session} />
           </div>
+        </div>
+
+        {/* Executive Resident Overview Snapshot */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Current Residence</div>
+            <div className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white mt-0.5 truncate">
+              {activeBooking?.property?.title || 'No Active Booking'}
+            </div>
+            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 flex items-center gap-1 truncate">
+              <Lock className="w-2.5 h-2.5 shrink-0" />
+              <span>{activeBooking ? 'MoMo Escrow Verified' : 'Explore Campus Hostels'}</span>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Escrow Rent Paid</div>
+            <div className="text-lg sm:text-xl font-black text-[#0F5132] dark:text-emerald-400 mt-0.5">
+              GHS {totalPaidGhs.toLocaleString()}
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Protected in Paystack escrow</div>
+          </div>
+
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Legal Agreements</div>
+            <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
+              {agreements.length} {agreements.length === 1 ? 'Agreement' : 'Agreements'}
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Act 220 Legally Binding</div>
+          </div>
+
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Maintenance Queue</div>
+            <div className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
+              {tickets.filter((t: any) => t.status !== 'RESOLVED').length} Active
+            </div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">
+              {tickets.filter((t: any) => t.status === 'RESOLVED').length} resolved tickets
+            </div>
+          </div>
+        </div>
+
+        {/* Primary Horizontal Workspace Navigation */}
+        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto scrollbar-none flex-nowrap shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('bookings')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              (activeTab === 'bookings' || activeTab === 'active-booking')
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <Building2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Accommodations</span>
+            {activeBookings.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                {activeBookings.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('documents')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'documents'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <FileText className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Leases</span>
+            {agreements.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                {agreements.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('payments')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'payments'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <CreditCard className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Payments</span>
+            {transactions.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                {transactions.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('tickets')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'tickets'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <Wrench className="w-3.5 h-3.5 text-amber-500" />
+            <span>Maintenance</span>
+            {tickets.filter((t: any) => t.status !== 'RESOLVED').length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
+                {tickets.filter((t: any) => t.status !== 'RESOLVED').length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('roommates')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'roommates'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <Users className="w-3.5 h-3.5 text-teal-500" />
+            <span>Roommates</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('billsplit')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'billsplit'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Split Utilities</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('visitors')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'visitors'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <Key className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Gate Passes</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('safety')}
+            className={clsx(
+              "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
+              activeTab === 'safety'
+                ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
+            )}
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-rose-500" />
+            <span>Safety &amp; Contacts</span>
+          </button>
         </div>
       </div>
 

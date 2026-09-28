@@ -364,7 +364,7 @@ function LandlordDashboardContent() {
       />
       
       {/* Header Banner & Tabs Container (Static on mobile, Sticky on desktop) */}
-      <div className="static md:sticky md:top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-3 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
+      <div className="static md:sticky md:top-0 z-20 bg-[#FBFBF9]/95 dark:bg-[#0D0F12]/95 backdrop-blur-md pt-2 pb-3 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-3">
@@ -379,14 +379,14 @@ function LandlordDashboardContent() {
             <Link
               id="tour-add-property"
               href="/dashboard/landlord/new"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>List Property</span>
             </Link>
             <Link
               href="/dashboard/landlord/withdraw"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <CreditCard className="w-3.5 h-3.5" />
               <span>Request MoMo Payout</span>
@@ -403,7 +403,7 @@ function LandlordDashboardContent() {
 
         {/* Executive Financial & Operational Snapshot */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Net Yield (Available)</div>
             <div className="text-lg sm:text-xl font-black text-[#0F5132] dark:text-emerald-400 mt-0.5">
               GHS {(earningsSummary?.totalNetEarnings || 0).toLocaleString()}
@@ -411,7 +411,7 @@ function LandlordDashboardContent() {
             <div className="text-[10px] text-zinc-500 mt-0.5">Cleared for MoMo withdrawal</div>
           </div>
 
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Gross Rent Inflow</div>
             <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
               GHS {(earningsSummary?.totalGrossEarnings || 0).toLocaleString()}
@@ -419,7 +419,7 @@ function LandlordDashboardContent() {
             <div className="text-[10px] text-zinc-500 mt-0.5">Total collected via escrow</div>
           </div>
 
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Listed Inventory</div>
             <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
               {subStats.totalProperties} {subStats.totalProperties === 1 ? 'Property' : 'Properties'}
@@ -427,7 +427,7 @@ function LandlordDashboardContent() {
             <div className="text-[10px] text-zinc-500 mt-0.5">{subStats.activeSubscriptions} active listings</div>
           </div>
 
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Action Queue</div>
             <div className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
               {bookings.filter((b: any) => b.status === 'PENDING').length + tickets.filter((t: any) => t.status === 'PENDING').length} Pending
