@@ -135,7 +135,7 @@ export default function MobileBottomNav() {
       ];
 
   // Do not render bottom nav on dedicated auth routes
-  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
+  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password') {
     return null;
   }
 

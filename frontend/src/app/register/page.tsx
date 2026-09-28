@@ -3,9 +3,20 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Lock, ArrowRight, ArrowLeft, Loader2, Building, Phone, Calendar, Globe, MapPin, GraduationCap, CheckCircle, Wrench } from 'lucide-react';
+import Image from 'next/image';
+import { 
+  User, 
+  Building2, 
+  GraduationCap, 
+  ArrowRight, 
+  ArrowLeft, 
+  Loader2, 
+  Eye, 
+  EyeOff, 
+  AlertCircle,
+  CheckCircle2
+} from 'lucide-react';
 import api from '@/lib/axios';
-import PassportUpload from '@/components/PassportUpload';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 
@@ -52,10 +63,12 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [formData, setFormData] = useState({
-    role: '',
-    isStudent: false,
+    role: 'TENANT',
+    isStudent: true,
     avatarUrl: '',
     
     // Basic Info
@@ -64,19 +77,19 @@ export default function RegisterPage() {
     otherNames: '',
     email: '',
     phoneNumber: '',
-    gender: '',
+    gender: 'MALE',
     dateOfBirth: '',
-    nationality: '',
+    nationality: 'Ghanaian',
     guardianName: '',
     guardianPhone: '',
     
     // School Info
-    campus: '',
+    campus: 'KNUST',
     studentId: '',
     dateOfAdmission: '',
     programmeOfStudy: '',
-    yearOfStudy: '',
-    studentType: '',
+    yearOfStudy: '100',
+    studentType: 'UNDERGRADUATE',
     
     // Security
     password: '',
@@ -89,62 +102,35 @@ export default function RegisterPage() {
   const triggerError = (msg: string) => {
     setError(msg);
     toast.error(msg);
-    setTimeout(() => {
-      if (errorRef.current) {
-        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }, 50);
+    if (errorRef.current) {
+      errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
-  const handleNext = () => {
+  const handleNextStep = () => {
     setError('');
-    
-    if (currentStep === 1 && !formData.role) {
-      triggerError('Please select an account type.');
+
+    // Step 1 Validation
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      triggerError('Please enter your first and last name.');
       return;
     }
-    
-    if (currentStep === 2) {
-      if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim()) {
-        triggerError('Please fill in your name and email address.');
-        return;
-      }
-      if (!formData.phoneNumber.trim() || !formData.gender || !formData.nationality.trim()) {
-        triggerError('Please fill in your Phone Number, Gender, and Country/Nationality.');
-        return;
-      }
-      if (formData.role === 'TENANT') {
-        if (!formData.dateOfBirth || !formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-          triggerError('Please fill in your Date of Birth and Guardian / Emergency Contact details.');
-          return;
-        }
-      }
+    if (!formData.phoneNumber.trim()) {
+      triggerError('Please provide a valid Ghanaian phone number (e.g. 054xxxxxxx).');
+      return;
+    }
+    if (!formData.gender || !formData.nationality.trim()) {
+      triggerError('Please specify your gender and nationality.');
+      return;
     }
 
-    if (currentStep === 3 && formData.isStudent) {
-      if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim() || !formData.yearOfStudy || !formData.studentType) {
-        triggerError('Please fill in all mandatory school information fields.');
-        return;
-      }
-    }
-
-    if (currentStep === 2 && (!formData.isStudent || formData.role === 'LANDLORD' || formData.role === 'CARETAKER')) {
-      setCurrentStep(4);
-    } else {
-      setCurrentStep((prev) => prev + 1);
-    }
+    setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleBack = () => {
+  const handleBackStep = () => {
     setError('');
-    if (currentStep === 4 && (!formData.isStudent || formData.role === 'LANDLORD' || formData.role === 'CARETAKER')) {
-      setCurrentStep(2);
-    } else {
-      setCurrentStep((prev) => prev - 1);
-    }
+    setCurrentStep(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -153,10 +139,31 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError('');
 
-    if (!formData.acceptTerms) {
-      triggerError('You must agree to the Terms and Conditions.');
+    // Step 2 Validations
+    if (!formData.email.trim()) {
+      triggerError('Please enter a valid email address.');
       setIsLoading(false);
       return;
+    }
+
+    if (formData.role === 'TENANT') {
+      if (!formData.dateOfBirth) {
+        triggerError('Date of birth is required for tenant verification.');
+        setIsLoading(false);
+        return;
+      }
+      if (formData.isStudent) {
+        if (!formData.guardianName.trim() || !formData.guardianPhone.trim()) {
+          triggerError('Please provide emergency guardian contact details.');
+          setIsLoading(false);
+          return;
+        }
+        if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim()) {
+          triggerError('Please complete your university and student details.');
+          setIsLoading(false);
+          return;
+        }
+      }
     }
 
     if (formData.password.length < 8) {
@@ -165,14 +172,14 @@ export default function RegisterPage() {
       return;
     }
 
-    if (!/[A-Z]/.test(formData.password) || !/[a-z]/.test(formData.password) || !/\d/.test(formData.password) || !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
-      triggerError('Password must include at least 1 uppercase letter, 1 lowercase letter, 1 number, and 1 special character.');
+    if (formData.password !== formData.confirmPassword) {
+      triggerError('Passwords do not match. Please re-enter your password.');
       setIsLoading(false);
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      triggerError('Passwords do not match.');
+    if (!formData.acceptTerms) {
+      triggerError('You must agree to the Terms of Service and Privacy Policy.');
       setIsLoading(false);
       return;
     }
@@ -182,22 +189,20 @@ export default function RegisterPage() {
       toast.success('Registration successful! Please sign in.');
       router.push('/login?registered=true');
     } catch (err: any) {
-      triggerError(err.response?.data?.message || 'Failed to register. Please try again.');
+      triggerError(err.response?.data?.message || 'Failed to complete registration. Please try again.');
       setIsLoading(false);
     }
   };
 
-  const totalSteps = 4;
-  const progressPercentage = ((currentStep) / totalSteps) * 100;
+  const inputClass = "w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors";
+  const labelClass = "block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5";
 
-  const inputClass = "block w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-800 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-all";
-  const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider mb-1.5";
-
+  // Active Session Fallback
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token')) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-4 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Verifying existing session...</p>
+      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
+        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132]" />
+        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
     );
   }
@@ -212,40 +217,40 @@ export default function RegisterPage() {
       : 'Tenant Dashboard';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 p-4 sm:p-6 transition-colors">
-        <div className="w-full max-w-md mx-auto">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 text-center space-y-5 shadow-xs">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center mx-auto text-[#0F5132] dark:text-emerald-400">
-              <CheckCircle className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-zinc-950 dark:text-white">Already Signed In</h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1.5 leading-relaxed">
-                You are currently logged in as <span className="font-bold text-zinc-900 dark:text-white">{sessionData.firstName || sessionData.email}</span> ({sessionData.role}).
-              </p>
-            </div>
-            <div className="space-y-2.5 pt-2">
-              <button
-                onClick={() => redirectByRole(sessionData)}
-                className="w-full py-3 px-4 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-              >
-                <span>Go to {roleTitle}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    await api.post('/auth/logout');
-                  } catch (e) {}
-                  localStorage.removeItem('akwaaba_access_token');
-                  localStorage.removeItem('akwaaba_refresh_token');
-                  window.location.reload();
-                }}
-                className="w-full py-2.5 px-4 text-xs font-semibold text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-              >
-                Sign out &amp; create new account
-              </button>
-            </div>
+      <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6">
+        <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+
+          <div className="space-y-1">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Already Signed In</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              You are signed in as <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span> ({sessionData.role}).
+            </p>
+          </div>
+
+          <div className="space-y-2.5 pt-2">
+            <button
+              onClick={() => redirectByRole(sessionData)}
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            >
+              <span>Continue to {roleTitle}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await api.post('/auth/logout');
+                } catch (e) {}
+                localStorage.removeItem('akwaaba_access_token');
+                localStorage.removeItem('akwaaba_refresh_token');
+                window.location.reload();
+              }}
+              className="w-full h-11 inline-flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-xs font-semibold text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
+            >
+              Sign out &amp; create new account
+            </button>
           </div>
         </div>
       </div>
@@ -253,295 +258,569 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 transition-colors">
+    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
-      
+      {/* ── Purpose-Built Auth Header ── */}
+      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
+        <Link href="/" className="inline-flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+            <Image
+              src="/logo.png"
+              alt="AkwaabaHomes"
+              width={32}
+              height={32}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
+            Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+          </span>
+        </Link>
 
-      <div className="w-full max-w-2xl z-10 animate-in fade-in duration-200 mt-12 mb-12">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-2xl font-black tracking-tight text-zinc-950 dark:text-white">
-              Create your Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span> Account
-            </h1>
+        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+          Already registered?{' '}
+          <Link 
+            href="/login" 
+            className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
+          >
+            Sign in &rarr;
           </Link>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Verified student accommodation, digital leases, and direct landlord connections.</p>
         </div>
+      </header>
 
-        <div className="bg-white dark:bg-[#12151D] rounded-2xl p-6 sm:p-8 border border-zinc-200 dark:border-zinc-800 shadow-xs relative">
+      {/* ── Main Two-Column Editorial Workspace ── */}
+      <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
+        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-start">
           
-          {/* Progress Bar */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-xs font-bold text-[#A1A1AA] uppercase tracking-wider">Step {currentStep} of {totalSteps}</span>
-              <span className="text-xs font-bold text-[#0F5132] dark:text-[#198754]">{Math.round(progressPercentage)}%</span>
-            </div>
-            <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-[#0F5132] dark:bg-[#198754] rounded-full transition-all duration-500 ease-out" style={{ width: `${progressPercentage}%` }}></div>
+          {/* ──── Left Side: Brand Reassurance (40% Desktop, Hidden Mobile) ──── */}
+          <div className="hidden lg:block lg:col-span-5 sticky top-12 self-start">
+            <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group bg-[#0B1510]">
+              
+              <Image
+                src="/images/auth-bg.png"
+                alt="Nkrumah Residence Ghanaian student and residential community"
+                fill
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                priority
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+
+              <div className="absolute bottom-0 inset-x-0 p-7 text-white space-y-2.5">
+                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
+                  Verified Community // Accra • Kumasi • Cape Coast
+                </div>
+                <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
+                  Join Ghana&apos;s verified accommodation network
+                </h3>
+                <p className="text-xs text-zinc-200/80 leading-relaxed font-normal">
+                  Over 1,200 verified rooms, escrow rent protections, and legally binding digital lease agreements connecting students and property owners.
+                </p>
+                <div className="pt-2 flex items-center gap-2 text-[11px] text-zinc-300/80">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>KNUST • UG Legon • UCC • ATU Portals</span>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          {error && (
-            <div ref={errorRef} className="mb-6 p-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl text-sm font-medium flex items-start gap-3">
-              <div className="mt-0.5"><Lock className="w-4 h-4" /></div>
-              {error}
-            </div>
-          )}
-
-          {/* STEP 1: ROLE SELECTION */}
-          {currentStep === 1 && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-xl font-bold text-zinc-950 dark:text-white tracking-tight">How will you use AkwaabaHomes?</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button
-                  type="button"
-                  onClick={() => { setFormData({ ...formData, role: 'TENANT' }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'TENANT' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'TENANT' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
-                    <User className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-white mb-1">Tenant</h3>
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I want to find and book premium hostels or apartments.</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setFormData({ ...formData, role: 'LANDLORD', isStudent: false }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'LANDLORD' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'LANDLORD' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
-                    <Building className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-white mb-1">Landlord</h3>
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I want to list my properties, track earnings, and manage bookings.</p>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => { setFormData({ ...formData, role: 'CARETAKER', isStudent: false }); setError(''); }}
-                  className={`p-6 rounded-[20px] border-[1.5px] text-left transition-all ${formData.role === 'CARETAKER' ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40'}`}
-                >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${formData.role === 'CARETAKER' ? 'bg-[#5B4CFF] text-white shadow-[0_0_15px_rgba(91,76,255,0.4)]' : 'bg-[#1C1A1B] text-[#A1A1AA]'}`}>
-                    <Wrench className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-lg text-white mb-1">Caretaker / Staff</h3>
-                  <p className="text-xs text-[#A1A1AA] leading-relaxed">I manage facility operations, tickets, check-ins, and compound notices.</p>
-                </button>
+          {/* ──── Right Side: Registration Form (60% Desktop, 100% Mobile) ──── */}
+          <div className="lg:col-span-7 w-full max-w-lg mx-auto lg:mx-0">
+            
+            {/* Header & Step Indicator */}
+            <div className="space-y-2 mb-6">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
+                  Step {currentStep} of 2 &bull; {currentStep === 1 ? 'Personal Profile' : 'Credentials & Verification'}
+                </span>
+                <span className="text-[11px] font-mono text-zinc-400">
+                  {currentStep === 1 ? '50%' : '100%'}
+                </span>
               </div>
-
-              {formData.role === 'TENANT' && (
-                <div className="mt-8 p-6 bg-[#2A2A2B]/40 rounded-[20px] border border-white/10 animate-in fade-in slide-in-from-bottom-2">
-                  <h4 className="font-bold text-white mb-3 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-[#5B4CFF]" /> Are you currently a University Student?</h4>
-                  <div className="flex gap-4">
-                    <button onClick={() => setFormData({...formData, isStudent: true})} className={`flex-1 py-3.5 rounded-2xl border-[1.5px] font-bold transition-all ${formData.isStudent ? 'border-[#5B4CFF] bg-[#5B4CFF]/10 text-white' : 'border-white/10 bg-transparent text-[#A1A1AA] hover:border-white/30'}`}>Yes</button>
-                    <button onClick={() => setFormData({...formData, isStudent: false})} className={`flex-1 py-3.5 rounded-2xl border-[1.5px] font-bold transition-all ${!formData.isStudent ? 'border-[#5B4CFF] bg-[#5B4CFF]/10 text-white' : 'border-white/10 bg-transparent text-[#A1A1AA] hover:border-white/30'}`}>No</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* STEP 2: BASIC INFO & PASSPORT */}
-          {currentStep === 2 && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-[28px] font-extrabold text-white tracking-tight">Basic Information</h2>
-              <p className="text-[#A1A1AA] text-sm mb-6">Tell us a bit about yourself (Passport picture is optional).</p>
-              
-              {/* Passport Upload */}
-              <div className="mb-8">
-                <PassportUpload 
-                  currentUrl={formData.avatarUrl}
-                  onUploadSuccess={(url) => setFormData({ ...formData, avatarUrl: url })}
-                  onUploadError={(err) => setError(err)}
+              <div className="w-full h-1 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#0F5132] dark:bg-emerald-500 rounded-full transition-all duration-300"
+                  style={{ width: currentStep === 1 ? '50%' : '100%' }}
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelClass}>First Name *</label>
-                  <input type="text" required className={inputClass} value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} placeholder="John" />
-                </div>
-                <div>
-                  <label className={labelClass}>Last Name *</label>
-                  <input type="text" required className={inputClass} value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} placeholder="Doe" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Other Name(s) (Optional)</label>
-                  <input type="text" className={inputClass} value={formData.otherNames} onChange={(e) => setFormData({...formData, otherNames: e.target.value})} placeholder="Middle name" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Email Address *</label>
-                  <input type="email" required className={inputClass} value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} placeholder="john@example.com" />
-                </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white pt-2">
+                Create your account
+              </h1>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {currentStep === 1 
+                  ? 'Select your role and provide your basic personal details.' 
+                  : 'Set your secure password and university enrollment information.'}
+              </p>
+            </div>
+
+            {/* Error Banner */}
+            {error && (
+              <div ref={errorRef} className="mb-5 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/70 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
+                <div className="text-xs leading-relaxed">{error}</div>
+              </div>
+            )}
+
+            {/* ──── STEP 1: Role Selection & Personal Information ──── */}
+            {currentStep === 1 && (
+              <div className="space-y-6">
                 
-                <div>
-                  <label className={labelClass}>Mobile Number *</label>
-                  <input type="tel" required className={inputClass} value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} placeholder="054..." />
-                </div>
-                <div>
-                  <label className={labelClass}>Gender *</label>
-                  <select required className={`${inputClass} appearance-none`} value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                    <option value="" className="bg-[#1C1A1B]">Select Gender</option>
-                    <option value="MALE" className="bg-[#1C1A1B]">Male</option>
-                    <option value="FEMALE" className="bg-[#1C1A1B]">Female</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Country / Nationality *</label>
-                  <input type="text" required className={inputClass} value={formData.nationality} onChange={(e) => setFormData({...formData, nationality: e.target.value})} placeholder="Ghana" />
+                {/* Role Cards (High Contrast, Accessible, No White-on-White) */}
+                <div className="space-y-2">
+                  <label className={labelClass}>How will you use AkwaabaHomes? *</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    
+                    {/* Tenant / Student Card */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: 'TENANT' })}
+                      className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                        formData.role === 'TENANT'
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/30 ring-1 ring-[#0F5132]'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#14181E]'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center mb-2.5">
+                        <User className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                      </div>
+                      <div className="text-sm font-bold text-zinc-900 dark:text-white">
+                        Tenant &amp; Student
+                      </div>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                        Find and book verified campus hostels or residential apartments.
+                      </p>
+                    </button>
+
+                    {/* Landlord Card */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, role: 'LANDLORD', isStudent: false })}
+                      className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+                        formData.role === 'LANDLORD'
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/30 ring-1 ring-[#0F5132]'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#14181E]'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 flex items-center justify-center mb-2.5">
+                        <Building2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                      </div>
+                      <div className="text-sm font-bold text-zinc-900 dark:text-white">
+                        Landlord &amp; Host
+                      </div>
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                        List properties, manage room units, and receive rent payouts.
+                      </p>
+                    </button>
+
+                  </div>
                 </div>
 
+                {/* Student Enrollment Toggle (If Tenant) */}
                 {formData.role === 'TENANT' && (
-                  <>
+                  <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                      <div>
+                        <span className="text-xs font-semibold text-zinc-900 dark:text-white block">
+                          University Student?
+                        </span>
+                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                          Access campus hostel quotas and student rates
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 p-0.5 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, isStudent: true })}
+                        className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                          formData.isStudent 
+                            ? 'bg-[#0F5132] text-white shadow-2xs' 
+                            : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
+                        }`}
+                      >
+                        Yes
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, isStudent: false })}
+                        className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                          !formData.isStudent 
+                            ? 'bg-[#0F5132] text-white shadow-2xs' 
+                            : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
+                        }`}
+                      >
+                        No
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Personal Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>First Name *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      className={inputClass} 
+                      value={formData.firstName} 
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
+                      placeholder="e.g. Kwame" 
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Last Name *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      className={inputClass} 
+                      value={formData.lastName} 
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
+                      placeholder="e.g. Mensah" 
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Other Names (Optional)</label>
+                    <input 
+                      type="text" 
+                      className={inputClass} 
+                      value={formData.otherNames} 
+                      onChange={(e) => setFormData({ ...formData, otherNames: e.target.value })} 
+                      placeholder="e.g. Osei" 
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Phone Number *</label>
+                    <input 
+                      type="tel" 
+                      required 
+                      className={inputClass} 
+                      value={formData.phoneNumber} 
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} 
+                      placeholder="054XXXXXXX" 
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Gender *</label>
+                    <select 
+                      required 
+                      className={`${inputClass} appearance-none cursor-pointer`} 
+                      value={formData.gender} 
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    >
+                      <option value="MALE">Male</option>
+                      <option value="FEMALE">Female</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className={labelClass}>Nationality *</label>
+                    <input 
+                      type="text" 
+                      required 
+                      className={inputClass} 
+                      value={formData.nationality} 
+                      onChange={(e) => setFormData({ ...formData, nationality: e.target.value })} 
+                      placeholder="Ghanaian" 
+                    />
+                  </div>
+                </div>
+
+                {/* Continue Action */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                  >
+                    <span>Continue to Credentials</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+            {/* ──── STEP 2: Credentials & Verification Information ──── */}
+            {currentStep === 2 && (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                
+                {/* Email Address */}
+                <div>
+                  <label className={labelClass}>Email Address *</label>
+                  <input 
+                    type="email" 
+                    required 
+                    autoComplete="email" 
+                    className={inputClass} 
+                    value={formData.email} 
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                    placeholder="e.g. kwame@st.ug.edu.gh or name@gmail.com" 
+                  />
+                </div>
+
+                {/* Tenant Specific: Date of Birth & Guardian */}
+                {formData.role === 'TENANT' && (
+                  <div className="space-y-4 pt-1">
                     <div>
                       <label className={labelClass}>Date of Birth *</label>
-                      <input type="date" required className={inputClass} value={formData.dateOfBirth} onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})} style={{ colorScheme: 'dark' }} />
+                      <input 
+                        type="date" 
+                        required 
+                        className={inputClass} 
+                        value={formData.dateOfBirth} 
+                        onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} 
+                      />
                     </div>
-                    <div>
-                      <label className={labelClass}>Guardian Name *</label>
-                      <input type="text" required className={inputClass} value={formData.guardianName} onChange={(e) => setFormData({...formData, guardianName: e.target.value})} placeholder="Jane Doe" />
-                    </div>
-                    <div>
-                      <label className={labelClass}>Guardian Phone *</label>
-                      <input type="tel" required className={inputClass} value={formData.guardianPhone} onChange={(e) => setFormData({...formData, guardianPhone: e.target.value})} placeholder="054..." />
-                    </div>
-                  </>
+
+                    {/* Student Campus Verification Fields */}
+                    {formData.isStudent && (
+                      <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 space-y-4">
+                        <div className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                          <span>Student Enrollment Verification</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div className="sm:col-span-2">
+                            <label className={labelClass}>Campus / University *</label>
+                            <select 
+                              required 
+                              className={`${inputClass} appearance-none cursor-pointer`} 
+                              value={formData.campus} 
+                              onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
+                            >
+                              <option value="KNUST">KNUST — Kwame Nkrumah University of Science and Technology</option>
+                              <option value="UG">UG — University of Ghana, Legon</option>
+                              <option value="UCC">UCC — University of Cape Coast</option>
+                              <option value="UPSA">UPSA — University of Professional Studies</option>
+                              <option value="ATU">ATU — Accra Technical University</option>
+                              <option value="UDS">UDS — University for Development Studies</option>
+                              <option value="OTHER">Other Tertiary Institution</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className={labelClass}>Student ID / Index No *</label>
+                            <input 
+                              type="text" 
+                              required 
+                              className={inputClass} 
+                              value={formData.studentId} 
+                              onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
+                              placeholder="e.g. 20849201" 
+                            />
+                          </div>
+
+                          <div>
+                            <label className={labelClass}>Year of Study *</label>
+                            <select 
+                              required 
+                              className={`${inputClass} appearance-none cursor-pointer`} 
+                              value={formData.yearOfStudy} 
+                              onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
+                            >
+                              <option value="100">Level 100 (Freshman)</option>
+                              <option value="200">Level 200</option>
+                              <option value="300">Level 300</option>
+                              <option value="400">Level 400</option>
+                              <option value="500">Postgraduate / Masters</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className={labelClass}>Date of Admission *</label>
+                            <input 
+                              type="date" 
+                              required 
+                              className={inputClass} 
+                              value={formData.dateOfAdmission} 
+                              onChange={(e) => setFormData({ ...formData, dateOfAdmission: e.target.value })} 
+                            />
+                          </div>
+
+                          <div>
+                            <label className={labelClass}>Degree / Programme *</label>
+                            <input 
+                              type="text" 
+                              required 
+                              className={inputClass} 
+                              value={formData.programmeOfStudy} 
+                              onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })} 
+                              placeholder="e.g. Computer Science" 
+                            />
+                          </div>
+
+                          <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+                            <div>
+                              <label className={labelClass}>Guardian / Emergency Contact *</label>
+                              <input 
+                                type="text" 
+                                required 
+                                className={inputClass} 
+                                value={formData.guardianName} 
+                                onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })} 
+                                placeholder="Parent or Guardian Name" 
+                              />
+                            </div>
+                            <div>
+                              <label className={labelClass}>Guardian Phone Number *</label>
+                              <input 
+                                type="tel" 
+                                required 
+                                className={inputClass} 
+                                value={formData.guardianPhone} 
+                                onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })} 
+                                placeholder="054XXXXXXX" 
+                              />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
-              </div>
-            </div>
-          )}
 
-          {/* STEP 3: SCHOOL INFO (Only for Students) */}
-          {currentStep === 3 && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-[28px] font-extrabold text-white tracking-tight flex items-center gap-2"><GraduationCap className="text-[#5B4CFF]"/> School Information *</h2>
-              <p className="text-[#A1A1AA] text-sm mb-6">All student credentials are mandatory for room allocation and verification.</p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Campus / University *</label>
-                  <select required className={`${inputClass} appearance-none`} value={formData.campus} onChange={(e) => setFormData({...formData, campus: e.target.value})}>
-                    <option value="" className="bg-[#1C1A1B]">Select Campus</option>
-                    <option value="UCC" className="bg-[#1C1A1B]">University of Cape Coast (UCC)</option>
-                    <option value="KNUST" className="bg-[#1C1A1B]">KNUST</option>
-                    <option value="UG" className="bg-[#1C1A1B]">University of Ghana, Legon</option>
-                    <option value="UPSA" className="bg-[#1C1A1B]">UPSA</option>
-                    <option value="UDS" className="bg-[#1C1A1B]">UDS</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Student ID / Index Number *</label>
-                  <input type="text" required className={`${inputClass} uppercase`} value={formData.studentId} onChange={(e) => setFormData({...formData, studentId: e.target.value})} placeholder="Index Number" />
-                </div>
-                <div>
-                  <label className={labelClass}>Date of Admission *</label>
-                  <input type="date" required className={inputClass} value={formData.dateOfAdmission} onChange={(e) => setFormData({...formData, dateOfAdmission: e.target.value})} style={{ colorScheme: 'dark' }} />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>Programme of Study *</label>
-                  <input type="text" required className={inputClass} value={formData.programmeOfStudy} onChange={(e) => setFormData({...formData, programmeOfStudy: e.target.value})} placeholder="e.g. BSc Computer Science" />
-                </div>
-                <div>
-                  <label className={labelClass}>Year of Study *</label>
-                  <select required className={`${inputClass} appearance-none`} value={formData.yearOfStudy} onChange={(e) => setFormData({...formData, yearOfStudy: e.target.value})}>
-                    <option value="" className="bg-[#1C1A1B]">Select Level</option>
-                    <option value="100" className="bg-[#1C1A1B]">Level 100</option>
-                    <option value="200" className="bg-[#1C1A1B]">Level 200</option>
-                    <option value="300" className="bg-[#1C1A1B]">Level 300</option>
-                    <option value="400" className="bg-[#1C1A1B]">Level 400</option>
-                    <option value="500" className="bg-[#1C1A1B]">Level 500+</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>Student Type *</label>
-                  <select required className={`${inputClass} appearance-none`} value={formData.studentType} onChange={(e) => setFormData({...formData, studentType: e.target.value})}>
-                    <option value="" className="bg-[#1C1A1B]">Select Type</option>
-                    <option value="UNDERGRADUATE" className="bg-[#1C1A1B]">Undergraduate</option>
-                    <option value="POSTGRADUATE" className="bg-[#1C1A1B]">Postgraduate</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          )}
+                {/* Password Fields */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Password *</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? 'text' : 'password'} 
+                        required 
+                        autoComplete="new-password" 
+                        className={`${inputClass} pr-10`} 
+                        value={formData.password} 
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+                        placeholder="Min. 8 characters" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
 
-          {/* STEP 4: PASSWORD & SUBMIT */}
-          {currentStep === 4 && (
-            <div className="space-y-6 animate-in slide-in-from-right-4 fade-in">
-              <h2 className="text-[28px] font-extrabold text-white tracking-tight">Secure your account</h2>
-              <p className="text-[#A1A1AA] text-sm mb-6">Create a strong password.</p>
-              
-              <div className="space-y-5">
-                <div>
-                  <label className={labelClass}>Password</label>
-                  <input type="password" required className={inputClass} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder="••••••••" />
-                  
-                  {/* Password Requirements Checklist */}
-                  <div className="mt-2.5 grid grid-cols-2 gap-2 text-[11px] text-[#A1A1AA]">
-                    <div className={`flex items-center gap-1.5 ${formData.password.length >= 8 ? 'text-emerald-400 font-bold' : ''}`}>
-                      <CheckCircle className={`w-3.5 h-3.5 ${formData.password.length >= 8 ? 'text-emerald-400' : 'text-[#71717A]'}`} />
-                      <span>Min. 8 characters</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 ${/[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
-                      <CheckCircle className={`w-3.5 h-3.5 ${/[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
-                      <span>Uppercase & lowercase</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 ${/\d/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
-                      <CheckCircle className={`w-3.5 h-3.5 ${/\d/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
-                      <span>At least 1 number</span>
-                    </div>
-                    <div className={`flex items-center gap-1.5 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-emerald-400 font-bold' : ''}`}>
-                      <CheckCircle className={`w-3.5 h-3.5 ${/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password) ? 'text-emerald-400' : 'text-[#71717A]'}`} />
-                      <span>Special character (@#$!%)</span>
+                  <div>
+                    <label className={labelClass}>Confirm Password *</label>
+                    <div className="relative">
+                      <input 
+                        type={showConfirmPassword ? 'text' : 'password'} 
+                        required 
+                        autoComplete="new-password" 
+                        className={`${inputClass} pr-10`} 
+                        value={formData.confirmPassword} 
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} 
+                        placeholder="Re-enter password" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>Confirm Password</label>
-                  <input type="password" required className={inputClass} value={formData.confirmPassword} onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})} placeholder="••••••••" />
-                </div>
 
-                <div className="flex items-start gap-3 p-4 bg-[#2A2A2B]/40 rounded-2xl border border-white/5">
-                  <input 
-                    type="checkbox" 
-                    id="terms" 
-                    className="mt-1 w-4 h-4 rounded bg-[#1C1A1B] text-[#5B4CFF] focus:ring-[#5B4CFF] border-white/10" 
-                    checked={formData.acceptTerms}
-                    onChange={(e) => setFormData({...formData, acceptTerms: e.target.checked})}
-                  />
-                  <label htmlFor="terms" className="text-sm text-[#A1A1AA] leading-tight">
-                    I agree to the <Link href="/terms" className="text-white font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-white font-bold hover:underline">Privacy Policy</Link>.
+                {/* Terms and Privacy Checkbox */}
+                <div className="pt-1">
+                  <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      required 
+                      checked={formData.acceptTerms} 
+                      onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })} 
+                      className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132]" 
+                    />
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                      I agree to the{' '}
+                      <Link href="/terms" target="_blank" className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline">
+                        Terms of Service
+                      </Link>{' '}
+                      and{' '}
+                      <Link href="/privacy" target="_blank" className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline">
+                        Privacy Policy
+                      </Link>
+                      .
+                    </span>
                   </label>
                 </div>
-              </div>
-            </div>
-          )}
 
-          {/* Navigation Buttons */}
-          <div className="mt-10 flex justify-between gap-4 pt-6 border-t border-white/10">
-            {currentStep > 1 ? (
-              <button onClick={handleBack} type="button" className="px-4 py-2.5 rounded-xl font-bold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex items-center gap-2 text-xs cursor-pointer">
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
-            ) : <div></div>}
-            
-            {currentStep < 4 ? (
-              <button onClick={handleNext} type="button" className="px-6 py-2.5 rounded-xl font-bold bg-[#0F5132] text-white hover:bg-[#0A3D24] transition-colors flex items-center gap-2 text-xs cursor-pointer">
-                Next <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button onClick={handleSubmit} disabled={isLoading} className="px-6 py-2.5 rounded-xl font-bold bg-[#0F5132] text-white hover:bg-[#0A3D24] transition-colors flex items-center gap-2 text-xs cursor-pointer disabled:opacity-70">
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle className="w-5 h-5" />} Create Account
-              </button>
+                {/* Form Buttons */}
+                <div className="flex items-center gap-3 pt-3">
+                  <button
+                    type="button"
+                    onClick={handleBackStep}
+                    className="h-11 px-4 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-60 cursor-pointer shadow-xs"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Complete Registration</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+              </form>
             )}
+
+            {/* Bottom Footer Note */}
+            <div className="mt-8 pt-5 border-t border-zinc-200/60 dark:border-zinc-800/60 text-center text-xs text-zinc-500 dark:text-zinc-400">
+              Already registered with an existing account?{' '}
+              <Link 
+                href="/login" 
+                className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
+              >
+                Sign in to your account
+              </Link>
+            </div>
+
           </div>
 
         </div>
+      </main>
 
-        <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
-          Already have an account? <Link href="/login" className="font-bold text-[#0F5132] dark:text-[#198754] hover:underline">Sign in</Link>
-        </p>
-      </div>
+      {/* ── Footer ── */}
+      <footer className="w-full px-6 sm:px-10 lg:px-16 py-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 dark:text-zinc-500 gap-2">
+        <div>
+          &copy; {new Date().getFullYear()} AkwaabaHomes Ghana. All rights reserved.
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Privacy
+          </Link>
+          <Link href="/help" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+            Help Center
+          </Link>
+        </div>
+      </footer>
+
     </div>
   );
 }

@@ -74,7 +74,7 @@ export default function Navbar() {
       ];
   
   // Do not render public Navbar on Admin portal and dedicated auth routes
-  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
+  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password') {
     return null;
   }
 
