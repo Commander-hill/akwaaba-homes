@@ -134,8 +134,15 @@ export default function MobileBottomNav() {
         },
       ];
 
-  // Do not render bottom nav on dedicated auth routes
-  if (pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password') {
+  // Do not render bottom nav on dedicated auth/onboarding routes
+  if (
+    pathname === '/login' || 
+    pathname === '/register' || 
+    pathname === '/forgot-password' || 
+    pathname === '/reset-password' ||
+    pathname?.startsWith('/verify-email') ||
+    pathname === '/onboarding'
+  ) {
     return null;
   }
 

@@ -73,8 +73,16 @@ export default function Navbar() {
         ),
       ];
   
-  // Do not render public Navbar on Admin portal and dedicated auth routes
-  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/register' || pathname === '/forgot-password' || pathname === '/reset-password') {
+  // Do not render public Navbar on Admin portal and dedicated auth/onboarding routes
+  if (
+    pathname?.startsWith('/admin') || 
+    pathname === '/login' || 
+    pathname === '/register' || 
+    pathname === '/forgot-password' || 
+    pathname === '/reset-password' ||
+    pathname?.startsWith('/verify-email') ||
+    pathname === '/onboarding'
+  ) {
     return null;
   }
 
