@@ -91,24 +91,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (user?.role === 'LANDLORD') {
     sidebarGroups = [
       {
-        title: 'MANAGEMENT',
+        title: 'EXECUTIVE PILLARS',
         links: [
           { name: 'Overview', href: '/dashboard/landlord', icon: LayoutDashboard },
-          { name: 'My properties', href: '/dashboard/landlord/properties', icon: Building },
-          { name: 'Add property', href: '/dashboard/landlord/new', icon: PlusCircle },
-          { name: 'Edit property', href: '/dashboard/landlord/properties', icon: Edit3 },
-          { name: 'Room and inventory management', href: '/dashboard/landlord?tab=assets', icon: Boxes },
-          { name: 'Booking requests', href: '/dashboard/landlord?tab=bookings', icon: Inbox },
-          { name: 'Subscription and billing', href: '/dashboard/landlord/subscription', icon: CreditCard },
-          { name: 'Verification status', href: '/dashboard/verification', icon: BadgeCheck },
-          { name: 'Tenant reviews', href: '/dashboard/landlord?tab=reviews', icon: Star },
+          { name: 'Portfolio & Units', href: '/dashboard/landlord?tab=portfolio', icon: Building2 },
+          { name: 'Financials & Escrow', href: '/dashboard/landlord?tab=financials', icon: CreditCard },
+          { name: 'Tenancies & Leases', href: '/dashboard/landlord?tab=tenancies', icon: Users },
+          { name: 'Facility & Operations', href: '/dashboard/landlord?tab=operations', icon: Wrench },
         ]
       },
       {
         title: 'ACCOUNT & ALERTS',
         links: [
-          { name: 'Profile', href: '/dashboard/profile', icon: User },
+          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+          { name: 'Profile & MoMo', href: '/dashboard/profile', icon: User },
           { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
+          { name: 'Verification Status', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }
     ];

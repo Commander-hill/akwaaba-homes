@@ -4,15 +4,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { 
   Loader2, Users, Mail, Phone, Calendar, Check, X, 
-  CreditCard, Star, PenTool, CheckCircle, CheckCircle2, Clock, FileSignature, Building, 
+  CreditCard, Star, CheckCircle, CheckCircle2, Clock, FileSignature, Building, Building2,
   Activity, DollarSign, AlertTriangle, ArrowUpRight, Printer, RefreshCw, Layers, MessageSquare,
-  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera, UserCheck
+  Megaphone, UserCog, ClipboardCheck, TrendingUp, Wrench, Plus, Camera, UserCheck, Eye,
+  Bed, ShieldCheck, Download, ExternalLink, ArrowRight, ShieldAlert, Sparkles, Filter
 } from 'lucide-react';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
 import OnboardingTour from '@/components/OnboardingTour';
 import MessagingTab from '@/components/MessagingTab';
@@ -25,6 +25,7 @@ import UtilitySubMeterTab from '@/components/landlord/UtilitySubMeterTab';
 import AcademicInstallmentTab from '@/components/landlord/AcademicInstallmentTab';
 import RoomAssetInventoryTab from '@/components/landlord/RoomAssetInventoryTab';
 import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
+import AlertBanner from '@/components/AlertBanner';
 import toast from 'react-hot-toast';
 
 function getImageUrl(path?: string | null): string {
@@ -34,34 +35,103 @@ function getImageUrl(path?: string | null): string {
   return `${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
-type LandlordTab = 'bookings' | 'occupancy' | 'installments' | 'assets' | 'notices' | 'expenses' | 'tickets' | 'subscriptions' | 'financials' | 'messages' | 'agreements' | 'staff' | 'gatepass' | 'utilities' | 'disciplinary' | 'reviews';
+export type LandlordPillar = 'portfolio' | 'financials' | 'tenancies' | 'operations';
 
-const VALID_LANDLORD_TABS: LandlordTab[] = [
-  'bookings', 'occupancy', 'installments', 'assets', 'notices', 'expenses', 
-  'tickets', 'subscriptions', 'financials', 'messages', 'agreements', 'staff', 
-  'gatepass', 'utilities', 'disciplinary', 'reviews'
-];
+export type LandlordSubTab = 
+  // Portfolio Pillar
+  | 'properties' | 'occupancy' | 'assets'
+  // Financials Pillar
+  | 'payouts' | 'expenses' | 'utilities' | 'installments' | 'subscriptions'
+  // Tenancies Pillar
+  | 'bookings' | 'agreements' | 'disciplinary' | 'reviews'
+  // Operations Pillar
+  | 'tickets' | 'staff' | 'gatepass' | 'notices' | 'messages';
+
+const SUBTAB_TO_PILLAR: Record<string, LandlordPillar> = {
+  portfolio: 'portfolio',
+  properties: 'portfolio',
+  occupancy: 'portfolio',
+  assets: 'portfolio',
+
+  financials: 'financials',
+  payouts: 'financials',
+  expenses: 'financials',
+  utilities: 'financials',
+  installments: 'financials',
+  subscriptions: 'financials',
+
+  tenancies: 'tenancies',
+  bookings: 'tenancies',
+  agreements: 'tenancies',
+  disciplinary: 'tenancies',
+  reviews: 'tenancies',
+
+  operations: 'operations',
+  tickets: 'operations',
+  staff: 'operations',
+  gatepass: 'operations',
+  notices: 'operations',
+  messages: 'operations',
+};
 
 function LandlordDashboardContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab') as LandlordTab | null;
+  const router = useRouter();
+  const tabParam = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<LandlordTab>(() => {
-    if (tabParam && VALID_LANDLORD_TABS.includes(tabParam)) {
-      return tabParam;
+  // Intelligent initial tab & pillar resolution
+  const initialSubTab: LandlordSubTab = useMemo(() => {
+    if (tabParam && SUBTAB_TO_PILLAR[tabParam]) {
+      if (tabParam === 'portfolio') return 'properties';
+      if (tabParam === 'financials') return 'payouts';
+      if (tabParam === 'tenancies') return 'bookings';
+      if (tabParam === 'operations') return 'tickets';
+      return tabParam as LandlordSubTab;
     }
-    return 'bookings';
-  });
+    return 'properties';
+  }, [tabParam]);
+
+  const [activeSubTab, setActiveSubTab] = useState<LandlordSubTab>(initialSubTab);
+
+  const activePillar: LandlordPillar = useMemo(() => {
+    return SUBTAB_TO_PILLAR[activeSubTab] || 'portfolio';
+  }, [activeSubTab]);
 
   useEffect(() => {
-    if (tabParam && VALID_LANDLORD_TABS.includes(tabParam)) {
-      setActiveTab(tabParam);
+    if (tabParam && SUBTAB_TO_PILLAR[tabParam]) {
+      const resolved = tabParam === 'portfolio' ? 'properties' :
+                       tabParam === 'financials' ? 'payouts' :
+                       tabParam === 'tenancies' ? 'bookings' :
+                       tabParam === 'operations' ? 'tickets' :
+                       (tabParam as LandlordSubTab);
+      setActiveSubTab(resolved);
     }
   }, [tabParam]);
 
-  const router = useRouter();
+  const handleSelectPillar = (pillar: LandlordPillar) => {
+    const defaultSubTabs: Record<LandlordPillar, LandlordSubTab> = {
+      portfolio: 'properties',
+      financials: 'payouts',
+      tenancies: 'bookings',
+      operations: 'tickets'
+    };
+    const target = defaultSubTabs[pillar];
+    setActiveSubTab(target);
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('tab', target);
+    window.history.replaceState(null, '', newUrl.toString());
+  };
+
+  const handleSelectSubTab = (subTab: LandlordSubTab) => {
+    setActiveSubTab(subTab);
+    const newUrl = new URL(window.location.href);
+    newUrl.searchParams.set('tab', subTab);
+    window.history.replaceState(null, '', newUrl.toString());
+  };
+
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [propertySearchQuery, setPropertySearchQuery] = useState('');
   const [ticketActionModal, setTicketActionModal] = useState<{
     isOpen: boolean;
     ticketId: string;
@@ -82,7 +152,7 @@ function LandlordDashboardContent() {
     completionImageUrl: '',
   });
 
-  // Session Query — uses shared cache key so it's instant on re-nav
+  // Session Query
   const { data: session } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
@@ -92,8 +162,8 @@ function LandlordDashboardContent() {
     staleTime: 5 * 60 * 1000
   });
 
-  // Fetch Bookings — loads eagerly as the primary tab
-  const { data: bookingsResponse, isLoading: isLoadingBookings, error: bookingsError, refetch: refetchBookings } = useQuery({
+  // Fetch Bookings
+  const { data: bookingsResponse, isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({
     queryKey: ['bookings', 'landlord'],
     queryFn: async () => {
       try {
@@ -106,8 +176,8 @@ function LandlordDashboardContent() {
     }
   });
 
-  // Fetch Landlord Properties for all tabs & selectors
-  const { data: propertiesData } = useQuery({
+  // Fetch Landlord Properties
+  const { data: propertiesData, isLoading: isLoadingProperties, refetch: refetchProperties } = useQuery({
     queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
       try {
@@ -120,7 +190,7 @@ function LandlordDashboardContent() {
   });
   const myProperties = propertiesData || [];
 
-  // Fetch Landlord Agreements — only loads when agreements tab is open
+  // Fetch Landlord Agreements
   const { data: agreementsResponse, isLoading: isLoadingAgreements, refetch: refetchAgreements } = useQuery({
     queryKey: ['agreements', 'landlord'],
     queryFn: async () => {
@@ -134,7 +204,7 @@ function LandlordDashboardContent() {
     },
   });
 
-  // Fetch Tickets — active for real-time badge updates and instant sync
+  // Fetch Tickets
   const { data: ticketsResponse, isLoading: isLoadingTickets, refetch: refetchTickets } = useQuery({
     queryKey: ['tickets', 'landlord'],
     queryFn: async () => {
@@ -148,7 +218,7 @@ function LandlordDashboardContent() {
     },
   });
 
-  // Fetch Subscriptions Overview — active for instant status updates
+  // Fetch Subscriptions Overview
   const { data: subOverviewResponse, isLoading: isLoadingSubs, refetch: refetchSubs } = useQuery({
     queryKey: ['subscriptions', 'overview'],
     queryFn: async () => {
@@ -174,11 +244,11 @@ function LandlordDashboardContent() {
         return [];
       }
     },
-    enabled: activeTab === 'reviews'
+    enabled: activeSubTab === 'reviews'
   });
   const landlordReviews = landlordReviewsResponse || [];
 
-  // Fetch Detailed Earnings Report — only loads when financials tab is open
+  // Fetch Detailed Earnings Report
   const { data: earningsReport, isLoading: isLoadingEarnings, refetch: refetchEarnings } = useQuery({
     queryKey: ['transactions', 'landlord', 'report'],
     queryFn: async () => {
@@ -190,10 +260,10 @@ function LandlordDashboardContent() {
         return { summary: { totalGrossEarnings: 0, totalCommissionDeducted: 0, totalNetEarnings: 0, thisMonthNetEarnings: 0, platformCommissionPercent: 5 }, monthlyTrends: [], recentCashflows: [] };
       }
     },
-    enabled: activeTab === 'financials'
+    enabled: activeSubTab === 'payouts' || activePillar === 'financials'
   });
 
-  // Fetch GRA Financial Ledger (Net Yields & Tax Deductions)
+  // Fetch GRA Financial Ledger
   const { data: financialLedger, refetch: refetchLedger } = useQuery({
     queryKey: ['transactions', 'landlord', 'financial-ledger'],
     queryFn: async () => {
@@ -204,7 +274,7 @@ function LandlordDashboardContent() {
         return null;
       }
     },
-    enabled: activeTab === 'financials'
+    enabled: activeSubTab === 'payouts' || activePillar === 'financials'
   });
 
   const handleDownloadGRATaxPDF = async () => {
@@ -245,33 +315,16 @@ function LandlordDashboardContent() {
     }
   };
 
-  const handleRefreshAll = () => {
-    refetchBookings();
-    if (activeTab === 'agreements') refetchAgreements();
-    if (activeTab === 'tickets') refetchTickets();
-    if (activeTab === 'subscriptions') refetchSubs();
-    if (activeTab === 'financials') {
-      refetchEarnings();
-      refetchLedger();
-    }
-    toast.success('Refreshing dashboard data...');
-  };
-
-  // Status Mutation (Bookings) with TanStack Query Optimistic Update & Snapshot Rollback
+  // Status Mutation (Bookings) with Optimistic Update
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { data } = await api.put(`/bookings/${id}/status`, { status });
       return data;
     },
-    // Step 1: Optimistic Update before the network request resolves
     onMutate: async ({ id, status }) => {
-      // Cancel outgoing refetches on landlord bookings so they don't overwrite our optimistic state
       await queryClient.cancelQueries({ queryKey: ['bookings', 'landlord'] });
-
-      // Snapshot the previous state for rollback on error
       const previousBookings = queryClient.getQueryData<{ bookings: any[] }>(['bookings', 'landlord']);
 
-      // Optimistically update the matching booking in cache
       if (previousBookings) {
         if (Array.isArray(previousBookings)) {
           queryClient.setQueryData(['bookings', 'landlord'], (previousBookings as any[]).map((b: any) =>
@@ -286,10 +339,8 @@ function LandlordDashboardContent() {
           });
         }
       }
-
       return { previousBookings };
     },
-    // Step 2: Rollback Cache on Error
     onError: (err: any, _variables, context) => {
       if (context?.previousBookings) {
         queryClient.setQueryData(['bookings', 'landlord'], context.previousBookings);
@@ -297,11 +348,9 @@ function LandlordDashboardContent() {
       const message = err.response?.data?.message || 'Failed to update booking status. Changes reverted.';
       toast.error(message);
     },
-    // Step 3: Success Feedback
     onSuccess: (_data, { status }) => {
       toast.success(`Booking ${status === 'APPROVED' ? 'approved' : status.toLowerCase()} successfully!`);
     },
-    // Step 4: Always refetch and synchronize related state on settled
     onSettled: () => {
       setProcessingId(null);
       queryClient.invalidateQueries({ queryKey: ['bookings', 'landlord'] });
@@ -343,10 +392,6 @@ function LandlordDashboardContent() {
     }
   });
 
-
-
-  const isLoading = isLoadingBookings && isLoadingTickets && isLoadingSubs && isLoadingEarnings;
-
   const bookings = bookingsResponse?.bookings || [];
   const agreements = agreementsResponse?.agreements || [];
   const tickets = ticketsResponse?.tickets || [];
@@ -356,247 +401,290 @@ function LandlordDashboardContent() {
   const monthlyTrends = earningsReport?.monthlyTrends || [];
   const cashflows = earningsReport?.recentCashflows || [];
 
+  const pendingBookingsCount = bookings.filter((b: any) => b.status === 'PENDING').length;
+  const pendingTicketsCount = tickets.filter((t: any) => t.status === 'PENDING').length;
+  const urgentTicketsCount = tickets.filter((t: any) => t.priority === 'URGENT' || t.priority === 'HIGH' || t.isEscalated).length;
+
+  const filteredProperties = useMemo(() => {
+    if (!propertySearchQuery.trim()) return myProperties;
+    const q = propertySearchQuery.toLowerCase();
+    return myProperties.filter((p: any) => 
+      p.title?.toLowerCase().includes(q) || 
+      p.location?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    );
+  }, [myProperties, propertySearchQuery]);
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-14 text-zinc-900 dark:text-zinc-100">
       <OnboardingProgressWidget 
         user={session} 
         hasProperty={Boolean(session?.hasProperty || session?._count?.properties > 0 || subStats.totalProperties > 0 || subProperties.length > 0)} 
       />
-      
-      {/* Header Banner & Tabs Container (Static on mobile, Sticky on desktop) */}
+
+      {/* ── 1. EXECUTIVE COMMAND HERO (STICKY ON DESKTOP) ── */}
       <div className="static md:sticky md:top-0 z-20 bg-[#FBFBF9]/95 dark:bg-[#0D0F12]/95 backdrop-blur-md pt-2 pb-3 -mx-3 px-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-3 sm:space-y-4 mb-4 sm:mb-6 shadow-xs">
+        
+        {/* Title & Action Buttons */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-3">
-              <span>Property Asset &amp; Landlord Hub</span>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-extrabold tracking-wider uppercase">
+                Host &amp; Asset Management
+              </span>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                Ghana Act 772 &amp; MoMo Escrow Verified
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1 flex items-center gap-3">
+              <span>Landlord Executive Console</span>
             </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Asset management, verified tenant allocations, MoMo escrow payouts, and caretaker delegation.
-            </p>
           </div>
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Link
-              id="tour-add-property"
               href="/dashboard/landlord/new"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              id="tour-add-property"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>List Property</span>
             </Link>
+
             <Link
               href="/dashboard/landlord/withdraw"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
-              <CreditCard className="w-3.5 h-3.5" />
+              <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
               <span>Request MoMo Payout</span>
             </Link>
+
+            <Link
+              href="/dashboard/landlord/notices/new"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
+            >
+              <Megaphone className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Broadcast Notice</span>
+            </Link>
+
             <OnboardingTour role={session?.role} user={session} />
-            {subStats.expiringSoon > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold">
-                <AlertTriangle className="w-3.5 h-3.5" />
-                <span>{subStats.expiringSoon} subscription(s) expiring</span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Executive Financial & Operational Snapshot */}
+        {/* Standardized Platform Notification Banners */}
+        {subStats.expiringSoon > 0 && (
+          <AlertBanner
+            type="warning"
+            message={`${subStats.expiringSoon} property listing subscription(s) are expiring soon. Renew now to prevent listing unpublishing from search.`}
+          />
+        )}
+
+        {/* 4-Metric Executive Strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Net Yield (Available)</div>
-            <div className="text-lg sm:text-xl font-black text-[#0F5132] dark:text-emerald-400 mt-0.5">
-              GHS {(earningsSummary?.totalNetEarnings || 0).toLocaleString()}
+            <div className="text-lg sm:text-xl font-black text-[#0F5132] dark:text-emerald-400 mt-0.5 font-mono">
+              GH₵ {(earningsSummary?.totalNetEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Cleared for MoMo withdrawal</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">Cleared for instant MoMo payout</div>
           </div>
 
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Gross Rent Inflow</div>
-            <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
-              GHS {(earningsSummary?.totalGrossEarnings || 0).toLocaleString()}
+            <div className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white mt-0.5 font-mono">
+              GH₵ {(earningsSummary?.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Total collected via escrow</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">100% escrow collected via Paystack</div>
           </div>
 
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Listed Inventory</div>
-            <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
-              {subStats.totalProperties} {subStats.totalProperties === 1 ? 'Property' : 'Properties'}
+            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Portfolio Scale</div>
+            <div className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white mt-0.5">
+              {myProperties.length} {myProperties.length === 1 ? 'Property' : 'Properties'}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">{subStats.activeSubscriptions} active listings</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">{subStats.activeSubscriptions} live &amp; published</div>
           </div>
 
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Action Queue</div>
             <div className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
-              {bookings.filter((b: any) => b.status === 'PENDING').length + tickets.filter((t: any) => t.status === 'PENDING').length} Pending
+              {pendingBookingsCount + pendingTicketsCount} Pending
             </div>
             <div className="text-[10px] text-zinc-500 mt-0.5">
-              {bookings.filter((b: any) => b.status === 'PENDING').length} booking(s), {tickets.filter((t: any) => t.status === 'PENDING').length} ticket(s)
+              {pendingBookingsCount} booking(s), {pendingTicketsCount} repair(s)
             </div>
           </div>
         </div>
 
-        {/* 3 Core Operational Workspaces */}
-        <div id="tour-landlord-tabs" className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2">
-          {/* Main Workspace Navigation */}
-          <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto scrollbar-none flex-nowrap shrink-0">
+        {/* ── 2. THE 4 COHESIVE EXECUTIVE PILLAR TABS ── */}
+        <div className="space-y-2 pt-2">
+          {/* Main 4 Pillars Switcher */}
+          <div className="flex items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900/90 p-1.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto scrollbar-none flex-nowrap">
             <button
-              onClick={() => setActiveTab('bookings')}
+              onClick={() => handleSelectPillar('portfolio')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-                ['bookings', 'occupancy', 'installments', 'assets', 'agreements'].includes(activeTab)
-                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                activePillar === 'portfolio'
+                  ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               )}
             >
-              <Building className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Tenancy &amp; Units</span>
+              <Building2 className={clsx("w-4 h-4", activePillar === 'portfolio' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
+              <span>1. Portfolio &amp; Units</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+                {myProperties.length}
+              </span>
             </button>
 
             <button
-              onClick={() => setActiveTab('financials')}
+              onClick={() => handleSelectPillar('financials')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-                ['financials', 'expenses', 'utilities', 'subscriptions'].includes(activeTab)
-                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                activePillar === 'financials'
+                  ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               )}
             >
-              <DollarSign className="w-3.5 h-3.5 text-amber-600" />
-              <span>Financials &amp; MoMo</span>
+              <CreditCard className={clsx("w-4 h-4", activePillar === 'financials' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
+              <span>2. Financials &amp; Escrow</span>
+              {earningsSummary?.totalNetEarnings > 0 && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              )}
             </button>
 
             <button
-              onClick={() => setActiveTab('tickets')}
+              onClick={() => handleSelectPillar('tenancies')}
               className={clsx(
-                "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-                ['tickets', 'staff', 'notices', 'gatepass', 'disciplinary', 'messages'].includes(activeTab)
-                  ? "bg-white dark:bg-[#12151D] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                activePillar === 'tenancies'
+                  ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
                   : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
               )}
             >
-              <Wrench className="w-3.5 h-3.5 text-blue-600" />
-              <span>Facility &amp; Caretakers</span>
+              <Users className={clsx("w-4 h-4", activePillar === 'tenancies' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
+              <span>3. Tenancies &amp; Leases</span>
+              {pendingBookingsCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black">
+                  {pendingBookingsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleSelectPillar('operations')}
+              className={clsx(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap",
+                activePillar === 'operations'
+                  ? "bg-white dark:bg-[#14181E] text-zinc-950 dark:text-white shadow-xs border border-zinc-200/80 dark:border-zinc-700"
+                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
+              )}
+            >
+              <Wrench className={clsx("w-4 h-4", activePillar === 'operations' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
+              <span>4. Facility &amp; Operations</span>
+              {pendingTicketsCount > 0 && (
+                <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black">
+                  {pendingTicketsCount}
+                </span>
+              )}
             </button>
           </div>
 
-          {/* Sub-Pills for Currently Selected Workspace */}
+          {/* Sub-Pills for the Active Pillar */}
           <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap py-1">
-            {['bookings', 'occupancy', 'installments', 'assets', 'agreements', 'reviews'].includes(activeTab) && (
+            
+            {/* PILLAR 1 SUB-TABS */}
+            {activePillar === 'portfolio' && (
               <>
                 <button
-                  onClick={() => setActiveTab('bookings')}
+                  onClick={() => handleSelectSubTab('properties')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'bookings'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'properties'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Bookings ({bookings.length})
+                  Property Catalog ({myProperties.length})
                 </button>
                 <button
-                  onClick={() => setActiveTab('occupancy')}
+                  onClick={() => handleSelectSubTab('occupancy')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'occupancy'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'occupancy'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Floorplan Matrix
+                  Floorplan &amp; Units
                 </button>
                 <button
-                  onClick={() => setActiveTab('installments')}
+                  onClick={() => handleSelectSubTab('assets')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'installments'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'assets'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Semester Tranches
-                </button>
-                <button
-                  onClick={() => setActiveTab('assets')}
-                  className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'assets'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  )}
-                >
-                  Room Fixtures &amp; Inventory
-                </button>
-                <button
-                  onClick={() => setActiveTab('reviews')}
-                  className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'reviews'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  )}
-                >
-                  Tenant Reviews ({landlordReviews.length})
-                </button>
-                <button
-                  onClick={() => setActiveTab('agreements')}
-                  className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'agreements'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  )}
-                >
-                  Lease Agreements ({agreements.length})
+                  Fixture &amp; Asset Inventory
                 </button>
               </>
             )}
 
-            {['financials', 'expenses', 'utilities', 'subscriptions'].includes(activeTab) && (
+            {/* PILLAR 2 SUB-TABS */}
+            {activePillar === 'financials' && (
               <>
                 <button
-                  onClick={() => setActiveTab('financials')}
+                  onClick={() => handleSelectSubTab('payouts')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'financials'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'payouts'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Payouts &amp; GRA Ledger
+                  MoMo Payouts &amp; GRA Ledger
                 </button>
                 <button
-                  onClick={() => setActiveTab('expenses')}
+                  onClick={() => handleSelectSubTab('expenses')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'expenses'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'expenses'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
                   Expenses &amp; P&amp;L
                 </button>
                 <button
-                  onClick={() => setActiveTab('utilities')}
+                  onClick={() => handleSelectSubTab('utilities')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'utilities'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'utilities'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
                   Sub-Meter Utilities
                 </button>
                 <button
-                  onClick={() => setActiveTab('subscriptions')}
+                  onClick={() => handleSelectSubTab('installments')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'subscriptions'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'installments'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  Semester Tranches
+                </button>
+                <button
+                  onClick={() => handleSelectSubTab('subscriptions')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'subscriptions'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
                   Listing Subscriptions
@@ -604,249 +692,666 @@ function LandlordDashboardContent() {
               </>
             )}
 
-            {['tickets', 'staff', 'notices', 'gatepass', 'disciplinary', 'messages'].includes(activeTab) && (
+            {/* PILLAR 3 SUB-TABS */}
+            {activePillar === 'tenancies' && (
               <>
                 <button
-                  onClick={() => setActiveTab('tickets')}
+                  onClick={() => handleSelectSubTab('bookings')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'tickets'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5",
+                    activeSubTab === 'bookings'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Tickets ({tickets.filter((t: any) => t.status === 'PENDING').length} pending)
+                  <span>Reservations</span>
+                  {pendingBookingsCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black">
+                      {pendingBookingsCount}
+                    </span>
+                  )}
                 </button>
                 <button
-                  onClick={() => setActiveTab('staff')}
+                  onClick={() => handleSelectSubTab('agreements')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'staff'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'agreements'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Caretaker Delegation
+                  Act 772 Leases ({agreements.length})
                 </button>
                 <button
-                  onClick={() => setActiveTab('gatepass')}
+                  onClick={() => handleSelectSubTab('disciplinary')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'gatepass'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'disciplinary'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Porter’s Gate Logbook
+                  Resident Conduct
                 </button>
                 <button
-                  onClick={() => setActiveTab('disciplinary')}
+                  onClick={() => handleSelectSubTab('reviews')}
                   className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'disciplinary'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'reviews'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
-                  Conduct Logbook
-                </button>
-                <button
-                  onClick={() => setActiveTab('notices')}
-                  className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'notices'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  )}
-                >
-                  Compound Notices
-                </button>
-                <button
-                  onClick={() => setActiveTab('messages')}
-                  className={clsx(
-                    "px-3 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                    activeTab === 'messages'
-                      ? "bg-[#0F5132] text-white font-bold"
-                      : "bg-zinc-50 dark:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100"
-                  )}
-                >
-                  Messages
+                  Verified Reviews ({landlordReviews.length})
                 </button>
               </>
             )}
+
+            {/* PILLAR 4 SUB-TABS */}
+            {activePillar === 'operations' && (
+              <>
+                <button
+                  onClick={() => handleSelectSubTab('tickets')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5",
+                    activeSubTab === 'tickets'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  <span>Work Orders</span>
+                  {pendingTicketsCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black">
+                      {pendingTicketsCount}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSelectSubTab('staff')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'staff'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  Caretaker Staff
+                </button>
+                <button
+                  onClick={() => handleSelectSubTab('gatepass')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'gatepass'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  Porter Gatehouse
+                </button>
+                <button
+                  onClick={() => handleSelectSubTab('notices')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'notices'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  Compound Broadcasts
+                </button>
+                <button
+                  onClick={() => handleSelectSubTab('messages')}
+                  className={clsx(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
+                    activeSubTab === 'messages'
+                      ? "bg-[#0F5132] text-white"
+                      : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
+                  )}
+                >
+                  Resident Chat
+                </button>
+              </>
+            )}
+
           </div>
         </div>
       </div>
 
-      {activeTab === 'messages' && (
-        <div>
-          <MessagingTab />
-        </div>
-      )}
+      {/* ── 3. PILLAR CONTENT WORKSPACES ── */}
 
-      {/* ─── TAB 1: BOOKING REQUESTS ──────────────────────────────────────────────── */}
-      {activeTab === 'bookings' && (
-        <div className="space-y-6">
-          {/* Action Required Triage: Pending Allocations */}
-          {!isLoadingBookings && bookings.filter((b: any) => b.status === 'PENDING').length > 0 && (
-            <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-                  <h3 className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200">
-                    Action Required: {bookings.filter((b: any) => b.status === 'PENDING').length} Pending Room Allocation(s)
-                  </h3>
+      {/* ═══════════════════════════════════════════════════════════════════
+          PILLAR 1: PORTFOLIO & UNITS
+      ═══════════════════════════════════════════════════════════════════ */}
+      {activePillar === 'portfolio' && (
+        <div className="space-y-6 animate-in">
+          
+          {/* Sub-tab: Property Catalog Grid */}
+          {activeSubTab === 'properties' && (
+            <div className="space-y-6">
+              
+              {/* Controls bar: Search & Fast Action */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <input
+                    type="text"
+                    placeholder="Search properties by title, campus or location..."
+                    value={propertySearchQuery}
+                    onChange={(e) => setPropertySearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium outline-none focus:border-[#0F5132]"
+                  />
+                  <Filter className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-3" />
                 </div>
-                <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
-                  Review and approve to issue digital tenancy agreement
-                </span>
+
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/dashboard/landlord/new"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Property</span>
+                  </Link>
+                  <Link
+                    href="/dashboard/landlord/inventory/new"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    <ClipboardCheck className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Log Fixtures</span>
+                  </Link>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                {bookings.filter((b: any) => b.status === 'PENDING').map((pending: any) => (
-                  <div 
-                    key={pending.id} 
-                    className="p-4 rounded-xl bg-white dark:bg-[#12151D] border border-amber-200 dark:border-amber-900/50 shadow-xs flex flex-col justify-between space-y-3"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
+              {isLoadingProperties ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 animate-pulse space-y-3">
+                      <div className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+                      <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3" />
+                      <div className="h-3 bg-zinc-100 dark:bg-zinc-900 rounded w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredProperties.length === 0 ? (
+                <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-100 dark:border-emerald-800/40">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-zinc-950 dark:text-white">
+                      {propertySearchQuery ? 'No matching properties found' : 'No properties in your portfolio yet'}
+                    </h3>
+                    <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+                      {propertySearchQuery 
+                        ? 'Try clearing your search query to see all listed properties.'
+                        : 'List your student hostel, apartment, or residential flat to start accepting tenant bookings and MoMo escrow deposits.'}
+                    </p>
+                  </div>
+                  {!propertySearchQuery && (
+                    <Link
+                      href="/dashboard/landlord/new"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] text-white text-xs font-bold rounded-xl shadow-xs"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create First Property Listing</span>
+                    </Link>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredProperties.map((p: any) => {
+                    const primaryImage = p.images?.[0] ? getImageUrl(p.images[0]) : null;
+                    const priceFormatted = Number(p.price || 0).toLocaleString();
+                    const isLive = p.isPublished && p.isAvailable;
+
+                    return (
+                      <div 
+                        key={p.id}
+                        className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between"
+                      >
                         <div>
-                          <div className="font-black text-sm text-zinc-950 dark:text-white">
-                            {pending.tenant?.firstName} {pending.tenant?.lastName}
-                          </div>
-                          <div className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
-                            <span>{pending.tenant?.campus || pending.tenant?.email}</span>
-                            {pending.tenant?.studentId && (
-                              <span className="font-mono text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                                ID: {pending.tenant.studentId}
-                              </span>
+                          {/* Image Thumbnail */}
+                          <div className="relative h-44 w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                            {primaryImage ? (
+                              <img 
+                                src={primaryImage} 
+                                alt={p.title} 
+                                className="w-full h-full object-cover" 
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-1">
+                                <Building2 className="w-8 h-8" />
+                                <span className="text-[10px] font-mono">No photo attached</span>
+                              </div>
                             )}
+
+                            {/* Status Overlay */}
+                            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                              <span className={clsx(
+                                "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-xs border",
+                                isLive
+                                  ? "bg-emerald-500/90 text-white border-emerald-400/30"
+                                  : "bg-zinc-900/85 text-zinc-200 border-zinc-700/50"
+                              )}>
+                                {isLive ? 'Active Listing' : 'Draft / Hidden'}
+                              </span>
+                            </div>
+
+                            <div className="absolute top-2.5 right-2.5">
+                              <span className="px-2 py-0.5 rounded-lg bg-black/60 text-white backdrop-blur-md font-mono text-[10px] font-bold">
+                                {p.category || 'RESIDENTIAL'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Content Body */}
+                          <div className="p-4 space-y-2">
+                            <div>
+                              <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1">
+                                {p.title}
+                              </h3>
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">
+                                {p.location || 'Ghana'}
+                              </p>
+                            </div>
+
+                            <div className="pt-2 flex items-baseline justify-between border-t border-zinc-100 dark:border-zinc-800">
+                              <div>
+                                <span className="text-sm font-black text-[#0F5132] dark:text-emerald-400 font-mono">
+                                  GH₵ {priceFormatted}
+                                </span>
+                                <span className="text-[11px] text-zinc-400 font-normal"> / {p.period || 'semester'}</span>
+                              </div>
+                              <span className="text-[11px] text-zinc-500 font-medium">
+                                {p.rooms?.length || 0} unit(s) registered
+                              </span>
+                            </div>
                           </div>
                         </div>
 
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                          Awaiting Approval
-                        </span>
-                      </div>
+                        {/* Action Bar */}
+                        <div className="p-3 bg-zinc-50 dark:bg-zinc-900/60 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-2">
+                          <Link
+                            href={`/dashboard/landlord/properties/${p.id}/edit`}
+                            className="px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 transition"
+                          >
+                            Edit Details
+                          </Link>
 
-                      <div className="mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
-                        <span className="font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-[60%]">
-                          {pending.property?.title}
-                        </span>
-                        <span className="font-mono font-bold text-[#0F5132] dark:text-emerald-400">
-                          {new Date(pending.startDate).toLocaleDateString()}
-                        </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                handleSelectSubTab('occupancy');
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 text-xs font-bold hover:bg-emerald-100 transition"
+                              title="View room availability matrix"
+                            >
+                              Floorplan
+                            </button>
+                            <Link
+                              href={`/properties/${p.id}`}
+                              target="_blank"
+                              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition"
+                              title="Preview Public Listing"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        onClick={() => { setProcessingId(pending.id); updateStatusMutation.mutate({ id: pending.id, status: 'APPROVED' }); }}
-                        disabled={processingId === pending.id}
-                        className="flex-1 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
-                      >
-                        {processingId === pending.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                        <span>Approve &amp; Issue Lease</span>
-                      </button>
-                      <button
-                        onClick={() => { setProcessingId(pending.id); updateStatusMutation.mutate({ id: pending.id, status: 'REJECTED' }); }}
-                        disabled={processingId === pending.id}
-                        className="px-3.5 py-2 bg-zinc-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-zinc-800 dark:hover:bg-rose-950/40 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold inline-flex items-center justify-center transition-all cursor-pointer disabled:opacity-50"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span>Decline</span>
-                      </button>
+          {/* Sub-tab: Floorplan Matrix */}
+          {activeSubTab === 'occupancy' && (
+            <FloorplanOccupancyTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Room Fixture & Asset Inventory */}
+          {activeSubTab === 'assets' && (
+            <RoomAssetInventoryTab properties={myProperties} bookings={bookings} />
+          )}
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          PILLAR 2: FINANCIALS & ESCROW LEDGER
+      ═══════════════════════════════════════════════════════════════════ */}
+      {activePillar === 'financials' && (
+        <div className="space-y-6 animate-in">
+          
+          {/* Sub-tab: MoMo Payouts & GRA Ledger */}
+          {activeSubTab === 'payouts' && (
+            <div className="space-y-6">
+              
+              {/* Financial Summary & Statement Export */}
+              <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <h3 className="text-sm font-black uppercase tracking-wider text-zinc-950 dark:text-white">
+                      Ghana Revenue Authority (GRA) Escrow Compliance
+                    </h3>
+                  </div>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl leading-relaxed">
+                    Official disbursement record of all verified tenant rent payments, 5% platform service commissions, and Mobile Money settlement vouchers.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={handleDownloadGRATaxPDF}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Tax PDF</span>
+                  </button>
+                  <button
+                    onClick={handleDownloadGRATaxCSV}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl border border-zinc-200 dark:border-zinc-800 transition cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Recent Cashflow Transactions Table */}
+              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
+                <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900 dark:text-white">
+                      Disbursement Ledger &amp; Escrow Settlements
+                    </h4>
+                    <p className="text-[11px] text-zinc-400">All Paystack transactions cleared to your Mobile Money account</p>
+                  </div>
+                  <Link
+                    href="/dashboard/landlord/withdraw"
+                    className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 text-xs font-bold rounded-xl hover:bg-emerald-100 transition"
+                  >
+                    Request Payout &rarr;
+                  </Link>
+                </div>
+
+                {isLoadingEarnings ? (
+                  <div className="p-8 text-center text-xs text-zinc-400">Loading disbursement cashflows...</div>
+                ) : cashflows.length === 0 ? (
+                  <div className="p-12 text-center space-y-2">
+                    <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
+                    <h5 className="font-bold text-sm text-zinc-900 dark:text-white">No Transactions Yet</h5>
+                    <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                      Rent collected from approved tenant bookings will automatically appear in your ledger here.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead className="bg-zinc-50 dark:bg-zinc-900/60 text-zinc-500 uppercase tracking-wider text-[10px] font-bold">
+                        <tr>
+                          <th className="p-3.5">Reference &amp; Date</th>
+                          <th className="p-3.5">Property / Unit</th>
+                          <th className="p-3.5">Gross (GH₵)</th>
+                          <th className="p-3.5">Fee (5%)</th>
+                          <th className="p-3.5">Net Disbursed</th>
+                          <th className="p-3.5">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 font-medium">
+                        {cashflows.map((flow: any) => (
+                          <tr key={flow.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40 transition">
+                            <td className="p-3.5">
+                              <div className="font-mono font-bold text-zinc-900 dark:text-white">{flow.reference || flow.id.slice(0, 8)}</div>
+                              <div className="text-[10px] text-zinc-400">{new Date(flow.createdAt).toLocaleDateString()}</div>
+                            </td>
+                            <td className="p-3.5 text-zinc-600 dark:text-zinc-300">
+                              {flow.propertyTitle || 'Residential Tenancy'}
+                            </td>
+                            <td className="p-3.5 font-mono">
+                              GH₵ {Number(flow.amount || 0).toLocaleString()}
+                            </td>
+                            <td className="p-3.5 font-mono text-zinc-400">
+                              - GH₵ {Number(flow.commission || 0).toLocaleString()}
+                            </td>
+                            <td className="p-3.5 font-mono font-bold text-[#0F5132] dark:text-emerald-400">
+                              GH₵ {Number(flow.netAmount || flow.amount || 0).toLocaleString()}
+                            </td>
+                            <td className="p-3.5">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                                {flow.status || 'CLEARED'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Sub-tab: Operational Expense Tracker */}
+          {activeSubTab === 'expenses' && (
+            <ExpenseTrackerTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Utility Sub-Meter Billing */}
+          {activeSubTab === 'utilities' && (
+            <UtilitySubMeterTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Semester Installment Tranches */}
+          {activeSubTab === 'installments' && (
+            <AcademicInstallmentTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Listing Subscriptions */}
+          {activeSubTab === 'subscriptions' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">Active Listing Subscriptions</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Monthly and semester platform placement to keep your listings prioritized in student search rankings.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/landlord/subscription"
+                  className="px-4 py-2 bg-[#0F5132] text-white text-xs font-bold rounded-xl shadow-xs"
+                >
+                  Manage Subscription Tiers &rarr;
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {subProperties.map((prop: any) => (
+                  <div key={prop.id} className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-sm text-zinc-950 dark:text-white">{prop.title}</h4>
+                      <p className="text-xs text-zinc-500 mt-0.5">Status: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{prop.subscriptionStatus || 'Active'}</span></p>
                     </div>
+                    <button
+                      onClick={() => renewSubMutation.mutate(prop.id)}
+                      disabled={renewSubMutation.isPending}
+                      className="px-3.5 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
+                    >
+                      Renew
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {isLoadingBookings ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3">
-              {[1,2,3].map(i => (
-                <div key={i} className="flex gap-4 items-center animate-pulse">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          PILLAR 3: TENANCIES & LEASES
+      ═══════════════════════════════════════════════════════════════════ */}
+      {activePillar === 'tenancies' && (
+        <div className="space-y-6 animate-in">
+          
+          {/* Sub-tab: Booking Applications Queue */}
+          {activeSubTab === 'bookings' && (
+            <div className="space-y-6">
+              
+              {/* Triage Alert for Pending Allocations */}
+              {!isLoadingBookings && pendingBookingsCount > 0 && (
+                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                      <h3 className="text-xs font-black uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                        Action Required: {pendingBookingsCount} Pending Room Reservation(s)
+                      </h3>
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-700 dark:text-amber-300">
+                      Approve to automatically issue binding Act 772 lease
+                    </span>
                   </div>
-                  <div className="h-7 w-24 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                </div>
-              ))}
-            </div>
-          ) : bookings.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
-                <Users className="w-8 h-8 text-[var(--muted-foreground)]" />
-              </div>
-              <h3 className="text-base font-black text-zinc-950 dark:text-white">No Pending Reservation Requests</h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-md mx-auto">Your listings are live on the platform. Prospective student tenants and residents will appear here for your review and lease issuance.</p>
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-[#0F5132] text-white">
-                    <tr>
-                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Tenant</th>
-                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Property</th>
-                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Dates</th>
-                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider">Status</th>
-                      <th className="p-4 text-xs font-extrabold text-white uppercase tracking-wider text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border)]">
-                    {bookings.map((booking: any) => (
-                      <tr key={booking.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className="p-4">
-                          <div className="font-bold text-[var(--foreground)]">{booking.tenant.firstName} {booking.tenant.lastName}</div>
-                          <div className="flex flex-col gap-1 mt-1">
-                            <span className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                              <Star className="w-3 h-3 fill-amber-500" /> Rep: {(booking.tenant.reputationScore ?? 5.0).toFixed(1)}/5.0
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {bookings.filter((b: any) => b.status === 'PENDING').map((pending: any) => (
+                      <div 
+                        key={pending.id} 
+                        className="p-4 rounded-xl bg-white dark:bg-[#12151D] border border-amber-200 dark:border-amber-900/50 shadow-xs flex flex-col justify-between space-y-3"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="font-black text-sm text-zinc-950 dark:text-white">
+                                {pending.tenant?.firstName} {pending.tenant?.lastName}
+                              </div>
+                              <div className="text-xs text-zinc-500 flex items-center gap-1.5 mt-0.5">
+                                <span>{pending.tenant?.campus || pending.tenant?.email}</span>
+                                {pending.tenant?.studentId && (
+                                  <span className="font-mono text-[10px] bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                                    ID: {pending.tenant.studentId}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
+                              Awaiting Approval
                             </span>
-                            <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]"><Mail className="w-3 h-3"/> {booking.tenant.email}</span>
-                            {booking.tenant.phoneNumber && (
-                              <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]"><Phone className="w-3 h-3"/> {booking.tenant.phoneNumber}</span>
-                            )}
                           </div>
-                        </td>
-                        <td className="p-4 font-medium">{booking.property.title}</td>
-                        <td className="p-4 text-sm text-[var(--muted-foreground)]">
-                          <div className="flex items-center gap-1"><Calendar className="w-3 h-3"/> {new Date(booking.startDate).toLocaleDateString()}</div>
-                          <div className="text-xs ml-4">to {new Date(booking.endDate).toLocaleDateString()}</div>
-                        </td>
-                        <td className="p-4">
-                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold ${
-                            booking.status === 'PENDING' ? 'bg-amber-100 text-amber-700 font-bold' :
-                            ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status) ? 'bg-emerald-100 text-emerald-700' :
-                            'bg-red-100 text-red-700'
-                          }`}>
-                            {booking.status === 'CHECKED_IN' ? 'CHECKED IN' : booking.status}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right space-x-2">
-                          {booking.status === 'PENDING' && (
-                            <>
-                              <button
-                                onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'APPROVED' }); }}
-                                disabled={processingId === booking.id}
-                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all"
-                              >
-                                {processingId === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />} Accept
-                              </button>
-                              <button
-                                onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'REJECTED' }); }}
-                                disabled={processingId === booking.id}
-                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all"
-                              >
-                                <X className="w-3 h-3" /> Decline
-                              </button>
-                            </>
-                          )}
-                          {(['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) && (
-                            <>
+
+                          <div className="mt-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                            <span className="font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-[60%]">
+                              {pending.property?.title}
+                            </span>
+                            <span className="font-mono font-bold text-[#0F5132] dark:text-emerald-400">
+                              {new Date(pending.startDate).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={() => { setProcessingId(pending.id); updateStatusMutation.mutate({ id: pending.id, status: 'APPROVED' }); }}
+                            disabled={processingId === pending.id}
+                            className="flex-1 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                          >
+                            {processingId === pending.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            <span>Approve &amp; Issue Lease</span>
+                          </button>
+                          <button
+                            onClick={() => { setProcessingId(pending.id); updateStatusMutation.mutate({ id: pending.id, status: 'REJECTED' }); }}
+                            disabled={processingId === pending.id}
+                            className="px-3.5 py-2 bg-zinc-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-zinc-800 dark:hover:bg-rose-950/40 text-zinc-700 dark:text-zinc-300 rounded-xl text-xs font-bold inline-flex items-center justify-center transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Decline</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Complete Bookings History Table */}
+              <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
+                <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900 dark:text-white">
+                    All Tenancy Reservations ({bookings.length})
+                  </h4>
+                  <span className="text-[11px] text-zinc-400">Direct booking logbook</span>
+                </div>
+
+                {isLoadingBookings ? (
+                  <div className="p-8 text-center text-xs text-zinc-400">Loading reservations...</div>
+                ) : bookings.length === 0 ? (
+                  <div className="p-12 text-center space-y-2">
+                    <Users className="w-10 h-10 text-zinc-400 mx-auto" />
+                    <h5 className="font-bold text-sm text-zinc-950 dark:text-white">No Reservations Yet</h5>
+                    <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                      Prospective tenants applying for your properties will be queued here for review and digital agreement signing.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead className="bg-zinc-50 dark:bg-zinc-900/60 text-zinc-500 uppercase tracking-wider text-[10px] font-bold">
+                        <tr>
+                          <th className="p-3.5">Tenant Details</th>
+                          <th className="p-3.5">Property Title</th>
+                          <th className="p-3.5">Stay Period</th>
+                          <th className="p-3.5">Status</th>
+                          <th className="p-3.5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800 font-medium">
+                        {bookings.map((booking: any) => (
+                          <tr key={booking.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/40 transition">
+                            <td className="p-3.5">
+                              <div className="font-bold text-zinc-900 dark:text-white">
+                                {booking.tenant?.firstName} {booking.tenant?.lastName}
+                              </div>
+                              <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                                <Mail className="w-3 h-3" /> {booking.tenant?.email}
+                              </div>
+                            </td>
+                            <td className="p-3.5 text-zinc-600 dark:text-zinc-300">
+                              {booking.property?.title}
+                            </td>
+                            <td className="p-3.5 text-zinc-500 font-mono text-[11px]">
+                              {new Date(booking.startDate).toLocaleDateString()} &rarr; {new Date(booking.endDate).toLocaleDateString()}
+                            </td>
+                            <td className="p-3.5">
+                              <span className={clsx(
+                                "px-2 py-0.5 rounded-full text-[10px] font-bold",
+                                booking.status === 'PENDING' ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                                ['APPROVED', 'CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE', 'CHECKED_IN'].includes(booking.status) ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                                "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
+                              )}>
+                                {booking.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right space-x-1.5">
+                              {booking.status === 'PENDING' && (
+                                <>
+                                  <button
+                                    onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'APPROVED' }); }}
+                                    disabled={processingId === booking.id}
+                                    className="px-2.5 py-1 bg-[#0F5132] text-white rounded-lg text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
+                                  >
+                                    Accept
+                                  </button>
+                                  <button
+                                    onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'REJECTED' }); }}
+                                    disabled={processingId === booking.id}
+                                    className="px-2.5 py-1 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg text-xs font-bold hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer"
+                                  >
+                                    Decline
+                                  </button>
+                                </>
+                              )}
+
                               {['CONFIRMED', 'COMPLETED', 'PAID', 'ACTIVE'].includes(booking.status) && (
                                 <button
                                   onClick={() => {
@@ -854,836 +1359,343 @@ function LandlordDashboardContent() {
                                     updateStatusMutation.mutate({ id: booking.id, status: 'CHECKED_IN' });
                                   }}
                                   disabled={processingId === booking.id}
-                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1 transition-all"
-                                  title="Mark Tenant as Checked-In"
+                                  className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition cursor-pointer"
                                 >
-                                  {processingId === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />} Check-In
+                                  Check-In
                                 </button>
                               )}
-                              <Link
-                                href={`/dashboard/landlord/inspections/${booking.id}`}
-                                className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all"
-                                title="Digital Move-In / Move-Out Inspection"
-                              >
-                                <ClipboardCheck className="w-3.5 h-3.5" /> Inspect
-                              </Link>
+
                               <Link
                                 href={`/dashboard/agreements/${booking.id}`}
-                                className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20"
+                                className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 rounded-lg text-xs font-bold hover:bg-zinc-200 transition inline-flex items-center gap-1"
                               >
-                                <FileSignature className="w-3.5 h-3.5" /> View & Sign Agreement
+                                <FileSignature className="w-3 h-3" />
+                                <span>Lease</span>
                               </Link>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
+
             </div>
           )}
-        </div>
-      )}
 
-      {/* ─── TAB: LEASE AGREEMENTS (DIGITAL CONTRACTS) ─────────────────────────── */}
-      {activeTab === 'agreements' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center bg-purple-50 dark:bg-purple-950/30 p-4 rounded-2xl border border-purple-100 dark:border-purple-900/50">
-            <div>
-              <h3 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
-                <FileSignature className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                Tenancy Lease Agreements
-              </h3>
-              <p className="text-xs text-[var(--muted-foreground)] mt-0.5">
-                Review, digitally sign, and manage binding residential tenancy agreements for your properties.
-              </p>
-            </div>
-          </div>
-
-          {isLoadingAgreements ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3 border border-[var(--border)]">
-              {[1,2,3].map(i => (
-                <div key={i} className="flex gap-4 items-center animate-pulse">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
-                  </div>
-                  <div className="h-7 w-24 bg-slate-200 dark:bg-slate-700 rounded-full" />
+          {/* Sub-tab: Act 772 Statutory Tenancy Agreements */}
+          {activeSubTab === 'agreements' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                    <FileSignature className="w-5 h-5 text-[#0F5132] dark:text-emerald-400" />
+                    <span>Statutory Residential Lease Agreements</span>
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                    Digitally countersigned under the Rent Act of Ghana (Act 220 &amp; Act 772).
+                  </p>
                 </div>
-              ))}
-            </div>
-          ) : agreements.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center mb-4">
-                <FileSignature className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-bold">No Lease Agreements Found</h3>
-              <p className="text-[var(--muted-foreground)] text-xs mt-1 max-w-sm">
-                When you accept tenant booking requests, official digital tenancy agreements will automatically be generated here for signature.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {agreements.map((item: any) => {
-                const isFullySigned = item.status === 'COMPLETED' || (Boolean(item.tenantSignature) && Boolean(item.landlordSignature));
-                const needsLandlordSig = !item.landlordSignature;
 
-                return (
-                  <div key={item.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border border-[var(--border)] hover:border-purple-500/50 transition-all flex flex-col justify-between space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                          isFullySigned ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400' :
-                          needsLandlordSig ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 animate-pulse' :
-                          'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400'
-                        }`}>
-                          {isFullySigned ? 'Verified & Binding' : needsLandlordSig ? 'Landlord Signature Needed' : 'Tenant Signature Needed'}
-                        </span>
-                        <h4 className="font-extrabold text-base text-[var(--foreground)] mt-3">
-                          {item.booking?.property?.title}
-                        </h4>
-                        <p className="text-xs text-[var(--muted-foreground)]">
-                          Tenant: <span className="font-bold text-[var(--foreground)]">{item.booking?.tenant?.firstName} {item.booking?.tenant?.lastName}</span>
-                        </p>
-                      </div>
-                    </div>
+              {isLoadingAgreements ? (
+                <div className="p-8 text-center text-xs text-zinc-400">Loading statutory leases...</div>
+              ) : agreements.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <FileSignature className="w-10 h-10 text-zinc-400 mx-auto" />
+                  <h5 className="font-bold text-sm text-zinc-900 dark:text-white">No Signed Agreements Found</h5>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    When you approve booking applications, enforceable legal contracts are generated automatically for digital signatures.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {agreements.map((item: any) => {
+                    const isFullySigned = item.status === 'COMPLETED' || (Boolean(item.tenantSignature) && Boolean(item.landlordSignature));
+                    const needsLandlordSig = !item.landlordSignature;
 
-                    <div className="flex justify-between items-center text-xs text-[var(--muted-foreground)] pt-3 border-t border-[var(--border)]">
-                      <div>
-                        Created: {new Date(item.createdAt).toLocaleDateString()}
-                      </div>
-                      <Link
-                        href={`/dashboard/agreements/${item.bookingId}`}
-                        className={`px-4 py-2 rounded-xl font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-md ${
-                          needsLandlordSig 
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:opacity-90 shadow-amber-500/20' 
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
-                        }`}
+                    return (
+                      <div 
+                        key={item.id} 
+                        className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4"
                       >
-                        <FileSignature className="w-3.5 h-3.5" />
-                        {needsLandlordSig ? 'Sign Agreement' : 'View Agreement'}
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── TAB 2: MAINTENANCE TICKETS ───────────────────────────────────────────── */}
-      {activeTab === 'tickets' && (
-        <div className="animate-in space-y-4">
-          {isLoadingTickets ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-3 border border-[var(--border)]">
-              {[1,2,3].map(i => (
-                <div key={i} className="flex gap-4 items-center animate-pulse">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-2/3" />
-                  </div>
-                  <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-full" />
-                </div>
-              ))}
-            </div>
-          ) : tickets.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-12 rounded-2xl text-center flex flex-col items-center">
-              <CheckCircle className="w-12 h-12 text-emerald-500 mb-3" />
-              <h3 className="text-lg font-bold">No maintenance tickets</h3>
-              <p className="text-xs text-[var(--muted-foreground)]">All property issues are currently clear.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tickets.map((t: any) => {
-                const isUrgent = t.priority === 'URGENT' || t.priority === 'HIGH';
-                return (
-                  <div key={t.id} className={clsx(
-                    "bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-5 rounded-2xl border space-y-4 transition-all",
-                    t.isEscalated ? "border-red-500/60 bg-red-500/5 shadow-lg shadow-red-500/10" : "border-[var(--border)]"
-                  )}>
-                    {/* Header Badges */}
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider">{t.property?.title}</span>
-                        <h4 className="font-extrabold text-base text-[var(--foreground)]">{t.title}</h4>
-                        <p className="text-xs text-[var(--muted-foreground)]">
-                          Tenant: <strong>{t.tenant?.firstName} {t.tenant?.lastName}</strong> ({t.tenant?.phoneNumber || t.tenant?.email})
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-1">
-                        <span className={clsx(
-                          "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider",
-                          t.status === 'PENDING' ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300" :
-                          t.status === 'SCHEDULED' ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border border-indigo-300" :
-                          t.status === 'IN_PROGRESS' ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-300" :
-                          t.status === 'ESCALATED' ? "bg-red-600 text-white animate-pulse" :
-                          "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300"
-                        )}>
-                          {t.status}
-                        </span>
-                        
-                        {isUrgent && (
-                          <span className="text-[9px] font-black text-red-500 uppercase flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" /> {t.priority} Priority
-                          </span>
-                        )}
-
-                        {t.isEscalated && (
-                          <span className="text-[9px] font-black bg-red-500 text-white px-2 py-0.5 rounded-md flex items-center gap-1 animate-pulse">
-                            <AlertTriangle className="w-3 h-3 text-white" /> Admin Escalated (48h Unresolved)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Multi-Stage Repair Status Bar */}
-                    <div className="bg-slate-100 dark:bg-slate-800/60 p-2.5 rounded-xl flex items-center justify-between text-[11px] font-bold">
-                      <span className={t.status === 'PENDING' ? 'text-amber-500 font-extrabold' : 'text-slate-400'}>1. Pending</span>
-                      <span className="text-slate-400">→</span>
-                      <span className={t.status === 'SCHEDULED' ? 'text-indigo-500 font-extrabold' : 'text-slate-400'}>2. Scheduled</span>
-                      <span className="text-slate-400">→</span>
-                      <span className={t.status === 'IN_PROGRESS' ? 'text-blue-500 font-extrabold' : 'text-slate-400'}>3. In Repair</span>
-                      <span className="text-slate-400">→</span>
-                      <span className={t.status === 'RESOLVED' ? 'text-emerald-500 font-extrabold' : 'text-slate-400'}>4. Resolved</span>
-                    </div>
-
-                    <p className="text-xs text-[var(--muted-foreground)]">{t.description}</p>
-
-                    {/* Meta Data Details */}
-                    {t.scheduledDate && (
-                      <p className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" /> Scheduled Repair Date: <strong>{new Date(t.scheduledDate).toLocaleDateString()}</strong>
-                      </p>
-                    )}
-
-                    {t.repairCost && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">
-                        Logged Repair Cost: GHS {t.repairCost.toLocaleString()}
-                      </p>
-                    )}
-
-                    {/* Image Attachments */}
-                    {(t.imageUrl || t.completionImageUrl) && (
-                      <div className="flex gap-3 pt-1">
-                        {t.imageUrl && (
-                          <a href={getImageUrl(t.imageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-indigo-500 hover:text-indigo-600 underline flex items-center gap-1">
-                            <Camera className="w-3.5 h-3.5" /> Issue Photo
-                          </a>
-                        )}
-                        {t.completionImageUrl && (
-                          <a href={getImageUrl(t.completionImageUrl)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-bold text-emerald-500 hover:text-emerald-600 underline flex items-center gap-1">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Repair Completion Proof
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Action Controls */}
-                    <div className="flex flex-wrap justify-between items-center pt-3 border-t border-[var(--border)] text-xs gap-2">
-                      <span className="text-slate-400 font-mono text-[10px]">
-                        Filed: {new Date(t.createdAt).toLocaleDateString()}
-                      </span>
-                      
-                      <div className="flex flex-wrap gap-2">
-                        {t.status === 'PENDING' && (
-                          <button
-                            onClick={() => {
-                              setTicketActionModal({
-                                isOpen: true,
-                                ticketId: t.id,
-                                ticketTitle: t.title,
-                                mode: 'SCHEDULE',
-                                scheduledDate: new Date().toISOString().split('T')[0],
-                                repairCost: '0',
-                                resolutionNotes: '',
-                                completionImageUrl: '',
-                              });
-                            }}
-                            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
-                          >
-                            Schedule Repair
-                          </button>
-                        )}
-
-                        {(t.status === 'PENDING' || t.status === 'SCHEDULED') && (
-                          <button
-                            onClick={() => updateTicketMutation.mutate({ id: t.id, status: 'IN_PROGRESS' })}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
-                          >
-                            Start Repair
-                          </button>
-                        )}
-
-                        {t.status !== 'RESOLVED' && (
-                          <button
-                            onClick={() => {
-                              setTicketActionModal({
-                                isOpen: true,
-                                ticketId: t.id,
-                                ticketTitle: t.title,
-                                mode: 'RESOLVE',
-                                scheduledDate: new Date().toISOString().split('T')[0],
-                                repairCost: '0',
-                                resolutionNotes: 'Repair completed successfully.',
-                                completionImageUrl: '',
-                              });
-                            }}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-500/20"
-                          >
-                            Complete Repair & Resolve
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── TAB 3: LISTING SUBSCRIPTIONS & RENEWAL REMINDERS ─────────────────────── */}
-      {activeTab === 'subscriptions' && (
-        <div className="animate-in space-y-6">
-          {isLoadingSubs ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-4 border border-[var(--border)]">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="h-20 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
-                ))}
-              </div>
-              {[1,2,3].map(i => (
-                <div key={i} className="flex gap-4 items-center animate-pulse">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-3.5 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3" />
-                    <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-1/2" />
-                  </div>
-                  <div className="h-7 w-32 bg-slate-200 dark:bg-slate-700 rounded-xl" />
-                </div>
-              ))}
-            </div>
-          ) : (
-          <>
-          {/* Subscription Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#E0E7FF] dark:bg-[#312E81] text-[#4338CA] dark:text-[#A5B4FC] rounded-2xl shadow-inner">
-                <Building className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider">Total Properties</p>
-                <h3 className="text-2xl font-black text-[#4338CA] dark:text-[#E0E7FF]">{subStats.totalProperties}</h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#6EE7B7] rounded-2xl shadow-inner">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider">Active Listings</p>
-                <h3 className="text-2xl font-black text-[#047857] dark:text-[#6EE7B7]">{subStats.activeSubscriptions}</h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#FFFBEB] dark:bg-[#451A03]/60 border-[#FDE68A] dark:border-[#78350F] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#FEF3C7] dark:bg-[#92400E] text-[#B45309] dark:text-[#FDE68A] rounded-2xl shadow-inner">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#78350F] dark:text-[#FDE68A] uppercase tracking-wider">Expiring Soon (&lt;7d)</p>
-                <h3 className="text-2xl font-black text-[#B45309] dark:text-[#FEF3C7]">{subStats.expiringSoon}</h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#FFE4E6] dark:bg-[#4C0519]/60 border-[#FECDD3] dark:border-[#881337] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#FECDD3] dark:bg-[#9F1239] text-[#BE123C] dark:text-[#FECDD3] rounded-2xl shadow-inner">
-                <Clock className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#881337] dark:text-[#FECDD3] uppercase tracking-wider">Expired / Inactive</p>
-                <h3 className="text-2xl font-black text-[#BE123C] dark:text-[#FFE4E6]">{subStats.unsubscribedOrExpired}</h3>
-              </div>
-            </div>
-          </div>
-
-          {/* Subscriptions Table */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
-            <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold">Property Listing Subscriptions</h3>
-                <p className="text-xs text-[var(--muted-foreground)]">
-                  Annual subscriptions grant active listing rights and search visibility.
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-[#0F5132] text-white">
-                  <tr>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Property</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Location</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Status</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Days Left</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Expiry Date</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {subProperties.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-slate-400">No properties registered yet.</td>
-                    </tr>
-                  ) : (
-                    subProperties.map((p: any) => {
-                      const sub = p.subscription;
-                      return (
-                        <tr key={p.propertyId} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                          <td className="p-4 font-bold text-sm text-[var(--foreground)]">{p.propertyTitle}</td>
-                          <td className="p-4 text-xs text-[var(--muted-foreground)]">{p.location}</td>
-                          <td className="p-4">
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
                             <span className={clsx(
-                              "px-2.5 py-1 rounded-full text-xs font-bold uppercase",
-                              sub?.isActive ? (sub.needsRenewalSoon ? "bg-amber-100 text-amber-700 animate-pulse" : "bg-emerald-100 text-emerald-700") : "bg-red-100 text-red-700"
+                              "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider",
+                              isFullySigned ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                              needsLandlordSig ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 animate-pulse" :
+                              "bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300"
                             )}>
-                              {sub?.isActive ? (sub.needsRenewalSoon ? "Expiring Soon" : "Active") : "Expired"}
+                              {isFullySigned ? 'Verified & Binding' : needsLandlordSig ? 'Landlord Signature Required' : 'Tenant Signature Required'}
                             </span>
-                          </td>
-                          <td className="p-4 text-xs font-black">
-                            {sub?.isActive ? `${sub.daysLeft} days` : '0 days'}
-                          </td>
-                          <td className="p-4 text-xs text-[var(--muted-foreground)]">
-                            {sub?.endDate ? new Date(sub.endDate).toLocaleDateString() : 'N/A'}
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              onClick={() => renewSubMutation.mutate(p.propertyId)}
-                              disabled={renewSubMutation.isPending}
-                              className={clsx(
-                                "px-3 py-1.5 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-sm",
-                                sub?.needsRenewalSoon || !sub?.isActive
-                                  ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25"
-                                  : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                              )}
-                            >
-                              {renewSubMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                              {sub?.isActive ? "Extend License" : "Renew Listing (GHS 100)"}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                          </div>
+
+                          <h4 className="font-bold text-base text-zinc-950 dark:text-white mt-2">
+                            {item.booking?.property?.title || 'Managed Apartment'}
+                          </h4>
+                          <p className="text-xs text-zinc-500 mt-0.5">
+                            Resident: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{item.booking?.tenant?.firstName} {item.booking?.tenant?.lastName}</span>
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                          <span className="text-[11px] text-zinc-400 font-mono">
+                            Created: {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                          <Link
+                            href={`/dashboard/agreements/${item.bookingId}`}
+                            className={clsx(
+                              "px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition shadow-xs",
+                              needsLandlordSig ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-[#0F5132] hover:bg-[#0A3D24] text-white"
+                            )}
+                          >
+                            <FileSignature className="w-3.5 h-3.5" />
+                            <span>{needsLandlordSig ? 'Sign Agreement' : 'View Agreement'}</span>
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-          </>
           )}
-        </div>
-      )}
 
-      {/* ─── TAB 4: FINANCIAL EARNINGS & REVENUE REPORT ───────────────────────────── */}
-      {activeTab === 'financials' && (
-        <div className="animate-in space-y-6">
-          {isLoadingEarnings ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6 space-y-4 border border-[var(--border)]">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl animate-pulse" />
-                ))}
-              </div>
-              <div className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />
-              {[1,2,3].map(i => (
-                <div key={i} className="h-10 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse w-full" />
-              ))}
-            </div>
-          ) : (
-          <>
-          {/* Action Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h3 className="text-lg font-bold">Landlord Financial Earnings Statement</h3>
-              <p className="text-xs text-[var(--muted-foreground)]">Net yield tracking &amp; GRA official rental tax filing.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={handleDownloadGRATaxPDF}
-                className="px-3.5 py-2 bg-[#064E3B] hover:bg-[#047857] text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-amber-300" /> GRA Tax PDF
-              </button>
-              <button
-                onClick={handleDownloadGRATaxCSV}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
-              >
-                <Printer className="w-4 h-4 text-emerald-400" /> GRA Tax CSV
-              </button>
-              <Link
-                href="/dashboard/landlord/withdraw"
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20 cursor-pointer"
-              >
-                <DollarSign className="w-4 h-4" /> Request Withdrawal
-              </Link>
-            </div>
-          </div>
-
-          {/* Earnings Breakdown Stat Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl border bg-[#ECFDF5] dark:bg-[#064E3B]/60 border-[#A7F3D0] dark:border-[#065F46] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#D1FAE5] dark:bg-[#047857] text-[#047857] dark:text-[#6EE7B7] rounded-2xl shadow-inner">
-                <DollarSign className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#065F46] dark:text-[#A7F3D0] uppercase tracking-wider">Gross Tenant Revenue</p>
-                <h3 className="text-2xl font-black text-[#047857] dark:text-[#6EE7B7]">
-                  GHS {earningsSummary.totalGrossEarnings.toLocaleString()}
-                </h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#EEF2FF] dark:bg-[#1E1B4B]/60 border-[#C7D2FE] dark:border-[#3730A3] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#E0E7FF] dark:bg-[#312E81] text-[#4338CA] dark:text-[#A5B4FC] rounded-2xl shadow-inner">
-                <Activity className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#3730A3] dark:text-[#C7D2FE] uppercase tracking-wider">
-                  Platform Commission ({earningsSummary.platformCommissionPercent}%)
-                </p>
-                <h3 className="text-2xl font-black text-[#4338CA] dark:text-[#E0E7FF]">
-                  - GHS {earningsSummary.totalCommissionDeducted.toLocaleString()}
-                </h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#CCFBF1] dark:bg-[#134E4A]/70 border-[#5EEAD4] dark:border-[#115E59] flex items-center gap-4 shadow-md transition-all">
-              <div className="p-3 bg-[#0D9488] text-white rounded-2xl shadow-md shadow-[#0D9488]/30">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#115E59] dark:text-[#99F6E4] uppercase tracking-wider">Net Landlord Earnings</p>
-                <h3 className="text-2xl font-black text-[#0F766E] dark:text-[#CCFBF1]">
-                  GHS {earningsSummary.totalNetEarnings.toLocaleString()}
-                </h3>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl border bg-[#E0F2FE] dark:bg-[#0C4A6E]/60 border-[#BAE6FD] dark:border-[#075985] flex items-center gap-4 shadow-sm hover:shadow-md transition-all">
-              <div className="p-3 bg-[#BAE6FD] dark:bg-[#0284C7] text-[#0369A1] dark:text-[#BAE6FD] rounded-2xl shadow-inner">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="text-xs font-extrabold text-[#075985] dark:text-[#BAE6FD] uppercase tracking-wider">This Month Net Payout</p>
-                <h3 className="text-2xl font-black text-[#0369A1] dark:text-[#E0F2FE]">
-                  GHS {earningsSummary.thisMonthNetEarnings.toLocaleString()}
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          {/* Revenue Chart */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs p-6 rounded-2xl border">
-            <h3 className="text-lg font-bold mb-6">Gross vs. Net Monthly Revenue Trend</h3>
-            <div className="h-72 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyTrends}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#64748b', fontSize: 12 }}
-                    tickFormatter={(value) => `GHS ${value}`}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: '#f1f5f9' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}
-                    formatter={(value: any, name: any) => [
-                      `GHS ${Number(value).toLocaleString()}`, 
-                      name === 'gross' ? 'Gross Revenue' : 'Net Payout'
-                    ]}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: 10 }} />
-                  <Bar dataKey="gross" name="Gross Revenue" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={25} />
-                  <Bar dataKey="net" name="Net Payout (After 5%)" fill="#10b981" radius={[4, 4, 0, 0]} barSize={25} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Detailed Transaction Ledger */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl overflow-hidden border">
-            <div className="p-6 border-b border-[var(--border)]">
-              <h3 className="text-lg font-bold">Transaction & Payout Ledger</h3>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-[#0F5132] text-white">
-                  <tr>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Date</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Tenant</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Property &amp; Room</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Gross Paid</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase">Commission ({earningsSummary.platformCommissionPercent}%)</th>
-                    <th className="p-4 text-xs font-extrabold text-white uppercase text-right">Net Payout</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border)]">
-                  {cashflows.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="p-8 text-center text-[var(--muted-foreground)]">
-                        No transactions recorded yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    cashflows.map((tx: any) => (
-                      <tr key={tx.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors">
-                        <td className="p-4 text-xs font-medium">
-                          {new Date(tx.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="p-4">
-                          <div className="font-bold text-xs text-[var(--foreground)]">{tx.tenantName}</div>
-                          <div className="text-[10px] font-mono text-slate-400">{tx.reference}</div>
-                        </td>
-                        <td className="p-4 text-xs">
-                          <div className="font-bold">{tx.propertyTitle}</div>
-                          <div className="text-[10px] text-slate-400">{tx.roomType}</div>
-                        </td>
-                        <td className="p-4 text-xs font-bold text-slate-600 dark:text-slate-300">
-                          GHS {tx.grossAmount.toLocaleString()}
-                        </td>
-                        <td className="p-4 text-xs font-bold text-red-500">
-                          - GHS {tx.commissionFee.toLocaleString()}
-                        </td>
-                        <td className="p-4 text-right font-black text-emerald-600">
-                          GHS {tx.netAmount.toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          </>
+          {/* Sub-tab: Resident Conduct Logbook */}
+          {activeSubTab === 'disciplinary' && (
+            <HostelDisciplinaryTab properties={myProperties} bookings={bookings} />
           )}
-        </div>
-      )}
 
-      {/* ─── TAB: FLOORPLAN & BED OCCUPANCY MATRIX ────────────────────────────────── */}
-      {activeTab === 'occupancy' && (
-        <div>
-          <FloorplanOccupancyTab 
-            properties={myProperties} 
-            onStartInspection={(bookingId) => {
-              router.push(`/dashboard/landlord/inspections/${bookingId}`);
-            }}
-            onOpenChat={() => {
-              setActiveTab('messages');
-            }}
-          />
-        </div>
-      )}
-
-      {/* ─── TAB: ACADEMIC INSTALLMENT & TRANCHE SCHEDULE ─────────────────────────── */}
-      {activeTab === 'installments' && (
-        <div>
-          <AcademicInstallmentTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: ROOM ASSET & APPLIANCE REGISTRY ───────────────────────────── */}
-      {activeTab === 'assets' && (
-        <div>
-          <RoomAssetInventoryTab properties={myProperties} bookings={bookings} />
-        </div>
-      )}
-
-      {/* ─── TAB: COMPOUND NOTICE BOARD ───────────────────────────────────────────── */}
-      {activeTab === 'notices' && (
-        <div>
-          <CompoundNoticeTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: OPERATING EXPENSES & P&L ────────────────────────────────────────── */}
-      {activeTab === 'expenses' && (
-        <div>
-          <ExpenseTrackerTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: ECG & WATER SUB-METER UTILITY MATRIX ─────────────────────────────── */}
-      {activeTab === 'utilities' && (
-        <div>
-          <UtilitySubMeterTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: STAFF & CARETAKER DELEGATION ────────────────────────────────────── */}
-      {activeTab === 'staff' && (
-        <div>
-          <StaffDelegationTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: DIGITAL PORTER'S DESK & GATE LOGBOOK ──────────────────────────────── */}
-      {activeTab === 'gatepass' && (
-        <div>
-          <GateLogbookTab properties={myProperties} />
-        </div>
-      )}
-
-      {/* ─── TAB: INCIDENT & DISCIPLINARY LOGBOOK ──────────────────────────────────── */}
-      {activeTab === 'disciplinary' && (
-        <div>
-          <HostelDisciplinaryTab properties={myProperties} bookings={bookings} />
-        </div>
-      )}
-
-      {/* ─── TAB: TENANT REVIEWS & RATINGS ────────────────────────────────────────── */}
-      {activeTab === 'reviews' && (
-        <div className="space-y-6 animate-in">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs rounded-2xl p-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-                  Resident &amp; Tenant Feedback
-                </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                  Verified reviews and ratings submitted by residents across your managed properties.
+          {/* Sub-tab: Tenant Ratings & Reviews */}
+          {activeSubTab === 'reviews' && (
+            <div className="space-y-6">
+              <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs">
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white">Tenant Ratings &amp; Reviews</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Direct feedback submitted by verified student residents regarding water, electricity, security, and compound maintenance.
                 </p>
               </div>
-              <div className="flex items-center gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-4 py-2.5 rounded-xl">
-                <span className="text-2xl font-black text-amber-700 dark:text-amber-400">
-                  {landlordReviews.length > 0 
-                    ? (landlordReviews.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / landlordReviews.length).toFixed(1)
-                    : '5.0'}
-                </span>
-                <div className="text-left">
-                  <div className="flex text-amber-500">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-3.5 h-3.5 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-[11px] font-semibold text-amber-900 dark:text-amber-300">
-                    {landlordReviews.length} total {landlordReviews.length === 1 ? 'review' : 'reviews'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {isLoadingLandlordReviews ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-zinc-200 dark:bg-zinc-800" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4" />
-                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
-                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full" />
-                  </div>
+              {isLoadingLandlordReviews ? (
+                <div className="p-8 text-center text-xs text-zinc-400">Loading reviews...</div>
+              ) : landlordReviews.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <Star className="w-10 h-10 text-amber-500 mx-auto" />
+                  <h5 className="font-bold text-sm text-zinc-900 dark:text-white">No Reviews Yet</h5>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    Verified residents will rate your accommodation after their tenancy stay.
+                  </p>
                 </div>
-              ))}
-            </div>
-          ) : landlordReviews.length === 0 ? (
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center flex flex-col items-center">
-              <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-center justify-center mb-3">
-                <Star className="w-7 h-7 text-amber-600" />
-              </div>
-              <h4 className="text-base font-bold text-zinc-900 dark:text-white">No Tenant Reviews Yet</h4>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm">
-                Once verified tenants move into your apartments or hostels, their ratings and reviews will be published here.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {landlordReviews.map((rev: any) => {
-                const tenantName = rev.booking?.tenant 
-                  ? `${rev.booking.tenant.firstName || ''} ${rev.booking.tenant.lastName || ''}`.trim() 
-                  : 'Verified Resident';
-                const propTitle = rev.booking?.property?.title || 'Managed Listing';
-                const propLocation = rev.booking?.property?.location || 'Ghana';
-                return (
-                  <div key={rev.id} className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-sm">
-                            {tenantName.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <h5 className="text-sm font-bold text-zinc-900 dark:text-white">{tenantName}</h5>
-                            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-                              <Building className="w-3 h-3 text-zinc-400" />
-                              {propTitle} • {propLocation}
-                            </p>
-                          </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {landlordReviews.map((rev: any) => (
+                    <div key={rev.id} className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-sm text-zinc-900 dark:text-white">
+                          {rev.booking?.tenant?.firstName} {rev.booking?.tenant?.lastName}
                         </div>
                         <div className="flex text-amber-500">
                           {[1, 2, 3, 4, 5].map((s) => (
                             <Star 
                               key={s} 
-                              className={clsx(
-                                "w-3.5 h-3.5",
-                                s <= (rev.rating || 5) ? "fill-amber-500 text-amber-500" : "text-zinc-300 dark:text-zinc-700"
-                              )} 
+                              className={clsx("w-3.5 h-3.5", s <= (rev.rating || 5) ? "fill-amber-500 text-amber-500" : "text-zinc-300 dark:text-zinc-700")} 
                             />
                           ))}
                         </div>
                       </div>
-                      <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-3 leading-relaxed">
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 italic">
                         "{rev.comment || 'Verified resident review.'}"
                       </p>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-400">
-                      <span>{new Date(rev.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                      <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                        <CheckCircle2 className="w-3 h-3" /> Verified Booking
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  ))}
+                </div>
+              )}
             </div>
           )}
+
         </div>
       )}
 
+      {/* ═══════════════════════════════════════════════════════════════════
+          PILLAR 4: FACILITY & OPERATIONS
+      ═══════════════════════════════════════════════════════════════════ */}
+      {activePillar === 'operations' && (
+        <div className="space-y-6 animate-in">
+          
+          {/* Sub-tab: Maintenance Work Orders */}
+          {activeSubTab === 'tickets' && (
+            <div className="space-y-6">
+              
+              {/* Emergency Banner if Urgent Tickets exist */}
+              {urgentTicketsCount > 0 && (
+                <AlertBanner
+                  type="warning"
+                  message={`Attention: ${urgentTicketsCount} high-priority or escalated repair issue(s) require prompt caretaker dispatch.`}
+                />
+              )}
+
+              {isLoadingTickets ? (
+                <div className="p-8 text-center text-xs text-zinc-400">Loading work orders...</div>
+              ) : tickets.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
+                  <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
+                  <h5 className="font-bold text-sm text-zinc-900 dark:text-white">All Clear! No Maintenance Tickets</h5>
+                  <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+                    Reported resident issues with plumbing, ECG power, or room fixtures will be queued here for triage.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tickets.map((t: any) => {
+                    const isUrgent = t.priority === 'URGENT' || t.priority === 'HIGH' || t.isEscalated;
+
+                    return (
+                      <div 
+                        key={t.id} 
+                        className={clsx(
+                          "p-5 rounded-2xl bg-white dark:bg-[#12151D] border shadow-xs space-y-4 transition",
+                          isUrgent ? "border-amber-300 dark:border-amber-900/60" : "border-zinc-200 dark:border-zinc-800"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                              {t.property?.title}
+                            </span>
+                            <h4 className="font-bold text-base text-zinc-950 dark:text-white mt-0.5">
+                              {t.title}
+                            </h4>
+                            <p className="text-xs text-zinc-500 mt-0.5">
+                              Tenant: <span className="font-semibold text-zinc-800 dark:text-zinc-200">{t.tenant?.firstName} {t.tenant?.lastName}</span>
+                              {t.tenant?.phoneNumber && ` • ${t.tenant.phoneNumber}`}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-1">
+                            <span className={clsx(
+                              "px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase",
+                              t.status === 'PENDING' ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300" :
+                              t.status === 'SCHEDULED' ? "bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300" :
+                              t.status === 'RESOLVED' ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300" :
+                              "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                            )}>
+                              {t.status}
+                            </span>
+                            {isUrgent && (
+                              <span className="text-[9px] font-bold text-rose-600 dark:text-rose-400 uppercase">
+                                Urgent
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {t.description && (
+                          <p className="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2 bg-zinc-50 dark:bg-zinc-900 p-2.5 rounded-xl font-mono text-[11px]">
+                            {t.description}
+                          </p>
+                        )}
+
+                        <div className="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800">
+                          <span className="text-[10px] text-zinc-400 font-mono">
+                            Logged: {new Date(t.createdAt).toLocaleDateString()}
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            {t.status !== 'RESOLVED' && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setTicketActionModal({
+                                      isOpen: true,
+                                      ticketId: t.id,
+                                      ticketTitle: t.title,
+                                      mode: 'SCHEDULE',
+                                      scheduledDate: new Date().toISOString().split('T')[0],
+                                      repairCost: '0',
+                                      resolutionNotes: '',
+                                      completionImageUrl: '',
+                                    });
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-200 transition cursor-pointer"
+                                >
+                                  Schedule
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setTicketActionModal({
+                                      isOpen: true,
+                                      ticketId: t.id,
+                                      ticketTitle: t.title,
+                                      mode: 'RESOLVE',
+                                      scheduledDate: '',
+                                      repairCost: '0',
+                                      resolutionNotes: 'Repair completed successfully.',
+                                      completionImageUrl: '',
+                                    });
+                                  }}
+                                  className="px-3 py-1.5 rounded-xl bg-[#0F5132] text-white text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
+                                >
+                                  Resolve
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Sub-tab: Caretaker & Porter Delegation */}
+          {activeSubTab === 'staff' && (
+            <StaffDelegationTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Porter's Gate Logbook */}
+          {activeSubTab === 'gatepass' && (
+            <GateLogbookTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Compound Broadcast Notices */}
+          {activeSubTab === 'notices' && (
+            <CompoundNoticeTab properties={myProperties} />
+          )}
+
+          {/* Sub-tab: Direct Resident Messaging */}
+          {activeSubTab === 'messages' && (
+            <MessagingTab />
+          )}
+
+        </div>
+      )}
 
       {/* ── Ticket Action & Resolution Modal ── */}
       {ticketActionModal.isOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/65 backdrop-blur-md transition-all">
-          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-slate-200/80 dark:border-white/10 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-lg bg-white dark:bg-[#121216] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3">
                 <div className={clsx(
-                  "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-md",
-                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600 shadow-indigo-600/30" : "bg-emerald-600 shadow-emerald-600/30"
+                  "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-xs",
+                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600" : "bg-[#0F5132]"
                 )}>
                   {ticketActionModal.mode === 'SCHEDULE' ? <Calendar className="w-5 h-5 text-white" /> : <Wrench className="w-5 h-5 text-white" />}
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    {ticketActionModal.mode === 'SCHEDULE' ? 'Schedule Maintenance' : 'Complete & Resolve Ticket'}
+                  <h3 className="font-extrabold text-base text-zinc-900 dark:text-white">
+                    {ticketActionModal.mode === 'SCHEDULE' ? 'Schedule Caretaker Visit' : 'Complete & Resolve Work Order'}
                   </h3>
-                  <p className="text-xs text-slate-500 line-clamp-1">{ticketActionModal.ticketTitle}</p>
+                  <p className="text-xs text-zinc-500 line-clamp-1">{ticketActionModal.ticketTitle}</p>
                 </div>
               </div>
               <button
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-white p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -1693,22 +1705,22 @@ function LandlordDashboardContent() {
             <div className="space-y-4 text-xs sm:text-sm">
               {ticketActionModal.mode === 'SCHEDULE' ? (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Estimated Repair Date
+                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                    Estimated Caretaker Visit Date
                   </label>
                   <input
                     type="date"
                     value={ticketActionModal.scheduledDate}
                     onChange={(e) => setTicketActionModal(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                    className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                    className="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:border-[#0F5132]"
                   />
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Repair Expenditure (GHS)
+                      <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                        Repair Expenditure (GH₵)
                       </label>
                       <input
                         type="number"
@@ -1717,11 +1729,11 @@ function LandlordDashboardContent() {
                         placeholder="0.00"
                         value={ticketActionModal.repairCost}
                         onChange={(e) => setTicketActionModal(prev => ({ ...prev, repairCost: e.target.value }))}
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                        className="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:border-[#0F5132]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                      <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
                         Proof Photo URL (Optional)
                       </label>
                       <input
@@ -1729,13 +1741,13 @@ function LandlordDashboardContent() {
                         placeholder="https://..."
                         value={ticketActionModal.completionImageUrl}
                         onChange={(e) => setTicketActionModal(prev => ({ ...prev, completionImageUrl: e.target.value }))}
-                        className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white"
+                        className="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:border-[#0F5132]"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
                       Resolution Summary / Work Done
                     </label>
                     <textarea
@@ -1743,18 +1755,18 @@ function LandlordDashboardContent() {
                       placeholder="e.g. Replaced leaking valve and sealed sink pipes."
                       value={ticketActionModal.resolutionNotes}
                       onChange={(e) => setTicketActionModal(prev => ({ ...prev, resolutionNotes: e.target.value }))}
-                      className="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-white resize-none"
+                      className="w-full p-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-xs sm:text-sm font-semibold outline-none focus:border-[#0F5132] resize-none"
                     />
                   </div>
                 </>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => setTicketActionModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
               >
                 Cancel
               </button>
@@ -1780,10 +1792,10 @@ function LandlordDashboardContent() {
                 }}
                 disabled={updateTicketMutation.isPending}
                 className={clsx(
-                  "px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white transition shadow-lg",
+                  "px-6 py-2.5 rounded-xl text-xs font-bold text-white transition shadow-xs",
                   ticketActionModal.mode === 'SCHEDULE' 
-                    ? "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30" 
-                    : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/30"
+                    ? "bg-indigo-600 hover:bg-indigo-700" 
+                    : "bg-[#0F5132] hover:bg-[#0A3D24]"
                 )}
               >
                 {updateTicketMutation.isPending ? 'Saving...' : ticketActionModal.mode === 'SCHEDULE' ? 'Save Schedule' : 'Confirm Resolution'}
@@ -1792,6 +1804,7 @@ function LandlordDashboardContent() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
@@ -1800,7 +1813,7 @@ export default function LandlordDashboard() {
   return (
     <Suspense fallback={
       <div className="min-h-[500px] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-[#0F5132]" />
       </div>
     }>
       <LandlordDashboardContent />

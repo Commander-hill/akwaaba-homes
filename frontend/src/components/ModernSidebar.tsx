@@ -154,11 +154,17 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                 const currentTab = searchParams ? searchParams.get('tab') : null;
 
                 const PILLAR_TAB_GROUPS: Record<string, string[]> = {
+                  // Tenant Pillars
                   residence: ['residence', 'bookings', 'active-booking', 'documents', 'renewals', 'inventory'],
                   payments: ['payments', 'tranches', 'billsplit'],
                   maintenance: ['maintenance', 'tickets', 'safety'],
                   living: ['living', 'visitors', 'deliveries', 'vehicles', 'services'],
                   community: ['community', 'roommates', 'messages', 'reviews', 'notices'],
+                  // Landlord Pillars
+                  portfolio: ['portfolio', 'occupancy', 'assets', 'properties'],
+                  financials: ['financials', 'payouts', 'expenses', 'utilities', 'installments', 'subscriptions'],
+                  tenancies: ['tenancies', 'bookings', 'agreements', 'disciplinary', 'reviews', 'inspections'],
+                  operations: ['operations', 'tickets', 'staff', 'notices', 'gatepass', 'messages'],
                 };
 
                 let isActive = false;
