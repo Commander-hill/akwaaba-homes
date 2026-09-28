@@ -1,7 +1,7 @@
 /**
- * Akwaaba Homes Institutional Email Templating Engine
- * Designed to Ghanaian Forest Emerald (#0F5132) & Heritage Gold (#D97706) aesthetic.
- * Fully responsive, cross-client safe (Gmail, Apple Mail, Outlook, Mobile).
+ * AkwaabaHomes Production Email Templating Engine
+ * Designed to a modern, restrained Ghanaian PropTech aesthetic.
+ * Clean typography, warm ivory canvas, cross-client safe (Gmail, Apple Mail, Outlook, Mobile).
  */
 
 export interface EmailBadge {
@@ -27,48 +27,52 @@ export const emailBadgeHtml = (badge: EmailBadge): string => {
   const styles: Record<string, { bg: string; text: string; border: string }> = {
     emerald: { bg: '#ECFDF5', text: '#065F46', border: '#A7F3D0' },
     gold: { bg: '#FFFBEB', text: '#92400E', border: '#FDE68A' },
-    slate: { bg: '#F1F5F9', text: '#334155', border: '#CBD5E1' },
+    slate: { bg: '#F4F4F5', text: '#3F3F46', border: '#E4E4E7' },
     rose: { bg: '#FEF2F2', text: '#991B1B', border: '#FECACA' },
     blue: { bg: '#EFF6FF', text: '#1E40AF', border: '#BFDBFE' },
   };
 
   const current = styles[badge.variant || 'slate'];
-  return `<span style="display:inline-block;padding:4px 10px;margin:2px 4px 2px 0;background:${current.bg};color:${current.text};border:1px solid ${current.border};border-radius:6px;font-size:12px;font-weight:700;letter-spacing:0.3px;">${badge.label}: ${badge.value}</span>`;
+  return `<span style="display:inline-block;padding:3px 8px;margin:2px 4px 2px 0;background:${current.bg};color:${current.text};border:1px solid ${current.border};border-radius:5px;font-size:11px;font-weight:600;letter-spacing:0.2px;">${badge.label}: ${badge.value}</span>`;
 };
 
 export const emailButtonHtml = (action: EmailAction): string => {
-  const styles: Record<string, { bg: string; text: string; shadow: string }> = {
-    primary: { bg: '#0F5132', text: '#FFFFFF', shadow: '0 4px 12px rgba(15,81,50,0.25)' },
-    accent: { bg: '#D97706', text: '#FFFFFF', shadow: '0 4px 12px rgba(217,119,6,0.25)' },
-    secondary: { bg: '#1E293B', text: '#FFFFFF', shadow: '0 4px 12px rgba(30,41,59,0.2)' },
-    danger: { bg: '#DC2626', text: '#FFFFFF', shadow: '0 4px 12px rgba(220,38,38,0.25)' },
+  const styles: Record<string, { bg: string; text: string; hoverBg: string }> = {
+    primary: { bg: '#0F5132', text: '#FFFFFF', hoverBg: '#0A3D24' },
+    accent: { bg: '#18181B', text: '#FFFFFF', hoverBg: '#27272A' },
+    secondary: { bg: '#F4F4F5', text: '#18181B', hoverBg: '#E4E4E7' },
+    danger: { bg: '#DC2626', text: '#FFFFFF', hoverBg: '#B91C1C' },
   };
 
   const current = styles[action.variant || 'primary'];
   return `
-    <div style="text-align:center;margin:32px 0 24px;">
-      <a href="${action.url}" style="background-color:${current.bg};color:${current.text};padding:14px 34px;text-decoration:none;border-radius:10px;font-weight:700;font-size:15px;display:inline-block;box-shadow:${current.shadow};letter-spacing:0.3px;">
-        ${action.label} &rarr;
-      </a>
-    </div>
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:26px auto 18px auto;">
+      <tr>
+        <td align="center" style="background-color:${current.bg};border-radius:8px;">
+          <a href="${action.url}" target="_blank" style="display:inline-block;padding:12px 28px;color:${current.text};font-size:13px;font-weight:600;text-decoration:none;border-radius:8px;letter-spacing:0.2px;">
+            ${action.label}
+          </a>
+        </td>
+      </tr>
+    </table>
   `;
 };
 
 export const emailCardHtml = (contentHtml: string, title?: string): string => `
-  <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:22px;margin:24px 0;">
-    ${title ? `<h4 style="margin:0 0 14px;color:#0F172A;font-size:14px;text-transform:uppercase;letter-spacing:1px;font-weight:800;">${title}</h4>` : ''}
+  <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-radius:8px;padding:16px 20px;margin:20px 0;">
+    ${title ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#71717A;margin-bottom:10px;">${title}</div>` : ''}
     ${contentHtml}
   </div>
 `;
 
 export const emailMetaTableHtml = (rows: EmailMetaRow[]): string => `
-  <table style="width:100%;border-collapse:collapse;margin:6px 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
     ${rows
       .map(
         (r, i) => `
-      <tr style="border-bottom:${i === rows.length - 1 ? 'none' : '1px solid #E2E8F0'};">
-        <td style="padding:10px 0;color:#64748B;font-size:13px;font-weight:500;">${r.label}</td>
-        <td style="padding:10px 0;color:${r.highlight ? '#0F5132' : '#0F172A'};font-size:14px;font-weight:${r.highlight ? '800' : '600'};text-align:right;${r.isMono ? 'font-family:ui-monospace,Menlo,monospace;word-break:break-all;' : ''}">${r.value}</td>
+      <tr style="border-bottom:${i === rows.length - 1 ? 'none' : '1px solid #F4F4F5'};">
+        <td style="padding:7px 0;color:#71717A;font-size:13px;font-weight:500;">${r.label}</td>
+        <td style="padding:7px 0;color:${r.highlight ? '#0F5132' : '#18181B'};font-size:13px;font-weight:${r.highlight ? '700' : '600'};text-align:right;${r.isMono ? 'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;word-break:break-all;' : ''}">${r.value}</td>
       </tr>
     `
       )
@@ -87,9 +91,9 @@ export interface RenderEmailOptions {
 export const renderInstitutionalEmail = ({
   title,
   preheader,
-  categoryTag = 'OFFICIAL NOTICE',
+  categoryTag = 'NOTICE',
   bodyHtml,
-  footerNote = 'This is an official transactional message sent by Akwaaba Homes. This record is securely logged for your tenancy account records.',
+  footerNote = 'This is an official transactional message sent by AkwaabaHomes for your account records.',
 }: RenderEmailOptions): string => {
   const currentYear = new Date().getFullYear();
 
@@ -106,31 +110,31 @@ export const renderInstitutionalEmail = ({
   </style>
   <![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#F1F5F9;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#1E293B;">
-  <span style="display:none;font-size:1px;color:#F1F5F9;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+<body style="margin:0;padding:0;background-color:#F7F7F6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#27272A;">
+  <span style="display:none;font-size:1px;color:#F7F7F6;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
     ${preheader}
   </span>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F1F5F9;padding:40px 12px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F7F7F6;padding:36px 12px;">
     <tr>
       <td align="center">
         <!-- Main Email Container -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#FFFFFF;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);border:1px solid #E2E8F0;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#FFFFFF;border-radius:10px;overflow:hidden;border:1px solid #E4E4E7;">
           
-          <!-- Institutional Header -->
+          <!-- Editorial Header -->
           <tr>
-            <td style="background:#0F5132;padding:32px 36px;text-align:left;border-bottom:3px solid #D97706;">
+            <td style="padding:24px 28px 20px;border-bottom:1px solid #E4E4E7;background-color:#FFFFFF;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td>
-                    <div style="font-size:24px;font-weight:900;color:#FFFFFF;letter-spacing:-0.5px;line-height:1.2;">
-                      Akwaaba<span style="color:#F59E0B;">Homes</span>
+                    <div style="font-size:18px;font-weight:800;color:#18181B;letter-spacing:-0.4px;line-height:1.2;">
+                      Akwaaba<span style="color:#0F5132;">Homes</span>
                     </div>
-                    <div style="color:rgba(255,255,255,0.85);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-top:4px;">
-                      Ghana National Housing & Tenancy Escrow
+                    <div style="color:#71717A;font-size:11px;font-weight:500;margin-top:2px;letter-spacing:0.2px;">
+                      Ghana Accommodation &amp; Tenancy Network
                     </div>
                   </td>
-                  <td align="right" valign="top">
-                    <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#FFFFFF;padding:5px 12px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;display:inline-block;">
+                  <td align="right" valign="middle">
+                    <span style="background-color:#F4F4F5;border:1px solid #E4E4E7;color:#52525B;padding:4px 9px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;display:inline-block;">
                       ${categoryTag}
                     </span>
                   </td>
@@ -141,29 +145,23 @@ export const renderInstitutionalEmail = ({
 
           <!-- Editorial Body -->
           <tr>
-            <td style="padding:40px 36px;background-color:#FFFFFF;">
+            <td style="padding:32px 28px;background-color:#FFFFFF;">
               ${bodyHtml}
             </td>
           </tr>
 
-          <!-- Statutory Compliance Footer -->
+          <!-- Professional Footer -->
           <tr>
-            <td style="background-color:#F8FAFC;border-top:1px solid #E2E8F0;padding:28px 36px;text-align:center;">
-              <div style="margin-bottom:14px;">
-                <span style="display:inline-block;padding:4px 10px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:6px;color:#065F46;font-size:11px;font-weight:700;letter-spacing:0.5px;">
-                  VERIFIED DIGITAL TENANCY
-                </span>
-                <span style="display:inline-block;padding:4px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;color:#92400E;font-size:11px;font-weight:700;letter-spacing:0.5px;margin-left:4px;">
-                  🏛️ VERIFIED PROPERTY STANDARDS
-                </span>
+            <td style="background-color:#FAFAFA;border-top:1px solid #E4E4E7;padding:22px 28px;text-align:center;">
+              <div style="font-size:11px;font-weight:600;color:#52525B;margin-bottom:6px;">
+                AkwaabaHomes Ghana
               </div>
-              <p style="margin:0 0 10px;color:#64748B;font-size:12px;line-height:1.6;">
+              <p style="margin:0 0 10px;color:#71717A;font-size:11px;line-height:1.5;">
                 ${footerNote}
               </p>
-              <div style="border-top:1px solid #E2E8F0;margin:16px 0 12px;padding-top:14px;color:#94A3B8;font-size:11px;line-height:1.5;">
-                &copy; ${currentYear} Akwaaba Homes Ghana Ltd. All rights reserved.<br />
-                Accra Central Financial District, Greater Accra Region, Ghana.<br />
-                For statutory inquiries or dispute assistance, contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
+              <div style="border-top:1px solid #E4E4E7;margin:12px 0 10px;padding-top:10px;color:#A1A1AA;font-size:10px;line-height:1.5;">
+                &copy; ${currentYear} Akwaaba Homes Ghana Ltd. Regulated under Ghana Data Protection Act, 2012 (Act 843).<br />
+                Accra Central &amp; Kumasi Hubs · For assistance, contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
               </div>
             </td>
           </tr>

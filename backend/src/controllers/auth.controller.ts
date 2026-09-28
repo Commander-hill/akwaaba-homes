@@ -121,54 +121,44 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     
     if (transporter) {
       const bodyHtml = `
-        <div style="margin-bottom:24px;">
-          <div style="margin-bottom:12px;">
-            ${emailBadgeHtml({ label: 'ACCOUNT SECURITY', value: 'IDENTITY VERIFICATION', variant: 'emerald' })}
-          </div>
-          <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-            Welcome to Akwaaba Homes — Verify Your Account
+        <div style="margin-bottom:20px;">
+          <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+            Welcome to AkwaabaHomes
           </h2>
-          <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-            Dear <strong>${user.firstName}</strong>, thank you for joining Ghana's institutional housing and tenancy network.
-          </p>
-          <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
-            To authenticate your account, protect against impersonation, and enable verified tenant/landlord transactions, please confirm your email address below:
+          <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
+            Hi ${user.firstName}, thank you for creating an account. Please confirm your email address to complete your registration and get started.
           </p>
         </div>
 
         ${emailCardHtml(`
           ${emailMetaTableHtml([
             { label: 'Registered Email', value: user.email },
-            { label: 'Platform Role', value: user.role || 'TENANT' },
-            { label: 'Identity Protection', value: 'NIA Ghana Card Protocol Ready' },
-            { label: 'Security Standard', value: 'Verified Digital Tenancy Platform' }
+            { label: 'Account Type', value: user.role === 'LANDLORD' ? 'Landlord & Host' : 'Student & Resident Tenant' }
           ])}
-        `, 'Account Credentials')}
+        `, 'Account Overview')}
 
         ${emailButtonHtml({
-          label: 'Verify Email Address',
+          label: 'Confirm Email Address',
           url: verifyLink,
           variant: 'primary'
         })}
 
-        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-top:20px;">
-          <p style="color:#64748B;font-size:12px;line-height:1.6;margin:0 0 6px;">
-            If the button above does not open, copy and paste this secure link directly into your browser:
-          </p>
-          <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,Menlo,monospace;word-break:break-all;margin:0;">
-            ${verifyLink}
-          </p>
-        </div>
+        <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
+          If the button does not open, copy and paste this link into your browser:
+        </p>
+        <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+          ${verifyLink}
+        </p>
       `;
 
       const mailOptions = {
-        from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
+        from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
         to: user.email,
-        subject: 'Verify your Akwaaba Homes Account',
+        subject: 'Confirm your AkwaabaHomes email address',
         html: renderInstitutionalEmail({
-          title: 'Verify Your Akwaaba Homes Account',
-          preheader: `Hi ${user.firstName}, please verify your email address on Akwaaba Homes`,
-          categoryTag: 'ACCOUNT ACTIVATION',
+          title: 'Confirm Your AkwaabaHomes Account',
+          preheader: `Hi ${user.firstName}, please confirm your email address on AkwaabaHomes`,
+          categoryTag: 'VERIFICATION',
           bodyHtml
         }),
       };
@@ -1084,52 +1074,44 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
     
     const bodyHtml = `
-      <div style="margin-bottom:24px;">
-        <div style="margin-bottom:12px;">
-          ${emailBadgeHtml({ label: 'SECURITY NOTICE', value: '15-MINUTE EXPIRATION', variant: 'gold' })}
-        </div>
-        <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-          Account Password Recovery Protocol
+      <div style="margin-bottom:20px;">
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+          Reset your password
         </h2>
-        <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-          A password reset request was initiated for your Akwaaba Homes account associated with <strong>${user.email}</strong>.
-        </p>
-        <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
-          To authorize this security request and create a new password, click the secure credential reset button below:
+        <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
+          We received a request to reset the password for your AkwaabaHomes account (<strong>${user.email}</strong>). Click the button below to choose a new password:
         </p>
       </div>
 
-      ${emailCardHtml(`
-        ${emailMetaTableHtml([
-          { label: 'Security Window', value: '15 Minutes From Request' },
-          { label: 'Target Account', value: user.email },
-          { label: 'Authentication Protocol', value: 'SHA-256 Single-Use Nonce Token' },
-          { label: 'Platform Protection', value: 'Ghana Cyber Security Authority (Act 1038) Standards' }
-        ])}
-      `, 'Security Assessment')}
-
       ${emailButtonHtml({
-        label: 'Reset Account Password',
+        label: 'Reset Password',
         url: resetUrl,
         variant: 'primary'
       })}
 
-      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:16px;margin-top:20px;">
-        <p style="color:#92400E;font-size:13px;line-height:1.6;margin:0;">
-          🔒 <strong>Did not request this?</strong> If you did not initiate this password recovery request, your account remains secure. You can safely disregard this email or notify <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;font-weight:700;">support@akwaabahomes.com</a> immediately.
+      <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #D97706;border-radius:6px;padding:12px 16px;margin:20px 0;">
+        <p style="color:#71717A;font-size:12px;line-height:1.5;margin:0;">
+          <strong>Security note:</strong> This link expires in 15 minutes. If you did not request a password reset, you can safely ignore this email—your account remains secure.
         </p>
       </div>
+
+      <p style="color:#71717A;font-size:12px;line-height:1.5;margin:16px 0 4px;text-align:center;">
+        If the button does not open, copy and paste this link into your browser:
+      </p>
+      <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+        ${resetUrl}
+      </p>
     `;
 
     // Send email asynchronously
     transporter.sendMail({
-      from: `"Akwaaba Homes Security" <${process.env.SMTP_USER}>`,
+      from: `"AkwaabaHomes Security" <${process.env.SMTP_USER}>`,
       to: user.email,
-      subject: 'Security Alert: Password Reset Request — Akwaaba Homes',
+      subject: 'Reset your AkwaabaHomes password',
       html: renderInstitutionalEmail({
-        title: 'Account Password Recovery Protocol',
-        preheader: 'Reset your Akwaaba Homes account password (valid for 15 minutes)',
-        categoryTag: 'SECURITY VERIFICATION',
+        title: 'Reset Your Password',
+        preheader: 'Use this link to reset your AkwaabaHomes password (expires in 15 minutes)',
+        categoryTag: 'SECURITY',
         bodyHtml
       }),
     })

@@ -73,41 +73,38 @@ export const requestPayoutOTP = async (req: Request, res: Response): Promise<voi
     const transporter = getTransporter();
     if (transporter) {
       const bodyHtml = `
-        <div style="margin-bottom:24px;">
-          <div style="margin-bottom:12px;">
-            ${emailBadgeHtml({ label: 'STEP-UP SECURITY', value: 'WITHDRAWAL AUTHORIZATION', variant: 'emerald' })}
-          </div>
-          <h2 style="color:#0F172A;font-size:20px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-            Authorize Mobile Money / Bank Withdrawal
+        <div style="margin-bottom:20px;">
+          <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+            Confirm your withdrawal request
           </h2>
-          <p style="color:#475569;font-size:14px;line-height:1.7;margin:0;">
-            Dear <strong>${landlord.firstName}</strong>, a withdrawal of rental earnings was initiated from your landlord balance.
+          <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 16px;">
+            Hi ${landlord.firstName}, a withdrawal request was initiated from your landlord balance. Please use the verification code below to authorize this payout:
           </p>
-          <div style="background:#F0FDF4;border:2px dashed #0F5132;border-radius:12px;padding:20px;text-align:center;margin:24px 0;">
-            <p style="color:#64748B;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">
-              Your 6-Digit One-Time Authorization Code
-            </p>
-            <div style="font-size:32px;font-weight:900;letter-spacing:8px;color:#0F5132;font-family:ui-monospace,Menlo,monospace;">
+          <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-radius:8px;padding:20px;text-align:center;margin:20px 0;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#71717A;margin-bottom:6px;">
+              Verification Code
+            </div>
+            <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#0F5132;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
               ${otpCode}
             </div>
-            <p style="color:#94A3B8;font-size:11px;margin:8px 0 0;">
-              This code expires in 5 minutes. Never share this authorization code with anyone.
+            <p style="color:#71717A;font-size:11px;margin:8px 0 0;">
+              Valid for 5 minutes. Never share this code with anyone.
             </p>
           </div>
-          <p style="color:#64748B;font-size:13px;line-height:1.6;margin:0;">
-            If you did not initiate this withdrawal, please contact Akwaaba Homes fraud support immediately and change your account password.
+          <p style="color:#71717A;font-size:12px;line-height:1.5;margin:0;">
+            If you did not initiate this withdrawal, please secure your account immediately and contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
           </p>
         </div>
       `;
 
       transporter.sendMail({
-        from: `"Akwaaba Security" <${process.env.SMTP_USER}>`,
+        from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
         to: landlord.email,
-        subject: `[Akwaaba Homes] ${otpCode} is your withdrawal authorization code`,
+        subject: `Your withdrawal verification code: ${otpCode}`,
         html: renderInstitutionalEmail({
-          title: 'Withdrawal Authorization Code',
-          preheader: `Use code ${otpCode} to authorize your cash payout`,
-          categoryTag: 'FINANCIAL SECURITY',
+          title: 'Withdrawal Verification Code',
+          preheader: `Use code ${otpCode} to authorize your rental earnings withdrawal`,
+          categoryTag: 'VERIFICATION',
           bodyHtml
         })
       }).catch(err => console.error('Failed to send payout OTP email:', err));

@@ -60,7 +60,7 @@ export const notify = async (params: NotifyParams): Promise<void> => {
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
+        from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
         to: recipientEmail,
         subject: emailSubject,
         html: emailBodyHtml
@@ -88,7 +88,7 @@ export const notify = async (params: NotifyParams): Promise<void> => {
   }
 
   if (phoneToUse && (smsText || message)) {
-    const textToSend = smsText || `Akwaaba Homes: ${title} - ${message}`;
+    const textToSend = smsText || `AkwaabaHomes: ${title} - ${message}`;
     sendSMS(phoneToUse, textToSend).catch((err) =>
       console.error(`[Notifications] SMS dispatch error:`, err)
     );
@@ -102,37 +102,37 @@ export const notifyBookingCreated = async (opts: {
   tenantName: string; propertyTitle: string; bookingId: string;
 }) => {
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        New Tenancy Booking Offer Received
+    <div style="margin-bottom:20px;">
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        New Booking Request
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, prospective tenant <strong>${opts.tenantName}</strong> has submitted an official tenancy booking application for your property listing.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.landlordName}, <strong>${opts.tenantName}</strong> has submitted a booking request for your property listing: <strong>${opts.propertyTitle}</strong>.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Property Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Prospective Tenant', value: opts.tenantName },
-        { label: 'Booking Protocol ID', value: opts.bookingId, isMono: true },
-        { label: 'Regulatory Framework', value: 'Verified Digital Tenancy' }
+        { label: 'Property', value: opts.propertyTitle, highlight: true },
+        { label: 'Applicant Name', value: opts.tenantName },
+        { label: 'Booking Reference', value: opts.bookingId, isMono: true },
+        { label: 'Escrow Protection', value: 'Paystack Secured Deposit' }
       ])}
-    `, 'Application Metadata')}
+    `, 'Booking Details')}
 
-    <p style="color:#475569;font-size:14px;line-height:1.7;margin:16px 0;">
-      Please inspect the tenant's profile, verification status, and move-in timeline in your Landlord Command Center. You may approve the booking to issue the digital tenancy agreement, or decline to release the escrow hold.
+    <p style="color:#52525B;font-size:13px;line-height:1.6;margin:16px 0;">
+      Please review the tenant's details and move-in timeline in your Landlord Hub. You can approve the booking to proceed to the Tenancy Agreement, or decline to release the escrow hold.
     </p>
 
     ${emailButtonHtml({
-      label: 'Review Tenancy Offer in Command Center',
+      label: 'Review Booking in Dashboard',
       url: `${getFrontendUrl()}/dashboard/landlord`,
       variant: 'primary'
     })}
 
-    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;margin-top:24px;">
-      <p style="color:#166534;font-size:13px;margin:0;line-height:1.6;">
-        <strong>Akwaaba Escrow Assurance:</strong> Tenant booking funds are held safely in escrow until you sign the Tenancy Agreement and key handover occurs.
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
+      <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
+        <strong>Escrow assurance:</strong> The tenant's payment is held securely in escrow. Payouts are transferred directly to your Mobile Money or bank account once the tenancy agreement is signed and keys are handed over.
       </p>
     </div>
   `;
@@ -145,54 +145,52 @@ export const notifyBookingCreated = async (opts: {
     title: 'New Booking Request',
     message: `${opts.tenantName} has submitted a booking request for "${opts.propertyTitle}".`,
     link: '/dashboard/landlord',
-    emailSubject: `Tenancy Application Received — ${opts.propertyTitle}`,
+    emailSubject: `New booking request: ${opts.propertyTitle}`,
     emailBodyHtml: renderInstitutionalEmail({
-      title: 'Tenancy Application Received',
-      preheader: `${opts.tenantName} submitted an application for ${opts.propertyTitle}`,
-      categoryTag: 'TENANCY DISPATCH',
+      title: 'New Booking Request Received',
+      preheader: `${opts.tenantName} requested to book ${opts.propertyTitle}`,
+      categoryTag: 'BOOKING',
       bodyHtml
     })
   });
 };
-
 
 export const notifyPaymentReceipt = async (opts: {
   tenantId: string; tenantEmail: string; tenantName: string;
   propertyTitle: string; amount: number; bookingId: string;
 }) => {
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        Official Tenancy Payment Receipt & Escrow Deposit
+    <div style="margin-bottom:20px;">
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        Payment Receipt
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.tenantName}</strong>, your advance rent remittance of <strong>GHS ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> has been securely cleared into the Akwaaba Homes Escrow Trust.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.tenantName}, thank you for your payment. Your rent deposit of <strong>GH₵ ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> has been received and is secured in escrow.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Property Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Amount Paid (Escrowed)', value: `GHS ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, highlight: true },
-        { label: 'Booking Protocol ID', value: opts.bookingId, isMono: true },
-        { label: 'Escrow Status', value: 'FUNDS SECURED (HELD IN TRUST)' },
-        { label: 'Security Standard', value: 'Protected Escrow Protocol' }
+        { label: 'Property', value: opts.propertyTitle, highlight: true },
+        { label: 'Amount Paid', value: `GH₵ ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, highlight: true },
+        { label: 'Booking Reference', value: opts.bookingId, isMono: true },
+        { label: 'Escrow Status', value: 'Held in Escrow' }
       ])}
-    `, 'Financial Itemization')}
+    `, 'Payment Summary')}
 
-    <p style="color:#475569;font-size:14px;line-height:1.7;margin:16px 0;">
-      Your payment is held safely in escrow. If the Landlord declines or does not confirm your booking, your payment will be <strong>automatically refunded in full (100%)</strong> to your original payment channel.
+    <p style="color:#52525B;font-size:13px;line-height:1.6;margin:16px 0;">
+      Your payment is held safely in escrow. If the landlord declines your booking or fails to confirm within the window, your payment will be <strong>automatically refunded in full (100%)</strong> to your original payment method.
     </p>
 
     ${emailButtonHtml({
-      label: 'View Booking & Tenancy Ledger',
+      label: 'View Booking in Dashboard',
       url: `${getFrontendUrl()}/dashboard/tenant`,
       variant: 'primary'
     })}
 
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px 18px;margin-top:20px;">
-      <p style="color:#64748B;font-size:12px;margin:0;line-height:1.6;">
-        💡 <strong>Next Steps:</strong> The property owner has been notified. Once approved, you will execute your statutory tenancy agreement digitally with SHA-256 cryptographic integrity.
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
+      <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
+        <strong>Next steps:</strong> The landlord has been notified to review your booking. Once approved, you will sign your digital Tenancy Agreement to finalize your stay.
       </p>
     </div>
   `;
@@ -203,13 +201,13 @@ export const notifyPaymentReceipt = async (opts: {
     recipientName: opts.tenantName,
     type: 'BOOKING',
     title: 'Booking Payment Receipt',
-    message: `Your payment of GHS ${opts.amount} for "${opts.propertyTitle}" has been received into escrow.`,
+    message: `Your payment of GH₵ ${opts.amount} for "${opts.propertyTitle}" has been received into escrow.`,
     link: '/dashboard/tenant',
-    emailSubject: `Payment Receipt — GHS ${opts.amount} (${opts.propertyTitle})`,
+    emailSubject: `Payment receipt: GH₵ ${opts.amount.toLocaleString()} for ${opts.propertyTitle}`,
     emailBodyHtml: renderInstitutionalEmail({
-      title: 'Official Payment Receipt',
-      preheader: `Payment confirmed: GHS ${opts.amount} for ${opts.propertyTitle}`,
-      categoryTag: 'ESCROW RECEIPT',
+      title: 'Payment Confirmation & Receipt',
+      preheader: `Payment confirmed: GH₵ ${opts.amount.toLocaleString()} for ${opts.propertyTitle}`,
+      categoryTag: 'RECEIPT',
       bodyHtml
     })
   });
@@ -223,49 +221,49 @@ export const notifyBookingStatusChanged = async (opts: {
   const isRejected = opts.status === 'REJECTED' || opts.status === 'CANCELLED';
 
   const badgeColor = isApproved ? 'emerald' : isRejected ? 'rose' : 'gold';
-  const statusTitle = isApproved ? 'Booking Application Approved' : isRejected ? 'Booking Application Declined' : `Booking Status: ${opts.status}`;
+  const statusTitle = isApproved ? 'Booking Confirmed' : isRejected ? 'Booking Declined' : `Booking Status: ${opts.status}`;
 
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <div style="margin-bottom:12px;">
-        ${emailBadgeHtml({ label: 'STATUS UPDATE', value: opts.status, variant: badgeColor })}
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
+        ${emailBadgeHtml({ label: 'STATUS', value: opts.status, variant: badgeColor })}
       </div>
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
         ${statusTitle}
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.tenantName}</strong>, the landlord has updated the status of your tenancy booking application for <strong>${opts.propertyTitle}</strong>.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.tenantName}, the landlord has updated the status of your booking application for <strong>${opts.propertyTitle}</strong>.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Property Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Resolution Status', value: opts.status },
-        { label: 'Escrow Action', value: isApproved ? 'READY FOR TENANCY LEASE' : isRejected ? 'ESCROW REFUND INITIATED' : 'UNDER REVIEW' }
+        { label: 'Property', value: opts.propertyTitle, highlight: true },
+        { label: 'Booking Status', value: opts.status },
+        { label: 'Next Action', value: isApproved ? 'Sign Tenancy Agreement' : isRejected ? '100% Refund Processed' : 'Under Review' }
       ])}
-    `, 'Resolution Dossier')}
+    `, 'Booking Status')}
 
     ${isApproved ? `
-      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
-        <h4 style="margin:0 0 8px;color:#166534;font-size:15px;font-weight:800;">🎉 Congratulations! Next: Digital Tenancy Agreement</h4>
-        <p style="margin:0;color:#15803D;font-size:13px;line-height:1.6;">
-          Your tenancy is confirmed. Please review and sign your digital Tenancy Agreement to finalize key handover.
+      <div style="background-color:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:14px 18px;margin:20px 0;">
+        <h4 style="margin:0 0 4px;color:#166534;font-size:14px;font-weight:700;">Next Step: Tenancy Agreement</h4>
+        <p style="margin:0;color:#15803D;font-size:13px;line-height:1.5;">
+          Your booking is approved! Please review and sign your digital Tenancy Agreement in your resident portal to finalize your move-in.
         </p>
       </div>
     ` : ''}
 
     ${isRejected ? `
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;padding:16px 20px;margin:20px 0;">
-        <h4 style="margin:0 0 8px;color:#991B1B;font-size:15px;font-weight:800;">💸 Full Refund Initiated</h4>
-        <p style="margin:0;color:#B91C1C;font-size:13px;line-height:1.6;">
-          Because this booking was declined by the property owner, your escrow deposit has been released and a 100% refund has been processed back to your original mobile money or bank account.
+      <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:14px 18px;margin:20px 0;">
+        <h4 style="margin:0 0 4px;color:#991B1B;font-size:14px;font-weight:700;">Full Escrow Refund</h4>
+        <p style="margin:0;color:#B91C1C;font-size:13px;line-height:1.5;">
+          Because this booking was declined by the property owner, your deposit has been released from escrow and a 100% refund has been processed back to your original payment channel.
         </p>
       </div>
     ` : ''}
 
     ${emailButtonHtml({
-      label: 'Open Tenant Dashboard',
+      label: 'Open Resident Portal',
       url: `${getFrontendUrl()}/dashboard/tenant`,
       variant: isApproved ? 'primary' : 'secondary'
     })}
@@ -279,11 +277,11 @@ export const notifyBookingStatusChanged = async (opts: {
     title: statusTitle,
     message: `Your booking for "${opts.propertyTitle}" has been ${opts.status.toLowerCase()}.${isRejected ? ' Your payment refund has been initiated.' : ''}`,
     link: '/dashboard/tenant',
-    emailSubject: `Tenancy Status: ${opts.status} — ${opts.propertyTitle}`,
+    emailSubject: `Booking ${isApproved ? 'approved' : 'update'}: ${opts.propertyTitle}`,
     emailBodyHtml: renderInstitutionalEmail({
       title: statusTitle,
       preheader: `Your booking status for ${opts.propertyTitle} is now ${opts.status}`,
-      categoryTag: 'STATUS UPDATE',
+      categoryTag: 'UPDATE',
       bodyHtml
     })
   });
@@ -294,34 +292,33 @@ export const notifySubscriptionExpirySoon = async (opts: {
   expiryDate: Date; daysLeft: number;
 }) => {
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        Action Required: Property Listing Subscription Renewal
+    <div style="margin-bottom:20px;">
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        Listing Subscription Renewal Notice
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, your Akwaaba Homes Landlord Platform Subscription is scheduled to expire in <strong>${opts.daysLeft} day(s)</strong> on <strong>${opts.expiryDate.toLocaleDateString('en-GB')}</strong>.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.landlordName}, your AkwaabaHomes landlord subscription will expire on <strong>${opts.expiryDate.toLocaleDateString('en-GB')}</strong> (${opts.daysLeft} day(s) remaining).
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
         { label: 'Expiry Date', value: opts.expiryDate.toLocaleDateString('en-GB'), highlight: true },
-        { label: 'Grace Days Remaining', value: `${opts.daysLeft} Day(s)` },
-        { label: 'Listing Visibility', value: opts.daysLeft > 0 ? 'ACTIVE (SEARCHABLE)' : 'SUSPENDED' },
-        { label: 'Account Tier', value: 'Verified Landlord Host' }
+        { label: 'Days Remaining', value: `${opts.daysLeft} Day(s)` },
+        { label: 'Listing Status', value: opts.daysLeft > 0 ? 'Active & Searchable' : 'Suspended' }
       ])}
-    `, 'Subscription Telemetry')}
+    `, 'Subscription Details')}
 
-    <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:16px 20px;margin:20px 0;">
-      <p style="margin:0;color:#92400E;font-size:13px;line-height:1.6;">
-        ⚠️ <strong>Search Continuity Notice:</strong> Upon expiration, your properties will be temporarily deactivated from tenant search results and escrow bookings until your listing quota is renewed.
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #D97706;border-radius:6px;padding:12px 16px;margin:20px 0;">
+      <p style="margin:0;color:#71717A;font-size:12px;line-height:1.5;">
+        <strong>Notice:</strong> When your subscription expires, your property listings will be temporarily hidden from search results until renewed.
       </p>
     </div>
 
     ${emailButtonHtml({
-      label: 'Renew Landlord Subscription',
+      label: 'Renew Subscription',
       url: `${getFrontendUrl()}/dashboard/landlord/subscription`,
-      variant: 'accent'
+      variant: 'primary'
     })}
   `;
 
@@ -333,11 +330,11 @@ export const notifySubscriptionExpirySoon = async (opts: {
     title: 'Subscription Expiring Soon',
     message: `Your subscription expires in ${opts.daysLeft} day(s) on ${opts.expiryDate.toLocaleDateString()}.`,
     link: '/dashboard/landlord/subscription',
-    emailSubject: `Renewal Notice: Platform Subscription Expiring in ${opts.daysLeft} Day(s)`,
+    emailSubject: `Your listing subscription expires in ${opts.daysLeft} day(s)`,
     emailBodyHtml: renderInstitutionalEmail({
-      title: 'Subscription Expiring Soon',
-      preheader: `Your Akwaaba Homes subscription expires in ${opts.daysLeft} days`,
-      categoryTag: 'LANDLORD SUBSCRIPTION',
+      title: 'Subscription Renewal Notice',
+      preheader: `Your AkwaabaHomes subscription expires in ${opts.daysLeft} days`,
+      categoryTag: 'SUBSCRIPTION',
       bodyHtml
     })
   });
@@ -350,40 +347,39 @@ export const notifyPropertyApproval = async (opts: {
   const isApproved = opts.status === 'APPROVED';
 
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <div style="margin-bottom:12px;">
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
         ${emailBadgeHtml({
-          label: 'VERIFICATION VERDICT',
-          value: isApproved ? 'APPROVED & LIVE' : 'MODIFICATION REQUIRED',
+          label: 'VERIFICATION',
+          value: isApproved ? 'APPROVED & LIVE' : 'ACTION REQUIRED',
           variant: isApproved ? 'emerald' : 'rose'
         })}
       </div>
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        ${isApproved ? 'Property Listing Approved & Live' : 'Property Listing Requires Update'}
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        ${isApproved ? 'Property Listing Approved' : 'Property Listing Requires Updates'}
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, our verification team has concluded the review of your property listing: <strong>${opts.propertyTitle}</strong>.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.landlordName}, our verification team has completed the review of your property listing for <strong>${opts.propertyTitle}</strong>.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
         { label: 'Property Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Review Status', value: isApproved ? 'APPROVED' : 'RETURNED FOR REVISION' },
-        { label: 'Verification Standard', value: 'Verified Property Listing' }
+        { label: 'Review Decision', value: isApproved ? 'Approved' : 'Revision Required' }
       ])}
       ${opts.reason ? `
-        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #E2E8F0;">
-          <strong style="font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;">Auditor Assessment Notes:</strong>
-          <p style="margin:6px 0 0;font-size:14px;color:#0F172A;line-height:1.6;">${opts.reason}</p>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #E4E4E7;">
+          <strong style="font-size:11px;color:#71717A;text-transform:uppercase;letter-spacing:0.4px;">Reviewer Notes:</strong>
+          <p style="margin:4px 0 0;font-size:13px;color:#18181B;line-height:1.5;">${opts.reason}</p>
         </div>
       ` : ''}
-    `, 'Property Audit Dossier')}
+    `, 'Listing Review')}
 
     ${isApproved ? `
-      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
-        <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">
-          ✅ <strong>Now Live in Ghana Directory:</strong> Verified tenants across Ghana can now view your listing, inspect amenities, and make advance rent escrow offers.
+      <div style="background-color:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:12px 16px;margin:20px 0;">
+        <p style="margin:0;color:#166534;font-size:13px;line-height:1.5;">
+          Your listing is now live. Verified tenants and university students can now browse your property, inspect units, and submit booking requests.
         </p>
       </div>
     ` : ''}
@@ -403,11 +399,11 @@ export const notifyPropertyApproval = async (opts: {
     title: `Property ${isApproved ? 'Approved' : 'Rejected'}`,
     message: `Your property "${opts.propertyTitle}" has been ${isApproved ? 'approved and is now live' : 'rejected by an administrator'}.`,
     link: '/dashboard/landlord/properties',
-    emailSubject: `Property Audit: ${isApproved ? 'Approved & Live' : 'Action Required'} — ${opts.propertyTitle}`,
+    emailSubject: `Property listing ${isApproved ? 'approved and live' : 'requires updates'}: ${opts.propertyTitle}`,
     emailBodyHtml: renderInstitutionalEmail({
       title: `Property Listing ${isApproved ? 'Approved' : 'Review Decision'}`,
-      preheader: `Audit verdict for ${opts.propertyTitle}: ${opts.status}`,
-      categoryTag: 'PROPERTY COMPLIANCE',
+      preheader: `Listing status for ${opts.propertyTitle}: ${opts.status}`,
+      categoryTag: 'PROPERTY',
       bodyHtml
     })
   });
@@ -428,35 +424,32 @@ export const notifyAdminAnnouncement = async (opts: {
   const transporter = getTransporter();
   if (transporter) {
     const bodyHtml = `
-      <div style="margin-bottom:24px;">
-        <div style="margin-bottom:12px;">
-          ${emailBadgeHtml({ label: 'OFFICIAL COMMUNIQUÉ', value: 'GENERAL BROADCAST', variant: 'emerald' })}
-        </div>
-        <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 14px;line-height:1.3;">
+      <div style="margin-bottom:20px;">
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 12px;line-height:1.3;">
           ${opts.subject}
         </h2>
       </div>
 
-      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:24px;margin:20px 0;color:#334155;font-size:15px;line-height:1.8;white-space:pre-wrap;">${opts.message}</div>
+      <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-radius:8px;padding:20px;margin:16px 0;color:#3F3F46;font-size:14px;line-height:1.7;white-space:pre-wrap;">${opts.message}</div>
 
-      <div style="margin-top:24px;padding-top:16px;border-top:1px solid #E2E8F0;color:#64748B;font-size:13px;">
-        Dispatched by: <strong>The Akwaaba Homes National Regulatory Secretariat</strong>
+      <div style="margin-top:20px;padding-top:14px;border-top:1px solid #E4E4E7;color:#71717A;font-size:12px;">
+        Sent by <strong>AkwaabaHomes Community Team</strong>
       </div>
     `;
 
     const emailHtml = renderInstitutionalEmail({
       title: opts.subject,
       preheader: opts.subject,
-      categoryTag: 'PLATFORM CIRCULAR',
+      categoryTag: 'ANNOUNCEMENT',
       bodyHtml
     });
 
     for (const recipient of opts.emailList) {
       try {
         await transporter.sendMail({
-          from: `"Akwaaba Homes Secretariat" <${process.env.SMTP_USER}>`,
+          from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
           to: recipient.email,
-          subject: `📢 ${opts.subject} — Akwaaba Homes`,
+          subject: `${opts.subject} — AkwaabaHomes`,
           html: emailHtml
         });
       } catch (err) {
@@ -474,40 +467,38 @@ export const notifyAgreementCompleted = async (opts: {
   bookingId: string;
   hash: string;
 }) => {
-  const subject = `Legally Executed: Tenancy Agreement for ${opts.propertyTitle}`;
+  const subject = `Signed Tenancy Agreement: ${opts.propertyTitle}`;
 
   const generateBody = (recipientRole: 'LANDLORD' | 'TENANT', recipientName: string) => `
-    <div style="margin-bottom:24px;">
-      <div style="margin-bottom:12px;">
-        ${emailBadgeHtml({ label: 'STATUS', value: 'FULLY EXECUTED & COUNTERSIGNED', variant: 'emerald' })}
-        ${emailBadgeHtml({ label: 'DOCUMENT', value: 'DIGITAL TENANCY AGREEMENT', variant: 'slate' })}
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
+        ${emailBadgeHtml({ label: 'STATUS', value: 'SIGNED BY BOTH PARTIES', variant: 'emerald' })}
       </div>
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        Official Tenancy Agreement Executed
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        Tenancy Agreement Signed
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${recipientName}</strong>, this certified communique confirms that both the Landlord and Tenant have completed and digitally executed the Tenancy Agreement for <strong>${opts.propertyTitle}</strong>.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${recipientName}, both the Landlord and Tenant have digitally signed the Tenancy Agreement for <strong>${opts.propertyTitle}</strong>.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Premises Title', value: opts.propertyTitle, highlight: true },
-        { label: 'Booking Agreement ID', value: opts.bookingId, isMono: true },
-        { label: 'Landlord Party', value: opts.landlordName },
-        { label: 'Tenant Party', value: opts.tenantName },
-        { label: 'Biometric Cryptographic Fingerprint', value: opts.hash, isMono: true, highlight: true }
+        { label: 'Property', value: opts.propertyTitle, highlight: true },
+        { label: 'Landlord', value: opts.landlordName },
+        { label: 'Tenant', value: opts.tenantName },
+        { label: 'Verification Hash', value: opts.hash.slice(0, 24) + '...', isMono: true, highlight: true }
       ])}
-    `, 'Digital Execution Ledger')}
+    `, 'Agreement Summary')}
 
-    <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
-      <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">
-        <strong>Statutory Evidentiary Record:</strong> Under the Electronic Transactions Act, 2008 (Act 772), Section 7, the digital signatures and SHA-256 fingerprint embedded herein possess full legal validity admissible before any Ghanaian Court or Rent Tribunal.
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin:20px 0;">
+      <p style="margin:0;color:#71717A;font-size:12px;line-height:1.5;">
+        <strong>Legal notice:</strong> Under Ghana's Electronic Transactions Act, 2008 (Act 772), this digital agreement is legally binding. You can download and print an official copy anytime from your dashboard.
       </p>
     </div>
 
     ${emailButtonHtml({
-      label: 'Download & View Certified Tenancy Agreement',
+      label: 'View Signed Agreement',
       url: `${getFrontendUrl()}/dashboard/${recipientRole === 'LANDLORD' ? 'landlord' : 'tenant'}`,
       variant: 'primary'
     })}
@@ -517,24 +508,24 @@ export const notifyAgreementCompleted = async (opts: {
   if (transporter) {
     try {
       await transporter.sendMail({
-        from: `"Akwaaba Homes Legal Registry" <${process.env.SMTP_USER}>`,
+        from: `"AkwaabaHomes Tenancies" <${process.env.SMTP_USER}>`,
         to: opts.landlordEmail,
         subject: subject,
         html: renderInstitutionalEmail({
-          title: 'Tenancy Agreement Executed',
-          preheader: `Tenancy Agreement for ${opts.propertyTitle} has been legally executed.`,
-          categoryTag: 'LEGAL INSTRUMENT',
+          title: 'Tenancy Agreement Signed',
+          preheader: `Tenancy Agreement for ${opts.propertyTitle} has been signed by both parties.`,
+          categoryTag: 'AGREEMENT',
           bodyHtml: generateBody('LANDLORD', opts.landlordName)
         })
       });
       await transporter.sendMail({
-        from: `"Akwaaba Homes Legal Registry" <${process.env.SMTP_USER}>`,
+        from: `"AkwaabaHomes Tenancies" <${process.env.SMTP_USER}>`,
         to: opts.tenantEmail,
         subject: subject,
         html: renderInstitutionalEmail({
-          title: 'Tenancy Agreement Executed',
-          preheader: `Tenancy Agreement for ${opts.propertyTitle} has been legally executed.`,
-          categoryTag: 'LEGAL INSTRUMENT',
+          title: 'Tenancy Agreement Signed',
+          preheader: `Tenancy Agreement for ${opts.propertyTitle} has been signed by both parties.`,
+          categoryTag: 'AGREEMENT',
           bodyHtml: generateBody('TENANT', opts.tenantName)
         })
       });
@@ -556,29 +547,26 @@ export const notifyMaintenanceEnded = async () => {
     const transporter = getTransporter();
     const frontendUrl = getFrontendUrl();
     const bodyHtml = `
-      <div style="margin-bottom:24px;">
-        <div style="margin-bottom:12px;">
-          ${emailBadgeHtml({ label: 'SYSTEM TELEMETRY', value: 'ALL SYSTEMS OPERATIONAL', variant: 'emerald' })}
-        </div>
-        <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-          Scheduled Maintenance Concluded — We Are Back Online
+      <div style="margin-bottom:20px;">
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+          Maintenance Complete — We Are Back Online
         </h2>
-        <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-          The scheduled infrastructure upgrade and system optimization have successfully completed. All escrow processing, tenancy arbitration tools, and property listings are fully operational.
+        <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+          Our scheduled system upgrade has finished. All services, room bookings, and escrow transactions are fully operational.
         </p>
       </div>
 
       ${emailButtonHtml({
-        label: 'Return to Akwaaba Homes',
+        label: 'Return to AkwaabaHomes',
         url: frontendUrl,
         variant: 'primary'
       })}
     `;
 
     const emailHtml = renderInstitutionalEmail({
-      title: 'Platform Maintenance Concluded',
-      preheader: 'Akwaaba Homes is fully back online and operational.',
-      categoryTag: 'SYSTEM RECOVERY',
+      title: 'Platform Maintenance Complete',
+      preheader: 'AkwaabaHomes is back online and all systems are operational.',
+      categoryTag: 'SYSTEM UPDATE',
       bodyHtml
     });
 
@@ -586,16 +574,16 @@ export const notifyMaintenanceEnded = async () => {
       if (transporter) {
         try {
           await transporter.sendMail({
-            from: `"Akwaaba Homes Operations" <${process.env.SMTP_USER}>`,
+            from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
             to: sub.email,
-            subject: 'System Online: Scheduled Platform Maintenance Complete',
+            subject: 'AkwaabaHomes is back online',
             html: emailHtml
           });
         } catch (err) {
           console.error(`Failed to send maintenance end email to ${sub.email}:`, err);
         }
       } else {
-        console.log(`[Maintenance Email Mock] → ${sub.email}: Akwaaba Homes is Back Online!`);
+        console.log(`[Maintenance Email Mock] → ${sub.email}: AkwaabaHomes is Back Online!`);
       }
     }
 
@@ -618,29 +606,25 @@ export const notifyPayoutSent = async (opts: {
   accountNumber: string;
 }) => {
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <div style="margin-bottom:12px;">
-        ${emailBadgeHtml({ label: 'DISBURSEMENT', value: 'PAYMENT CLEARED', variant: 'emerald' })}
-      </div>
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        Landlord Rental Escrow Payout Dispatched
+    <div style="margin-bottom:20px;">
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        Payout Dispatched
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, your requested advance rent withdrawal of <strong>GHS ${opts.amount.toFixed(2)}</strong> has been successfully disbursed to your designated Ghanaian financial channel.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.landlordName}, your requested rental withdrawal of <strong>GH₵ ${opts.amount.toFixed(2)}</strong> has been sent to your account.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Disbursement Destination', value: `${opts.bankOrNetwork} (${opts.accountNumber})` },
-        { label: 'Amount Remitted', value: `GHS ${opts.amount.toFixed(2)}`, highlight: true },
-        { label: 'Settlement Speed', value: 'INSTANT PAYSTACK TRANSFER' },
-        { label: 'Statutory Tax Reference', value: 'GRA 5% Withholding Tracked' }
+        { label: 'Destination', value: `${opts.bankOrNetwork} (${opts.accountNumber})` },
+        { label: 'Amount Sent', value: `GH₵ ${opts.amount.toFixed(2)}`, highlight: true },
+        { label: 'Transfer Method', value: 'Mobile Money / Bank Transfer' }
       ])}
-    `, 'Settlement Breakdown')}
+    `, 'Payout Details')}
 
     ${emailButtonHtml({
-      label: 'View Financial Statement & GRA Tax Slip',
+      label: 'View Payout History',
       url: `${getFrontendUrl()}/dashboard/landlord`,
       variant: 'primary'
     })}
@@ -653,16 +637,16 @@ export const notifyPayoutSent = async (opts: {
     recipientPhone: opts.landlordPhone,
     type: 'SUBSCRIPTION',
     title: 'Payout Dispatched',
-    message: `Your withdrawal of GHS ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork} (${opts.accountNumber}) has been processed.`,
+    message: `Your withdrawal of GH₵ ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork} (${opts.accountNumber}) has been processed.`,
     link: '/dashboard/landlord/financials',
-    emailSubject: `Disbursement Confirmed — GHS ${opts.amount.toFixed(2)} Transferred`,
+    emailSubject: `Payout confirmed: GH₵ ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork}`,
     emailBodyHtml: renderInstitutionalEmail({
-      title: 'Disbursement Confirmed',
-      preheader: `GHS ${opts.amount.toFixed(2)} transferred to your ${opts.bankOrNetwork} account`,
-      categoryTag: 'ESCROW DISBURSEMENT',
+      title: 'Payout Confirmation',
+      preheader: `GH₵ ${opts.amount.toFixed(2)} sent to your ${opts.bankOrNetwork} account`,
+      categoryTag: 'PAYOUT',
       bodyHtml
     }),
-    smsText: `Akwaaba Homes: GHS ${opts.amount.toFixed(2)} payout sent to your ${opts.bankOrNetwork} (${opts.accountNumber}). Funds will reflect shortly.`
+    smsText: `AkwaabaHomes: GH₵ ${opts.amount.toFixed(2)} payout sent to your ${opts.bankOrNetwork} (${opts.accountNumber}). Funds should reflect shortly.`
   });
 };
 
@@ -674,40 +658,39 @@ export const notifyLandlordVerification = async (opts: {
   isVerified: boolean;
   notes?: string;
 }) => {
-  const statusStr = opts.isVerified ? 'VERIFIED & CERTIFIED' : 'ACTION REQUIRED';
+  const statusStr = opts.isVerified ? 'VERIFIED' : 'ACTION REQUIRED';
   const badgeColor = opts.isVerified ? 'emerald' : 'rose';
 
   const bodyHtml = `
-    <div style="margin-bottom:24px;">
-      <div style="margin-bottom:12px;">
-        ${emailBadgeHtml({ label: 'LANDS AUDIT', value: statusStr, variant: badgeColor })}
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
+        ${emailBadgeHtml({ label: 'VERIFICATION', value: statusStr, variant: badgeColor })}
       </div>
-      <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-        ${opts.isVerified ? 'Land Title Deed Verified — Verified Host Badge Active' : 'Landlord Deed Verification Requires Correction'}
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        ${opts.isVerified ? 'Landlord Verification Approved' : 'Verification Update Required'}
       </h2>
-      <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-        Dear <strong>${opts.landlordName}</strong>, the statutory property deed audit has concluded for your landlord account.
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.landlordName}, our verification team has reviewed your property ownership documentation.
       </p>
     </div>
 
     ${emailCardHtml(`
       ${emailMetaTableHtml([
-        { label: 'Auditor Verdict', value: statusStr, highlight: true },
-        { label: 'Verification Badge', value: opts.isVerified ? 'VERIFIED LANDLORD' : 'PENDING CORRECTION' },
-        { label: 'Statutory Body', value: 'Lands Commission & NIA Ghana Card Protocol' }
+        { label: 'Status', value: opts.isVerified ? 'Approved' : 'Action Required', highlight: true },
+        { label: 'Badge Status', value: opts.isVerified ? 'Verified Landlord Badge Active' : 'Pending Updates' }
       ])}
       ${opts.notes ? `
-        <div style="margin-top:16px;padding-top:14px;border-top:1px solid #E2E8F0;">
-          <strong style="font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;">Auditor Directive:</strong>
-          <p style="margin:6px 0 0;font-size:14px;color:#0F172A;line-height:1.6;">${opts.notes}</p>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #E4E4E7;">
+          <strong style="font-size:11px;color:#71717A;text-transform:uppercase;letter-spacing:0.4px;">Review Notes:</strong>
+          <p style="margin:4px 0 0;font-size:13px;color:#18181B;line-height:1.5;">${opts.notes}</p>
         </div>
       ` : ''}
-    `, 'Title Deed Compliance Dossier')}
+    `, 'Verification Summary')}
 
     ${opts.isVerified ? `
-      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px 20px;margin:20px 0;">
-        <p style="margin:0;color:#166534;font-size:13px;line-height:1.6;">
-          <strong>Verified Host Distinction:</strong> The official Verified Landlord seal is now prominently displayed across all your property listings, accelerating tenant trust and escrow booking requests.
+      <div style="background-color:#F0FDF4;border:1px solid #BBF7D0;border-radius:6px;padding:12px 16px;margin:20px 0;">
+        <p style="margin:0;color:#166534;font-size:13px;line-height:1.5;">
+          The official <strong>Verified Landlord</strong> badge is now displayed on all your listings, helping build trust with prospective students and tenants.
         </p>
       </div>
     ` : ''}
@@ -727,16 +710,16 @@ export const notifyLandlordVerification = async (opts: {
     type: 'ANNOUNCEMENT',
     title: `Landlord Verification ${opts.isVerified ? 'Approved' : 'Updated'}`,
     message: opts.isVerified
-      ? 'Congratulations! Your Landlord Property Deed verification was approved. You now hold the Verified Host badge.'
-      : `Your Landlord verification requires update. Note: ${opts.notes || 'Please resubmit valid ownership deeds.'}`,
+      ? 'Congratulations! Your Landlord verification was approved. You now hold the Verified Landlord badge.'
+      : `Your Landlord verification requires an update. Note: ${opts.notes || 'Please resubmit valid ownership deeds.'}`,
     link: '/dashboard/verification',
-    emailSubject: `Title Deed Audit: ${opts.isVerified ? 'Approved' : 'Requires Action'} — Akwaaba Homes`,
+    emailSubject: `Landlord verification ${opts.isVerified ? 'approved' : 'update'} — AkwaabaHomes`,
     emailBodyHtml: renderInstitutionalEmail({
-      title: `Landlord Deed Audit ${opts.isVerified ? 'Approved' : 'Correction Needed'}`,
-      preheader: opts.isVerified ? 'Your Verified Host badge is active' : 'Please check your submitted ownership documents',
-      categoryTag: 'LAND TITLE AUDIT',
+      title: `Landlord Verification ${opts.isVerified ? 'Approved' : 'Update Needed'}`,
+      preheader: opts.isVerified ? 'Your Verified Landlord badge is active' : 'Please check your submitted verification documents',
+      categoryTag: 'VERIFICATION',
       bodyHtml
     }),
-    smsText: `Akwaaba Homes: Your Landlord Deed verification is ${statusStr}.${opts.isVerified ? ' Verified Host badge is active!' : ''}`
+    smsText: `AkwaabaHomes: Your Landlord verification is ${statusStr}.${opts.isVerified ? ' Verified Landlord badge is active!' : ''}`
   });
 };
