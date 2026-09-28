@@ -120,10 +120,19 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
 
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-1">
                 <h4 className="text-xs font-bold text-zinc-100 truncate">
                   {userDisplayName}
                 </h4>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  title="Sign Out of Account"
+                  className="p-1 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-950/40 transition-colors shrink-0 cursor-pointer"
+                  aria-label="Sign Out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
               <p className="text-[11px] text-zinc-400 truncate">
                 {user?.email || portalConfig.badge}
@@ -134,7 +143,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
       </div>
 
       {/* ── 2. SCROLLABLE NAVIGATION ITEMS ── */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-zinc-800">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-4 scrollbar-thin scrollbar-thumb-zinc-800">
         {groups.map((group, groupIdx) => (
           <div key={groupIdx} className="space-y-1">
             {group.title && !collapsed && (
@@ -227,7 +236,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
       </div>
 
       {/* ── 3. PINNED BOTTOM ACTION CONTROLS ── */}
-      <div className="shrink-0 border-t border-zinc-800/80 p-2.5 space-y-1 bg-[#090B0E]">
+      <div className="shrink-0 border-t border-zinc-800/80 p-2.5 pb-3 md:pb-4 space-y-1 bg-[#090B0E]">
         {/* Marketplace Link */}
         <Link
           href="/properties"
@@ -244,7 +253,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
           {!collapsed && <span className="text-[13px]">Explore Properties</span>}
         </Link>
 
-        {/* Sign Out Action */}
+        {/* Sign Out Action - High Prominence */}
         <button
           onClick={() => {
             if (isMobile && onMobileClose) onMobileClose();
@@ -252,11 +261,13 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
           }}
           title={collapsed ? "Sign Out" : undefined}
           className={clsx(
-            "w-full flex items-center rounded-xl text-xs text-zinc-400 hover:text-rose-400 hover:bg-rose-950/30 transition-colors font-medium cursor-pointer",
-            collapsed ? "justify-center p-2.5" : "gap-3 px-3 py-2"
+            "w-full flex items-center rounded-xl text-xs transition-colors font-semibold cursor-pointer",
+            collapsed 
+              ? "justify-center p-2.5 text-rose-400 hover:bg-rose-950/40" 
+              : "gap-3 px-3 py-2 text-rose-400 hover:text-rose-300 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-900/30"
           )}
         >
-          <LogOut className="w-4 h-4 text-zinc-500 hover:text-rose-400 shrink-0" />
+          <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
           {!collapsed && <span className="text-[13px]">Sign Out</span>}
         </button>
 
@@ -266,8 +277,8 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
             onClick={toggleCollapse}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             className={clsx(
-              "w-full flex items-center rounded-xl text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors cursor-pointer pt-1",
-              collapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
+              "w-full flex items-center rounded-xl text-xs text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 transition-colors cursor-pointer pt-0.5",
+              collapsed ? "justify-center p-2" : "gap-3 px-3 py-1.5"
             )}
           >
             {collapsed ? (
@@ -289,7 +300,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
       {/* ── 1. DESKTOP SIDEBAR ── */}
       <aside 
         className={clsx(
-          "hidden md:flex h-screen shrink-0 bg-[#0D0F14] text-zinc-100 border-r border-zinc-800/80 flex-col transition-all duration-200 ease-in-out z-20 select-none",
+          "hidden md:flex h-full max-h-full shrink-0 bg-[#0D0F14] text-zinc-100 border-r border-zinc-800/80 flex-col transition-all duration-200 ease-in-out z-20 select-none",
           isCollapsed ? "w-18" : "w-64"
         )}
       >
