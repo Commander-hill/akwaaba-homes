@@ -41,7 +41,7 @@ const VISITOR_PRESETS = [
     icon: Package,
     defaultPurpose: 'Delivery / Courier (Food/Jumia/Bolt)',
     defaultDuration: '2',
-    color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
+    badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
     description: 'Bolt Food, Yango, Jumia Express, or parcel delivery.'
   },
   {
@@ -50,7 +50,7 @@ const VISITOR_PRESETS = [
     icon: Car,
     defaultPurpose: 'Ride-Hail Pickup / Dropoff',
     defaultDuration: '2',
-    color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
+    badgeColor: 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
     description: 'Entry clearance for cab pickup or drop-off inside compound.'
   },
   {
@@ -59,7 +59,7 @@ const VISITOR_PRESETS = [
     icon: User,
     defaultPurpose: 'Guest / Friend Visit',
     defaultDuration: '12',
-    color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800',
+    badgeColor: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800',
     description: 'Standard daytime social visit to your room or flat.'
   },
   {
@@ -68,7 +68,7 @@ const VISITOR_PRESETS = [
     icon: Wrench,
     defaultPurpose: 'Artisan / Maintenance Contractor',
     defaultDuration: '6',
-    color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800',
+    badgeColor: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800',
     description: 'AC technician, electrician, plumber, or appliance repair.'
   },
   {
@@ -77,7 +77,7 @@ const VISITOR_PRESETS = [
     icon: HeartHandshake,
     defaultPurpose: 'Family Member Visit',
     defaultDuration: '24',
-    color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
+    badgeColor: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
     description: 'Parent, sibling, or approved overnight visitor.'
   }
 ];
@@ -101,7 +101,6 @@ function NewVisitorPassContent() {
   const [visitorPhone, setVisitorPhone] = useState('');
   const [purpose, setPurpose] = useState('Guest / Friend Visit');
   const [durationHours, setDurationHours] = useState('12');
-  const [unitNote, setUnitNote] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Fetch logged in tenant
@@ -148,7 +147,7 @@ function NewVisitorPassContent() {
     onSuccess: () => {
       toast.success('Visitor gate pass generated! Security desk notified.');
       queryClient.invalidateQueries({ queryKey: ['visitorPasses', 'tenant'] });
-      router.push('/dashboard/tenant');
+      router.push('/dashboard/tenant?tab=living');
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to generate gate pass');
@@ -178,7 +177,7 @@ function NewVisitorPassContent() {
   const selectedProperty = propertyList.find(p => p.id === propertyId);
   const selectedDuration = DURATION_OPTIONS.find(d => d.hours === durationHours) || DURATION_OPTIONS[2];
 
-  const shareText = `*Akwaaba Homes Visitor Gate Pass*\nResidence: ${selectedProperty?.title || 'Residential Compound'}\nVisitor: ${visitorName || 'Guest'}\nPurpose: ${purpose}\nValid for: ${selectedDuration.label}\nHost: ${userData?.firstName || 'Resident'}\n*Present this PIN at the security gate for entry.*`;
+  const shareText = `*AkwaabaHomes Visitor Gate Pass*\nResidence: ${selectedProperty?.title || 'Residential Compound'}\nVisitor: ${visitorName || 'Guest'}\nPurpose: ${purpose}\nValid for: ${selectedDuration.label}\nHost: ${userData?.firstName || 'Resident'}\n*Present this PIN at the security gate for entry.*`;
 
   const copyShareText = () => {
     navigator.clipboard.writeText(shareText);
@@ -188,341 +187,299 @@ function NewVisitorPassContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      {/* Top Header / Breadcrumbs */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              <Link href="/dashboard/tenant" className="hover:text-primary flex items-center gap-1 transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Tenant Dashboard
-              </Link>
-              <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-slate-900 dark:text-white font-bold">New Visitor & Gate Pass</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Security Desk Clearance
+    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12] pb-24 pt-4 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
+      {/* ── Breadcrumbs & Header ── */}
+      <div className="mb-6 space-y-3 pb-5 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+          <Link href="/dashboard/tenant" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition">
+            Resident Portal
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+          <Link href="/dashboard/tenant?tab=living" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition">
+            Living & Amenities
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+          <span className="text-zinc-900 dark:text-zinc-200 font-bold">New Visitor Pass</span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-3">
+              <span className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                <KeyRound className="w-5 h-5" />
               </span>
-            </div>
+              Generate Digital Gate Pass
+            </h1>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+              Pre-authorize couriers, ride-hailing drivers, friends, and family for fast compound security clearance.
+            </p>
           </div>
+
+          <Link
+            href="/dashboard/tenant?tab=living"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#14181E] text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> Cancel & Return
+          </Link>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Page Hero */}
-        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8">
-          <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pointer-events-none pr-8">
-            <KeyRound className="w-72 h-72" />
-          </div>
-          <div className="relative z-10 max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider">
-              <Lock className="w-3.5 h-3.5" /> Automated Security Clearance
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main Form Fields */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* 1. Property Selection */}
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+              Destination Compound / Property
+            </h2>
+            <div>
+              {loadingProperties ? (
+                <div className="h-10 bg-zinc-100 dark:bg-zinc-900 rounded-xl animate-pulse" />
+              ) : (
+                <select
+                  value={propertyId}
+                  onChange={(e) => setPropertyId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-[#0F5132]/30 cursor-pointer"
+                >
+                  {propertyList.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} {p.location ? `· ${p.location}` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Generate Digital Gate Pass
-            </h1>
-            <p className="text-amber-100 text-sm leading-relaxed">
-              Pre-authorize deliveries, ride-hailing drivers, friends, and family. The generated 6-digit access PIN and QR clearance are instantly synced with the estate security gate and caretaker log.
-            </p>
+          </div>
+
+          {/* 2. Quick Presets */}
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Visitor Type Presets
+              </span>
+              <span className="text-[10px] text-zinc-400">Tap to auto-fill duration</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {VISITOR_PRESETS.map((preset) => {
+                const Icon = preset.icon;
+                const isSelected = purpose === preset.defaultPurpose;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    className={`p-3 rounded-xl border text-left flex flex-col gap-1.5 transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className={`p-1.5 rounded-lg border ${preset.badgeColor}`}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />}
+                    </div>
+                    <span className="text-xs font-bold leading-tight">{preset.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Visitor Details */}
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <h2 className="text-xs font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Visitor Information
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Visitor Full Name *
+                </label>
+                <div className="relative">
+                  <User className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    value={visitorName}
+                    onChange={(e) => setVisitorName(e.target.value)}
+                    placeholder="e.g. Yaw Osei / Bolt Driver"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-[#0F5132]/30"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Visitor Phone (Optional)
+                </label>
+                <div className="relative">
+                  <Phone className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-3.5" />
+                  <input
+                    type="tel"
+                    value={visitorPhone}
+                    onChange={(e) => setVisitorPhone(e.target.value)}
+                    placeholder="e.g. 0244123456"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono font-medium text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-[#0F5132]/30"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Purpose of Visit
+              </label>
+              <input
+                type="text"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="e.g. Food Delivery / Family Visit"
+                className="w-full px-3.5 py-2.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-[#0F5132]/30"
+              />
+            </div>
+
+            {/* Duration Selector */}
+            <div className="space-y-2 pt-1">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
+                Pass Validity Duration
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {DURATION_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.hours}
+                    type="button"
+                    onClick={() => setDurationHours(opt.hours)}
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      durationHours === opt.hours
+                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-1 ring-[#0F5132]/30 font-bold'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <div className="text-xs font-bold">{opt.label}</div>
+                    <div className="text-[10px] text-zinc-500 truncate">{opt.badge}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Form Fields */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* 1. Property Selection */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Building className="w-5 h-5 text-amber-500" />
-                Select Residential Compound
-              </h2>
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  Destination Property
-                </label>
-                {loadingProperties ? (
-                  <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
-                ) : (
-                  <select
-                    value={propertyId}
-                    onChange={(e) => setPropertyId(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-amber-500"
-                  >
-                    {propertyList.length === 0 && (
-                      <option value="">No registered rental property found</option>
-                    )}
-                    {propertyList.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title} {p.location ? `— ${p.location}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <p className="text-xs text-slate-400 mt-2">
-                  Gate security at this property will receive real-time verification authorization.
-                </p>
-              </div>
+        {/* Right Column: Pass Preview & Clearance Card (5 cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Live Gate Clearance Preview
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="w-3 h-3" /> Security Ready
+              </span>
             </div>
 
-            {/* 2. Visitor Category Presets */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-amber-500" />
-                Select Visitor Type
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {VISITOR_PRESETS.map((preset) => {
-                  const Icon = preset.icon;
-                  const isSelected = purpose === preset.defaultPurpose;
-                  return (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      onClick={() => handleSelectPreset(preset)}
-                      className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-3 ${
-                        isSelected
-                          ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20 ring-2 ring-amber-500/20'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
-                      }`}
-                    >
-                      <div className={`p-2.5 rounded-xl w-fit ${preset.color}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          {preset.label}
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-1 leading-snug">
-                          {preset.description}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+            {/* Physical Gate Pass Card Mockup */}
+            <div className="bg-zinc-900 text-white rounded-xl p-5 space-y-4 border border-zinc-800 shadow-md">
+              <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#0F5132] text-white flex items-center justify-center font-black text-xs">
+                    AH
+                  </div>
+                  <div>
+                    <div className="text-xs font-black tracking-tight leading-none">AKWAABAHOMES</div>
+                    <div className="text-[9px] text-zinc-400 uppercase tracking-widest mt-0.5">GATE PASS</div>
+                  </div>
+                </div>
+                <div className="p-1 bg-white rounded-md text-zinc-900">
+                  <QrCode className="w-5 h-5" />
+                </div>
               </div>
-            </div>
 
-            {/* 3. Visitor Details */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-5">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <User className="w-5 h-5 text-amber-500" />
-                Visitor Credentials & Clearance Info
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Visitor / Courier Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={visitorName}
-                    onChange={(e) => setVisitorName(e.target.value)}
-                    placeholder="e.g. Kwame Mensah (Bolt Food Rider)"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500"
-                    required
-                  />
+                  <div className="text-[10px] uppercase font-mono text-zinc-400">VISITOR / COURIER</div>
+                  <div className="text-sm font-bold truncate text-white">{visitorName || 'Guest / Driver'}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <div className="text-[10px] uppercase font-mono text-zinc-400">VALIDITY</div>
+                    <div className="font-semibold text-emerald-400">{selectedDuration.label}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] uppercase font-mono text-zinc-400">HOST RESIDENT</div>
+                    <div className="font-semibold truncate">{userData?.firstName || 'Resident'}</div>
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Visitor Phone Number (Optional)
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="tel"
-                      value={visitorPhone}
-                      onChange={(e) => setVisitorPhone(e.target.value)}
-                      placeholder="054 XXX XXXX"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500"
-                    />
+                  <div className="text-[10px] uppercase font-mono text-zinc-400">RESIDENCE</div>
+                  <div className="text-xs font-medium text-zinc-300 truncate">
+                    {selectedProperty?.title || 'Residential Compound'}
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Purpose of Visit
-                </label>
-                <input
-                  type="text"
-                  value={purpose}
-                  onChange={(e) => setPurpose(e.target.value)}
-                  placeholder="e.g. Guest / Friend Visit"
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
-              </div>
-
-              {/* 4. Duration Selector */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  Access Duration Validity *
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                  {DURATION_OPTIONS.map((opt) => {
-                    const isSelected = durationHours === opt.hours;
-                    return (
-                      <button
-                        key={opt.hours}
-                        type="button"
-                        onClick={() => setDurationHours(opt.hours)}
-                        className={`p-3 rounded-xl border text-center transition-all ${
-                          isSelected
-                            ? 'border-amber-500 bg-amber-500 text-white font-bold shadow-md shadow-amber-500/20'
-                            : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        <div className="text-xs font-extrabold">{opt.label}</div>
-                        <div className={`text-[10px] mt-0.5 truncate ${isSelected ? 'text-amber-100' : 'text-slate-400'}`}>
-                          {opt.badge}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Arrival Instructions / Host Room Unit (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={unitNote}
-                  onChange={(e) => setUnitNote(e.target.value)}
-                  placeholder="e.g. Flat 4B, 2nd Floor — Call on arrival"
-                  className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500"
-                />
+              <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] text-zinc-400 font-mono">
+                <span>ESTATE SECURITY DESK</span>
+                <span className="text-emerald-400 font-bold">PRE-APPROVED</span>
               </div>
             </div>
-          </div>
 
-          {/* Right Sidebar: Security Clearance Card Preview */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-amber-500" /> Digital Gate Pass Card
-              </h3>
-
-              {/* Holographic Security Pass Simulation */}
-              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-5 rounded-2xl border-2 border-amber-500/40 relative overflow-hidden shadow-xl space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-amber-500 flex items-center justify-center text-slate-900 font-black text-xs">
-                      A
-                    </div>
-                    <span className="text-xs font-extrabold tracking-wider uppercase text-amber-400">
-                      Akwaaba GatePass
-                    </span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-400 uppercase tracking-widest">
-                    Pre-Authorized
-                  </span>
-                </div>
-
-                {/* PIN Code Box */}
-                <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center space-y-1">
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest block">
-                    Security Gate Access Code
-                  </span>
-                  <div className="text-2xl font-black font-mono tracking-widest text-amber-400">
-                    ######
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">
-                    Generated upon form submission
-                  </span>
-                </div>
-
-                <div className="space-y-1.5 text-xs text-slate-300">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Visitor:</span>
-                    <span className="font-bold text-white">{visitorName || 'Guest Name'}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Purpose:</span>
-                    <span className="font-bold text-amber-300">{purpose}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Validity:</span>
-                    <span className="font-bold text-white">{selectedDuration.label} from issue</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Host Resident:</span>
-                    <span className="font-bold text-white">
-                      {userData?.firstName ? `${userData.firstName} ${userData.lastName || ''}` : 'Resident'}
-                    </span>
-                  </div>
-                  {unitNote && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Note:</span>
-                      <span className="font-bold text-white truncate max-w-[150px]">{unitNote}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="flex items-center gap-1 font-mono">
-                    <QrCode className="w-3.5 h-3.5 text-amber-400" /> Scannable at Guardhouse
-                  </span>
-                  <span className="text-emerald-400 font-bold">Encrypted PIN</span>
-                </div>
-              </div>
-
-              {/* Quick WhatsApp Share Copy Button */}
+            {/* Quick Share Buttons */}
+            <div className="space-y-2">
               <button
                 type="button"
                 onClick={copyShareText}
-                className="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+                className="w-full py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center justify-center gap-2 transition cursor-pointer"
               >
-                {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                {copiedCode ? 'Copied Invitation Text!' : 'Copy WhatsApp Invitation'}
+                {copiedCode ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Copied to Clipboard!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy WhatsApp / SMS Message</span>
+                  </>
+                )}
               </button>
-
-              {/* Submit Buttons */}
-              <div className="space-y-2 pt-2">
-                <button
-                  type="submit"
-                  disabled={createPassMutation.isPending}
-                  className="w-full py-3.5 px-4 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-amber-600/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {createPassMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Authorizing PIN...
-                    </>
-                  ) : (
-                    <>
-                      <KeyRound className="w-4 h-4" /> Issue Gate Clearance PIN
-                    </>
-                  )}
-                </button>
-
-                <Link
-                  href="/dashboard/tenant"
-                  className="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center transition"
-                >
-                  Cancel & Return
-                </Link>
-              </div>
             </div>
           </div>
-        </form>
-      </div>
+
+          {/* Submit Action */}
+          <div>
+            <button
+              type="submit"
+              disabled={createPassMutation.isPending}
+              className="w-full py-3.5 bg-[#0F5132] hover:bg-[#0B3D26] disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {createPassMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Authorizing Pass...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" /> Issue Gate Pass & Clear Security
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   );
 }
 
 export default function NewVisitorPassPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-        </div>
-      }
-    >
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+      </div>
+    }>
       <NewVisitorPassContent />
     </Suspense>
   );
