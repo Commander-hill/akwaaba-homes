@@ -299,8 +299,8 @@ export default function RegisterPage() {
             <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group bg-[#0B1510]">
               
               <Image
-                src="/images/auth-bg.png"
-                alt="Nkrumah Residence Ghanaian student and residential community"
+                src="/images/auth-register.jpg"
+                alt="Ghanaian residents moving into a verified apartment with house keys"
                 fill
                 sizes="(max-width: 1024px) 100vw, 45vw"
                 className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
@@ -311,13 +311,13 @@ export default function RegisterPage() {
 
               <div className="absolute bottom-0 inset-x-0 p-7 text-white space-y-2.5">
                 <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
-                  Verified Community // Accra • Kumasi • Cape Coast
+                  Akwaaba // Verified Move-In
                 </div>
                 <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
-                  Join Ghana&apos;s verified accommodation network
+                  Welcome to Ghana&apos;s trusted rental community
                 </h3>
                 <p className="text-xs text-zinc-200/80 leading-relaxed font-normal">
-                  Over 1,200 verified rooms, escrow rent protections, and legally binding digital lease agreements connecting students and property owners.
+                  Over 1,200 verified rooms, escrow rent protection, and digital tenancy agreements connecting residents and property owners with zero agent hassle.
                 </p>
                 <div className="pt-2 flex items-center gap-2 text-[11px] text-zinc-300/80">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
