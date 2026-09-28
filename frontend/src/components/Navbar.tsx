@@ -98,32 +98,32 @@ export default function Navbar() {
 
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-18 items-center">
+          <div className="flex justify-between h-16 items-center">
             
             {/* Left: Brand Identity */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6 sm:gap-8">
               <Link 
                 href="/" 
                 className={clsx(
-                  "items-center gap-3 group",
+                  "items-center gap-2.5 group",
                   pathname?.startsWith('/dashboard') ? "hidden xl:flex" : "flex"
                 )}
               >
-                <div className="w-9 h-9 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700/60 shadow-xs group-hover:scale-102 transition-transform shrink-0">
+                <div className="w-8 h-8 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700/60 shadow-xs group-hover:scale-102 transition-transform shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Akwaaba Homes Logo"
-                    width={36}
-                    height={36}
+                    width={32}
+                    height={32}
                     className="w-full h-full object-cover"
                     priority
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-extrabold text-lg tracking-tight text-zinc-950 dark:text-zinc-50 leading-none">
-                    Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span>
+                  <span className="font-bold text-base tracking-tight text-zinc-950 dark:text-zinc-50 leading-none">
+                    Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
                   </span>
-                  <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 tracking-wider uppercase mt-0.5">
+                  <span className="text-[9.5px] font-mono font-medium text-zinc-500 dark:text-zinc-400 tracking-wider uppercase mt-0.5">
                     Ghana PropTech
                   </span>
                 </div>
@@ -140,10 +140,10 @@ export default function Navbar() {
                       href={link.href}
                       id={isProperties ? 'tour-nav-properties' : undefined}
                       className={clsx(
-                        "px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap",
+                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap",
                         isActive
-                          ? "text-[#0F5132] dark:text-[#198754] bg-emerald-50 dark:bg-emerald-950/40 font-bold"
-                          : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/60"
+                          ? "text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+                          : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50"
                       )}
                     >
                       {link.name}
@@ -154,30 +154,33 @@ export default function Navbar() {
             </div>
 
             {/* Right: Quick Tools & Authentication */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-2.5">
               <LanguageSelector />
               <ThemeToggle isScrolled={true} />
 
               <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-              {/* List Property CTA: strictly for Landlords, never for Tenants */}
-              {!pathname?.startsWith('/dashboard/tenant') && role !== 'TENANT' && (role === 'LANDLORD' || !isAuthenticated) && (
+              {/* List Property CTA: strictly for Landlords, hidden on informational/legal pages to reduce marketing noise */}
+              {!pathname?.startsWith('/dashboard/tenant') && 
+               role !== 'TENANT' && 
+               (role === 'LANDLORD' || !isAuthenticated) && 
+               !['/privacy', '/terms', '/faq', '/help'].includes(pathname || '') && (
                 <Link
                   href="/dashboard/landlord/new"
-                  className="text-[13px] font-bold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-2.5 py-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 >
                   List Property
                 </Link>
               )}
               
               {isAuthenticated ? (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <NotificationBell />
                   <Link
                     href={dashboardHref}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[#0F5132] hover:bg-[#0A3D24] text-white shadow-xs transition-all"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#0F5132] hover:bg-[#0A3D24] text-white shadow-xs transition-colors"
                   >
-                    <UserCircle className="w-4 h-4" />
+                    <UserCircle className="w-3.5 h-3.5" />
                     <span>Dashboard</span>
                   </Link>
                 </div>
@@ -185,17 +188,26 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="text-[13px] font-bold text-zinc-800 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white px-3.5 py-2 rounded-lg transition-colors"
+                    className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white px-3 py-1.5 rounded-lg transition-colors"
                   >
                     Sign In
                   </Link>
-                  <Link
-                    href="/register"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-all shadow-xs"
-                  >
-                    <span>Get Started</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+                  {['/privacy', '/terms', '/faq', '/help'].includes(pathname || '') ? (
+                    <Link
+                      href="/register"
+                      className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline px-2 py-1.5"
+                    >
+                      Create account
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/register"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors shadow-2xs"
+                    >
+                      <span>Get Started</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
