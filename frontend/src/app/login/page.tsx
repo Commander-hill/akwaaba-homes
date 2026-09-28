@@ -16,6 +16,7 @@ import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import AlertBanner from '@/components/AlertBanner';
 
 function LoginForm() {
   const router = useRouter();
@@ -242,23 +243,20 @@ function LoginForm() {
 
             {/* Inactivity Timeout Notice */}
             {isTimeout && (
-              <div className="mb-5 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/70 dark:bg-amber-950/20 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
-                <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="font-semibold">Session expired</div>
-                  <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80">
-                    Your session timed out due to inactivity. Please sign in to resume.
-                  </div>
-                </div>
-              </div>
+              <AlertBanner
+                type="warning"
+                message="Your session timed out due to inactivity. Please sign in to resume."
+                className="mb-5"
+              />
             )}
 
             {/* Error Notice */}
             {error && (
-              <div className="mb-5 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/70 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-                <div className="text-xs leading-relaxed">{error}</div>
-              </div>
+              <AlertBanner
+                type="error"
+                message={error}
+                className="mb-5"
+              />
             )}
 
             {/* Two-Factor Verification Challenge */}

@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft, Building, MapPin, DollarSign, Image as ImageIcon, I
 import Link from 'next/link';
 import Map from '@/components/Map';
 import toast from 'react-hot-toast';
+import AlertBanner from '@/components/AlertBanner';
 
 const PRESET_AMENITY_CATEGORIES = [
   {
@@ -294,9 +295,12 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
 
       <div className="glass-card rounded-3xl p-8 border border-[var(--border)]">
         {error && (
-          <div ref={errorRef} className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-4 rounded-xl text-sm font-medium border border-red-100 dark:border-red-900/50 mb-6">
-            {error}
-          </div>
+          <AlertBanner
+            ref={errorRef}
+            type="error"
+            message={error}
+            className="mb-6"
+          />
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">

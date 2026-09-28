@@ -15,6 +15,7 @@ import Map from '@/components/Map';
 import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import AlertBanner from '@/components/AlertBanner';
 
 interface RoomInput {
   id: string;
@@ -476,10 +477,11 @@ export default function NewPropertyPage() {
       </div>
 
       {error && (
-        <div ref={errorRef} className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-xs font-bold text-rose-700 dark:text-rose-300 flex items-center gap-2 animate-in">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{error}</span>
-        </div>
+        <AlertBanner
+          ref={errorRef}
+          type="error"
+          message={error}
+        />
       )}
 
       {/* ── STEP 1: IDENTITY & LOCATION ── */}

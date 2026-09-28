@@ -5,6 +5,7 @@ import { Upload, X, CheckCircle2, AlertCircle, Camera, User } from 'lucide-react
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
+import AlertBanner from '@/components/AlertBanner';
 
 interface PassportUploadProps {
   onUploadSuccess: (url: string) => void;
@@ -187,9 +188,11 @@ export default function PassportUpload({ onUploadSuccess, onUploadError, current
       </div>
 
       {error && (
-        <div className="mt-3 text-sm font-medium text-red-400 flex items-center gap-2 justify-center">
-          <AlertCircle className="w-4 h-4" /> {error}
-        </div>
+        <AlertBanner
+          type="error"
+          message={error}
+          className="mt-3"
+        />
       )}
     </div>
   );

@@ -6,6 +6,7 @@ import { Lock, Mail, Loader2, ArrowRight, Clock, CheckCircle2 } from 'lucide-rea
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
+import AlertBanner from '@/components/AlertBanner';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -176,17 +177,19 @@ function AdminLoginForm() {
         </div>
 
         {isTimeout && (
-          <div className="bg-amber-950/40 border border-amber-800/60 text-amber-300 p-4 rounded-xl text-sm font-medium mb-6 flex items-start gap-3">
-            <Clock className="w-5 h-5 shrink-0 mt-0.5 text-amber-400" />
-            <p>Administrative session timed out due to inactivity. Re-authenticate to access the console.</p>
-          </div>
+          <AlertBanner
+            type="warning"
+            message="Administrative session timed out due to inactivity. Re-authenticate to access the console."
+            className="mb-6"
+          />
         )}
 
         {error && (
-          <div className="bg-red-950/50 border border-red-900/50 text-red-400 p-4 rounded-xl text-sm font-medium mb-6 flex items-start gap-3">
-            <Lock className="w-5 h-5 shrink-0 mt-0.5" />
-            <p>{error}</p>
-          </div>
+          <AlertBanner
+            type="error"
+            message={error}
+            className="mb-6"
+          />
         )}
 
         {requireTwoFactor ? (

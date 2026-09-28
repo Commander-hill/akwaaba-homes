@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import AlertBanner from '@/components/AlertBanner';
 import {
   Armchair,
   ArrowLeft,
@@ -293,10 +294,10 @@ export default function NewInventoryAssetPage() {
 
               {/* Error Banner */}
               {formError && (
-                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-300 text-sm flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                  <div className="font-semibold">{formError}</div>
-                </div>
+                <AlertBanner
+                  type="error"
+                  message={formError}
+                />
               )}
 
               {/* 1. Property & Room Unit Assignment */}

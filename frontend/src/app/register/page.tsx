@@ -19,6 +19,7 @@ import {
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
+import AlertBanner from '@/components/AlertBanner';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -359,10 +360,12 @@ export default function RegisterPage() {
 
             {/* Error Banner */}
             {error && (
-              <div ref={errorRef} className="mb-5 p-3 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/70 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-                <div className="text-xs leading-relaxed">{error}</div>
-              </div>
+              <AlertBanner
+                ref={errorRef}
+                type="error"
+                message={error}
+                className="mb-5"
+              />
             )}
 
             {/* ──── STEP 1: Role Selection & Personal Information ──── */}

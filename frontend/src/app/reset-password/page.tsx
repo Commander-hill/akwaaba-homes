@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
+import AlertBanner from '@/components/AlertBanner';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -196,22 +197,19 @@ function ResetPasswordForm() {
 
                 {/* Error Banner */}
                 {error && (
-                  <div className="p-3.5 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/70 dark:bg-red-950/30 text-red-700 dark:text-red-400 text-xs flex items-start gap-2.5">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <div className="flex-1 leading-relaxed">
-                      <span>{error}</span>
-                      {!token && (
-                        <div className="mt-2">
-                          <Link 
-                            href="/forgot-password" 
-                            className="font-semibold underline hover:text-red-900 dark:hover:text-red-200"
-                          >
-                            Request a new reset link &rarr;
-                          </Link>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <AlertBanner type="error">
+                    <span>{error}</span>
+                    {!token && (
+                      <div className="mt-1.5">
+                        <Link 
+                          href="/forgot-password" 
+                          className="font-bold underline hover:opacity-80"
+                        >
+                          Request a new reset link &rarr;
+                        </Link>
+                      </div>
+                    )}
+                  </AlertBanner>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">

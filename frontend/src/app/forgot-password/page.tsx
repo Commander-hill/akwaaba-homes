@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
+import AlertBanner from '@/components/AlertBanner';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -201,10 +202,10 @@ export default function ForgotPasswordPage() {
 
                 {/* Inline Error Notice */}
                 {error && (
-                  <div className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-800/60 bg-rose-50/70 dark:bg-rose-950/20 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" />
-                    <div className="text-xs leading-relaxed">{error}</div>
-                  </div>
+                  <AlertBanner
+                    type="error"
+                    message={error}
+                  />
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">

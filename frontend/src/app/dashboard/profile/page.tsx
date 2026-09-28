@@ -14,6 +14,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useDialog } from '@/providers/DialogProvider';
+import AlertBanner from '@/components/AlertBanner';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -328,12 +329,11 @@ export default function ProfilePage() {
       </div>
 
       {message && (
-        <div className={clsx(
-          "p-3.5 rounded-xl text-xs font-bold border",
-          message.type === 'success' ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300"
-        )}>
-          {message.text}
-        </div>
+        <AlertBanner
+          type={message.type}
+          message={message.text}
+          onClose={() => setMessage(null)}
+        />
       )}
 
       {/* ── WORKSPACE TABS ── */}

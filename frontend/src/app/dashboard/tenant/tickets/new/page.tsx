@@ -28,6 +28,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AlertBanner from '@/components/AlertBanner';
 
 const CATEGORIES = [
   {
@@ -362,10 +363,11 @@ function ReportIssueContent() {
       </div>
 
       {formError && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 flex items-center gap-3 text-xs font-bold text-red-700 dark:text-red-300">
-          <AlertTriangle className="w-4 h-4 shrink-0" />
-          <span>{formError}</span>
-        </div>
+        <AlertBanner
+          type="error"
+          message={formError}
+          className="mb-6"
+        />
       )}
 
       {/* ── Main 2-Column Form ── */}

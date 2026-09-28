@@ -7,6 +7,7 @@ import {
   Loader2, Lock, Monitor, Smartphone, Globe, LogOut, 
   Clock, AlertTriangle, KeyRound, ArrowRight, CheckCircle2 
 } from 'lucide-react';
+import AlertBanner from '@/components/AlertBanner';
 
 interface Session {
   id: string;
@@ -76,17 +77,9 @@ export default function SecurityPage() {
       </div>
 
       {/* Security Alert Banner */}
-      <div className="p-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 flex items-start gap-3.5">
-        <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-        <div className="space-y-0.5">
-          <h3 className="font-bold text-xs sm:text-sm text-amber-900 dark:text-amber-300">
-            Notice any unfamiliar devices?
-          </h3>
-          <p className="text-xs text-amber-800/80 dark:text-amber-400/80 leading-relaxed">
-            If you see a sign-in location or device you do not recognize, revoke its access immediately and update your password.
-          </p>
-        </div>
-      </div>
+      <AlertBanner type="warning">
+        <span>Notice any unfamiliar devices? If you see a sign-in location or device you do not recognize, revoke its access immediately and update your password.</span>
+      </AlertBanner>
 
       {/* Two-Factor Authentication Section */}
       <div className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-all shadow-2xs">
