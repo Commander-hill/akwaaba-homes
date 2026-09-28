@@ -296,12 +296,13 @@ export default function RegisterPage() {
           
           {/* ──── Left Side: Brand Reassurance (40% Desktop, Hidden Mobile) ──── */}
           <div className="hidden lg:block lg:col-span-5 sticky top-12 self-start">
-            <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group bg-[#0B1510]">
+            <div className="relative w-full aspect-[4/5] min-h-[520px] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group bg-[#0B1510]">
               
               <Image
-                src="/images/auth-register.jpg"
+                src="/images/auth-partnership.jpg"
                 alt="Ghanaian property owner and resident shaking hands in modern residence foyer with digital tenancy agreement"
                 fill
+                unoptimized
                 sizes="(max-width: 1024px) 100vw, 45vw"
                 className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
                 priority
@@ -331,6 +332,28 @@ export default function RegisterPage() {
           {/* ──── Right Side: Registration Form (60% Desktop, 100% Mobile) ──── */}
           <div className="lg:col-span-7 w-full max-w-lg mx-auto lg:mx-0">
             
+            {/* Mobile / Tablet Visual Header (visible below lg) */}
+            <div className="lg:hidden mb-6 relative w-full h-52 sm:h-64 rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs bg-[#0B1510]">
+              <Image
+                src="/images/auth-partnership.jpg"
+                alt="Ghanaian property owner and resident shaking hands in modern residence foyer with digital tenancy agreement"
+                fill
+                unoptimized
+                sizes="100vw"
+                className="object-cover object-top"
+                priority
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+              <div className="absolute bottom-0 inset-x-0 p-4 text-white">
+                <div className="text-[9px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
+                  Akwaaba // Verified Partnership
+                </div>
+                <h3 className="text-sm font-bold text-white leading-snug">
+                  Connecting trusted landlords &amp; verified residents
+                </h3>
+              </div>
+            </div>
+
             {/* Header & Step Indicator */}
             <div className="space-y-2 mb-6">
               <div className="flex items-center justify-between">
