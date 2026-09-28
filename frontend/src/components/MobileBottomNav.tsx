@@ -11,7 +11,7 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
 
   // Do not render bottom nav on dedicated auth routes
-  if (pathname === '/login') {
+  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
     return null;
   }
 
