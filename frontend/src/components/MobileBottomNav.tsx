@@ -10,10 +10,6 @@ import api from '@/lib/axios';
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
-  // Do not render bottom nav on dedicated auth routes
-  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
-    return null;
-  }
 
   const { data: userResponse } = useQuery({
     queryKey: ['auth', 'me'],
@@ -137,6 +133,11 @@ export default function MobileBottomNav() {
           isActive: pathname === '/login',
         },
       ];
+
+  // Do not render bottom nav on dedicated auth routes
+  if (pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
+    return null;
+  }
 
   return (
     <nav 

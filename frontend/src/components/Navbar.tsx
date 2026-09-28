@@ -17,10 +17,6 @@ export default function Navbar() {
   const pathname = usePathname();
   const { t } = useLanguage();
 
-  // Do not render public Navbar on Admin portal and dedicated auth routes
-  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
-    return null;
-  }
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -77,6 +73,11 @@ export default function Navbar() {
         ),
       ];
   
+  // Do not render public Navbar on Admin portal and dedicated auth routes
+  if (pathname?.startsWith('/admin') || pathname === '/login' || pathname === '/forgot-password' || pathname === '/reset-password') {
+    return null;
+  }
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all">
       {/* Maintenance Mode Alert */}
