@@ -231,12 +231,24 @@ function LoginForm() {
           {/* ──── Left Column: Dominant Authentication Form (58%) ──── */}
           <div className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto lg:mx-0">
             
-            {/* Title & Editorial Framing */}
-            <div className="space-y-1.5 mb-7">
+            {/* Title & Editorial Framing with Centered Akwaaba Logo */}
+            <div className="flex flex-col items-center text-center mb-7">
+              <Link href="/" className="mb-3.5 inline-flex items-center justify-center group" title="AkwaabaHomes">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-500 to-[#0F5132] border border-emerald-400/40 flex items-center justify-center shadow-md p-1.5 group-hover:scale-105 transition-transform ring-4 ring-emerald-500/10 dark:ring-emerald-500/20">
+                  <Image
+                    src="/logo.png"
+                    alt="AkwaabaHomes Logo"
+                    width={36}
+                    height={36}
+                    className="w-full h-full object-contain"
+                    priority
+                  />
+                </div>
+              </Link>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
                 Sign in to your account
               </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1.5 max-w-sm">
                 Enter your details to access your tenancy ledger, hostel bookings, or property management desk.
               </p>
             </div>
