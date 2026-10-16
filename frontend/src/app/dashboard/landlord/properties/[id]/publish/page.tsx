@@ -138,6 +138,27 @@ export default function PublishPropertyPage() {
     return () => clearInterval(interval);
   }, [waitingForMomo, isAlreadyActive, refetchProperty, queryClient, propertyId]);
 
+  const parsedImages = React.useMemo(() => {
+    if (!property?.images) return [];
+    if (Array.isArray(property.images)) return property.images;
+    if (typeof property.images === 'string') {
+      try {
+        const parsed = JSON.parse(property.images);
+        return Array.isArray(parsed) ? parsed : [property.images];
+      } catch {
+        return [property.images];
+      }
+    }
+    return [];
+  }, [property?.images]);
+
+  const coverImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : '';
+
+  const totalRooms = React.useMemo(() => {
+    if (!property?.rooms || !Array.isArray(property.rooms)) return 0;
+    return property.rooms.reduce((acc: number, r: any) => acc + (Number(r.numberOfRooms) || 1), 0);
+  }, [property?.rooms]);
+
   // Loading state
   if (isLoadingProperty) {
     return (
@@ -166,27 +187,6 @@ export default function PublishPropertyPage() {
       </div>
     );
   }
-
-  const parsedImages = React.useMemo(() => {
-    if (!property?.images) return [];
-    if (Array.isArray(property.images)) return property.images;
-    if (typeof property.images === 'string') {
-      try {
-        const parsed = JSON.parse(property.images);
-        return Array.isArray(parsed) ? parsed : [property.images];
-      } catch {
-        return [property.images];
-      }
-    }
-    return [];
-  }, [property?.images]);
-
-  const coverImage = parsedImages.length > 0 ? getImageUrl(parsedImages[0]) : '';
-
-  const totalRooms = React.useMemo(() => {
-    if (!property?.rooms || !Array.isArray(property.rooms)) return 0;
-    return property.rooms.reduce((acc: number, r: any) => acc + (Number(r.numberOfRooms) || 1), 0);
-  }, [property?.rooms]);
 
   return (
     <div className="w-full max-w-6xl mx-auto pb-16 space-y-8 animate-in fade-in duration-300">
