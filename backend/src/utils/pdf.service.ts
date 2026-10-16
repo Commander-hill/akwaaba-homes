@@ -1,7 +1,7 @@
 import PDFDocument from 'pdfkit';
 
 /**
- * Generate official signed Tenancy Agreement PDF
+ * Generate official signed Tenancy Agreement PDF (Human-Crafted Ghanaian Conveyancing Standard)
  */
 export async function generateTenancyAgreementPDF(data: {
   agreementId: string;
@@ -30,412 +30,405 @@ export async function generateTenancyAgreementPDF(data: {
   guardianPhone?: string | null;
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: 'A4', autoFirstPage: true });
+    const doc = new PDFDocument({ margin: 54, size: 'A4', autoFirstPage: true });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', (err) => reject(err));
 
-    // ════════════════════════════════════════════════════════════════
-    // PAGE 1: HEADER, PARTIES, PREMISES, FINANCIALS & LANDLORD COVENANTS
-    // ════════════════════════════════════════════════════════════════
-
-    // Top Header Banner
-    doc.rect(0, 0, 595.28, 95).fill('#0F5132'); // Ghanaian Forest Emerald
-    doc.rect(0, 95, 595.28, 3).fill('#D97706'); // Heritage Gold Accent
-
-    doc
-      .fillColor('#F8FAFC')
-      .fontSize(18)
-      .font('Helvetica-Bold')
-      .text('REPUBLIC OF GHANA', 40, 20, { align: 'left' });
-
-    doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fillColor('#FBBF24') // Amber / Gold
-      .text('STATUTORY RESIDENTIAL & COMMERCIAL TENANCY AGREEMENT', 40, 42, { align: 'left' });
-
-    doc
-      .fontSize(8.5)
-      .font('Helvetica')
-      .fillColor('#D1FAE5')
-      .text('Pursuant to the Electronic Transactions Act, 2008 (Act 772) & Standard Tenancy Guidelines', 40, 60, { align: 'left' });
-
-    doc
-      .fontSize(7.5)
-      .font('Helvetica-Bold')
-      .fillColor('#FEF3C7')
-      .text(`LANDS COMM. DEED REF: GA-2026-REG-DEED`, 360, 18, { align: 'right' });
-
-    doc
-      .fontSize(7.5)
-      .font('Helvetica')
-      .fillColor('#CBD5E1')
-      .text(`VAULT REF: ${data.agreementId.slice(0, 10).toUpperCase()}`, 360, 32, { align: 'right' })
-      .text(`DATE: ${new Date().toLocaleDateString('en-GB')}`, 360, 46, { align: 'right' })
-      .fillColor('#6EE7B7')
-      .font('Helvetica-Bold')
-      .text('STATUS: ✅ CERTIFIED LAND TITLE (ACT 767)', 360, 60, { align: 'right' });
-
-    // Section 1: Contracting Parties
-    const hasStudentDetails = Boolean(data.isStudentHostel || data.studentId);
-    const startY1 = 105;
-    const s1Height = hasStudentDetails ? 94 : 80;
-    doc.rect(40, startY1, 515, s1Height).fillAndStroke('#F8FAFC', '#CBD5E1');
-
-    doc
-      .fillColor('#1E293B')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('1. THE CONTRACTING PARTIES', 50, startY1 + 8);
-
-    doc
-      .fontSize(8)
-      .font('Helvetica')
-      .fillColor('#0F172A')
-      .text(`LANDLORD / LESSOR: ${data.landlordName}`, 50, startY1 + 22)
-      .fillColor('#475569')
-      .text(`Contact Phone: ${data.landlordPhone} • Identity Status: Verified Host (Ghana Card KYC on-file)`, 50, startY1 + 34)
-      .fillColor('#0F172A')
-      .text(`TENANT / RESIDENT: ${data.tenantName}`, 50, startY1 + 47)
-      .fillColor('#475569')
-      .text(`Contact: ${data.tenantPhone} | ${data.tenantEmail} • Identity Status: Verified Resident`, 50, startY1 + 59);
-
-    if (hasStudentDetails) {
-      doc
-        .fillColor('#0F5132')
-        .font('Helvetica-Bold')
-        .fontSize(7.5)
-        .text(`ACADEMIC PROFILE: 🎓 ${data.studentCampus || 'Tertiary Institution'} | ID/Index: ${data.studentId || 'N/A'}${data.programmeOfStudy ? ` | Programme: ${data.programmeOfStudy}` : ''}`, 50, startY1 + 71);
-      if (data.guardianName) {
-        doc
-          .fillColor('#475569')
-          .font('Helvetica')
-          .fontSize(7.5)
-          .text(`EMERGENCY / GUARDIAN CONTACT: ${data.guardianName} (${data.guardianPhone || 'N/A'})`, 50, startY1 + 82);
-      }
-    }
-
-    // Section 2: Demised Premises & Term
-    const startY2 = hasStudentDetails ? 207 : 195;
-    doc.rect(40, startY2, 515, 80).fillAndStroke('#F8FAFC', '#CBD5E1');
-
-    doc
-      .fillColor('#1E293B')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('2. DEMISED PREMISES & TENANCY DURATION', 50, startY2 + 10);
-
-    doc
-      .fontSize(8.5)
-      .font('Helvetica')
-      .fillColor('#0F172A')
-      .text(`PROPERTY NAME: ${data.propertyTitle}`, 50, startY2 + 28)
-      .text(`PHYSICAL LOCATION: ${data.propertyAddress}`, 50, startY2 + 42)
-      .text(`ACCOMMODATION / UNIT CATEGORY: ${data.roomType}`, 50, startY2 + 56)
-      .text(`COMMENCEMENT & EXPIRATION: ${data.startDate} to ${data.endDate}`, 50, startY2 + 68);
-
-    // Section 3: Financial Consideration & Escrow
-    const startY3 = 290;
-    doc.rect(40, startY3, 515, 65).fillAndStroke('#EFF6FF', '#3B82F6');
-
-    doc
-      .fillColor('#1D4ED8')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('3. RENT CONSIDERATION & ESCROW PROTECTION', 50, startY3 + 10);
-
-    doc
-      .fontSize(11)
-      .font('Helvetica-Bold')
-      .fillColor('#0F172A')
-      .text(`TOTAL AGREED RENT: GHS ${data.rentAmount.toLocaleString()}`, 50, startY3 + 28);
-
-    doc
-      .fontSize(8)
-      .font('Helvetica')
-      .fillColor('#475569')
-      .text('Payment is authenticated via Paystack Escrow (MTN MoMo, Telecel Cash, AT & Bank Transfer).', 50, startY3 + 46);
-
-    // Section 4: Standard Landlord Covenants
-    const startY4 = 365;
-    doc.rect(40, startY4, 515, 140).fillAndStroke('#F8FAFC', '#CBD5E1');
-
-    doc
-      .fillColor('#1E293B')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('4. STANDARD LANDLORD COVENANTS', 50, startY4 + 10);
-
-    const landlordCovenants = [
-      '• Quiet Enjoyment: Landlord shall guarantee tenant uninterrupted, quiet enjoyment of demised premises.',
-      '• Structural Repairs: Landlord shall be responsible for roof, foundation, external walls, and main plumbing.',
-      '• Right of Inspection: Landlord/agent must provide minimum 24-hour advance written notice before conducting inspections.',
-      '• Prohibition of Unlawful Eviction: Landlord covenants never to unlawfully eject, lockout, disconnect water or electricity, or remove roofing without due process of law.',
-      '• Rent Receipts: Landlord shall ensure an official electronic or physical rent receipt is furnished for all payments.'
-    ];
-
-    let lCovenantY = startY4 + 28;
-    landlordCovenants.forEach((c) => {
-      doc.fontSize(8).font('Helvetica').fillColor('#334155').text(c, 50, lCovenantY, { width: 495 });
-      lCovenantY += 21;
+    const docRef = `AKW/${new Date().getFullYear()}/${data.agreementId.slice(0, 8).toUpperCase()}`;
+    const executionDate = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
     });
 
-    // Section 5: Tenant Covenants
-    const startY5 = 515;
-    doc.rect(40, startY5, 515, 130).fillAndStroke('#F8FAFC', '#CBD5E1');
+    // ════════════════════════════════════════════════════════════════
+    // PAGE 1: FORMAL CONVEYANCING HEADER, RECITALS, SCHEDULE & CLAUSES
+    // ════════════════════════════════════════════════════════════════
+
+    // Top Reference Folio Line
+    doc
+      .font('Times-Roman')
+      .fontSize(9)
+      .fillColor('#57534E')
+      .text(`INSTRUMENT REF: ${docRef}`, 54, 42, { align: 'left' })
+      .text('REPUBLIC OF GHANA', 54, 42, { align: 'right' });
+
+    doc.moveTo(54, 56).lineTo(541, 56).lineWidth(0.5).strokeColor('#A8A29E').stroke();
+
+    // Formal Title Block
+    doc
+      .font('Times-Bold')
+      .fontSize(10)
+      .fillColor('#292524')
+      .text('REPUBLIC OF GHANA', 54, 68, { align: 'center', characterSpacing: 2 });
 
     doc
-      .fillColor('#1E293B')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('5. STANDARD TENANT COVENANTS', 50, startY5 + 10);
+      .font('Times-Bold')
+      .fontSize(16)
+      .fillColor('#111110')
+      .text('TENANCY AGREEMENT', 54, 84, { align: 'center', characterSpacing: 1.5 });
 
-    const tenantCovenants = [
-      '• Rent Punctuality: Tenant shall pay agreed rent punctually through the Akwaaba Homes verified payment gateway.',
-      '• Internal Maintenance: Tenant shall keep internal fixtures, glass, and light points in good tenantable order (fair wear excepted).',
-      '• No Unauthorized Subletting: Tenant shall not sublet or part with possession of premises without written landlord consent.',
-      '• Permitted Use: Premises shall be used strictly for lawful residential/commercial purposes in conformity with community quiet hours.',
-      '• Handover Inspection: Tenant shall participate in the digital move-in and move-out inspection checklists.'
+    doc
+      .font('Times-Italic')
+      .fontSize(9.5)
+      .fillColor('#57534E')
+      .text('Made pursuant to the Rent Act, 1963 (Act 220) and the Conveyancing Act, 1973 (N.R.C.D. 175)', 54, 104, {
+        align: 'center',
+      });
+
+    // Double Rule Divider
+    doc.moveTo(54, 122).lineTo(541, 122).lineWidth(1.2).strokeColor('#1C1917').stroke();
+    doc.moveTo(54, 125).lineTo(541, 125).lineWidth(0.5).strokeColor('#1C1917').stroke();
+
+    // Opening Recital & Parties
+    let y = 140;
+    doc
+      .font('Times-Roman')
+      .fontSize(10.5)
+      .fillColor('#1C1917')
+      .text(
+        `THIS TENANCY AGREEMENT is made on ${executionDate} BETWEEN ${data.landlordName.toUpperCase()} (Telephone: ${data.landlordPhone || 'on file'}) of the Republic of Ghana, hereinafter referred to as "the Landlord" (which expression shall, where the context so admits, include the Landlord's heirs, personal representatives, successors-in-title, and assigns) of the one part;`,
+        54,
+        y,
+        { width: 487, align: 'justify', lineGap: 3 }
+      );
+
+    y = doc.y + 10;
+    doc.text(
+      `AND ${data.tenantName.toUpperCase()} (Telephone: ${data.tenantPhone || 'on file'}; Electronic Mail: ${data.tenantEmail})${data.studentCampus ? `, Student of ${data.studentCampus} (ID: ${data.studentId || 'on file'})` : ''}, hereinafter referred to as "the Tenant" (which expression shall, where the context so admits, include the Tenant's personal representatives and permitted assigns) of the other part.`,
+      54,
+      y,
+      { width: 487, align: 'justify', lineGap: 3 }
+    );
+
+    // WHEREAS Recitals
+    y = doc.y + 12;
+    doc.font('Times-Bold').text('WHEREAS:', 54, y);
+    y = doc.y + 4;
+    doc
+      .font('Times-Roman')
+      .text(
+        `I. The Landlord is the lawful owner or authorized lessor of the residential property known as ${data.propertyTitle}, situated at ${data.propertyAddress} in the Republic of Ghana (hereinafter referred to as "the Premises").`,
+        68,
+        y,
+        { width: 473, align: 'justify', lineGap: 2.5 }
+      );
+    y = doc.y + 5;
+    doc.text(
+      'II. The Landlord has agreed to let and the Tenant has agreed to take the Premises for the term and at the rent hereinafter set forth, subject to the covenants, conditions, and stipulations contained in this Agreement.',
+      68,
+      y,
+      { width: 473, align: 'justify', lineGap: 2.5 }
+    );
+
+    y = doc.y + 12;
+    doc.font('Times-Bold').fontSize(10).text('NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:', 54, y);
+
+    // Schedule of Tenancy Particulars (Clean Bordered Legal Table)
+    y = doc.y + 10;
+    doc.font('Times-Bold').fontSize(9.5).text('SCHEDULE OF TENANCY PARTICULARS', 54, y);
+    y = doc.y + 5;
+
+    const scheduleRows = [
+      ['1. Description & Location of Premises', `${data.propertyTitle}, situated at ${data.propertyAddress}`],
+      ['2. Unit / Accommodation Category', data.roomType || 'Self-Contained Residential Unit'],
+      ['3. Term of Tenancy', `From ${data.startDate} to ${data.endDate}`],
+      ['4. Agreed Rent for the Term', `GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })} (Ghana Cedis)`],
+      ['5. Permitted Use', 'Private Residential Occupation Only'],
     ];
 
-    let tCovenantY = startY5 + 28;
-    tenantCovenants.forEach((c) => {
-      doc.fontSize(8).font('Helvetica').fillColor('#334155').text(c, 50, tCovenantY, { width: 495 });
-      tCovenantY += 19;
+    const col1Width = 185;
+    const col2Width = 302;
+    const rowHeight = 20;
+
+    scheduleRows.forEach(([label, val]) => {
+      doc.rect(54, y, col1Width, rowHeight).fillAndStroke('#F5F2EB', '#A8A29E');
+      doc.rect(54 + col1Width, y, col2Width, rowHeight).stroke('#A8A29E');
+
+      doc
+        .font('Times-Bold')
+        .fontSize(9.5)
+        .fillColor('#292524')
+        .text(label, 60, y + 5, { width: col1Width - 12 });
+
+      doc
+        .font('Times-Roman')
+        .fontSize(9.5)
+        .fillColor('#1C1917')
+        .text(val, 54 + col1Width + 8, y + 5, { width: col2Width - 16 });
+
+      y += rowHeight;
+    });
+
+    // Clause 1
+    y += 14;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text('1. GRANT OF TENANCY AND TERM', 54, y);
+    y = doc.y + 4;
+    doc
+      .font('Times-Roman')
+      .fontSize(10)
+      .fillColor('#1C1917')
+      .text(
+        `In consideration of the rent hereby reserved and the covenants on the part of the Tenant hereinafter contained, the Landlord hereby lets unto the Tenant the Premises described in the Schedule hereto, TO HOLD the same unto the Tenant from ${data.startDate} until ${data.endDate}, unless earlier determined in accordance with the provisions of this Agreement or the Rent Act, 1963 (Act 220).`,
+        54,
+        y,
+        { width: 487, align: 'justify', lineGap: 2.5 }
+      );
+
+    // Clause 2
+    y = doc.y + 12;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text('2. RENT AND RECEIPTS', 54, y);
+    y = doc.y + 4;
+    doc
+      .font('Times-Roman')
+      .fontSize(10)
+      .fillColor('#1C1917')
+      .text(
+        `2.1. The rent reserved for the tenancy is GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}, paid by the Tenant through the designated settlement channel into escrow custody on behalf of the Landlord.\n2.2. In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent made under this Agreement shall be acknowledged by an official written or electronic rent receipt issued to the Tenant stating the period covered and the sum received.`,
+        54,
+        y,
+        { width: 487, align: 'justify', lineGap: 2.5 }
+      );
+
+    // Clause 3
+    y = doc.y + 12;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text("3. TENANT'S COVENANTS", 54, y);
+    y = doc.y + 4;
+    doc.font('Times-Roman').fontSize(10).text('The Tenant hereby covenants with the Landlord as follows:', 54, y);
+
+    const tenantClauses = [
+      '3.1. Payment of Rent and Utilities: To pay the reserved rent punctually as stipulated, and to pay all charges for electricity, water, sanitation, and other utilities consumed on or attributable to the Premises during the tenancy.',
+      '3.2. Care of Interior and Fixtures: To keep the interior of the Premises, including all doors, windows, locks, sanitary fittings, electrical appliances, and fixtures provided by the Landlord, in a clean and tenantable state of repair (fair wear and tear excepted).',
+      '3.3. Alterations: Not to make any structural alterations, additions, or permanent modifications to the Premises without obtaining the prior written consent of the Landlord.',
+      '3.4. Prohibition on Assignment and Subletting: Not to assign, sublet, or part with the possession of the Premises or any part thereof to any third party without the prior written consent of the Landlord, in compliance with Section 22 of the Rent Act, 1963 (Act 220).',
+      '3.5. Good Neighbourliness and Conduct: Not to do or permit to be done upon the Premises anything which may constitute a nuisance, annoyance, or disturbance to the Landlord, co-tenants, or occupiers of adjoining properties.',
+      "3.6. Condition Inspection and Yielding Up: To participate in a joint condition inspection upon taking possession and at the expiration of the tenancy, and to peaceably yield up the Premises with all keys and Landlord's fixtures in good tenantable order at the determination of the tenancy.",
+    ];
+
+    tenantClauses.forEach((clause) => {
+      y = doc.y + 5;
+      doc.font('Times-Roman').fontSize(9.8).fillColor('#1C1917').text(clause, 66, y, {
+        width: 475,
+        align: 'justify',
+        lineGap: 2,
+      });
     });
 
     // Bottom Footer Page 1
+    doc.moveTo(54, 770).lineTo(541, 770).lineWidth(0.5).strokeColor('#D6D0C4').stroke();
     doc
-      .fontSize(8)
-      .fillColor('#94A3B8')
-      .text('Page 1 of 2 • Akwaaba Homes Ghana • Statutory Digital Tenancy Vault', 40, 785, { align: 'center' });
-
-    // ════════════════════════════════════════════════════════════════
-    // PAGE 2: SECURITY DEPOSIT, TERMINATION & CRYPTOGRAPHIC E-SIGNATURES
-    // ════════════════════════════════════════════════════════════════
-    doc.addPage({ margin: 40, size: 'A4' });
-
-    // Top Header Banner Page 2
-    doc.rect(0, 0, 595.28, 55).fill('#0F5132'); // Ghanaian Forest Emerald
-    doc.rect(0, 55, 595.28, 2).fill('#D97706'); // Heritage Gold Accent
-
-    doc
-      .fillColor('#F8FAFC')
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .text('AKWAABA HOMES • STATUTORY TENANCY VAULT', 40, 18);
-
-    doc
+      .font('Times-Italic')
       .fontSize(8.5)
-      .font('Helvetica')
-      .fillColor('#FBBF24')
-      .text(`AGREEMENT REF: ${data.agreementId.slice(0, 12).toUpperCase()}`, 350, 20, { align: 'right' });
+      .fillColor('#57534E')
+      .text(`Tenancy Agreement (${docRef})`, 54, 776, { align: 'left' })
+      .text('Page 1 of 2', 54, 776, { align: 'right' });
 
-    // Section 6: Security / Caution Deposit Escrow
-    const p2Y1 = 75;
-    doc.rect(40, p2Y1, 515, 80).fillAndStroke('#FEF3C7', '#F59E0B');
-
-    doc
-      .fillColor('#92400E')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('6. CAUTION DEPOSIT ESCROW & REFUND PROTOCOL', 50, p2Y1 + 10);
+    // ════════════════════════════════════════════════════════════════
+    // PAGE 2: LANDLORD COVENANTS, DEPOSIT, NOTICE & EXECUTION BLOCK
+    // ════════════════════════════════════════════════════════════════
+    doc.addPage({ margin: 54, size: 'A4' });
 
     doc
-      .fontSize(8)
-      .font('Helvetica')
-      .fillColor('#78350F')
-      .text('• Any caution deposit paid shall be held in protected custody and shall NOT be treated as rent.', 50, p2Y1 + 28)
-      .text('• Refund shall be processed within fourteen (14) calendar days following post-tenancy joint digital inspection.', 50, p2Y1 + 42)
-      .text('• Deductions are strictly limited to documented physical damages beyond reasonable wear and tear.', 50, p2Y1 + 56);
-
-    // Section 7: Termination & Notice to Quit
-    const p2Y2 = 165;
-    doc.rect(40, p2Y2, 515, 85).fillAndStroke('#F8FAFC', '#CBD5E1');
-
-    doc
-      .fillColor('#1E293B')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('7. DETERMINATION OF TENANCY & NOTICE TO QUIT', 50, p2Y2 + 10);
-
-    doc
-      .fontSize(8)
-      .font('Helvetica')
-      .fillColor('#334155')
-      .text('• Monthly Tenancy: Minimum of one (1) clear calendar month notice in writing prior to expiration.', 50, p2Y2 + 28)
-      .text('• Annual / Academic Lease: Minimum of three (3) clear calendar months notice prior to expiration.', 50, p2Y2 + 42)
-      .text('• Recovery of Possession: Governed strictly by lawful notice periods and written lease terms.', 50, p2Y2 + 56)
-      .text('• Breach of Covenants: Either party may seek formal mediation or legal arbitration.', 50, p2Y2 + 70);
-
-    // Section 8: Digital Execution & Electronic Signatures (Act 772)
-    const p2Y3 = 260;
-    doc.rect(40, p2Y3, 515, 185).fillAndStroke('#F1F5F9', '#94A3B8');
-
-    doc
-      .fillColor('#0F172A')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('8. DIGITAL EXECUTION & E-SIGNATURE VERIFICATION (ELECTRONIC TRANSACTIONS ACT 772)', 50, p2Y3 + 10);
-
-    // Tenant Signature Column
-    doc
+      .font('Times-Roman')
       .fontSize(9)
-      .font('Helvetica-Bold')
-      .fillColor('#1E293B')
-      .text('TENANT / LESSEE SIGNATURE', 60, p2Y3 + 28)
-      .font('Helvetica')
-      .fontSize(8)
-      .fillColor('#334155')
-      .text(`Full Name: ${data.tenantName}`, 60, p2Y3 + 44)
-      .text(`Email: ${data.tenantEmail}`, 60, p2Y3 + 57)
-      .text(`Phone: ${data.tenantPhone}`, 60, p2Y3 + 70)
-      .text(`Signed At: ${data.tenantSignedAt || 'Digital Consent On-File'}`, 60, p2Y3 + 83)
-      .fillColor('#059669')
-      .font('Helvetica-Bold')
-      .text('Authentication: ✅ VERIFIED E-SIGNATURE', 60, p2Y3 + 97);
+      .fillColor('#57534E')
+      .text(`INSTRUMENT REF: ${docRef}`, 54, 42, { align: 'left' })
+      .text('CONTINUATION SHEET', 54, 42, { align: 'right' });
+    doc.moveTo(54, 56).lineTo(541, 56).lineWidth(0.5).strokeColor('#A8A29E').stroke();
 
-    // Embed Tenant Signature Canvas Image if present
-    if (data.tenantSignatureUrl && data.tenantSignatureUrl.startsWith('data:image')) {
-      try {
-        const cleanB64 = data.tenantSignatureUrl.replace(/^data:image\/\w+;base64,/, '');
-        const imgBuffer = Buffer.from(cleanB64, 'base64');
-        doc.image(imgBuffer, 60, p2Y3 + 115, { fit: [190, 50] });
-      } catch (e) {
-        // Fallback gracefully if image cannot be parsed
-      }
-    } else {
+    // Clause 4: Landlord's Covenants
+    let p2Y = 72;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text("4. LANDLORD'S COVENANTS", 54, p2Y);
+    p2Y = doc.y + 4;
+    doc.font('Times-Roman').fontSize(10).text('The Landlord hereby covenants with the Tenant as follows:', 54, p2Y);
+
+    const landlordClauses = [
+      "4.1. Quiet Enjoyment: That the Tenant, paying the rent hereby reserved and observing and performing the covenants and obligations on the Tenant's part herein contained, shall peaceably and quietly hold and enjoy the Premises during the term without any unlawful interruption, harassment, or disturbance by the Landlord.",
+      '4.2. Structural and External Repairs: To keep the roof, foundation, exterior walls, main drains, main plumbing pipes, and primary electrical conduit of the Premises in good and tenantable structural repair throughout the term of the tenancy.',
+      "4.3. Notice of Entry for Inspection: To give the Tenant not less than twenty-four (24) hours' prior notice (except in the case of an emergency) before entering the Premises at reasonable daytime hours to inspect its condition or carry out necessary repairs.",
+      '4.4. Due Process of Law: Not to unlawfully lock out the Tenant, remove roofing or doors, or disconnect essential water or electricity supplies as a means of compelling vacation of the Premises, in strict observance of the Rent Act, 1963 (Act 220).',
+    ];
+
+    landlordClauses.forEach((clause) => {
+      p2Y = doc.y + 5;
+      doc.font('Times-Roman').fontSize(9.8).fillColor('#1C1917').text(clause, 66, p2Y, {
+        width: 475,
+        align: 'justify',
+        lineGap: 2,
+      });
+    });
+
+    // Clause 5: Caution Deposit
+    p2Y = doc.y + 12;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text('5. CAUTION DEPOSIT AND REFUND', 54, p2Y);
+    p2Y = doc.y + 4;
+    doc
+      .font('Times-Roman')
+      .fontSize(10)
+      .fillColor('#1C1917')
+      .text(
+        "Any caution or security deposit paid by the Tenant shall be held strictly as security for the due performance of the Tenant's obligations and shall not be treated by either party as payment of rent. Upon the expiration or lawful determination of the tenancy and following a joint move-out inspection, the caution deposit shall be refunded to the Tenant within fourteen (14) days, less only verified and itemized costs of repairing physical damage caused by the Tenant beyond fair wear and tear, or settling unpaid utility bills incurred during the Tenant's occupation.",
+        54,
+        p2Y,
+        { width: 487, align: 'justify', lineGap: 2.5 }
+      );
+
+    // Clause 6: Notice & Determination
+    p2Y = doc.y + 12;
+    doc.font('Times-Bold').fontSize(10.5).fillColor('#111110').text('6. DETERMINATION OF TENANCY AND NOTICE', 54, p2Y);
+    p2Y = doc.y + 4;
+    doc
+      .font('Times-Roman')
+      .fontSize(10)
+      .fillColor('#1C1917')
+      .text(
+        '6.1. Either party wishing to terminate or not renew this tenancy shall give prior written notice to the other party of not less than one (1) calendar month in the case of a monthly tenancy, or not less than three (3) calendar months in the case of an annual tenancy.\n6.2. Any dispute or difference arising out of or in connection with this Agreement which cannot be amicably resolved between the parties within fourteen (14) days shall be referred for mediation or determination by the appropriate Rent Magistrate or Rent Control Officer in accordance with the Rent Act, 1963 (Act 220) of the Republic of Ghana.',
+        54,
+        p2Y,
+        { width: 487, align: 'justify', lineGap: 2.5 }
+      );
+
+    if (data.isStudentHostel) {
+      p2Y = doc.y + 12;
       doc
-        .fontSize(8)
-        .font('Courier-Oblique')
-        .fillColor('#94A3B8')
-        .text('// Signed via Authenticated E-Consent //', 60, p2Y3 + 130);
+        .font('Times-Bold')
+        .fontSize(10.5)
+        .fillColor('#111110')
+        .text('7. STUDENT RESIDENCY AND COMPOUND REGULATIONS', 54, p2Y);
+      p2Y = doc.y + 4;
+      doc
+        .font('Times-Roman')
+        .fontSize(9.8)
+        .fillColor('#1C1917')
+        .text(
+          `Occupancy of this student accommodation is granted subject to the Tenant's active matriculation at ${data.studentCampus || 'an accredited tertiary institution'} and observance of hostel curfews, visitor sign-in regulations, and electrical appliance safety rules.${data.guardianName ? ` Designated Parent/Guardian on record: ${data.guardianName} (${data.guardianPhone || 'N/A'}).` : ''}`,
+          54,
+          p2Y,
+          { width: 487, align: 'justify', lineGap: 2.5 }
+        );
     }
 
-    // Landlord Signature Column
+    // Testimonium Clause
+    p2Y = doc.y + 20;
     doc
-      .fontSize(9)
-      .font('Helvetica-Bold')
-      .fillColor('#1E293B')
-      .text('LANDLORD / LESSOR SIGNATURE', 300, p2Y3 + 28)
-      .font('Helvetica')
-      .fontSize(8)
-      .fillColor('#334155')
-      .text(`Full Name: ${data.landlordName}`, 300, p2Y3 + 44)
-      .text(`Phone: ${data.landlordPhone}`, 300, p2Y3 + 57)
-      .text(`Signed At: ${data.landlordSignedAt || 'Pending Host Execution'}`, 300, p2Y3 + 70)
-      .text(`Status: ${data.landlordSignedAt ? 'VERIFIED HOST E-SIGNATURE' : 'PENDING STAMP'}`, 300, p2Y3 + 83)
-      .fillColor('#059669')
-      .font('Helvetica-Bold')
-      .text('Authentication: GHANA CARD HOST KYC VERIFIED', 300, p2Y3 + 97);
+      .font('Times-Bold')
+      .fontSize(10.5)
+      .fillColor('#111110')
+      .text(
+        'IN WITNESS WHEREOF the parties hereto have executed this Agreement the day, month, and year first above written.',
+        54,
+        p2Y,
+        { width: 487 }
+      );
 
-    // Embed Landlord Signature Canvas Image if present
+    // Traditional Two-Column Solicitor Execution Block
+    const sigTopY = doc.y + 24;
+    const leftX = 54;
+    const rightX = 310;
+    const sigLineWidth = 215;
+
+    // Left Column: Landlord
+    doc
+      .font('Times-Bold')
+      .fontSize(9.5)
+      .fillColor('#1C1917')
+      .text('SIGNED by the within-named LANDLORD:', leftX, sigTopY);
+
     if (data.landlordSignatureUrl && data.landlordSignatureUrl.startsWith('data:image')) {
       try {
         const cleanB64 = data.landlordSignatureUrl.replace(/^data:image\/\w+;base64,/, '');
         const imgBuffer = Buffer.from(cleanB64, 'base64');
-        doc.image(imgBuffer, 300, p2Y3 + 115, { fit: [190, 50] });
+        doc.image(imgBuffer, leftX + 5, sigTopY + 18, { fit: [170, 48] });
       } catch (e) {
-        // Fallback gracefully if image cannot be parsed
+        // Fallback if signature image cannot be parsed
       }
     } else {
       doc
-        .fontSize(8)
-        .font('Courier-Oblique')
-        .fillColor('#94A3B8')
-        .text(data.landlordSignedAt ? '// Signed via Authenticated Host E-Consent //' : '// Awaiting Host Signature //', 300, p2Y3 + 130);
+        .font('Times-Italic')
+        .fontSize(9)
+        .fillColor('#78716C')
+        .text('[ Awaiting Landlord Signature ]', leftX + 5, sigTopY + 42);
     }
 
-    // Section 9: Tamper-Proof Cryptographic SHA-256 Audit Seal
-    const p2Y4 = 455;
-    doc.rect(40, p2Y4, 515, 65).fillAndStroke('#E2E8F0', '#64748B');
+    doc
+      .moveTo(leftX, sigTopY + 72)
+      .lineTo(leftX + sigLineWidth, sigTopY + 72)
+      .lineWidth(0.8)
+      .strokeColor('#1C1917')
+      .stroke();
 
     doc
-      .fillColor('#1E293B')
-      .fontSize(9)
-      .font('Helvetica-Bold')
-      .text('IMMUTABLE AUDIT TRAIL & CRYPTOGRAPHIC SHA-256 SEAL', 50, p2Y4 + 10);
+      .font('Times-Roman')
+      .fontSize(9.5)
+      .fillColor('#1C1917')
+      .text(`Name: ${data.landlordName.toUpperCase()}`, leftX, sigTopY + 80)
+      .text('Capacity: Landlord / Lessor', leftX, sigTopY + 94)
+      .text(`Date: ${data.landlordSignedAt || 'Pending execution'}`, leftX, sigTopY + 108);
 
-    const hashVal = data.cryptographicHash || data.agreementId;
+    // Right Column: Tenant
     doc
-      .font('Courier-Bold')
-      .fontSize(8)
-      .fillColor('#0F172A')
-      .text(`SHA256: ${hashVal}`, 50, p2Y4 + 26, { width: 495 });
+      .font('Times-Bold')
+      .fontSize(9.5)
+      .fillColor('#1C1917')
+      .text('SIGNED by the within-named TENANT:', rightX, sigTopY);
 
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor('#475569')
-      .text('This digital instrument is encrypted and cryptographically sealed on the Akwaaba Homes Legal Ledger.', 50, p2Y4 + 42)
-      .text('Any alteration, tampering, or forgery invalidates this certificate under Act 772 of the Laws of Ghana.', 50, p2Y4 + 53);
-
-    // Official Digital Stamp & Lands Commission Deed Audit Badges
-    const p2Y5 = 530;
-
-    // Left Badge: Lands Commission Deed Registry Audit
-    doc.rect(40, p2Y5, 250, 68).fillAndStroke('#FEF9C3', '#CA8A04');
-    doc
-      .fillColor('#854D0E')
-      .fontSize(9)
-      .font('Helvetica-Bold')
-      .text('LANDS COMMISSION DEED REGISTRY AUDIT', 50, p2Y5 + 10, { width: 230 });
-    doc
-      .fontSize(7.5)
-      .font('Helvetica')
-      .fillColor('#713F12')
-      .text('DEED REF: GA-2026-AKW-TITLED-REGISTRY', 50, p2Y5 + 24)
-      .text('LAND TITLE STATUS: TITLED & PARCEL-REGISTERED', 50, p2Y5 + 36)
-      .text('ACT 767 / ACT 1036 STATUTORY CERTIFICATE', 50, p2Y5 + 48);
-
-    // Right Badge: Akwaaba Homes Official Digital Seal
-    doc.rect(305, p2Y5, 250, 68).fillAndStroke('#F0FDF4', '#16A34A');
-    doc
-      .fillColor('#15803D')
-      .fontSize(9)
-      .font('Helvetica-Bold')
-      .text('AKWAABA HOMES OFFICIAL DIGITAL SEAL', 315, p2Y5 + 10, { width: 230 });
-    doc
-      .fontSize(7.5)
-      .font('Helvetica')
-      .fillColor('#166534')
-      .text('VERIFIED DIGITAL TENANCY • PROTECTED ESCROW', 315, p2Y5 + 24)
-      .text('SECURED VIA PAYSTACK ESCROW • AUDITED LEDGER', 315, p2Y5 + 36)
-      .text(`DATE ISSUED: ${new Date().toLocaleDateString('en-GB')} • VALIDATED`, 315, p2Y5 + 48);
-
-    // Section 10: Hostel Code of Conduct & Academic Matriculation Clause (Hostels & Student Listings)
-    if (data.isStudentHostel) {
-      const p2Y6 = 608;
-      doc.rect(40, p2Y6, 515, 120).fillAndStroke('#FEF3C7', '#F59E0B');
-
+    if (data.tenantSignatureUrl && data.tenantSignatureUrl.startsWith('data:image')) {
+      try {
+        const cleanB64 = data.tenantSignatureUrl.replace(/^data:image\/\w+;base64,/, '');
+        const imgBuffer = Buffer.from(cleanB64, 'base64');
+        doc.image(imgBuffer, rightX + 5, sigTopY + 18, { fit: [170, 48] });
+      } catch (e) {
+        // Fallback if signature image cannot be parsed
+      }
+    } else {
       doc
-        .fillColor('#92400E')
-        .fontSize(9.5)
-        .font('Helvetica-Bold')
-        .text('10. HOSTEL CODE OF CONDUCT & ACADEMIC MATRICULATION COVENANT', 50, p2Y6 + 10);
-
-      const hostelClauses = [
-        `• Active Matriculation Status: Occupancy is granted strictly contingent upon active, bona fide matriculation at ${data.studentCampus || 'an accredited tertiary institution'} (Student ID: ${data.studentId || 'On-file'}).`,
-        '• Falsification & Immediate Lease Termination: Providing fraudulent student credentials, student impersonation, unauthorized sub-letting, or tertiary expulsion/suspension constitutes immediate material breach, triggering tenancy termination and possession recovery.',
-        '• Hostel Code & Quiet Hours: Resident covenants to strictly adhere to compound quiet hours, official visitor entry curfews, electrical safety, and sanitation protocols enforced by the landlord and caretaker.',
-        `• Emergency Contact Protocol: Landlord/Caretaker reserves the right to notify designated Parent/Guardian ${data.guardianName ? `(${data.guardianName} - ${data.guardianPhone || 'N/A'})` : ''} in the event of emergencies, misconduct, or disciplinary procedures.`
-      ];
-
-      let hClauseY = p2Y6 + 26;
-      hostelClauses.forEach((hc) => {
-        doc.fontSize(7.5).font('Helvetica').fillColor('#78350F').text(hc, 50, hClauseY, { width: 495 });
-        hClauseY += 22;
-      });
+        .font('Times-Italic')
+        .fontSize(9)
+        .fillColor('#78716C')
+        .text('[ Awaiting Tenant Signature ]', rightX + 5, sigTopY + 42);
     }
+
+    doc
+      .moveTo(rightX, sigTopY + 72)
+      .lineTo(rightX + sigLineWidth, sigTopY + 72)
+      .lineWidth(0.8)
+      .strokeColor('#1C1917')
+      .stroke();
+
+    doc
+      .font('Times-Roman')
+      .fontSize(9.5)
+      .fillColor('#1C1917')
+      .text(`Name: ${data.tenantName.toUpperCase()}`, rightX, sigTopY + 80)
+      .text('Capacity: Tenant / Lessee', rightX, sigTopY + 94)
+      .text(`Date: ${data.tenantSignedAt || 'Pending execution'}`, rightX, sigTopY + 108);
+
+    // Understated Electronic Execution Footnote at Bottom of Page 2
+    const hashVal = data.cryptographicHash || data.agreementId;
+    const footerBoxY = 710;
+    doc.moveTo(54, footerBoxY).lineTo(541, footerBoxY).lineWidth(0.5).strokeColor('#A8A29E').stroke();
+    doc
+      .font('Times-Roman')
+      .fontSize(8)
+      .fillColor('#57534E')
+      .text(
+        `Executed electronically pursuant to Section 10 of the Electronic Transactions Act, 2008 (Act 772). Document Reference: ${docRef} • Checksum: ${hashVal}`,
+        54,
+        footerBoxY + 8,
+        { width: 487, align: 'left' }
+      );
 
     // Page 2 Footer
+    doc.moveTo(54, 770).lineTo(541, 770).lineWidth(0.5).strokeColor('#D6D0C4').stroke();
     doc
-      .fontSize(8)
-      .fillColor('#94A3B8')
-      .text('Page 2 of 2 • Republic of Ghana Statutory Tenancy Vault • End of Agreement', 40, 785, { align: 'center' });
+      .font('Times-Italic')
+      .fontSize(8.5)
+      .fillColor('#57534E')
+      .text(`Tenancy Agreement (${docRef})`, 54, 776, { align: 'left' })
+      .text('Page 2 of 2', 54, 776, { align: 'right' });
 
     doc.end();
   });
