@@ -679,6 +679,7 @@ export async function generateReceiptPDF(data: {
 
 /**
  * Generate official GRA Tax Statement PDF for Landlords
+ * Crafted in classical Ghanaian Statutory Tax Return Schedule format (Income Tax Act, 2015 Act 896)
  */
 export async function generateGRATaxReportPDF(data: {
   landlordName: string;
@@ -693,140 +694,207 @@ export async function generateGRATaxReportPDF(data: {
   propertyBreakdown: { title: string; gross: number; maintenance: number; net: number }[];
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    const doc = new PDFDocument({ margin: 54, size: 'A4' });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', (err) => reject(err));
 
-    // Header Banner (Ghana National Colors Theme)
-    doc
-      .rect(0, 0, 595.28, 100)
-      .fill('#064E3B'); // Emerald 900
+    const issueDate = new Date().toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+    const scheduleRef = `GRA/RENT/${data.taxYear}/${Buffer.from(data.landlordEmail || 'LANDLORD').toString('hex').slice(0, 6).toUpperCase()}`;
 
-    doc
-      .fillColor('#FFFFFF')
-      .fontSize(20)
-      .font('Helvetica-Bold')
-      .text('GHANA REVENUE AUTHORITY (GRA)', 40, 25);
+    const fmt = (n: number) =>
+      Number(n || 0).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+    // Classical Statutory Letterhead
     doc
+      .fillColor('#111827')
+      .font('Times-Bold')
       .fontSize(10)
-      .font('Helvetica')
-      .fillColor('#FDE047') // Yellow accent
-      .text('OFFICIAL ANNUAL RENTAL INCOME TAX STATEMENT', 40, 52);
+      .text('REPUBLIC OF GHANA  •  GHANA REVENUE AUTHORITY (DOMESTIC TAX REVENUE DIVISION)', 54, 54, {
+        characterSpacing: 0.8,
+      });
 
     doc
-      .fontSize(9)
-      .fillColor('#D1FAE5')
-      .text(`Tax Year: ${data.taxYear}`, 400, 32, { align: 'right' })
-      .text(`Issued: ${new Date().toLocaleDateString('en-GB')}`, 400, 48, { align: 'right' });
-
-    doc.moveDown(4);
-
-    // Landlord Taxpayer Profile Box
-    const startY = 120;
-    doc
-      .rect(40, startY, 515, 75)
-      .fillAndStroke('#F8FAFC', '#CBD5E1');
+      .font('Times-Bold')
+      .fontSize(15)
+      .text('ANNUAL SCHEDULE OF RENTAL INCOME & ALLOWABLE DEDUCTIONS', 54, 70);
 
     doc
-      .fillColor('#334155')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('TAXPAYER IDENTIFICATION & LANDLORD DETAILS', 50, startY + 10);
+      .font('Times-Italic')
+      .fontSize(9.5)
+      .fillColor('#374151')
+      .text('Prepared Pursuant to the Income Tax Act, 2015 (Act 896) — Residential & Commercial Rent Tax Return', 54, 89);
 
+    // Double Rule Divider
+    doc.moveTo(54, 108).lineTo(541, 108).lineWidth(1.5).strokeColor('#111827').stroke();
+    doc.moveTo(54, 111).lineTo(541, 111).lineWidth(0.5).strokeColor('#111827').stroke();
+
+    // Part I — Taxpayer Identification Schedule
+    const part1Y = 124;
     doc
-      .fontSize(9)
-      .font('Helvetica')
-      .fillColor('#0F172A')
-      .text(`Landlord Name: ${data.landlordName}`, 50, startY + 28)
-      .text(`Contact Email: ${data.landlordEmail} (${data.landlordPhone})`, 50, startY + 43)
-      .text(`Total Rental Transactions Processed: ${data.transactionCount}`, 50, startY + 58);
+      .font('Times-Bold')
+      .fontSize(9.5)
+      .fillColor('#111827')
+      .text('PART I — PARTICULARS OF LANDLORD / TAXPAYER', 54, part1Y);
 
-    // Financial Summary Ribbon
-    const startY2 = 210;
-    doc
-      .rect(40, startY2, 515, 110)
-      .fillAndStroke('#EEF2FF', '#6366F1');
+    const metaRows: [string, string][] = [
+      ['Name of Taxpayer / Landlord', data.landlordName],
+      ['Registered Contact Particulars', `${data.landlordPhone || 'On File'}  |  ${data.landlordEmail}`],
+      ['Year of Assessment', `1st January ${data.taxYear} to 31st December ${data.taxYear}`],
+      ['Schedule Reference & Issue Date', `${scheduleRef}  (Issued: ${issueDate})`],
+      ['Audited Tenancy Settlements', `${data.transactionCount} Verified Rent Remittance(s)`],
+    ];
 
-    doc
-      .fillColor('#3730A3')
-      .fontSize(10)
-      .font('Helvetica-Bold')
-      .text('TAX COMPUTATION & REVENUE BREAKDOWN', 50, startY2 + 12);
+    let curY = part1Y + 15;
+    const col1W = 175;
+    const col2W = 312;
+    const rowH = 22;
 
-    doc
-      .fontSize(9)
-      .font('Helvetica')
-      .fillColor('#1E1B4B')
-      .text(`Gross Rental Revenue: GHS ${data.grossRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 32)
-      .text(`Less Allowable Maintenance Expenses: -GHS ${data.totalMaintenanceDeductions.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 50)
-      .text(`Estimated GRA Withholding Tax (5% Rate): GHS ${data.withholdingTax5Percent.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 68);
-
-    doc
-      .fontSize(11)
-      .font('Helvetica-Bold')
-      .fillColor('#047857')
-      .text(`NET TAXABLE LANDLORD INCOME: GHS ${data.netTaxableIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, 50, startY2 + 88);
-
-    // Property Line-Item Table
-    const tableY = 335;
-    doc
-      .rect(40, tableY, 515, 22)
-      .fill('#1E293B');
-
-    doc
-      .fillColor('#FFFFFF')
-      .fontSize(8.5)
-      .font('Helvetica-Bold')
-      .text('PROPERTY TITLE', 50, tableY + 6)
-      .text('GROSS RENT', 280, tableY + 6)
-      .text('MAINTENANCE', 370, tableY + 6)
-      .text('NET YIELD (GHS)', 460, tableY + 6, { align: 'right' });
-
-    let currentY = tableY + 22;
-    data.propertyBreakdown.forEach((prop, idx) => {
-      doc
-        .rect(40, currentY, 515, 22)
-        .fillAndStroke(idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC', '#E2E8F0');
+    metaRows.forEach(([label, val]) => {
+      doc.rect(54, curY, col1W, rowH).fillAndStroke('#F9FAFB', '#9CA3AF');
+      doc.rect(54 + col1W, curY, col2W, rowH).fillAndStroke('#FFFFFF', '#9CA3AF');
 
       doc
-        .fillColor('#0F172A')
-        .fontSize(8.5)
-        .font('Helvetica')
-        .text(prop.title.slice(0, 32), 50, currentY + 6)
-        .text(`GHS ${prop.gross.toLocaleString()}`, 280, currentY + 6)
-        .text(`GHS ${prop.maintenance.toLocaleString()}`, 370, currentY + 6)
-        .font('Helvetica-Bold')
-        .text(`GHS ${prop.net.toLocaleString()}`, 460, currentY + 6, { align: 'right' });
+        .fillColor('#111827')
+        .font('Times-Bold')
+        .fontSize(9)
+        .text(label, 62, curY + 6, { width: col1W - 16 });
 
-      currentY += 22;
+      doc
+        .fillColor('#111827')
+        .font('Times-Roman')
+        .fontSize(9)
+        .text(val, 54 + col1W + 10, curY + 6, { width: col2W - 20 });
+
+      curY += rowH;
     });
 
-    // GRA Compliance Certification Footer
-    const footerY = Math.max(currentY + 25, 620);
+    // Part II — Statutory Tax Computation Summary
+    const part2Y = curY + 20;
     doc
-      .rect(40, footerY, 515, 50)
-      .fill('#F0FDF4');
+      .font('Times-Bold')
+      .fontSize(9.5)
+      .fillColor('#111827')
+      .text('PART II — SUMMARY OF GROSS RENTAL RECEIPTS & TAX COMPUTATION', 54, part2Y);
+
+    const compRows: [string, string, boolean][] = [
+      ['01. Gross Rental Revenue Collected (Escrow & Direct Settlements)', `GHS ${fmt(data.grossRevenue)}`, false],
+      ['02. Less: Allowable Property Maintenance & Repair Deductions', `(GHS ${fmt(data.totalMaintenanceDeductions)})`, false],
+      ['03. Net Assessable Rental Income', `GHS ${fmt(data.netTaxableIncome)}`, true],
+      ['04. Estimated Statutory Rent Tax Liability (Withholding Assessment)', `GHS ${fmt(data.withholdingTax5Percent)}`, true],
+    ];
+
+    let compY = part2Y + 15;
+    compRows.forEach(([label, amountStr, isBold]) => {
+      doc.rect(54, compY, 357, 24).fillAndStroke(isBold ? '#F3F4F6' : '#FFFFFF', '#9CA3AF');
+      doc.rect(411, compY, 130, 24).fillAndStroke(isBold ? '#F3F4F6' : '#FFFFFF', '#9CA3AF');
+
+      doc
+        .fillColor('#111827')
+        .font(isBold ? 'Times-Bold' : 'Times-Roman')
+        .fontSize(9.5)
+        .text(label, 62, compY + 7, { width: 340 });
+
+      doc
+        .fillColor('#111827')
+        .font(isBold ? 'Times-Bold' : 'Times-Roman')
+        .fontSize(9.5)
+        .text(amountStr, 419, compY + 7, { width: 114, align: 'right' });
+
+      compY += 24;
+    });
+
+    // Part III — Property-by-Property Schedule
+    const part3Y = compY + 22;
+    doc
+      .font('Times-Bold')
+      .fontSize(9.5)
+      .fillColor('#111827')
+      .text('PART III — SCHEDULE OF DEMISED PROPERTIES & NET YIELD', 54, part3Y);
+
+    const tableY = part3Y + 15;
+    doc.rect(54, tableY, 217, 22).fillAndStroke('#F3F4F6', '#4B5563');
+    doc.rect(271, tableY, 90, 22).fillAndStroke('#F3F4F6', '#4B5563');
+    doc.rect(361, tableY, 90, 22).fillAndStroke('#F3F4F6', '#4B5563');
+    doc.rect(451, tableY, 90, 22).fillAndStroke('#F3F4F6', '#4B5563');
 
     doc
-      .fillColor('#166534')
+      .fillColor('#111827')
+      .font('Times-Bold')
       .fontSize(8.5)
-      .font('Helvetica-Bold')
-      .text('GRA CERTIFICATION & COMPLIANCE NOTICE', 50, footerY + 10);
+      .text('PROPERTY / COMPOUND DESIGNATION', 60, tableY + 7)
+      .text('GROSS (GHS)', 277, tableY + 7, { width: 78, align: 'right' })
+      .text('REPAIRS (GHS)', 367, tableY + 7, { width: 78, align: 'right' })
+      .text('NET (GHS)', 457, tableY + 7, { width: 78, align: 'right' });
+
+    let rowY = tableY + 22;
+    const properties = data.propertyBreakdown.length > 0
+      ? data.propertyBreakdown
+      : [{ title: 'Consolidated Residential Holdings', gross: data.grossRevenue, maintenance: data.totalMaintenanceDeductions, net: data.netTaxableIncome }];
+
+    properties.slice(0, 8).forEach((prop) => {
+      doc.rect(54, rowY, 217, 22).strokeColor('#9CA3AF').stroke();
+      doc.rect(271, rowY, 90, 22).strokeColor('#9CA3AF').stroke();
+      doc.rect(361, rowY, 90, 22).strokeColor('#9CA3AF').stroke();
+      doc.rect(451, rowY, 90, 22).strokeColor('#9CA3AF').stroke();
+
+      doc
+        .fillColor('#111827')
+        .font('Times-Roman')
+        .fontSize(9)
+        .text(prop.title.slice(0, 38), 60, rowY + 6)
+        .text(fmt(prop.gross), 277, rowY + 6, { width: 78, align: 'right' })
+        .text(fmt(prop.maintenance), 367, rowY + 6, { width: 78, align: 'right' })
+        .font('Times-Bold')
+        .text(fmt(prop.net), 457, rowY + 6, { width: 78, align: 'right' });
+
+      rowY += 22;
+    });
+
+    // Declaration & Comptroller Sign-off
+    const declY = Math.min(rowY + 28, 665);
+    doc
+      .font('Times-Bold')
+      .fontSize(9)
+      .fillColor('#111827')
+      .text('STATUTORY DECLARATION & AUDIT CERTIFICATION:', 54, declY);
 
     doc
-      .fontSize(7.5)
-      .font('Helvetica')
-      .fillColor('#15803D')
-      .text('This statement reflects audited rental income and maintenance cost deductions logged on the Akwaaba Homes Housing Infrastructure. Generated for annual Ghana Revenue Authority (GRA) individual tax return filing.', 50, footerY + 25, { width: 495 });
+      .font('Times-Roman')
+      .fontSize(8.5)
+      .fillColor('#374151')
+      .text(
+        'I hereby declare that the particulars of gross rental receipts and maintenance disbursements set forth in this Schedule represent a true and complete extract of the audited tenancy ledger for the Year of Assessment stated above, prepared for submission to the Ghana Revenue Authority (GRA).',
+        54,
+        declY + 13,
+        { width: 280, align: 'justify', lineGap: 2 }
+      );
 
+    doc.moveTo(360, declY + 38).lineTo(541, declY + 38).lineWidth(0.75).strokeColor('#111827').stroke();
     doc
+      .font('Times-Bold')
+      .fontSize(8.5)
+      .fillColor('#111827')
+      .text('SIGNATURE OF TAXPAYER / LANDLORD', 360, declY + 43, { width: 181, align: 'center' })
+      .font('Times-Roman')
       .fontSize(8)
-      .fillColor('#94A3B8')
-      .text('Page 1 of 1 • Generated by Akwaaba Homes Tax Engine • www.akwaabahomes.com', 40, 780, { align: 'center' });
+      .fillColor('#4B5563')
+      .text(`Date: ${issueDate}`, 360, declY + 55, { width: 181, align: 'center' });
+
+    // Footer Line
+    doc.moveTo(54, 745).lineTo(541, 745).lineWidth(0.5).strokeColor('#D1D5DB').stroke();
+    doc
+      .font('Times-Roman')
+      .fontSize(8)
+      .fillColor('#6B7280')
+      .text(`Schedule Ref: ${scheduleRef}  |  Akwaaba Homes Tenancy Audit Ledger`, 54, 754)
+      .text('Page 1 of 1', 54, 754, { width: 487, align: 'right' });
 
     doc.end();
   });

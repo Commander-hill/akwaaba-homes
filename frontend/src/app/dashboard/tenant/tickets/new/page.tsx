@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, Suspense } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
@@ -15,15 +14,12 @@ import {
   Bug,
   Building,
   Camera,
-  AlertTriangle,
-  Clock,
-  MapPin,
+  CheckCircle2,
   Loader2,
   ArrowLeft,
   ChevronRight,
+  ChevronLeft,
   X,
-  User,
-  PhoneCall,
   Check,
   ShieldAlert
 } from 'lucide-react';
@@ -35,7 +31,6 @@ const CATEGORIES = [
     id: 'PLUMBING',
     label: 'Plumbing & Water',
     icon: Droplets,
-    badgeColor: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900',
     suggestions: [
       'Leaking sink pipe in bathroom',
       'Toilet flush not refilling / running continuously',
@@ -48,7 +43,6 @@ const CATEGORIES = [
     id: 'ELECTRICAL',
     label: 'Electrical & Power',
     icon: Zap,
-    badgeColor: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900',
     suggestions: [
       'Wall socket / outlet sparking or dead',
       'Ceiling light flickering / burnt out',
@@ -60,7 +54,6 @@ const CATEGORIES = [
     id: 'AC_COOLING',
     label: 'AC & Ventilation',
     icon: Wind,
-    badgeColor: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-900',
     suggestions: [
       'AC unit blowing warm / unchilled air',
       'AC unit dripping water onto bedroom floor',
@@ -72,7 +65,6 @@ const CATEGORIES = [
     id: 'LOCKS_SECURITY',
     label: 'Locks & Security',
     icon: Key,
-    badgeColor: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-900',
     suggestions: [
       'Main entry door lock cylinder jammed',
       'Key broken / sticking inside lock',
@@ -84,7 +76,6 @@ const CATEGORIES = [
     id: 'FIXTURES',
     label: 'Furniture & Fixtures',
     icon: Hammer,
-    badgeColor: 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900',
     suggestions: [
       'Wardrobe door hinge loose or detached',
       'Bed frame joint broken or unstable',
@@ -96,7 +87,6 @@ const CATEGORIES = [
     id: 'PEST_HYGIENE',
     label: 'Pest & Sanitation',
     icon: Bug,
-    badgeColor: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900',
     suggestions: [
       'Fumigation requested (ants / insect infestation)',
       'Corridor waste bin area blocked',
@@ -107,7 +97,6 @@ const CATEGORIES = [
     id: 'GENERAL',
     label: 'Compound & General',
     icon: Building,
-    badgeColor: 'text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700',
     suggestions: [
       'Compound security light out',
       'Overhead polytank water pump failure',
@@ -132,33 +121,25 @@ const PRIORITIES = [
     id: 'LOW',
     label: 'Low (Routine)',
     desc: 'Minor cosmetic wear, scheduled fix within 72 hrs',
-    sla: '48 – 72 hrs',
-    activeBg: 'border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-200',
-    badge: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300'
+    sla: '48 – 72 hrs'
   },
   {
     id: 'MEDIUM',
     label: 'Medium (Standard)',
     desc: 'Noticeable inconvenience, standard priority response',
-    sla: '24 – 48 hrs',
-    activeBg: 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 text-amber-950 dark:text-amber-200',
-    badge: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300'
+    sla: '24 – 48 hrs'
   },
   {
     id: 'HIGH',
     label: 'High (Urgent)',
     desc: 'Impairs living condition, lack of water or broken lock',
-    sla: 'Within 24 hrs',
-    activeBg: 'border-orange-500 bg-orange-50/50 dark:bg-orange-950/30 text-orange-950 dark:text-orange-200',
-    badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300'
+    sla: 'Within 24 hrs'
   },
   {
     id: 'URGENT',
     label: 'Emergency (Hazard)',
     desc: 'Active electrical sparking, flooding, or security danger',
-    sla: 'Immediate Response',
-    activeBg: 'border-red-600 bg-red-50/50 dark:bg-red-950/30 text-red-950 dark:text-red-200',
-    badge: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300'
+    sla: 'Immediate Response'
   }
 ];
 
@@ -175,6 +156,7 @@ function ReportIssueContent() {
   const queryClient = useQueryClient();
   const initialPropertyId = searchParams.get('propertyId') || '';
 
+  const [step, setStep] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string>('PLUMBING');
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>(initialPropertyId);
   const [title, setTitle] = useState('');
@@ -189,7 +171,6 @@ function ReportIssueContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch active bookings so tenant can choose property/unit
   const { data: bookingsData } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
@@ -210,7 +191,8 @@ function ReportIssueContent() {
 
   const activeBooking = activeBookings.find((b: any) => b.propertyId === selectedPropertyId) || activeBookings[0];
   const activeProperty = activeBooking?.property;
-  const currentCategoryObj = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+  const currentCategoryObj = CATEGORIES.find((c) => c.id === selectedCategory) || CATEGORIES[0];
+  const currentPriorityObj = PRIORITIES.find((p) => p.id === priority) || PRIORITIES[1];
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -288,22 +270,40 @@ function ReportIssueContent() {
     }
   });
 
+  const handleNextStep = () => {
+    setFormError('');
+    if (step === 2) {
+      if (!title.trim()) {
+        toast.error('Please enter a short issue headline or select a fault suggestion');
+        return;
+      }
+      if (!description.trim() || description.trim().length < 10) {
+        toast.error('Please provide at least 10 characters describing the fault');
+        return;
+      }
+    }
+    setStep((prev) => Math.min(prev + 1, 4));
+  };
+
+  const handlePrevStep = () => {
+    setFormError('');
+    setStep((prev) => Math.max(prev - 1, 1));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (step < 4) {
+      handleNextStep();
+      return;
+    }
     setFormError('');
 
     if (!selectedPropertyId) {
       setFormError('Please select a rented property/room.');
       return;
     }
-
-    if (!title.trim()) {
-      setFormError('Please provide a short headline or summary for the issue.');
-      return;
-    }
-
-    if (!description.trim() || description.trim().length < 10) {
-      setFormError('Please provide at least 10 characters describing the fault.');
+    if (!title.trim() || !description.trim() || description.trim().length < 10) {
+      setFormError('Please complete the issue headline and description.');
       return;
     }
 
@@ -325,117 +325,153 @@ function ReportIssueContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12] pb-24 pt-4 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-      {/* ── Breadcrumbs & Header ── */}
-      <div className="mb-6 space-y-3 pb-5 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-          <Link href="/dashboard/tenant" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition">
-            Resident Portal
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-          <Link href="/dashboard/tenant?tab=maintenance" className="hover:text-[#0F5132] dark:hover:text-emerald-400 transition">
-            Repairs & Maintenance
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
-          <span className="text-zinc-900 dark:text-zinc-200 font-bold">New Ticket</span>
-        </div>
+    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-6 pb-24">
+      {/* Header */}
+      <div>
+        <button
+          onClick={() => router.push('/dashboard/tenant?tab=maintenance')}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Repairs &amp; Maintenance
+        </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight flex items-center gap-3">
-              <span className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                <Wrench className="w-5 h-5" />
-              </span>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
               Report a Maintenance Issue
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Dispatch an official work order directly to your property manager and hostel caretaker.
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Dispatch an official repair work order directly to your landlord and compound caretaker.
             </p>
           </div>
-
-          <Link
-            href="/dashboard/tenant?tab=maintenance"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#14181E] text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-          >
-            <ArrowLeft className="w-4 h-4" /> Cancel & Return
-          </Link>
+          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 w-fit">
+            Step {step} of 4
+          </span>
         </div>
       </div>
 
-      {formError && (
-        <AlertBanner
-          type="error"
-          message={formError}
-          className="mb-6"
-        />
-      )}
+      {/* 4-Step Segmented Bar */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { num: 1, label: '1. Unit & Category' },
+          { num: 2, label: '2. Fault & Photo' },
+          { num: 3, label: '3. Urgency & Access' },
+          { num: 4, label: '4. Review & Dispatch' }
+        ].map((s) => {
+          const active = step === s.num;
+          const completed = step > s.num;
+          return (
+            <button
+              key={s.num}
+              type="button"
+              onClick={() => {
+                if (s.num < step) setStep(s.num);
+              }}
+              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                active
+                  ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-400'
+                  : completed
+                  ? 'border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-[#12151D] text-zinc-800 dark:text-zinc-200'
+                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] text-zinc-400'
+              }`}
+            >
+              <div className="text-[11px] font-bold truncate">{s.label}</div>
+              <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 mt-2 overflow-hidden">
+                <div
+                  className={`h-full transition-all ${
+                    active || completed ? 'w-full bg-[#0F5132] dark:bg-emerald-500' : 'w-0'
+                  }`}
+                />
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* ── Main 2-Column Form ── */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Form Controls (7 cols) */}
-        <div className="lg:col-span-7 space-y-6">
-          {/* Property Selector (if multiple bookings) */}
-          {activeBookings.length > 1 && (
-            <div className="bg-white dark:bg-[#14181E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-xs space-y-2">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Affected Rental Unit
-              </label>
-              <select
-                value={selectedPropertyId}
-                onChange={(e) => setSelectedPropertyId(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-[#0F5132]/30"
-              >
-                {activeBookings.map((b: any) => (
-                  <option key={b.propertyId} value={b.propertyId}>
-                    {b.property?.title} ({b.property?.city || 'Accra'})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+      {formError && <AlertBanner type="error" message={formError} />}
 
-          {/* Category Selector */}
-          <div className="bg-white dark:bg-[#14181E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* STEP 1: Unit & Category */}
+        {step === 1 && (
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
             <div>
-              <h2 className="text-sm font-extrabold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">
-                1. Select Issue Category
+              <h2 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                <Wrench className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                Select Affected Unit &amp; Artisan Trade
               </h2>
               <p className="text-xs text-zinc-500 mt-0.5">
-                Accurate categorization dispatches the appropriate Ghanaian artisan (electrician, plumber, mason).
+                Accurate categorization dispatches the right artisan (plumber, electrician, AC technician, or carpenter).
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-              {CATEGORIES.map((cat) => {
-                const Icon = cat.icon;
-                const isSelected = selectedCategory === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`p-3 rounded-xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
-                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className={`p-1.5 rounded-lg border ${cat.badgeColor}`}>
-                        <Icon className="w-3.5 h-3.5" />
+            {activeBookings.length > 0 && (
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+                  Rented Residence / Unit *
+                </label>
+                <select
+                  value={selectedPropertyId}
+                  onChange={(e) => setSelectedPropertyId(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                >
+                  {activeBookings.map((b: any) => (
+                    <option key={b.propertyId} value={b.propertyId}>
+                      {b.property?.title} ({b.property?.city || 'Accra'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2.5">
+                Issue Category *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  const isSelected = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`p-4 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#0F5132] dark:text-emerald-400">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />}
                       </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />}
-                    </div>
-                    <span className="text-xs font-bold leading-tight">{cat.label}</span>
-                  </button>
-                );
-              })}
+                      <span className="text-xs font-bold leading-tight">{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: Fault & Photo */}
+        {step === 2 && (
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-zinc-950 dark:text-white">
+                Describe the Fault &amp; Attach Photo Evidence
+              </h2>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Tap a common fault below or type your own summary and attach a clear photo of the issue.
+              </p>
             </div>
 
-            {/* Quick Suggestions for current category */}
-            <div className="pt-2">
+            <div>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block mb-2">
-                Common Ghanaian Faults (Tap to fill):
+                Common {currentCategoryObj.label} Faults (Tap to fill):
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {currentCategoryObj.suggestions.map((suggestion, idx) => (
@@ -443,59 +479,51 @@ function ReportIssueContent() {
                     key={idx}
                     type="button"
                     onClick={() => setTitle(suggestion)}
-                    className="text-[11px] px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-emerald-50 hover:text-emerald-800 dark:bg-zinc-800/80 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition text-left cursor-pointer border border-zinc-200/60 dark:border-zinc-700/60"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-emerald-50 hover:text-[#0F5132] dark:bg-zinc-800/80 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition text-left cursor-pointer border border-zinc-200/60 dark:border-zinc-700/60"
                   >
                     + {suggestion}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
 
-          {/* Details & Location */}
-          <div className="bg-white dark:bg-[#14181E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-4">
-            <h2 className="text-sm font-extrabold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">
-              2. Describe the Fault
-            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                  Issue Summary / Headline *
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Bathroom sink pipe leaking onto floor"
+                  required
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                />
+              </div>
 
-            {/* Title */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Issue Summary / Title
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Bathroom sink pipe leaking onto floor"
-                required
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0F5132]/30 placeholder:text-zinc-400"
-              />
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
+                  Location in Unit / Compound *
+                </label>
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                >
+                  {LOCATIONS.map((loc) => (
+                    <option key={loc} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Location in Unit */}
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Location in Unit / Property
-              </label>
-              <select
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0F5132]/30 cursor-pointer"
-              >
-                {LOCATIONS.map((loc) => (
-                  <option key={loc} value={loc}>
-                    {loc}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Detailed Description */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Full Description & Circumstances
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                  Full Description &amp; Circumstances *
                 </label>
                 <span className="text-[10px] text-zinc-400">Min. 10 characters</span>
               </div>
@@ -504,16 +532,14 @@ function ReportIssueContent() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
                 placeholder="Describe when the issue started, whether water is actively running, or what breaker tripped..."
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0F5132]/30 placeholder:text-zinc-400 leading-relaxed"
+                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] leading-relaxed"
               />
             </div>
 
-            {/* Photo Capture / Upload */}
-            <div className="space-y-2 pt-1">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
-                Evidence Photo (Recommended)
+            <div>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+                Evidence Photo (Optional)
               </label>
-
               <input
                 ref={fileInputRef}
                 type="file"
@@ -522,21 +548,19 @@ function ReportIssueContent() {
                 onChange={handlePhotoUpload}
                 className="hidden"
               />
-
               {imagePreview ? (
-                <div className="relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 max-h-56 flex items-center justify-center">
+                <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 max-h-56 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={imagePreview} alt="Fault Evidence" className="max-h-56 object-contain w-full" />
                   <button
                     type="button"
                     onClick={removePhoto}
                     className="absolute top-3 right-3 p-1.5 bg-black/70 hover:bg-black text-white rounded-lg transition cursor-pointer"
-                    title="Remove photo"
                   >
                     <X className="w-4 h-4" />
                   </button>
                   {isUploading && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold gap-2">
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-bold gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> Uploading image...
                     </div>
                   )}
@@ -544,72 +568,67 @@ function ReportIssueContent() {
               ) : (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-zinc-300 dark:border-zinc-800 hover:border-[#0F5132] dark:hover:border-emerald-500 rounded-xl p-5 text-center cursor-pointer transition bg-zinc-50/50 dark:bg-zinc-900/40 space-y-2"
+                  className="border-2 border-dashed border-zinc-300 dark:border-zinc-800 hover:border-[#0F5132] rounded-2xl p-6 text-center cursor-pointer transition bg-zinc-50/50 dark:bg-zinc-900/40 space-y-2"
                 >
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto">
                     <Camera className="w-5 h-5" />
                   </div>
-                  <div>
-                    <span className="text-xs font-bold text-zinc-900 dark:text-white block">
-                      Tap to take photo or choose file
-                    </span>
-                    <span className="text-[10px] text-zinc-400">
-                      Camera capture or gallery image (JPG, PNG up to 10MB)
-                    </span>
+                  <div className="text-xs font-bold text-zinc-900 dark:text-white">
+                    Tap to attach photo of fault
                   </div>
+                  <div className="text-[11px] text-zinc-400">JPG, PNG, or WebP up to 10MB</div>
                 </div>
               )}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Right Column: Urgency & Caretaker Rail (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Priority & Urgency */}
-          <div className="bg-white dark:bg-[#14181E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-4">
+        {/* STEP 3: Urgency & Access */}
+        {step === 3 && (
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
             <div>
-              <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">
-                3. Urgency & Service Level
-              </h3>
+              <h2 className="text-base font-bold text-zinc-950 dark:text-white">
+                Urgency Level &amp; Artisan Access Window
+              </h2>
               <p className="text-xs text-zinc-500 mt-0.5">
-                Set priority based on safety and daily living impairment.
+                Set the response SLA based on severity and indicate when the caretaker or artisan may enter.
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {PRIORITIES.map((p) => {
                 const isSelected = priority === p.id;
                 return (
-                  <div
+                  <button
                     key={p.id}
+                    type="button"
                     onClick={() => setPriority(p.id)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? `${p.activeBg} ring-1 ring-[#0F5132]/30`
-                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/40 dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300'
+                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 ring-2 ring-[#0F5132]/20'
+                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-xs font-bold">{p.label}</span>
-                      <span className={`text-[9px] font-black font-mono px-2 py-0.5 rounded-full ${p.badge}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold text-zinc-900 dark:text-white">{p.label}</span>
+                      <span className="text-[10px] font-mono font-bold text-[#0F5132] dark:text-emerald-400">
                         {p.sla}
                       </span>
                     </div>
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-normal">{p.desc}</p>
-                  </div>
+                    <p className="text-[11px] text-zinc-500">{p.desc}</p>
+                  </button>
                 );
               })}
             </div>
 
-            {/* Preferred Visit Time */}
-            <div className="pt-2 space-y-1.5">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
-                Preferred Artisan Visit Time
+            <div>
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
+                Preferred Artisan Visit Time *
               </label>
               <select
                 value={preferredTime}
                 onChange={(e) => setPreferredTime(e.target.value)}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0F5132]/30 cursor-pointer"
+                className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
               >
                 {PREFERRED_TIMES.map((time) => (
                   <option key={time} value={time}>
@@ -618,65 +637,101 @@ function ReportIssueContent() {
                 ))}
               </select>
             </div>
+
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-300 text-xs space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Active Electrical or Fire Emergency?</span>
+              </div>
+              <p className="text-[11px] text-amber-800 dark:text-amber-400 leading-relaxed">
+                For active fires, gas leaks, or serious electrical danger, switch off the main breaker immediately and dial Ghana National Fire Service on <strong>192</strong>.
+              </p>
+            </div>
           </div>
+        )}
 
-          {/* Residence Context & Contacts */}
-          {activeProperty && (
-            <div className="bg-white dark:bg-[#14181E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xs space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-                Rented Residence Context
-              </h3>
+        {/* STEP 4: Review & Dispatch */}
+        {step === 4 && (
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                Review Maintenance Work Order
+              </h2>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Confirm the fault details below before dispatching to your landlord and caretaker.
+              </p>
+            </div>
 
-              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 space-y-1.5">
-                <div className="text-xs font-bold text-zinc-900 dark:text-white truncate">
-                  {activeProperty.title}
-                </div>
-                <div className="text-[11px] text-zinc-500 flex items-center gap-1">
-                  <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
-                  <span className="truncate">{activeProperty.address || activeProperty.city}, Ghana</span>
-                </div>
-                {activeBooking.roomNumber && (
-                  <div className="text-[11px] font-semibold text-[#0F5132] dark:text-emerald-400">
-                    Room / Unit: {activeBooking.roomNumber}
-                  </div>
-                )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Trade &amp; Location</span>
+                <div className="font-bold text-zinc-900 dark:text-white">{currentCategoryObj.label}</div>
+                <div className="text-zinc-500">{selectedLocation} &bull; {activeProperty?.title || 'Rented Unit'}</div>
               </div>
 
-              {activeProperty.landlord && (
-                <div className="pt-1 text-xs text-zinc-600 dark:text-zinc-400 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Manager: {activeProperty.landlord.firstName} {activeProperty.landlord.lastName}</span>
-                  </div>
-                  {activeProperty.landlord.phone && (
-                    <div className="flex items-center gap-2 font-mono text-[11px]">
-                      <PhoneCall className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>{activeProperty.landlord.phone}</span>
-                    </div>
-                  )}
+              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Priority &amp; Access Window</span>
+                <div className="font-bold text-[#0F5132] dark:text-emerald-400">
+                  {currentPriorityObj.label} ({currentPriorityObj.sla})
                 </div>
-              )}
+                <div className="text-zinc-500">{preferredTime}</div>
+              </div>
             </div>
+
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-1.5 text-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                {title || 'Work Order Summary'}
+              </span>
+              <p className="text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed">
+                {description}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Horizontal Summary Bar */}
+        <div className="bg-zinc-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <div className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">
+              Maintenance Work Order Summary
+            </div>
+            <div className="text-sm font-bold">
+              {currentCategoryObj.label} &bull; {selectedLocation}
+            </div>
+          </div>
+          <div className="text-xs text-zinc-400 font-mono">
+            SLA: {currentPriorityObj.sla}
+          </div>
+        </div>
+
+        {/* Wizard Footer Navigation */}
+        <div className="flex items-center justify-between pt-2">
+          {step > 1 ? (
+            <button
+              type="button"
+              onClick={handlePrevStep}
+              className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" /> Previous Step
+            </button>
+          ) : (
+            <div />
           )}
 
-          {/* Emergency Safety Notice */}
-          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-300 text-xs space-y-1">
-            <div className="flex items-center gap-1.5 font-bold">
-              <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>Immediate Hazard?</span>
-            </div>
-            <p className="text-[11px] text-amber-800 dark:text-amber-400 leading-relaxed">
-              For active fires, gas leaks, or serious electrical danger, switch off the main breaker and dial Ghana Fire Service on <strong>192</strong> or Police on <strong>191</strong>.
-            </p>
-          </div>
-
-          {/* Submit Action */}
-          <div>
+          {step < 4 ? (
+            <button
+              type="button"
+              onClick={handleNextStep}
+              className="px-6 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+            >
+              Continue <ChevronRight className="w-4 h-4" />
+            </button>
+          ) : (
             <button
               type="submit"
               disabled={createTicketMutation.isPending || isUploading}
-              className="w-full py-3.5 bg-[#0F5132] hover:bg-[#0B3D26] disabled:opacity-50 text-white rounded-xl font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
             >
               {createTicketMutation.isPending ? (
                 <>
@@ -688,7 +743,7 @@ function ReportIssueContent() {
                 </>
               )}
             </button>
-          </div>
+          )}
         </div>
       </form>
     </div>
@@ -697,11 +752,13 @@ function ReportIssueContent() {
 
 export default function NewTicketPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
+        </div>
+      }
+    >
       <ReportIssueContent />
     </Suspense>
   );
