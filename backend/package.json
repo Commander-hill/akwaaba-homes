@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "predev": "node scripts/ensure-postgres.js",
     "dev": "npx tsx watch src/server.ts",
+    "db:start": "node scripts/ensure-postgres.js",
     "build": "prisma generate && tsc",
     "postinstall": "prisma generate --schema=prisma/schema.prisma || true",
     "start": "node dist/server.js"
