@@ -39,22 +39,22 @@ export default function MobileBottomNav() {
     ? isCaretaker
       ? [
           {
-            name: 'Ops Hub',
+            name: 'Command',
             href: '/dashboard/caretaker',
             icon: LayoutDashboard,
             isActive: pathname === '/dashboard/caretaker',
           },
           {
-            name: 'Tickets',
-            href: '/dashboard/caretaker?tab=tickets',
+            name: 'Repairs',
+            href: '/dashboard/caretaker?tab=maintenance',
             icon: Wrench,
-            isActive: pathname === '/dashboard/caretaker',
+            isActive: false,
           },
           {
-            name: 'Gate Log',
-            href: '/dashboard/caretaker?tab=visitors',
+            name: 'Gatehouse',
+            href: '/dashboard/caretaker?tab=gatehouse',
             icon: Key,
-            isActive: pathname === '/dashboard/caretaker',
+            isActive: false,
           },
           {
             name: 'Messages',
@@ -127,6 +127,12 @@ export default function MobileBottomNav() {
           isActive: pathname?.startsWith('/properties'),
         },
         {
+          name: 'Saved',
+          href: '/dashboard/wishlist',
+          icon: Heart,
+          isActive: pathname === '/dashboard/wishlist',
+        },
+        {
           name: 'Sign In',
           href: '/login',
           icon: LogIn,
@@ -159,8 +165,9 @@ export default function MobileBottomNav() {
             <Link
               key={tab.name}
               href={tab.href}
+              aria-current={tab.isActive ? 'page' : undefined}
               className={clsx(
-                "flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-150 min-w-[52px] cursor-pointer",
+                "flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-150 min-w-[52px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600",
                 tab.isActive
                   ? "text-[#0F5132] dark:text-[#198754] font-bold"
                   : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"

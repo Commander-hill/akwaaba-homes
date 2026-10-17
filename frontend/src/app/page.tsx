@@ -1,744 +1,866 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  Search,
+  MapPin,
+  Building2,
+  ShieldCheck,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  Lock,
+  Users,
+  Home as HomeIcon,
+  GraduationCap,
+  SlidersHorizontal,
+  Star,
+  FileText,
+  HelpCircle,
+  Wallet,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
-import { getImageUrl } from '@/lib/utils';
-import { 
-  Search, MapPin, Building, Users, 
-  ArrowRight, CheckCircle2, Lock, DollarSign, Wrench, ChevronRight,
-  GraduationCap, Clock, HelpCircle, FileText, Check,
-  Zap, Compass, PhoneCall, AlertCircle, Eye, BedDouble, Droplet
-} from 'lucide-react';
 import WishlistButton from '@/components/WishlistButton';
 
-interface Property {
-  id: string;
-  title: string;
-  type: string;
-  targetAudience?: string;
-  furnishing?: string;
-  pricePeriod?: string;
-  rooms: { roomType: string }[];
-  totalCapacity: number;
-  remainingCapacity: number;
-  description: string;
-  price: number;
-  location: string;
-  amenities: string[];
-  images: string[];
-  isAvailable: boolean;
-  landlord?: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    isVerifiedLandlord?: boolean;
-    landlordVerificationStatus?: string;
-  };
-}
-
-const POPULAR_CAMPUSES = [
-  { name: 'KNUST — Kumasi', query: 'Ayeduase', tag: 'Ayeduase • Kotei • Gaza • Boadi' },
-  { name: 'UG Legon — Accra', query: 'East Legon', tag: 'East Legon • Okponglo • Haatso' },
-  { name: 'UCC — Cape Coast', query: 'Amamoma', tag: 'Amamoma • Apewosika • Kakumdo' },
-  { name: 'UPSA / ATU', query: 'Madina', tag: 'Madina • Kinbu • Adabraka' },
-  { name: 'UENR / UDS', query: 'Sunyani', tag: 'Sunyani • Tamale Campus' },
+const POPULAR_LOCATIONS = [
+  { label: 'KNUST • Ayeduase / Boadi', query: 'KNUST' },
+  { label: 'UG Legon • East Legon', query: 'Legon' },
+  { label: 'UCC • Cape Coast', query: 'UCC' },
+  { label: 'UPSA • Madina', query: 'Madina' },
+  { label: 'Accra • Spintex / Osu', query: 'Accra' },
+  { label: 'Kumasi • Ahodwo', query: 'Kumasi' },
 ];
 
-const PROPERTY_CATEGORIES = [
-  { id: 'Hostel', name: 'University Hostels', tag: 'Academic Year Billing', icon: GraduationCap, count: '140+ Halls & Hostels' },
-  { id: 'Single Room', name: 'Self-Contained Studios', tag: 'Private Kitchen & Bath', icon: BedDouble, count: '85+ Available' },
-  { id: 'Apartment', name: '1–3 Bed Residential Flats', tag: 'Professionals & Families', icon: Building, count: '62+ Units' },
-  { id: 'Homestay', name: 'Verified Room Shares', tag: 'Split Rent via Escrow', icon: Users, count: '94+ Verified Peers' },
+const PROPERTY_TYPES = [
+  { value: '', label: 'All Accommodation Types' },
+  { value: 'HOSTEL', label: 'Student Hostel' },
+  { value: 'APARTMENT', label: 'Self-Contained Apartment' },
+  { value: 'STUDIO', label: 'Studio Unit' },
+  { value: 'CHAMBER_AND_HALL', label: 'Chamber & Hall' },
+  { value: 'SINGLE_ROOM', label: 'Single Room' },
+  { value: 'HOUSE', label: 'Full Residential House' },
+];
+
+const BUDGET_PRESETS = [
+  { value: '', label: 'Any Budget (GH₵)' },
+  { value: '0-2000', label: 'Up to GH₵ 2,000' },
+  { value: '2000-4000', label: 'GH₵ 2,000 – GH₵ 4,000' },
+  { value: '4000-7500', label: 'GH₵ 4,000 – GH₵ 7,500' },
+  { value: '7500-50000', label: 'GH₵ 7,500+' },
 ];
 
 export default function Home() {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [propertyType, setPropertyType] = useState('');
+  const [budgetRange, setBudgetRange] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'ALL' | 'HOSTEL' | 'RESIDENTIAL' | 'BUDGET'>('ALL');
 
-  // Search State
-  const [activeType, setActiveType] = useState<string>('ALL');
-  const [locationInput, setLocationInput] = useState('');
-  const [budgetTier, setBudgetTier] = useState('');
-  const [billingPeriod, setBillingPeriod] = useState('');
-
-  // Fetch Featured Listings
-  const { data: propertiesData, isLoading: isPropsLoading } = useQuery<{ properties: Property[] }>({
-    queryKey: ['properties', 'featured'],
+  const { data: userResponse } = useQuery({
+    queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const res = await api.get('/properties');
-      return res.data;
-    }
+      const { data } = await api.get('/auth/me');
+      return data;
+    },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const featuredListings = (propertiesData?.properties || []).slice(0, 6);
+  const user = userResponse?.user;
+
+  const { data: propertiesData, isLoading: isLoadingProperties } = useQuery({
+    queryKey: ['featured-properties'],
+    queryFn: async () => {
+      const { data } = await api.get('/properties?limit=12');
+      return data;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const allListings: any[] = useMemo(() => {
+    return propertiesData?.data || propertiesData?.properties || [];
+  }, [propertiesData]);
+
+  const filteredListings = useMemo(() => {
+    if (activeCategory === 'HOSTEL') {
+      return allListings.filter((p) => p.type === 'HOSTEL' || p.targetAudience === 'STUDENTS').slice(0, 6);
+    }
+    if (activeCategory === 'RESIDENTIAL') {
+      return allListings.filter((p) => p.type !== 'HOSTEL').slice(0, 6);
+    }
+    if (activeCategory === 'BUDGET') {
+      return [...allListings].sort((a, b) => Number(a.price || 0) - Number(b.price || 0)).slice(0, 6);
+    }
+    return allListings.slice(0, 6);
+  }, [allListings, activeCategory]);
+
+  const spotlightProperty = allListings[0] || null;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (locationInput.trim()) params.append('location', locationInput.trim());
-    if (activeType !== 'ALL') params.append('type', activeType);
-    if (billingPeriod) params.append('pricePeriod', billingPeriod);
-    if (budgetTier) {
-      if (budgetTier === 'under2k') params.append('maxPrice', '2000');
-      if (budgetTier === '2k-5k') { params.append('minPrice', '2000'); params.append('maxPrice', '5000'); }
-      if (budgetTier === '5k-10k') { params.append('minPrice', '5000'); params.append('maxPrice', '10000'); }
-      if (budgetTier === 'above10k') params.append('minPrice', '10000');
+    if (searchQuery.trim()) params.append('location', searchQuery.trim());
+    if (propertyType) params.append('type', propertyType);
+    if (budgetRange) {
+      const [min, max] = budgetRange.split('-');
+      if (min) params.append('minPrice', min);
+      if (max) params.append('maxPrice', max);
     }
-    router.push('/properties?' + params.toString());
+    router.push(`/properties?${params.toString()}`);
   };
 
-  const handleCampusDirect = (query: string) => {
-    router.push('/properties?location=' + encodeURIComponent(query));
+  const formatPeriod = (period?: string, type?: string) => {
+    if (period === 'PER_MONTH') return '/ month';
+    if (period === 'PER_SEMESTER') return '/ semester';
+    if (period === 'PER_YEAR' || period === 'PER_ACADEMIC_YEAR') {
+      return type === 'HOSTEL' ? '/ academic yr' : '/ year';
+    }
+    return type === 'HOSTEL' ? '/ academic yr' : '/ year';
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FBFBFC] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
-      
-      {/* ════════════════════════════════════════════════════════════════
-          1. EDITORIAL HERO SECTION: GROUNDED & ARCHITECTURAL
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="relative pt-12 pb-16 lg:pt-18 lg:pb-24 border-b border-zinc-200/80 dark:border-zinc-800/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            
-            {/* Left Column: Clear Editorial Messaging */}
+    <div className="flex flex-col min-h-screen bg-[#FAF9F6] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 selection:bg-[#0F5132] selection:text-white">
+      {/* 1. HERO SECTION */}
+      <section className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24 border-b border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-[0.025] dark:opacity-[0.04] pointer-events-none"
+          style={{
+            backgroundImage: 'radial-gradient(#0F5132 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+          }}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            {/* Left Copy & Search */}
             <div className="lg:col-span-7 space-y-6">
-              
-              {/* Editorial Category Eyebrow */}
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide uppercase">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>Direct Landlord &amp; Hostel Network</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/5 dark:bg-emerald-400/10 border border-[#0F5132]/20 dark:border-emerald-400/20">
+                <span className="w-2 h-2 rounded-full bg-[#0F5132] dark:bg-emerald-400" />
+                <span className="text-xs font-semibold text-[#0F5132] dark:text-emerald-300 tracking-wide">
+                  Akwaaba Homes — Trusted Homes for Students &amp; Residents
+                </span>
               </div>
 
-              {/* Editorial Title */}
-              <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-zinc-950 dark:text-white tracking-tight leading-[1.12]">
-                Verified Housing in Ghana. <br />
-                <span className="text-[#0F5132] dark:text-[#198754]">
-                  Zero Roadside Agent Fees.
-                </span>
+              <h1 className="text-3xl sm:text-5xl lg:text-[3.35rem] font-extrabold tracking-tight text-zinc-950 dark:text-white leading-[1.1]">
+                Find safe, transparent accommodation across{' '}
+                <span className="text-[#0F5132] dark:text-emerald-400">Ghana.</span>
               </h1>
 
-              {/* Sub-copy */}
-              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-xl leading-relaxed">
-                Connect directly with certified property owners, landlords, and facility managers across Accra, Kumasi, Takoradi, and nationwide. 
-                Pay securely via MoMo escrow — funds are released only after on-site key handover and condition sign-off.
+              <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 max-w-2xl leading-relaxed">
+                Browse accredited student hostels, self-contained apartments, and residential homes near major campuses and city centres. Review real utility terms, sign digital leases, and pay safely through escrow.
               </p>
 
-              {/* ── SOLID EDITORIAL SEARCH MODULE ── */}
-              <div className="pt-2">
-                <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm">
-                  
-                  {/* Category Filter Pills */}
-                  <div className="flex items-center gap-1.5 pb-3 border-b border-zinc-100 dark:border-zinc-800 overflow-x-auto scrollbar-none">
-                    {[
-                      { id: 'ALL', label: 'All Listings' },
-                      { id: 'Hostel', label: 'Student Hostels' },
-                      { id: 'Single Room', label: 'Self-Contain' },
-                      { id: 'Apartment', label: 'Apartments' },
-                    ].map((tab) => (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => setActiveType(tab.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          activeType === tab.id
-                            ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-950'
-                            : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                        }`}
+              {/* Structured Multi-Field Search Panel */}
+              <form
+                onSubmit={handleSearch}
+                aria-label="Search accommodations"
+                className="bg-white dark:bg-[#12151E] p-3 rounded-2xl border border-zinc-200/90 dark:border-zinc-800 shadow-[0_12px_36px_-10px_rgba(0,0,0,0.08)]"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                  {/* Location Input */}
+                  <div className="sm:col-span-5 flex items-center px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border border-transparent focus-within:border-[#0F5132] dark:focus-within:border-emerald-500 transition-colors">
+                    <MapPin className="w-4 h-4 text-zinc-400 mr-2.5 shrink-0" />
+                    <div className="w-full">
+                      <label htmlFor="hero-location-search" className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Location or Campus
+                      </label>
+                      <input
+                        id="hero-location-search"
+                        type="text"
+                        placeholder="KNUST, Legon, East Legon, UCC..."
+                        className="w-full bg-transparent text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none text-sm font-medium mt-0.5"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Property Type Select */}
+                  <div className="sm:col-span-4 flex items-center px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border border-transparent focus-within:border-[#0F5132] dark:focus-within:border-emerald-500 transition-colors">
+                    <Building2 className="w-4 h-4 text-zinc-400 mr-2.5 shrink-0" />
+                    <div className="w-full">
+                      <label htmlFor="hero-property-type" className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Property Type
+                      </label>
+                      <select
+                        id="hero-property-type"
+                        value={propertyType}
+                        onChange={(e) => setPropertyType(e.target.value)}
+                        className="w-full bg-transparent text-zinc-900 dark:text-white focus:outline-none text-sm font-medium mt-0.5 cursor-pointer"
                       >
-                        {tab.label}
+                        {PROPERTY_TYPES.map((t) => (
+                          <option key={t.value} value={t.value} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white">
+                            {t.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Budget Select */}
+                  <div className="sm:col-span-3 flex items-center px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/70 border border-transparent focus-within:border-[#0F5132] dark:focus-within:border-emerald-500 transition-colors">
+                    <Wallet className="w-4 h-4 text-zinc-400 mr-2 shrink-0" />
+                    <div className="w-full">
+                      <label htmlFor="hero-budget" className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                        Budget
+                      </label>
+                      <select
+                        id="hero-budget"
+                        value={budgetRange}
+                        onChange={(e) => setBudgetRange(e.target.value)}
+                        className="w-full bg-transparent text-zinc-900 dark:text-white focus:outline-none text-sm font-medium mt-0.5 cursor-pointer"
+                      >
+                        {BUDGET_PRESETS.map((b) => (
+                          <option key={b.value} value={b.value} className="bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white">
+                            {b.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800/80">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-[11px] font-semibold text-zinc-400 mr-1">Popular:</span>
+                    {POPULAR_LOCATIONS.map((loc) => (
+                      <button
+                        key={loc.query}
+                        type="button"
+                        onClick={() => router.push(`/properties?location=${encodeURIComponent(loc.query)}`)}
+                        className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-emerald-50 text-zinc-700 hover:text-[#0F5132] dark:bg-zinc-800/80 dark:text-zinc-300 dark:hover:bg-emerald-950/50 dark:hover:text-emerald-300 transition-colors cursor-pointer"
+                      >
+                        {loc.label}
                       </button>
                     ))}
                   </div>
 
-                  {/* Form Inputs Grid */}
-                  <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
-                    
-                    {/* Location Input */}
-                    <div className="space-y-1">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Campus or Area
-                      </label>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
-                        <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <input
-                          type="text"
-                          value={locationInput}
-                          onChange={(e) => setLocationInput(e.target.value)}
-                          placeholder="e.g. Ayeduase, East Legon..."
-                          className="w-full bg-transparent border-none outline-none text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Price Range */}
-                    <div className="space-y-1">
-                      <label className="block text-[11px] font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Budget Range
-                      </label>
-                      <div className="flex items-center gap-2 px-3 py-2 bg-zinc-50 dark:bg-zinc-800/60 rounded-xl border border-zinc-200 dark:border-zinc-700/60">
-                        <DollarSign className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <select
-                          value={budgetTier}
-                          onChange={(e) => setBudgetTier(e.target.value)}
-                          aria-label="Select Budget Range"
-                          className="w-full bg-transparent border-none outline-none text-xs font-medium text-zinc-900 dark:text-white cursor-pointer [&>option]:bg-white [&>option]:text-zinc-900 dark:[&>option]:bg-zinc-900 dark:[&>option]:text-white"
-                        >
-                          <option value="">Any Price</option>
-                          <option value="under2k">Under GH₵ 2,000</option>
-                          <option value="2k-5k">GH₵ 2,000 – 5,000</option>
-                          <option value="5k-10k">GH₵ 5,000 – 10,000</option>
-                          <option value="above10k">Above GH₵ 10,000</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Search Trigger */}
-                    <div className="flex items-end">
-                      <button
-                        type="submit"
-                        className="w-full py-2.5 px-4 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
-                      >
-                        <Search className="w-4 h-4" />
-                        <span>Find Listings</span>
-                      </button>
-                    </div>
-
-                  </form>
-                </div>
-              </div>
-
-              {/* Quick Campus Chips */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                <span className="font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                  <GraduationCap className="w-3.5 h-3.5 text-[#0F5132] dark:text-[#198754]" /> Major Hubs:
-                </span>
-                {POPULAR_CAMPUSES.map((campus) => (
                   <button
-                    key={campus.name}
-                    type="button"
-                    onClick={() => handleCampusDirect(campus.query)}
-                    className="px-2.5 py-1 rounded-md bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 text-zinc-700 dark:text-zinc-300 font-medium transition-colors cursor-pointer"
+                    type="submit"
+                    className="px-6 py-3 rounded-xl font-bold text-white bg-[#0F5132] hover:bg-[#0b3e26] transition-all flex items-center justify-center gap-2 text-sm shadow-sm shrink-0 cursor-pointer"
                   >
-                    {campus.name}
+                    <Search className="w-4 h-4" />
+                    <span>Search Homes</span>
                   </button>
-                ))}
-              </div>
+                </div>
+              </form>
 
-            </div>
-
-            {/* Right Column: Architectural Photography Preview */}
-            <div className="lg:col-span-5 relative">
-              <div className="rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm relative">
-                <div className="relative h-96 w-full">
-                  <img
-                    src="/images/sunset-bg.png"
-                    alt="Verified student accommodation complex in Ghana"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-zinc-950/20 to-transparent" />
-
-                  {/* Overlaid Data Tag */}
-                  <div className="absolute bottom-4 left-4 right-4 p-4 rounded-xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md flex items-center justify-between">
-                    <div>
-                      <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Direct Landlord Verified
-                      </div>
-                      <div className="text-sm font-black text-zinc-900 dark:text-white mt-0.5">
-                        Unity Palms Student Hostel
-                      </div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Ayeduase Gate, KNUST • 400m from Campus
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-zinc-400 line-through">GH₵ 3,800</div>
-                      <div className="text-base font-black text-[#0F5132] dark:text-emerald-400">
-                        GH₵ 3,200
-                        <span className="text-[10px] font-normal text-zinc-500"> / Acad. Yr</span>
-                      </div>
-                    </div>
+              {/* Key Platform Commitments */}
+              <div className="grid grid-cols-3 gap-4 pt-2 border-t border-zinc-200/70 dark:border-zinc-800/70">
+                <div className="flex items-start gap-2.5">
+                  <Lock className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-white">Escrow Rent Protection</p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Funds held until check-in</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <FileText className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-white">Act 220 Digital Leases</p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Clear terms &amp; deposit rules</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-zinc-900 dark:text-white">Transparent Listings</p>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Upfront ECG &amp; water policies</p>
                   </div>
                 </div>
               </div>
             </div>
 
-          </div>
+            {/* Right Visual Showcase (Backed by Real Listing or Honest Platform Card) */}
+            <div className="lg:col-span-5">
+              <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xl bg-zinc-900 aspect-[4/4.6]">
+                <Image
+                  src={
+                    spotlightProperty?.images?.[0] ||
+                    'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=1200&q=85'
+                  }
+                  alt={spotlightProperty?.title || 'Modern residential accommodation in Ghana'}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-[11px] font-semibold border border-white/15">
+                    {spotlightProperty ? 'Live Marketplace Listing' : 'Escrow-Protected Marketplace'}
+                  </span>
+                  {spotlightProperty?.landlord?.isVerifiedLandlord && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0F5132]/90 backdrop-blur-md text-white text-[11px] font-semibold">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                      KYC Verified Host
+                    </span>
+                  )}
+                </div>
+
+                {spotlightProperty ? (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-[#12151E]/95 backdrop-blur-md p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
+                          {spotlightProperty.type?.replace(/_/g, ' ') || 'ACCOMMODATION'}
+                        </p>
+                        <h2 className="font-bold text-zinc-900 dark:text-white text-base truncate mt-0.5">
+                          {spotlightProperty.title}
+                        </h2>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-0.5 truncate">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                          {spotlightProperty.location}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-mono font-extrabold text-zinc-950 dark:text-white text-base">
+                          GH₵ {Number(spotlightProperty.price || 0).toLocaleString()}
+                        </p>
+                        <p className="text-[10px] text-zinc-500">
+                          {formatPeriod(spotlightProperty.pricePeriod, spotlightProperty.type)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 pt-2.5 border-t border-zinc-200/70 dark:border-zinc-800 flex items-center justify-between">
+                      <span className="text-[11px] text-zinc-600 dark:text-zinc-400">
+                        {spotlightProperty.remainingCapacity > 0
+                          ? `${spotlightProperty.remainingCapacity} space(s) open`
+                          : 'Available for inspection'}
+                      </span>
+                      <Link
+                        href={`/properties/${spotlightProperty.id}`}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                      >
+                        View details <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-[#12151E]/95 backdrop-blur-md p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg">
+                    <p className="text-xs font-bold text-zinc-900 dark:text-white">
+                      Verified Student Hostels &amp; Private Rentals
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                      Explore available accommodations with transparent pricing in GH₵ and digital tenancy protection.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          2. AUDITED TRUST & STATUTORY SECURITY STRIP
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-[#12151D]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
-                <Lock className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Escrow Protected</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Rent released after on-site key handover</p>
-              </div>
+      {/* 2. QUICK BROWSE BY ACCOMMODATION CATEGORY */}
+      <section className="py-12 bg-white dark:bg-[#0E1017] border-b border-zinc-200/70 dark:border-zinc-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-3">
+            <div>
+              <p className="text-xs font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold">
+                Browse by Category
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold text-zinc-950 dark:text-white tracking-tight mt-0.5">
+                Tailored for Campus &amp; City Living
+              </h2>
             </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Identity Verified</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">Verified landlord &amp; caretaker accounts</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
-                <Zap className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Direct MoMo Payouts</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">MTN, Telecel Cash &amp; Bank Transfer</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-zinc-700">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Digital Tenancy Leases</div>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">E-signed agreements with statutory audit seals</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          3. REALITY CHECK: WHY AKWAABA BEATS ROADSIDE BROKERS
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] p-8 sm:p-10 shadow-xs">
-          
-          <div className="max-w-2xl mb-8">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0F5132] dark:text-[#198754]">
-              The Ghana Rental Reality
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1">
-              Engineered to Fix the Roadside Agent Crisis
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-2 leading-relaxed">
-              In Ghana, finding accommodation traditionally meant paying non-refundable "viewing fees" to informal roadside agents, 
-              only to be shown substandard rooms or face double-allocation scams. Here is how Akwaaba Homes changes the game:
-            </p>
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+            >
+              <span>Open Full Search &amp; Filters</span>
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-700/60 space-y-3">
-              <div className="text-xs font-bold text-red-600 dark:text-red-400 flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4" /> Old Roadside Agent Model
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Link
+              href="/properties?type=HOSTEL"
+              className="group p-5 rounded-xl bg-[#FAF9F6] dark:bg-[#12151E] border border-zinc-200/90 dark:border-zinc-800 hover:border-[#0F5132] dark:hover:border-emerald-500/60 transition-all flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-950/10 dark:bg-emerald-400/10 flex items-center justify-center text-[#0F5132] dark:text-emerald-400">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <ul className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
-                <li className="line-through">GH₵ 100–200 upfront viewing fees before inspection</li>
-                <li className="line-through">10% agent commission added onto your rent</li>
-                <li className="line-through">Unlawful demands for 2–3 years advance payment</li>
-                <li className="line-through">No written lease or statutory eviction protection</li>
-              </ul>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-3 md:col-span-2">
-              <div className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" /> The Akwaaba Homes Standard
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-zinc-700 dark:text-zinc-300">
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Zero viewing fees:</strong> Inspect photos, 360 virtual tours, and room dimensions for free online.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Direct Host Linkage:</strong> Deal directly with verified landlords and on-site caretakers.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Digital Lease:</strong> Verified tenancy agreement signed electronically.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <span><strong>Escrow Safeguard:</strong> Landlord receives payout only when you inspect the room and sign off.</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          4. BROWSE BY ACCOMMODATION TYPE (EDITORIAL TILES)
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-black text-zinc-950 dark:text-white tracking-tight">
-              Accommodations by Category
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Select verified rental homes, apartments, executive studios, or student accommodations.
-            </p>
-          </div>
-          <Link
-            href="/properties"
-            className="text-xs font-bold text-[#0F5132] dark:text-[#198754] hover:underline flex items-center gap-1"
-          >
-            All Listings <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PROPERTY_CATEGORIES.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <Link
-                key={cat.id}
-                href={`/properties?type=${encodeURIComponent(cat.id)}`}
-                className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-700 transition-all group shadow-xs hover:shadow-sm"
-              >
-                <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-800 dark:text-zinc-200 group-hover:bg-[#0F5132] group-hover:text-white transition-colors mb-3">
-                  <Icon className="w-5 h-5" />
-                </div>
-                <h3 className="font-extrabold text-sm text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                  {cat.name}
-                </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-                  {cat.tag}
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white text-sm">Student Hostels</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  1-in-a-room to 4-in-a-room campus hostels with bed-level booking.
                 </p>
-                <div className="mt-3 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                  {cat.count}
+              </div>
+            </Link>
+
+            <Link
+              href="/properties?type=APARTMENT"
+              className="group p-5 rounded-xl bg-[#FAF9F6] dark:bg-[#12151E] border border-zinc-200/90 dark:border-zinc-800 hover:border-[#0F5132] dark:hover:border-emerald-500/60 transition-all flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-950/10 dark:bg-emerald-400/10 flex items-center justify-center text-[#0F5132] dark:text-emerald-400">
+                  <Building2 className="w-5 h-5" />
                 </div>
-              </Link>
-            );
-          })}
+                <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white text-sm">Self-Contained Apartments</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Private apartments and studios for professionals, couples, and families.
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/properties?type=CHAMBER_AND_HALL"
+              className="group p-5 rounded-xl bg-[#FAF9F6] dark:bg-[#12151E] border border-zinc-200/90 dark:border-zinc-800 hover:border-[#0F5132] dark:hover:border-emerald-500/60 transition-all flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-950/10 dark:bg-emerald-400/10 flex items-center justify-center text-[#0F5132] dark:text-emerald-400">
+                  <HomeIcon className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white text-sm">Chamber &amp; Hall / Single Rooms</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Practical Ghanaian residential units with transparent advance terms.
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href={user ? '/dashboard/roommates' : '/login'}
+              className="group p-5 rounded-xl bg-[#FAF9F6] dark:bg-[#12151E] border border-zinc-200/90 dark:border-zinc-800 hover:border-[#0F5132] dark:hover:border-emerald-500/60 transition-all flex flex-col justify-between"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <ArrowRight className="w-4 h-4 text-zinc-400 group-hover:text-amber-600 dark:group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <div>
+                <h3 className="font-bold text-zinc-900 dark:text-white text-sm">Roommate Matcher</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  Pair with compatible students or co-tenants by study and sleep habits.
+                </p>
+              </div>
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          5. FEATURED LISTINGS: DENSE WITH AUTHENTIC GHANAIAN SPECS
-         ════════════════════════════════════════════════════════════════ */}
+      {/* 3. FEATURED & VERIFIED LISTINGS */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-[#0F5132] dark:text-[#198754]">
-              Pre-Inspected &amp; Available
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1">
-              Featured Verified Accommodations
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-              Genuine listings with real photos, transparent billing, and zero agent surcharge.
+            <p className="text-xs font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold mb-1">
+              Live Accommodations
             </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-zinc-950 dark:text-white tracking-tight">
+              Available Properties Across Ghana
+            </h2>
           </div>
 
-          <Link
-            href="/properties"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-colors shrink-0"
-          >
-            <span>Explore All Accommodations</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        {/* Listings Grid */}
-        {isPropsLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((n) => (
-              <div key={n} className="h-84 rounded-2xl bg-zinc-200 dark:bg-zinc-800/50 animate-pulse" />
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200/80 dark:border-zinc-800">
+            {[
+              { id: 'ALL', label: 'All Featured' },
+              { id: 'HOSTEL', label: 'Student Hostels' },
+              { id: 'RESIDENTIAL', label: 'Apartments & Homes' },
+              { id: 'BUDGET', label: 'Lowest Price First' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveCategory(tab.id as any)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  activeCategory === tab.id
+                    ? 'bg-[#0F5132] text-white shadow-xs'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
-        ) : featuredListings.length === 0 ? (
-          <div className="p-12 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 text-center space-y-3">
-            <Building className="w-10 h-10 text-zinc-400 mx-auto" />
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-white">All Properties Reserved</h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
-              New verified hostels and rental apartments are inspected and onboarded weekly.
-            </p>
+        </div>
+
+        {isLoadingProperties ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
+              <div
+                key={n}
+                className="bg-white dark:bg-[#12151E] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-pulse"
+              >
+                <div className="h-52 bg-zinc-200 dark:bg-zinc-800" />
+                <div className="p-5 space-y-3">
+                  <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4" />
+                  <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
+                  <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded w-full mt-4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredListings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredListings.map((prop: any) => {
+              const amenitiesList: string[] = Array.isArray(prop.amenities)
+                ? prop.amenities
+                : Array.isArray(prop.includedUtilities)
+                ? prop.includedUtilities
+                : [];
+              const isVerifiedHost = Boolean(prop.landlord?.isVerifiedLandlord);
+
+              return (
+                <article
+                  key={prop.id}
+                  className="group relative bg-white dark:bg-[#12151E] rounded-2xl overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 hover:border-[#0F5132]/50 dark:hover:border-emerald-500/50 transition-all duration-200 flex flex-col shadow-xs hover:shadow-lg"
+                >
+                  {/* Wishlist Button placed outside <Link> to satisfy HTML5 & WCAG 2.2 AA */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <WishlistButton propertyId={prop.id} />
+                  </div>
+
+                  <Link href={`/properties/${prop.id}`} className="flex flex-col flex-1 focus-visible:outline-none">
+                    {/* Image Container */}
+                    <div className="relative h-52 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
+                      <Image
+                        src={
+                          prop.images && prop.images.length > 0
+                            ? prop.images[0]
+                            : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80'
+                        }
+                        alt={prop.title}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                      {/* Top Left Badges */}
+                      <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 pr-12">
+                        <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-zinc-900/80 text-white backdrop-blur-md">
+                          {prop.type?.replace(/_/g, ' ') || 'RESIDENCE'}
+                        </span>
+                        {isVerifiedHost && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#0F5132]/95 text-white backdrop-blur-md">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                            Verified Host
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bottom Left Availability / Rating */}
+                      <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
+                        <span className="font-medium bg-black/55 backdrop-blur-xs px-2.5 py-0.5 rounded-md">
+                          {prop.totalCapacity > 0
+                            ? prop.remainingCapacity > 0
+                              ? `${prop.remainingCapacity} bed(s) left`
+                              : 'Fully Booked'
+                            : prop.isAvailable
+                            ? 'Available Now'
+                            : 'Unavailable'}
+                        </span>
+                        {prop.avgRating && (
+                          <span className="inline-flex items-center gap-1 bg-black/65 backdrop-blur-xs px-2 py-0.5 rounded-md font-bold text-amber-300">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            {Number(prop.avgRating).toFixed(1)}
+                            {prop.reviewCount ? <span className="text-zinc-300 font-normal">({prop.reviewCount})</span> : null}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Content */}
+                    <div className="p-5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors line-clamp-1 mb-1">
+                          {prop.title}
+                        </h3>
+                        <p className="flex items-center text-zinc-500 dark:text-zinc-400 text-xs mb-3 line-clamp-1">
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-zinc-400 shrink-0" />
+                          {prop.location}
+                        </p>
+
+                        {/* Genuine Amenities from Property Data */}
+                        {amenitiesList.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5 mb-4">
+                            {amenitiesList.slice(0, 3).map((item, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/90 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium"
+                              >
+                                {item}
+                              </span>
+                            ))}
+                            {amenitiesList.length > 3 && (
+                              <span className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/90 text-zinc-500 text-[11px]">
+                                +{amenitiesList.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-1 mb-4">
+                            {prop.furnishing ? `${prop.furnishing.replace(/_/g, ' ')} • ` : ''}
+                            {prop.targetAudience ? `For ${prop.targetAudience.toLowerCase()}` : 'Direct landlord listing'}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-3.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-baseline justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
+                            Rent
+                          </span>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-mono font-extrabold text-zinc-950 dark:text-white">
+                              GH₵ {Number(prop.price || 0).toLocaleString()}
+                            </span>
+                            <span className="text-xs text-zinc-500">
+                              {formatPeriod(prop.pricePeriod, prop.type)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                          Inspect <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredListings.map((prop) => (
-              <div 
-                key={prop.id}
-                className="group rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+          <div className="text-center py-14 bg-white dark:bg-[#12151E] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-8">
+            <Building2 className="w-10 h-10 text-zinc-400 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-1">
+              No properties match this category yet
+            </h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs max-w-md mx-auto mb-4">
+              Switch categories above or explore the full property catalog.
+            </p>
+            <button
+              type="button"
+              onClick={() => setActiveCategory('ALL')}
+              className="px-4 py-2 rounded-lg text-xs font-bold bg-[#0F5132] text-white hover:bg-[#0b3e26] transition-colors cursor-pointer"
+            >
+              Show All Featured Homes
+            </button>
+          </div>
+        )}
+
+        <div className="mt-8 text-center">
+          <Link
+            href="/properties"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] dark:hover:border-emerald-400 text-xs font-bold text-zinc-900 dark:text-white transition-colors"
+          >
+            <span>View All Available Accommodations</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* 4. HOW AKWAABA HOMES WORKS (4-Step Process) */}
+      <section id="how-it-works" className="py-16 bg-white dark:bg-[#0E1017] border-y border-zinc-200/80 dark:border-zinc-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl mb-12">
+            <p className="text-xs font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold mb-1">
+              How It Works
+            </p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-zinc-950 dark:text-white tracking-tight">
+              From Campus Search to Safe Move-In
+            </h2>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+              Every booking on Akwaaba Homes follows a clear, verifiable process designed to protect students and residents from rental fraud.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                step: '01',
+                title: 'Search & Filter Honestly',
+                desc: 'Filter by university campus, neighbourhood, room occupancy (1-in-a-room to 4-in-a-room), furnishing, and budget in GH₵.',
+              },
+              {
+                step: '02',
+                title: 'Verify Rules & Utilities',
+                desc: 'Review real photos, ECG electricity meter type, water supply, gate curfew hours, and caution deposit requirements before applying.',
+              },
+              {
+                step: '03',
+                title: 'Sign Digital Lease & Pay Escrow',
+                desc: 'Once approved, review and sign your digital tenancy agreement and pay via Mobile Money or card into Paystack-backed escrow.',
+              },
+              {
+                step: '04',
+                title: 'Check In & Release Funds',
+                desc: 'Collect your keys at the property and confirm check-in on your dashboard before rent is released to the property owner.',
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="p-6 rounded-2xl bg-[#FAF9F6] dark:bg-[#12151E] border border-zinc-200/80 dark:border-zinc-800 flex flex-col justify-between"
               >
                 <div>
-                  {/* Photo Thumbnail */}
-                  <div className="relative h-50 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-                    <img 
-                      src={getImageUrl(prop.images?.[0]) || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                      alt={prop.title} 
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                    />
-                    
-                    {/* Top Type Tag */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 pointer-events-none">
-                      <span className="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-zinc-950/80 text-white backdrop-blur-xs">
-                        {prop.type}
-                      </span>
-                    </div>
-
-                    <div className="absolute top-3 right-3 pointer-events-auto">
-                      <WishlistButton propertyId={prop.id} />
-                    </div>
-
-                    {/* Price Tag Overlay */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                      <span className="px-2.5 py-1 rounded-lg bg-white/95 dark:bg-zinc-900/95 text-zinc-950 dark:text-white text-xs font-black shadow-xs">
-                        GH₵ {prop.price.toLocaleString()}
-                        <span className="text-[10px] font-normal text-zinc-500"> / {prop.pricePeriod || 'Year'}</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                        {prop.title}
-                      </h3>
-                      {prop.landlord?.isVerifiedLandlord && (
-                        <span title="Verified Host">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                        </span>
-                      )}
-                    </div>
-                    
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 line-clamp-1">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>{prop.location}</span>
-                    </p>
-
-                    {/* Ghanaian Utility & Housing Tags */}
-                    <div className="flex flex-wrap gap-1.5 pt-1.5 text-[10px] font-medium text-zinc-600 dark:text-zinc-400">
-                      {prop.rooms?.[0]?.roomType && (
-                        <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                          {prop.rooms[0].roomType}
-                        </span>
-                      )}
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                        Prepaid ECG
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800">
-                        Water Storage
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-4 pt-0">
-                  <Link
-                    href={`/properties/${prop.id}`}
-                    className="w-full py-2 rounded-xl bg-zinc-100 hover:bg-[#0F5132] text-zinc-900 hover:text-white dark:bg-zinc-800 dark:hover:bg-[#0F5132] dark:text-zinc-100 dark:hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <span>View Room Details</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
+                  <span className="inline-block font-mono text-xs font-extrabold px-2.5 py-1 rounded-md bg-emerald-950/10 dark:bg-emerald-400/10 text-[#0F5132] dark:text-emerald-400 mb-4">
+                    STEP {item.step}
+                  </span>
+                  <h3 className="text-base font-bold text-zinc-900 dark:text-white mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </section>
-
-      {/* ════════════════════════════════════════════════════════════════
-          6. EDITORIAL ROOMMATE COMPATIBILITY SECTION
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-zinc-900 text-white p-8 sm:p-12 relative overflow-hidden flex flex-col lg:flex-row items-center justify-between gap-8">
-          
-          <div className="space-y-4 max-w-xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/10 text-zinc-200 text-xs font-bold tracking-tight">
-              <Users className="w-3.5 h-3.5 text-amber-400" />
-              <span>Roommate Matcher Algorithm</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Split Campus Hostel Rent with Compatible Students.
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-              Living alone off-campus is expensive. Match with vetted student peers across KNUST, Legon, and UCC based on study habits, 
-              cleanliness standards, and sleep schedules. Split the room cost in half safely through digital lease escrow.
-            </p>
-            <div className="pt-2">
-              <Link
-                href="/dashboard/roommates"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition-colors shadow-xs"
-              >
-                <span>Find a Compatible Roommate</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 w-full lg:w-auto shrink-0 text-center">
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <div className="text-2xl font-black text-amber-400">GH₵ 1,800+</div>
-              <div className="text-[10px] text-zinc-400 mt-0.5">Average Yearly Savings</div>
-            </div>
-            <div className="p-4 rounded-xl bg-white/5 border border-white/10">
-              <div className="text-2xl font-black text-emerald-400">100%</div>
-              <div className="text-[10px] text-zinc-400 mt-0.5">Student ID Verified</div>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          7. DUAL PORTALS: LANDLORDS & HOSTEL CARETAKERS
-         ════════════════════════════════════════════════════════════════ */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Landlord Portal */}
-          <div className="p-8 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
-                <Building className="w-5 h-5" />
+      {/* 5. TRUST, ESCROW & RESIDENT PROTECTION */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-[#0F291E] text-white p-8 sm:p-12 border border-emerald-800/40 shadow-xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Resident Safeguards</span>
               </div>
-              <h3 className="text-xl font-black text-zinc-950 dark:text-white">For Property Owners &amp; Landlords</h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                List your residential properties, apartments, or student hostels. Fill vacancies without informal agent squabbles, manage statutory leases automatically, 
-                and receive automated MoMo payouts straight into your MTN or Telecel wallet.
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                Why Students &amp; Residents Book Through Akwaaba Homes
+              </h2>
+              <p className="text-sm text-emerald-100/80 leading-relaxed max-w-xl">
+                Informal agents often demand inspection fees or full rent advances before showing a real room. Akwaaba Homes replaces informal guesswork with documented leases, verified landlord badges, and escrow payment protection.
               </p>
-              <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Direct MoMo &amp; Bank Escrow Settlements</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Caretaker &amp; Porter Delegation Tools</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Digital Tenancy Agreements &amp; E-Signatures</li>
-              </ul>
+              <div className="pt-2 flex flex-wrap gap-3">
+                <Link
+                  href="/properties"
+                  className="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-xs transition-colors"
+                >
+                  Browse Accommodations
+                </Link>
+                <Link
+                  href="/faq"
+                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs border border-white/15 transition-colors"
+                >
+                  Read Frequently Asked Questions
+                </Link>
+              </div>
             </div>
 
-            <div className="pt-2">
-              <Link
-                href="/dashboard/landlord/new"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0F5132] hover:bg-[#0A3D24] transition-colors"
-              >
-                <span>List a Property</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <Lock className="w-5 h-5 text-amber-400 mb-2" />
+                <h3 className="text-sm font-bold text-white">Escrow Safeguard</h3>
+                <p className="text-xs text-emerald-100/75 mt-1">
+                  Your rent payment stays protected in escrow until your physical move-in is confirmed.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 mb-2" />
+                <h3 className="text-sm font-bold text-white">KYC Identity Checks</h3>
+                <p className="text-xs text-emerald-100/75 mt-1">
+                  Landlords and students can complete Ghana Card and Student ID verification for mutual trust.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <FileText className="w-5 h-5 text-amber-400 mb-2" />
+                <h3 className="text-sm font-bold text-white">Digital Tenancy PDF</h3>
+                <p className="text-xs text-emerald-100/75 mt-1">
+                  Every approved booking generates a downloadable tenancy agreement with clear terms.
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <HelpCircle className="w-5 h-5 text-emerald-400 mb-2" />
+                <h3 className="text-sm font-bold text-white">Dedicated Support</h3>
+                <p className="text-xs text-emerald-100/75 mt-1">
+                  Report listing discrepancies, maintenance issues, or booking questions directly from your portal.
+                </p>
+              </div>
             </div>
           </div>
-
-          {/* Caretaker Portal */}
-          <div className="p-8 rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 flex items-center justify-center border border-amber-100 dark:border-amber-800/40">
-                <Wrench className="w-5 h-5" />
-              </div>
-              <h3 className="text-xl font-black text-zinc-950 dark:text-white">For On-Site Hostel Caretakers</h3>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Conduct digital move-in condition checklists right on your phone. Record tenant signatures, track plumbing or electrical repair tickets, 
-                and log incoming packages with front-desk PIN clearance.
-              </p>
-              <ul className="space-y-1.5 text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Digital Room Handover Condition Checklist</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Work Order Management &amp; Repair Proof</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Front Desk Package &amp; Delivery Logging</li>
-              </ul>
-            </div>
-
-            <div className="pt-2">
-              <Link
-                href="/dashboard/caretaker"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-zinc-900 bg-amber-400 hover:bg-amber-300 transition-colors"
-              >
-                <span>Open Caretaker Hub</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      {/* ════════════════════════════════════════════════════════════════
-          8. EDITORIAL ARCHITECTURAL FOOTER
-         ════════════════════════════════════════════════════════════════ */}
-      <footer className="border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0B0D12] text-zinc-500 dark:text-zinc-400 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="font-black text-zinc-950 dark:text-white text-base tracking-tight">
-                  Akwaaba<span className="text-[#0F5132] dark:text-[#198754]">Homes</span>
+      {/* 6. COMPLETE FOOTER */}
+      <footer className="bg-white dark:bg-[#080A0F] border-t border-zinc-200 dark:border-zinc-800/80 pt-14 pb-12 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-zinc-200 dark:border-zinc-800">
+            {/* Brand Column */}
+            <div className="lg:col-span-2 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-md overflow-hidden border border-zinc-200 dark:border-zinc-700">
+                  <Image src="/logo.png" alt="Akwaaba Homes" width={28} height={28} className="object-cover" />
+                </div>
+                <span className="font-bold text-base tracking-tight text-zinc-950 dark:text-white">
+                  Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Ghana's trusted digital rental and accommodation marketplace. Escrow backed, zero middleman broker fraud, and verified digital tenancy agreements.
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
+                Akwaaba Homes — Trusted Homes for Students &amp; Residents. Connecting students, working professionals, and families with verified hostels and residential properties across Ghana.
+              </p>
+              <p className="text-[11px] font-mono text-zinc-400">
+                Accra • Kumasi • Cape Coast • Takoradi • Tamale
               </p>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Accommodations</div>
-              <ul className="space-y-1.5">
-                <li><Link href="/properties?type=Hostel" className="hover:text-zinc-950 dark:hover:text-white">University Hostels</Link></li>
-                <li><Link href="/properties?type=Single+Room" className="hover:text-zinc-950 dark:hover:text-white">Single Room Self-Contain</Link></li>
-                <li><Link href="/properties?type=Apartment" className="hover:text-zinc-950 dark:hover:text-white">Residential Apartments</Link></li>
-                <li><Link href="/dashboard/roommates" className="hover:text-zinc-950 dark:hover:text-white">Find a Roommate</Link></li>
-              </ul>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Campus Clusters</div>
-              <ul className="space-y-1.5">
-                <li><Link href="/properties?location=Ayeduase" className="hover:text-zinc-950 dark:hover:text-white">KNUST (Ayeduase / Kotei / Gaza)</Link></li>
-                <li><Link href="/properties?location=East+Legon" className="hover:text-zinc-950 dark:hover:text-white">UG Legon (East Legon / Okponglo)</Link></li>
-                <li><Link href="/properties?location=Amamoma" className="hover:text-zinc-950 dark:hover:text-white">UCC (Amamoma / Apewosika)</Link></li>
-                <li><Link href="/properties?location=Madina" className="hover:text-zinc-950 dark:hover:text-white">UPSA &amp; ATU</Link></li>
-              </ul>
-            </div>
-
-            <div className="space-y-2 text-xs">
-              <div className="font-bold text-zinc-950 dark:text-white uppercase tracking-wider text-[11px]">Portals &amp; Legal</div>
-              <ul className="space-y-1.5">
-                <li><Link href="/login" className="hover:text-zinc-950 dark:hover:text-white">Resident &amp; Student Sign In</Link></li>
-                <li><Link href="/dashboard/landlord" className="hover:text-zinc-950 dark:hover:text-white">Landlord Command Center</Link></li>
-                <li><Link href="/dashboard/caretaker" className="hover:text-zinc-950 dark:hover:text-white">Caretaker Operations Hub</Link></li>
-                <li><Link href="/admin/login" className="text-[#0F5132] dark:text-[#198754] font-bold">Admin Security Portal</Link></li>
-              </ul>
-            </div>
-
-          </div>
-
-          <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            {/* Explore Links */}
             <div>
-              &copy; {new Date().getFullYear()} Akwaaba Homes Ghana Ltd. All rights reserved.
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white mb-3">
+                Explore Homes
+              </h3>
+              <ul className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
+                <li><Link href="/properties" className="hover:text-[#0F5132] dark:hover:text-emerald-400">All Accommodations</Link></li>
+                <li><Link href="/properties?type=HOSTEL" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Student Hostels</Link></li>
+                <li><Link href="/properties?type=APARTMENT" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Apartments &amp; Studios</Link></li>
+                <li><Link href="/dashboard/wishlist" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Saved Properties</Link></li>
+                <li><Link href="/dashboard/roommates" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Roommate Matcher</Link></li>
+              </ul>
             </div>
-            <div className="flex items-center gap-4 text-zinc-500">
-              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5" /> 100% MoMo Escrow Verified
-              </span>
-              <span>Accra &amp; Kumasi, Ghana 🇬🇭</span>
+
+            {/* Support & Company */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white mb-3">
+                Support &amp; Platform
+              </h3>
+              <ul className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
+                <li><Link href="/about" className="hover:text-[#0F5132] dark:hover:text-emerald-400">About Akwaaba Homes</Link></li>
+                <li><Link href="/#how-it-works" className="hover:text-[#0F5132] dark:hover:text-emerald-400">How It Works</Link></li>
+                <li><Link href="/faq" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Frequently Asked Questions</Link></li>
+                <li><Link href="/help" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Help Center</Link></li>
+                <li><Link href="/contact" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Contact Support</Link></li>
+              </ul>
+            </div>
+
+            {/* Legal & Compliance */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white mb-3">
+                Legal &amp; Policies
+              </h3>
+              <ul className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
+                <li><Link href="/terms" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Terms of Service</Link></li>
+                <li><Link href="/privacy" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Privacy Policy</Link></li>
+                <li><Link href="/lease-agreement" className="hover:text-[#0F5132] dark:hover:text-emerald-400">Standard Tenancy Framework</Link></li>
+                <li><Link href="/dashboard/verification" className="hover:text-[#0F5132] dark:hover:text-emerald-400">KYC Verification Center</Link></li>
+              </ul>
             </div>
           </div>
 
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+            <p>© {new Date().getFullYear()} Akwaaba Homes Ghana. All rights reserved.</p>
+            <p>Compliant with the Ghana Rent Act, 1963 (Act 220) &amp; Data Protection Act, 2012 (Act 843).</p>
+          </div>
         </div>
       </footer>
-
     </div>
   );
 }

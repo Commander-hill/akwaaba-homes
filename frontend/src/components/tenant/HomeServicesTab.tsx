@@ -34,42 +34,42 @@ const SERVICE_CATALOG = [
     type: 'AC_SERVICING',
     title: 'AC Servicing & Gas Refill',
     icon: Wind,
-    rate: 'GHS 250',
+    rate: 'GH₵ 250',
     desc: 'Filter cleaning, coil wash, gas pressure check & refrigerant recharge.'
   },
   {
     type: 'DEEP_CLEANING',
     title: 'Deep Home & Move-In Cleaning',
     icon: Brush,
-    rate: 'GHS 350',
+    rate: 'GH₵ 350',
     desc: 'Thorough sanitization of bathrooms, kitchen grease degreasing & floor scrubbing.'
   },
   {
     type: 'PLUMBING',
     title: 'Plumbing Repair & Leak Fixing',
     icon: Droplets,
-    rate: 'GHS 180',
+    rate: 'GH₵ 180',
     desc: 'Water heater repair, faucet leaks, pipe unclogging & pressure valve calibration.'
   },
   {
     type: 'ELECTRICAL',
     title: 'Electrical & Inverter Diagnostics',
     icon: Zap,
-    rate: 'GHS 200',
+    rate: 'GH₵ 200',
     desc: 'Prepaid meter wiring, socket grounding, breaker troubleshooting & solar inverter check.'
   },
   {
     type: 'FUMIGATION',
     title: 'Fumigation & Pest Extermination',
     icon: Bug,
-    rate: 'GHS 400',
+    rate: 'GH₵ 400',
     desc: 'Non-toxic indoor/outdoor pest treatment against mosquitoes, termites & rodents.'
   },
   {
     type: 'WATER_FILTER',
     title: 'Borehole & RO Filter Replacement',
     icon: Droplets,
-    rate: 'GHS 220',
+    rate: 'GH₵ 220',
     desc: 'Sediment, carbon, and reverse osmosis cartridge replacement for clean running water.'
   }
 ];
@@ -85,31 +85,14 @@ export default function HomeServicesTab({ bookings = [] }: { bookings?: any[] })
   const [timeSlot, setTimeSlot] = useState('MORNING (8AM - 12PM)');
   const [notes, setNotes] = useState('');
 
-  const { data: propertiesData } = useQuery({
-    queryKey: ['properties', 'public-catalog'],
-    queryFn: async () => {
-      const res = await api.get('/properties');
-      return res.data;
-    }
-  });
-
-  const rawBookingProps = (bookings || [])
+  const activeProperties = (bookings || [])
+    .filter((b: any) => !['CANCELLED', 'REJECTED'].includes(b.status))
     .map((b: any) => ({
       id: b.propertyId || b.property?.id,
-      title: b.property?.title || 'Residential Residence',
+      title: b.property?.title || 'Booked Residence',
       location: b.property?.location || ''
     }))
     .filter((p: any) => Boolean(p.id));
-
-  const fallbackProps = (propertiesData?.properties || propertiesData?.data || [])
-    .map((p: any) => ({
-      id: p.id,
-      title: p.title || 'Residential Residence',
-      location: p.location || ''
-    }))
-    .filter((p: any) => Boolean(p.id));
-
-  const activeProperties = rawBookingProps.length > 0 ? rawBookingProps : fallbackProps;
 
   useEffect(() => {
     if (!propertyId && activeProperties.length > 0) {

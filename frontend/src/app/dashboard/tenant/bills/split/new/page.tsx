@@ -97,19 +97,22 @@ function BillSplitterContent() {
     }
   });
 
-  const { data: propertiesData, isLoading: loadingProperties } = useQuery({
-    queryKey: ['properties', 'public-catalog'],
+  const { data: bookingsData, isLoading: loadingProperties } = useQuery({
+    queryKey: ['tenant', 'bookings'],
     queryFn: async () => {
-      const res = await api.get('/properties');
+      const res = await api.get('/bookings/me');
       return res.data;
     }
   });
 
-  const propertyList: PropertyOption[] = (propertiesData?.properties || propertiesData?.data || []).map((p: any) => ({
-    id: p.id,
-    title: p.title || 'Residential Residence',
-    location: p.location || ''
-  }));
+  const propertyList: PropertyOption[] = (bookingsData?.bookings || [])
+    .filter((b: any) => !['CANCELLED', 'REJECTED'].includes(b.status))
+    .map((b: any) => ({
+      id: b.propertyId || b.property?.id,
+      title: b.property?.title || 'Booked Residence',
+      location: b.property?.location || ''
+    }))
+    .filter((p: PropertyOption) => Boolean(p.id));
 
   useEffect(() => {
     if (!propertyId && propertyList.length > 0) {

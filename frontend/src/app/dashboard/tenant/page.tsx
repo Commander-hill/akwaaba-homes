@@ -499,11 +499,11 @@ function TenantDashboardContent() {
               </Link>
 
               <Link
-                href={`/dashboard/agreements/${activeResidentBooking.id}`}
+                href={`/dashboard/tenant/bookings/${activeResidentBooking.id}`}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
               >
                 <FileText className="w-3.5 h-3.5 text-zinc-500" />
-                <span>View Lease</span>
+                <span>Booking &amp; Lease Details</span>
               </Link>
 
               <Link
@@ -520,8 +520,8 @@ function TenantDashboardContent() {
           <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             <div className="flex items-center gap-4 flex-wrap">
               <span>Term: <strong className="text-zinc-900 dark:text-zinc-100">{new Date(activeResidentBooking.startDate).toLocaleDateString()} – {new Date(activeResidentBooking.endDate).toLocaleDateString()}</strong></span>
-              {activeResidentBooking.price && (
-                <span>Advance: <strong className="text-zinc-900 dark:text-zinc-100">GH₵ {activeResidentBooking.price.toLocaleString()}</strong></span>
+              {(activeResidentBooking.price || activeResidentBooking.room?.price || activeResidentBooking.property?.price) && (
+                <span>Advance: <strong className="text-zinc-900 dark:text-zinc-100">GH₵ {Number(activeResidentBooking.price || activeResidentBooking.room?.price || activeResidentBooking.property?.price).toLocaleString()}</strong></span>
               )}
             </div>
 
@@ -547,11 +547,17 @@ function TenantDashboardContent() {
                 Booking Pending Landlord Confirmation: {pendingBooking.property?.title}
               </h2>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
-                Your rent deposit is secured in Paystack escrow. If the landlord does not confirm within the window, a <strong>100% automated refund</strong> is issued to your mobile money account.
+                Your booking application is awaiting landlord review. Open the booking details page to track approval, sign your digital lease, or cancel without penalty.
               </p>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href={`/dashboard/tenant/bookings/${pendingBooking.id}`}
+                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold transition"
+              >
+                Open Booking Details
+              </Link>
               <button
                 onClick={() => cancelPendingMutation.mutate(pendingBooking.id)}
                 disabled={cancelPendingMutation.isPending}
@@ -637,8 +643,8 @@ function TenantDashboardContent() {
         </div>
       </div>
 
-      {/* ── 5 RESIDENT PILLARS NAVIGATION ── */}
-      <div className="border-b border-zinc-200 dark:border-zinc-800 pb-3">
+      {/* ── MOBILE-ONLY 5 RESIDENT PILLARS NAVIGATION (Desktop uses Sidebar) ── */}
+      <div className="lg:hidden border-b border-zinc-200 dark:border-zinc-800 pb-3">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap py-1">
           <button
             type="button"
@@ -742,7 +748,7 @@ function TenantDashboardContent() {
       {activePillar === 'residence' && (
         <div className="space-y-6">
           {/* Subview Pills */}
-          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 overflow-x-auto">
             {[
               { id: 'home', label: 'Accommodation Dossier' },
               { id: 'lease', label: `Digital Leases (${agreements.length})` },
@@ -755,7 +761,7 @@ function TenantDashboardContent() {
                 type="button"
                 onClick={() => setSubview(sub.id)}
                 className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
+                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap",
                   subview === sub.id
                     ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
                     : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
@@ -792,6 +798,8 @@ function TenantDashboardContent() {
                   {activeBookings.map((b: any) => {
                     const isConfirmed = ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status);
                     const isPending = b.status === 'PENDING';
+                    const isApprovedUnpaid = b.status === 'APPROVED';
+                    const effectivePrice = b.price ?? b.room?.price ?? b.property?.price ?? 0;
 
                     return (
                       <div
@@ -801,9 +809,12 @@ function TenantDashboardContent() {
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="text-base font-bold text-zinc-950 dark:text-white">
+                              <Link
+                                href={`/dashboard/tenant/bookings/${b.id}`}
+                                className="text-base font-bold text-zinc-950 dark:text-white hover:text-[#0F5132] dark:hover:text-emerald-400 transition-colors"
+                              >
                                 {b.property?.title}
-                              </h3>
+                              </Link>
                               <span className={clsx(
                                 "px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase",
                                 isConfirmed && "bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
@@ -820,8 +831,8 @@ function TenantDashboardContent() {
 
                           <div className="text-right">
                             <span className="text-[10px] text-zinc-400 uppercase font-mono block">Rental Rate</span>
-                            <span className="text-sm font-bold text-zinc-900 dark:text-white">
-                              GH₵ {b.price ? b.price.toLocaleString() : '—'}
+                            <span className="text-sm font-mono font-bold text-zinc-900 dark:text-white">
+                              GH₵ {Number(effectivePrice).toLocaleString()}
                             </span>
                           </div>
                         </div>
@@ -830,7 +841,7 @@ function TenantDashboardContent() {
                           <div>
                             <span className="text-[10px] uppercase font-bold text-zinc-400 block">Unit Allocated</span>
                             <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                              {b.room?.roomType || 'Standard'} {b.roomUnit?.unitNumber ? `· Unit ${b.roomUnit.unitNumber}` : ''}
+                              {b.room?.roomType || b.room?.name || 'Standard'} {b.roomUnit?.name ? `· ${b.roomUnit.name}` : ''}
                             </span>
                           </div>
                           <div>
@@ -846,16 +857,36 @@ function TenantDashboardContent() {
                             </span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Escrow Reference</span>
+                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Booking Reference</span>
                             <span className="font-mono text-[11px] text-zinc-600 dark:text-zinc-400 truncate block">
-                              {b.id.slice(0, 12)}...
+                              #{b.id.slice(0, 8).toUpperCase()}
                             </span>
                           </div>
                         </div>
 
                         {/* Action buttons */}
                         <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/dashboard/tenant/bookings/${b.id}`}
+                              className="px-3.5 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold flex items-center gap-1.5 transition"
+                            >
+                              <span>Booking Details</span>
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                            </Link>
+
+                            {isApprovedUnpaid && b.leaseAgreement?.status === 'COMPLETED' && (
+                              <button
+                                type="button"
+                                onClick={() => payBookingMutation.mutate(b.id)}
+                                disabled={payBookingMutation.isPending}
+                                className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                              >
+                                <CreditCard className="w-3.5 h-3.5" />
+                                <span>Pay Escrow Now</span>
+                              </button>
+                            )}
+
                             {isConfirmed && (
                               <button
                                 onClick={() => setSelectedGatePassBooking(b)}

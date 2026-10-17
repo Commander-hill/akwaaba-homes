@@ -41,31 +41,14 @@ export default function VehicleParkingTab({ bookings = [] }: { bookings?: any[] 
   const [parkingSlotNumber, setParkingSlotNumber] = useState('');
   const [passType, setPassType] = useState('RESIDENT');
 
-  const { data: propertiesData } = useQuery({
-    queryKey: ['properties', 'public-catalog'],
-    queryFn: async () => {
-      const res = await api.get('/properties');
-      return res.data;
-    }
-  });
-
-  const rawBookingProps = (bookings || [])
+  const activeProperties = (bookings || [])
+    .filter((b: any) => !['CANCELLED', 'REJECTED'].includes(b.status))
     .map((b: any) => ({
       id: b.propertyId || b.property?.id,
-      title: b.property?.title || 'Residential Residence',
+      title: b.property?.title || 'Booked Residence',
       location: b.property?.location || ''
     }))
     .filter((p: any) => Boolean(p.id));
-
-  const fallbackProps = (propertiesData?.properties || propertiesData?.data || [])
-    .map((p: any) => ({
-      id: p.id,
-      title: p.title || 'Residential Residence',
-      location: p.location || ''
-    }))
-    .filter((p: any) => Boolean(p.id));
-
-  const activeProperties = rawBookingProps.length > 0 ? rawBookingProps : fallbackProps;
 
   useEffect(() => {
     if (!propertyId && activeProperties.length > 0) {

@@ -124,22 +124,31 @@ export const getPropertyReviews = async (req: Request, res: Response): Promise<v
 
     // Compute aggregate stats
     const allRatings = reviews.map(r => r.rating);
-    const avgRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length) : null;
+    const avgRating = allRatings.length > 0 ? Number((allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(2)) : null;
+    const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    for (const r of reviews) {
+      const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+      ratingDistribution[star] = (ratingDistribution[star] || 0) + 1;
+    }
 
-    res.status(200).json({ reviews: mappedReviews, avgRating, totalReviews: reviews.length });
+    res.status(200).json({ reviews: mappedReviews, avgRating, totalReviews: reviews.length, ratingDistribution });
   } catch (error) {
     console.error('Error fetching property reviews:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
 
-// Tenant, landlord, or admin flags a review for admin moderation
+// Authenticated tenant, landlord, or admin flags a review for admin moderation
 export const flagReview = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const userRole = req.user?.role;
     const { id } = req.params;
     const { reason } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ message: 'Authentication required to report a review' });
+      return;
+    }
 
     const review = await prisma.review.findUnique({
       where: { id },
@@ -147,15 +156,6 @@ export const flagReview = async (req: Request, res: Response): Promise<void> => 
     });
     if (!review) {
       res.status(404).json({ message: 'Review not found' });
-      return;
-    }
-
-    const isAuthor = review.authorId === userId;
-    const isLandlord = review.booking?.property?.landlordId === userId;
-    const isAdmin = userRole === 'ADMIN';
-
-    if (!isAuthor && !isLandlord && !isAdmin) {
-      res.status(403).json({ message: 'Forbidden: You do not have permission to flag this review' });
       return;
     }
 

@@ -60,16 +60,20 @@ export default function Navbar() {
 
   const navLinks = isStaff
     ? [
-        { name: 'Operations Hub', href: '/dashboard/caretaker' },
-        { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets' },
-        { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors' },
+        { name: 'Compound Command', href: '/dashboard/caretaker' },
+        { name: 'Repairs & Utilities', href: '/dashboard/caretaker?tab=maintenance' },
+        { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse' },
       ]
     : [
         { name: 'Home', href: '/' },
         { name: 'Browse Accommodations', href: '/properties' },
         ...(isLandlord 
           ? [{ name: 'My Properties', href: '/dashboard/landlord/properties' }]
-          : [{ name: 'Roommate Matcher', href: '/dashboard/roommates' }]
+          : [
+              { name: 'Saved Homes', href: '/dashboard/wishlist' },
+              { name: 'Roommate Matcher', href: '/dashboard/roommates' },
+              { name: 'Help & FAQ', href: '/faq' },
+            ]
         ),
       ];
   
@@ -97,14 +101,15 @@ export default function Navbar() {
       )}
 
       {/* Main Editorial Navigation Bar */}
-      <nav className={clsx(
-        "transition-all duration-200 border-b relative",
-        scrolled
-          ? "bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]"
-          : "bg-white dark:bg-[#0B0D12] border-zinc-200/80 dark:border-zinc-800/80"
-      )}>
-
-
+      <nav
+        aria-label="Primary Navigation"
+        className={clsx(
+          "transition-all duration-200 border-b relative",
+          scrolled
+            ? "bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]"
+            : "bg-white dark:bg-[#0B0D12] border-zinc-200/80 dark:border-zinc-800/80"
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             
@@ -132,7 +137,7 @@ export default function Navbar() {
                     Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
                   </span>
                   <span className="text-[9.5px] font-mono font-medium text-zinc-500 dark:text-zinc-400 tracking-wider uppercase mt-0.5">
-                    Ghana PropTech
+                    Trusted Homes • Ghana
                   </span>
                 </div>
               </Link>
@@ -146,9 +151,10 @@ export default function Navbar() {
                     <Link
                       key={link.name}
                       href={link.href}
+                      aria-current={isActive ? 'page' : undefined}
                       id={isProperties ? 'tour-nav-properties' : undefined}
                       className={clsx(
-                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap",
+                        "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600",
                         isActive
                           ? "text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
                           : "text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50"

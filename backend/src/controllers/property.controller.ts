@@ -200,7 +200,7 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
 export const getProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, pricePeriod, limit = 20, page = 1 } = req.query;
+    const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, pricePeriod, sort, limit = 20, page = 1 } = req.query;
 
     const cacheKey = `properties_${JSON.stringify(req.query)}`;
     const cachedData = appCache.get(cacheKey);
@@ -208,6 +208,15 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
     if (cachedData) {
       res.status(200).json(cachedData);
       return;
+    }
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (sort === 'price_asc') {
+      orderBy = { price: 'asc' };
+    } else if (sort === 'price_desc') {
+      orderBy = { price: 'desc' };
+    } else if (sort === 'newest') {
+      orderBy = { createdAt: 'desc' };
     }
 
     const queryOptions: any = {
@@ -221,7 +230,7 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
       },
       skip: (Number(page) - 1) * Number(limit),
       take: Number(limit),
-      orderBy: { createdAt: 'desc' },
+      orderBy,
     };
 
     if (isAvailable !== undefined) {
@@ -275,37 +284,78 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
         include: { 
           rooms: true,
           landlord: {
-            select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true }
+            select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true, reputationScore: true }
           }
         }
       }),
       prisma.property.count({ where: queryOptions.where }),
     ]);
 
-    // Compute remaining capacity for each property
+    // Compute remaining capacity and review aggregates for each property
     const propertyIds = properties.map((p: any) => p.id);
-    const completedBookingCounts = await prisma.booking.groupBy({
-      by: ['propertyId'],
-      where: { propertyId: { in: propertyIds }, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } },
-      _count: { id: true }
-    });
+    const [completedBookingCounts, propertyReviews] = await Promise.all([
+      prisma.booking.groupBy({
+        by: ['propertyId'],
+        where: { propertyId: { in: propertyIds }, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } },
+        _count: { id: true }
+      }),
+      prisma.review.findMany({
+        where: {
+          booking: { propertyId: { in: propertyIds } },
+          isFlagged: false,
+          isModerated: false
+        },
+        select: {
+          rating: true,
+          booking: { select: { propertyId: true } }
+        }
+      })
+    ]);
+
     const bookingCountMap: Record<string, number> = {};
     completedBookingCounts.forEach((b: any) => { bookingCountMap[b.propertyId] = b._count.id; });
 
+    const reviewStatsMap: Record<string, { sum: number; count: number }> = {};
+    propertyReviews.forEach((r: any) => {
+      const propId = r.booking?.propertyId;
+      if (!propId) return;
+      if (!reviewStatsMap[propId]) reviewStatsMap[propId] = { sum: 0, count: 0 };
+      reviewStatsMap[propId].sum += r.rating;
+      reviewStatsMap[propId].count += 1;
+    });
+
+    let mappedList = properties.map((p: any) => {
+      const parsed = parseProperty(p);
+      let totalCapacity = 0;
+      if (p.rooms && Array.isArray(p.rooms)) {
+        totalCapacity = p.rooms.reduce((acc: number, r: any) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
+      }
+      const completedCount = bookingCountMap[p.id] || 0;
+      const rStats = reviewStatsMap[p.id];
+      const avgRating = rStats && rStats.count > 0 ? Number((rStats.sum / rStats.count).toFixed(2)) : null;
+      const reviewCount = rStats ? rStats.count : 0;
+
+      return {
+        ...parsed,
+        totalCapacity,
+        remainingCapacity: Math.max(0, totalCapacity - completedCount),
+        avgRating,
+        reviewCount,
+      };
+    });
+
+    if (sort === 'rating') {
+      mappedList = mappedList.sort((a: any, b: any) => {
+        const rA = a.avgRating ?? -1;
+        const rB = b.avgRating ?? -1;
+        if (rB !== rA) return rB - rA;
+        return (b.reviewCount || 0) - (a.reviewCount || 0);
+      });
+    }
+
     const responseData = {
-      data: properties.map((p: any) => {
-        const parsed = parseProperty(p);
-        let totalCapacity = 0;
-        if (p.rooms && Array.isArray(p.rooms)) {
-          totalCapacity = p.rooms.reduce((acc: number, r: any) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
-        }
-        const completedCount = bookingCountMap[p.id] || 0;
-        return {
-          ...parsed,
-          totalCapacity,
-          remainingCapacity: Math.max(0, totalCapacity - completedCount),
-        };
-      }),
+      data: mappedList,
+      properties: mappedList,
       pagination: {
         total: totalCount,
         page: Number(page),
@@ -466,11 +516,23 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
       };
     });
 
+    const reviewAgg = await prisma.review.aggregate({
+      where: {
+        booking: { propertyId: property.id },
+        isFlagged: false,
+        isModerated: false
+      },
+      _avg: { rating: true },
+      _count: { id: true }
+    });
+
     const enrichedProperty = {
       ...parseProperty(property),
       rooms: enrichedRooms,
       totalCapacity,
-      remainingCapacity
+      remainingCapacity,
+      avgRating: reviewAgg._avg.rating ? Number(reviewAgg._avg.rating.toFixed(2)) : null,
+      reviewCount: reviewAgg._count.id || 0
     };
 
     res.status(200).json({ property: enrichedProperty });

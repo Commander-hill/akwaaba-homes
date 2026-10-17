@@ -501,22 +501,158 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
     const bookings = await prisma.booking.findMany({
       where: { tenantId },
       include: {
-        property: { select: { title: true, location: true, price: true, images: true } },
-        leaseAgreement: { select: { status: true } }
+        property: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            price: true,
+            pricePeriod: true,
+            cautionDeposit: true,
+            type: true,
+            images: true,
+            gateLockTime: true,
+            visitorPolicy: true,
+            quietHours: true,
+            includedUtilities: true,
+            landlord: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                email: true,
+                isVerifiedLandlord: true,
+              }
+            }
+          }
+        },
+        room: { select: { id: true, name: true, roomType: true, price: true } },
+        roomUnit: { select: { id: true, name: true } },
+        bed: { select: { id: true, label: true, status: true } },
+        leaseAgreement: { select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true } },
+        transactions: {
+          select: { id: true, amount: true, status: true, paymentReference: true, paymentChannel: true, createdAt: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        review: { select: { id: true, rating: true, comment: true, createdAt: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    const parsedBookings = bookings.map(b => ({
-      ...b,
-      property: { ...b.property, images: safeJsonParse(b.property.images, []) }
-    }));
+    const parsedBookings = bookings.map(b => {
+      const effectivePrice = b.room?.price ?? b.property?.price ?? 0;
+      return {
+        ...b,
+        price: effectivePrice,
+        property: {
+          ...b.property,
+          images: safeJsonParse(b.property.images, []),
+          includedUtilities: safeJsonParse(b.property.includedUtilities, [])
+        }
+      };
+    });
 
     const payload = { bookings: parsedBookings };
     appCache.set(cacheKey, payload, 30);
     res.status(200).json(payload);
   } catch (error) {
     console.error('Error fetching tenant bookings:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getBookingById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const userRole = req.user.role;
+    const { id } = req.params;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        property: {
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            price: true,
+            pricePeriod: true,
+            cautionDeposit: true,
+            type: true,
+            images: true,
+            gateLockTime: true,
+            visitorPolicy: true,
+            quietHours: true,
+            includedUtilities: true,
+            houseRules: true,
+            landlordId: true,
+            caretakerId: true,
+            landlord: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                email: true,
+                isVerifiedLandlord: true,
+              }
+            }
+          }
+        },
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            studentId: true,
+            university: true,
+            ghanaCardNumber: true,
+          }
+        },
+        room: { select: { id: true, name: true, roomType: true, price: true, bedsPerRoom: true } },
+        roomUnit: { select: { id: true, name: true } },
+        bed: { select: { id: true, label: true, status: true } },
+        leaseAgreement: { select: { id: true, status: true, terms: true, tenantSignedAt: true, landlordSignedAt: true } },
+        transactions: {
+          select: { id: true, amount: true, status: true, paymentReference: true, paymentChannel: true, escrowStatus: true, createdAt: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        review: { select: { id: true, rating: true, comment: true, createdAt: true } }
+      }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking not found' });
+      return;
+    }
+
+    const isOwnerTenant = booking.tenantId === userId;
+    const isOwnerLandlord = booking.property?.landlordId === userId;
+    const isAssignedCaretaker = booking.property?.caretakerId === userId;
+    const isAdmin = userRole === 'ADMIN';
+
+    if (!isOwnerTenant && !isOwnerLandlord && !isAssignedCaretaker && !isAdmin) {
+      res.status(403).json({ message: 'Forbidden: You do not have permission to view this booking' });
+      return;
+    }
+
+    const effectivePrice = booking.room?.price ?? booking.property?.price ?? 0;
+    const parsedBooking = {
+      ...booking,
+      price: effectivePrice,
+      property: {
+        ...booking.property,
+        images: safeJsonParse(booking.property.images, []),
+        includedUtilities: safeJsonParse(booking.property.includedUtilities, [])
+      }
+    };
+
+    res.status(200).json({ booking: parsedBooking });
+  } catch (error) {
+    console.error('Error fetching booking by ID:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

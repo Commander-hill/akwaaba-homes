@@ -174,7 +174,7 @@ function ReportIssueContent() {
   const { data: bookingsData } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
-      const res = await api.get('/bookings/my-bookings');
+      const res = await api.get('/bookings/me');
       return res.data;
     }
   });

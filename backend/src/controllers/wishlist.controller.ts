@@ -86,18 +86,22 @@ export const getMyWishlist = async (req: Request, res: Response): Promise<void> 
       orderBy: { createdAt: 'desc' }
     });
 
-    const properties = wishlists
+    const parsedWishlists = wishlists.map(w => ({
+      ...w,
+      property: w.property ? {
+        ...w.property,
+        amenities: safeJsonParse(w.property.amenities, []),
+        images: safeJsonParse(w.property.images, [])
+      } : null
+    }));
+
+    const properties = parsedWishlists
       .map(w => w.property)
-      .filter(Boolean)
-      .map(p => ({
-        ...p,
-        amenities: safeJsonParse(p.amenities, []),
-        images: safeJsonParse(p.images, [])
-      }));
+      .filter(Boolean);
 
     const savedPropertyIds = wishlists.map(w => w.propertyId);
 
-    res.status(200).json({ wishlists, properties, savedPropertyIds });
+    res.status(200).json({ wishlists: parsedWishlists, properties, savedPropertyIds });
   } catch (error) {
     console.error('Error fetching wishlist:', error);
     res.status(500).json({ message: 'Failed to fetch wishlist' });

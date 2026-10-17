@@ -1,73 +1,143 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart } from 'lucide-react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-interface WishlistButtonProps {
+const GUEST_WISHLIST_KEY = 'akwaaba_guest_wishlist';
+
+export function getGuestWishlistIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(GUEST_WISHLIST_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function setGuestWishlistIds(ids: string[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(GUEST_WISHLIST_KEY, JSON.stringify(Array.from(new Set(ids))));
+    window.dispatchEvent(new Event('akwaaba_wishlist_changed'));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export interface WishlistButtonProps {
   propertyId: string;
   initialIsSaved?: boolean;
-  className?: string;
   showText?: boolean;
+  className?: string;
 }
 
 export default function WishlistButton({
   propertyId,
   initialIsSaved = false,
-  className = '',
   showText = false,
+  className = '',
 }: WishlistButtonProps) {
   const queryClient = useQueryClient();
   const [isSaved, setIsSaved] = useState(initialIsSaved);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const { data } = await api.post('/wishlist/toggle', { propertyId });
+  const { data: userResponse } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const { data } = await api.get('/auth/me');
       return data;
     },
-    onMutate: () => {
-      // Instant optimistic UI toggle
-      setIsSaved(prev => !prev);
-    },
-    onSuccess: (data) => {
-      setIsSaved(data.isSaved);
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
-      toast.success(data.message, { id: `wishlist-${propertyId}` });
-    },
-    onError: () => {
-      // Revert on error
-      setIsSaved(prev => !prev);
-      toast.error('Please log in as a tenant to save properties.');
-    },
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
+
+  const isAuthenticated = Boolean(userResponse?.user);
+
+  const { data: wishlistData } = useQuery({
+    queryKey: ['wishlist'],
+    queryFn: async () => {
+      const res = await api.get('/wishlist');
+      return res.data;
+    },
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (isAuthenticated && wishlistData?.savedPropertyIds) {
+      setIsSaved(wishlistData.savedPropertyIds.includes(propertyId));
+    } else if (!isAuthenticated) {
+      const syncGuest = () => {
+        const guestIds = getGuestWishlistIds();
+        setIsSaved(guestIds.includes(propertyId));
+      };
+      syncGuest();
+      window.addEventListener('akwaaba_wishlist_changed', syncGuest);
+      return () => window.removeEventListener('akwaaba_wishlist_changed', syncGuest);
+    }
+  }, [isAuthenticated, wishlistData, propertyId]);
+
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      const currentIds = getGuestWishlistIds();
+      const exists = currentIds.includes(propertyId);
+      const nextIds = exists
+        ? currentIds.filter((id) => id !== propertyId)
+        : [...currentIds, propertyId];
+      setGuestWishlistIds(nextIds);
+      setIsSaved(!exists);
+      toast.success(
+        exists
+          ? 'Removed from saved homes'
+          : 'Saved in this browser. Sign in anytime to sync across devices.'
+      );
+      return;
+    }
+
+    const previousState = isSaved;
+    setIsSaved(!isSaved);
+    setIsLoading(true);
+
+    try {
+      const res = await api.post('/wishlist/toggle', { propertyId });
+      setIsSaved(res.data.isSaved);
+      toast.success(res.data.isSaved ? 'Saved to your wishlist' : 'Removed from wishlist');
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+    } catch (error: any) {
+      setIsSaved(previousState);
+      toast.error(error?.response?.data?.message || 'Failed to update saved properties');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <button
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        mutation.mutate();
-      }}
-      disabled={mutation.isPending}
-      className={`group relative inline-flex items-center justify-center gap-2 p-2.5 rounded-full transition-all duration-300 ${
+      type="button"
+      onClick={handleToggle}
+      disabled={isLoading}
+      aria-pressed={isSaved}
+      aria-label={isSaved ? 'Remove from saved properties' : 'Save property'}
+      title={isSaved ? 'Remove from saved properties' : 'Save property'}
+      className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 cursor-pointer ${
         isSaved
-          ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 scale-105'
-          : 'bg-white/80 dark:bg-slate-900/80 backdrop-blur text-slate-600 dark:text-slate-300 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-900 shadow-md'
+          ? 'bg-red-500/95 text-white hover:bg-red-600'
+          : 'bg-slate-900/65 text-white hover:bg-slate-900/85 border border-white/20'
+      } ${showText ? 'px-3.5 py-2 rounded-xl text-xs font-bold' : ''} ${
+        isLoading ? 'opacity-60 cursor-wait' : ''
       } ${className}`}
-      title={isSaved ? 'Remove from Wishlist' : 'Save to Wishlist'}
     >
-      <Heart
-        className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${
-          isSaved ? 'fill-white stroke-white' : 'stroke-current'
-        }`}
-      />
-      {showText && (
-        <span className="text-sm font-bold pr-1">
-          {isSaved ? 'Saved to Wishlist' : 'Add to Wishlist'}
-        </span>
-      )}
+      <Heart className={`w-4 h-4 transition-transform duration-200 ${isSaved ? 'fill-current scale-110' : ''}`} />
+      {showText && <span>{isSaved ? 'Saved' : 'Save'}</span>}
     </button>
   );
 }
