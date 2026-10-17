@@ -702,7 +702,7 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
             type: 'ANNOUNCEMENT',
             title: '🔑 Tenant Checked In by Caretaker',
             message: `${booking.tenant.firstName} ${booking.tenant.lastName} has been checked into ${booking.property.title} by property staff.`,
-            link: '/dashboard/landlord/bookings'
+            link: '/dashboard/landlord'
           }
         }).catch(() => {});
         try {

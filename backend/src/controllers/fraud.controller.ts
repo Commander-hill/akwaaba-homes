@@ -226,7 +226,7 @@ export const resolveFraudAction = async (req: Request, res: Response): Promise<v
           type: 'SECURITY',
           title: '⛔ Account Suspended for Safety Violations',
           message: `Your landlord account and property listings have been suspended following an anti-fraud security review.`,
-          link: '/support'
+          link: '/contact'
         }
       }).catch(() => null);
       getIO().to(property.landlordId).emit('user_updated', { isSuspended: true });

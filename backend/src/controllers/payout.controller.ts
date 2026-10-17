@@ -337,7 +337,7 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
             message: status === 'SUCCESS'
               ? `GHS ${amount.toFixed(2)} has been sent to your ${bankOrNetwork} account (${accountNumber}).`
               : `Withdrawal of GHS ${amount.toFixed(2)} to ${bankOrNetwork} is being processed. Funds will arrive shortly.`,
-            link: '/dashboard/earnings'
+            link: '/dashboard/landlord/withdraw'
           }
         });
 
@@ -387,7 +387,7 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
             type: 'SYSTEM_ALERT',
             title: '⚠️ Payout Transfer Failed',
             message: `Withdrawal of GHS ${amount.toFixed(2)} could not be processed: ${failureReason}. Funds remain in your available balance.`,
-            link: '/dashboard/earnings'
+            link: '/dashboard/landlord/withdraw'
           }
         });
 
@@ -524,7 +524,7 @@ export const handleTransferWebhook = async (req: Request, res: Response): Promis
               message: finalStatus === 'SUCCESS'
                 ? `Your withdrawal of GHS ${payout.amount.toFixed(2)} has settled successfully in your account.`
                 : `Your withdrawal of GHS ${payout.amount.toFixed(2)} failed: ${failureReason || 'Provider rejected transfer'}. Funds returned to balance.`,
-              link: '/dashboard/earnings'
+              link: '/dashboard/landlord/withdraw'
             }
           });
 

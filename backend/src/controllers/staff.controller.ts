@@ -80,7 +80,7 @@ export const assignStaff = async (req: Request, res: Response): Promise<void> =>
         type: 'ANNOUNCEMENT',
         title: 'Property Staff Assignment',
         message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}". You now have on-site management privileges.`,
-        link: '/dashboard/staff'
+        link: '/dashboard/caretaker'
       }
     }).catch(() => null);
 
@@ -173,7 +173,7 @@ export const removeStaff = async (req: Request, res: Response): Promise<void> =>
         type: 'ANNOUNCEMENT',
         title: 'Staff Assignment Concluded',
         message: 'Your property staff assignment has concluded.',
-        link: '/dashboard'
+        link: '/dashboard/caretaker'
       }
     }).catch(() => null);
 

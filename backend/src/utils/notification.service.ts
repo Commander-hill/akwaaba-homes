@@ -638,7 +638,7 @@ export const notifyPayoutSent = async (opts: {
     type: 'SUBSCRIPTION',
     title: 'Payout Dispatched',
     message: `Your withdrawal of GH₵ ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork} (${opts.accountNumber}) has been processed.`,
-    link: '/dashboard/landlord/financials',
+    link: '/dashboard/landlord/withdraw',
     emailSubject: `Payout confirmed: GH₵ ${opts.amount.toFixed(2)} to ${opts.bankOrNetwork}`,
     emailBodyHtml: renderInstitutionalEmail({
       title: 'Payout Confirmation',
@@ -828,7 +828,7 @@ export const notifyContactInquiry = async (opts: {
         type: 'ANNOUNCEMENT',
         title: `New Inquiry [${opts.referenceId}]: ${categoryLabel}`,
         message: `${opts.name} (${cleanEmail}${opts.phone ? ` · ${opts.phone}` : ''}): "${opts.message.slice(0, 140)}${opts.message.length > 140 ? '...' : ''}"`,
-        link: '/dashboard/admin/audit-logs',
+        link: '/admin/audit',
         emailSubject: `[${opts.referenceId}] ${categoryLabel} — ${opts.name}`,
         emailBodyHtml: renderInstitutionalEmail({
           title: `New Support Inquiry: ${opts.referenceId}`,

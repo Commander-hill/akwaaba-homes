@@ -234,8 +234,8 @@ export default function ForgotPasswordPage() {
                   {/* Primary CTA Button */}
                   <button
                     type="submit"
-                    disabled={isLoading || !email.trim()}
-                    className="w-full h-[52px] flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-sm font-semibold transition-colors shadow-xs cursor-pointer disabled:opacity-50"
+                    disabled={isLoading || !email.trim().includes('@') || !email.trim().includes('.')}
+                    className="w-full h-[52px] flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-sm font-semibold transition-colors shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

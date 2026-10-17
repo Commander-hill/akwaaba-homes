@@ -30,8 +30,6 @@ export default function ContactPage() {
   } | null>(null);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    if (!token) return;
     api.get('/auth/me')
       .then((res) => {
         const u = res.data?.user || res.data;

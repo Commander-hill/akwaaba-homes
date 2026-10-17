@@ -488,8 +488,8 @@ function AdminLoginForm() {
                   <div className="pt-2">
                     <button
                       type="submit"
-                      disabled={isLoading}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
+                      disabled={isLoading || !formData.email.trim() || !formData.password}
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

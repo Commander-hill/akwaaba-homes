@@ -906,7 +906,7 @@ export const submitLandlordVerification = async (req: Request, res: Response): P
           type: 'SYSTEM_ALERT',
           title: 'Landlord Verification Document Submitted',
           message: `Landlord submitted property ownership & Ghana Card for verification.`,
-          link: '/admin/landlord-verification'
+          link: '/admin/deeds'
         }))
       }).catch(() => null);
     }
