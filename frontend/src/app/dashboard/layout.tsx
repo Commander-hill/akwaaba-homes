@@ -58,7 +58,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/admin/dashboard');
       } else if ((user.role === 'CARETAKER' || user.role === 'STAFF') && (
         pathname.startsWith('/dashboard/tenant') || 
-        pathname.startsWith('/dashboard/landlord') ||
+        (pathname.startsWith('/dashboard/landlord') &&
+          !pathname.startsWith('/dashboard/landlord/inspections') &&
+          !pathname.startsWith('/dashboard/landlord/notices/new') &&
+          !pathname.startsWith('/dashboard/landlord/inventory/new') &&
+          !pathname.startsWith('/dashboard/landlord/disciplinary/new')) ||
         pathname.startsWith('/dashboard/roommates') ||
         pathname.startsWith('/dashboard/wishlist')
       )) {
@@ -113,25 +117,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   } else if (user?.role === 'CARETAKER' || user?.role === 'STAFF') {
     sidebarGroups = [
       {
-        title: 'OPERATIONS',
+        title: 'OPERATIONS DESK',
         links: [
-          { name: 'Operations Hub', href: '/dashboard/caretaker', icon: LayoutDashboard },
-          { name: 'Maintenance Tickets', href: '/dashboard/caretaker?tab=tickets', icon: Wrench },
-          { name: 'Gatehouse Logbook', href: '/dashboard/caretaker?tab=visitors', icon: Key },
-          { name: 'Fixtures & Inventory', href: '/dashboard/caretaker?tab=assets', icon: ClipboardCheck },
-          { name: 'Utility Sub-Meters', href: '/dashboard/caretaker?tab=meters', icon: Gauge },
-          { name: 'Conduct Logbook', href: '/dashboard/caretaker?tab=conduct', icon: Scale },
-          { name: 'Move-In Inspections', href: '/dashboard/caretaker?tab=inspections', icon: FileText },
-          { name: 'Package Deliveries', href: '/dashboard/caretaker?tab=parcels', icon: Package },
-          { name: 'Compound Notices', href: '/dashboard/caretaker?tab=notices', icon: BellRing },
+          { name: 'Overview', href: '/dashboard/caretaker', icon: LayoutDashboard },
+          { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse', icon: Key },
+          { name: 'Residents & Check-In', href: '/dashboard/caretaker?tab=residents', icon: Users },
+          { name: 'Repairs & Maintenance', href: '/dashboard/caretaker?tab=maintenance', icon: Wrench },
+          { name: 'Utilities & Notices', href: '/dashboard/caretaker?tab=utilities', icon: Gauge },
         ]
       },
       {
         title: 'ACCOUNT',
         links: [
           { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
-          { name: 'Profile', href: '/dashboard/profile', icon: User },
           { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
+          { name: 'Profile', href: '/dashboard/profile', icon: User },
           { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
         ]
       }

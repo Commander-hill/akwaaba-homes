@@ -224,7 +224,11 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
         property: {
           include: {
             landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-            rooms: true,
+            rooms: {
+              include: {
+                roomUnits: true,
+              },
+            },
             tickets: {
               include: {
                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true } },
@@ -243,6 +247,12 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
               },
               orderBy: { createdAt: 'desc' }
+            },
+            BreachReport: {
+              include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
+              },
+              orderBy: { createdAt: 'desc' },
             },
             bookings: {
               where: { status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED', 'PAID'] } },
@@ -263,6 +273,8 @@ export const getMyStaffAssignments = async (req: Request, res: Response): Promis
                   }
                 },
                 room: true,
+                roomUnit: true,
+                bed: true,
                 inspections: true,
               },
               orderBy: { createdAt: 'desc' },

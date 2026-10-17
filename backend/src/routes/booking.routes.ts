@@ -25,8 +25,8 @@ router.post('/:id/verify-payment', authenticate, authorizeRole(['TENANT', 'ADMIN
 router.post('/:id/cancel', authenticate, authorizeRole(['TENANT', 'ADMIN']), cancelPendingBooking);
 router.delete('/:id', authenticate, authorizeRole(['TENANT', 'ADMIN']), deleteBooking);
 
-// Landlord routes
+// Landlord & Caretaker check-in routes
 router.get('/landlord', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordBookings);
-router.put('/:id/status', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), updateBookingStatus);
+router.put('/:id/status', authenticate, authorizeRole(['LANDLORD', 'CARETAKER', 'STAFF', 'ADMIN']), updateBookingStatus);
 
 export default router;

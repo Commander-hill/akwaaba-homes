@@ -174,6 +174,10 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                   financials: ['financials', 'payouts', 'expenses', 'utilities', 'installments', 'subscriptions'],
                   tenancies: ['tenancies', 'bookings', 'agreements', 'disciplinary', 'reviews', 'inspections'],
                   operations: ['operations', 'tickets', 'staff', 'notices', 'gatepass', 'messages'],
+                  // Caretaker Pillars
+                  gatehouse: ['gatehouse', 'visitors', 'parcels'],
+                  residents: ['residents', 'checkins', 'inspections', 'assets', 'conduct'],
+                  utilities: ['utilities', 'meters', 'notices'],
                 };
 
                 let isActive = false;
@@ -188,7 +192,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                     }
                   }
                 } else if (pathname === linkPath) {
-                  isActive = !currentTab;
+                  isActive = !currentTab || currentTab === 'overview';
                 }
 
                 return (
