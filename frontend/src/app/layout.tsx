@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, DM_Serif_Display } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import Providers from '../providers/Providers';
 import Navbar from '../components/Navbar';
@@ -11,13 +11,6 @@ import MaintenanceGuard from '../components/MaintenanceGuard';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap',
-});
-
-const dmSerif = DM_Serif_Display({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -48,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${dmSerif.variable}`} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased bg-[#F8F7F2] text-[#242925] dark:bg-[#0B0D12] dark:text-[#F4F4F5]" suppressHydrationWarning>
         <Providers>
           <PwaRegister />
