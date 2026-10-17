@@ -723,3 +723,201 @@ export const notifyLandlordVerification = async (opts: {
     smsText: `AkwaabaHomes: Your Landlord verification is ${statusStr}.${opts.isVerified ? ' Verified Landlord badge is active!' : ''}`
   });
 };
+
+const CONTACT_SUBJECT_LABELS: Record<string, string> = {
+  TENANCY_INQUIRY: 'Student Hostel / Accommodation Inquiry',
+  LANDLORD_ONBOARDING: 'Landlord Property Registration',
+  ESCROW_ASSISTANCE: 'MoMo Escrow & Payment Support',
+  DISPUTE_REPORT: 'Tenancy or Booking Dispute',
+  OTHER: 'General Feedback'
+};
+
+export const notifyContactInquiry = async (opts: {
+  referenceId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  ipAddress?: string;
+}) => {
+  const categoryLabel = CONTACT_SUBJECT_LABELS[opts.subject] || opts.subject || 'General Inquiry';
+  const cleanEmail = opts.email.trim().toLowerCase();
+
+  // 1. Find all Admin users and any matching user account for the sender
+  const [admins, senderUser] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { id: true, email: true, firstName: true, lastName: true, phoneNumber: true }
+    }),
+    prisma.user.findUnique({
+      where: { email: cleanEmail },
+      select: { id: true, email: true, firstName: true, lastName: true, phoneNumber: true }
+    })
+  ]);
+
+  // 2. Persist AuditLog record (linked to senderUser if registered, otherwise first admin)
+  const auditUserId = senderUser?.id || admins[0]?.id;
+  if (auditUserId) {
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: auditUserId,
+          action: 'CONTACT_INQUIRY_SUBMITTED',
+          entity: 'ContactInquiry',
+          entityId: opts.referenceId,
+          newData: JSON.stringify({
+            referenceId: opts.referenceId,
+            name: opts.name,
+            email: cleanEmail,
+            phone: opts.phone || null,
+            subject: opts.subject,
+            categoryLabel,
+            message: opts.message
+          }),
+          ipAddress: opts.ipAddress || null
+        }
+      });
+    } catch (err) {
+      console.error('[ContactInquiry] Failed to write AuditLog:', err);
+    }
+  }
+
+  // 3. Notify all Admin users (In-App Notification + Email + SMS)
+  const adminBodyHtml = `
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
+        ${emailBadgeHtml({ label: 'SUPPORT DESK', value: opts.referenceId, variant: 'emerald' })}
+      </div>
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        New Support Inquiry Received
+      </h2>
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        <strong>${opts.name}</strong> has submitted an inquiry via the AkwaabaHomes Contact Portal.
+      </p>
+    </div>
+
+    ${emailCardHtml(`
+      ${emailMetaTableHtml([
+        { label: 'Reference ID', value: opts.referenceId, isMono: true, highlight: true },
+        { label: 'Category', value: categoryLabel },
+        { label: 'Sender Name', value: opts.name },
+        { label: 'Sender Email', value: cleanEmail, isMono: true },
+        { label: 'Phone / WhatsApp', value: opts.phone || 'Not provided', isMono: true }
+      ])}
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #E4E4E7;">
+        <strong style="font-size:11px;color:#71717A;text-transform:uppercase;letter-spacing:0.4px;">Inquiry Message:</strong>
+        <p style="margin:6px 0 0;font-size:13px;color:#18181B;line-height:1.6;white-space:pre-wrap;">${opts.message}</p>
+      </div>
+    `, 'Inquiry Details')}
+
+    ${emailButtonHtml({
+      label: `Reply to ${opts.name}`,
+      url: `mailto:${cleanEmail}?subject=${encodeURIComponent(`Re: [${opts.referenceId}] ${categoryLabel} — AkwaabaHomes Support`)}`,
+      variant: 'primary'
+    })}
+  `;
+
+  await Promise.all(
+    admins.map((admin) =>
+      notify({
+        userId: admin.id,
+        recipientEmail: admin.email,
+        recipientName: `${admin.firstName || ''} ${admin.lastName || ''}`.trim() || 'Admin',
+        recipientPhone: admin.phoneNumber,
+        type: 'ANNOUNCEMENT',
+        title: `New Inquiry [${opts.referenceId}]: ${categoryLabel}`,
+        message: `${opts.name} (${cleanEmail}${opts.phone ? ` · ${opts.phone}` : ''}): "${opts.message.slice(0, 140)}${opts.message.length > 140 ? '...' : ''}"`,
+        link: '/dashboard/admin/audit-logs',
+        emailSubject: `[${opts.referenceId}] ${categoryLabel} — ${opts.name}`,
+        emailBodyHtml: renderInstitutionalEmail({
+          title: `New Support Inquiry: ${opts.referenceId}`,
+          preheader: `${opts.name} submitted a ${categoryLabel} inquiry`,
+          categoryTag: 'SUPPORT INQUIRY',
+          bodyHtml: adminBodyHtml
+        }),
+        smsText: `AkwaabaHomes Support [${opts.referenceId}]: ${categoryLabel} from ${opts.name} (${opts.phone || cleanEmail}).`
+      })
+    )
+  );
+
+  // 4. Send confirmation to the sender (In-App if registered + Email + SMS)
+  const senderBodyHtml = `
+    <div style="margin-bottom:20px;">
+      <div style="margin-bottom:10px;">
+        ${emailBadgeHtml({ label: 'ACKNOWLEDGED', value: opts.referenceId, variant: 'emerald' })}
+      </div>
+      <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+        We Have Received Your Inquiry
+      </h2>
+      <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
+        Hi ${opts.name}, thank you for contacting AkwaabaHomes Support. Your message has been logged with our Accra &amp; Kumasi support desk and assigned reference number <strong>${opts.referenceId}</strong>.
+      </p>
+    </div>
+
+    ${emailCardHtml(`
+      ${emailMetaTableHtml([
+        { label: 'Reference Number', value: opts.referenceId, isMono: true, highlight: true },
+        { label: 'Category', value: categoryLabel },
+        { label: 'Contact Email', value: cleanEmail, isMono: true },
+        ...(opts.phone ? [{ label: 'Phone / WhatsApp', value: opts.phone, isMono: true }] : [])
+      ])}
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid #E4E4E7;">
+        <strong style="font-size:11px;color:#71717A;text-transform:uppercase;letter-spacing:0.4px;">Your Message:</strong>
+        <p style="margin:6px 0 0;font-size:13px;color:#18181B;line-height:1.6;white-space:pre-wrap;">${opts.message}</p>
+      </div>
+    `, 'Submission Summary')}
+
+    <p style="color:#52525B;font-size:13px;line-height:1.6;margin:16px 0;">
+      A support specialist will respond via email or WhatsApp within 24 hours (Mon–Sat, 8:00 AM – 7:00 PM GMT).
+    </p>
+  `;
+
+  if (senderUser) {
+    await notify({
+      userId: senderUser.id,
+      recipientEmail: cleanEmail,
+      recipientName: opts.name,
+      recipientPhone: opts.phone || senderUser.phoneNumber,
+      type: 'ANNOUNCEMENT',
+      title: `Support Inquiry Logged (${opts.referenceId})`,
+      message: `We received your "${categoryLabel}" inquiry. Our support team will respond shortly.`,
+      link: '/contact',
+      emailSubject: `[${opts.referenceId}] We received your inquiry — AkwaabaHomes Support`,
+      emailBodyHtml: renderInstitutionalEmail({
+        title: 'Support Inquiry Confirmation',
+        preheader: `Your inquiry (${opts.referenceId}) has been logged with AkwaabaHomes Support`,
+        categoryTag: 'SUPPORT DESK',
+        bodyHtml: senderBodyHtml
+      }),
+      smsText: `AkwaabaHomes: Your support inquiry (${opts.referenceId}) has been received. Our team will reply via email/WhatsApp shortly.`
+    });
+  } else {
+    // Unregistered visitor: send email + optional SMS directly
+    const transporter = getTransporter();
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: `"AkwaabaHomes Support" <${process.env.SMTP_USER}>`,
+          to: cleanEmail,
+          subject: `[${opts.referenceId}] We received your inquiry — AkwaabaHomes Support`,
+          html: renderInstitutionalEmail({
+            title: 'Support Inquiry Confirmation',
+            preheader: `Your inquiry (${opts.referenceId}) has been logged with AkwaabaHomes Support`,
+            categoryTag: 'SUPPORT DESK',
+            bodyHtml: senderBodyHtml
+          })
+        });
+      } catch (err) {
+        console.error(`[ContactInquiry] Confirmation email failed to ${cleanEmail}:`, err);
+      }
+    }
+    if (opts.phone) {
+      sendSMS(
+        opts.phone,
+        `AkwaabaHomes: Your support inquiry (${opts.referenceId}) has been received. Our team will reply via email/WhatsApp shortly.`
+      ).catch((err) => console.error('[ContactInquiry] SMS error:', err));
+    }
+  }
+};
+

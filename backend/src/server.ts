@@ -83,6 +83,7 @@ import { xssSanitizer } from './middleware/xss.middleware';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler.middleware';
 import { checkMaintenanceMode } from './middleware/config.middleware';
 import { getSystemConfig } from './utils/config.service';
+import { notifyContactInquiry } from './utils/notification.service';
 import prisma from './utils/prisma';
 
 import { createServer } from 'http';
@@ -269,6 +270,47 @@ app.post('/api/v1/config/subscribe-maintenance', async (req: Request, res: Respo
   } catch (err) {
     console.error('Error subscribing to maintenance notification:', err);
     res.status(500).json({ message: 'Failed to subscribe.' });
+  }
+});
+
+// ─── Public Contact & Support Inquiry Endpoint ───────────────────────────────
+app.post('/api/v1/contact', async (req: Request, res: Response) => {
+  try {
+    const { name, email, phone, subject, message } = req.body;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({ message: 'Please provide your full name.' });
+      return;
+    }
+    if (!email || typeof email !== 'string' || !email.includes('@')) {
+      res.status(400).json({ message: 'Please provide a valid email address.' });
+      return;
+    }
+    if (!message || typeof message !== 'string' || message.trim().length < 5) {
+      res.status(400).json({ message: 'Please describe your inquiry in at least 5 characters.' });
+      return;
+    }
+
+    const referenceId = `INQ-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+    const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+
+    await notifyContactInquiry({
+      referenceId,
+      name: name.trim(),
+      email: email.trim(),
+      phone: typeof phone === 'string' && phone.trim() ? phone.trim() : undefined,
+      subject: typeof subject === 'string' && subject.trim() ? subject.trim() : 'TENANCY_INQUIRY',
+      message: message.trim(),
+      ipAddress
+    });
+
+    res.status(201).json({
+      success: true,
+      referenceId,
+      message: `Your inquiry (${referenceId}) has been received by our Support Desk. We will respond via email or WhatsApp shortly.`
+    });
+  } catch (err) {
+    console.error('Error submitting contact inquiry:', err);
+    res.status(500).json({ message: 'Failed to submit inquiry. Please try again or call our hotline.' });
   }
 });
 
