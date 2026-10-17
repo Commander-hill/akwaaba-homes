@@ -227,8 +227,8 @@ export default function RegisterPage() {
   // Active Session Fallback
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token')) {
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132]" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
+        <Loader2 className="w-7 h-7 animate-spin text-[#173D32]" />
         <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
     );
@@ -244,14 +244,14 @@ export default function RegisterPage() {
       : 'Tenant Dashboard';
 
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6">
-        <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6">
+        <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-[#E7E7DF] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#173D32] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
             <CheckCircle2 className="w-6 h-6" />
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Already Signed In</h2>
+            <h2 className="font-editorial text-xl text-zinc-900 dark:text-white">Already Signed In</h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
               You are signed in as <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span> ({sessionData.role}).
             </p>
@@ -260,7 +260,7 @@ export default function RegisterPage() {
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -285,7 +285,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
       {/* ── Purpose-Built Auth Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">

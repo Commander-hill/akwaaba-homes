@@ -263,7 +263,7 @@ function ReportIssueContent() {
     onSuccess: () => {
       toast.success('Maintenance ticket submitted to your property manager and caretaker.');
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      router.push('/dashboard/tenant?tab=maintenance');
+      router.push('/support');
     },
     onError: (err: any) => {
       setFormError(err.response?.data?.message || 'Failed to submit ticket. Please try again.');
@@ -329,10 +329,10 @@ function ReportIssueContent() {
       {/* Header */}
       <div>
         <button
-          onClick={() => router.push('/dashboard/tenant?tab=maintenance')}
+          onClick={() => router.push('/support')}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Repairs &amp; Maintenance
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Support &amp; Issue Reporting
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

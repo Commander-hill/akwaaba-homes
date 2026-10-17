@@ -1,1023 +1,706 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
-import api from '@/lib/axios';
-import Map from '@/components/Map';
 import {
-  MapPin,
   Search,
-  CheckCircle2,
+  MapPin,
   SlidersHorizontal,
-  ArrowRight,
-  Building2,
-  Map as MapIcon,
-  LayoutGrid,
   X,
   RotateCcw,
-  Star,
+  Building2,
+  ChevronLeft,
+  ChevronRight,
   ArrowUpDown,
 } from 'lucide-react';
-import WishlistButton from '@/components/WishlistButton';
+import api from '@/lib/axios';
+import PropertyCard, {
+  PropertyCardData,
+  formatPropertyTypeLabel,
+} from '@/components/tenant-ui/PropertyCard';
+import PublicFooter from '@/components/tenant-ui/PublicFooter';
+import {
+  Button,
+  BreadcrumbNav,
+  EmptyState,
+  ErrorState,
+  PropertyCardSkeleton,
+} from '@/components/tenant-ui/primitives';
 
-function SkeletonCard() {
-  return (
-    <div className="bg-white dark:bg-[#12151E] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 animate-pulse">
-      <div className="h-52 bg-zinc-200 dark:bg-zinc-800" />
-      <div className="p-5 space-y-3">
-        <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4" />
-        <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2" />
-        <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded w-full mt-4" />
-      </div>
-    </div>
-  );
-}
+const PROPERTY_TYPES = [
+  { value: '', label: 'All Types' },
+  { value: 'HOSTEL', label: 'Student Hostel' },
+  { value: 'SINGLE_ROOM', label: 'Private Room' },
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'HOMESTAY', label: 'Homestay' },
+];
 
-interface RoomTier {
-  id: string;
-  name: string;
-  roomType: string;
-  price: number;
-  bedsPerRoom: number;
-  numberOfRooms: number;
-}
+const AMENITY_OPTIONS = [
+  'Wi-Fi',
+  'Running Water',
+  'Backup Generator',
+  'Air Conditioning',
+  '24/7 Security',
+  'Study Desk',
+  'Kitchen',
+  'Parking',
+];
 
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  price: number;
-  type: string;
-  targetAudience?: string;
-  furnishing?: string;
-  pricePeriod?: string;
-  cautionDeposit?: number;
-  amenities: string[];
-  includedUtilities?: string[];
-  images: string[];
-  isAvailable: boolean;
-  totalCapacity?: number;
-  remainingCapacity?: number;
-  avgRating?: number | null;
-  reviewCount?: number;
-  rooms?: RoomTier[];
-  landlord?: {
-    id?: string;
-    firstName?: string;
-    lastName?: string;
-    isVerifiedLandlord?: boolean;
-    landlordVerificationStatus?: string;
-    reputationScore?: number;
-  };
-}
+const SORT_OPTIONS = [
+  { value: 'newest', label: 'Recently added' },
+  { value: 'price_asc', label: 'Lowest price (GH₵)' },
+  { value: 'price_desc', label: 'Highest price (GH₵)' },
+  { value: 'rating', label: 'Highest rated' },
+];
 
-function PropertiesCatalogContent() {
-  const searchParams = useSearchParams();
+function SearchDiscoveryContent() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() || '/search';
+  const searchParams = useSearchParams();
 
-  // Initialize filter states from URL search params
-  const [location, setLocation] = useState(() => searchParams.get('location') || '');
-  const [minPrice, setMinPrice] = useState(() => searchParams.get('minPrice') || '');
-  const [maxPrice, setMaxPrice] = useState(() => searchParams.get('maxPrice') || '');
-  const [type, setType] = useState(() => searchParams.get('type') || '');
-  const [roomType, setRoomType] = useState(() => searchParams.get('roomType') || '');
-  const [targetAudience, setTargetAudience] = useState(() => searchParams.get('targetAudience') || '');
-  const [furnishing, setFurnishing] = useState(() => searchParams.get('furnishing') || '');
-  const [pricePeriod, setPricePeriod] = useState(() => searchParams.get('pricePeriod') || '');
-  const [amenity, setAmenity] = useState(() => searchParams.get('amenity') || '');
-  const [onlyAvailable, setOnlyAvailable] = useState(() => searchParams.get('isAvailable') !== 'false');
-  const [sort, setSort] = useState(() => searchParams.get('sort') || 'newest');
+  // Initialize state from URL query params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || '');
+  const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '');
+  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
+  const [capacityFilter, setCapacityFilter] = useState(searchParams.get('capacity') || '');
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(() => {
+    const raw = searchParams.get('amenities');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  });
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
+  const [page, setPage] = useState(Number(searchParams.get('page') || 1));
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
-
-  // Sync state when URL changes externally (e.g., browser back/forward or Navbar link)
+  // Sync local state when browser back/forward changes searchParams
   useEffect(() => {
-    setLocation(searchParams.get('location') || '');
+    setSearchQuery(searchParams.get('search') || '');
+    setLocationFilter(searchParams.get('location') || '');
+    setTypeFilter(searchParams.get('type') || '');
     setMinPrice(searchParams.get('minPrice') || '');
     setMaxPrice(searchParams.get('maxPrice') || '');
-    setType(searchParams.get('type') || '');
-    setRoomType(searchParams.get('roomType') || '');
-    setTargetAudience(searchParams.get('targetAudience') || '');
-    setFurnishing(searchParams.get('furnishing') || '');
-    setPricePeriod(searchParams.get('pricePeriod') || '');
-    setAmenity(searchParams.get('amenity') || '');
-    setOnlyAvailable(searchParams.get('isAvailable') !== 'false');
-    setSort(searchParams.get('sort') || 'newest');
+    setCapacityFilter(searchParams.get('capacity') || '');
+    const rawAm = searchParams.get('amenities');
+    setSelectedAmenities(rawAm ? rawAm.split(',').filter(Boolean) : []);
+    setSortBy(searchParams.get('sort') || 'newest');
+    setPage(Number(searchParams.get('page') || 1));
   }, [searchParams]);
 
-  // Helper to push filter changes to URL
-  const syncUrlParams = useCallback(
-    (overrides: Record<string, string | boolean | undefined> = {}) => {
-      const next = {
-        location,
-        minPrice,
-        maxPrice,
-        type,
-        roomType,
-        targetAudience,
-        furnishing,
-        pricePeriod,
-        amenity,
-        onlyAvailable,
-        sort,
-        ...overrides,
-      };
-      const params = new URLSearchParams();
-      if (next.location) params.set('location', String(next.location));
-      if (next.minPrice) params.set('minPrice', String(next.minPrice));
-      if (next.maxPrice) params.set('maxPrice', String(next.maxPrice));
-      if (next.type) params.set('type', String(next.type));
-      if (next.roomType) params.set('roomType', String(next.roomType));
-      if (next.targetAudience) params.set('targetAudience', String(next.targetAudience));
-      if (next.furnishing) params.set('furnishing', String(next.furnishing));
-      if (next.pricePeriod) params.set('pricePeriod', String(next.pricePeriod));
-      if (next.amenity) params.set('amenity', String(next.amenity));
-      if (next.onlyAvailable === false) params.set('isAvailable', 'false');
-      if (next.sort && next.sort !== 'newest') params.set('sort', String(next.sort));
+  // Persist filter changes in URL
+  const updateUrlParams = (overrides: Record<string, string | number | string[] | undefined>) => {
+    const next = {
+      search: searchQuery,
+      location: locationFilter,
+      type: typeFilter,
+      minPrice,
+      maxPrice,
+      capacity: capacityFilter,
+      amenities: selectedAmenities,
+      sort: sortBy,
+      page: 1,
+      ...overrides,
+    };
 
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [location, minPrice, maxPrice, type, roomType, targetAudience, furnishing, pricePeriod, amenity, onlyAvailable, sort, pathname, router]
-  );
+    const params = new URLSearchParams();
+    if (next.search) params.set('search', String(next.search));
+    if (next.location) params.set('location', String(next.location));
+    if (next.type) params.set('type', String(next.type));
+    if (next.minPrice) params.set('minPrice', String(next.minPrice));
+    if (next.maxPrice) params.set('maxPrice', String(next.maxPrice));
+    if (next.capacity) params.set('capacity', String(next.capacity));
+    if (Array.isArray(next.amenities) && next.amenities.length > 0) {
+      params.set('amenities', next.amenities.join(','));
+    }
+    if (next.sort && next.sort !== 'newest') params.set('sort', String(next.sort));
+    if (next.page && Number(next.page) > 1) params.set('page', String(next.page));
+
+    const qs = params.toString();
+    router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
+  };
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['properties', location, minPrice, maxPrice, type, roomType, targetAudience, furnishing, pricePeriod, amenity, onlyAvailable, sort],
+    queryKey: [
+      'properties-search',
+      searchQuery,
+      locationFilter,
+      typeFilter,
+      minPrice,
+      maxPrice,
+      capacityFilter,
+      selectedAmenities.join(','),
+      sortBy,
+      page,
+    ],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (location) params.append('location', location);
-      if (minPrice) params.append('minPrice', minPrice);
-      if (maxPrice) params.append('maxPrice', maxPrice);
-      if (type) params.append('type', type);
-      if (roomType) params.append('roomType', roomType);
-      if (targetAudience) params.append('targetAudience', targetAudience);
-      if (furnishing) params.append('furnishing', furnishing);
-      if (pricePeriod) params.append('pricePeriod', pricePeriod);
-      if (amenity) params.append('amenity', amenity);
-      if (onlyAvailable) params.append('isAvailable', 'true');
-      else params.append('isAvailable', 'false');
-      if (sort) params.append('sort', sort);
+      const params: Record<string, string | number> = {
+        page,
+        limit: 12,
+        sort: sortBy,
+      };
+      if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (locationFilter.trim()) params.location = locationFilter.trim();
+      if (typeFilter) params.type = typeFilter;
+      if (minPrice) params.minPrice = minPrice;
+      if (maxPrice) params.maxPrice = maxPrice;
+      if (capacityFilter) params.capacity = capacityFilter;
+      if (selectedAmenities.length > 0) params.amenities = selectedAmenities.join(',');
 
-      const response = await api.get(`/properties?${params.toString()}`);
-      return response.data;
+      const res = await api.get('/properties', { params });
+      return res.data;
     },
   });
 
-  const properties: Property[] = data?.data || data?.properties || [];
+  const listings: PropertyCardData[] = data?.data || data?.properties || [];
+  const totalCount: number = data?.pagination?.total ?? listings.length;
+  const totalPages: number = data?.pagination?.totalPages ?? 1;
 
-  // Build active filter chips for easy removal
-  const activeFilterChips: { key: string; label: string; clear: () => void }[] = [];
-  if (location) {
-    activeFilterChips.push({
-      key: 'location',
-      label: `Location: "${location}"`,
-      clear: () => {
-        setLocation('');
-        syncUrlParams({ location: '' });
-      },
-    });
-  }
-  if (type) {
-    activeFilterChips.push({
-      key: 'type',
-      label: `Type: ${type.replace(/_/g, ' ')}`,
-      clear: () => {
-        setType('');
-        setRoomType('');
-        syncUrlParams({ type: '', roomType: '' });
-      },
-    });
-  }
-  if (roomType) {
-    activeFilterChips.push({
-      key: 'roomType',
-      label: `Occupancy: ${roomType.replace(/_/g, ' ')}`,
-      clear: () => {
-        setRoomType('');
-        syncUrlParams({ roomType: '' });
-      },
-    });
-  }
-  if (targetAudience) {
-    activeFilterChips.push({
-      key: 'targetAudience',
-      label: `For: ${targetAudience.replace(/_/g, ' ')}`,
-      clear: () => {
-        setTargetAudience('');
-        syncUrlParams({ targetAudience: '' });
-      },
-    });
-  }
-  if (furnishing) {
-    activeFilterChips.push({
-      key: 'furnishing',
-      label: `Furnishing: ${furnishing.replace(/_/g, ' ')}`,
-      clear: () => {
-        setFurnishing('');
-        syncUrlParams({ furnishing: '' });
-      },
-    });
-  }
-  if (pricePeriod) {
-    activeFilterChips.push({
-      key: 'pricePeriod',
-      label: `Billing: ${pricePeriod.replace(/_/g, ' ')}`,
-      clear: () => {
-        setPricePeriod('');
-        syncUrlParams({ pricePeriod: '' });
-      },
-    });
-  }
-  if (minPrice || maxPrice) {
-    activeFilterChips.push({
-      key: 'price',
-      label: `Budget: GH₵ ${minPrice || '0'} – ${maxPrice ? `GH₵ ${maxPrice}` : 'Any'}`,
-      clear: () => {
-        setMinPrice('');
-        setMaxPrice('');
-        syncUrlParams({ minPrice: '', maxPrice: '' });
-      },
-    });
-  }
-  if (amenity) {
-    activeFilterChips.push({
-      key: 'amenity',
-      label: `Utility: ${amenity}`,
-      clear: () => {
-        setAmenity('');
-        syncUrlParams({ amenity: '' });
-      },
-    });
-  }
-  if (!onlyAvailable) {
-    activeFilterChips.push({
-      key: 'onlyAvailable',
-      label: 'Including Unavailable',
-      clear: () => {
-        setOnlyAvailable(true);
-        syncUrlParams({ onlyAvailable: true });
-      },
-    });
-  }
+  const toggleAmenity = (amenity: string) => {
+    const next = selectedAmenities.includes(amenity)
+      ? selectedAmenities.filter((a) => a !== amenity)
+      : [...selectedAmenities, amenity];
+    setSelectedAmenities(next);
+    updateUrlParams({ amenities: next, page: 1 });
+  };
 
-  const resetFilters = () => {
-    setLocation('');
+  const resetAllFilters = () => {
+    setSearchQuery('');
+    setLocationFilter('');
+    setTypeFilter('');
     setMinPrice('');
     setMaxPrice('');
-    setType('');
-    setRoomType('');
-    setTargetAudience('');
-    setFurnishing('');
-    setPricePeriod('');
-    setAmenity('');
-    setOnlyAvailable(true);
-    setSort('newest');
+    setCapacityFilter('');
+    setSelectedAmenities([]);
+    setSortBy('newest');
+    setPage(1);
     router.replace(pathname, { scroll: false });
   };
 
-  const quickRegions = [
-    { label: 'KNUST Campus', val: 'KNUST' },
-    { label: 'UG Legon', val: 'Legon' },
-    { label: 'East Legon', val: 'East Legon' },
-    { label: 'UCC Cape Coast', val: 'UCC' },
-    { label: 'Spintex / Osu', val: 'Spintex' },
-    { label: 'Madina / UPSA', val: 'Madina' },
-  ];
+  // Active filter summary pills
+  const activePills: Array<{ key: string; label: string; onRemove: () => void }> = [];
+  if (searchQuery) {
+    activePills.push({
+      key: 'search',
+      label: `Keyword: "${searchQuery}"`,
+      onRemove: () => {
+        setSearchQuery('');
+        updateUrlParams({ search: '' });
+      },
+    });
+  }
+  if (locationFilter) {
+    activePills.push({
+      key: 'location',
+      label: `Location: ${locationFilter}`,
+      onRemove: () => {
+        setLocationFilter('');
+        updateUrlParams({ location: '' });
+      },
+    });
+  }
+  if (typeFilter) {
+    activePills.push({
+      key: 'type',
+      label: `Type: ${formatPropertyTypeLabel(typeFilter)}`,
+      onRemove: () => {
+        setTypeFilter('');
+        updateUrlParams({ type: '' });
+      },
+    });
+  }
+  if (minPrice) {
+    activePills.push({
+      key: 'minPrice',
+      label: `Min: GH₵ ${Number(minPrice).toLocaleString()}`,
+      onRemove: () => {
+        setMinPrice('');
+        updateUrlParams({ minPrice: '' });
+      },
+    });
+  }
+  if (maxPrice) {
+    activePills.push({
+      key: 'maxPrice',
+      label: `Max: GH₵ ${Number(maxPrice).toLocaleString()}`,
+      onRemove: () => {
+        setMaxPrice('');
+        updateUrlParams({ maxPrice: '' });
+      },
+    });
+  }
+  if (capacityFilter) {
+    activePills.push({
+      key: 'capacity',
+      label: `${capacityFilter}+ Occupants`,
+      onRemove: () => {
+        setCapacityFilter('');
+        updateUrlParams({ capacity: '' });
+      },
+    });
+  }
+  selectedAmenities.forEach((am) => {
+    activePills.push({
+      key: `am-${am}`,
+      label: am,
+      onRemove: () => toggleAmenity(am),
+    });
+  });
 
-  const formatPeriod = (period?: string, propType?: string) => {
-    if (period === 'PER_MONTH') return '/ month';
-    if (period === 'PER_SEMESTER') return '/ semester';
-    if (period === 'PER_ACADEMIC_YEAR') return '/ academic yr';
-    if (period === 'PER_YEAR') return propType === 'HOSTEL' ? '/ academic yr' : '/ year';
-    return propType === 'HOSTEL' ? '/ academic yr' : '/ year';
-  };
+  const renderFilterControls = () => (
+    <div className="space-y-6">
+      {/* Location Filter */}
+      <div className="space-y-1.5">
+        <label
+          htmlFor="filter-location"
+          className="block text-xs font-bold text-[#242925] dark:text-white"
+        >
+          Location or University
+        </label>
+        <div className="relative flex items-center">
+          <MapPin className="w-4 h-4 text-[#557A67] absolute left-3 pointer-events-none" />
+          <input
+            id="filter-location"
+            type="text"
+            value={locationFilter}
+            onChange={(e) => {
+              setLocationFilter(e.target.value);
+              updateUrlParams({ location: e.target.value });
+            }}
+            placeholder="e.g. Legon, Kumasi, Osu..."
+            className="w-full h-10 pl-9 pr-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+          />
+        </div>
+      </div>
 
-  return (
-    <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0B0D12] text-zinc-900 dark:text-zinc-100 pb-20">
-      {/* 1. COMPACT SEARCH HEADER */}
-      <div className="bg-white dark:bg-[#12151E] border-b border-zinc-200 dark:border-zinc-800 pt-22 pb-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-5">
-            <div>
-              <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-[#0F5132] dark:text-emerald-400 font-semibold mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400" />
-                <span>Accommodation Directory</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
-                Explore Student Hostels &amp; Residential Homes
-              </h1>
-            </div>
-
-            {/* View Mode Toggle & Mobile Filter Trigger */}
-            <div className="flex items-center gap-2.5 self-start md:self-auto">
-              <div className="inline-flex p-1 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    viewMode === 'grid'
-                      ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs'
-                      : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'
-                  }`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Grid</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('map')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                    viewMode === 'map'
-                      ? 'bg-white dark:bg-zinc-800 text-zinc-950 dark:text-white shadow-2xs'
-                      : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'
-                  }`}
-                >
-                  <MapIcon className="w-3.5 h-3.5" />
-                  <span>Map</span>
-                </button>
-              </div>
-
+      {/* Accommodation Type */}
+      <div className="space-y-2">
+        <span className="block text-xs font-bold text-[#242925] dark:text-white">
+          Accommodation Type
+        </span>
+        <div className="space-y-1">
+          {PROPERTY_TYPES.map((t) => {
+            const active = typeFilter === t.value;
+            return (
               <button
+                key={t.value || 'ALL'}
                 type="button"
-                onClick={() => setIsMobileFilterOpen(true)}
-                className="lg:hidden inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-semibold cursor-pointer"
+                onClick={() => {
+                  setTypeFilter(t.value);
+                  updateUrlParams({ type: t.value });
+                }}
+                className={`w-full px-3 py-2 rounded-lg text-xs font-medium text-left flex items-center justify-between transition-colors cursor-pointer ${
+                  active
+                    ? 'bg-[#173D32] text-white font-semibold'
+                    : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
+                }`}
               >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>Filters</span>
-                {activeFilterChips.length > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-[#0F5132] text-white text-[10px] flex items-center justify-center font-mono">
-                    {activeFilterChips.length}
-                  </span>
-                )}
+                <span>{t.label}</span>
+                {active && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
               </button>
-            </div>
-          </div>
+            );
+          })}
+        </div>
+      </div>
 
-          {/* Search Bar & Quick Campus/Area Chips */}
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                syncUrlParams({ location });
+      {/* Price Range (GH₵) */}
+      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+        <span className="block text-xs font-bold text-[#242925] dark:text-white">
+          Budget Range (GH₵)
+        </span>
+        <div className="grid grid-cols-2 gap-2.5">
+          <div>
+            <label htmlFor="filter-min-price" className="sr-only">
+              Minimum Price in GH₵
+            </label>
+            <input
+              id="filter-min-price"
+              type="number"
+              min="0"
+              placeholder="Min GH₵"
+              value={minPrice}
+              onChange={(e) => {
+                setMinPrice(e.target.value);
+                updateUrlParams({ minPrice: e.target.value });
               }}
-              className="relative flex-1 flex gap-2"
-            >
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  aria-label="Search by neighbourhood, campus, or hostel name"
-                  placeholder="Search by neighbourhood, university campus, or property title..."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  onBlur={() => syncUrlParams({ location })}
-                  className="w-full pl-10 pr-9 py-2.5 bg-[#FAF9F6] dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-[#0F5132] dark:focus:border-emerald-500 transition-colors"
-                />
-                {location && (
-                  <button
-                    type="button"
-                    aria-label="Clear search query"
-                    onClick={() => {
-                      setLocation('');
-                      syncUrlParams({ location: '' });
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </form>
-
-            {/* Quick Region Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
-              {quickRegions.map((reg) => {
-                const isSelected = location.toLowerCase() === reg.val.toLowerCase();
-                return (
-                  <button
-                    key={reg.val}
-                    type="button"
-                    onClick={() => {
-                      const nextLoc = isSelected ? '' : reg.val;
-                      setLocation(nextLoc);
-                      syncUrlParams({ location: nextLoc });
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#0F5132] text-white border-[#0F5132]'
-                        : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
-                    }`}
-                  >
-                    {reg.label}
-                  </button>
-                );
-              })}
-            </div>
+              className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+            />
+          </div>
+          <div>
+            <label htmlFor="filter-max-price" className="sr-only">
+              Maximum Price in GH₵
+            </label>
+            <input
+              id="filter-max-price"
+              type="number"
+              min="0"
+              placeholder="Max GH₵"
+              value={maxPrice}
+              onChange={(e) => {
+                setMaxPrice(e.target.value);
+                updateUrlParams({ maxPrice: e.target.value });
+              }}
+              className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+            />
           </div>
         </div>
       </div>
 
-      {/* 2. MAIN WORKSPACE: LEFT FILTER SIDEBAR + RIGHT LISTINGS */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
-          {/* LEFT FILTER PANEL */}
-          <aside
-            aria-label="Property Filters"
-            className={`
-              lg:w-72 shrink-0 bg-white dark:bg-[#12151E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5
-              ${isMobileFilterOpen ? 'fixed inset-4 z-50 overflow-y-auto shadow-2xl lg:static lg:shadow-none' : 'hidden lg:block lg:sticky lg:top-22'}
-            `}
+      {/* Occupant Capacity */}
+      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+        <label
+          htmlFor="filter-capacity"
+          className="block text-xs font-bold text-[#242925] dark:text-white"
+        >
+          Minimum Capacity
+        </label>
+        <select
+          id="filter-capacity"
+          value={capacityFilter}
+          onChange={(e) => {
+            setCapacityFilter(e.target.value);
+            updateUrlParams({ capacity: e.target.value });
+          }}
+          className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
+        >
+          <option value="">Any occupancy</option>
+          <option value="1">1+ Person</option>
+          <option value="2">2+ People</option>
+          <option value="3">3+ People</option>
+          <option value="4">4+ People</option>
+        </select>
+      </div>
+
+      {/* Amenities */}
+      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+        <span className="block text-xs font-bold text-[#242925] dark:text-white">
+          Facilities &amp; Amenities
+        </span>
+        <div className="flex flex-wrap gap-1.5">
+          {AMENITY_OPTIONS.map((amenity) => {
+            const checked = selectedAmenities.includes(amenity);
+            return (
+              <button
+                key={amenity}
+                type="button"
+                aria-pressed={checked}
+                onClick={() => toggleAmenity(amenity)}
+                className={`px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
+                  checked
+                    ? 'bg-[#EDF6F0] border-[#173D32] text-[#173D32] dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-600 font-semibold'
+                    : 'bg-[#F8F7F2] dark:bg-[#1B211E] border-[#E7E7DF] dark:border-[#262E2A] text-[#5E645E] dark:text-[#9EA69F] hover:border-[#557A67]'
+                }`}
+              >
+                {amenity}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Reset All */}
+      {activePills.length > 0 && (
+        <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+          <Button
+            variant="outline"
+            size="sm"
+            fullWidth
+            onClick={resetAllFilters}
+            leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
           >
-            <div className="flex items-center justify-between pb-4 mb-5 border-b border-zinc-100 dark:border-zinc-800/80">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                <h2 className="text-sm font-bold text-zinc-950 dark:text-white">Filter Properties</h2>
-              </div>
+            Reset all filters
+          </Button>
+        </div>
+      )}
+    </div>
+  );
 
-              <div className="flex items-center gap-2">
-                {activeFilterChips.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={resetFilters}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors cursor-pointer"
-                  >
-                    <RotateCcw className="w-3 h-3" />
-                    <span>Reset</span>
-                  </button>
-                )}
-                {isMobileFilterOpen && (
-                  <button
-                    type="button"
-                    aria-label="Close filters"
-                    onClick={() => setIsMobileFilterOpen(false)}
-                    className="lg:hidden p-1 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+  return (
+    <div className="min-h-screen flex flex-col bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+      {/* ── SEARCH HEADER SUMMARY BAR ── */}
+      <div className="bg-white dark:bg-[#141816] border-b border-[#E7E7DF] dark:border-[#262E2A]">
+        <div className="container-akwaaba py-6 sm:py-8 space-y-4">
+          <BreadcrumbNav
+            items={[
+              { label: 'Home', href: '/' },
+              {
+                label: locationFilter
+                  ? `Accommodations in ${locationFilter}`
+                  : typeFilter
+                  ? formatPropertyTypeLabel(typeFilter)
+                  : 'Search & Discovery',
+              },
+            ]}
+          />
+
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div>
+              <h1 className="font-editorial text-2xl sm:text-3xl lg:text-4xl text-[#242925] dark:text-white">
+                {locationFilter
+                  ? `Accommodations in ${locationFilter}`
+                  : typeFilter
+                  ? `${formatPropertyTypeLabel(typeFilter)}s in Ghana`
+                  : 'Explore Accommodations'}
+              </h1>
+              <p className="text-xs sm:text-sm text-[#6F756F] dark:text-[#9EA69F] mt-1">
+                {isLoading
+                  ? 'Searching available properties...'
+                  : `${totalCount} ${totalCount === 1 ? 'property' : 'properties'} matching your criteria`}
+              </p>
             </div>
 
-            <div className="space-y-5">
-              {/* Availability Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800">
-                <div>
-                  <p className="text-xs font-semibold text-zinc-900 dark:text-white">Available Now</p>
-                  <p className="text-[11px] text-zinc-500">Hide fully booked properties</p>
-                </div>
+            {/* Keyword Search + Sort Controls */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="w-4 h-4 text-[#6F756F] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    updateUrlParams({ search: e.target.value });
+                  }}
+                  placeholder="Search property name or keyword..."
+                  aria-label="Search by property name or keyword"
+                  className="w-full h-10 pl-9 pr-8 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      updateUrlParams({ search: '' });
+                    }}
+                    aria-label="Clear keyword search"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6F756F] hover:text-[#242925]"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Mobile Filter Trigger */}
                 <button
                   type="button"
-                  role="switch"
-                  aria-checked={onlyAvailable}
-                  aria-label="Only show available properties"
-                  onClick={() => {
-                    const next = !onlyAvailable;
-                    setOnlyAvailable(next);
-                    syncUrlParams({ onlyAvailable: next });
-                  }}
-                  className={`w-10 h-5.5 flex items-center rounded-full p-0.5 transition-colors cursor-pointer ${
-                    onlyAvailable ? 'bg-[#0F5132]' : 'bg-zinc-300 dark:bg-zinc-700'
-                  }`}
+                  onClick={() => setMobileFiltersOpen(true)}
+                  className="lg:hidden h-10 px-3.5 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold flex items-center gap-2 cursor-pointer"
                 >
-                  <div
-                    className={`bg-white w-4.5 h-4.5 rounded-full shadow-xs transform transition-transform ${
-                      onlyAvailable ? 'translate-x-4.5' : 'translate-x-0'
-                    }`}
-                  />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#173D32]" />
+                  <span>Filters</span>
+                  {activePills.length > 0 && (
+                    <span className="px-1.5 py-0.5 rounded-full bg-[#173D32] text-white text-[10px] font-bold">
+                      {activePills.length}
+                    </span>
+                  )}
                 </button>
-              </div>
 
-              {/* Property Category */}
-              <div>
-                <label htmlFor="filter-type" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Property Category
-                </label>
-                <select
-                  id="filter-type"
-                  value={type}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setType(val);
-                    const nextRoom = val !== 'HOSTEL' ? '' : roomType;
-                    if (val !== 'HOSTEL') setRoomType('');
-                    syncUrlParams({ type: val, roomType: nextRoom });
-                  }}
-                  className="w-full px-3 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                >
-                  <option value="">All Property Types</option>
-                  <option value="HOSTEL">Student Hostel</option>
-                  <option value="APARTMENT">Self-Contained Apartment</option>
-                  <option value="STUDIO">Studio Unit</option>
-                  <option value="CHAMBER_AND_HALL">Chamber &amp; Hall Self-Contain</option>
-                  <option value="SINGLE_ROOM">Single Room (Porch / Shared)</option>
-                  <option value="HOUSE">Full Residential House</option>
-                </select>
-              </div>
-
-              {/* Target Resident */}
-              <div>
-                <label htmlFor="filter-audience" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Resident Profile
-                </label>
-                <select
-                  id="filter-audience"
-                  value={targetAudience}
-                  onChange={(e) => {
-                    setTargetAudience(e.target.value);
-                    syncUrlParams({ targetAudience: e.target.value });
-                  }}
-                  className="w-full px-3 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                >
-                  <option value="">Anyone (All Residents)</option>
-                  <option value="STUDENTS">University Students</option>
-                  <option value="PROFESSIONALS">Working Professionals</option>
-                  <option value="FAMILIES">Families &amp; Couples</option>
-                </select>
-              </div>
-
-              {/* Room Occupancy (for Hostels / All) */}
-              {(type === 'HOSTEL' || type === '') && (
-                <div>
-                  <label htmlFor="filter-room-type" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                    Hostel Room Occupancy
-                  </label>
+                {/* Sort Select */}
+                <div className="relative flex items-center">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#557A67] absolute left-3 pointer-events-none" />
                   <select
-                    id="filter-room-type"
-                    value={roomType}
+                    aria-label="Sort properties by"
+                    value={sortBy}
                     onChange={(e) => {
-                      setRoomType(e.target.value);
-                      syncUrlParams({ roomType: e.target.value });
+                      setSortBy(e.target.value);
+                      updateUrlParams({ sort: e.target.value });
                     }}
-                    className="w-full px-3 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
+                    className="h-10 pl-8 pr-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
                   >
-                    <option value="">Any Room Configuration</option>
-                    <option value="1-in-a-room">1-in-a-Room (Private Executive)</option>
-                    <option value="2-in-a-room">2-in-a-Room (Twin Shared)</option>
-                    <option value="3-in-a-room">3-in-a-Room (Triple Shared)</option>
-                    <option value="4-in-a-room">4-in-a-Room (Quadruple Shared)</option>
-                  </select>
-                </div>
-              )}
-
-              {/* Furnishing Level & Billing Cycle */}
-              <div className="grid grid-cols-2 gap-2.5">
-                <div>
-                  <label htmlFor="filter-furnishing" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    Furnishing
-                  </label>
-                  <select
-                    id="filter-furnishing"
-                    value={furnishing}
-                    onChange={(e) => {
-                      setFurnishing(e.target.value);
-                      syncUrlParams({ furnishing: e.target.value });
-                    }}
-                    className="w-full px-2.5 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                  >
-                    <option value="">Any</option>
-                    <option value="FURNISHED">Furnished</option>
-                    <option value="SEMI_FURNISHED">Semi-Furnished</option>
-                    <option value="UNFURNISHED">Unfurnished</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="filter-billing" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    Billing Cycle
-                  </label>
-                  <select
-                    id="filter-billing"
-                    value={pricePeriod}
-                    onChange={(e) => {
-                      setPricePeriod(e.target.value);
-                      syncUrlParams({ pricePeriod: e.target.value });
-                    }}
-                    className="w-full px-2.5 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                  >
-                    <option value="">Any Cycle</option>
-                    <option value="PER_ACADEMIC_YEAR">Per Academic Yr</option>
-                    <option value="PER_SEMESTER">Per Semester</option>
-                    <option value="PER_MONTH">Per Month</option>
-                    <option value="PER_YEAR">Per Year</option>
+                    {SORT_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        Sort: {opt.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Price Range (GH₵) */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Budget Range (GH₵)</label>
-                  <span className="text-[10px] font-mono text-zinc-400">GHS</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    aria-label="Minimum price in Ghana Cedis"
-                    placeholder="Min"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    onBlur={() => syncUrlParams({ minPrice })}
-                    className="w-full px-3 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    aria-label="Maximum price in Ghana Cedis"
-                    placeholder="Max"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    onBlur={() => syncUrlParams({ maxPrice })}
-                    className="w-full px-3 py-2 bg-[#FAF9F6] dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {[
-                    { label: '≤ 2,500', min: '', max: '2500' },
-                    { label: '2.5k – 5k', min: '2500', max: '5000' },
-                    { label: '5k+', min: '5000', max: '' },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => {
-                        setMinPrice(preset.min);
-                        setMaxPrice(preset.max);
-                        syncUrlParams({ minPrice: preset.min, maxPrice: preset.max });
-                      }}
-                      className="text-[11px] font-mono px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors cursor-pointer"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Essential Infrastructure & Utilities */}
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2">
-                  Essential Utilities &amp; Features
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    'Wi-Fi',
-                    'AC',
-                    'Backup Generator',
-                    'Water Supply',
-                    '24/7 Security',
-                    'Study Room',
-                    'Self-Contained',
-                    'Kitchen',
-                  ].map((item) => {
-                    const isSelected = amenity === item;
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => {
-                          const nextVal = isSelected ? '' : item;
-                          setAmenity(nextVal);
-                          syncUrlParams({ amenity: nextVal });
-                        }}
-                        className={`px-2.5 py-2 rounded-lg text-left text-[11px] font-medium border transition-colors truncate cursor-pointer ${
-                          isSelected
-                            ? 'bg-emerald-50 dark:bg-emerald-950/50 border-[#0F5132] text-[#0F5132] dark:text-emerald-300 font-semibold'
-                            : 'bg-[#FAF9F6] dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
-                        }`}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {isMobileFilterOpen && (
-                <button
-                  type="button"
-                  onClick={() => setIsMobileFilterOpen(false)}
-                  className="w-full py-3 rounded-xl bg-[#0F5132] text-white text-xs font-bold mt-4"
+          {/* Active Filter Pills */}
+          {activePills.length > 0 && (
+            <div className="flex items-center flex-wrap gap-2 pt-2">
+              {activePills.map((pill) => (
+                <span
+                  key={pill.key}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#C5E2D0] dark:border-emerald-800/60 text-xs font-medium text-[#173D32] dark:text-emerald-300"
                 >
-                  Apply Filters ({properties.length} results)
-                </button>
+                  <span>{pill.label}</span>
+                  <button
+                    type="button"
+                    onClick={pill.onRemove}
+                    aria-label={`Remove ${pill.label} filter`}
+                    className="hover:text-[#9E2A2B] cursor-pointer"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={resetAllFilters}
+                className="text-xs font-semibold text-[#6F756F] hover:text-[#173D32] underline ml-1 cursor-pointer"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── MAIN RESULTS WORKSPACE ── */}
+      <div className="container-akwaaba py-8 sm:py-10 flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Desktop Filter Sidebar (3 cols) */}
+          <aside
+            aria-label="Search filters"
+            className="hidden lg:block lg:col-span-3 bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl p-5 sticky top-22"
+          >
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#E7E7DF] dark:border-[#262E2A]">
+              <h2 className="text-sm font-bold text-[#242925] dark:text-white flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#173D32]" />
+                <span>Filter Properties</span>
+              </h2>
+              {activePills.length > 0 && (
+                <span className="text-xs font-semibold text-[#557A67]">
+                  {activePills.length} active
+                </span>
               )}
             </div>
+            {renderFilterControls()}
           </aside>
 
-          {/* RIGHT LISTINGS AREA */}
-          <div className="flex-1 w-full min-w-0">
-            {/* Results Count + Sort Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-zinc-200/70 dark:border-zinc-800/70">
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                Showing <span className="font-mono font-bold text-zinc-950 dark:text-white">{properties.length}</span>{' '}
-                {properties.length === 1 ? 'accommodation' : 'accommodations'}
-                {location ? ` matching "${location}"` : ''}
-              </p>
-
-              <div className="flex items-center gap-2">
-                <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400" />
-                <label htmlFor="sort-select" className="text-xs font-semibold text-zinc-500">
-                  Sort by:
-                </label>
-                <select
-                  id="sort-select"
-                  value={sort}
-                  onChange={(e) => {
-                    setSort(e.target.value);
-                    syncUrlParams({ sort: e.target.value });
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#12151E] border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132] cursor-pointer"
-                >
-                  <option value="newest">Newest Listed</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Active Filter Chips */}
-            {activeFilterChips.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mb-5">
-                {activeFilterChips.map((chip) => (
-                  <span
-                    key={chip.key}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/10 dark:bg-emerald-400/10 border border-[#0F5132]/25 dark:border-emerald-400/25 text-xs font-semibold text-[#0F5132] dark:text-emerald-300"
-                  >
-                    <span>{chip.label}</span>
-                    <button
-                      type="button"
-                      onClick={chip.clear}
-                      aria-label={`Remove ${chip.label} filter`}
-                      className="hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </span>
-                ))}
-                <button
-                  type="button"
-                  onClick={resetFilters}
-                  className="text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white underline ml-1 cursor-pointer"
-                >
-                  Clear all
-                </button>
-              </div>
-            )}
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Results Grid (9 cols) */}
+          <div className="lg:col-span-9 space-y-8">
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <SkeletonCard key={n} />
+                  <PropertyCardSkeleton key={n} />
                 ))}
               </div>
-            )}
-
-            {/* Error State */}
-            {isError && (
-              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-2xl p-8 text-center">
-                <p className="text-sm font-bold text-red-700 dark:text-red-400 mb-1">
-                  Unable to load accommodations right now
-                </p>
-                <p className="text-xs text-red-600/80 dark:text-red-400/70 mb-4">
-                  Please check your network connection and try again.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => refetch()}
-                  className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer"
-                >
-                  Retry Search
-                </button>
-              </div>
-            )}
-
-            {/* Map View */}
-            {!isLoading && !isError && viewMode === 'map' && (
-              <div className="h-[600px] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800">
-                <Map mode="multiple" properties={properties} />
-              </div>
-            )}
-
-            {/* Grid View */}
-            {!isLoading && !isError && viewMode === 'grid' && (
+            ) : isError ? (
+              <ErrorState
+                title="Unable to load search results"
+                message="We could not retrieve properties at this moment. Please check your connection and try again."
+                onRetry={() => refetch()}
+              />
+            ) : listings.length === 0 ? (
+              <EmptyState
+                icon={Building2}
+                title="No matching accommodations found"
+                description="No properties match your current combination of location, budget, and facility filters. Try broadening your location, increasing your maximum GH₵ budget, or clearing active filters."
+                actionLabel="Reset all filters"
+                onAction={resetAllFilters}
+              />
+            ) : (
               <>
-                {properties.length === 0 ? (
-                  <div className="bg-white dark:bg-[#12151E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center">
-                    <Building2 className="w-10 h-10 text-zinc-400 mx-auto mb-3" />
-                    <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">
-                      No matching accommodations found
-                    </h3>
-                    <p className="text-xs text-zinc-500 max-w-md mx-auto mb-5">
-                      Try broadening your budget range, clearing a utility filter, or searching a nearby neighbourhood.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={resetFilters}
-                      className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {listings.map((property) => (
+                    <PropertyCard key={property.id} property={property} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <nav
+                    aria-label="Pagination"
+                    className="pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => {
+                        const prev = Math.max(1, page - 1);
+                        setPage(prev);
+                        updateUrlParams({ page: prev });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      leftIcon={<ChevronLeft className="w-4 h-4" />}
                     >
-                      Reset All Filters
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {properties.map((property) => {
-                      const lowestRoomPrice =
-                        property.rooms && property.rooms.length > 0
-                          ? Math.min(...property.rooms.map((r) => r.price))
-                          : property.price;
-                      const isVerifiedHost = Boolean(property.landlord?.isVerifiedLandlord);
-
-                      return (
-                        <article
-                          key={property.id}
-                          className="group relative bg-white dark:bg-[#12151E] rounded-2xl overflow-hidden border border-zinc-200/90 dark:border-zinc-800/90 hover:border-[#0F5132]/50 dark:hover:border-emerald-500/50 transition-all duration-200 flex flex-col shadow-2xs hover:shadow-md"
-                        >
-                          {/* Wishlist Button outside <Link> for valid HTML5 & WCAG AA */}
-                          <div className="absolute top-3 right-3 z-20">
-                            <WishlistButton propertyId={property.id} />
-                          </div>
-
-                          <Link
-                            href={`/properties/${property.id}`}
-                            className="flex flex-col flex-1 focus-visible:outline-none"
-                          >
-                            {/* Image Header */}
-                            <div className="relative h-52 w-full bg-zinc-100 dark:bg-zinc-900 overflow-hidden">
-                              {property.images?.[0] ? (
-                                <Image
-                                  src={property.images[0]}
-                                  alt={property.title}
-                                  fill
-                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                  className="object-cover group-hover:scale-103 transition-transform duration-500"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-zinc-400 text-xs">
-                                  No Image Available
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-
-                              {/* Top Left Badges */}
-                              <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 pr-12">
-                                <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-zinc-900/80 text-white backdrop-blur-md">
-                                  {property.type.replace(/_/g, ' ')}
-                                </span>
-                                {isVerifiedHost && (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[#0F5132]/90 text-white backdrop-blur-md">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                                    Verified Host
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Bottom Status & Rating Pill */}
-                              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                                {property.totalCapacity && property.totalCapacity > 0 ? (
-                                  <span
-                                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold backdrop-blur-md ${
-                                      property.remainingCapacity === 0
-                                        ? 'bg-red-950/90 text-red-200'
-                                        : 'bg-black/65 text-white'
-                                    }`}
-                                  >
-                                    {property.remainingCapacity === 0
-                                      ? 'Sold Out'
-                                      : `${property.remainingCapacity} of ${property.totalCapacity} beds left`}
-                                  </span>
-                                ) : (
-                                  <span
-                                    className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold backdrop-blur-md ${
-                                      property.isAvailable ? 'bg-black/65 text-white' : 'bg-red-950/90 text-red-200'
-                                    }`}
-                                  >
-                                    {property.isAvailable ? 'Available' : 'Booked'}
-                                  </span>
-                                )}
-
-                                {property.avgRating && (
-                                  <span className="inline-flex items-center gap-1 bg-black/65 backdrop-blur-xs px-2 py-0.5 rounded-md text-xs font-bold text-amber-300">
-                                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                    {Number(property.avgRating).toFixed(1)}
-                                    {property.reviewCount ? (
-                                      <span className="text-zinc-300 font-normal">({property.reviewCount})</span>
-                                    ) : null}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Card Body */}
-                            <div className="p-5 flex-1 flex flex-col justify-between">
-                              <div>
-                                <h2 className="text-base font-bold text-zinc-950 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors line-clamp-1 mb-1">
-                                  {property.title}
-                                </h2>
-                                <p className="flex items-center text-zinc-500 dark:text-zinc-400 text-xs mb-3 line-clamp-1">
-                                  <MapPin className="w-3.5 h-3.5 mr-1 text-zinc-400 shrink-0" />
-                                  {property.location}
-                                </p>
-
-                                {/* Room Tiers or Furnishing summary */}
-                                {property.rooms && property.rooms.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1.5 mb-3">
-                                    {property.rooms.slice(0, 3).map((room) => (
-                                      <span
-                                        key={room.id}
-                                        className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300"
-                                      >
-                                        {room.roomType}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="flex flex-wrap gap-1.5 mb-3">
-                                    {property.furnishing && (
-                                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300">
-                                        {property.furnishing.replace(/_/g, ' ')}
-                                      </span>
-                                    )}
-                                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300">
-                                      {isVerifiedHost ? 'Direct Landlord • KYC Verified' : 'Direct Landlord Listing'}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Amenities preview */}
-                                {property.amenities && property.amenities.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 mb-4">
-                                    {property.amenities.slice(0, 3).map((item, i) => (
-                                      <span key={i} className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                                        • {item}
-                                      </span>
-                                    ))}
-                                    {property.amenities.length > 3 && (
-                                      <span className="text-[11px] text-zinc-400">
-                                        +{property.amenities.length - 3} more
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Price Footer */}
-                              <div className="pt-3.5 border-t border-zinc-100 dark:border-zinc-800/80 flex items-baseline justify-between">
-                                <div>
-                                  <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
-                                    {property.rooms && property.rooms.length > 0 ? 'Starting from' : 'Rent'}
-                                  </span>
-                                  <div className="flex items-baseline gap-1">
-                                    <span className="text-lg font-mono font-extrabold text-zinc-950 dark:text-white">
-                                      GH₵ {Number(lowestRoomPrice || 0).toLocaleString()}
-                                    </span>
-                                    <span className="text-xs text-zinc-500">
-                                      {formatPeriod(property.pricePeriod, property.type)}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <span className="inline-flex items-center gap-1 text-xs font-bold text-[#0F5132] dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform">
-                                  <span>View Details</span>
-                                  <ArrowRight className="w-3.5 h-3.5" />
-                                </span>
-                              </div>
-                            </div>
-                          </Link>
-                        </article>
-                      );
-                    })}
-                  </div>
+                      Previous
+                    </Button>
+                    <span className="text-xs font-medium text-[#6F756F]">
+                      Page <strong className="text-[#242925] dark:text-white">{page}</strong> of{' '}
+                      <strong className="text-[#242925] dark:text-white">{totalPages}</strong>
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => {
+                        const next = Math.min(totalPages, page + 1);
+                        setPage(next);
+                        updateUrlParams({ page: next });
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      rightIcon={<ChevronRight className="w-4 h-4" />}
+                    >
+                      Next
+                    </Button>
+                  </nav>
                 )}
               </>
             )}
           </div>
         </div>
       </div>
+
+      {/* ── MOBILE FILTER DRAWER ── */}
+      {mobileFiltersOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-50 flex justify-end"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Filter properties"
+        >
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs"
+            onClick={() => setMobileFiltersOpen(false)}
+          />
+          <div className="relative w-80 max-w-[90vw] bg-white dark:bg-[#141816] h-full flex flex-col z-10 shadow-2xl">
+            <div className="h-16 px-5 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between">
+              <span className="font-editorial text-lg text-[#242925] dark:text-white">
+                Filter Properties
+              </span>
+              <button
+                type="button"
+                onClick={() => setMobileFiltersOpen(false)}
+                aria-label="Close filters"
+                className="p-2 rounded-lg text-[#6F756F]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 p-5 overflow-y-auto">{renderFilterControls()}</div>
+            <div className="p-4 border-t border-[#E7E7DF] dark:border-[#262E2A] bg-[#F8F7F2] dark:bg-[#111513]">
+              <Button fullWidth onClick={() => setMobileFiltersOpen(false)}>
+                View {totalCount} {totalCount === 1 ? 'Result' : 'Results'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PublicFooter />
     </div>
   );
 }
 
-export default function PropertiesPage() {
+export default function PropertiesSearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#FAF9F6] dark:bg-[#0B0D12] pt-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((n) => (
-              <SkeletonCard key={n} />
-            ))}
-          </div>
+        <div className="container-akwaaba py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <PropertyCardSkeleton key={n} />
+          ))}
         </div>
       }
     >
-      <PropertiesCatalogContent />
+      <SearchDiscoveryContent />
     </Suspense>
   );
 }

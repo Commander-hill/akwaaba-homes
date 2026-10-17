@@ -2,26 +2,25 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import {
   ArrowRight,
   Loader2,
   CheckCircle2,
-  Clock,
   Eye,
   EyeOff,
-  AlertCircle
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
+import ThemeToggle from '@/components/ThemeToggle';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const isTimeout = searchParams.get('reason') === 'timeout';
+  const isRegistered = searchParams.get('registered') === 'true';
+  const redirectParam = searchParams.get('redirect');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +45,11 @@ function LoginForm() {
   });
 
   const redirectByRole = (user: any) => {
+    if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
+      window.location.href = redirectParam;
+      return;
+    }
+
     if (user.role === 'ADMIN') {
       window.location.href = '/admin/dashboard';
     } else if (user.role === 'LANDLORD') {
@@ -80,7 +84,7 @@ function LoginForm() {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      
+
       if (response.data.requireTwoFactor) {
         setRequireTwoFactor(true);
         setTempToken(response.data.tempToken);
@@ -110,7 +114,7 @@ function LoginForm() {
     try {
       const response = await api.post('/auth/login/2fa', {
         tempToken,
-        code: twoFactorCode.trim()
+        code: twoFactorCode.trim(),
       });
 
       if (response.data?.accessToken) {
@@ -127,65 +131,63 @@ function LoginForm() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    toast('Google sign-in is being enabled for your region. Please sign in with your email and password.', {
-      icon: 'ℹ️',
-      duration: 4000,
-    });
-  };
-
   // Active session loading spinner
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-4">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-500" />
-        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Verifying session...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] p-6 space-y-4">
+        <Loader2 className="w-7 h-7 animate-spin text-[#173D32] dark:text-[#86B59C]" />
+        <p className="text-xs font-medium text-[#5E645E] dark:text-[#A0A8A2]">Verifying session...</p>
       </div>
     );
   }
 
   // Active session already verified
   if (sessionData && !isTimeout) {
-    const roleTitle = sessionData.role === 'LANDLORD' 
-      ? 'Landlord Dashboard' 
-      : sessionData.role === 'ADMIN' 
-      ? 'Admin Hub' 
-      : (sessionData.role === 'CARETAKER' || sessionData.role === 'STAFF')
-      ? 'Operations Hub' 
-      : 'Tenant Dashboard';
+    const roleTitle =
+      sessionData.role === 'LANDLORD'
+        ? 'Landlord Dashboard'
+        : sessionData.role === 'ADMIN'
+        ? 'Admin Hub'
+        : sessionData.role === 'CARETAKER' || sessionData.role === 'STAFF'
+        ? 'Operations Hub'
+        : 'Tenant Dashboard';
 
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6">
-        <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] p-6">
+        <div className="w-full max-w-md bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-8 text-center space-y-5 shadow-xs">
+          <div className="w-12 h-12 rounded-xl bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#1F7A4C] dark:text-[#6EE7B7] flex items-center justify-center mx-auto border border-[#A7F3D0] dark:border-[#065F46]">
             <CheckCircle2 className="w-6 h-6" />
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Active Session Detected</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              You are signed in as <span className="font-semibold text-zinc-800 dark:text-zinc-200">{sessionData.firstName || sessionData.email}</span>.
+            <h2 className="font-editorial text-2xl text-[#242925] dark:text-white">Active Session Detected</h2>
+            <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2]">
+              You are signed in as{' '}
+              <span className="font-semibold text-[#242925] dark:text-white">
+                {sessionData.firstName || sessionData.email}
+              </span>
+              .
             </p>
           </div>
 
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium rounded-[10px] transition-colors cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={async () => {
                 try {
                   await api.post('/auth/logout');
-                } catch (e) {}
+                } catch {}
                 localStorage.removeItem('akwaaba_access_token');
                 localStorage.removeItem('akwaaba_refresh_token');
                 window.location.reload();
               }}
-              className="w-full h-11 inline-flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-xs font-semibold text-zinc-600 dark:text-zinc-400 rounded-xl transition-colors cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#1E2420] text-sm font-medium text-[#242925] dark:text-[#F4F5F2] rounded-[10px] transition-colors cursor-pointer"
             >
               Sign out &amp; switch account
             </button>
@@ -196,64 +198,66 @@ function LoginForm() {
   }
 
   return (
-    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
-      
+    <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] antialiased">
       {/* ── Minimal Purpose-Built Header ── */}
-      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
+      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-[#E7E7DF] dark:border-[#262E29] bg-white/80 dark:bg-[#111513]/80 backdrop-blur-md flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+          <div className="w-9 h-9 rounded-[10px] overflow-hidden bg-[#173D32] flex items-center justify-center shadow-xs">
             <Image
               src="/logo.png"
-              alt="AkwabaHomes"
-              width={32}
-              height={32}
+              alt="Akwaaba Homes"
+              width={36}
+              height={36}
               className="w-full h-full object-cover"
               priority
             />
           </div>
-          <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
-            Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[16px] font-semibold tracking-tight text-[#242925] dark:text-white leading-none">
+              Akwaaba<span className="text-[#173D32] dark:text-[#86B59C]">Homes</span>
+            </span>
+            <span className="text-[10px] text-[#6F756F] dark:text-[#9CA39E] tracking-wide mt-0.5">
+              Trusted Homes for Students &amp; Residents
+            </span>
+          </div>
         </Link>
 
-        <Link 
-          href="/properties" 
-          className="text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors"
-        >
-          Explore accommodations &rarr;
-        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link
+            href="/search"
+            className="text-xs sm:text-sm font-medium text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white transition-colors"
+          >
+            Explore homes &rarr;
+          </Link>
+        </div>
       </header>
 
       {/* ── Main Asymmetric Workspace ── */}
       <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
         <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-center">
-          
           {/* ──── Left Column: Dominant Authentication Form (58%) ──── */}
-          <div className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto lg:mx-0">
-            
-            {/* Title & Editorial Framing with Centered Akwaaba Logo */}
-            <div className="flex flex-col items-center text-center mb-7">
-              <Link href="/" className="mb-3.5 inline-flex items-center justify-center group" title="AkwaabaHomes">
-                <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-500 to-[#0F5132] border border-emerald-400/40 flex items-center justify-center shadow-md p-1.5 group-hover:scale-105 transition-transform ring-4 ring-emerald-500/10 dark:ring-emerald-500/20">
-                  <Image
-                    src="/logo.png"
-                    alt="AkwaabaHomes Logo"
-                    width={36}
-                    height={36}
-                    className="w-full h-full object-contain"
-                    priority
-                  />
-                </div>
-              </Link>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+          <div className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto lg:mx-0 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-8 shadow-xs">
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1.5">
+                Welcome Back
+              </p>
+              <h1 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white">
                 Sign in to your account
               </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1.5 max-w-sm">
-                Enter your details to access your tenancy ledger, hostel bookings, or property management desk.
+              <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed mt-1.5">
+                Access your bookings, saved properties, tenancy records, or host workspace.
               </p>
             </div>
 
-            {/* Inactivity Timeout Notice */}
+            {isRegistered && (
+              <AlertBanner
+                type="success"
+                message="Your account has been created. Please sign in below to continue."
+                className="mb-5"
+              />
+            )}
+
             {isTimeout && (
               <AlertBanner
                 type="warning"
@@ -262,7 +266,6 @@ function LoginForm() {
               />
             )}
 
-            {/* Error Notice */}
             {error && (
               <AlertBanner
                 type="error"
@@ -274,11 +277,11 @@ function LoginForm() {
             {/* Two-Factor Verification Challenge */}
             {requireTwoFactor ? (
               <form onSubmit={handle2FASubmit} className="space-y-5">
-                <div className="space-y-1 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-800 dark:text-zinc-200">
+                <div className="space-y-1 pb-2 border-b border-[#E7E7DF] dark:border-[#262E29]">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#242925] dark:text-white">
                     Two-Factor Authentication
                   </div>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
                     {useRecoveryCode
                       ? 'Enter your 8-character emergency recovery code.'
                       : 'Enter the 6-digit code from your authenticator app.'}
@@ -286,7 +289,7 @@ function LoginForm() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                  <label className="block text-[13px] font-medium text-[#242925] dark:text-[#E5E7E4]">
                     {useRecoveryCode ? 'Emergency recovery key' : '6-digit verification code'}
                   </label>
                   <input
@@ -294,7 +297,7 @@ function LoginForm() {
                     required
                     maxLength={useRecoveryCode ? 10 : 6}
                     autoFocus
-                    className="w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-center text-lg font-mono font-bold tracking-widest text-zinc-900 dark:text-white placeholder:text-zinc-300 dark:placeholder:text-zinc-600 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors"
+                    className="w-full h-11 px-3.5 bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] rounded-[10px] text-center text-lg font-mono font-bold tracking-widest text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:border-[#173D32] focus:ring-2 focus:ring-[#173D32]/20 outline-none transition-colors"
                     placeholder={useRecoveryCode ? 'XXXX-XXXX' : '000000'}
                     value={twoFactorCode}
                     onChange={(e) => setTwoFactorCode(e.target.value)}
@@ -309,7 +312,7 @@ function LoginForm() {
                       setTwoFactorCode('');
                       setError('');
                     }}
-                    className="text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="text-[#173D32] dark:text-[#86B59C] hover:underline cursor-pointer font-medium"
                   >
                     {useRecoveryCode ? 'Use 6-digit authenticator code' : 'Lost device? Use emergency recovery key'}
                   </button>
@@ -319,7 +322,7 @@ function LoginForm() {
                   <button
                     type="submit"
                     disabled={isLoading || !twoFactorCode.trim()}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-60 cursor-pointer"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors disabled:opacity-60 cursor-pointer"
                   >
                     {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify and continue'}
                   </button>
@@ -331,97 +334,67 @@ function LoginForm() {
                       setTwoFactorCode('');
                       setError('');
                     }}
-                    className="w-full text-center text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer py-1"
+                    className="w-full text-center text-xs text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white cursor-pointer py-1"
                   >
                     &larr; Back to sign in
                   </button>
                 </div>
               </form>
             ) : (
-              /* Standard Sign-In Form */
               <div className="space-y-5">
-                
-                {/* Optional Clean Google Sign-in */}
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  className="w-full h-11 flex items-center justify-center gap-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#14181E] text-xs font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shadow-2xs cursor-pointer"
-                >
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>Continue with Google</span>
-                </button>
-
-                {/* Subtle Divider */}
-                <div className="relative flex items-center justify-center my-4">
-                  <div className="w-full border-t border-zinc-200 dark:border-zinc-800" />
-                  <span className="absolute bg-[#FBFBF9] dark:bg-[#0D0F12] px-3 text-[11px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
-                    or continue with email
-                  </span>
-                </div>
-
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  
                   {/* Email Input */}
                   <div className="space-y-1.5">
-                    <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                    <label
+                      htmlFor="login-email"
+                      className="block text-[13px] font-medium text-[#242925] dark:text-[#E5E7E4]"
+                    >
                       Email address
                     </label>
-                    <input 
-                      type="email" 
-                      required 
+                    <input
+                      id="login-email"
+                      type="email"
+                      required
                       autoComplete="email"
-                      className="w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors" 
-                      placeholder="e.g. kwame@st.ug.edu.gh or personal@email.com" 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
+                      className="w-full h-11 px-3.5 bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] rounded-[10px] text-sm text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:border-[#173D32] focus:ring-2 focus:ring-[#173D32]/20 outline-none transition-colors"
+                      placeholder="e.g. kwame@st.ug.edu.gh or personal@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
                   {/* Password Input */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                      <label
+                        htmlFor="login-password"
+                        className="block text-[13px] font-medium text-[#242925] dark:text-[#E5E7E4]"
+                      >
                         Password
                       </label>
-                      <Link 
-                        href="/forgot-password" 
-                        className="text-xs text-[#0F5132] dark:text-emerald-400 hover:underline font-medium"
+                      <Link
+                        href="/forgot-password"
+                        className="text-xs text-[#173D32] dark:text-[#86B59C] hover:underline font-medium"
                       >
                         Forgot password?
                       </Link>
                     </div>
                     <div className="relative">
-                      <input 
-                        type={showPassword ? 'text' : 'password'} 
-                        required 
+                      <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
                         autoComplete="current-password"
-                        className="w-full h-11 pl-3.5 pr-10 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors" 
-                        placeholder="••••••••••••" 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
+                        className="w-full h-11 pl-3.5 pr-10 bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] rounded-[10px] text-sm text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:border-[#173D32] focus:ring-2 focus:ring-[#173D32]/20 outline-none transition-colors"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
-                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors cursor-pointer"
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#6F756F] hover:text-[#242925] dark:hover:text-white transition-colors cursor-pointer"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -431,15 +404,15 @@ function LoginForm() {
                   {/* Keep me signed in */}
                   <div className="pt-0.5">
                     <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                      <input 
-                        id="remember-me" 
-                        name="remember-me" 
-                        type="checkbox" 
+                      <input
+                        id="remember-me"
+                        name="remember-me"
+                        type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132]" 
+                        className="h-4 w-4 rounded border-[#D4D6CE] text-[#173D32] focus:ring-[#173D32] accent-[#173D32]"
                       />
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                      <span className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
                         Keep me signed in on this device
                       </span>
                     </label>
@@ -450,99 +423,79 @@ function LoginForm() {
                     <button
                       type="submit"
                       disabled={isLoading || !email.trim() || !password}
-                      className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs"
+                      className="w-full h-11 flex items-center justify-center gap-2 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs"
                     >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <span>Sign in</span>
-                      )}
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign in</span>}
                     </button>
                   </div>
-
                 </form>
 
                 {/* Secondary Registration Link */}
-                <div className="pt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E29] text-center text-sm text-[#5E645E] dark:text-[#A0A8A2]">
                   Don&apos;t have an account?{' '}
-                  <Link 
-                    href="/register" 
-                    className="font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  <Link
+                    href={redirectParam ? `/register?redirect=${encodeURIComponent(redirectParam)}` : '/register'}
+                    className="font-semibold text-[#173D32] dark:text-[#86B59C] hover:underline"
                   >
                     Create an account
                   </Link>
                 </div>
-
               </div>
             )}
-
           </div>
 
           {/* ──── Right Column: Restrained Editorial Brand Visual (42%) ──── */}
           <div className="hidden lg:block lg:col-span-5 xl:col-span-6">
-            <div className="relative w-full aspect-[4/5] max-h-[580px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group">
-              
-              {/* Authentic Ghanaian Student & Residential Complex Photo */}
+            <div className="relative w-full aspect-[4/5] max-h-[560px] rounded-[16px] overflow-hidden border border-[#E7E7DF] dark:border-[#262E29] shadow-xs group">
               <Image
                 src="/images/auth-bg.png"
-                alt="Nkrumah Residence Ghanaian student and apartment community"
+                alt="Verified Ghanaian student and residential community"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                className="object-cover object-center"
                 priority
               />
 
-              {/* Gentle Vignette Gradient for Legibility */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-              {/* Editorial Caption Card */}
-              <div className="absolute bottom-0 inset-x-0 p-6 sm:p-8 text-white space-y-2">
-                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
-                  Verified Housing // Accra • Kumasi • Cape Coast
+              <div className="absolute bottom-0 inset-x-0 p-7 sm:p-8 text-white space-y-2.5">
+                <div className="text-[11px] uppercase tracking-widest text-[#A7F3D0] font-semibold">
+                  Verified Housing • Accra • Kumasi • Cape Coast
                 </div>
-                <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
-                  Nkrumah Residence &amp; Executive Suites
+                <h3 className="font-editorial text-2xl text-white leading-snug">
+                  Trusted homes for students &amp; residents across Ghana
                 </h3>
-                <p className="text-xs text-zinc-200/80 leading-relaxed font-normal max-w-sm">
-                  Verified student hostels and residential tenancies with transparent terms, escrow protection, and direct landlord connections.
+                <p className="text-xs text-white/85 leading-relaxed font-normal max-w-sm">
+                  Review room availability, compare transparent GH₵ pricing, and manage your reservations in one calm workspace.
                 </p>
-                <div className="pt-2 flex items-center gap-2 text-[11px] text-zinc-300/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>Ayeduase Hub • KNUST &amp; Legon Campus Portals</span>
-                </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </main>
 
       {/* ── Restrained Footer ── */}
-      <footer className="w-full px-6 sm:px-10 lg:px-16 py-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-400 dark:text-zinc-500 gap-2">
-        <div>
-          &copy; {new Date().getFullYear()} AkwaabaHomes Ghana. All rights reserved.
-        </div>
+      <footer className="w-full px-6 sm:px-10 lg:px-16 py-4 border-t border-[#E7E7DF] dark:border-[#262E29] flex flex-col sm:flex-row items-center justify-between text-xs text-[#6F756F] dark:text-[#A0A8A2] gap-2">
+        <div>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana. All rights reserved.</div>
         <div className="flex items-center gap-4">
-          <Link href="/terms" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+          <Link href="/terms" className="hover:text-[#242925] dark:hover:text-white transition-colors">
             Terms
           </Link>
-          <Link href="/privacy" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+          <Link href="/privacy" className="hover:text-[#242925] dark:hover:text-white transition-colors">
             Privacy
           </Link>
-          <Link href="/help" className="hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors">
+          <Link href="/support" className="hover:text-[#242925] dark:hover:text-white transition-colors">
             Support
           </Link>
         </div>
       </footer>
-
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="-mt-18 md:-mt-20 min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F8F7F2] dark:bg-[#111513]" />}>
       <LoginForm />
     </Suspense>
   );

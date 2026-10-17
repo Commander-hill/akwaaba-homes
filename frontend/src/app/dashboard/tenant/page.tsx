@@ -2,251 +2,115 @@
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSearchParams, useRouter } from 'next/navigation';
-import api from '@/lib/axios';
-import { 
-  Loader2, Calendar, MapPin, CheckCircle, Clock, XCircle, Star, PenTool, 
-  AlertTriangle, MessageSquarePlus, Users, Edit3, HeartHandshake, UserPlus, 
-  MessageSquare, Flag, CreditCard, Lock, FileText, Printer, Copy, CheckCircle2, 
-  Receipt, PhoneCall, Siren, Phone, ExternalLink, Heart, Megaphone, KeyRound, 
-  Car, Package, DollarSign, HeartPulse, Flame, Key, AlertCircle, ClipboardCheck, BadgeCheck,
-  Radio, Building2, Check, Trash2, Wrench, Camera, GraduationCap, ChevronRight, ArrowLeft,
-  ArrowUpRight, Scale, ShieldCheck, Sparkles, Filter, Plus
-} from 'lucide-react';
-import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import NoticeBoard from '@/components/NoticeBoard';
-import CommuteWidget from '@/components/CommuteWidget';
-import OnboardingProgressWidget from '@/components/OnboardingProgressWidget';
-import OnboardingTour from '@/components/OnboardingTour';
-import MessagingTab from '@/components/MessagingTab';
-import VisitorPassTab from '@/components/tenant/VisitorPassTab';
-import HomeServicesTab from '@/components/tenant/HomeServicesTab';
-import VehicleParkingTab from '@/components/tenant/VehicleParkingTab';
-import LeaseRenewalTab from '@/components/tenant/LeaseRenewalTab';
-import PackageDeliveriesTab from '@/components/tenant/PackageDeliveriesTab';
-import BillSplitterTab from '@/components/tenant/BillSplitterTab';
-import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
-import TenantAssetInventoryTab from '@/components/tenant/TenantAssetInventoryTab';
+import Image from 'next/image';
+import api from '@/lib/axios';
+import toast from 'react-hot-toast';
+import {
+  Search,
+  MapPin,
+  Calendar,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  FileText,
+  Heart,
+  Bell,
+  Star,
+  Wrench,
+  MessageSquare,
+  Building2,
+  ShieldCheck,
+  Loader2,
+  KeyRound,
+  Package,
+  Users,
+  Receipt,
+  ChevronRight,
+} from 'lucide-react';
+import PropertyCard from '@/components/tenant-ui/PropertyCard';
+import {
+  StatusBadge,
+  EmptyState,
+  formatCedis,
+} from '@/components/tenant-ui/primitives';
 import { getImageUrl } from '@/lib/utils';
-import clsx from 'clsx';
-import SkeletonTable from '@/components/SkeletonTable';
-import { printPaymentReceipt, printLeaseAgreementReceipt } from '@/lib/receiptTemplates';
+import VisitorPassTab from '@/components/tenant/VisitorPassTab';
+import PackageDeliveriesTab from '@/components/tenant/PackageDeliveriesTab';
+import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
 
-// ─── 5 Cohesive Resident Pillars ─────────────────────────────────────────────
-export type TenantPillarType = 'residence' | 'payments' | 'maintenance' | 'living' | 'community';
-
-// Legacy mapping for bookmarks and direct links
-const LEGACY_TAB_MAP: Record<string, { pillar: TenantPillarType; subview?: string }> = {
-  'bookings': { pillar: 'residence', subview: 'home' },
-  'active-booking': { pillar: 'residence', subview: 'home' },
-  'documents': { pillar: 'residence', subview: 'lease' },
-  'renewals': { pillar: 'residence', subview: 'renewals' },
-  'inventory': { pillar: 'residence', subview: 'inventory' },
-  'payments': { pillar: 'payments', subview: 'receipts' },
-  'tranches': { pillar: 'payments', subview: 'tranches' },
-  'billsplit': { pillar: 'payments', subview: 'billsplit' },
-  'tickets': { pillar: 'maintenance', subview: 'tickets' },
-  'safety': { pillar: 'maintenance', subview: 'safety' },
-  'visitors': { pillar: 'living', subview: 'passes' },
-  'deliveries': { pillar: 'living', subview: 'deliveries' },
-  'vehicles': { pillar: 'living', subview: 'vehicles' },
-  'services': { pillar: 'living', subview: 'services' },
-  'roommates': { pillar: 'community', subview: 'roommates' },
-  'messages': { pillar: 'community', subview: 'messages' },
-  'reviews': { pillar: 'community', subview: 'reviews' },
-};
-
-function LiveBookingCountdown({ createdAt, onExpire }: { createdAt: string; onExpire?: () => void }) {
-  const getRemainingSeconds = () => {
-    const expiresAt = new Date(createdAt).getTime() + 15 * 60 * 1000;
-    return Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
-  };
-
-  const [diffSec, setDiffSec] = useState<number>(getRemainingSeconds);
-
-  useEffect(() => {
-    const initial = getRemainingSeconds();
-    setDiffSec(initial);
-
-    if (initial <= 0) {
-      onExpire?.();
-      return;
-    }
-
-    const interval = setInterval(() => {
-      const remaining = getRemainingSeconds();
-      setDiffSec(remaining);
-
-      if (remaining <= 0) {
-        clearInterval(interval);
-        onExpire?.();
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [createdAt]);
-
-  if (diffSec <= 0) {
-    return (
-      <span className="text-[11px] font-mono font-bold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-900 flex items-center gap-1">
-        <Clock className="w-3 h-3 text-rose-500" />
-        Expired
-      </span>
-    );
-  }
-
-  const minutes = Math.floor(diffSec / 60);
-  const seconds = String(diffSec % 60).padStart(2, '0');
-
-  return (
-    <span className="text-[11px] font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800 flex items-center gap-1">
-      <Clock className="w-3 h-3 animate-pulse text-amber-600 dark:text-amber-400" />
-      {minutes}m {seconds}s left
-    </span>
-  );
-}
+type ActiveResidentModalTool = 'visitors' | 'deliveries' | 'payments' | null;
 
 function TenantDashboardContent() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab');
+  const [quickSearchQuery, setQuickSearchQuery] = useState('');
+  const [quickSearchType, setQuickSearchType] = useState('');
+  const [activeResidentTool, setActiveResidentTool] = useState<ActiveResidentModalTool>(null);
 
-  // Determine initial pillar & subview
-  const initialNav = useMemo(() => {
-    if (!tabParam) return { pillar: 'residence' as TenantPillarType, subview: 'home' };
-    if (['residence', 'payments', 'maintenance', 'living', 'community'].includes(tabParam)) {
-      return { pillar: tabParam as TenantPillarType, subview: undefined };
-    }
-    if (LEGACY_TAB_MAP[tabParam]) {
-      return LEGACY_TAB_MAP[tabParam];
-    }
-    return { pillar: 'residence' as TenantPillarType, subview: 'home' };
-  }, [tabParam]);
-
-  const [activePillar, setActivePillar] = useState<TenantPillarType>(initialNav.pillar);
-  const [subview, setSubview] = useState<string>(initialNav.subview || 'home');
-
-  useEffect(() => {
-    if (tabParam) {
-      if (['residence', 'payments', 'maintenance', 'living', 'community'].includes(tabParam)) {
-        setActivePillar(tabParam as TenantPillarType);
-      } else if (LEGACY_TAB_MAP[tabParam]) {
-        setActivePillar(LEGACY_TAB_MAP[tabParam].pillar);
-        if (LEGACY_TAB_MAP[tabParam].subview) {
-          setSubview(LEGACY_TAB_MAP[tabParam].subview!);
-        }
-      }
-    }
-  }, [tabParam]);
-
-  const handleSelectPillar = (pillar: TenantPillarType) => {
-    setActivePillar(pillar);
-    // Reset to default subview for that pillar
-    let defSubview = 'home';
-    if (pillar === 'payments') defSubview = 'receipts';
-    if (pillar === 'maintenance') defSubview = 'tickets';
-    if (pillar === 'living') defSubview = 'passes';
-    if (pillar === 'community') defSubview = 'roommates';
-    setSubview(defSubview);
-    router.replace(`/dashboard/tenant?tab=${pillar}`, { scroll: false });
-  };
-
-  // Queries
-  const { data: session } = useQuery({
-    queryKey: ['session'],
+  // 1. Authenticated User Session
+  const { data: session, isLoading: sessionLoading } = useQuery({
+    queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
-      return res.data.user;
-    }
+      return res.data?.user;
+    },
   });
 
+  // 2. Tenant Bookings
   const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
     queryKey: ['bookings', 'tenant'],
     queryFn: async () => {
       const { data } = await api.get('/bookings/me');
       return data;
-    }
+    },
   });
 
-  const { data: ticketsResponse, isLoading: ticketsLoading } = useQuery({
-    queryKey: ['tickets', 'tenant'],
+  // 3. Saved Properties (Wishlist)
+  const { data: wishlistData, isLoading: wishlistLoading } = useQuery({
+    queryKey: ['wishlist'],
     queryFn: async () => {
-      const { data } = await api.get('/tickets/me');
-      return data;
-    }
-  });
-
-  const { data: agreementsResponse, isLoading: agreementsLoading } = useQuery({
-    queryKey: ['agreements', 'tenant'],
-    queryFn: async () => {
-      const { data } = await api.get('/agreements/tenant');
-      return data;
-    }
-  });
-
-  const { data: transactionsResponse, isLoading: transactionsLoading } = useQuery({
-    queryKey: ['transactions', 'tenant'],
-    queryFn: async () => {
-      const { data } = await api.get('/transactions/tenant');
-      return data;
-    }
-  });
-
-  const { data: roommateProfileResponse, isLoading: profileLoading } = useQuery({
-    queryKey: ['roommateProfile', 'me'],
-    queryFn: async () => {
-      try {
-        const { data } = await api.get('/roommates/profile');
-        if (data.profile) {
-          setRoommateProfile({
-            budget: data.profile.budget,
-            cleanliness: data.profile.cleanliness,
-            sleepHabits: data.profile.sleepHabits,
-            studyHabits: data.profile.studyHabits,
-            bio: data.profile.bio || ''
-          });
-        }
-        return data;
-      } catch (err: any) {
-        if (err.response?.status === 404) return null;
-        throw err;
-      }
-    }
-  });
-
-  const { data: roommateMatchesResponse } = useQuery({
-    queryKey: ['roommateMatches'],
-    queryFn: async () => {
-      const { data } = await api.get('/roommates/matches');
+      const { data } = await api.get('/wishlist');
       return data;
     },
-    enabled: !!roommateProfileResponse?.profile
   });
 
-  const { data: myReviewsData, isLoading: myReviewsLoading } = useQuery({
-    queryKey: ['myReviews'],
+  // 4. Recent Notifications
+  const { data: notificationsData, isLoading: notificationsLoading } = useQuery({
+    queryKey: ['notifications'],
     queryFn: async () => {
-      const { data } = await api.get('/reviews/mine');
+      const { data } = await api.get('/notifications');
       return data;
-    }
+    },
   });
 
-  // State
-  const [selectedGatePassBooking, setSelectedGatePassBooking] = useState<any>(null);
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [roommateProfile, setRoommateProfile] = useState({
-    budget: 5000,
-    cleanliness: 'AVERAGE',
-    sleepHabits: 'EARLY_BIRD',
-    studyHabits: 'QUIET',
-    bio: ''
+  // 5. Featured / Available Properties (for State A or discovery)
+  const { data: featuredPropsData } = useQuery({
+    queryKey: ['tenant-dashboard-featured-properties'],
+    queryFn: async () => {
+      const { data } = await api.get('/properties?limit=3');
+      return data?.data || data?.properties || [];
+    },
   });
-  const [copiedDispatchAddress, setCopiedDispatchAddress] = useState(false);
-  const [bookingFilter, setBookingFilter] = useState<'ACTIVE' | 'CANCELLED'>('ACTIVE');
 
-  // Verify Paystack return params
+  // Verify Paystack return params if redirected back to /dashboard/tenant
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async ({ bookingId, reference }: { bookingId: string; reference: string }) => {
+      const res = await api.post(`/bookings/${bookingId}/verify-payment`, { reference });
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
+      toast.success('Payment verified! Your booking status has been updated.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Payment verification failed');
+    },
+  });
+
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const verifyId = urlParams.get('verify');
@@ -260,37 +124,11 @@ function TenantDashboardContent() {
         {
           onSettled: () => {
             toast.dismiss('payment-verifying');
-          }
+          },
         }
       );
     }
   }, []);
-
-  // Mutations
-  const cancelPendingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      const { data } = await api.post(`/bookings/${bookingId}/cancel`);
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Booking request cancelled. 100% Escrow refund initiated.');
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to cancel booking');
-    }
-  });
-
-  const deleteBookingMutation = useMutation({
-    mutationFn: async (bookingId: string) => {
-      const { data } = await api.delete(`/bookings/${bookingId}`);
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Booking removed from history');
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-    }
-  });
 
   const payBookingMutation = useMutation({
     mutationFn: async (bookingId: string) => {
@@ -298,1426 +136,862 @@ function TenantDashboardContent() {
       return res.data;
     },
     onSuccess: (data) => {
-      if (data.authorization_url) {
+      if (data?.authorization_url) {
+        toast.loading('Redirecting to secure Paystack checkout...');
         window.location.href = data.authorization_url;
       }
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to initialize payment');
+      toast.error(
+        err?.response?.data?.message ||
+          'Unable to initialize payment. Please ensure your lease agreement is signed.'
+      );
+    },
+  });
+
+  const bookings: any[] = bookingsResponse?.bookings || [];
+  const savedProperties: any[] =
+    wishlistData?.properties ||
+    (wishlistData?.wishlists || []).map((w: any) => w.property).filter(Boolean);
+  const notifications: any[] = Array.isArray(notificationsData)
+    ? notificationsData
+    : notificationsData?.notifications || [];
+  const featuredProperties: any[] = Array.isArray(featuredPropsData) ? featuredPropsData : [];
+
+  // Determine the Tenant's Current Dashboard State (Section 11.2)
+  const dashboardState = useMemo(() => {
+    // 1. Check for Pending Booking or Pending Payment (APPROVED/CONFIRMED awaiting lease or payment, or PENDING approval)
+    const pendingOrAwaitingPayment = bookings.find((b) =>
+      ['PENDING', 'APPROVED', 'CONFIRMED'].includes(b.status)
+    );
+
+    // 2. Check for Active / Upcoming Confirmed Stay (PAID / COMPLETED / ACTIVE / CHECKED_IN)
+    const confirmedOrActiveStay = bookings.find(
+      (b) =>
+        ['ACTIVE', 'CHECKED_IN'].includes(b.status) ||
+        (b.status === 'COMPLETED' && (b.isCheckedIn || new Date(b.endDate) >= new Date()))
+    );
+
+    // 3. Check for Past Completed Bookings
+    const completedPastBookings = bookings.filter((b) => b.status === 'COMPLETED');
+    const unreviewedCompletedBooking = completedPastBookings.find((b) => !b.review);
+
+    if (pendingOrAwaitingPayment) {
+      return {
+        mode: 'PENDING_BOOKING' as const,
+        primaryBooking: pendingOrAwaitingPayment,
+      };
     }
-  });
 
-  const verifyPaymentMutation = useMutation({
-    mutationFn: async ({ bookingId, reference }: { bookingId: string, reference: string }) => {
-      const res = await api.post(`/bookings/${bookingId}/verify-payment`, { reference });
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
-      queryClient.invalidateQueries({ queryKey: ['transactions', 'tenant'] });
-      queryClient.invalidateQueries({ queryKey: ['agreements', 'tenant'] });
-      toast.success('Payment verified! Tenancy agreement ready to sign.');
-      window.history.replaceState({}, document.title, window.location.pathname);
-    },
-    onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Payment verification failed');
+    if (confirmedOrActiveStay) {
+      return {
+        mode: 'CONFIRMED_STAY' as const,
+        primaryBooking: confirmedOrActiveStay,
+      };
     }
-  });
 
-  const profileMutation = useMutation({
-    mutationFn: async (profileData: any) => {
-      const res = await api.post('/roommates/profile', profileData);
-      return res.data;
-    },
-    onSuccess: () => {
-      setIsEditingProfile(false);
-      toast.success('Roommate preferences updated');
-      queryClient.invalidateQueries({ queryKey: ['roommateProfile', 'me'] });
-      queryClient.invalidateQueries({ queryKey: ['roommateMatches'] });
+    if (completedPastBookings.length > 0) {
+      return {
+        mode: 'RETURNING_TENANT' as const,
+        primaryBooking: unreviewedCompletedBooking || completedPastBookings[0],
+        needsReview: Boolean(unreviewedCompletedBooking),
+      };
     }
-  });
 
-  // Data processing
-  const bookings = bookingsResponse?.bookings || [];
-  const activeBookings = bookings.filter((b: any) => ['PENDING', 'APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status));
-  const cancelledBookings = bookings.filter((b: any) => ['CANCELLED', 'REJECTED'].includes(b.status));
-  const displayedBookings = bookingFilter === 'ACTIVE' ? activeBookings : cancelledBookings;
+    return {
+      mode: 'NEW_TENANT' as const,
+      primaryBooking: null,
+    };
+  }, [bookings]);
 
-  const tickets = ticketsResponse?.tickets || [];
-  const agreements = agreementsResponse?.agreements || [];
-  const transactions = transactionsResponse?.transactions || [];
-  const matches = roommateMatchesResponse?.matches || [];
-  const myReviews = myReviewsData?.reviews || myReviewsData || [];
-
-  const totalPaidGhs = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
-
-  // Active Resident Dossier Selection
-  const activeResidentBooking = activeBookings.find((b: any) =>
-    ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)
-  );
-  const pendingBooking = activeBookings.find((b: any) => b.status === 'PENDING');
-
-  const activePropertyId = activeResidentBooking?.propertyId || pendingBooking?.propertyId;
-
-  // Compound Notices Query
-  const { data: compoundNoticesData } = useQuery({
-    queryKey: ['compoundNotices', 'tenant', activePropertyId],
-    queryFn: async () => {
-      if (!activePropertyId) return { notices: [] };
-      try {
-        const res = await api.get(`/compound-notices/property/${activePropertyId}`);
-        return res.data;
-      } catch (err) {
-        return { notices: [] };
-      }
-    },
-    enabled: Boolean(activePropertyId)
-  });
-
-  const compoundNotices = Array.isArray(compoundNoticesData?.notices)
-    ? compoundNoticesData.notices.filter((n: any) => n && !n.title?.startsWith('__') && n.category !== 'ASSET_INVENTORY')
-    : [];
-
-  const handlePrintReceipt = (tx: any) => {
-    printPaymentReceipt(tx);
+  const handleQuickSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (quickSearchQuery.trim()) params.set('search', quickSearchQuery.trim());
+    if (quickSearchType) params.set('type', quickSearchType);
+    router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
-  const handlePrintAgreement = (agreement: any) => {
-    printLeaseAgreementReceipt(agreement);
-  };
+  if (sessionLoading || bookingsLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-24 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]" />
+        <div className="h-64 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-7 h-72 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]" />
+          <div className="lg:col-span-5 h-72 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]" />
+        </div>
+      </div>
+    );
+  }
+
+  const firstName = session?.firstName || 'Resident';
+  const primaryBooking = dashboardState.primaryBooking;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-24">
-      <OnboardingProgressWidget user={session} />
-
-      {/* ── AMBIENT COMPOUND NOTICES ── */}
-      {compoundNotices.length > 0 && (
-        <div className="space-y-2">
-          {compoundNotices.map((notice: any) => {
-            if (!notice) return null;
-            const isEmergency = notice.priority === 'EMERGENCY';
-            const isImportant = notice.priority === 'IMPORTANT';
-            return (
-              <div
-                key={notice.id}
-                className={clsx(
-                  "py-3 px-4 rounded-xl border-l-4 flex items-start gap-3 text-xs transition-colors",
-                  isEmergency && "bg-rose-50/70 border-l-rose-600 text-rose-950 dark:bg-rose-950/20 dark:text-rose-200 border border-rose-200 dark:border-rose-900/40",
-                  isImportant && "bg-amber-50/70 border-l-amber-500 text-amber-950 dark:bg-amber-950/20 dark:text-amber-200 border border-amber-200 dark:border-amber-900/40",
-                  !isEmergency && !isImportant && "bg-emerald-50/70 border-l-[#0F5132] text-emerald-950 dark:bg-emerald-950/20 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-900/40"
-                )}
-              >
-                <Megaphone className="w-4 h-4 shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 font-bold flex-wrap">
-                    <span className="uppercase font-mono text-[9px] tracking-wider px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10">
-                      {notice.category || 'NOTICE'} • {notice.property?.title || 'Property'}
-                    </span>
-                    <span>{notice.title || 'Announcement'}</span>
-                  </div>
-                  <p className="mt-0.5 font-medium opacity-90 whitespace-pre-line leading-relaxed">
-                    {notice.message || ''}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── CONTEXT-AWARE HERO MASTHEAD ── */}
-      {activeResidentBooking ? (
-        /* State A: Active Resident Dossier */
-        <section aria-label="Active Residence Dossier" className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-            <div className="flex items-start sm:items-center gap-4 sm:gap-5 min-w-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
-                {(() => {
-                  try {
-                    let imgs = activeResidentBooking.property?.images;
-                    if (typeof imgs === 'string') imgs = JSON.parse(imgs);
-                    if (Array.isArray(imgs) && imgs.length > 0) {
-                      return <img src={getImageUrl(imgs[0])} className="w-full h-full object-cover" alt="Current Residence" />;
-                    }
-                  } catch (e) {}
-                  return <div className="w-full h-full flex items-center justify-center text-zinc-400"><Building2 className="w-7 h-7" /></div>;
-                })()}
-              </div>
-
-              <div className="space-y-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap text-xs">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                    Active Resident
-                  </span>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                  <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                    {activeResidentBooking.status === 'CHECKED_IN' || activeResidentBooking.status === 'ACTIVE' 
-                      ? 'Tenancy Active' 
-                      : 'Move-In Ready'}
-                  </span>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 font-medium">
-                    <Lock className="w-3 h-3 text-[#0F5132] dark:text-emerald-400" /> MoMo Escrow Verified
-                  </span>
-                </div>
-
-                <h1 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight truncate">
-                  {activeResidentBooking.property?.title}
-                </h1>
-
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-zinc-600 dark:text-zinc-400">
-                  <span className="flex items-center gap-1 font-medium">
-                    <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <span className="truncate">{activeResidentBooking.property?.location}</span>
-                  </span>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">
-                    {activeResidentBooking.room?.roomType || 'Standard Unit'}
-                    {activeResidentBooking.roomUnit?.unitNumber ? ` · Unit ${activeResidentBooking.roomUnit.unitNumber}` : ''}
-                    {activeResidentBooking.bed?.bedNumber ? ` · Bed ${activeResidentBooking.bed.bedNumber}` : ''}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Fast Action Tray */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                onClick={() => setSelectedGatePassBooking(activeResidentBooking)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Digital Gate Pass</span>
-              </button>
-
-              <Link
-                href={`/dashboard/tenant/tickets/new?propertyId=${activeResidentBooking.propertyId}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
-              >
-                <Wrench className="w-3.5 h-3.5 text-amber-500" />
-                <span>Report Issue</span>
-              </Link>
-
-              <Link
-                href={`/dashboard/tenant/bookings/${activeResidentBooking.id}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
-              >
-                <FileText className="w-3.5 h-3.5 text-zinc-500" />
-                <span>Booking &amp; Lease Details</span>
-              </Link>
-
-              <Link
-                href={`/dashboard/tenant/bills/split/new?propertyId=${activeResidentBooking.propertyId}`}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold border border-zinc-200 dark:border-zinc-700 transition-colors"
-              >
-                <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Split Utility</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Tenancy Validity Row */}
-          <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-            <div className="flex items-center gap-4 flex-wrap">
-              <span>Term: <strong className="text-zinc-900 dark:text-zinc-100">{new Date(activeResidentBooking.startDate).toLocaleDateString()} – {new Date(activeResidentBooking.endDate).toLocaleDateString()}</strong></span>
-              {(activeResidentBooking.price || activeResidentBooking.room?.price || activeResidentBooking.property?.price) && (
-                <span>Advance: <strong className="text-zinc-900 dark:text-zinc-100">GH₵ {Number(activeResidentBooking.price || activeResidentBooking.room?.price || activeResidentBooking.property?.price).toLocaleString()}</strong></span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> Key Handover &amp; Move-in Inventory Cleared
-              </span>
-            </div>
-          </div>
-        </section>
-      ) : pendingBooking ? (
-        /* State B: Pending Booking / Escrow Hold */
-        <section aria-label="Pending Booking Escrow Status" className="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-5 sm:p-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700">
-                  Escrow Hold Active
-                </span>
-                <LiveBookingCountdown createdAt={pendingBooking.createdAt} />
-              </div>
-              <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
-                Booking Pending Landlord Confirmation: {pendingBooking.property?.title}
-              </h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
-                Your booking application is awaiting landlord review. Open the booking details page to track approval, sign your digital lease, or cancel without penalty.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href={`/dashboard/tenant/bookings/${pendingBooking.id}`}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold transition"
-              >
-                Open Booking Details
-              </Link>
-              <button
-                onClick={() => cancelPendingMutation.mutate(pendingBooking.id)}
-                disabled={cancelPendingMutation.isPending}
-                className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 transition cursor-pointer"
-              >
-                {cancelPendingMutation.isPending ? 'Cancelling...' : 'Cancel & Release Escrow'}
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : (
-        /* State C: New Tenant Discovery Hero */
-        <section aria-label="Welcome Hero" className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800">
-                <ShieldCheck className="w-3.5 h-3.5" /> Ghana Rent Act, 1963 (Act 220) Verified
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
-                Welcome to your Resident Portal
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Discover verified student hostels, executive flats, and shared apartments across Greater Accra and Kumasi. All advance rents are secured in escrow until move-in.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-              <Link
-                href="/properties"
-                className="px-4 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white font-bold text-xs shadow-xs transition-all flex items-center gap-1.5"
-              >
-                <span>Browse Verified Rooms</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/dashboard/verification"
-                className="px-4 py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-semibold text-xs border border-zinc-200 dark:border-zinc-700 transition-colors"
-              >
-                Verify Ghana Card
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── 4 EXECUTIVE SNAPSHOT METRICS ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Current Residence</div>
-          <div className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white mt-0.5 truncate">
-            {activeResidentBooking?.property?.title || 'No Active Stay'}
-          </div>
-          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5 flex items-center gap-1 truncate">
-            <Lock className="w-2.5 h-2.5 shrink-0" />
-            <span>{activeResidentBooking ? 'MoMo Escrow Verified' : 'Explore Campus Hostels'}</span>
-          </div>
+    <div className="space-y-8">
+      {/* ── 1. Welcome Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#E7E7DF] dark:border-[#262E29]">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1">
+            Resident Workspace
+          </p>
+          <h1 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white">
+            Akwaaba, {firstName}
+          </h1>
+          <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] mt-1">
+            {dashboardState.mode === 'PENDING_BOOKING'
+              ? 'You have an active reservation request in progress.'
+              : dashboardState.mode === 'CONFIRMED_STAY'
+              ? 'Your accommodation is confirmed and protected in escrow.'
+              : dashboardState.mode === 'RETURNING_TENANT'
+              ? 'Welcome back. Review your past stays or search for your next home.'
+              : 'Explore verified student hostels, studios, and apartments across Ghana.'}
+          </p>
         </div>
 
-        <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Escrow Rent Paid</div>
-          <div className="text-lg sm:text-xl font-black text-[#0F5132] dark:text-emerald-400 mt-0.5">
-            GH₵ {totalPaidGhs.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">Protected in Paystack escrow</div>
-        </div>
-
-        <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Legal Agreements</div>
-          <div className="text-lg sm:text-xl font-black text-zinc-900 dark:text-white mt-0.5">
-            {agreements.length} {agreements.length === 1 ? 'Agreement' : 'Agreements'}
-          </div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">Act 220 Legally Binding</div>
-        </div>
-
-        <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 p-4 rounded-xl shadow-xs">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Maintenance Queue</div>
-          <div className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">
-            {tickets.filter((t: any) => t.status !== 'RESOLVED').length} Active
-          </div>
-          <div className="text-[10px] text-zinc-500 mt-0.5">
-            {tickets.filter((t: any) => t.status === 'RESOLVED').length} resolved tickets
-          </div>
-        </div>
-      </div>
-
-      {/* ── MOBILE-ONLY 5 RESIDENT PILLARS NAVIGATION (Desktop uses Sidebar) ── */}
-      <div className="lg:hidden border-b border-zinc-200 dark:border-zinc-800 pb-3">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap py-1">
-          <button
-            type="button"
-            onClick={() => handleSelectPillar('residence')}
-            className={clsx(
-              "px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-              activePillar === 'residence'
-                ? "bg-[#0F5132] text-white shadow-xs"
-                : "bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
-            )}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>My Residence &amp; Lease</span>
-            {activeBookings.length > 0 && (
-              <span className={clsx(
-                "px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold",
-                activePillar === 'residence' ? "bg-white/20 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-              )}>
-                {activeBookings.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSelectPillar('payments')}
-            className={clsx(
-              "px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-              activePillar === 'payments'
-                ? "bg-[#0F5132] text-white shadow-xs"
-                : "bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
-            )}
-          >
-            <CreditCard className="w-3.5 h-3.5" />
-            <span>Escrow &amp; Payments</span>
-            {transactions.length > 0 && (
-              <span className={clsx(
-                "px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold",
-                activePillar === 'payments' ? "bg-white/20 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-              )}>
-                {transactions.length}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSelectPillar('maintenance')}
-            className={clsx(
-              "px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-              activePillar === 'maintenance'
-                ? "bg-[#0F5132] text-white shadow-xs"
-                : "bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
-            )}
-          >
-            <Wrench className="w-3.5 h-3.5" />
-            <span>Repairs &amp; Maintenance</span>
-            {tickets.filter((t: any) => t.status !== 'RESOLVED').length > 0 && (
-              <span className={clsx(
-                "px-1.5 py-0.2 rounded-full font-mono text-[10px] font-extrabold",
-                activePillar === 'maintenance' ? "bg-white/20 text-white" : "bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300"
-              )}>
-                {tickets.filter((t: any) => t.status !== 'RESOLVED').length}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSelectPillar('living')}
-            className={clsx(
-              "px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-              activePillar === 'living'
-                ? "bg-[#0F5132] text-white shadow-xs"
-                : "bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
-            )}
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Living &amp; Amenities</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSelectPillar('community')}
-            className={clsx(
-              "px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap",
-              activePillar === 'community'
-                ? "bg-[#0F5132] text-white shadow-xs"
-                : "bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50"
-            )}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Community &amp; Roommates</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ═════════════════════════════════════════════════════════════════════════
-          PILLAR 1: MY RESIDENCE & LEASE
-      ═════════════════════════════════════════════════════════════════════════ */}
-      {activePillar === 'residence' && (
-        <div className="space-y-6">
-          {/* Subview Pills */}
-          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3 overflow-x-auto">
-            {[
-              { id: 'home', label: 'Accommodation Dossier' },
-              { id: 'lease', label: `Digital Leases (${agreements.length})` },
-              { id: 'inventory', label: 'Move-in Inventory' },
-              { id: 'renewals', label: 'Lease Renewal' },
-              { id: 'history', label: 'Booking Archive' },
-            ].map((sub) => (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSubview(sub.id)}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap",
-                  subview === sub.id
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Subview: Home / Accommodations */}
-          {subview === 'home' && (
-            <div className="space-y-6">
-              {bookingsLoading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" /></div>
-              ) : activeBookings.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
-                    <Building2 className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">No Active Accommodations</h3>
-                  <p className="text-xs text-zinc-500 max-w-md mx-auto">
-                    You do not have any active or confirmed bookings. Explore verified hostels and apartments across Ghana.
-                  </p>
-                  <Link
-                    href="/properties"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F5132] text-white text-xs font-bold hover:bg-[#0B3D26] transition"
-                  >
-                    Find a Home
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activeBookings.map((b: any) => {
-                    const isConfirmed = ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status);
-                    const isPending = b.status === 'PENDING';
-                    const isApprovedUnpaid = b.status === 'APPROVED';
-                    const effectivePrice = b.price ?? b.room?.price ?? b.property?.price ?? 0;
-
-                    return (
-                      <div
-                        key={b.id}
-                        className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-4"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-100 dark:border-zinc-800">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <Link
-                                href={`/dashboard/tenant/bookings/${b.id}`}
-                                className="text-base font-bold text-zinc-950 dark:text-white hover:text-[#0F5132] dark:hover:text-emerald-400 transition-colors"
-                              >
-                                {b.property?.title}
-                              </Link>
-                              <span className={clsx(
-                                "px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase",
-                                isConfirmed && "bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800",
-                                isPending && "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
-                              )}>
-                                {b.status}
-                              </span>
-                            </div>
-                            <div className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3.5 h-3.5 text-zinc-400" />
-                              <span>{b.property?.location || b.property?.city || 'Accra, Ghana'}</span>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <span className="text-[10px] text-zinc-400 uppercase font-mono block">Rental Rate</span>
-                            <span className="text-sm font-mono font-bold text-zinc-900 dark:text-white">
-                              GH₵ {Number(effectivePrice).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                          <div>
-                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Unit Allocated</span>
-                            <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                              {b.room?.roomType || b.room?.name || 'Standard'} {b.roomUnit?.name ? `· ${b.roomUnit.name}` : ''}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Move-in Date</span>
-                            <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                              {new Date(b.startDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">End Date</span>
-                            <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                              {new Date(b.endDate).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Booking Reference</span>
-                            <span className="font-mono text-[11px] text-zinc-600 dark:text-zinc-400 truncate block">
-                              #{b.id.slice(0, 8).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Link
-                              href={`/dashboard/tenant/bookings/${b.id}`}
-                              className="px-3.5 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold flex items-center gap-1.5 transition"
-                            >
-                              <span>Booking Details</span>
-                              <ArrowUpRight className="w-3.5 h-3.5" />
-                            </Link>
-
-                            {isApprovedUnpaid && b.leaseAgreement?.status === 'COMPLETED' && (
-                              <button
-                                type="button"
-                                onClick={() => payBookingMutation.mutate(b.id)}
-                                disabled={payBookingMutation.isPending}
-                                className="px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                              >
-                                <CreditCard className="w-3.5 h-3.5" />
-                                <span>Pay Escrow Now</span>
-                              </button>
-                            )}
-
-                            {isConfirmed && (
-                              <button
-                                onClick={() => setSelectedGatePassBooking(b)}
-                                className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 transition cursor-pointer"
-                              >
-                                <KeyRound className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-                                <span>Gate Clearance</span>
-                              </button>
-                            )}
-                            <Link
-                              href={`/dashboard/agreements/${b.id}`}
-                              className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-xs font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5 transition"
-                            >
-                              <FileText className="w-3.5 h-3.5 text-zinc-500" />
-                              <span>View Agreement</span>
-                            </Link>
-                          </div>
-
-                          {isPending && (
-                            <button
-                              onClick={() => cancelPendingMutation.mutate(b.id)}
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 transition cursor-pointer"
-                            >
-                              Cancel Booking
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Subview: Leases */}
-          {subview === 'lease' && (
-            <div className="space-y-4">
-              {agreementsLoading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" /></div>
-              ) : agreements.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-2">
-                  <FileText className="w-8 h-8 text-zinc-400 mx-auto" />
-                  <h3 className="text-sm font-bold text-zinc-950 dark:text-white">No Signed Tenancy Leases</h3>
-                  <p className="text-xs text-zinc-500">Agreements appear here once booking payment is confirmed by the landlord.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {agreements.map((agr: any) => (
-                    <div
-                      key={agr.id}
-                      className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-zinc-950 dark:text-white">
-                            {agr.property?.title || 'Residential Tenancy Agreement'}
-                          </h4>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                            Act 220 Legally Binding
-                          </span>
-                        </div>
-                        <div className="text-xs text-zinc-500">
-                          Executed between {agr.landlord?.firstName} {agr.landlord?.lastName} (Landlord) and You (Tenant)
-                        </div>
-                        <div className="text-[11px] font-mono text-zinc-400">
-                          Verification Hash: {agr.signatureHash ? agr.signatureHash.slice(0, 20) + '...' : agr.id}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handlePrintAgreement(agr)}
-                          className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition cursor-pointer"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Print Agreement</span>
-                        </button>
-                        <Link
-                          href={`/dashboard/agreements/${agr.bookingId || agr.id}`}
-                          className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold flex items-center gap-1.5 transition"
-                        >
-                          <span>Open Lease</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Subview: Inventory */}
-          {subview === 'inventory' && (
-            <TenantAssetInventoryTab bookings={bookings} />
-          )}
-
-          {/* Subview: Renewals */}
-          {subview === 'renewals' && (
-            <LeaseRenewalTab bookings={bookings} />
-          )}
-
-          {/* Subview: History / Archive */}
-          {subview === 'history' && (
-            <div className="space-y-4">
-              {cancelledBookings.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                  No cancelled or expired booking records in archive.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {cancelledBookings.map((b: any) => (
-                    <div
-                      key={b.id}
-                      className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-3 text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-zinc-900 dark:text-white">{b.property?.title}</div>
-                        <div className="text-zinc-500">Status: {b.status} · {new Date(b.createdAt).toLocaleDateString()}</div>
-                      </div>
-                      <button
-                        onClick={() => deleteBookingMutation.mutate(b.id)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-500 rounded-lg transition cursor-pointer"
-                        title="Remove from history"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═════════════════════════════════════════════════════════════════════════
-          PILLAR 2: ESCROW & PAYMENTS
-      ═════════════════════════════════════════════════════════════════════════ */}
-      {activePillar === 'payments' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-            {[
-              { id: 'receipts', label: `Escrow Receipts (${transactions.length})` },
-              { id: 'tranches', label: 'Payment Tranches' },
-              { id: 'billsplit', label: 'Split Utilities' },
-            ].map((sub) => (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSubview(sub.id)}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  subview === sub.id
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Subview: Escrow Receipts */}
-          {subview === 'receipts' && (
-            <div className="space-y-4">
-              <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 shrink-0" />
-                    Paystack Escrow Protection
-                  </div>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xl">
-                    All rent transactions processed through AkwaabaHomes are held in automated escrow until key handover and move-in inspection are complete.
-                  </p>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total Escrow Processed</span>
-                  <span className="text-xl font-black text-[#0F5132] dark:text-emerald-400">
-                    GH₵ {totalPaidGhs.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-              </div>
-
-              {transactionsLoading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" /></div>
-              ) : transactions.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center text-xs text-zinc-500">
-                  No payment transactions recorded yet.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {transactions.map((tx: any) => (
-                    <div
-                      key={tx.id}
-                      className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-zinc-950 dark:text-white">
-                            {tx.description || tx.booking?.property?.title || 'Rent Advance Deposit'}
-                          </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400">
-                            {tx.status}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-zinc-500">
-                          {new Date(tx.createdAt).toLocaleDateString()} · Channel: {tx.channel || 'Paystack MoMo'} · Ref: <span className="font-mono">{tx.reference || tx.id.slice(0, 10)}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-mono font-bold text-sm text-zinc-900 dark:text-white">
-                          GH₵ {(tx.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handlePrintReceipt(tx)}
-                          className="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 transition cursor-pointer"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          <span>Receipt</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Subview: Tranches */}
-          {subview === 'tranches' && (
-            <TenantPaymentScheduleTab bookings={bookings} />
-          )}
-
-          {/* Subview: Bill Splitter */}
-          {subview === 'billsplit' && (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Link
-                  href="/dashboard/tenant/bills/split/new"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold transition shadow-xs"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Split New Utility Bill</span>
-                </Link>
-              </div>
-              <BillSplitterTab bookings={bookings} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═════════════════════════════════════════════════════════════════════════
-          PILLAR 3: REPAIRS & MAINTENANCE
-      ═════════════════════════════════════════════════════════════════════════ */}
-      {activePillar === 'maintenance' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3 flex-wrap gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setSubview('tickets')}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  subview === 'tickets'
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                Work Orders ({tickets.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubview('safety')}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  subview === 'safety'
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                Emergency Dispatch &amp; Hotlines
-              </button>
-            </div>
-
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {primaryBooking ? (
             <Link
-              href="/dashboard/tenant/tickets/new"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold transition shadow-xs"
+              href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
             >
-              <Wrench className="w-3.5 h-3.5" />
-              <span>Report a Maintenance Issue</span>
+              <span>View Active Booking</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              <span>Find a Home</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* ── 2. Primary Focus Card (Adapts to State A, B, C, or D) ── */}
+      {dashboardState.mode === 'NEW_TENANT' && (
+        <section className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-8 shadow-2xs space-y-6">
+          <div className="max-w-2xl space-y-2">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#1F7A4C] dark:text-[#6EE7B7]">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Verified Ghanaian Accommodations
+            </span>
+            <h2 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white">
+              Start your search for a verified home
+            </h2>
+            <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
+              Search by university campus, neighborhood, or accommodation type. Every listing displays transparent GH₵ pricing, room availability, and verified host details.
+            </p>
+          </div>
+
+          <form
+            onSubmit={handleQuickSearch}
+            className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-2 rounded-[14px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]"
+          >
+            <div className="sm:col-span-6 relative flex items-center">
+              <Search className="w-4 h-4 text-[#6F756F] absolute left-3.5 pointer-events-none" />
+              <input
+                type="text"
+                value={quickSearchQuery}
+                onChange={(e) => setQuickSearchQuery(e.target.value)}
+                placeholder="Search Ayeduase, Legon, East Legon, Cape Coast..."
+                aria-label="Search location or property name"
+                className="w-full h-11 pl-10 pr-3.5 bg-white dark:bg-[#171C19] border border-[#D4D6CE] dark:border-[#2E3832] rounded-[10px] text-sm text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:border-[#173D32] outline-none"
+              />
+            </div>
+            <div className="sm:col-span-3">
+              <select
+                value={quickSearchType}
+                onChange={(e) => setQuickSearchType(e.target.value)}
+                aria-label="Accommodation type"
+                className="w-full h-11 px-3.5 bg-white dark:bg-[#171C19] border border-[#D4D6CE] dark:border-[#2E3832] rounded-[10px] text-sm text-[#242925] dark:text-white focus:border-[#173D32] outline-none cursor-pointer"
+              >
+                <option value="">All Property Types</option>
+                <option value="HOSTEL">Student Hostels</option>
+                <option value="APARTMENT">Apartments &amp; Studios</option>
+                <option value="HOUSE">Compound &amp; Family Houses</option>
+              </select>
+            </div>
+            <div className="sm:col-span-3">
+              <button
+                type="submit"
+                className="w-full h-11 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              >
+                <span>Search Homes</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </form>
+
+          {/* 3-Step How Booking Works Reassurance */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E7E7DF] dark:border-[#262E29]">
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#173D32] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                1
+              </span>
+              <div>
+                <p className="text-xs sm:text-sm font-semibold text-[#242925] dark:text-white">
+                  Compare &amp; Select a Room
+                </p>
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
+                  Review real photos, amenities, and room/bed availability.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#173D32] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                2
+              </span>
+              <div>
+                <p className="text-xs sm:text-sm font-semibold text-[#242925] dark:text-white">
+                  Host Approval &amp; Digital Lease
+                </p>
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
+                  Once approved, review and sign your Act 220 tenancy agreement.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="w-6 h-6 rounded-full bg-[#173D32] text-white text-xs font-semibold flex items-center justify-center shrink-0 mt-0.5">
+                3
+              </span>
+              <div>
+                <p className="text-xs sm:text-sm font-semibold text-[#242925] dark:text-white">
+                  Protected Escrow Payment
+                </p>
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
+                  Pay securely via Mobile Money or card before move-in.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {dashboardState.mode === 'PENDING_BOOKING' && primaryBooking && (
+        <section className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-7 shadow-2xs space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-[#E7E7DF] dark:border-[#262E29]">
+            <div className="flex items-center gap-2.5">
+              <StatusBadge
+                tone={primaryBooking.status === 'PENDING' ? 'warning' : 'info'}
+              >
+                {primaryBooking.status === 'PENDING'
+                  ? 'Awaiting Landlord Approval'
+                  : primaryBooking.leaseAgreement?.status === 'COMPLETED'
+                  ? 'Approved • Ready for Escrow Payment'
+                  : 'Approved • Lease Signature Required'}
+              </StatusBadge>
+              <span className="text-xs font-mono text-[#6F756F] dark:text-[#A0A8A2]">
+                Ref #{primaryBooking.id.slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+            <Link
+              href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+              className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+            >
+              <span>Full Booking Details</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Subview: Tickets */}
-          {subview === 'tickets' && (
-            <div className="space-y-4">
-              {ticketsLoading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" /></div>
-              ) : tickets.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
-                  <Wrench className="w-8 h-8 text-zinc-400 mx-auto" />
-                  <h3 className="text-sm font-bold text-zinc-950 dark:text-white">No Maintenance Tickets</h3>
-                  <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-                    Everything running smoothly? If any electrical, plumbing, or lock faults occur, submit a ticket for prompt artisan dispatch.
-                  </p>
-                  <Link
-                    href="/dashboard/tenant/tickets/new"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F5132] text-white text-xs font-bold"
-                  >
-                    Report Fault
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {tickets.map((t: any) => {
-                    const isResolved = t.status === 'RESOLVED';
-                    return (
-                      <div
-                        key={t.id}
-                        className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-3"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold text-zinc-950 dark:text-white">{t.title}</h4>
-                            <span className={clsx(
-                              "px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase",
-                              isResolved && "bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 border border-emerald-200",
-                              !isResolved && "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200"
-                            )}>
-                              {t.status}
-                            </span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
-                              {t.priority} PRIORITY
-                            </span>
-                          </div>
-                          <span className="text-[11px] text-zinc-400">
-                            Logged {new Date(t.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-zinc-600 dark:text-zinc-400 whitespace-pre-line leading-relaxed">
-                          {t.description}
-                        </p>
-
-                        {t.imageUrl && (
-                          <div className="pt-1">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={t.imageUrl} alt="Fault Attachment" className="h-28 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800" />
-                          </div>
-                        )}
-
-                        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px] text-zinc-500">
-                          <span>Property: <strong>{t.property?.title || 'Rented Unit'}</strong></span>
-                          <span>Ticket Reference: <strong className="font-mono">{t.id.slice(0, 10)}</strong></span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Subview: Safety & Emergency Hotlines */}
-          {subview === 'safety' && (
-            <div className="space-y-6">
-              {/* Emergency Dispatch Card */}
-              {activeResidentBooking && (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-                      Your Dispatch Residence Address
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const addr = `${activeResidentBooking.property?.title}, ${activeResidentBooking.property?.location}, Room ${activeResidentBooking.roomNumber || 'Unit'}`;
-                        navigator.clipboard.writeText(addr);
-                        setCopiedDispatchAddress(true);
-                        toast.success('Address copied for emergency dispatch');
-                        setTimeout(() => setCopiedDispatchAddress(false), 2000);
-                      }}
-                      className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {copiedDispatchAddress ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedDispatchAddress ? 'Copied' : 'Copy Address'}</span>
-                    </button>
-                  </div>
-                  <div className="p-3.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-xl space-y-1">
-                    <div className="font-bold text-sm text-zinc-900 dark:text-white">
-                      {activeResidentBooking.property?.title}
-                    </div>
-                    <div className="text-xs text-zinc-600 dark:text-zinc-400">
-                      {activeResidentBooking.property?.location}, Greater Accra, Ghana
-                    </div>
-                    {activeResidentBooking.roomNumber && (
-                      <div className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400">
-                        Allocated Unit: {activeResidentBooking.roomNumber}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* National Emergency Hotline Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4" />
-                  </div>
-                  <div className="font-bold text-sm text-zinc-950 dark:text-white">Ghana Police Service</div>
-                  <div className="text-[11px] text-zinc-500">Security threats, compound intrusion</div>
-                  <a href="tel:191" className="block mt-2 font-mono font-black text-base text-blue-600 hover:underline">
-                    191 / 18555
-                  </a>
-                </div>
-
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-2">
-                  <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 flex items-center justify-center">
-                    <Flame className="w-4 h-4" />
-                  </div>
-                  <div className="font-bold text-sm text-zinc-950 dark:text-white">National Fire Service</div>
-                  <div className="text-[11px] text-zinc-500">Gas leaks, active electrical fires</div>
-                  <a href="tel:192" className="block mt-2 font-mono font-black text-base text-rose-600 hover:underline">
-                    192
-                  </a>
-                </div>
-
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-2">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
-                    <HeartPulse className="w-4 h-4" />
-                  </div>
-                  <div className="font-bold text-sm text-zinc-950 dark:text-white">Ambulance Service</div>
-                  <div className="text-[11px] text-zinc-500">Medical emergencies, paramedic triage</div>
-                  <a href="tel:193" className="block mt-2 font-mono font-black text-base text-emerald-600 hover:underline">
-                    193
-                  </a>
-                </div>
-
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-xs space-y-2">
-                  <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
-                    <Siren className="w-4 h-4" />
-                  </div>
-                  <div className="font-bold text-sm text-zinc-950 dark:text-white">Emergency Toll-Free</div>
-                  <div className="text-[11px] text-zinc-500">Universal national crisis dispatch</div>
-                  <a href="tel:112" className="block mt-2 font-mono font-black text-base text-amber-600 hover:underline">
-                    112
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ═════════════════════════════════════════════════════════════════════════
-          PILLAR 4: LIVING & AMENITIES
-      ═════════════════════════════════════════════════════════════════════════ */}
-      {activePillar === 'living' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-            {[
-              { id: 'passes', label: 'Gate Passes' },
-              { id: 'deliveries', label: 'Package Deliveries' },
-              { id: 'vehicles', label: 'Vehicle Parking' },
-              { id: 'services', label: 'Home Services' },
-            ].map((sub) => (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSubview(sub.id)}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  subview === sub.id
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Subview: Passes */}
-          {subview === 'passes' && (
-            <div className="space-y-4">
-              <div className="flex justify-end">
-                <Link
-                  href="/dashboard/tenant/visitors/new"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold transition shadow-xs"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Generate New Gate Pass</span>
-                </Link>
-              </div>
-              <VisitorPassTab bookings={bookings} />
-            </div>
-          )}
-
-          {/* Subview: Deliveries */}
-          {subview === 'deliveries' && (
-            <PackageDeliveriesTab bookings={bookings} />
-          )}
-
-          {/* Subview: Vehicles */}
-          {subview === 'vehicles' && (
-            <VehicleParkingTab bookings={bookings} />
-          )}
-
-          {/* Subview: Services */}
-          {subview === 'services' && (
-            <HomeServicesTab bookings={bookings} />
-          )}
-        </div>
-      )}
-
-      {/* ═════════════════════════════════════════════════════════════════════════
-          PILLAR 5: COMMUNITY & ROOMMATES
-      ═════════════════════════════════════════════════════════════════════════ */}
-      {activePillar === 'community' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
-            {[
-              { id: 'roommates', label: 'Roommate Matcher' },
-              { id: 'messages', label: 'Secure Messages' },
-              { id: 'notices', label: 'Notice Board' },
-              { id: 'reviews', label: `Reviews & Appeals (${myReviews.length})` },
-            ].map((sub) => (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => setSubview(sub.id)}
-                className={clsx(
-                  "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer",
-                  subview === sub.id
-                    ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold"
-                    : "text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
-                )}
-              >
-                {sub.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Subview: Roommates */}
-          {subview === 'roommates' && (
-            <div className="space-y-6">
-              {/* Profile Card */}
-              <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <h3 className="text-sm font-bold text-zinc-950 dark:text-white">Your Roommate Living Profile</h3>
-                    <p className="text-xs text-zinc-500">Compatibility factors used to match you with compatible flatmates.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingProfile(!isEditingProfile)}
-                    className="px-3.5 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 transition cursor-pointer"
-                  >
-                    {isEditingProfile ? 'Cancel' : 'Edit Profile'}
-                  </button>
-                </div>
-
-                {isEditingProfile ? (
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      profileMutation.mutate(roommateProfile);
-                    }}
-                    className="space-y-4 pt-2 border-t border-zinc-100 dark:border-zinc-800"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Max Monthly Budget (GH₵)</label>
-                        <input
-                          type="number"
-                          value={roommateProfile.budget}
-                          onChange={(e) => setRoommateProfile({ ...roommateProfile, budget: Number(e.target.value) })}
-                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold outline-none"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">Sleep Schedule</label>
-                        <select
-                          value={roommateProfile.sleepHabits}
-                          onChange={(e) => setRoommateProfile({ ...roommateProfile, sleepHabits: e.target.value })}
-                          className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold outline-none"
-                        >
-                          <option value="EARLY_BIRD">Early Bird (Before 10 PM)</option>
-                          <option value="NIGHT_OWL">Night Owl (Late study)</option>
-                          <option value="FLEXIBLE">Flexible</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">About You &amp; Expectations</label>
-                      <textarea
-                        rows={3}
-                        value={roommateProfile.bio}
-                        onChange={(e) => setRoommateProfile({ ...roommateProfile, bio: e.target.value })}
-                        placeholder="State your department, university year, hobbies, and cooking habits..."
-                        className="w-full px-3 py-2 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium outline-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={profileMutation.isPending}
-                      className="px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold hover:bg-[#0B3D26] transition cursor-pointer"
-                    >
-                      {profileMutation.isPending ? 'Saving...' : 'Save Profile'}
-                    </button>
-                  </form>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Target Budget</span>
-                      <span className="font-semibold text-zinc-900 dark:text-white">GH₵ {roommateProfile.budget}/mo</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Sleep Schedule</span>
-                      <span className="font-semibold text-zinc-900 dark:text-white">{roommateProfile.sleepHabits}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Study Preference</span>
-                      <span className="font-semibold text-zinc-900 dark:text-white">{roommateProfile.studyHabits}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-zinc-400 block">Cleanliness</span>
-                      <span className="font-semibold text-zinc-900 dark:text-white">{roommateProfile.cleanliness}</span>
-                    </div>
-                  </div>
-                )}
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+            <div className="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+              <div className="relative w-full sm:w-44 h-32 rounded-[12px] overflow-hidden bg-[#F1EFE7] dark:bg-[#222925] shrink-0 border border-[#E7E7DF] dark:border-[#262E29]">
+                <Image
+                  src={
+                    primaryBooking.property?.images?.[0]
+                      ? getImageUrl(primaryBooking.property.images[0])
+                      : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80'
+                  }
+                  alt={primaryBooking.property?.title || 'Property'}
+                  fill
+                  sizes="176px"
+                  className="object-cover"
+                />
               </div>
 
-              {/* Roommate Matches */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                  Algorithmic Compatibility Matches
-                </h4>
-                {matches.length === 0 ? (
-                  <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 text-center text-xs text-zinc-500">
-                    No matching roommates found yet. Matches appear as more tenants complete their profiles.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {matches.map((m: any) => (
-                      <div
-                        key={m.userId || m.id}
-                        className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="font-bold text-sm text-zinc-950 dark:text-white">
-                            {m.user?.firstName} {m.user?.lastName}
-                          </div>
-                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400">
-                            {m.compatibilityScore || 85}% Match
-                          </span>
-                        </div>
-                        <p className="text-xs text-zinc-500 line-clamp-2">{m.bio || 'Prospective resident looking for quiet shared flat.'}</p>
-                        <div className="text-[11px] text-zinc-400">Budget: GH₵ {m.budget}/mo · {m.sleepHabits}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Subview: Messages */}
-          {subview === 'messages' && (
-            <MessagingTab />
-          )}
-
-          {/* Subview: Notices */}
-          {subview === 'notices' && (
-            <div className="space-y-4">
-              <NoticeBoard />
-            </div>
-          )}
-
-          {/* Subview: Reviews & Appeals */}
-          {subview === 'reviews' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Your Verified Reviews</span>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href="/dashboard/tenant/appeals/new"
-                    className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#14181E] text-xs font-bold text-rose-700 dark:text-rose-400 hover:bg-rose-50 transition"
-                  >
-                    File Grievance Appeal
-                  </Link>
-                  <Link
-                    href="/dashboard/tenant/reviews/new"
-                    className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold transition shadow-xs"
-                  >
-                    Write Property Review
-                  </Link>
+              <div className="space-y-1.5 min-w-0">
+                <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white truncate">
+                  {primaryBooking.property?.title || 'Reserved Property'}
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#557A67] shrink-0" />
+                  <span>{primaryBooking.property?.location}</span>
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-[#242925] dark:text-[#E5E7E4]">
+                  <span className="inline-flex items-center gap-1 font-medium">
+                    <Building2 className="w-3.5 h-3.5 text-[#557A67]" />
+                    {primaryBooking.bed?.label
+                      ? `${primaryBooking.roomUnit?.name || 'Unit'} • ${primaryBooking.bed.label}`
+                      : primaryBooking.room?.name || primaryBooking.room?.roomType || 'Standard Unit'}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[#5E645E] dark:text-[#A0A8A2]">
+                    <Calendar className="w-3.5 h-3.5 text-[#557A67]" />
+                    Move-in:{' '}
+                    {new Date(primaryBooking.startDate).toLocaleDateString('en-GH', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
                 </div>
-              </div>
-
-              {myReviewsLoading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" /></div>
-              ) : myReviews.length === 0 ? (
-                <div className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center text-xs text-zinc-500">
-                  You have not published any property reviews yet.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {myReviews.map((r: any) => (
-                    <div
-                      key={r.id}
-                      className="bg-white dark:bg-[#14181E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-xs space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="font-bold text-sm text-zinc-950 dark:text-white">
-                          {r.property?.title}
-                        </div>
-                        <div className="flex items-center gap-1 text-amber-500">
-                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                          <span className="text-xs font-bold text-zinc-900 dark:text-white">{r.rating}/5</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed whitespace-pre-line">{r.comment}</p>
-                      <div className="text-[11px] text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                        Published {new Date(r.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── DIGITAL GATE PASS MODAL ── */}
-      {selectedGatePassBooking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
-            <button
-              onClick={() => setSelectedGatePassBooking(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer"
-            >
-              <XCircle className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                <KeyRound className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black text-zinc-950 dark:text-white">
-                  {session?.studentId ? 'Digital Student Gate Pass' : 'Resident Gate Clearance'}
-                </h3>
-                <p className="text-[11px] text-zinc-500">
-                  Pre-authorized access for estate security &amp; caretaker key handover.
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] pt-1">
+                  {primaryBooking.status === 'PENDING'
+                    ? 'The property host is reviewing your reservation request. You will be notified as soon as it is approved.'
+                    : primaryBooking.leaseAgreement?.status !== 'COMPLETED'
+                    ? 'Your request has been approved! Please review and sign the digital tenancy agreement to unlock escrow payment.'
+                    : 'Your digital tenancy agreement is complete. Proceed to secure your room via Paystack escrow.'}
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                <span className="text-zinc-500">Resident Name:</span>
-                <span className="font-bold text-zinc-900 dark:text-white">{session?.firstName} {session?.lastName}</span>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                <span className="text-zinc-500">Gate Pass Code:</span>
-                <span className="font-mono font-black text-[#0F5132] dark:text-emerald-400">
-                  {session?.studentId ? 'STU-' : 'RES-'}{selectedGatePassBooking.id.slice(0, 8).toUpperCase()}
+            {/* Action Area */}
+            <div className="w-full lg:w-auto flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3 pt-4 lg:pt-0 border-t lg:border-t-0 border-[#E7E7DF] dark:border-[#262E29]">
+              <div className="lg:text-right">
+                <span className="text-[11px] uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
+                  Total Payable
+                </span>
+                <span className="text-xl font-bold text-[#242925] dark:text-white">
+                  {formatCedis(
+                    Number(
+                      primaryBooking.price ||
+                        primaryBooking.room?.price ||
+                        primaryBooking.property?.price ||
+                        0
+                    ) + Number(primaryBooking.property?.cautionDeposit || 0)
+                  )}
                 </span>
               </div>
-              <div className="flex justify-between items-center pb-2 border-b border-zinc-200 dark:border-zinc-800">
-                <span className="text-zinc-500">Accommodation:</span>
-                <span className="font-semibold text-zinc-900 dark:text-white truncate max-w-[180px]">
-                  {selectedGatePassBooking.property?.title}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-zinc-500">Allocated Unit:</span>
-                <span className="font-bold text-emerald-700 dark:text-emerald-400">
-                  {selectedGatePassBooking.room?.roomType || 'Standard'} {selectedGatePassBooking.roomUnit?.unitNumber ? `· Unit ${selectedGatePassBooking.roomUnit.unitNumber}` : ''}
-                </span>
-              </div>
-            </div>
 
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 text-[11px] text-amber-900 dark:text-amber-300">
-              Present this pass with your valid photo ID or Student ID Card to the caretaker upon arrival to inspect the room and collect keys.
-            </div>
+              <div className="flex flex-wrap items-center gap-2.5">
+                {['APPROVED', 'CONFIRMED'].includes(primaryBooking.status) &&
+                  primaryBooking.leaseAgreement?.status !== 'COMPLETED' && (
+                    <Link
+                      href={`/dashboard/agreements/${primaryBooking.id}`}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors"
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span>Review &amp; Sign Lease</span>
+                    </Link>
+                  )}
 
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== 'undefined') window.print();
-                }}
-                className="flex-1 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Pass</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedGatePassBooking(null)}
-                className="flex-1 py-2.5 bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold rounded-xl transition cursor-pointer"
-              >
-                Done
-              </button>
+                {['APPROVED', 'CONFIRMED'].includes(primaryBooking.status) &&
+                  primaryBooking.leaseAgreement?.status === 'COMPLETED' && (
+                    <button
+                      type="button"
+                      onClick={() => payBookingMutation.mutate(primaryBooking.id)}
+                      disabled={payBookingMutation.isPending}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      {payBookingMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CreditCard className="w-4 h-4" />
+                      )}
+                      <span>Complete Escrow Payment</span>
+                    </button>
+                  )}
+
+                <Link
+                  href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs sm:text-sm font-medium text-[#242925] dark:text-white transition-colors"
+                >
+                  <span>View Booking Details</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
       )}
+
+      {dashboardState.mode === 'CONFIRMED_STAY' && primaryBooking && (
+        <section className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-7 shadow-2xs space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-[#E7E7DF] dark:border-[#262E29]">
+            <div className="flex items-center gap-2.5">
+              <StatusBadge tone="success">
+                {primaryBooking.isCheckedIn ? 'Active Residency • Checked In' : 'Confirmed Upcoming Stay'}
+              </StatusBadge>
+              <span className="text-xs font-mono text-[#6F756F] dark:text-[#A0A8A2]">
+                Ref #{primaryBooking.id.slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+            <Link
+              href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+              className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+            >
+              <span>Manage Residency</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-6 justify-between items-start lg:items-center">
+            <div className="flex flex-col sm:flex-row gap-4 min-w-0 flex-1">
+              <div className="relative w-full sm:w-44 h-32 rounded-[12px] overflow-hidden bg-[#F1EFE7] dark:bg-[#222925] shrink-0 border border-[#E7E7DF] dark:border-[#262E29]">
+                <Image
+                  src={
+                    primaryBooking.property?.images?.[0]
+                      ? getImageUrl(primaryBooking.property.images[0])
+                      : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=600&q=80'
+                  }
+                  alt={primaryBooking.property?.title || 'Property'}
+                  fill
+                  sizes="176px"
+                  className="object-cover"
+                />
+              </div>
+
+              <div className="space-y-1.5 min-w-0">
+                <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white truncate">
+                  {primaryBooking.property?.title || 'Confirmed Residence'}
+                </h2>
+                <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2] flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-[#557A67] shrink-0" />
+                  <span>{primaryBooking.property?.location}</span>
+                </p>
+                <div className="flex flex-wrap items-center gap-4 pt-1 text-xs text-[#242925] dark:text-[#E5E7E4]">
+                  <span className="inline-flex items-center gap-1 font-medium">
+                    <Building2 className="w-3.5 h-3.5 text-[#557A67]" />
+                    {primaryBooking.bed?.label
+                      ? `${primaryBooking.roomUnit?.name || 'Unit'} • ${primaryBooking.bed.label}`
+                      : primaryBooking.room?.name || primaryBooking.room?.roomType || 'Whole Unit'}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[#5E645E] dark:text-[#A0A8A2]">
+                    <Calendar className="w-3.5 h-3.5 text-[#557A67]" />
+                    {new Date(primaryBooking.startDate).toLocaleDateString('en-GH', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}{' '}
+                    &ndash;{' '}
+                    {new Date(primaryBooking.endDate).toLocaleDateString('en-GH', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions for Confirmed / Active Resident */}
+            <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-[#E7E7DF] dark:border-[#262E29]">
+              <Link
+                href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors"
+              >
+                <span>View Booking Details</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <Link
+                href={`/dashboard/agreements/${primaryBooking.id}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs sm:text-sm font-medium text-[#242925] dark:text-white transition-colors"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Agreement</span>
+              </Link>
+              <Link
+                href="/dashboard/tenant/tickets/new"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs sm:text-sm font-medium text-[#242925] dark:text-white transition-colors"
+              >
+                <Wrench className="w-3.5 h-3.5" />
+                <span>Report Issue</span>
+              </Link>
+              <Link
+                href="/dashboard/messages"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs sm:text-sm font-medium text-[#242925] dark:text-white transition-colors"
+              >
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>Contact Host</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Active Residency Utility Strip */}
+          <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29] flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-medium text-[#5E645E] dark:text-[#A0A8A2]">
+              Resident Compound Utilities:
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveResidentTool(activeResidentTool === 'visitors' ? null : 'visitors')
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                  activeResidentTool === 'visitors'
+                    ? 'bg-[#173D32] text-white border-[#173D32]'
+                    : 'bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border-[#E7E7DF] dark:border-[#262E29]'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Visitor Passes</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveResidentTool(activeResidentTool === 'deliveries' ? null : 'deliveries')
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                  activeResidentTool === 'deliveries'
+                    ? 'bg-[#173D32] text-white border-[#173D32]'
+                    : 'bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border-[#E7E7DF] dark:border-[#262E29]'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Gatehouse Parcels</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveResidentTool(activeResidentTool === 'payments' ? null : 'payments')
+                }
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                  activeResidentTool === 'payments'
+                    ? 'bg-[#173D32] text-white border-[#173D32]'
+                    : 'bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border-[#E7E7DF] dark:border-[#262E29]'
+                }`}
+              >
+                <Receipt className="w-3.5 h-3.5" />
+                <span>Rent Schedule</span>
+              </button>
+              <Link
+                href="/dashboard/roommates"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border border-[#E7E7DF] dark:border-[#262E29] hover:border-[#173D32] transition-colors"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Roommate Match</span>
+              </Link>
+            </div>
+          </div>
+
+          {activeResidentTool && (
+            <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29]">
+              {activeResidentTool === 'visitors' && <VisitorPassTab />}
+              {activeResidentTool === 'deliveries' && <PackageDeliveriesTab />}
+              {activeResidentTool === 'payments' && <TenantPaymentScheduleTab />}
+            </div>
+          )}
+        </section>
+      )}
+
+      {dashboardState.mode === 'RETURNING_TENANT' && primaryBooking && (
+        <section className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-7 shadow-2xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-xl">
+            <StatusBadge tone={dashboardState.needsReview ? 'warning' : 'neutral'}>
+              {dashboardState.needsReview ? 'Share Your Experience' : 'Completed Tenancy'}
+            </StatusBadge>
+            <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
+              {dashboardState.needsReview
+                ? `How was your stay at ${primaryBooking.property?.title || 'your recent residence'}?`
+                : `Ready for your next accommodation?`}
+            </h2>
+            <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
+              {dashboardState.needsReview
+                ? 'Your verified resident review helps fellow students and tenants make confident housing decisions across Ghana.'
+                : 'Browse available hostels, apartments, and studios for the upcoming semester or tenancy period.'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {dashboardState.needsReview && (
+              <Link
+                href="/dashboard/tenant/reviews/new"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+              >
+                <Star className="w-4 h-4" />
+                <span>Leave a Verified Review</span>
+              </Link>
+            )}
+            <Link
+              href="/search"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-sm font-medium text-[#242925] dark:text-white transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              <span>Search Next Home</span>
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── 3. Secondary Two-Column Grid ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column (7 cols): Recent Bookings OR Featured Homes */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-editorial text-xl text-[#242925] dark:text-white">
+                  {bookings.length > 0 ? 'Recent Bookings' : 'Available Properties to Explore'}
+                </h2>
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
+                  {bookings.length > 0
+                    ? 'Your latest reservation requests and tenancy records'
+                    : 'Verified listings currently open for booking'}
+                </p>
+              </div>
+              <Link
+                href={bookings.length > 0 ? '/dashboard/tenant/bookings' : '/search'}
+                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+              >
+                <span>{bookings.length > 0 ? 'View All' : 'Explore All'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {bookings.length > 0 ? (
+              <div className="divide-y divide-[#E7E7DF] dark:divide-[#262E29]">
+                {bookings.slice(0, 4).map((b: any) => {
+                  const prop = b.property || {};
+                  const total =
+                    Number(b.price || b.room?.price || prop.price || 0) +
+                    Number(prop.cautionDeposit || 0);
+                  const tone = ['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)
+                    ? 'success'
+                    : ['APPROVED', 'CONFIRMED'].includes(b.status)
+                    ? 'info'
+                    : b.status === 'PENDING'
+                    ? 'warning'
+                    : 'danger';
+
+                  return (
+                    <div
+                      key={b.id}
+                      className="py-3.5 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/dashboard/tenant/bookings/${b.id}`}
+                            className="text-sm font-semibold text-[#242925] dark:text-white hover:text-[#173D32] dark:hover:text-[#86B59C] truncate"
+                          >
+                            {prop.title || 'Accommodation'}
+                          </Link>
+                          <StatusBadge tone={tone}>
+                            {b.isCheckedIn ? 'Checked In' : b.status}
+                          </StatusBadge>
+                        </div>
+                        <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] flex flex-wrap items-center gap-2">
+                          <span>{prop.location}</span>
+                          <span>•</span>
+                          <span>
+                            {new Date(b.startDate).toLocaleDateString('en-GH', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                        <span className="text-sm font-bold text-[#242925] dark:text-white">
+                          {formatCedis(total)}
+                        </span>
+                        <Link
+                          href={`/dashboard/tenant/bookings/${b.id}`}
+                          className="px-3 py-1.5 rounded-[8px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs font-medium text-[#242925] dark:text-white transition-colors"
+                        >
+                          Details
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : featuredProperties.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                {featuredProperties.slice(0, 2).map((prop: any) => (
+                  <PropertyCard key={prop.id} property={prop} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<Building2 className="w-6 h-6" />}
+                title="No bookings yet"
+                description="Explore verified hostels and apartments to make your first reservation."
+                action={
+                  <Link
+                    href="/search"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#173D32] text-white text-xs font-medium"
+                  >
+                    Browse Properties
+                  </Link>
+                }
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Right Column (5 cols): Saved Properties Summary & Recent Notifications */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* Saved Properties Card */}
+          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-[#C77B59]" />
+                <h2 className="font-editorial text-lg text-[#242925] dark:text-white">
+                  Saved Properties ({savedProperties.length})
+                </h2>
+              </div>
+              <Link
+                href="/dashboard/wishlist"
+                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline"
+              >
+                View All
+              </Link>
+            </div>
+
+            {wishlistLoading ? (
+              <div className="h-24 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] animate-pulse" />
+            ) : savedProperties.length === 0 ? (
+              <div className="p-4 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] text-center space-y-2">
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
+                  You haven&apos;t saved any properties to your shortlist yet.
+                </p>
+                <Link
+                  href="/search"
+                  className="inline-block text-xs font-semibold text-[#173D32] dark:text-[#86B59C] hover:underline"
+                >
+                  Explore homes to shortlist &rarr;
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {savedProperties.slice(0, 3).map((prop: any) => (
+                  <Link
+                    key={prop.id}
+                    href={`/properties/${prop.id}`}
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-[12px] hover:bg-[#F8F7F2] dark:hover:bg-[#111513] border border-transparent hover:border-[#E7E7DF] dark:hover:border-[#262E29] transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-14 h-12 rounded-[8px] overflow-hidden bg-[#F1EFE7] shrink-0">
+                        <Image
+                          src={
+                            prop.images?.[0]
+                              ? getImageUrl(prop.images[0])
+                              : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=300&q=80'
+                          }
+                          alt={prop.title || 'Saved Property'}
+                          fill
+                          sizes="56px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm font-semibold text-[#242925] dark:text-white truncate">
+                          {prop.title}
+                        </p>
+                        <p className="text-[11px] text-[#5E645E] dark:text-[#A0A8A2] truncate">
+                          {prop.location}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-[#242925] dark:text-white shrink-0">
+                      {formatCedis(prop.price)}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Notifications Card */}
+          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-[#557A67]" />
+                <h2 className="font-editorial text-lg text-[#242925] dark:text-white">
+                  Recent Notifications
+                </h2>
+              </div>
+              <Link
+                href="/dashboard/notifications"
+                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline"
+              >
+                View All
+              </Link>
+            </div>
+
+            {notificationsLoading ? (
+              <div className="h-24 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] animate-pulse" />
+            ) : notifications.length === 0 ? (
+              <div className="p-4 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] text-center">
+                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
+                  You&apos;re all caught up. Important booking and payment updates will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E7E7DF] dark:divide-[#262E29]">
+                {notifications.slice(0, 3).map((n: any) => (
+                  <div key={n.id} className="py-2.5 first:pt-0 last:pb-0 space-y-0.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-xs font-semibold text-[#242925] dark:text-white truncate">
+                        {n.title || 'Account Update'}
+                      </p>
+                      {!n.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-[#173D32] dark:bg-[#86B59C] shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] line-clamp-2">
+                      {n.message}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── 4. Quick Search / Explore Strip ── */}
+      <div className="bg-[#F1EFE7] dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h3 className="font-editorial text-lg text-[#242925] dark:text-white">
+            Looking for another hostel, studio, or apartment?
+          </h3>
+          <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2]">
+            Filter verified listings across Accra, Kumasi, Cape Coast, and major university campuses.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <Link
+            href="/search?type=HOSTEL"
+            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#173D32] transition-colors"
+          >
+            Student Hostels
+          </Link>
+          <Link
+            href="/search?type=APARTMENT"
+            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#173D32] transition-colors"
+          >
+            Apartments
+          </Link>
+          <Link
+            href="/search"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-medium transition-colors"
+          >
+            <span>Browse All Properties</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
 
-export default function TenantDashboard() {
+export default function TenantDashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-[500px] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="py-12 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#173D32]" />
+        </div>
+      }
+    >
       <TenantDashboardContent />
     </Suspense>
   );

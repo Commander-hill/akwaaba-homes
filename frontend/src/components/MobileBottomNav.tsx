@@ -3,13 +3,24 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Home, Compass, LayoutDashboard, MessageSquare, User, Heart, Building, LogIn, Wrench, Key } from 'lucide-react';
+import {
+  Home,
+  Search,
+  LayoutDashboard,
+  MessageSquare,
+  User,
+  Heart,
+  Building,
+  LogIn,
+  Wrench,
+  Key,
+  CalendarCheck,
+} from 'lucide-react';
 import clsx from 'clsx';
 import api from '@/lib/axios';
 
 export default function MobileBottomNav() {
-  const pathname = usePathname();
-
+  const pathname = usePathname() || '';
 
   const { data: userResponse } = useQuery({
     queryKey: ['auth', 'me'],
@@ -24,17 +35,20 @@ export default function MobileBottomNav() {
   const user = userResponse?.user;
   const isAuthenticated = !!user;
   const isCaretaker = user?.role === 'CARETAKER' || user?.role === 'STAFF';
+  const isLandlord = user?.role === 'LANDLORD';
 
-  // Derive dashboard link
-  const dashboardHref = user?.role === 'ADMIN' 
-    ? '/admin/dashboard' 
-    : user?.role === 'LANDLORD' 
-    ? '/dashboard/landlord' 
-    : isCaretaker
-    ? '/dashboard/caretaker'
-    : '/dashboard/tenant';
+  if (
+    pathname.startsWith('/admin') ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password' ||
+    pathname.startsWith('/verify-email') ||
+    pathname === '/onboarding'
+  ) {
+    return null;
+  }
 
-  // Define nav tabs based on authentication state
   const navTabs = isAuthenticated
     ? isCaretaker
       ? [
@@ -60,57 +74,78 @@ export default function MobileBottomNav() {
             name: 'Messages',
             href: '/dashboard/messages',
             icon: MessageSquare,
-            isActive: pathname?.startsWith('/dashboard/messages'),
+            isActive: pathname.startsWith('/dashboard/messages'),
           },
           {
             name: 'Profile',
             href: '/dashboard/profile',
             icon: User,
-            isActive: pathname?.startsWith('/dashboard/profile'),
+            isActive: pathname.startsWith('/dashboard/profile'),
           },
         ]
-      : [
+      : isLandlord
+      ? [
           {
             name: 'Explore',
             href: '/properties',
-            icon: Compass,
-            isActive: pathname === '/properties' || pathname === '/',
+            icon: Search,
+            isActive: pathname === '/properties' || pathname === '/search',
           },
           {
             name: 'Dashboard',
-            href: dashboardHref,
+            href: '/dashboard/landlord',
             icon: LayoutDashboard,
-            isActive: (pathname?.startsWith('/dashboard') && !pathname?.startsWith('/dashboard/messages') && !pathname?.startsWith('/dashboard/profile') && !pathname?.startsWith('/dashboard/wishlist')) || pathname?.startsWith('/admin'),
+            isActive: pathname === '/dashboard/landlord',
+          },
+          {
+            name: 'Properties',
+            href: '/dashboard/landlord/properties',
+            icon: Building,
+            isActive: pathname === '/dashboard/landlord/properties',
           },
           {
             name: 'Messages',
             href: '/dashboard/messages',
             icon: MessageSquare,
-            isActive: pathname?.startsWith('/dashboard/messages'),
+            isActive: pathname.startsWith('/dashboard/messages'),
           },
-          ...(user?.role === 'LANDLORD'
-            ? [
-                {
-                  name: 'Properties',
-                  href: '/dashboard/landlord/properties',
-                  icon: Building,
-                  isActive: pathname === '/dashboard/landlord/properties',
-                },
-              ]
-            : [
-                {
-                  name: 'Saved',
-                  href: '/dashboard/wishlist',
-                  icon: Heart,
-                  isActive: pathname === '/dashboard/wishlist',
-                },
-              ]
-          ),
           {
             name: 'Profile',
             href: '/dashboard/profile',
             icon: User,
-            isActive: pathname?.startsWith('/dashboard/profile'),
+            isActive: pathname.startsWith('/dashboard/profile'),
+          },
+        ]
+      : [
+          {
+            name: 'Explore',
+            href: '/search',
+            icon: Search,
+            isActive: pathname === '/' || pathname === '/search' || pathname.startsWith('/properties'),
+          },
+          {
+            name: 'Saved',
+            href: '/saved',
+            icon: Heart,
+            isActive: pathname === '/saved' || pathname === '/dashboard/wishlist',
+          },
+          {
+            name: 'Bookings',
+            href: '/bookings',
+            icon: CalendarCheck,
+            isActive: pathname.startsWith('/bookings') || pathname.startsWith('/dashboard/tenant/bookings'),
+          },
+          {
+            name: 'Dashboard',
+            href: '/dashboard/tenant',
+            icon: LayoutDashboard,
+            isActive: pathname === '/dashboard/tenant' || pathname === '/dashboard',
+          },
+          {
+            name: 'Account',
+            href: '/profile',
+            icon: User,
+            isActive: pathname.startsWith('/profile') || pathname.startsWith('/dashboard/profile') || pathname.startsWith('/settings'),
           },
         ]
     : [
@@ -121,41 +156,29 @@ export default function MobileBottomNav() {
           isActive: pathname === '/',
         },
         {
-          name: 'Explore',
-          href: '/properties',
-          icon: Compass,
-          isActive: pathname?.startsWith('/properties'),
+          name: 'Search',
+          href: '/search',
+          icon: Search,
+          isActive: pathname === '/search' || pathname.startsWith('/properties'),
         },
         {
           name: 'Saved',
-          href: '/dashboard/wishlist',
+          href: '/saved',
           icon: Heart,
-          isActive: pathname === '/dashboard/wishlist',
+          isActive: pathname === '/saved' || pathname === '/dashboard/wishlist',
         },
         {
-          name: 'Sign In',
+          name: 'Sign in',
           href: '/login',
           icon: LogIn,
           isActive: pathname === '/login',
         },
       ];
 
-  // Do not render bottom nav on dedicated auth/onboarding routes
-  if (
-    pathname === '/login' || 
-    pathname === '/register' || 
-    pathname === '/forgot-password' || 
-    pathname === '/reset-password' ||
-    pathname?.startsWith('/verify-email') ||
-    pathname === '/onboarding'
-  ) {
-    return null;
-  }
-
   return (
-    <nav 
+    <nav
       aria-label="Mobile Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md border-t border-zinc-200/90 dark:border-zinc-800/90 px-2 py-1.5 shadow-[0_-2px_10px_rgba(0,0,0,0.04)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-t border-[#E7E7DF] dark:border-[#262E2A] px-2 py-1.5 shadow-[0_-2px_10px_rgba(23,61,50,0.04)]"
       style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
       <div className="flex items-center justify-around">
@@ -167,21 +190,19 @@ export default function MobileBottomNav() {
               href={tab.href}
               aria-current={tab.isActive ? 'page' : undefined}
               className={clsx(
-                "flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all duration-150 min-w-[52px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600",
+                'flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-all duration-150 min-w-[56px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]',
                 tab.isActive
-                  ? "text-[#0F5132] dark:text-[#198754] font-bold"
-                  : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 font-medium"
+                  ? 'text-[#173D32] dark:text-emerald-400 font-bold'
+                  : 'text-[#6F756F] dark:text-[#9EA69F] hover:text-[#242925] dark:hover:text-white font-medium'
               )}
             >
               <div className="relative">
-                <Icon className={clsx("w-5 h-5", tab.isActive && "stroke-[2.4]")} />
+                <Icon className={clsx('w-5 h-5', tab.isActive && 'stroke-[2.3]')} />
                 {tab.isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#0F5132] dark:bg-[#198754] rounded-full" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#173D32] dark:bg-emerald-400 rounded-full" />
                 )}
               </div>
-              <span className="text-[10px] mt-1 tracking-tight leading-none">
-                {tab.name}
-              </span>
+              <span className="text-[10px] mt-1 tracking-tight leading-none">{tab.name}</span>
             </Link>
           );
         })}
@@ -189,3 +210,4 @@ export default function MobileBottomNav() {
     </nav>
   );
 }
+

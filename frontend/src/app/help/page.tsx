@@ -222,21 +222,21 @@ export default function HelpFaqPage() {
         </div>
 
         {/* Reassurance Support Box */}
-        <div className="pt-8 border-t border-zinc-200/80 dark:border-zinc-800/80">
-          <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/80 dark:border-zinc-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xs">
+        <div className="pt-8 border-t border-[#E7E7DF] dark:border-[#262E29]">
+          <div className="p-6 sm:p-8 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xs">
             <div className="space-y-1 max-w-md">
-              <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                Have a question that isn&apos;t covered here?
+              <h3 className="font-editorial text-xl text-[#242925] dark:text-white">
+                Need to report a property or booking issue?
               </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                Our Accra and Kumasi tenancy advisory teams can assist you with active bookings, verification, or disputes.
+              <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
+                Submit a support inquiry or maintenance ticket linked to your booking and track its status online.
               </p>
             </div>
             <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold transition-colors shadow-xs shrink-0 cursor-pointer"
+              href="/support"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs shrink-0 cursor-pointer"
             >
-              <span>Contact Support</span>
+              <span>Open Support &amp; Issue Center</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
