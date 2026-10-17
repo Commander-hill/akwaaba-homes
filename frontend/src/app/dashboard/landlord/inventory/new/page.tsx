@@ -1,36 +1,38 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 import AlertBanner from '@/components/AlertBanner';
 import {
   Armchair,
   ArrowLeft,
+  ArrowRight,
   Building,
-  Layers,
   Zap,
   Key,
-  Wind,
-  Fan,
-  FileText,
   CheckCircle2,
-  AlertCircle,
   Loader2,
   Info,
-  Plus,
-  Tag,
-  DollarSign,
   DoorClosed,
   Wrench,
-  Sparkles
+  Sparkles,
+  Check,
+  MapPin,
 } from 'lucide-react';
 
 export type AssetCondition = 'PRISTINE' | 'GOOD' | 'FAIR' | 'DAMAGED' | 'MISSING';
-export type AssetCategory = 'ELECTRICAL' | 'FURNITURE' | 'DOORS_WINDOWS' | 'PLUMBING' | 'APPLIANCES' | 'KEYS_SECURITY';
+export type AssetCategory =
+  | 'ELECTRICAL'
+  | 'FURNITURE'
+  | 'DOORS_WINDOWS'
+  | 'PLUMBING'
+  | 'APPLIANCES'
+  | 'KEYS_SECURITY';
 
 interface PresetTemplate {
   name: string;
@@ -48,7 +50,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'KDK 3-Blade Regulator',
     condition: 'PRISTINE',
     replacementCostGHS: 650,
-    notes: 'Smooth rotation, wall speed regulator functional.'
+    notes: 'Smooth rotation, wall speed regulator functional.',
   },
   {
     name: 'Single Bed Frame & High-Density Mattress',
@@ -56,7 +58,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Solid Hardwood 3x6 / Ashfoam 10"',
     condition: 'PRISTINE',
     replacementCostGHS: 1400,
-    notes: 'Firm base, clean orthopedic fabric cover.'
+    notes: 'Firm base, clean orthopedic fabric cover.',
   },
   {
     name: 'Study Desk & Ergonomic Swivel Chair',
@@ -64,7 +66,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Laminate 120cm / Mesh Highback',
     condition: 'GOOD',
     replacementCostGHS: 850,
-    notes: 'Sturdy legs, smooth chair castors and gas lift.'
+    notes: 'Sturdy legs, smooth chair castors and gas lift.',
   },
   {
     name: '2-Door Fitted Wardrobe with Lock & Key',
@@ -72,7 +74,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'MDF Laminated / Union Cylinder',
     condition: 'GOOD',
     replacementCostGHS: 1200,
-    notes: 'Hinges aligned, 2 keys verified.'
+    notes: 'Hinges aligned, 2 keys verified.',
   },
   {
     name: 'Inhemeter Din-Rail Pre-paid Submeter',
@@ -80,7 +82,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Inhemeter DIN Pre-paid',
     condition: 'PRISTINE',
     replacementCostGHS: 950,
-    notes: 'Calibrated, tamper seal intact with keypad.'
+    notes: 'Calibrated, tamper seal intact with keypad.',
   },
   {
     name: 'Mortise Entrance Lockset + 2 Brass Keys',
@@ -88,7 +90,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Union Brass Heavy-Duty Deadbolt',
     condition: 'PRISTINE',
     replacementCostGHS: 320,
-    notes: 'Smooth cylinder latching, both original keys present.'
+    notes: 'Smooth cylinder latching, both original keys present.',
   },
   {
     name: 'Louver Window Blades (12 Blades + Mosquito Net)',
@@ -96,7 +98,7 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Anodized Aluminum Frame',
     condition: 'PRISTINE',
     replacementCostGHS: 420,
-    notes: 'All 12 glass blades unbroken, wire mesh securely clamped.'
+    notes: 'All 12 glass blades unbroken, wire mesh securely clamped.',
   },
   {
     name: 'Split Air Conditioner 1.5HP (Inverter)',
@@ -104,14 +106,25 @@ const PRESET_TEMPLATES: PresetTemplate[] = [
     brandModel: 'Midea / Nasco Inverter R410A',
     condition: 'PRISTINE',
     replacementCostGHS: 3850,
-    notes: 'Condenser serviced, remote control functional.'
-  }
+    notes: 'Condenser serviced, remote control functional.',
+  },
+];
+
+const ASSET_CATEGORIES: Array<{ id: AssetCategory; label: string; icon: any }> = [
+  { id: 'ELECTRICAL', label: 'Electrical & Metering', icon: Zap },
+  { id: 'FURNITURE', label: 'Furniture & Bedding', icon: Armchair },
+  { id: 'APPLIANCES', label: 'Appliances & HVAC', icon: Sparkles },
+  { id: 'DOORS_WINDOWS', label: 'Doors, Glass & Louvers', icon: DoorClosed },
+  { id: 'PLUMBING', label: 'Plumbing & Sanitary', icon: Wrench },
+  { id: 'KEYS_SECURITY', label: 'Locks & Access Keys', icon: Key },
 ];
 
 export default function NewInventoryAssetPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const errorRef = useRef<HTMLDivElement>(null);
 
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('');
   const [roomUnit, setRoomUnit] = useState<string>('RM 101');
   const [name, setName] = useState<string>('');
@@ -133,18 +146,19 @@ export default function NewInventoryAssetPage() {
       } catch {
         return [];
       }
-    }
+    },
   });
 
-  const propertyList = (propertiesData || []).map((p: any) => ({
-    id: p.id || p.propertyId,
-    title: p.title || p.propertyTitle || 'Property',
-    location: p.location || p.propertyLocation || 'Ghana',
-    type: p.type || 'Hostel/Apartment',
-    rooms: p.rooms || []
-  })).filter((p: any) => Boolean(p.id));
+  const propertyList = (propertiesData || [])
+    .map((p: any) => ({
+      id: p.id || p.propertyId,
+      title: p.title || p.propertyTitle || 'Property',
+      location: p.location || p.propertyLocation || 'Ghana',
+      type: p.type || 'Hostel / Apartment',
+      rooms: p.rooms || [],
+    }))
+    .filter((p: any) => Boolean(p.id));
 
-  // Auto-select first property
   useEffect(() => {
     if (!selectedPropertyId && propertyList.length > 0) {
       setSelectedPropertyId(propertyList[0].id);
@@ -153,7 +167,6 @@ export default function NewInventoryAssetPage() {
 
   const activeProperty = propertyList.find((p: any) => p.id === selectedPropertyId);
 
-  // Suggested unit numbers
   const unitOptions = useMemo(() => {
     const list = ['RM 101', 'RM 102', 'RM 103', 'RM 201', 'RM 202', 'General Compound'];
     if (activeProperty?.rooms && Array.isArray(activeProperty.rooms)) {
@@ -163,6 +176,20 @@ export default function NewInventoryAssetPage() {
     }
     return list;
   }, [activeProperty]);
+
+  const costNumber = parseFloat(replacementCostGHS) || 0;
+
+  const triggerError = (msg: string) => {
+    setFormError(msg);
+    toast.error(msg);
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
+  };
 
   const applyTemplate = (tmpl: PresetTemplate) => {
     setName(tmpl.name);
@@ -174,11 +201,52 @@ export default function NewInventoryAssetPage() {
     toast.success(`Template applied: ${tmpl.name}`);
   };
 
+  const validateStep = (step: number): boolean => {
+    setFormError('');
+    if (step === 1) {
+      if (!selectedPropertyId) {
+        triggerError('Please select a target property.');
+        return false;
+      }
+      if (!roomUnit.trim()) {
+        triggerError('Please specify a room or unit identifier.');
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!name.trim()) {
+        triggerError('Fixture / appliance name is required.');
+        return false;
+      }
+    }
+    if (step === 3) {
+      if (costNumber < 0) {
+        triggerError('Replacement cost cannot be negative.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep) && currentStep < 4) {
+      setCurrentStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleBack = () => {
+    setFormError('');
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   const saveAssetMutation = useMutation({
     mutationFn: async () => {
       if (!selectedPropertyId) throw new Error('Property required');
 
-      // 1. Fetch current items from server or localStorage
       let existingItems: any[] = [];
       try {
         const res = await api.get(`/inspections/property/${selectedPropertyId}/inventory`);
@@ -188,11 +256,12 @@ export default function NewInventoryAssetPage() {
       } catch {
         const cached = localStorage.getItem(`akwaaba_room_assets_${selectedPropertyId}`);
         if (cached) {
-          try { existingItems = JSON.parse(cached); } catch {}
+          try {
+            existingItems = JSON.parse(cached);
+          } catch {}
         }
       }
 
-      // 2. Append new item
       const newItem = {
         id: `ast-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         propertyId: selectedPropertyId,
@@ -205,12 +274,11 @@ export default function NewInventoryAssetPage() {
         replacementCostGHS: parseFloat(replacementCostGHS) || 0,
         notes: notes.trim() || undefined,
         lastAuditedDate: new Date().toISOString(),
-        deductFromCaution: ['DAMAGED', 'MISSING'].includes(condition)
+        deductFromCaution: ['DAMAGED', 'MISSING'].includes(condition),
       };
 
       const updated = [newItem, ...existingItems];
 
-      // 3. Persist
       localStorage.setItem(`akwaaba_room_assets_${selectedPropertyId}`, JSON.stringify(updated));
       await api.post(`/inspections/property/${selectedPropertyId}/inventory`, { items: updated });
       return newItem;
@@ -222,426 +290,501 @@ export default function NewInventoryAssetPage() {
     },
     onError: (err: any) => {
       const msg = err.response?.data?.message || err.message || 'Failed to save fixture';
-      setFormError(msg);
-      toast.error(msg);
-    }
+      triggerError(msg);
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-
-    if (!selectedPropertyId) {
-      setFormError('Please select a target property.');
-      toast.error('Property selection required.');
-      return;
-    }
-
-    if (!name.trim()) {
-      setFormError('Fixture name is required.');
-      toast.error('Asset name is required.');
-      return;
-    }
-
+  const handleSubmit = () => {
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
     saveAssetMutation.mutate();
   };
 
-  const costNumber = parseFloat(replacementCostGHS) || 0;
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      {/* Top Header & Breadcrumbs */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+    <div className="max-w-4xl mx-auto pb-16 space-y-6">
+      {/* ── HEADER & 4-STEP SEGMENTED BAR ── */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
             <Link
               href="/dashboard/landlord?tab=inventory"
-              className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Return to Inventory Vault"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Room Asset Vault
             </Link>
-            <div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <Link href="/dashboard/landlord" className="hover:underline">Dashboard</Link>
-                <span>/</span>
-                <Link href="/dashboard/landlord?tab=inventory" className="hover:underline">Room Asset Vault</Link>
-                <span>/</span>
-                <span className="text-slate-800 dark:text-slate-200 font-semibold">Register Fixture</span>
-              </div>
-              <h1 className="text-lg font-black text-slate-900 dark:text-white tracking-tight">
-                Register Fixed Fixture or Room Appliance
-              </h1>
-            </div>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Register Fixed Fixture or Room Appliance
+            </h1>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-              <Armchair className="w-3.5 h-3.5 text-teal-600" />
-              Room Asset Vault
-            </span>
-          </div>
+        {/* 4-Step Segmented Bar (Matches List Property Page) */}
+        <div className="grid grid-cols-4 gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+          {[
+            { step: 1, label: '1. Property & Room' },
+            { step: 2, label: '2. Fixture Identity' },
+            { step: 3, label: '3. Condition & Value' },
+            { step: 4, label: '4. Notes & Review' },
+          ].map((s) => (
+            <button
+              key={s.step}
+              type="button"
+              onClick={() => {
+                if (s.step < currentStep || validateStep(currentStep)) {
+                  setCurrentStep(s.step as 1 | 2 | 3 | 4);
+                }
+              }}
+              className={clsx(
+                'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
+                currentStep === s.step
+                  ? 'bg-[#0F5132] text-white shadow-xs'
+                  : currentStep > s.step
+                  ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30'
+                  : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            {/* Left 2-Columns: Fixture Details Form */}
-            <div className="lg:col-span-2 space-y-6">
+      {formError && <AlertBanner ref={errorRef} type="error" message={formError} />}
 
-              {/* Error Banner */}
-              {formError && (
-                <AlertBanner
-                  type="error"
-                  message={formError}
-                />
-              )}
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 1: PROPERTY & ROOM UNIT ASSIGNMENT
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 1 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+                Step 1: Property &amp; Room Unit Assignment
+              </h2>
+              <p className="text-xs text-zinc-500 mt-0.5">
+                Select the building and specify which room or common area houses this fixture.
+              </p>
+            </div>
+            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+              {propertyList.length} {propertyList.length === 1 ? 'Property' : 'Properties'}
+            </span>
+          </div>
 
-              {/* 1. Property & Room Unit Assignment */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 flex items-center justify-center font-bold">
-                      <Building className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                        1. Property &amp; Room Assignment
-                      </h2>
-                      <p className="text-xs text-slate-500">
-                        Specify which property and specific room unit this fixture belongs to
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Property *
-                    </label>
-                    <select
-                      value={selectedPropertyId}
-                      onChange={(e) => setSelectedPropertyId(e.target.value)}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white outline-none"
-                    >
-                      {propertyList.map((p: any) => (
-                        <option key={p.id} value={p.id}>
-                          {p.title} ({p.location})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Room Unit / Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={roomUnit}
-                      onChange={(e) => setRoomUnit(e.target.value)}
-                      placeholder="e.g. RM 101, Master Suite, Compound"
-                      list="unit-suggestions"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white outline-none"
-                      required
-                    />
-                    <datalist id="unit-suggestions">
-                      {unitOptions.map((opt, i) => (
-                        <option key={i} value={opt} />
-                      ))}
-                    </datalist>
-                  </div>
-                </div>
+          <div className="space-y-5">
+            {isLoadingProps ? (
+              <div className="py-10 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
+                <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading your properties...
               </div>
-
-              {/* 2. Quick Preset Templates */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center font-bold">
-                    <Sparkles className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                      2. Common Ghanaian Fixture Templates
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Click any standard hostel item to auto-populate category, specifications &amp; replacement cost
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                  {PRESET_TEMPLATES.map((tmpl, idx) => (
+            ) : propertyList.length === 0 ? (
+              <div className="p-5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 text-xs space-y-2">
+                <p className="font-bold">No active properties found under your landlord account.</p>
+                <Link
+                  href="/dashboard/landlord/new"
+                  className="inline-flex items-center gap-1.5 text-[#0F5132] dark:text-emerald-400 font-bold underline"
+                >
+                  Publish a property listing first
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {propertyList.map((prop: any) => {
+                  const isSelected = selectedPropertyId === prop.id;
+                  return (
                     <button
-                      key={idx}
+                      key={prop.id}
                       type="button"
-                      onClick={() => applyTemplate(tmpl)}
-                      className="text-left p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-teal-500 dark:hover:border-teal-400 bg-slate-50 dark:bg-slate-800/50 hover:bg-teal-50/40 dark:hover:bg-teal-950/20 transition-all cursor-pointer group"
+                      onClick={() => setSelectedPropertyId(prop.id)}
+                      className={clsx(
+                        'text-left p-4 rounded-xl border-2 transition-all cursor-pointer relative',
+                        isSelected
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 shadow-2xs'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40'
+                      )}
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-xs text-slate-900 dark:text-white group-hover:text-teal-600">
-                          {tmpl.name}
-                        </span>
-                        <span className="font-mono text-xs font-black text-slate-600 dark:text-slate-300">
-                          GH₵ {tmpl.replacementCostGHS}
-                        </span>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Building
+                            className={clsx(
+                              'w-4 h-4 shrink-0',
+                              isSelected ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400'
+                            )}
+                          />
+                          <span className="font-bold text-xs text-zinc-950 dark:text-white uppercase tracking-wide truncate">
+                            {prop.title}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                        )}
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate mt-1">
-                        {tmpl.brandModel}
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-2 pl-6 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span className="truncate">{prop.location}</span>
                       </div>
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
+                Room / Unit Identifier *
+              </label>
+              <input
+                type="text"
+                value={roomUnit}
+                onChange={(e) => setRoomUnit(e.target.value)}
+                placeholder="e.g. RM 101, Flat B2, or General Compound"
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                required
+              />
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {unitOptions.map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setRoomUnit(u)}
+                    className={clsx(
+                      'px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer',
+                      roomUnit === u
+                        ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                        : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
+                    )}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={propertyList.length === 0}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+            >
+              <span>Next: Fixture Identity</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 2: FIXTURE IDENTITY, CATEGORY & QUICK TEMPLATES
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 2 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 2: Fixture Identity &amp; Specification
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Select a quick-fill Ghanaian room fixture preset or enter the appliance details manually.
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            {/* Quick-Fill Templates */}
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Quick-Fill Room Fixture Templates (Click to Apply)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {PRESET_TEMPLATES.map((tmpl, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => applyTemplate(tmpl)}
+                    className="text-left p-2.5 rounded-xl bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#0F5132]/40 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all flex items-center justify-between gap-2 cursor-pointer"
+                  >
+                    <span className="truncate">{tmpl.name}</span>
+                    <span className="text-[10px] font-bold text-[#0F5132] dark:text-emerald-400 shrink-0">
+                      GH₵ {tmpl.replacementCostGHS}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category Selector */}
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Fixture Category *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                {ASSET_CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  const isSelected = category === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategory(cat.id)}
+                      className={clsx(
+                        'p-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
+                        isSelected
+                          ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-2xs'
+                          : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
+                      )}
+                    >
+                      <Icon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{cat.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Name & Brand */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Fixture / Appliance Name *
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder='e.g. 56" Ceiling Fan (Orient/KDK)'
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  required
+                />
               </div>
 
-              {/* 3. Physical Specs & Valuation */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center font-bold">
-                    <Tag className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
-                      3. Asset Specifications &amp; Replacement Value
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Brand details, inventory serial tag, condition, and caution deposit value
-                    </p>
-                  </div>
-                </div>
-
-                {/* Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                    Fixture / Appliance Name *
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                    Brand / Model Specification
                   </label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder='e.g. 56" Ceiling Fan, Orthopedic Bed & Mattress, Wardrobe'
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-teal-500"
-                    required
+                    value={brandModel}
+                    onChange={(e) => setBrandModel(e.target.value)}
+                    placeholder="e.g. KDK 3-Blade Regulator / Ashfoam 10in"
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                   />
                 </div>
 
-                {/* Category & Condition */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Asset Category *
-                    </label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value as AssetCategory)}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white outline-none"
-                    >
-                      <option value="ELECTRICAL">⚡ Electrical (Fan, Pre-paid Submeter, Lighting)</option>
-                      <option value="FURNITURE">🪑 Furniture (Bed Frame, Mattress, Desk, Chair, Wardrobe)</option>
-                      <option value="DOORS_WINDOWS">🚪 Doors, Windows &amp; Louvers</option>
-                      <option value="PLUMBING">🚰 Plumbing &amp; Sanitary Fixtures</option>
-                      <option value="APPLIANCES">❄️ Appliances (Air Conditioner, Water Heater, Fridge)</option>
-                      <option value="KEYS_SECURITY">🔑 Keys, Locksets &amp; Security</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Initial Condition Status *
-                    </label>
-                    <select
-                      value={condition}
-                      onChange={(e) => setCondition(e.target.value as AssetCondition)}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-900 dark:text-white outline-none"
-                    >
-                      <option value="PRISTINE">🟢 Brand New / Pristine Condition</option>
-                      <option value="GOOD">🔵 Good (Normal minor signs of use)</option>
-                      <option value="FAIR">🟡 Fair (Cosmetic wear, fully functional)</option>
-                      <option value="DAMAGED">🔴 Damaged (Requires repair / deduction)</option>
-                      <option value="MISSING">⚫ Missing (Requires replacement)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Brand & Serial Tag */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Brand / Model
-                    </label>
-                    <input
-                      type="text"
-                      value={brandModel}
-                      onChange={(e) => setBrandModel(e.target.value)}
-                      placeholder="e.g. KDK 3-Blade / Ashfoam Orthopedic"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-semibold text-slate-900 dark:text-white outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                      Inventory Serial Tag #
-                    </label>
-                    <input
-                      type="text"
-                      value={serialTag}
-                      onChange={(e) => setSerialTag(e.target.value)}
-                      placeholder="e.g. AST-4820"
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-mono font-bold text-slate-900 dark:text-white outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* Replacement Cost */}
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                    Replacement Cost / Caution Valuation (GH₵) *
+                  <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                    Asset Serial / Tag ID
                   </label>
-                  <div className="relative rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 overflow-hidden focus-within:ring-2 focus-within:ring-teal-500 max-w-sm">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-slate-400">
-                      GH₵
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={replacementCostGHS}
-                      onChange={(e) => setReplacementCostGHS(e.target.value)}
-                      placeholder="0.00"
-                      className="w-full pl-14 pr-4 py-3 bg-transparent text-lg font-black text-slate-900 dark:text-white outline-none"
-                      required
-                    />
-                  </div>
-                  <span className="text-[11px] text-slate-400 mt-1 block">
-                    The statutory amount charged if damaged or unreturned at checkout
-                  </span>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className="block text-xs font-extrabold text-slate-800 dark:text-slate-200 mb-1.5 uppercase tracking-wider">
-                    Inspection Remarks &amp; Notes
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Specific fixture notes, warranty info, date installed, or pre-existing blemishes..."
-                    className="w-full px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-teal-500"
+                  <input
+                    type="text"
+                    value={serialTag}
+                    onChange={(e) => setSerialTag(e.target.value)}
+                    placeholder="e.g. AST-4821"
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                   />
                 </div>
               </div>
-
             </div>
-
-            {/* Right Column: Caution Deposit Impact & Summary */}
-            <div className="space-y-6">
-
-              {/* Dossier Card */}
-              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                    Fixture Audit Dossier
-                  </span>
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-600">
-                    Vault Item
-                  </span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  <div className="flex justify-between items-start gap-2">
-                    <span className="text-slate-400 font-medium">Property:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[180px]">
-                      {activeProperty ? activeProperty.title : 'None selected'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Room Unit:</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">
-                      {roomUnit || 'RM 101'}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Serial Tag:</span>
-                    <span className="font-mono text-slate-700 dark:text-slate-300">
-                      {serialTag}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-400 font-medium">Condition:</span>
-                    <span className="font-bold text-emerald-600">
-                      {condition}
-                    </span>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Replacement Valuation
-                    </span>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                      GH₵ {costNumber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Primary Button */}
-                <div className="space-y-2.5 pt-3">
-                  <button
-                    type="submit"
-                    disabled={saveAssetMutation.isPending}
-                    className="w-full py-3.5 bg-teal-600 hover:bg-teal-700 text-white rounded-2xl font-black text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                  >
-                    {saveAssetMutation.isPending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Saving to Vault...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" /> Save Fixture to Vault
-                      </>
-                    )}
-                  </button>
-
-                  <Link
-                    href="/dashboard/landlord?tab=inventory"
-                    className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl font-bold text-xs transition-colors flex items-center justify-center"
-                  >
-                    Cancel &amp; Return
-                  </Link>
-                </div>
-              </div>
-
-              {/* Caution Deposit Protection Card */}
-              <div className="bg-gradient-to-br from-slate-900 to-slate-950 text-white rounded-3xl p-6 border border-slate-800 shadow-md space-y-3">
-                <div className="flex items-center gap-2 text-teal-400">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <h4 className="font-extrabold text-xs uppercase tracking-wider">
-                    Caution Deposit Guidelines
-                  </h4>
-                </div>
-                <div className="text-xs text-slate-400 space-y-2 leading-relaxed">
-                  <p>
-                    Landlords may only deduct verifiable fixture damages beyond normal fair wear and tear from a tenant's caution deposit.
-                  </p>
-                  <ul className="list-disc pl-4 space-y-1 text-slate-400 text-[11px]">
-                    <li>Documenting initial fixture condition upon check-in protects your legal right to settlement.</li>
-                    <li>Items logged here sync automatically to Move-In and Move-Out inspection checklists.</li>
-                  </ul>
-                </div>
-              </div>
-
-            </div>
-
           </div>
-        </form>
-      </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Condition &amp; Value</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 3: CONDITION STATE & REPLACEMENT VALUATION
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 3 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 3: Physical Condition &amp; Replacement Value
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Record the current physical state and replacement cost for move-in/move-out caution deposit audits.
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Current Physical Condition *
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                {(
+                  [
+                    { id: 'PRISTINE', label: 'Pristine / New' },
+                    { id: 'GOOD', label: 'Good Working' },
+                    { id: 'FAIR', label: 'Fair Wear' },
+                    { id: 'DAMAGED', label: 'Damaged' },
+                    { id: 'MISSING', label: 'Missing' },
+                  ] as Array<{ id: AssetCondition; label: string }>
+                ).map((c) => {
+                  const isSelected = condition === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setCondition(c.id)}
+                      className={clsx(
+                        'py-2.5 px-3 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer',
+                        isSelected
+                          ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-2xs'
+                          : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
+                      )}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Estimated Replacement Cost (GH₵) *
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={replacementCostGHS}
+                onChange={(e) => setReplacementCostGHS(e.target.value)}
+                placeholder="e.g. 650"
+                className="w-full sm:w-72 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                required
+              />
+              <span className="text-[11px] text-zinc-500 mt-1.5 block">
+                Used as the benchmark replacement cost if the item is willfully damaged beyond fair wear and tear.
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Notes &amp; Review</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 4: INSPECTION NOTES & ASSET SUMMARY
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 4 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 4: Inspection Notes &amp; Review
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Add any baseline condition notes and review the fixture details before saving to the Room Asset Vault.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Inspection &amp; Condition Notes (Optional)
+              </label>
+              <textarea
+                rows={4}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Note any existing scratches, key count, regulator speed checks, or warranty details..."
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl p-3.5 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+              />
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 leading-relaxed flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+              <div>
+                Registered room fixtures automatically appear on the tenant&rsquo;s digital Move-In and Move-Out
+                Condition Checklists so both parties can verify room contents transparently.
+              </div>
+            </div>
+
+            {/* Horizontal Asset Summary Box (Matches Publication Summary on List Property Page) */}
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+              <div className="text-xs font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+                Fixture Registration Summary
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Property &amp; Unit</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">
+                    {activeProperty ? `${activeProperty.title} (${roomUnit})` : roomUnit}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Fixture</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">
+                    {name || 'Not specified'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Condition</span>
+                  <span className="font-bold text-[#0F5132] dark:text-emerald-400">{condition}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Replacement Value</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">
+                    GH₵ {costNumber.toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saveAssetMutation.isPending}
+              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+            >
+              {saveAssetMutation.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )}
+              <span>Register Fixture</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

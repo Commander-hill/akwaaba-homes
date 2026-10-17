@@ -1,18 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import clsx from 'clsx';
+import AlertBanner from '@/components/AlertBanner';
 import {
-  AlertTriangle,
-  FileText,
   Building,
-  User,
-  Phone,
-  Clock,
-  Calendar,
   Volume2,
   Users,
   Flame,
@@ -21,21 +17,21 @@ import {
   Swords,
   DoorClosed,
   ArrowLeft,
-  ChevronRight,
+  ArrowRight,
   CheckCircle2,
-  Send,
   Loader2,
-  Gavel,
-  BookOpen
+  Check,
+  MapPin,
+  Info,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type InfractionType = 
-  | 'NOISE_POLLUTION' 
-  | 'UNAUTHORIZED_GUEST' 
-  | 'PROHIBITED_APPLIANCE' 
-  | 'SMOKING_CONTRABAND' 
-  | 'PROPERTY_DAMAGE' 
+type InfractionType =
+  | 'NOISE_POLLUTION'
+  | 'UNAUTHORIZED_GUEST'
+  | 'PROHIBITED_APPLIANCE'
+  | 'SMOKING_CONTRABAND'
+  | 'PROPERTY_DAMAGE'
   | 'FIGHTING_HARASSMENT'
   | 'CURFEW_VIOLATION';
 
@@ -65,7 +61,6 @@ const INFRACTIONS: Array<{
   label: string;
   icon: any;
   defaultFine: string;
-  color: string;
   description: string;
 }> = [
   {
@@ -73,70 +68,65 @@ const INFRACTIONS: Array<{
     label: 'Noise Curfew Violation',
     icon: Volume2,
     defaultFine: '0',
-    color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800',
-    description: 'Blaring music, loud partying during quiet hours (post 10:00 PM).'
+    description: 'Blaring music or loud disturbance during compound quiet hours (after 10:00 PM).',
   },
   {
     id: 'UNAUTHORIZED_GUEST',
     label: 'Unauthorized Overnight Guest',
     icon: Users,
     defaultFine: '100',
-    color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800',
-    description: 'Unregistered squatters or non-residents staying past gate curfew.'
+    description: 'Unregistered squatters or non-residents staying past compound gate curfew.',
   },
   {
     id: 'PROHIBITED_APPLIANCE',
     label: 'Prohibited Heating Appliance',
     icon: Flame,
     defaultFine: '150',
-    color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800',
-    description: 'Electric coil heaters, hotplates, or high-draw elements causing breaker trips.'
+    description: 'Electric coil heaters, hotplates, or high-load elements causing breaker trips.',
   },
   {
     id: 'SMOKING_CONTRABAND',
     label: 'Smoking & Contraband',
     icon: Cigarette,
     defaultFine: '200',
-    color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800',
-    description: 'Smoking shisha, cigarettes, or contraband inside rooms/corridors.'
+    description: 'Smoking shisha, cigarettes, or prohibited substances inside rooms or corridors.',
   },
   {
     id: 'PROPERTY_DAMAGE',
     label: 'Fixture or Wall Destruction',
     icon: Hammer,
     defaultFine: '300',
-    color: 'text-red-500 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800',
-    description: 'Damaged locks, smashed louvre blades, broken beds, or defaced walls.'
+    description: 'Damaged locks, broken louvre blades, damaged furniture, or defaced walls.',
   },
   {
     id: 'FIGHTING_HARASSMENT',
-    label: 'Physical Altercation / Brawl',
+    label: 'Physical Altercation / Harassment',
     icon: Swords,
     defaultFine: '400',
-    color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800',
-    description: 'Assault, fighting, threats, or harassment against residents or porter.'
+    description: 'Physical altercation, threats, or harassment against residents or staff.',
   },
   {
     id: 'CURFEW_VIOLATION',
     label: 'Gate Curfew Breach',
     icon: DoorClosed,
     defaultFine: '50',
-    color: 'text-orange-500 bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800',
-    description: 'Scaling perimeter fence or returning after lockdown hours.'
-  }
+    description: 'Scaling perimeter walls or forcing gate access after lockdown hours.',
+  },
 ];
 
 function NewDisciplinaryIncidentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialPropertyId = searchParams.get('propertyId') || '';
+  const errorRef = useRef<HTMLDivElement>(null);
 
+  const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
   const [propertyId, setPropertyId] = useState(initialPropertyId);
   const [residentName, setResidentName] = useState('');
   const [residentPhone, setResidentPhone] = useState('');
   const [roomUnit, setRoomUnit] = useState('RM 101');
   const [infraction, setInfraction] = useState<InfractionType>('NOISE_POLLUTION');
-  const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [incidentDate, setIncidentDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [incidentTime, setIncidentTime] = useState('22:30');
   const [strikeLevel, setStrikeLevel] = useState<StrikeLevel>(1);
   const [fineAmount, setFineAmount] = useState('0');
@@ -145,17 +135,29 @@ function NewDisciplinaryIncidentContent() {
   const [witnessStatement, setWitnessStatement] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
   // Fetch properties owned by landlord
   const { data: propertiesData, isLoading: loadingProperties } = useQuery({
-    queryKey: ['properties', 'landlord'],
+    queryKey: ['properties', 'landlord', 'mine'],
     queryFn: async () => {
-      const res = await api.get('/properties/my-properties');
-      return res.data;
-    }
+      try {
+        const res = await api.get('/properties/landlord/mine');
+        return res.data?.data || [];
+      } catch {
+        const fallback = await api.get('/properties/my-properties');
+        return fallback.data?.properties || fallback.data?.data || [];
+      }
+    },
   });
 
-  const properties = propertiesData?.properties || propertiesData?.data || [];
+  const properties = (propertiesData || [])
+    .map((p: any) => ({
+      id: p.id || p.propertyId,
+      title: p.title || p.propertyTitle || 'Property',
+      location: p.location || p.propertyLocation || 'Ghana',
+    }))
+    .filter((p: any) => Boolean(p.id));
 
   useEffect(() => {
     if (!propertyId && properties.length > 0) {
@@ -163,9 +165,24 @@ function NewDisciplinaryIncidentContent() {
     }
   }, [properties, propertyId, initialPropertyId]);
 
+  const selectedInfraction = INFRACTIONS.find((i) => i.id === infraction) || INFRACTIONS[0];
+  const selectedProperty = properties.find((p: any) => p.id === propertyId);
+
+  const triggerError = (msg: string) => {
+    setFormError(msg);
+    toast.error(msg);
+    setTimeout(() => {
+      if (errorRef.current) {
+        errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 50);
+  };
+
   const handleInfractionChange = (newInfraction: InfractionType) => {
     setInfraction(newInfraction);
-    const item = INFRACTIONS.find(i => i.id === newInfraction);
+    const item = INFRACTIONS.find((i) => i.id === newInfraction);
     if (item && strikeLevel > 1) {
       setFineAmount(item.defaultFine);
     }
@@ -177,7 +194,7 @@ function NewDisciplinaryIncidentContent() {
       setFineAmount('0');
       setStatus('WARNING_ISSUED');
     } else if (level === 2) {
-      setFineAmount('200');
+      setFineAmount(selectedInfraction.defaultFine !== '0' ? selectedInfraction.defaultFine : '200');
       setStatus('FINE_PENDING');
     } else {
       setFineAmount('400');
@@ -185,23 +202,52 @@ function NewDisciplinaryIncidentContent() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!propertyId) {
-      toast.error('Please select the hostel or rental property');
-      return;
+  const validateStep = (step: number): boolean => {
+    setFormError('');
+    if (step === 1) {
+      if (!propertyId) {
+        triggerError('Please select a target hostel or property.');
+        return false;
+      }
+      if (!residentName.trim()) {
+        triggerError('Please enter the resident full name.');
+        return false;
+      }
     }
-    if (!residentName.trim()) {
-      toast.error('Resident name is required');
-      return;
+    if (step === 2) {
+      if (!infraction) {
+        triggerError('Please select the infraction category.');
+        return false;
+      }
     }
-    if (!description.trim()) {
-      toast.error('Please provide a detailed description of the violation');
-      return;
+    if (step === 3) {
+      if (!description.trim()) {
+        triggerError('Please provide a clear factual description of the incident.');
+        return false;
+      }
     }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (validateStep(currentStep) && currentStep < 4) {
+      setCurrentStep((prev) => (prev + 1) as 1 | 2 | 3 | 4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleBack = () => {
+    setFormError('');
+    if (currentStep > 1) {
+      setCurrentStep((prev) => (prev - 1) as 1 | 2 | 3 | 4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return;
 
     setIsSubmitting(true);
-
     const refCode = `DISC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const newIncident: DisciplinaryIncident = {
@@ -219,7 +265,7 @@ function NewDisciplinaryIncidentContent() {
       status,
       description: description.trim(),
       reportedBy: reportedBy.trim(),
-      witnessStatement: witnessStatement.trim() || undefined
+      witnessStatement: witnessStatement.trim() || undefined,
     };
 
     try {
@@ -231,97 +277,201 @@ function NewDisciplinaryIncidentContent() {
 
       toast.success(`Disciplinary dossier ${refCode} logged successfully!`);
       router.push('/dashboard/landlord?tab=hostel');
-    } catch (err) {
-      toast.error('Failed to save disciplinary record');
+    } catch {
+      triggerError('Failed to save disciplinary record.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedInfraction = INFRACTIONS.find(i => i.id === infraction) || INFRACTIONS[0];
-  const selectedProperty = properties.find((p: any) => p.id === propertyId);
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      {/* Top Header / Breadcrumb */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-              <Link href="/dashboard/landlord" className="hover:text-primary flex items-center gap-1 transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to Landlord Dashboard
-              </Link>
-              <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-slate-900 dark:text-white font-bold">Disciplinary Incident Workstation</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400">
-                <Gavel className="w-3.5 h-3.5" /> Disciplinary Policy Framework
-              </span>
-            </div>
+    <div className="max-w-4xl mx-auto pb-16 space-y-6">
+      {/* ── HEADER & 4-STEP SEGMENTED BAR ── */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <Link
+              href="/dashboard/landlord?tab=hostel"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-1 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Conduct &amp; Disciplinary
+            </Link>
+            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+              Log Resident Disciplinary Incident
+            </h1>
           </div>
+        </div>
+
+        {/* 4-Step Segmented Bar (Matches List Property Page) */}
+        <div className="grid grid-cols-4 gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs">
+          {[
+            { step: 1, label: '1. Property & Resident' },
+            { step: 2, label: '2. Infraction & Strike' },
+            { step: 3, label: '3. Incident Report' },
+            { step: 4, label: '4. Sanction & Review' },
+          ].map((s) => (
+            <button
+              key={s.step}
+              type="button"
+              onClick={() => {
+                if (s.step < currentStep || validateStep(currentStep)) {
+                  setCurrentStep(s.step as 1 | 2 | 3 | 4);
+                }
+              }}
+              className={clsx(
+                'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
+                currentStep === s.step
+                  ? 'bg-[#0F5132] text-white shadow-xs'
+                  : currentStep > s.step
+                  ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30'
+                  : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
+              )}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Page Hero */}
-        <div className="bg-gradient-to-r from-rose-700 via-red-600 to-amber-700 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden mb-8">
-          <div className="absolute right-0 top-0 bottom-0 opacity-10 flex items-center pointer-events-none pr-8">
-            <AlertTriangle className="w-72 h-72" />
-          </div>
-          <div className="relative z-10 max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold uppercase tracking-wider">
-              <Gavel className="w-3.5 h-3.5" /> Student Hostel Code of Conduct
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Log Resident Disciplinary Incident
-            </h1>
-            <p className="text-rose-100 text-sm leading-relaxed">
-              Formally document student misconduct, noise infractions, unauthorized occupants, or property damage. Records generate audit citations for parent notifications and Rent Control dispute filings.
+      {formError && <AlertBanner ref={errorRef} type="error" message={formError} />}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 1: PROPERTY & RESIDENT PARTICULARS
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 1 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 1: Property &amp; Resident Particulars
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Select the hostel or compound and identify the resident involved in the incident.
             </p>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Form Area */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* 1. Property Selection */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Building className="w-5 h-5 text-rose-500" />
-                Select Hostel or Compound
-              </h2>
+          <div className="space-y-5">
+            {loadingProperties ? (
+              <div className="py-8 flex items-center justify-center gap-2 text-zinc-400 text-xs font-bold">
+                <Loader2 className="w-4 h-4 animate-spin text-[#0F5132]" /> Loading properties...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {properties.map((prop: any) => {
+                  const isSelected = propertyId === prop.id;
+                  return (
+                    <button
+                      key={prop.id}
+                      type="button"
+                      onClick={() => setPropertyId(prop.id)}
+                      className={clsx(
+                        'text-left p-4 rounded-xl border-2 transition-all cursor-pointer relative',
+                        isSelected
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 shadow-2xs'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Building
+                            className={clsx(
+                              'w-4 h-4 shrink-0',
+                              isSelected ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400'
+                            )}
+                          />
+                          <span className="font-bold text-xs text-zinc-950 dark:text-white uppercase tracking-wide truncate">
+                            {prop.title}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 mt-2 pl-6 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span className="truncate">{prop.location}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-zinc-100 dark:border-zinc-800">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                  Hostel / Residence Facility
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Resident Full Name *
                 </label>
-                {loadingProperties ? (
-                  <div className="h-10 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
-                ) : (
-                  <select
-                    value={propertyId}
-                    onChange={(e) => setPropertyId(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-rose-500"
-                  >
-                    {properties.length === 0 && (
-                      <option value="">No properties registered</option>
-                    )}
-                    {properties.map((p: any) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title} {p.location ? `— ${p.location}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <input
+                  type="text"
+                  value={residentName}
+                  onChange={(e) => setResidentName(e.target.value)}
+                  placeholder="e.g. Kwesi Mensah"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Room / Unit Number *
+                </label>
+                <input
+                  type="text"
+                  value={roomUnit}
+                  onChange={(e) => setRoomUnit(e.target.value)}
+                  placeholder="e.g. RM 104 / Block B"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Resident Phone (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={residentPhone}
+                  onChange={(e) => setResidentPhone(e.target.value)}
+                  placeholder="e.g. 0244123456"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                />
               </div>
             </div>
+          </div>
 
-            {/* 2. Infraction Category */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-rose-500" />
-                Select Violation Category
-              </h2>
+          <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Infraction &amp; Strike</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 2: INFRACTION CATEGORY & STRIKE LEVEL
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 2 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 2: Infraction Category &amp; Strike Level
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Classify the compound rule violation and assign the corresponding disciplinary strike tier.
+            </p>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Nature of Violation *
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {INFRACTIONS.map((item) => {
                   const Icon = item.icon;
@@ -331,22 +481,31 @@ function NewDisciplinaryIncidentContent() {
                       key={item.id}
                       type="button"
                       onClick={() => handleInfractionChange(item.id)}
-                      className={`p-3.5 rounded-2xl border text-left transition-all flex items-start gap-3 ${
+                      className={clsx(
+                        'p-3.5 rounded-xl border-2 text-left transition-all flex items-start gap-3 cursor-pointer',
                         isSelected
-                          ? 'border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 ring-2 ring-rose-500/20'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
-                      }`}
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 shadow-2xs'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40'
+                      )}
                     >
-                      <div className={`p-2.5 rounded-xl shrink-0 ${item.color}`}>
-                        <Icon className="w-5 h-5" />
+                      <div
+                        className={clsx(
+                          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
+                          isSelected
+                            ? 'bg-[#0F5132] text-white'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                        )}
+                      >
+                        <Icon className="w-4 h-4" />
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          {item.label}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-xs text-zinc-950 dark:text-white truncate">{item.label}</span>
+                          {isSelected && (
+                            <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                          )}
                         </div>
-                        <div className="text-[11px] text-slate-400 mt-1 leading-snug">
-                          {item.description}
-                        </div>
+                        <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{item.description}</p>
                       </div>
                     </button>
                   );
@@ -354,293 +513,284 @@ function NewDisciplinaryIncidentContent() {
               </div>
             </div>
 
-            {/* 3. Resident & Unit Info */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <User className="w-5 h-5 text-rose-500" />
-                Resident Identity & Room Assignment
-              </h2>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Student / Resident Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={residentName}
-                    onChange={(e) => setResidentName(e.target.value)}
-                    placeholder="e.g. Emmanuel Osei"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Contact Phone Number
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="tel"
-                      value={residentPhone}
-                      onChange={(e) => setResidentPhone(e.target.value)}
-                      placeholder="024 XXX XXXX"
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Room / Unit Number *
-                  </label>
-                  <input
-                    type="text"
-                    value={roomUnit}
-                    onChange={(e) => setRoomUnit(e.target.value)}
-                    placeholder="e.g. Block C, Room 204"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Date & Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Date of Occurrence
-                  </label>
-                  <div className="relative">
-                    <Calendar className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="date"
-                      value={incidentDate}
-                      onChange={(e) => setIncidentDate(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Time of Occurrence
-                  </label>
-                  <div className="relative">
-                    <Clock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    <input
-                      type="time"
-                      value={incidentTime}
-                      onChange={(e) => setIncidentTime(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Reported By
-                  </label>
-                  <input
-                    type="text"
-                    value={reportedBy}
-                    onChange={(e) => setReportedBy(e.target.value)}
-                    placeholder="e.g. Caretaker / Porter"
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 4. Strike Escalation & Sanction */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                Disciplinary Strike Level & Statutory Sanctions
-              </h2>
-
+            <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-2">
+                Disciplinary Strike Tier *
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleStrikeChange(1)}
-                  className={`p-4 rounded-xl border text-left transition ${
-                    strikeLevel === 1
-                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30 ring-2 ring-amber-500/20'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="text-xs font-extrabold text-amber-600">Strike 1</div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">Written Warning</div>
-                  <div className="text-[11px] text-slate-500 mt-1">Formal reprimand letter issued with 0 surcharge.</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleStrikeChange(2)}
-                  className={`p-4 rounded-xl border text-left transition ${
-                    strikeLevel === 2
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/30 ring-2 ring-orange-500/20'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="text-xs font-extrabold text-orange-600">Strike 2</div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">Financial Surcharge</div>
-                  <div className="text-[11px] text-slate-500 mt-1">GH₵ 200 fee + guardian notification dispatch.</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleStrikeChange(3)}
-                  className={`p-4 rounded-xl border text-left transition ${
-                    strikeLevel === 3
-                      ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/30 ring-2 ring-rose-500/20'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="text-xs font-extrabold text-rose-600">Strike 3</div>
-                  <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">Eviction Referral</div>
-                  <div className="text-[11px] text-slate-500 mt-1">Rent Control referral & hostel expulsion notice.</div>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Disciplinary Fine / Damage Surcharge (GH₵)
-                  </label>
-                  <input
-                    type="number"
-                    value={fineAmount}
-                    onChange={(e) => setFineAmount(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-black outline-none focus:ring-2 focus:ring-rose-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Sanction Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as IncidentStatus)}
-                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-rose-500"
-                  >
-                    <option value="WARNING_ISSUED">Warning Issued (Pending Acknowledgment)</option>
-                    <option value="FINE_PENDING">Disciplinary Surcharge Pending Settlement</option>
-                    <option value="SETTLED">Fine Settled / Case Closed</option>
-                    <option value="EVICTION_PROCEEDINGS">Referred to Rent Control for Eviction</option>
-                  </select>
-                </div>
+                {[
+                  {
+                    level: 1 as StrikeLevel,
+                    title: 'Strike 1: Formal Warning',
+                    desc: 'Written caution placed on file. No monetary fine.',
+                  },
+                  {
+                    level: 2 as StrikeLevel,
+                    title: 'Strike 2: Restitution Fine',
+                    desc: 'Second violation or damage repair surcharge.',
+                  },
+                  {
+                    level: 3 as StrikeLevel,
+                    title: 'Strike 3: Final Notice',
+                    desc: 'Severe breach; escalates to guardian & tenancy review.',
+                  },
+                ].map((s) => {
+                  const isSelected = strikeLevel === s.level;
+                  return (
+                    <button
+                      key={s.level}
+                      type="button"
+                      onClick={() => handleStrikeChange(s.level)}
+                      className={clsx(
+                        'p-3.5 rounded-xl border-2 text-left transition-all cursor-pointer',
+                        isSelected
+                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 shadow-2xs'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/40'
+                      )}
+                    >
+                      <div className="font-bold text-xs text-zinc-950 dark:text-white mb-1">{s.title}</div>
+                      <p className="text-[11px] text-zinc-500 leading-relaxed">{s.desc}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* 5. Violation Description */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-rose-500" />
-                Incident Narrative & Witness Statements
-              </h2>
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Incident Report</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 3: INCIDENT DATE, STATEMENT & WITNESS REPORT
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 3 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 3: Factual Incident Report &amp; Witness Log
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Record the date, time, reporting officer, and objective description of what occurred.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Comprehensive Incident Description *
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Incident Date *
                 </label>
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Detail what occurred, who was present, what items were confiscated or damaged, and resident response when confronted..."
-                  className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500"
+                <input
+                  type="date"
+                  value={incidentDate}
+                  onChange={(e) => setIncidentDate(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Witness Corroboration / Porter Statement (Optional)
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Incident Time *
                 </label>
-                <textarea
-                  rows={2}
-                  value={witnessStatement}
-                  onChange={(e) => setWitnessStatement(e.target.value)}
-                  placeholder="Witness statements from roommates, adjacent room occupants, or night security..."
-                  className="w-full p-4 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-rose-500"
+                <input
+                  type="time"
+                  value={incidentTime}
+                  onChange={(e) => setIncidentTime(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Reported By *
+                </label>
+                <input
+                  type="text"
+                  value={reportedBy}
+                  onChange={(e) => setReportedBy(e.target.value)}
+                  placeholder="e.g. Hostel Caretaker On Duty"
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  required
                 />
               </div>
             </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Detailed Incident Description *
+              </label>
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Provide an objective, factual account of the violation, warnings given, and any property affected..."
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl p-3.5 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                Corroborating Witness Statement (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={witnessStatement}
+                onChange={(e) => setWitnessStatement(e.target.value)}
+                placeholder="Name / room number of any co-tenant or security guard who witnessed the incident..."
+                className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl p-3.5 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+              />
+            </div>
           </div>
 
-          {/* Right Column: Legal Citation & Action Summary */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5 sticky top-24">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-rose-500" /> Tenancy Conduct Standards
-              </h3>
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleNext}
+              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+            >
+              <span>Next: Sanction &amp; Review</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
 
-              {/* Conduct Reference Card */}
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2 text-xs text-amber-900 dark:text-amber-300">
-                <div className="font-bold flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                  <CheckCircle2 className="w-4 h-4" /> Quiet Enjoyment &amp; Conduct Rules
-                </div>
-                <p className="text-[11px] leading-relaxed">
-                  Tenancy agreements require all residents to respect communal living standards, quiet enjoyment, and facility safety regulations. Repeated violations may result in escalated disciplinary action or tenancy termination.
-                </p>
+      {/* ══════════════════════════════════════════════════════════════════════════
+          STEP 4: SANCTION ASSESSMENT & DOSSIER REVIEW
+         ══════════════════════════════════════════════════════════════════════════ */}
+      {currentStep === 4 && (
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6 animate-in">
+          <div className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+              Step 4: Sanction Assessment &amp; Review
+            </h2>
+            <p className="text-xs text-zinc-500 mt-0.5">
+              Confirm any restitution surcharge and review the disciplinary dossier before recording.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Restitution / Fine Amount (GH₵)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="10"
+                  value={fineAmount}
+                  onChange={(e) => setFineAmount(e.target.value)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                />
               </div>
 
-              <div className="space-y-3 pb-4 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Selected Offense:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{selectedInfraction.label}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Assigned Strike:</span>
-                  <span className="font-bold text-rose-600 dark:text-rose-400">Strike Level {strikeLevel}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Disciplinary Surcharge:</span>
-                  <span className="text-sm font-black text-slate-900 dark:text-white">
-                    GH₵ {parseFloat(fineAmount || '0').toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Target Facility:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">
-                    {selectedProperty?.title || 'Selected Facility'}
-                  </span>
-                </div>
+              <div>
+                <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
+                  Dossier Resolution Status
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as IncidentStatus)}
+                  className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                >
+                  <option value="WARNING_ISSUED">Formal Warning Issued</option>
+                  <option value="FINE_PENDING">Restitution Fine Pending</option>
+                  <option value="SETTLED">Resolved &amp; Settled</option>
+                  <option value="EVICTION_PROCEEDINGS">Escalated to Tenancy Review</option>
+                </select>
               </div>
+            </div>
 
-              {/* Submit Buttons */}
-              <div className="space-y-2 pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 transition-all cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Recording Incident...
-                    </>
-                  ) : (
-                    <>
-                      <Gavel className="w-4 h-4" /> Issue Citation & Log Record
-                    </>
-                  )}
-                </button>
+            <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 leading-relaxed flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+              <div>
+                Residents have the right to submit a formal written response or appeal from their Tenant Portal within 7
+                days of a disciplinary citation.
+              </div>
+            </div>
 
-                <Link
-                  href="/dashboard/landlord?tab=hostel"
-                  className="w-full py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold flex items-center justify-center transition"
-                >
-                  Cancel & Return
-                </Link>
+            {/* Horizontal Summary Box (Matches Publication Summary on List Property Page) */}
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2">
+              <div className="text-xs font-bold text-zinc-950 dark:text-white uppercase tracking-wider">
+                Disciplinary Citation Summary
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Property &amp; Unit</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">
+                    {selectedProperty ? `${selectedProperty.title} (${roomUnit})` : roomUnit}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Resident</span>
+                  <span className="font-bold text-zinc-900 dark:text-white truncate block">
+                    {residentName || 'Not specified'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Violation &amp; Strike</span>
+                  <span className="font-bold text-[#0F5132] dark:text-emerald-400 truncate block">
+                    Strike {strikeLevel} • {selectedInfraction.label}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block uppercase">Restitution Fine</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">
+                    GH₵ {(parseFloat(fineAmount) || 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </form>
-      </div>
+
+          <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+            >
+              {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              <span>Record Disciplinary Citation</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -649,8 +799,8 @@ export default function NewDisciplinaryIncidentPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
+        <div className="py-20 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" />
         </div>
       }
     >
