@@ -195,6 +195,32 @@ export default function RegisterPage() {
     }
   };
 
+  const isStep1Valid = Boolean(
+    formData.firstName.trim() &&
+    formData.lastName.trim() &&
+    formData.phoneNumber.trim() &&
+    formData.gender &&
+    formData.nationality.trim()
+  );
+
+  const isStep2Valid = Boolean(
+    formData.email.trim() &&
+    formData.password.length >= 8 &&
+    formData.confirmPassword.length >= 8 &&
+    formData.password === formData.confirmPassword &&
+    formData.acceptTerms &&
+    (formData.role !== 'TENANT' ||
+      (Boolean(formData.dateOfBirth) &&
+        (!formData.isStudent ||
+          (Boolean(formData.campus) &&
+            Boolean(formData.studentId.trim()) &&
+            Boolean(formData.yearOfStudy) &&
+            Boolean(formData.dateOfAdmission) &&
+            Boolean(formData.programmeOfStudy.trim()) &&
+            Boolean(formData.guardianName.trim()) &&
+            Boolean(formData.guardianPhone.trim())))))
+  );
+
   const inputClass = "w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors";
   const labelClass = "block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5";
 
@@ -561,7 +587,8 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={handleNextStep}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                    disabled={!isStep1Valid}
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0F5132] cursor-pointer shadow-xs disabled:shadow-none"
                   >
                     <span>Continue to Credentials</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -796,7 +823,7 @@ export default function RegisterPage() {
 
                   <button
                     type="submit"
-                    disabled={isLoading || !formData.acceptTerms}
+                    disabled={isLoading || !isStep1Valid || !isStep2Valid}
                     className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0F5132] cursor-pointer shadow-xs disabled:shadow-none"
                   >
                     {isLoading ? (
