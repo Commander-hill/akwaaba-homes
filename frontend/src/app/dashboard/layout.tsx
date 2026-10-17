@@ -13,6 +13,7 @@ import api from '@/lib/axios';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
 import NotificationBell from '@/components/NotificationBell';
 import TenantShell from '@/components/tenant-ui/TenantShell';
+import LandlordShell from '@/components/landlord-ui/LandlordShell';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -114,6 +115,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         {children}
       </TenantShell>
+    );
+  }
+
+  if (user.role === 'LANDLORD') {
+    return (
+      <LandlordShell
+        user={user}
+        unreadNotificationsCount={unreadNotificationsCount}
+        onLogout={handleLogout}
+      >
+        {children}
+      </LandlordShell>
     );
   }
 

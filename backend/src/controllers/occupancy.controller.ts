@@ -171,6 +171,12 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
     const bed = await prisma.bed.findUnique({
       where: { id: bedId },
       include: {
+        bookings: {
+          where: {
+            status: { in: ['APPROVED', 'CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'PAID'] }
+          },
+          select: { id: true, status: true }
+        },
         roomUnit: {
           include: {
             room: {
@@ -195,6 +201,13 @@ export const updateBedStatus = async (req: Request, res: Response): Promise<void
 
     if (property.landlordId !== userId && userRole !== 'ADMIN' && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
+      return;
+    }
+
+    if (bed.bookings && bed.bookings.length > 0) {
+      res.status(409).json({
+        message: 'Conflict: Cannot manually override availability for a bed that has an approved, confirmed, or active resident booking.'
+      });
       return;
     }
 

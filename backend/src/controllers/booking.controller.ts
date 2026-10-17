@@ -527,13 +527,12 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
             }
           }
         },
-        room: { select: { id: true, name: true, roomType: true, price: true } },
-        roomUnit: { select: { id: true, name: true } },
-        bed: { select: { id: true, label: true, status: true } },
+        room: { select: { id: true, blockName: true, roomType: true, gender: true, bedsPerRoom: true, price: true } },
+        roomUnit: { select: { id: true, unitNumber: true, floor: true, genderLock: true } },
+        bed: { select: { id: true, bedNumber: true, status: true } },
         leaseAgreement: { select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true } },
-        transactions: {
-          select: { id: true, amount: true, status: true, paymentReference: true, paymentChannel: true, createdAt: true },
-          orderBy: { createdAt: 'desc' }
+        transaction: {
+          select: { id: true, amount: true, status: true, reference: true, createdAt: true }
         },
         review: { select: { id: true, rating: true, comment: true, createdAt: true } }
       },
@@ -545,6 +544,7 @@ export const getTenantBookings = async (req: Request, res: Response): Promise<vo
       return {
         ...b,
         price: effectivePrice,
+        transactions: b.transaction ? [b.transaction] : [],
         property: {
           ...b.property,
           images: safeJsonParse(b.property.images, []),
@@ -578,6 +578,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
             location: true,
             price: true,
             pricePeriod: true,
+            paymentSchedule: true,
             cautionDeposit: true,
             type: true,
             images: true,
@@ -585,9 +586,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
             visitorPolicy: true,
             quietHours: true,
             includedUtilities: true,
-            houseRules: true,
             landlordId: true,
-            caretakerId: true,
             landlord: {
               select: {
                 id: true,
@@ -607,18 +606,24 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
             lastName: true,
             email: true,
             phoneNumber: true,
+            gender: true,
+            nationality: true,
+            guardianName: true,
+            guardianPhone: true,
             studentId: true,
-            university: true,
-            ghanaCardNumber: true,
+            campus: true,
+            programmeOfStudy: true,
+            yearOfStudy: true,
+            ghanaCardStatus: true,
+            avatarUrl: true,
           }
         },
-        room: { select: { id: true, name: true, roomType: true, price: true, bedsPerRoom: true } },
-        roomUnit: { select: { id: true, name: true } },
-        bed: { select: { id: true, label: true, status: true } },
-        leaseAgreement: { select: { id: true, status: true, terms: true, tenantSignedAt: true, landlordSignedAt: true } },
-        transactions: {
-          select: { id: true, amount: true, status: true, paymentReference: true, paymentChannel: true, escrowStatus: true, createdAt: true },
-          orderBy: { createdAt: 'desc' }
+        room: { select: { id: true, blockName: true, roomType: true, gender: true, price: true, bedsPerRoom: true } },
+        roomUnit: { select: { id: true, unitNumber: true, floor: true, genderLock: true } },
+        bed: { select: { id: true, bedNumber: true, status: true } },
+        leaseAgreement: { select: { id: true, status: true, cryptographicHash: true, tenantSignedAt: true, landlordSignedAt: true } },
+        transaction: {
+          select: { id: true, amount: true, status: true, reference: true, createdAt: true }
         },
         review: { select: { id: true, rating: true, comment: true, createdAt: true } }
       }
@@ -631,10 +636,12 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
 
     const isOwnerTenant = booking.tenantId === userId;
     const isOwnerLandlord = booking.property?.landlordId === userId;
-    const isAssignedCaretaker = booking.property?.caretakerId === userId;
     const isAdmin = userRole === 'ADMIN';
+    const isAssignedStaff = await prisma.propertyStaff.findFirst({
+      where: { propertyId: booking.propertyId, userId }
+    });
 
-    if (!isOwnerTenant && !isOwnerLandlord && !isAssignedCaretaker && !isAdmin) {
+    if (!isOwnerTenant && !isOwnerLandlord && !isAssignedStaff && !isAdmin) {
       res.status(403).json({ message: 'Forbidden: You do not have permission to view this booking' });
       return;
     }
@@ -643,6 +650,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
     const parsedBooking = {
       ...booking,
       price: effectivePrice,
+      transactions: booking.transaction ? [booking.transaction] : [],
       property: {
         ...booking.property,
         images: safeJsonParse(booking.property.images, []),
@@ -671,13 +679,93 @@ export const getLandlordBookings = async (req: Request, res: Response): Promise<
     const bookings = await prisma.booking.findMany({
       where: { property: { landlordId } },
       include: {
-        property: { select: { id: true, title: true, cautionDeposit: true, location: true } },
-        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true, avatarUrl: true, gender: true, studentId: true, programmeOfStudy: true } }
+        property: {
+          select: {
+            id: true,
+            title: true,
+            cautionDeposit: true,
+            location: true,
+            price: true,
+            pricePeriod: true,
+            type: true,
+            images: true,
+          }
+        },
+        room: {
+          select: {
+            id: true,
+            blockName: true,
+            roomType: true,
+            gender: true,
+            bedsPerRoom: true,
+            price: true,
+          }
+        },
+        roomUnit: {
+          select: {
+            id: true,
+            unitNumber: true,
+            floor: true,
+            genderLock: true,
+          }
+        },
+        bed: {
+          select: {
+            id: true,
+            bedNumber: true,
+            status: true,
+          }
+        },
+        leaseAgreement: {
+          select: {
+            id: true,
+            status: true,
+            tenantSignedAt: true,
+            landlordSignedAt: true,
+          }
+        },
+        transaction: {
+          select: {
+            id: true,
+            amount: true,
+            reference: true,
+            status: true,
+            createdAt: true,
+          }
+        },
+        tenant: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            reputationScore: true,
+            avatarUrl: true,
+            gender: true,
+            campus: true,
+            studentId: true,
+            programmeOfStudy: true,
+            yearOfStudy: true,
+            ghanaCardStatus: true,
+          }
+        }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    const payload = { bookings };
+    const parsedBookings = bookings.map((b: any) => ({
+      ...b,
+      price: b.room?.price ?? b.property?.price ?? 0,
+      property: b.property
+        ? {
+            ...b.property,
+            images: safeJsonParse(b.property.images, []),
+          }
+        : b.property,
+    }));
+
+    const payload = { bookings: parsedBookings };
     appCache.set(cacheKey, payload, 30);
     res.status(200).json(payload);
   } catch (error) {

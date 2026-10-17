@@ -550,7 +550,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
       title, type, targetAudience, furnishing, pricePeriod, 
       gateLockTime, visitorPolicy, quietHours, 
       paymentSchedule, cautionDeposit, includedUtilities,
-      description, location, amenities, images, videoUrl, isAvailable 
+      description, location, latitude, longitude, amenities, images, videoUrl, isAvailable 
     } = req.body;
 
     const property = await prisma.property.findUnique({ where: { id } });
@@ -604,6 +604,8 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
         includedUtilities: includedUtilities !== undefined ? JSON.stringify(includedUtilities) : property.includedUtilities,
         description: description || property.description,
         location: location || property.location,
+        latitude: latitude !== undefined ? (latitude !== null ? parseFloat(latitude) : null) : property.latitude,
+        longitude: longitude !== undefined ? (longitude !== null ? parseFloat(longitude) : null) : property.longitude,
         amenities: amenities ? JSON.stringify(amenities) : property.amenities,
         images: images ? JSON.stringify(images) : property.images,
         videoUrl: videoUrl !== undefined ? videoUrl : property.videoUrl,
@@ -802,7 +804,18 @@ export const getLandlordProperties = async (req: Request, res: Response): Promis
         landlordId,
         approvalStatus: { not: 'DELETED' }
       },
-      include: { rooms: true },
+      include: {
+        subscription: true,
+        rooms: {
+          include: {
+            roomUnits: {
+              include: {
+                beds: true
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
     res.status(200).json({ data: properties.map(parseProperty) });
