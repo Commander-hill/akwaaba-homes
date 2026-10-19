@@ -21,6 +21,12 @@ export default function PublishPropertyPage() {
   const queryClient = useQueryClient();
   const propertyId = params?.id as string;
 
+  const { data: fee } = useQuery({
+    queryKey: ['subscriptions', 'fee'],
+    queryFn: async () => Number((await api.get('/subscriptions/fee')).data.feeGhs),
+    staleTime: 10 * 60 * 1000,
+  });
+
   const [selectedProvider, setSelectedProvider] = useState<'HUBTEL' | 'PAYSTACK'>('HUBTEL');
   const [momoPhoneNumber, setMomoPhoneNumber] = useState('');
   const [phonePrefilled, setPhonePrefilled] = useState(false);
@@ -188,437 +194,306 @@ export default function PublishPropertyPage() {
     );
   }
 
-  return (
-    <div className="w-full max-w-6xl mx-auto pb-16 space-y-8 animate-in fade-in duration-300">
-      {/* ── Top Navigation & Breadcrumbs ── */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          <Link href="/dashboard/landlord" className="hover:text-zinc-900 dark:hover:text-white transition">
-            Landlord Hub
-          </Link>
-          <span>/</span>
-          <Link href="/dashboard/landlord/properties" className="hover:text-zinc-900 dark:hover:text-white transition">
-            My Properties
-          </Link>
-          <span>/</span>
-          <span className="text-zinc-900 dark:text-white font-medium truncate max-w-[200px]">
-            {property?.title || 'Listing'}
-          </span>
-          <span>/</span>
-          <span className="text-[#0F5132] dark:text-emerald-400 font-bold">Publish Listing</span>
-        </div>
+  const feeLabel = fee !== undefined ? `GH₵ ${fee.toFixed(2)}` : '…';
+  const periodLabel = property.pricePeriod ? `/ ${String(property.pricePeriod).toLowerCase()}` : '';
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard/landlord/properties"
-                className="p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-                title="Back to Properties"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-              <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-                Publish Property Listing
-              </h1>
+  const steps = [
+    { label: '1. Listing', state: 'done' as const },
+    { label: '2. Plan & Payment', state: isAlreadyActive ? ('done' as const) : ('current' as const) },
+    { label: '3. Go Live', state: isAlreadyActive ? ('current' as const) : ('todo' as const) },
+  ];
+
+  const benefits = [
+    { icon: Search, title: 'Marketplace visibility', body: 'Your approved listing appears in search results and on the public property page for the length of the subscription.' },
+    { icon: CheckCircle2, title: 'Verified landlord badge', body: 'Once your identity and ownership documents are verified, a verification badge is shown on your listing.' },
+    { icon: Bell, title: 'Booking requests', body: 'Receive booking requests and notifications, and approve or decline them from your Bookings page.' },
+    { icon: FileText, title: 'Digital tenancy agreements', body: 'An agreement is generated when you approve a booking, and both parties sign it online.' },
+  ];
+
+  return (
+    <div className="w-full max-w-4xl mx-auto pb-16 space-y-6 animate-in fade-in duration-300">
+      {/* Header & stepper */}
+      <div className="space-y-4">
+        <Link
+          href="/dashboard/landlord/properties"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Properties
+        </Link>
+        <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Publish Accommodation Listing</h1>
+
+        <ol
+          aria-label="Publishing progress"
+          className="grid grid-cols-3 gap-2 bg-zinc-100 dark:bg-zinc-900 p-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-xs"
+        >
+          {steps.map((s) => (
+            <li
+              key={s.label}
+              aria-current={s.state === 'current' ? 'step' : undefined}
+              className={clsx(
+                'py-2 text-center font-bold rounded-lg truncate px-1',
+                s.state === 'current'
+                  ? 'bg-[#0F5132] text-white shadow-xs'
+                  : s.state === 'done'
+                    ? 'text-[#0F5132] dark:text-emerald-400'
+                    : 'text-zinc-400 dark:text-zinc-500'
+              )}
+            >
+              {s.label}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* Step 1 card: target listing */}
+      <section className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-5">
+        <div>
+          <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 1: Target Listing</h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            The property this subscription will activate.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-5 items-start pt-1 border-t border-zinc-100 dark:border-zinc-800">
+          <div className="w-full sm:w-44 h-32 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative shrink-0 mt-5">
+            {coverImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={coverImage} alt={property.title} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
+                <Building className="w-8 h-8 mb-1 opacity-50" />
+                <span className="text-[10px]">No photo</span>
+              </div>
+            )}
+            <span
+              className={clsx(
+                'absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide text-white',
+                isAlreadyActive ? 'bg-emerald-600' : 'bg-amber-600'
+              )}
+            >
+              {isAlreadyActive ? 'Live' : 'Unpublished'}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0 space-y-2 sm:mt-5">
+            <h3 className="text-lg font-black text-zinc-950 dark:text-white leading-snug truncate">{property.title}</h3>
+            <div className="flex items-center text-xs text-zinc-500 dark:text-zinc-400">
+              <MapPin className="w-3.5 h-3.5 mr-1 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+              <span className="truncate">{property.location}</span>
             </div>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 pl-11">
-              Publish your listing for 365 days of verified marketplace visibility, tenant inquiries, and automated bookings.
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                {property.type || property.propertyType || 'Residential'}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
+                {totalRooms} {totalRooms === 1 ? 'room' : 'rooms'}
+              </span>
+              {property.price ? (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-bold text-[#0F5132] dark:text-emerald-300">
+                  From GH₵ {Number(property.price).toLocaleString()} {periodLabel}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Step 2 / 3 card */}
+      {isAlreadyActive ? (
+        <section className="bg-white dark:bg-[#12151D] border border-emerald-300 dark:border-emerald-800/80 rounded-2xl p-6 shadow-xs space-y-5">
+          <div>
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 3: Your listing is live</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Your property is visible to tenants and can receive booking requests.
+            </p>
+          </div>
+          {property.subscription?.endDate && (
+            <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs">
+              <span className="text-zinc-500 block text-[11px]">Subscription expires</span>
+              <span className="font-bold text-zinc-900 dark:text-white">
+                {new Date(property.subscription.endDate).toLocaleDateString(undefined, {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-wrap justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+            <Link
+              href="/dashboard/landlord/properties"
+              className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200"
+            >
+              Back to Properties
+            </Link>
+            <Link
+              href={`/properties/${property.id}`}
+              target="_blank"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold"
+            >
+              <ExternalLink className="w-4 h-4" /> View public listing
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <section className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-xs space-y-6">
+          <div>
+            <h2 className="text-sm font-bold text-zinc-950 dark:text-white uppercase tracking-wider">Step 2: Plan &amp; Payment</h2>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Activate a 365-day subscription to make this approved listing visible to tenants.
             </p>
           </div>
 
-          {isAlreadyActive && (
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Currently Live &amp; Published
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Main Two-Column Layout ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* ── Left Column: Property Summary & License Benefits (7 cols) ── */}
-        <div className="lg:col-span-7 space-y-6">
-          
-          {/* Target Listing Snapshot Card */}
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-xs">
-            <span className="text-[10px] font-black uppercase tracking-wider text-zinc-400 dark:text-zinc-500 block mb-3">
-              Target Property Listing
-            </span>
-
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-start">
-              {/* Image Preview */}
-              <div className="w-full sm:w-44 h-36 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative shrink-0 border border-zinc-200/80 dark:border-zinc-700/60">
-                {coverImage ? (
-                  <img
-                    src={coverImage}
-                    alt={property.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
-                    <Building className="w-8 h-8 mb-1 opacity-50" />
-                    <span className="text-[10px]">No Photo</span>
-                  </div>
-                )}
-                <div className="absolute top-2 left-2">
-                  <span className={clsx(
-                    "px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wide",
-                    isAlreadyActive 
-                      ? "bg-emerald-600 text-white shadow-xs" 
-                      : "bg-amber-600 text-white shadow-xs"
-                  )}>
-                    {isAlreadyActive ? 'Live' : 'Unpublished'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Property Details */}
-              <div className="flex-1 min-w-0 space-y-2">
-                <h3 className="text-lg font-black text-zinc-950 dark:text-white leading-snug truncate">
-                  {property.title}
-                </h3>
-
-                <div className="flex items-center text-xs text-zinc-500 dark:text-zinc-400">
-                  <MapPin className="w-3.5 h-3.5 mr-1 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                  <span className="truncate">{property.location}</span>
-                </div>
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                    <Building className="w-3 h-3 mr-1 text-zinc-400" />
-                    {property.propertyType || 'Residential'}
-                  </span>
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-[11px] font-semibold text-zinc-700 dark:text-zinc-300">
-                    {totalRooms} {totalRooms === 1 ? 'Room Unit' : 'Room Units'}
-                  </span>
-                  {property.price && (
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[11px] font-bold text-[#0F5132] dark:text-emerald-300">
-                      GH₵ {property.price.toLocaleString()} / mo
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Included Features & Annual Plan Benefits */}
-          <div className="space-y-4 pt-1">
-            <div>
-              <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                Everything Included with Your Listing
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                Verified tools to showcase your property, attract quality tenants, and protect your rental income.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              {/* Feature 1 */}
-              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <Search className="w-4 h-4" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                    Campus &amp; Citywide Reach
-                  </h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Prominently showcased to thousands of verified students across KNUST, Legon, and UCC, plus prime residential directories in Accra and Kumasi.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                    Verified Landlord Trust Badge
-                  </h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Displays your official Ghana Card authenticity seal on every listing, establishing instant trust so tenants book with total confidence.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                    Protected Rent &amp; Escrow
-                  </h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Tenant security deposits and rent installments are safeguarded via secure Mobile Money escrow and disbursed reliably upon room handover.
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-[#12151D] flex items-start gap-3.5 transition-all hover:border-emerald-300 dark:hover:border-emerald-800/80 shadow-2xs">
-                <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
-                  <FileText className="w-4 h-4" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
-                    Instant Digital Tenancy Leases
-                  </h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Auto-generated, standardized tenancy agreements with enforceable digital signatures for hassle-free move-ins.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Official Tax & Expense Notice */}
-            <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 flex items-start sm:items-center gap-3">
-              <span className="shrink-0 px-2 py-0.5 rounded-md bg-[#0F5132] text-white font-extrabold text-[10px] tracking-wide uppercase">
-                Tax Benefit
+          {property.approvalStatus && property.approvalStatus !== 'APPROVED' && (
+            <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-800 dark:text-amber-300 flex gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <span>
+                This listing is {String(property.approvalStatus).toLowerCase()} by the review team. Paying now activates your
+                subscription, but the listing becomes visible to tenants only after it is approved.
               </span>
-              <p className="text-zinc-700 dark:text-zinc-300 text-[11px] leading-relaxed">
-                Listing fees qualify as 100% tax-deductible property management expenses under GRA guidelines. An official VAT invoice receipt is generated automatically for your records.
-              </p>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ── Right Column: Order Summary & Checkout (5 cols) ── */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Active Listing State Card */}
-          {isAlreadyActive ? (
-            <div className="bg-white dark:bg-[#12151D] border border-emerald-300 dark:border-emerald-800/80 rounded-2xl p-6 shadow-sm space-y-5">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-bold text-zinc-950 dark:text-white">This Listing is Active</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-                  Your property is live on the marketplace and receiving student bookings.
-                </p>
-              </div>
-
-              {property.subscription?.endDate && (
-                <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs">
-                  <span className="text-zinc-500 block text-[11px]">Subscription Expiry Date:</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">
-                    {new Date(property.subscription.endDate).toLocaleDateString(undefined, {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                </div>
-              )}
-
-              <div className="space-y-2 pt-2">
-                <Link
-                  href={`/properties/${property.id}`}
-                  target="_blank"
-                  className="w-full py-2.5 px-4 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
-                >
-                  <ExternalLink className="w-4 h-4" /> View Live Public Listing
-                </Link>
-                <Link
-                  href="/dashboard/landlord/properties"
-                  className="w-full py-2.5 px-4 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 rounded-xl text-xs font-bold transition flex items-center justify-center"
-                >
-                  Return to Property Manager
-                </Link>
-              </div>
-            </div>
-          ) : (
-            /* Checkout & Order Form */
-            <div className="bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-sm space-y-6">
-              <div>
-                <h3 className="text-base font-bold text-zinc-950 dark:text-white">Order Summary</h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">365 Days Verified Listing Access</p>
-              </div>
-
-              {/* Price Breakdown */}
-              <div className="space-y-3 pb-4 border-b border-zinc-100 dark:border-zinc-800 text-xs">
-                <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
-                  <span>Annual Listing Subscription (365 Days)</span>
-                  <span className="font-bold text-zinc-900 dark:text-white">GH₵ 100.00</span>
-                </div>
-                <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
-                  <span>Marketplace Processing Fee</span>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">GH₵ 0.00 (Waived)</span>
-                </div>
-                <div className="flex justify-between items-center text-zinc-600 dark:text-zinc-400">
-                  <span>VAT / Ghana Health Levy</span>
-                  <span className="font-semibold text-zinc-500">Included</span>
-                </div>
-
-                <div className="pt-2 flex justify-between items-center text-sm font-black text-zinc-950 dark:text-white">
-                  <span>Total Amount Due</span>
-                  <span className="text-base text-[#0F5132] dark:text-emerald-400">GH₵ 100.00</span>
-                </div>
-              </div>
-
-              {/* Payment Gateway Selector */}
-              <div className="space-y-3">
-                <label className="text-xs font-bold text-zinc-900 dark:text-white block">
-                  Select Payment Method
-                </label>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Hubtel Mobile Money */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedProvider('HUBTEL');
-                      setWaitingForMomo(false);
-                    }}
-                    className={clsx(
-                      "p-3.5 rounded-xl border text-left transition-all cursor-pointer",
-                      selectedProvider === 'HUBTEL'
-                        ? "border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 dark:bg-emerald-950/20 ring-2 ring-[#0F5132]/20"
-                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#12151D]"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-xs text-zinc-950 dark:text-white">Mobile Money</span>
-                      <Smartphone className={clsx("w-4 h-4", selectedProvider === 'HUBTEL' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
-                    </div>
-                    <p className="text-[10px] text-zinc-500 leading-tight">
-                      MTN MoMo, Telecel Cash, AT Money (Instant Push Prompt)
-                    </p>
-                  </button>
-
-                  {/* Paystack Cards */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedProvider('PAYSTACK');
-                      setWaitingForMomo(false);
-                    }}
-                    className={clsx(
-                      "p-3.5 rounded-xl border text-left transition-all cursor-pointer",
-                      selectedProvider === 'PAYSTACK'
-                        ? "border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 dark:bg-emerald-950/20 ring-2 ring-[#0F5132]/20"
-                        : "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-white dark:bg-[#12151D]"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="font-bold text-xs text-zinc-950 dark:text-white">Bank &amp; Card</span>
-                      <CreditCard className={clsx("w-4 h-4", selectedProvider === 'PAYSTACK' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
-                    </div>
-                    <p className="text-[10px] text-zinc-500 leading-tight">
-                      Ghana Cards, Visa, Mastercard, Apple Pay, GHQR
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Mobile Money Phone Input */}
-              {selectedProvider === 'HUBTEL' && (
-                <div className="space-y-2 pt-1 animate-in fade-in">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-bold text-zinc-900 dark:text-white">
-                      Mobile Money Phone Number (Ghana)
-                    </label>
-                    <span className="text-[10px] text-zinc-400">MTN / Telecel / AT</span>
-                  </div>
-
-                  <div className="relative">
-                    <input
-                      type="tel"
-                      value={momoPhoneNumber}
-                      onChange={(e) => setMomoPhoneNumber(e.target.value)}
-                      placeholder="e.g. 0244123456 or 0551234567"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0F5132] text-xs font-medium"
-                    />
-                  </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                    An authorization payment prompt will be sent directly to this phone.
-                  </p>
-                </div>
-              )}
-
-              {/* Waiting for MoMo Push Prompt Notification */}
-              {waitingForMomo && (
-                <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-3 animate-in fade-in">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                      <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                      Awaiting Mobile Money Approval
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/90 bg-amber-100 dark:bg-amber-900/50 px-2 py-0.5 rounded-full">
-                      Auto-Checking
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                    A USSD prompt for <strong>GH₵ 100.00</strong> was sent to <strong>{momoPhoneNumber}</strong>. Please enter your mobile money PIN to confirm. This page will update automatically once authorized.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const res = await refetchProperty();
-                      const updatedProp = res.data?.property || res.data?.data || res.data;
-                      if (updatedProp?.isAvailable && updatedProp?.subscription?.isActive) {
-                        setWaitingForMomo(false);
-                        toast.success('Listing verified and live!');
-                      } else {
-                        toast('Payment still pending authorization. Please approve on your phone.', { icon: '⏳' });
-                      }
-                    }}
-                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Check Approval Status Now</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Authorize & Pay Button */}
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    initPaymentMutation.mutate({
-                      provider: selectedProvider,
-                      phoneNumber: momoPhoneNumber || undefined
-                    });
-                  }}
-                  disabled={initPaymentMutation.isPending || (selectedProvider === 'HUBTEL' && !momoPhoneNumber.trim())}
-                  className="w-full py-3 px-4 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 shadow-md shadow-[#0F5132]/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {initPaymentMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Processing with {selectedProvider === 'HUBTEL' ? 'Hubtel MoMo' : 'Paystack'}...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="w-4 h-4" />
-                      <span>Proceed to Pay GH₵ 100.00</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Security Badge */}
-              <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-100 dark:border-zinc-800">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Bank of Ghana licensed payment gateways with 256-bit encryption</span>
-              </div>
             </div>
           )}
 
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-5 border-t border-zinc-100 dark:border-zinc-800">
+            {benefits.map((b) => {
+              const Icon = b.icon;
+              return (
+                <div key={b.title} className="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs text-zinc-900 dark:text-zinc-100">{b.title}</h4>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">{b.body}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
-      </div>
+          {/* Price */}
+          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 flex items-center justify-between text-sm">
+            <div>
+              <p className="font-bold text-zinc-950 dark:text-white">Annual listing subscription</p>
+              <p className="text-xs text-zinc-500">365 days, for this property only</p>
+            </div>
+            <p className="text-lg font-black text-[#0F5132] dark:text-emerald-400 tabular-nums">{feeLabel}</p>
+          </div>
+
+          {/* Payment method */}
+          <div className="space-y-3">
+            <span id="pay-method" className="text-xs font-bold text-zinc-900 dark:text-white block">
+              Select payment method
+            </span>
+            <div role="radiogroup" aria-labelledby="pay-method" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { key: 'HUBTEL' as const, name: 'Mobile Money', desc: 'MTN MoMo, Telecel Cash, AT Money (payment prompt on your phone)', Icon: Smartphone },
+                { key: 'PAYSTACK' as const, name: 'Bank & Card', desc: 'Cards and other methods on the secure Paystack page', Icon: CreditCard },
+              ].map(({ key, name, desc, Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedProvider === key}
+                  onClick={() => {
+                    setSelectedProvider(key);
+                    setWaitingForMomo(false);
+                  }}
+                  className={clsx(
+                    'p-3.5 rounded-xl border text-left transition-all cursor-pointer',
+                    selectedProvider === key
+                      ? 'border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 ring-2 ring-[#0F5132]/20'
+                      : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'
+                  )}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-xs text-zinc-950 dark:text-white">{name}</span>
+                    <Icon className={clsx('w-4 h-4', selectedProvider === key ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400')} />
+                  </div>
+                  <p className="text-[11px] text-zinc-500 leading-tight">{desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {selectedProvider === 'HUBTEL' && (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label htmlFor="momo-phone" className="text-xs font-bold text-zinc-900 dark:text-white">
+                  Mobile Money phone number (Ghana)
+                </label>
+                <span className="text-[10px] text-zinc-400">MTN / Telecel / AT</span>
+              </div>
+              <input
+                id="momo-phone"
+                type="tel"
+                value={momoPhoneNumber}
+                onChange={(e) => setMomoPhoneNumber(e.target.value)}
+                placeholder="e.g. 0244123456 or 0551234567"
+                className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0F5132] text-xs font-medium"
+              />
+              <p className="text-[11px] text-zinc-500">An authorization prompt will be sent to this phone.</p>
+            </div>
+          )}
+
+          {waitingForMomo && (
+            <div role="status" className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-3">
+              <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                Awaiting Mobile Money approval
+              </div>
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                A prompt for <strong>{feeLabel}</strong> was sent to <strong>{momoPhoneNumber}</strong>. Enter your PIN to
+                confirm. This page checks automatically, and your listing is activated only when the payment provider
+                confirms the payment.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await refetchProperty();
+                  const updated = res.data?.property || res.data?.data || res.data;
+                  if (updated?.isAvailable && updated?.subscription?.isActive) {
+                    setWaitingForMomo(false);
+                    toast.success('Payment confirmed. Your subscription is active.');
+                  } else {
+                    toast('Payment is still pending. Please approve it on your phone.', { icon: '⏳' });
+                  }
+                }}
+                className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Check payment status
+              </button>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-zinc-100 dark:border-zinc-800">
+            <p className="text-[11px] text-zinc-500 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              Payments are processed by Hubtel and Paystack.
+            </p>
+            <button
+              type="button"
+              onClick={() =>
+                initPaymentMutation.mutate({ provider: selectedProvider, phoneNumber: momoPhoneNumber || undefined })
+              }
+              disabled={
+                initPaymentMutation.isPending ||
+                fee === undefined ||
+                (selectedProvider === 'HUBTEL' && !momoPhoneNumber.trim())
+              }
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {initPaymentMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing…
+                </>
+              ) : (
+                <>Pay {feeLabel} &amp; Activate</>
+              )}
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

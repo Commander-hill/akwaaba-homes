@@ -21,6 +21,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
+import LogoutControl from '@/components/LogoutControl';
 import api from '@/lib/axios';
 
 export interface TenantShellProps {
@@ -265,15 +266,7 @@ export default function TenantShell({
               </div>
             </Link>
 
-            <button
-              type="button"
-              onClick={onLogout}
-              title="Sign out"
-              aria-label="Sign out of your account"
-              className="p-2 rounded-lg text-[#6F756F] hover:text-[#9E2A2B] hover:bg-[#FCEEEE] dark:hover:bg-rose-950/40 transition-colors cursor-pointer shrink-0"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <LogoutControl onLogout={onLogout} />
           </div>
         </div>
       </aside>
@@ -383,17 +376,15 @@ export default function TenantShell({
                 <Search className="w-3.5 h-3.5" />
                 <span>Explore Accommodations</span>
               </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileDrawerOpen(false);
-                  onLogout();
-                }}
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-[#FCEEEE] text-[#9E2A2B] text-xs font-semibold cursor-pointer"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
-              </button>
+              <div className="flex justify-center">
+                <LogoutControl
+                  fullWidthLabel="Sign Out"
+                  onLogout={() => {
+                    setMobileDrawerOpen(false);
+                    onLogout();
+                  }}
+                />
+              </div>
             </div>
           </aside>
         </div>

@@ -94,6 +94,11 @@ export const processSuccessfulSubscriptionPayment = async (
 /**
  * Get Subscription Status for a specific property
  */
+export const getSubscriptionFee = async (_req: AuthRequest, res: Response): Promise<void> => {
+  const feeGhs = parseFloat(process.env.SUBSCRIPTION_FEE_GHS || '100');
+  res.status(200).json({ feeGhs, durationDays: 365 });
+};
+
 export const getSubscriptionStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const landlordId = req.user?.id;

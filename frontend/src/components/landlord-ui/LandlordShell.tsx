@@ -15,12 +15,12 @@ import {
   Bell,
   User,
   ShieldCheck,
-  LogOut,
   Menu,
   X,
   Plus,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
+import LogoutControl from '@/components/LogoutControl';
 
 export interface LandlordShellProps {
   user?: {
@@ -219,17 +219,7 @@ export default function LandlordShell({
           <span className="block text-[11px] truncate text-[#6F756F]">{user?.email}</span>
         </span>
       </Link>
-      {onLogout && (
-        <button
-          type="button"
-          onClick={onLogout}
-          aria-label="Sign out"
-          title="Sign out"
-          className="p-2 rounded-lg text-[#6F756F] hover:text-[#9E2A2B] hover:bg-[#FCEEEE] cursor-pointer"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
-      )}
+      {onLogout && <LogoutControl onLogout={onLogout} />}
     </div>
   );
 

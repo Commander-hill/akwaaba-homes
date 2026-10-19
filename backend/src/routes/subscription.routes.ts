@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { 
+  getSubscriptionFee,
   getSubscriptionStatus, 
   verifyPayment, 
   initializePayment, 
@@ -20,6 +21,7 @@ router.post('/webhook/hubtel', handleHubtelWebhook);
 router.use(authenticate);
 router.use(authorizeRole(['LANDLORD']));
 
+router.get('/fee', getSubscriptionFee);
 router.get('/status', getSubscriptionStatus);
 router.get('/overview', getLandlordSubscriptionsOverview);
 router.post('/initialize', initializePayment);
