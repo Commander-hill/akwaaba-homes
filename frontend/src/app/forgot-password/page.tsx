@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
       {/* ── Focused Application Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">

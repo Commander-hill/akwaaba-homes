@@ -143,7 +143,7 @@ function LoginForm() {
   // Active session loading spinner
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] p-6 space-y-4">
+      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] p-6 space-y-4">
         <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-400" />
         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
@@ -162,7 +162,7 @@ function LoginForm() {
         : 'Tenant Dashboard';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-white p-6">
+      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-white p-6">
         <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-xs">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
             <CheckCircle2 className="w-7 h-7" />
@@ -207,10 +207,10 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
+    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
       {/* ──── LEFT COLUMN (40% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] relative z-10 shrink-0">
+      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] relative z-10 shrink-0">
         
         {/* Top Header: Brand + Theme Toggle */}
         <div className="flex items-center justify-between">
@@ -471,7 +471,7 @@ function LoginForm() {
       </div>
 
       {/* ──── RIGHT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen overflow-hidden">
+      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
         <Image
           src="/images/auth-bg.png"
           alt="Verified Ghanaian student and residential community"
@@ -533,7 +533,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-white dark:bg-[#0E1210]" />}>
+    <Suspense fallback={<div className="-mt-16 -mb-16 md:mb-0 min-h-screen bg-white dark:bg-[#0E1210]" />}>
       <LoginForm />
     </Suspense>
   );

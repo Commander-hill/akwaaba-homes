@@ -227,7 +227,7 @@ export default function RegisterPage() {
   // Active Session Fallback
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token')) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
+      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
         <Loader2 className="w-7 h-7 animate-spin text-[#173D32]" />
         <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
@@ -244,7 +244,7 @@ export default function RegisterPage() {
       : 'Tenant Dashboard';
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6">
+      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 p-6">
         <div className="w-full max-w-md bg-white dark:bg-[#14181E] border border-[#E7E7DF] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-5 shadow-xs">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#173D32] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200/60 dark:border-emerald-800/60">
             <CheckCircle2 className="w-6 h-6" />
@@ -285,7 +285,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
       
       {/* ── Purpose-Built Auth Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
