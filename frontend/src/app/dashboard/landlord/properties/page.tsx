@@ -17,9 +17,11 @@ type Lifecycle = 'LIVE' | 'NEEDS_SUBSCRIPTION' | 'PENDING' | 'REJECTED' | 'HIDDE
 
 const lifecycle = (p: any): Lifecycle => {
   if (p.approvalStatus === 'REJECTED') return 'REJECTED';
+  if (isSubActive(p.subscription)) {
+    return p.isAvailable ? 'LIVE' : 'HIDDEN';
+  }
   if (p.approvalStatus === 'PENDING') return 'PENDING';
-  if (!isSubActive(p.subscription)) return 'NEEDS_SUBSCRIPTION';
-  return p.isAvailable ? 'LIVE' : 'HIDDEN';
+  return 'NEEDS_SUBSCRIPTION';
 };
 
 const LABEL: Record<Lifecycle, { text: string; tone: 'success' | 'warning' | 'error' | 'info' | 'neutral' }> = {

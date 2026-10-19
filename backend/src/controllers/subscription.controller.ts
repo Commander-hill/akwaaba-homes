@@ -34,6 +34,12 @@ export const processSuccessfulSubscriptionPayment = async (
 
   // Idempotency guard: Return immediately if already processed
   if (existingSub.paymentStatus === 'COMPLETED' && existingSub.isActive) {
+    if (existingSub.property && existingSub.property.approvalStatus !== 'APPROVED') {
+      await prisma.property.update({
+        where: { id: existingSub.propertyId },
+        data: { approvalStatus: 'APPROVED', isAvailable: true }
+      });
+    }
     return { success: true, alreadyProcessed: true, subscription: existingSub };
   }
 
@@ -61,7 +67,10 @@ export const processSuccessfulSubscriptionPayment = async (
     }),
     prisma.property.update({
       where: { id: existingSub.propertyId },
-      data: { isAvailable: true }
+      data: { 
+        isAvailable: true,
+        approvalStatus: 'APPROVED'
+      }
     }),
     prisma.notification.create({
       data: {

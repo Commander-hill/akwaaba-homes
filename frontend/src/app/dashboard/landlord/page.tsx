@@ -52,13 +52,13 @@ export default function LandlordDashboardPage() {
   const allBookings = bookings.data || [];
   const pending = allBookings.filter((b) => b.status === 'PENDING');
   const awaitingPayment = allBookings.filter((b) => b.status === 'APPROVED');
-  const pendingApproval = properties.filter((p) => p.approvalStatus === 'PENDING');
+  const pendingApproval = properties.filter((p) => p.approvalStatus === 'PENDING' && !isSubActive(p.subscription));
   const rejected = properties.filter((p) => p.approvalStatus === 'REJECTED');
   const needSub = properties.filter(
-    (p) => p.approvalStatus === 'APPROVED' && !isSubActive(p.subscription)
+    (p) => (p.approvalStatus === 'APPROVED' || !p.approvalStatus) && !isSubActive(p.subscription)
   );
   const live = properties.filter(
-    (p) => p.approvalStatus === 'APPROVED' && p.isAvailable && isSubActive(p.subscription)
+    (p) => p.isAvailable && isSubActive(p.subscription)
   );
   const noRooms = properties.filter((p) => !p.rooms || p.rooms.length === 0);
 

@@ -818,6 +818,23 @@ export const getLandlordProperties = async (req: Request, res: Response): Promis
       },
       orderBy: { createdAt: 'desc' }
     });
+    // Ensure properties with active subscriptions are marked APPROVED
+    for (const p of properties) {
+      if (
+        p.approvalStatus === 'PENDING' &&
+        p.subscription?.isActive &&
+        p.subscription?.paymentStatus === 'COMPLETED' &&
+        new Date(p.subscription.endDate) > new Date()
+      ) {
+        p.approvalStatus = 'APPROVED';
+        p.isAvailable = true;
+        prisma.property.update({
+          where: { id: p.id },
+          data: { approvalStatus: 'APPROVED', isAvailable: true }
+        }).catch((err) => console.error('Failed to sync approvalStatus:', err));
+      }
+    }
+
     res.status(200).json({ data: properties.map(parseProperty) });
   } catch (error) {
     console.error('Error fetching landlord properties:', error);

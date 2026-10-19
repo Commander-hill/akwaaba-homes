@@ -59,26 +59,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socketInstance.on('notification', (data: { title: string, message: string, type: string }) => {
-      toast(
-        (t) => (
-          <div className="flex flex-col gap-1 text-left">
-            <span className="font-semibold text-sm text-white leading-snug">{data.title}</span>
-            <span className="text-xs text-slate-300 leading-normal">{data.message}</span>
-          </div>
-        ),
-        {
-          duration: 6000,
-          position: 'top-right',
-          style: {
-            background: '#0F172A',
-            border: '1px solid #334155',
-            color: '#FFFFFF',
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.2)',
-            padding: '12px 16px',
-          },
-        }
+      const isSuccess = data.type === 'PAYMENT_RECEIVED' || data.type?.includes('SUCCESS') || data.type?.includes('APPROVED');
+      const isError = data.type?.includes('ERROR') || data.type?.includes('REJECTED');
+
+      const messageContent = (
+        <div className="flex flex-col gap-0.5 text-left">
+          <span className="font-bold text-xs leading-snug">{data.title}</span>
+          <span className="text-[11px] font-normal opacity-90 leading-relaxed">{data.message}</span>
+        </div>
       );
+
+      const toastFn = isSuccess ? toast.success : isError ? toast.error : toast;
+      toastFn(messageContent, {
+        duration: 6000,
+        position: 'top-right',
+      });
       // Invalidate notifications query
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     });
