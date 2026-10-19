@@ -27,7 +27,7 @@ export default function PublishPropertyPage() {
     staleTime: 10 * 60 * 1000,
   });
 
-  const [selectedProvider, setSelectedProvider] = useState<'HUBTEL' | 'PAYSTACK'>('HUBTEL');
+  const [selectedProvider, setSelectedProvider] = useState<'HUBTEL' | 'PAYSTACK'>('PAYSTACK');
   const [momoPhoneNumber, setMomoPhoneNumber] = useState('');
   const [phonePrefilled, setPhonePrefilled] = useState(false);
   const [waitingForMomo, setWaitingForMomo] = useState(false);
@@ -76,9 +76,8 @@ export default function PublishPropertyPage() {
       const authUrl = data?.authorization_url || data?.data?.authorization_url;
       if (authUrl) {
         window.location.href = authUrl;
-      } else if (selectedProvider === 'HUBTEL') {
-        setWaitingForMomo(true);
-        toast.success('Mobile Money prompt pushed to your phone. Please confirm the authorization.');
+      } else {
+        toast.error('The payment provider did not return a checkout page. Please try again.');
       }
     },
     onError: (error: any) => {
@@ -385,8 +384,8 @@ export default function PublishPropertyPage() {
             </span>
             <div role="radiogroup" aria-labelledby="pay-method" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { key: 'HUBTEL' as const, name: 'Mobile Money', desc: 'MTN MoMo, Telecel Cash, AT Money (payment prompt on your phone)', Icon: Smartphone },
-                { key: 'PAYSTACK' as const, name: 'Bank & Card', desc: 'Cards and other methods on the secure Paystack page', Icon: CreditCard },
+                { key: 'PAYSTACK' as const, name: 'Mobile Money or Card', desc: 'Pay with MTN, Telecel, AT mobile money or a card on the secure Paystack page', Icon: CreditCard },
+                { key: 'HUBTEL' as const, name: 'Hubtel checkout', desc: 'Pay through the Hubtel hosted checkout page', Icon: Smartphone },
               ].map(({ key, name, desc, Icon }) => (
                 <button
                   key={key}
@@ -414,72 +413,22 @@ export default function PublishPropertyPage() {
             </div>
           </div>
 
-          {selectedProvider === 'HUBTEL' && (
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label htmlFor="momo-phone" className="text-xs font-bold text-zinc-900 dark:text-white">
-                  Mobile Money phone number (Ghana)
-                </label>
-                <span className="text-[10px] text-zinc-400">MTN / Telecel / AT</span>
-              </div>
-              <input
-                id="momo-phone"
-                type="tel"
-                value={momoPhoneNumber}
-                onChange={(e) => setMomoPhoneNumber(e.target.value)}
-                placeholder="e.g. 0244123456 or 0551234567"
-                className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0F5132] text-xs font-medium"
-              />
-              <p className="text-[11px] text-zinc-500">An authorization prompt will be sent to this phone.</p>
-            </div>
-          )}
-
-          {waitingForMomo && (
-            <div role="status" className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 text-xs space-y-3">
-              <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
-                <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                Awaiting Mobile Money approval
-              </div>
-              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
-                A prompt for <strong>{feeLabel}</strong> was sent to <strong>{momoPhoneNumber}</strong>. Enter your PIN to
-                confirm. This page checks automatically, and your listing is activated only when the payment provider
-                confirms the payment.
-              </p>
-              <button
-                type="button"
-                onClick={async () => {
-                  const res = await refetchProperty();
-                  const updated = res.data?.property || res.data?.data || res.data;
-                  if (updated?.isAvailable && updated?.subscription?.isActive) {
-                    setWaitingForMomo(false);
-                    toast.success('Payment confirmed. Your subscription is active.');
-                  } else {
-                    toast('Payment is still pending. Please approve it on your phone.', { icon: '⏳' });
-                  }
-                }}
-                className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Check payment status
-              </button>
-            </div>
-          )}
+          <p className="text-[11px] text-zinc-500 leading-relaxed">
+            {selectedProvider === 'PAYSTACK'
+              ? 'You will be taken to Paystack, where you can choose mobile money (MTN, Telecel or AT) or a card, depending on what is enabled for the account.'
+              : 'You will be taken to the Hubtel checkout page to complete the payment.'}{' '}
+            Your subscription is activated only after the provider confirms the payment to our servers.
+          </p>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-zinc-100 dark:border-zinc-800">
             <p className="text-[11px] text-zinc-500 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              Payments are processed by Hubtel and Paystack.
+              You will complete payment on the provider&apos;s secure page.
             </p>
             <button
               type="button"
-              onClick={() =>
-                initPaymentMutation.mutate({ provider: selectedProvider, phoneNumber: momoPhoneNumber || undefined })
-              }
-              disabled={
-                initPaymentMutation.isPending ||
-                fee === undefined ||
-                (selectedProvider === 'HUBTEL' && !momoPhoneNumber.trim())
-              }
+              onClick={() => initPaymentMutation.mutate({ provider: selectedProvider })}
+              disabled={initPaymentMutation.isPending || fee === undefined}
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {initPaymentMutation.isPending ? (
