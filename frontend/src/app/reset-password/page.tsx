@@ -11,9 +11,10 @@ import {
   CheckCircle2, 
   Eye, 
   EyeOff, 
-  AlertCircle,
-  Check,
-  ArrowLeft
+  ArrowLeft,
+  ShieldCheck,
+  Building2,
+  KeyRound
 } from 'lucide-react';
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -74,283 +75,298 @@ function ResetPasswordForm() {
     }
   };
 
-  const inputClass = "w-full h-11 px-3.5 bg-white dark:bg-[#14181E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-xs font-normal text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors";
-  const labelClass = "block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5";
-
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ── Purpose-Built Auth Header ── */}
-      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
-            <Image
-              src="/logo.png"
-              alt="AkwaabaHomes"
-              width={32}
-              height={32}
-              className="w-full h-full object-cover"
-              priority
-            />
-          </div>
-          <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
-            Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
-          </span>
-        </Link>
-
-        <div className="flex items-center gap-3 sm:gap-5">
-          <ThemeToggle />
-          <Link 
-            href="/login" 
-            className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:text-[#0A3D24] dark:hover:text-emerald-300 transition-colors"
-          >
-            Sign in &rarr;
-          </Link>
-        </div>
-      </header>
-
-      {/* ── Main Two-Column Editorial Body ── */}
-      <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-16">
-        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-center">
-          
-          {/* ──── Left Side: Brand Reassurance (42% Desktop, Hidden Mobile) ──── */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-5">
-            <div className="relative w-full aspect-[4/5] max-h-[560px] rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs group bg-[#0B1510]">
-              
+      {/* ──── LEFT COLUMN (40% Desktop, 100% Mobile) ──── */}
+      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] relative z-10 shrink-0">
+        
+        {/* Top Header: Brand + Theme Toggle + Sign In */}
+        <div className="flex items-center justify-between">
+          <Link href="/" className="inline-flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
               <Image
-                src="/images/auth-recovery.jpg"
-                alt="Authentic Ghanaian resident verifying password reset"
-                fill
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover object-center transform group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+                src="/logo.png"
+                alt="Akwaaba Homes"
+                width={36}
+                height={36}
+                className="w-full h-full object-cover"
                 priority
               />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
-
-              <div className="absolute bottom-0 inset-x-0 p-7 text-white space-y-2.5">
-                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-300 font-semibold">
-                  Credential Security // Cryptographic Lock
-                </div>
-                <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
-                  Securing Ghanaian rental contracts and payments
-                </h3>
-                <p className="text-xs text-zinc-200/80 leading-relaxed font-normal">
-                  Setting a strong new password invalidates prior session tokens across other devices, safeguarding your identity and tenancy lease files.
-                </p>
-                <div className="pt-2 flex items-center gap-2 text-[11px] text-zinc-300/80">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>256-bit encryption · Ghana Act 843 compliant</span>
-                </div>
-              </div>
-
             </div>
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-tight text-zinc-950 dark:text-white leading-none">
+                Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+              </span>
+              <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">
+                Ghana PropTech
+              </span>
+            </div>
+          </Link>
+          
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              href="/login"
+              className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+            >
+              Sign in
+            </Link>
           </div>
+        </div>
 
-          {/* ──── Right Side: Form / Status Container (58% Desktop) ──── */}
-          <div className="lg:col-span-7 xl:col-span-7 w-full max-w-[480px] mx-auto lg:mx-0">
-            
-            {success ? (
-              /* Success State */
-              <div className="space-y-6 animate-in fade-in duration-300">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60 flex items-center justify-center shadow-2xs">
-                  <CheckCircle2 className="w-6 h-6" />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
-                    Password Updated
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                    Credentials secured
-                  </h1>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    Your password has been changed successfully. You can now use your new password to sign in to your AkwaabaHomes account.
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <Link
-                    href="/login"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
-                  >
-                    <span>Proceed to Sign In</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
+        {/* Main Content Area */}
+        <div className="my-auto py-8 sm:py-10 max-w-sm w-full mx-auto space-y-6">
+          {success ? (
+            /* Success State */
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center shadow-xs">
+                <CheckCircle2 className="w-7 h-7" />
               </div>
-            ) : (
-              /* Reset Form */
-              <div className="space-y-6">
-                
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400 mb-2">
-                    Security Update
-                  </div>
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-                    Set new password
-                  </h1>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">
-                    Choose a strong, unique password to protect your bookings, lease agreements, and payment records.
-                  </p>
+
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
+                  <span>PASSWORD UPDATED</span>
                 </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+                  Credentials secured
+                </h1>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed pt-0.5">
+                  Your password has been changed successfully. You can now use your new password to sign in to your AkwaabaHomes account.
+                </p>
+              </div>
 
-                {/* Error Banner */}
-                {error && (
-                  <AlertBanner type="error">
-                    <span>{error}</span>
-                    {!token && (
-                      <div className="mt-1.5">
-                        <Link 
-                          href="/forgot-password" 
-                          className="font-bold underline hover:opacity-80"
-                        >
-                          Request a new reset link &rarr;
-                        </Link>
-                      </div>
-                    )}
-                  </AlertBanner>
-                )}
+              <div className="pt-2">
+                <Link
+                  href="/login"
+                  className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-[0.99]"
+                >
+                  <span>Proceed to Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            /* Reset Form */
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
+                  <span>SECURITY UPDATE</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+                  Set new password
+                </h1>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Choose a strong, unique password to protect your bookings, lease agreements, and payment records.
+                </p>
+              </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  
-                  {/* New Password */}
-                  <div>
-                    <label className={labelClass}>New Password *</label>
-                    <div className="relative">
-                      <input 
-                        type={showPassword ? 'text' : 'password'} 
-                        required 
-                        autoComplete="new-password" 
-                        disabled={!token}
-                        className={`${inputClass} pr-10`} 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)} 
-                        placeholder="At least 8 characters" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+              {/* Error Banner */}
+              {error && (
+                <AlertBanner type="error">
+                  <span>{error}</span>
+                  {!token && (
+                    <div className="mt-1.5">
+                      <Link 
+                        href="/forgot-password" 
+                        className="font-bold underline hover:opacity-80"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                        Request a new reset link &rarr;
+                      </Link>
                     </div>
-                  </div>
+                  )}
+                </AlertBanner>
+              )}
 
-                  {/* Confirm Password */}
-                  <div>
-                    <label className={labelClass}>Confirm New Password *</label>
-                    <div className="relative">
-                      <input 
-                        type={showConfirmPassword ? 'text' : 'password'} 
-                        required 
-                        autoComplete="new-password" 
-                        disabled={!token}
-                        className={`${inputClass} pr-10`} 
-                        value={confirmPassword} 
-                        onChange={(e) => setConfirmPassword(e.target.value)} 
-                        placeholder="Re-enter new password" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Live Criteria Checklist */}
-                  <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/30 space-y-1.5 text-[11px]">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
-                        isLengthValid ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {isLengthValid ? '✓' : '•'}
-                      </span>
-                      <span className={isLengthValid ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
-                        At least 8 characters
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
-                        hasMixedCase ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {hasMixedCase ? '✓' : '•'}
-                      </span>
-                      <span className={hasMixedCase ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
-                        Uppercase and lowercase letters
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
-                        isMatchValid ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {isMatchValid ? '✓' : '•'}
-                      </span>
-                      <span className={isMatchValid ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
-                        Passwords match
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-3 pt-2">
-                    <Link
-                      href="/login"
-                      className="h-11 px-4 border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1.5"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" />
-                      <span>Back</span>
-                    </Link>
-
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* New Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="new-password" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <input 
+                      id="new-password"
+                      type={showPassword ? 'text' : 'password'} 
+                      required 
+                      autoComplete="new-password" 
+                      disabled={!token}
+                      className="w-full h-11 pl-3.5 pr-10 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      placeholder="At least 8 characters" 
+                    />
                     <button
-                      type="submit"
-                      disabled={isLoading || !isPasswordReady}
-                      className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0F5132] cursor-pointer shadow-xs disabled:shadow-none"
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
                     >
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <>
-                          <span>Update Password</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </>
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                </div>
 
-                </form>
+                {/* Confirm Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="confirm-password" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <input 
+                      id="confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'} 
+                      required 
+                      autoComplete="new-password" 
+                      disabled={!token}
+                      className="w-full h-11 pl-3.5 pr-10 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition" 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      placeholder="Re-enter new password" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
 
-              </div>
-            )}
+                {/* Live Criteria Checklist */}
+                <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/30 space-y-1.5 text-[11px]">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
+                      isLengthValid ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
+                    }`}>
+                      {isLengthValid ? '✓' : '•'}
+                    </span>
+                    <span className={isLengthValid ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
+                      At least 8 characters
+                    </span>
+                  </div>
 
+                  <div className="flex items-center gap-2">
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
+                      hasMixedCase ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
+                    }`}>
+                      {hasMixedCase ? '✓' : '•'}
+                    </span>
+                    <span className={hasMixedCase ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
+                      Uppercase and lowercase letters
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
+                      isMatchValid ? 'bg-emerald-500 text-white' : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400'
+                    }`}>
+                      {isMatchValid ? '✓' : '•'}
+                    </span>
+                    <span className={isMatchValid ? 'text-zinc-800 dark:text-zinc-200 font-medium' : 'text-zinc-500'}>
+                      Passwords match
+                    </span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-3 pt-2">
+                  <Link
+                    href="/login"
+                    className="h-11 px-4 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1.5"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back</span>
+                  </Link>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading || !isPasswordReady}
+                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-[0.99]"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Update Password</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Footer */}
+        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-400 gap-2">
+          <span>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana</span>
+          <div className="flex items-center gap-3">
+            <Link href="/terms" className="hover:text-zinc-950 dark:hover:text-white transition">Terms</Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
+            <span>•</span>
+            <Link href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ──── RIGHT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
+      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
+        <Image
+          src="/images/auth-recovery.jpg"
+          alt="Authentic Ghanaian resident verifying password reset"
+          fill
+          sizes="60vw"
+          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
+          priority
+        />
+
+        {/* Cinematic Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+
+        {/* Top-Right Floating Action */}
+        <div className="absolute top-8 right-8 z-10">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to sign in</span>
+          </Link>
+        </div>
+
+        {/* Bottom Overlay Content */}
+        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
+            <span>CREDENTIAL SECURITY • CRYPTOGRAPHIC LOCK</span>
           </div>
 
-        </div>
-      </main>
+          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
+            Securing Ghanaian rental contracts and payments
+          </h2>
 
-      {/* ── Subdued Institutional Footer ── */}
-      <footer className="w-full px-6 sm:px-10 lg:px-16 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400 dark:text-zinc-500">
-        <div>
-          &copy; {new Date().getFullYear()} AkwaabaHomes Ghana. All rights reserved.
+          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
+            Setting a strong new password invalidates prior session tokens across other devices, safeguarding your identity and tenancy lease files.
+          </p>
+
+          {/* Trust Markers */}
+          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <KeyRound className="w-3.5 h-3.5 text-emerald-400" /> 256-Bit Encryption
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Ghana Act 843 Compliant
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
-          <Link href="/privacy" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-            Privacy Policy
-          </Link>
-          <Link href="/terms" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-            Terms of Service
-          </Link>
-          <Link href="/help" className="hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
-            Help Center
-          </Link>
-        </div>
-      </footer>
+      </div>
 
     </div>
   );
@@ -359,7 +375,7 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-3">
+      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 p-6 space-y-3">
         <Loader2 className="w-7 h-7 animate-spin text-[#0F5132]" />
         <span className="text-xs font-medium text-zinc-500">Loading security token...</span>
       </div>
