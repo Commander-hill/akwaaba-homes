@@ -1,452 +1,318 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import api from '@/lib/axios';
-import { 
-  Loader2, Plus, Edit, Trash2, MapPin, Building, AlertCircle, 
-  CreditCard, CheckCircle, ExternalLink, Search, Users, Bed, 
-  TrendingUp, Eye, Smartphone, X
-} from 'lucide-react';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { Building2, Search } from 'lucide-react';
+import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
-import clsx from 'clsx';
+import { Button, EmptyState, ErrorState, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
 
-export default function LandlordPropertiesPage() {
+const isSubActive = (sub: any) =>
+  !!sub && sub.isActive && sub.paymentStatus === 'COMPLETED' && new Date(sub.endDate) > new Date();
+
+type Lifecycle = 'LIVE' | 'NEEDS_SUBSCRIPTION' | 'PENDING' | 'REJECTED' | 'HIDDEN';
+
+const lifecycle = (p: any): Lifecycle => {
+  if (p.approvalStatus === 'REJECTED') return 'REJECTED';
+  if (p.approvalStatus === 'PENDING') return 'PENDING';
+  if (!isSubActive(p.subscription)) return 'NEEDS_SUBSCRIPTION';
+  return p.isAvailable ? 'LIVE' : 'HIDDEN';
+};
+
+const LABEL: Record<Lifecycle, { text: string; tone: 'success' | 'warning' | 'error' | 'info' | 'neutral' }> = {
+  LIVE: { text: 'Live', tone: 'success' },
+  NEEDS_SUBSCRIPTION: { text: 'Approved, needs subscription', tone: 'warning' },
+  PENDING: { text: 'Pending approval', tone: 'info' },
+  REJECTED: { text: 'Not approved', tone: 'error' },
+  HIDDEN: { text: 'Approved, hidden', tone: 'neutral' },
+};
+
+const FILTERS: { key: 'ALL' | Lifecycle; label: string }[] = [
+  { key: 'ALL', label: 'All' },
+  { key: 'LIVE', label: 'Live' },
+  { key: 'NEEDS_SUBSCRIPTION', label: 'Needs subscription' },
+  { key: 'PENDING', label: 'Pending approval' },
+  { key: 'REJECTED', label: 'Not approved' },
+];
+
+function Inventory() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [verifyingPropId, setVerifyingPropId] = useState<string | null>(null);
-  const [paymentMsg, setPaymentMsg] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const sp = useSearchParams();
+  const qc = useQueryClient();
+  const [q, setQ] = useState('');
+  const [filter, setFilter] = useState<'ALL' | Lifecycle>('ALL');
+  const [sort, setSort] = useState<'newest' | 'title' | 'price'>('newest');
+  const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
+  const PAGE = 8;
 
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'DRAFT'>('ALL');
-
-  const { data: session, isLoading: sessionLoading } = useQuery({
-    queryKey: ['session'],
-    queryFn: async () => {
-      const res = await api.get('/auth/me');
-      return res.data.user;
-    },
-  });
-
-  const requiredProfileFields = ['firstName', 'lastName', 'phoneNumber', 'gender', 'dateOfBirth', 'nationality', 'guardianName', 'guardianPhone'];
-  const isProfileIncomplete = session && requiredProfileFields.some(field => !session[field] || !String(session[field]).trim());
-  const isVerificationIncomplete = session && (!session.ghanaCardStatus || session.ghanaCardStatus === 'NOT_SUBMITTED');
-  const isListingBlocked = isProfileIncomplete || isVerificationIncomplete;
-
-  const { data: properties, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['landlord', 'properties'],
-    queryFn: async () => {
-      const res = await api.get('/properties/landlord/mine');
-      return res.data.data;
-    },
-    enabled: !!session
+    queryFn: async () => (await api.get('/properties/landlord/mine')).data.data as any[],
   });
 
-  const handleDelete = async (id: string) => {
-    setIsDeleting(true);
-    try {
-      const { data } = await api.delete(`/properties/${id}`);
-      toast.success(data?.message || 'Property deleted successfully');
-      refetch();
-    } catch (error: any) {
-      console.error('Failed to delete property:', error);
-      toast.error(error.response?.data?.message || 'Failed to delete property');
-    } finally {
-      setIsDeleting(false);
-      setDeleteId(null);
-    }
-  };
-
-
-  const verifyPaymentMutation = useMutation({
+  // Subscription payment return: the backend verifies with the provider; the browser return alone activates nothing.
+  const verify = useMutation({
     mutationFn: async ({ reference, provider }: { reference: string; provider?: string }) => {
-      const { data } = await api.post('/subscriptions/verify', { 
+      const { data } = await api.post('/subscriptions/verify', {
         paymentReference: reference,
-        provider: provider || (reference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK')
+        provider: provider || (reference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK'),
       });
       return data?.data || data;
     },
     onSuccess: () => {
-      setPaymentMsg({ text: 'Listing published successfully!', type: 'success' });
-      refetch();
+      toast.success('Payment verified. Your subscription is active.');
+      qc.invalidateQueries({ queryKey: ['landlord'] });
       router.replace('/dashboard/landlord/properties');
     },
-    onError: (error: any) => {
-      setPaymentMsg({ text: error.response?.data?.message || 'Verification failed.', type: 'error' });
+    onError: (e: any) => {
+      toast.error(e?.response?.data?.message || 'We could not verify this payment yet. Check the Subscription page.');
       router.replace('/dashboard/landlord/properties');
+    },
+  });
+  const verified = useRef(false);
+  useEffect(() => {
+    const reference = sp.get('reference') || sp.get('trxref') || sp.get('clientReference');
+    if (sp.get('verify') === 'true' && reference && !verified.current) {
+      verified.current = true;
+      verify.mutate({ reference, provider: sp.get('provider') || undefined });
     }
+  }, [sp, verify]);
+
+  const del = useMutation({
+    mutationFn: async (id: string) => (await api.delete(`/properties/${id}`)).data,
+    onSuccess: (d) => {
+      toast.success(d?.message || 'Property removed');
+      qc.invalidateQueries({ queryKey: ['landlord'] });
+    },
+    onError: (e: any) => toast.error(e?.response?.data?.message || 'Could not remove this property.'),
+    onSettled: () => setDeleteTarget(null),
   });
 
-  const verifiedRef = useRef(false);
-  useEffect(() => {
-    const verify = searchParams.get('verify');
-    const reference = searchParams.get('reference') || searchParams.get('trxref') || searchParams.get('clientReference');
-    const provider = searchParams.get('provider') || undefined;
-    
-    if (verify === 'true' && reference && !verifiedRef.current && !verifyPaymentMutation.isPending && !paymentMsg) {
-      verifiedRef.current = true;
-      verifyPaymentMutation.mutate({ reference, provider });
-    }
-  }, [searchParams, verifyPaymentMutation, paymentMsg]);
+  const all = useMemo(() => (data || []).filter((p) => p.approvalStatus !== 'DELETED'), [data]);
 
-  // Aggregate Portfolio Stats
-  const portfolioStats = useMemo(() => {
-    if (!properties || !Array.isArray(properties)) return { total: 0, live: 0, drafts: 0, totalBeds: 0, grossValue: 0 };
+  const rows = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    const out = all
+      .filter((p) => filter === 'ALL' || lifecycle(p) === filter)
+      .filter((p) => !term || `${p.title} ${p.location}`.toLowerCase().includes(term));
+    out.sort((a, b) =>
+      sort === 'title'
+        ? String(a.title).localeCompare(String(b.title))
+        : sort === 'price'
+          ? Number(a.price) - Number(b.price)
+          : +new Date(b.createdAt) - +new Date(a.createdAt)
+    );
+    return out;
+  }, [all, q, filter, sort]);
 
-    const total = properties.length;
-    const live = properties.filter((p: any) => p.isAvailable).length;
-    const drafts = total - live;
-
-    let totalBeds = 0;
-    let grossValue = 0;
-
-    properties.forEach((p: any) => {
-      const bedsInProp = p.rooms?.reduce((acc: number, r: any) => {
-        const beds = parseInt(r.roomType?.split(' ')[0], 10) || 1;
-        return acc + (Number(r.numberOfRooms || 0) * beds);
-      }, 0) || 0;
-
-      totalBeds += bedsInProp;
-      grossValue += Number(p.price || 0);
-    });
-
-    return { total, live, drafts, totalBeds, grossValue };
-  }, [properties]);
-
-  // Filtered properties
-  const filteredProperties = useMemo(() => {
-    if (!properties || !Array.isArray(properties)) return [];
-
-    return properties.filter((p: any) => {
-      if (statusFilter === 'ACTIVE' && !p.isAvailable) return false;
-      if (statusFilter === 'DRAFT' && p.isAvailable) return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchTitle = (p.title || '').toLowerCase().includes(q);
-        const matchLoc = (p.location || '').toLowerCase().includes(q);
-        return matchTitle || matchLoc;
-      }
-      return true;
-    });
-  }, [properties, statusFilter, searchQuery]);
-
-  if (isLoading || sessionLoading) {
-    return <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" /></div>;
-  }
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
+  const visible = rows.slice((page - 1) * PAGE, page * PAGE);
 
   return (
-    <div className="w-full space-y-6 pb-16">
-      
-      {/* ── STICKY HEADER & PORTFOLIO SNAPSHOT ── */}
-      <div className="sticky top-0 z-20 bg-[#FBFBFC]/95 dark:bg-[#0B0D12]/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 border-b border-zinc-200 dark:border-zinc-800 space-y-4 mb-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Accommodation Portfolio</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Manage live campus listings, room floorplans, and publication statuses.</p>
-          </div>
-          
-          <Link 
-            href="/dashboard/landlord/new" 
-            id="tour-add-property"
-            className={clsx(
-              "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-xs transition-colors shrink-0",
-              isListingBlocked ? "bg-amber-600 hover:bg-amber-700" : "bg-[#0F5132] hover:bg-[#0A3D24]"
-            )}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{isListingBlocked ? '🔒 Add Property (Locked)' : 'List New Property'}</span>
-          </Link>
-        </div>
-
-        {/* Executive Portfolio Metric Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Total Properties</span>
-              <Building className="w-3.5 h-3.5 text-zinc-400" />
-            </div>
-            <div className="text-xl font-black text-zinc-950 dark:text-white">{portfolioStats.total}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Properties in portfolio</div>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Live &amp; Visible</span>
-              <CheckCircle className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            </div>
-            <div className="text-xl font-black text-[#0F5132] dark:text-emerald-400">{portfolioStats.live}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Accepting tenant & resident bookings</div>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Resident Capacity</span>
-              <Bed className="w-3.5 h-3.5 text-zinc-400" />
-            </div>
-            <div className="text-xl font-black text-zinc-950 dark:text-white">{portfolioStats.totalBeds} Beds</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Total registered capacity</div>
-          </div>
-
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-3.5 rounded-xl shadow-xs">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Action Required</span>
-              <AlertCircle className="w-3.5 h-3.5 text-amber-500" />
-            </div>
-            <div className="text-xl font-black text-amber-600 dark:text-amber-400">{portfolioStats.drafts}</div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">Unpublished or pending renewal</div>
-          </div>
-        </div>
-      </div>
-
-      {isListingBlocked && (
-        <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-200 text-xs space-y-2">
-          <div className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 text-sm">
-            <AlertCircle className="w-4 h-4 text-amber-600" /> Verification Required to Publish Listings
-          </div>
-          <p className="leading-relaxed">
-            To ensure trust and prevent fraudulent listings, please complete your profile details and verify your identity before creating new property listings.
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-editorial text-3xl">Properties</h1>
+          <p className="text-sm text-[#6F756F] mt-1">
+            A listing is visible to tenants only when it is approved and has an active subscription.
           </p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {isProfileIncomplete && (
-              <Link href="/dashboard/profile" className="px-3 py-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg font-bold text-xs">
-                Complete Account Profile
-              </Link>
-            )}
-            {isVerificationIncomplete && (
-              <Link href="/dashboard/verification" className="px-3 py-1 bg-[#0F5132] text-white rounded-lg font-bold text-xs">
-                Submit Ghana Card KYC
-              </Link>
-            )}
-          </div>
         </div>
-      )}
+        <Link
+          href="/dashboard/landlord/new"
+          className="h-10 px-4 inline-flex items-center rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-semibold"
+        >
+          Add property
+        </Link>
+      </header>
 
-      {paymentMsg && (
-        <div className={clsx(
-          "p-3.5 rounded-xl flex items-center gap-2 text-xs font-bold border",
-          paymentMsg.type === 'success' 
-            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" 
-            : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300"
-        )}>
-          {paymentMsg.type === 'success' ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-          <span>{paymentMsg.text}</span>
-        </div>
-      )}
-
-      {/* ── TOOLBAR: SEARCH & STATUS FILTERS ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-        <div className="relative w-full sm:w-80">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+      <div className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[220px] max-w-sm">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6F756F]" aria-hidden="true" />
           <input
-            type="text"
-            placeholder="Search properties by title or location..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] outline-none transition-all shadow-xs"
+            type="search"
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setPage(1);
+            }}
+            aria-label="Search properties"
+            placeholder="Search by name or location"
+            className="w-full h-10 pl-9 pr-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
           />
         </div>
+        <select
+          aria-label="Filter by status"
+          value={filter}
+          onChange={(e) => {
+            setFilter(e.target.value as any);
+            setPage(1);
+          }}
+          className="h-10 px-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+        >
+          {FILTERS.map((f) => (
+            <option key={f.key} value={f.key}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Sort"
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="h-10 px-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+        >
+          <option value="newest">Newest first</option>
+          <option value="title">Name (A to Z)</option>
+          <option value="price">Lowest price</option>
+        </select>
+      </div>
 
-        <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 w-full sm:w-auto">
-          {[
-            { id: 'ALL', label: `All (${portfolioStats.total})` },
-            { id: 'ACTIVE', label: `Live & Listed (${portfolioStats.live})` },
-            { id: 'DRAFT', label: `Drafts (${portfolioStats.drafts})` },
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setStatusFilter(tab.id as any)}
-              className={clsx(
-                "px-3 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer",
-                statusFilter === tab.id
-                  ? "bg-[#0F5132] text-white shadow-xs"
-                  : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
-              )}
-            >
-              {tab.label}
-            </button>
+      {isError ? (
+        <ErrorState message="We could not load your properties." onRetry={() => refetch()} />
+      ) : isLoading ? (
+        <div className="space-y-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-24 rounded-lg bg-[#EFEDE5] animate-pulse" />
           ))}
         </div>
-      </div>
-
-      {/* ── PROPERTIES GRID ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredProperties.length === 0 ? (
-          <div className="col-span-full p-12 text-center rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] space-y-3">
-            <Building className="w-10 h-10 text-zinc-300 dark:text-zinc-700 mx-auto" />
-            <h3 className="text-sm font-bold text-zinc-950 dark:text-white">No Matching Properties Found</h3>
-            <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-              {searchQuery ? 'Try modifying your search keywords or clear filters.' : 'You have not added any accommodations yet.'}
-            </p>
-            {!searchQuery && (
-              <Link 
-                href="/dashboard/landlord/new" 
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold shadow-xs hover:bg-[#0A3D24] transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" /> List Your First Property
-              </Link>
-            )}
-          </div>
-        ) : (
-          filteredProperties.map((property: any) => {
-            const totalBeds = property.rooms?.reduce((acc: number, r: any) => {
-              const beds = parseInt(r.roomType?.split(' ')[0], 10) || 1;
-              return acc + (Number(r.numberOfRooms || 0) * beds);
-            }, 0) || 0;
-
-            const roomConfigsCount = property.rooms?.length || 1;
-
-            return (
-              <div 
-                key={property.id} 
-                className="bg-white dark:bg-[#12151D] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group relative"
-              >
-                {/* Image Header with Badges */}
-                <div className="h-44 overflow-hidden relative bg-zinc-100 dark:bg-zinc-800">
-                  <img 
-                    src={property.images?.[0] ? getImageUrl(property.images[0]) : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'} 
-                    alt={property.title} 
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-                    }}
-                    className={clsx(
-                      "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
-                      !property.isAvailable && "grayscale opacity-75"
+      ) : all.length === 0 ? (
+        <EmptyState
+          icon={Building2}
+          title="No properties yet"
+          description="Add a property, set up its rooms and upload photos. It is reviewed before tenants can see it."
+          actionLabel="Add property"
+          actionHref="/dashboard/landlord/new"
+        />
+      ) : rows.length === 0 ? (
+        <EmptyState icon={Search} title="No matching properties" description="Try a different search or filter." />
+      ) : (
+        <>
+          <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+            {visible.map((p) => {
+              const state = lifecycle(p);
+              const imgs: string[] = Array.isArray(p.images) ? p.images : [];
+              const roomCount = (p.rooms || []).reduce((n: number, r: any) => n + Number(r.numberOfRooms || 0), 0);
+              return (
+                <li key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="w-full sm:w-28 h-20 rounded-md bg-[#EFEDE5] overflow-hidden shrink-0">
+                    {imgs[0] && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={getImageUrl(imgs[0])} alt="" className="w-full h-full object-cover" />
                     )}
-                  />
-                  
-                  {/* Status Badges Overlay */}
-                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                    {property.isAvailable ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#0F5132]/90 backdrop-blur-md text-white border border-emerald-500/40 shadow-xs">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live & Listed
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-600/90 backdrop-blur-md text-white border border-amber-400/40 shadow-xs">
-                        <AlertCircle className="w-3 h-3" /> Unpublished / Draft
-                      </span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-sm font-semibold truncate">{p.title}</h2>
+                      <StatusBadge tone={LABEL[state].tone} size="xs">
+                        {LABEL[state].text}
+                      </StatusBadge>
+                    </div>
+                    <p className="text-xs text-[#6F756F] mt-0.5 truncate">
+                      {p.type} · {p.location}
+                    </p>
+                    <p className="text-xs text-[#6F756F] mt-1">
+                      <span className="tabular-nums">{(p.rooms || []).length}</span> room type
+                      {(p.rooms || []).length === 1 ? '' : 's'} ·{' '}
+                      <span className="tabular-nums">{roomCount}</span> room{roomCount === 1 ? '' : 's'} · from{' '}
+                      <span className="tabular-nums">{formatCedis(p.price)}</span> per {p.pricePeriod || 'period'}
+                    </p>
+                    {state === 'REJECTED' && (
+                      <p className="text-xs text-[#9E2A2B] mt-1">
+                        This listing was not approved. Review the details and save changes to resubmit.
+                      </p>
                     )}
-
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white border border-white/20">
-                      {property.type || 'Hostel'}
-                    </span>
                   </div>
-                </div>
-
-                {/* Card Content */}
-                <div className="p-4 flex flex-col flex-1 space-y-3">
-                  <div>
-                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white line-clamp-1 group-hover:text-[#0F5132] transition-colors">
-                      {property.title}
-                    </h3>
-                    <div className="flex items-center text-zinc-500 text-xs mt-1 truncate">
-                      <MapPin className="w-3.5 h-3.5 mr-1 shrink-0 text-zinc-400" />
-                      <span className="truncate">{property.location}</span>
-                    </div>
-                  </div>
-
-                  {/* Operational Metrics Bar */}
-                  <div className="grid grid-cols-2 gap-2 bg-zinc-50 dark:bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800 text-[11px]">
-                    <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-medium">
-                      <Bed className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>{totalBeds > 0 ? `${totalBeds} Total Beds` : '1 Unit'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300 font-medium">
-                      <Building className="w-3.5 h-3.5 text-zinc-400" />
-                      <span>{roomConfigsCount} Room Type{roomConfigsCount > 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-
-                  {/* Price & Action Row */}
-                  <div className="mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-                    <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Listing Rate</div>
-                      <div className="font-black text-xs text-zinc-950 dark:text-white">
-                        GH₵{property.price?.toLocaleString()}{' '}
-                        <span className="text-[10px] font-medium text-zinc-500">
-                          {property.pricePeriod === 'Nightly' ? '/night' :
-                           property.pricePeriod === 'Monthly' ? '/mo' :
-                           property.pricePeriod === 'Annual' ? '/yr' : '/acad. yr'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      {!property.isAvailable && (
-                        <Link
-                          href={`/dashboard/landlord/properties/${property.id}/publish`}
-                          className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1 shadow-xs"
-                          title="Pay GH₵ 100/yr to publish and activate this listing"
-                        >
-                          <CreditCard className="w-3 h-3" /> Publish
-                        </Link>
-                      )}
-
-                      <Link 
-                        href={`/properties/${property.id}`}
-                        className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                        title="View Public Page"
-                        target="_blank"
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-semibold shrink-0">
+                    {state === 'NEEDS_SUBSCRIPTION' && (
+                      <Link
+                        href={`/dashboard/landlord/properties/${p.id}/publish`}
+                        className="h-8 px-3 inline-flex items-center rounded-lg bg-[#173D32] text-white"
                       >
-                        <Eye className="w-3.5 h-3.5" />
+                        Activate subscription
                       </Link>
-
-                      <Link 
-                        href={`/dashboard/landlord/properties/${property.id}/edit`}
-                        className="p-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-                        title="Edit Property"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
+                    )}
+                    {state === 'LIVE' && (
+                      <Link href={`/properties/${p.id}`} className="text-[#173D32] dark:text-emerald-400 hover:underline">
+                        View public page
                       </Link>
-
-                      <button 
-                        onClick={() => setDeleteId(property.id)}
-                        className="p-1.5 text-zinc-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
-                        title="Delete Property"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    )}
+                    <Link
+                      href={`/dashboard/landlord/properties/${p.id}/edit`}
+                      className="text-[#173D32] dark:text-emerald-400 hover:underline"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(p)}
+                      className="text-[#9E2A2B] hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
                   </div>
-                </div>
-
-                {/* Delete Confirmation Modal */}
-                {deleteId === property.id && (
-                  <div className="absolute inset-0 bg-black/80 backdrop-blur-xs z-20 flex items-center justify-center p-4 text-center flex-col animate-in fade-in">
-                    <AlertCircle className="w-10 h-10 text-rose-500 mb-3" />
-                    <h4 className="text-white font-bold text-base mb-1">Delete Property?</h4>
-                    <p className="text-zinc-300 text-xs mb-4">This action cannot be undone. Associated floorplan records will be purged.</p>
-                    <div className="flex gap-2 w-full max-w-xs">
-                      <button 
-                        onClick={() => setDeleteId(null)} 
-                        disabled={isDeleting}
-                        className="flex-1 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(property.id)} 
-                        disabled={isDeleting}
-                        className="flex-1 px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors flex justify-center items-center gap-1.5 cursor-pointer"
-                      >
-                        {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirm'}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </li>
+              );
+            })}
+          </ul>
+          {pages > 1 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-[#6F756F]">
+                Page {page} of {pages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(page - 1)}
+                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={page === pages}
+                  onClick={() => setPage(page + 1)}
+                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
+                >
+                  Next
+                </button>
               </div>
-            );
-          })
-        )}
-      </div>
+            </div>
+          )}
+        </>
+      )}
 
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="del-h">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !del.isPending && setDeleteTarget(null)} />
+          <div className="relative bg-white dark:bg-[#141816] rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h2 id="del-h" className="font-semibold">
+              Remove {deleteTarget.title}?
+            </h2>
+            <p className="text-sm text-[#6F756F] mt-2">
+              The listing will no longer be visible to tenants. Properties with active tenancies cannot be removed.
+            </p>
+            <div className="flex justify-end gap-2 mt-5">
+              <Button variant="outline" disabled={del.isPending} onClick={() => setDeleteTarget(null)}>
+                Keep property
+              </Button>
+              <Button variant="danger" isLoading={del.isPending} onClick={() => del.mutate(deleteTarget.id)}>
+                Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function LandlordPropertiesPage() {
+  return (
+    <Suspense fallback={null}>
+      <Inventory />
+    </Suspense>
   );
 }
