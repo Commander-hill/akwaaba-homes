@@ -234,10 +234,10 @@ function LoginForm() {
       </header>
 
       {/* ── Main Asymmetric Workspace ── */}
-      <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-14">
-        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-20 items-center">
-          {/* ──── Left Column: Dominant Authentication Form (58%) ──── */}
-          <div className="lg:col-span-7 xl:col-span-6 w-full max-w-md mx-auto lg:mx-0 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-8 shadow-xs">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[2fr_3fr]">
+        <div className="flex items-center justify-center px-6 sm:px-10 py-10 sm:py-14">
+          {/* ──── Authentication Form (40%) ──── */}
+          <div className="w-full max-w-md bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 sm:p-8 shadow-xs">
             <div className="mb-6">
               <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1.5">
                 Welcome Back
@@ -443,33 +443,31 @@ function LoginForm() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* ──── Right Column: Restrained Editorial Brand Visual (42%) ──── */}
-          <div className="hidden lg:block lg:col-span-5 xl:col-span-6">
-            <div className="relative w-full aspect-[4/5] max-h-[560px] rounded-[16px] overflow-hidden border border-[#E7E7DF] dark:border-[#262E29] shadow-xs group">
-              <Image
-                src="/images/auth-bg.png"
-                alt="Verified Ghanaian student and residential community"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover object-center"
-                priority
-              />
+        {/* ──── Brand Visual (60%) ──── */}
+        <div className="hidden lg:block relative min-h-[560px]">
+          <Image
+            src="/images/auth-bg.png"
+            alt="Verified Ghanaian student and residential community"
+            fill
+            sizes="60vw"
+            className="object-cover object-center"
+            priority
+          />
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
-              <div className="absolute bottom-0 inset-x-0 p-7 sm:p-8 text-white space-y-2.5">
-                <div className="text-[11px] uppercase tracking-widest text-[#A7F3D0] font-semibold">
-                  Verified Housing • Accra • Kumasi • Cape Coast
-                </div>
-                <h3 className="font-editorial text-2xl text-white leading-snug">
-                  Trusted homes for students &amp; residents across Ghana
-                </h3>
-                <p className="text-xs text-white/85 leading-relaxed font-normal max-w-sm">
-                  Review room availability, compare transparent GH₵ pricing, and manage your reservations in one calm workspace.
-                </p>
-              </div>
+          <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-2.5">
+            <div className="text-[11px] uppercase tracking-widest text-[#A7F3D0] font-semibold">
+              Verified Housing • Accra • Kumasi • Cape Coast
             </div>
+            <h3 className="font-editorial text-3xl text-white leading-snug max-w-xl">
+              Trusted homes for students &amp; residents across Ghana
+            </h3>
+            <p className="text-sm text-white/85 leading-relaxed font-normal max-w-md">
+              Review room availability, compare transparent GH₵ pricing, and manage your reservations in one calm workspace.
+            </p>
           </div>
         </div>
       </main>
