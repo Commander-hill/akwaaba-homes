@@ -250,14 +250,26 @@ export const serveSecureDocument = async (req: Request, res: Response): Promise<
     // Stream directly through backend so client never sees or stores raw Cloudinary bucket URL
     const documentResponse = await axios.get(rawUrl, {
       responseType: 'stream',
-      timeout: 15000
+      timeout: 20000
     });
 
     res.setHeader('Content-Type', documentResponse.headers['content-type'] || 'application/octet-stream');
+    if (documentResponse.headers['content-length']) {
+      res.setHeader('Content-Length', documentResponse.headers['content-length']);
+    }
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    documentResponse.data.on('error', (streamErr: any) => {
+      console.error('Error during document streaming:', streamErr);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to stream document' });
+      }
+    });
 
     documentResponse.data.pipe(res);
   } catch (error) {

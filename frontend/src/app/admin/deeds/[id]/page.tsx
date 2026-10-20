@@ -123,7 +123,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
 
   const allChecklistPassed = checklist.titleSearch && checklist.sitePlan && checklist.identityMatch && checklist.encumbranceFree;
   const rawDeedUrl = landlord.landlordDocUrl ? getImageUrl(landlord.landlordDocUrl) : null;
-  const isPdf = rawDeedUrl?.toLowerCase().endsWith('.pdf');
+  const isPdf = rawDeedUrl ? Boolean(rawDeedUrl.toLowerCase().split('?')[0].endsWith('.pdf') || rawDeedUrl.toLowerCase().includes('.pdf')) : false;
   const cleanPhone = landlord.phoneNumber ? landlord.phoneNumber.replace(/[^0-9]/g, '') : '';
   const waNumber = cleanPhone.startsWith('0') ? '233' + cleanPhone.slice(1) : cleanPhone;
   const waUrl = waNumber 

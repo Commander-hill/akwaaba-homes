@@ -2,13 +2,13 @@ import crypto from 'crypto';
 
 /**
  * Generates an expiring signed URL token for sensitive document access (Ghana Cards, etc.)
- * Expiration defaults to 15 minutes.
+ * Expiration defaults to 60 minutes for administrative review sessions.
  */
-export const generateSignedDocumentUrl = (rawUrl: string | null, expiresMinutes = 15): string | null => {
+export const generateSignedDocumentUrl = (rawUrl: string | null, expiresMinutes = 60): string | null => {
   if (!rawUrl) return null;
 
   // If already signed proxy URL, return as-is
-  if (rawUrl.includes('/api/upload/secure-document') || rawUrl.includes('/upload/secure-document')) {
+  if (rawUrl.includes('/secure-document')) {
     return rawUrl;
   }
 
@@ -23,7 +23,7 @@ export const generateSignedDocumentUrl = (rawUrl: string | null, expiresMinutes 
     .update(`${rawUrl}:${expires}`)
     .digest('hex');
 
-  const proxyUrl = `/api/upload/secure-document?url=${encodeURIComponent(rawUrl)}&expires=${expires}&signature=${signature}`;
+  const proxyUrl = `/api/v1/upload/secure-document?url=${encodeURIComponent(rawUrl)}&expires=${expires}&signature=${signature}`;
   return proxyUrl;
 };
 

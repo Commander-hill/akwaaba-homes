@@ -51,14 +51,15 @@ export const adminRateLimiter = rateLimit({
   statusCode: 429,
 });
 
-// ─── Upload routes: prevent bandwidth abuse ───────────────────────────────────
+// ─── Upload routes: prevent bandwidth abuse (POST/PUT uploads only) ─────────
 export const uploadRateLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 20,
+  max: 100,
   message: { error: 'Too many upload requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  skip: (req) => req.method === 'GET' || req.method === 'OPTIONS',
 });
 
 // ─── General API limiter: all other routes (Safe DDoS Protection, No artificial lag) ─────

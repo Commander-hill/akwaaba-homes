@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import appCache from '../utils/cache';
 import { emitToUser, emitToAll } from '../socket';
+import { generateSignedDocumentUrl } from '../utils/security.service';
 
 /**
  * Fetch all contract breach reports for admin moderation
@@ -220,7 +221,14 @@ export const getLandlordDeedAudits = async (req: Request, res: Response): Promis
       orderBy: { createdAt: 'desc' }
     });
 
-    res.status(200).json({ landlords });
+    const sanitizedLandlords = landlords.map((l) => ({
+      ...l,
+      ghanaCardNumber: l.ghanaCardNumber ? 'GHA-•••••••••' : null,
+      landlordDocUrl: generateSignedDocumentUrl(l.landlordDocUrl),
+      ghanaCardFrontUrl: generateSignedDocumentUrl(l.ghanaCardFrontUrl)
+    }));
+
+    res.status(200).json({ landlords: sanitizedLandlords });
   } catch (error) {
     console.error('Error fetching landlord deed audits:', error);
     res.status(500).json({ message: 'Failed to fetch landlord deed audits' });

@@ -1,10 +1,17 @@
-export const getImageUrl = (url?: string | null) => {
+export const getImageUrl = (url?: string | null): string => {
   if (!url) return '';
-  if (url.startsWith('http')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
   
-  // Get the base API URL and strip the /api/v1 part to get the root domain
+  // Get base API URL and strip /api/v1 or /api from the tail to obtain the backend host root
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-  const rootUrl = apiUrl.replace('/api/v1', '').replace(/\/$/, '');
+  const rootUrl = apiUrl.replace(/\/api(\/v1)?\/?$/, '').replace(/\/$/, '');
+
+  // Normalize legacy /api/upload paths to /api/v1/upload
+  const normalizedPath = url.startsWith('/api/upload')
+    ? url.replace('/api/upload', '/api/v1/upload')
+    : url;
   
-  return `${rootUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${rootUrl}${normalizedPath.startsWith('/') ? '' : '/'}${normalizedPath}`;
 };

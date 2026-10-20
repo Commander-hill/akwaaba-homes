@@ -328,6 +328,7 @@ app.use('/api/v1/gis', gisRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/notices', noticeRoutes);
 app.use('/api/v1/upload', uploadRateLimiter, uploadRoutes);    // Upload-specific limit
+app.use('/api/upload', uploadRateLimiter, uploadRoutes);       // Backwards-compatible alias for signed document URLs
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/agreements', agreementRoutes);
 app.use('/api/v1/breaches', breachRoutes);

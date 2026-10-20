@@ -24,9 +24,12 @@ import {
   Ban,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  IdCard,
+  ZoomIn
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getImageUrl } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
@@ -422,43 +425,115 @@ export default function AdminLandlordDetailPage({
 
       {/* ── TAB 4: DOCUMENTS ── */}
       {activeTab === 'DOCUMENTS' && (
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-2xs max-w-2xl">
-          <h3 className="text-sm font-bold text-zinc-950 dark:text-white border-b border-zinc-100 dark:border-zinc-800 pb-2">
-            Ownership Title Proof Document
-          </h3>
-          {landlord.landlordDocUrl ? (
-            <div className="space-y-4">
-              <p className="text-xs text-zinc-500">
-                Official document proof submitted to substantiate property ownership under Ghanaian land administration guidelines.
-              </p>
-              <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileCheck className="w-6 h-6 text-[#0F5132] dark:text-emerald-400" />
-                  <div>
-                    <div className="text-xs font-bold text-zinc-900 dark:text-white">
-                      Landlord_Ownership_Title.pdf
-                    </div>
-                    <div className="text-[10px] text-zinc-400">
-                      Encrypted Cloud Storage · Secure Time-Limited Access
-                    </div>
+        <div className="space-y-6 max-w-4xl">
+          {/* Statutory Ghana Cards */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <div className="flex items-center gap-2">
+                <IdCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <h3 className="text-sm font-bold text-zinc-950 dark:text-white">
+                  Ghana Card National Identity (KYC Proof)
+                </h3>
+              </div>
+              <AdminStatusBadge status={landlord.ghanaCardStatus || 'NOT_SUBMITTED'} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Front */}
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-zinc-500">Document 01: Front</div>
+                {landlord.ghanaCardFrontUrl ? (
+                  <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-2 flex flex-col items-center justify-center min-h-[180px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getImageUrl(landlord.ghanaCardFrontUrl)}
+                      alt="Ghana Card Front"
+                      className="max-h-48 object-contain rounded-lg w-full"
+                    />
+                    <a
+                      href={getImageUrl(landlord.ghanaCardFrontUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Full Resolution
+                    </a>
                   </div>
-                </div>
-                <a
-                  href={landlord.landlordDocUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3.5 py-1.5 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition flex items-center gap-1.5"
-                >
-                  <span>Open Document</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
+                ) : (
+                  <div className="p-8 text-center text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    No Ghana Card front uploaded
+                  </div>
+                )}
+              </div>
+
+              {/* Back */}
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-zinc-500">Document 02: Back</div>
+                {landlord.ghanaCardBackUrl ? (
+                  <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-2 flex flex-col items-center justify-center min-h-[180px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getImageUrl(landlord.ghanaCardBackUrl)}
+                      alt="Ghana Card Back"
+                      className="max-h-48 object-contain rounded-lg w-full"
+                    />
+                    <a
+                      href={getImageUrl(landlord.ghanaCardBackUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Full Resolution
+                    </a>
+                  </div>
+                ) : (
+                  <div className="p-8 text-center text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    No Ghana Card back uploaded
+                  </div>
+                )}
               </div>
             </div>
-          ) : (
-            <div className="text-xs text-zinc-400 italic">
-              No ownership deed document has been uploaded for this landlord account.
-            </div>
-          )}
+          </div>
+
+          {/* Ownership Title Deed */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-2xs">
+            <h3 className="text-sm font-bold text-zinc-950 dark:text-white border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              Ownership Title Proof Document
+            </h3>
+            {landlord.landlordDocUrl ? (
+              <div className="space-y-4">
+                <p className="text-xs text-zinc-500">
+                  Official document proof submitted to substantiate property ownership under Ghanaian land administration guidelines.
+                </p>
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <FileCheck className="w-6 h-6 text-[#0F5132] dark:text-emerald-400" />
+                    <div>
+                      <div className="text-xs font-bold text-zinc-900 dark:text-white">
+                        Landlord_Ownership_Title
+                      </div>
+                      <div className="text-[10px] text-zinc-400">
+                        Encrypted Cloud Storage · Secure Time-Limited Access
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={getImageUrl(landlord.landlordDocUrl)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition flex items-center gap-1.5"
+                  >
+                    <span>Open Document</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-zinc-400 italic">
+                No ownership deed document has been uploaded for this landlord account.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
