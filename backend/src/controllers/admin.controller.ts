@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { notifyPropertyApproval, notifyLandlordVerification } from '../utils/notification.service';
-import { decryptData } from '../utils/crypto';
+import { decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
 import appCache from '../utils/cache';
@@ -33,34 +33,67 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    const totalUsers = await prisma.user.count();
-    const totalLandlords = await prisma.user.count({ where: { role: 'LANDLORD' } });
-    const totalTenants = await prisma.user.count({ where: { role: 'TENANT' } });
-    const totalProperties = await prisma.property.count();
-    const verifiedProperties = await prisma.property.count({ where: { approvalStatus: 'APPROVED' } });
-    const verifiedUsers = await prisma.user.count({ where: { ghanaCardStatus: 'VERIFIED' } });
-    const verifiedLandlords = await prisma.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } });
-    const totalBookings = await prisma.booking.count();
+    const [
+      totalUsers,
+      totalLandlords,
+      totalTenants,
+      totalProperties,
+      verifiedProperties,
+      verifiedUsers,
+      verifiedLandlords,
+      totalBookings,
+      pendingProperties,
+      pendingKyc,
+      pendingLandlordDeeds,
+      openBreaches,
+      activeSubscriptions
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { role: 'LANDLORD' } }),
+      prisma.user.count({ where: { role: 'TENANT' } }),
+      prisma.property.count(),
+      prisma.property.count({ where: { approvalStatus: 'APPROVED' } }),
+      prisma.user.count({ where: { ghanaCardStatus: 'VERIFIED' } }),
+      prisma.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } }),
+      prisma.booking.count(),
+      prisma.property.count({ where: { approvalStatus: 'PENDING' } }),
+      prisma.user.count({ where: { ghanaCardStatus: { in: ['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'] } } }),
+      prisma.user.count({ where: { role: 'LANDLORD', landlordVerificationStatus: 'PENDING' } }),
+      prisma.breachReport.count({ where: { status: 'PENDING' } }),
+      prisma.propertySubscription.count({ where: { isActive: true } })
+    ]);
     
-    // Sum all successful transaction amounts (total platform transaction volume)
+    // Sum all successful transaction amounts (total platform escrow volume)
     const transactionSum = await prisma.transaction.aggregate({
       _sum: { amount: true },
       where: { status: 'SUCCESS' }
     });
     const totalRevenue = transactionSum._sum.amount || 0;
 
-    // Generate 6 months of historical data based on current totals for the chart
-    const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-    const monthlyGrowth = months.map((month, index) => {
-      // Create an escalating curve that culminates in the current totals
-      const factor = (index + 1) / 6; 
-      return {
-        name: month,
-        users: Math.round(totalUsers * factor * (0.8 + Math.random() * 0.4)),
-        properties: Math.round(totalProperties * factor * (0.8 + Math.random() * 0.4)),
-        revenue: Math.round(totalRevenue * factor * (0.8 + Math.random() * 0.4))
-      };
-    });
+    // Authentic monthly historical curves computed from real database records (no Math.random)
+    const now = new Date();
+    const monthlyGrowth = [];
+    for (let i = 5; i >= 0; i--) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+      const monthName = monthStart.toLocaleString('en-US', { month: 'short' });
+
+      const [userCount, propCount, txSum] = await Promise.all([
+        prisma.user.count({ where: { createdAt: { lte: monthEnd } } }),
+        prisma.property.count({ where: { createdAt: { lte: monthEnd } } }),
+        prisma.transaction.aggregate({
+          _sum: { amount: true },
+          where: { status: 'SUCCESS', createdAt: { lte: monthEnd } }
+        })
+      ]);
+
+      monthlyGrowth.push({
+        name: monthName,
+        users: userCount,
+        properties: propCount,
+        revenue: txSum._sum.amount || 0
+      });
+    }
 
     const responseData = {
       totalUsers,
@@ -72,6 +105,11 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
       verifiedLandlords,
       totalBookings,
       totalRevenue,
+      pendingProperties,
+      pendingKyc,
+      pendingLandlordDeeds,
+      openBreaches,
+      activeSubscriptions,
       monthlyGrowth
     };
 
@@ -80,6 +118,103 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
     res.status(200).json(responseData);
   } catch (error) {
     console.error('Error fetching stats:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getActionRequiredQueue = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const [pendingLandlords, pendingKycUsers, pendingProperties, openBreaches, pendingTickets] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: 'LANDLORD', landlordVerificationStatus: 'PENDING' },
+        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, landlordDocUrl: true, createdAt: true, updatedAt: true },
+        take: 10
+      }),
+      prisma.user.findMany({
+        where: { ghanaCardStatus: { in: ['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'] } },
+        select: { id: true, firstName: true, lastName: true, email: true, role: true, ghanaCardStatus: true, createdAt: true, updatedAt: true },
+        take: 10
+      }),
+      prisma.property.findMany({
+        where: { approvalStatus: 'PENDING' },
+        include: { landlord: { select: { id: true, firstName: true, lastName: true, email: true } } },
+        take: 10
+      }),
+      prisma.breachReport.findMany({
+        where: { status: 'PENDING' },
+        include: {
+          reporter: { select: { id: true, firstName: true, lastName: true } },
+          tenant: { select: { id: true, firstName: true, lastName: true } },
+          property: { select: { id: true, title: true } }
+        },
+        take: 10
+      }),
+      prisma.maintenanceTicket.findMany({
+        where: { status: 'PENDING', priority: { in: ['HIGH', 'URGENT'] } },
+        include: {
+          tenant: { select: { id: true, firstName: true, lastName: true } },
+          property: { select: { id: true, title: true } }
+        },
+        take: 10
+      })
+    ]);
+
+    const queue: any[] = [
+      ...pendingLandlords.map(l => ({
+        id: `action-landlord-${l.id}`,
+        category: 'LANDLORD_VERIFICATION',
+        priority: 'HIGH',
+        title: `Landlord Ownership Deed: ${l.firstName} ${l.lastName}`,
+        description: `Ownership proof deed awaiting statutory verification.`,
+        targetUrl: `/admin/verifications/${l.id}`,
+        entityId: l.id,
+        createdAt: l.updatedAt || l.createdAt
+      })),
+      ...pendingKycUsers.map(u => ({
+        id: `action-kyc-${u.id}`,
+        category: 'IDENTITY_KYC',
+        priority: u.ghanaCardStatus === 'UNDER_REVIEW' ? 'MEDIUM' : 'HIGH',
+        title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Ghana Card KYC: ${u.firstName} ${u.lastName}`,
+        description: `Status: ${u.ghanaCardStatus.replace('_', ' ')}. Identity documents submitted for compliance review.`,
+        targetUrl: `/admin/verifications/${u.id}`,
+        entityId: u.id,
+        createdAt: u.updatedAt || u.createdAt
+      })),
+      ...pendingProperties.map(p => ({
+        id: `action-prop-${p.id}`,
+        category: 'PROPERTY_APPROVAL',
+        priority: 'HIGH',
+        title: `Listing Approval: "${p.title}"`,
+        description: `Submitted by ${p.landlord?.firstName || 'Host'} ${p.landlord?.lastName || ''} in ${p.location}. Awaiting listing moderation.`,
+        targetUrl: `/admin/properties/${p.id}`,
+        entityId: p.id,
+        createdAt: p.createdAt
+      })),
+      ...openBreaches.map(b => ({
+        id: `action-breach-${b.id}`,
+        category: 'DISPUTE_BREACH',
+        priority: 'URGENT',
+        title: `Active Tenancy Breach Claim: ${b.title}`,
+        description: `Lodged by ${b.reporter?.firstName || 'User'} regarding "${b.property?.title}".`,
+        targetUrl: `/admin/disputes/${b.id}`,
+        entityId: b.id,
+        createdAt: b.createdAt
+      })),
+      ...pendingTickets.map(t => ({
+        id: `action-ticket-${t.id}`,
+        category: 'ESCALATED_MAINTENANCE',
+        priority: 'URGENT',
+        title: `Urgent Repair Escalation: "${t.title}"`,
+        description: `At "${t.property?.title}". Reported by ${t.tenant?.firstName || 'Tenant'}.`,
+        targetUrl: `/admin/tickets/${t.id}`,
+        entityId: t.id,
+        createdAt: t.createdAt
+      }))
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    res.status(200).json(queue);
+  } catch (error) {
+    console.error('Error fetching action required queue:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -232,8 +367,514 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
+    const { role, status, search, page, limit } = req.query;
+
+    const where: any = {};
+
+    if (role && role !== 'ALL') {
+      where.role = String(role);
+    }
+
+    if (status && status !== 'ALL') {
+      if (status === 'SUSPENDED') where.isSuspended = true;
+      else if (status === 'ACTIVE') where.isSuspended = false;
+      else if (status === 'VERIFIED_LANDLORD') where.isVerifiedLandlord = true;
+      else if (status === 'VERIFIED_KYC') where.ghanaCardStatus = 'VERIFIED';
+      else if (status === 'PENDING_KYC') where.ghanaCardStatus = { in: ['PENDING', 'UNDER_REVIEW'] };
+    }
+
+    if (search && String(search).trim()) {
+      const q = String(search).trim();
+      where.OR = [
+        { firstName: { contains: q, mode: 'insensitive' } },
+        { lastName: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
+        { phoneNumber: { contains: q } }
+      ];
+    }
+
+    const isPaginated = Boolean(page || limit);
+    const pageNum = Math.max(1, parseInt(String(page || 1), 10));
+    const takeNum = Math.min(100, Math.max(1, parseInt(String(limit || 50), 10)));
+    const skipNum = (pageNum - 1) * takeNum;
+
+    const [total, users] = await Promise.all([
+      prisma.user.count({ where }),
+      prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        ...(isPaginated ? { skip: skipNum, take: takeNum } : {}),
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          phoneNumber: true,
+          gender: true,
+          campus: true,
+          studentId: true,
+          programmeOfStudy: true,
+          studentType: true,
+          isSuspended: true,
+          isProfileLocked: true,
+          profileUnlockRequested: true,
+          profileUnlockReason: true,
+          ghanaCardStatus: true,
+          ghanaCardNumber: true,
+          ghanaCardFrontUrl: true,
+          ghanaCardBackUrl: true,
+          ghanaCardRejectionReason: true,
+          ghanaCardReviewedAt: true,
+          ghanaCardReviewedBy: true,
+          landlordDocUrl: true,
+          isVerifiedLandlord: true,
+          landlordVerificationStatus: true,
+          reputationScore: true,
+          createdAt: true
+        }
+      })
+    ]);
+
+    // Mask sensitive national identity card numbers in list responses (Act 843 compliance)
+    const sanitizedUsers = users.map(user => {
+      let maskedCard: string | null = null;
+      if (user.ghanaCardNumber) {
+        try {
+          const decrypted = decryptData(user.ghanaCardNumber);
+          maskedCard = maskGhanaCardNumber(decrypted);
+        } catch {
+          maskedCard = 'GHA-•••••••••';
+        }
+      }
+
+      return {
+        ...user,
+        ghanaCardNumber: maskedCard,
+        ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
+        ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl),
+        landlordDocUrl: generateSignedDocumentUrl(user.landlordDocUrl)
+      };
+    });
+
+    if (isPaginated) {
+      res.status(200).json({
+        users: sanitizedUsers,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / takeNum),
+        limit: takeNum
+      });
+    } else {
+      res.status(200).json(sanitizedUsers);
+    }
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        properties: {
+          select: { id: true, title: true, type: true, location: true, price: true, approvalStatus: true, isAvailable: true, createdAt: true },
+          orderBy: { createdAt: 'desc' }
+        },
+        bookings: {
+          include: {
+            property: { select: { id: true, title: true, location: true } },
+            transaction: { select: { id: true, amount: true, status: true, reference: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 20
+        },
+        transactionsAsTenant: {
+          include: { property: { select: { id: true, title: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 15
+        },
+        transactionsAsLandlord: {
+          include: { property: { select: { id: true, title: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 15
+        },
+        reviews: {
+          include: {
+            booking: { include: { property: { select: { id: true, title: true } } } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 15
+        },
+        tenantBreaches: {
+          include: { property: { select: { id: true, title: true } } },
+          orderBy: { createdAt: 'desc' }
+        },
+        reportedBreaches: {
+          include: { property: { select: { id: true, title: true } } },
+          orderBy: { createdAt: 'desc' }
+        },
+        auditLogs: {
+          orderBy: { createdAt: 'desc' },
+          take: 20
+        }
+      }
+    });
+
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    let decryptedCard: string | null = null;
+    let maskedCard: string | null = null;
+    if (user.ghanaCardNumber) {
+      try {
+        decryptedCard = decryptData(user.ghanaCardNumber);
+        maskedCard = maskGhanaCardNumber(decryptedCard);
+      } catch {
+        maskedCard = 'GHA-•••••••••';
+      }
+    }
+
+    res.status(200).json({
+      ...user,
+      ghanaCardNumber: decryptedCard,
+      maskedGhanaCard: maskedCard,
+      ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
+      ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl),
+      landlordDocUrl: generateSignedDocumentUrl(user.landlordDocUrl)
+    });
+  } catch (error) {
+    console.error('Error fetching user by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getPropertyById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const property = await prisma.property.findUnique({
+      where: { id },
+      include: {
+        landlord: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            avatarUrl: true,
+            isVerifiedLandlord: true,
+            landlordVerificationStatus: true,
+            reputationScore: true,
+            createdAt: true
+          }
+        },
+        rooms: {
+          include: {
+            roomUnits: {
+              include: {
+                beds: true
+              }
+            }
+          }
+        },
+        bookings: {
+          include: {
+            tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+            transaction: { select: { id: true, amount: true, status: true, reference: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 15
+        },
+        subscription: true,
+        tickets: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        }
+      }
+    });
+
+    if (!property) {
+      res.status(404).json({ message: 'Property not found' });
+      return;
+    }
+
+    res.status(200).json({
+      ...property,
+      images: safeJsonParse(property.images, []),
+      amenities: safeJsonParse(property.amenities, []),
+      includedUtilities: safeJsonParse(property.includedUtilities, [])
+    });
+  } catch (error) {
+    console.error('Error fetching property by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getBookingById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        tenant: {
+          select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, studentId: true, campus: true }
+        },
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+          }
+        },
+        room: true,
+        roomUnit: true,
+        bed: true,
+        leaseAgreement: true,
+        transaction: true,
+        review: true
+      }
+    });
+
+    if (!booking) {
+      res.status(404).json({ message: 'Booking not found' });
+      return;
+    }
+
+    res.status(200).json(booking);
+  } catch (error) {
+    console.error('Error fetching booking by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getSubscriptionById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const subscription = await prisma.propertySubscription.findUnique({
+      where: { id },
+      include: {
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+          }
+        }
+      }
+    });
+
+    if (!subscription) {
+      res.status(404).json({ message: 'Subscription not found' });
+      return;
+    }
+
+    const now = new Date();
+    const endDate = new Date(subscription.endDate);
+    const diffMs = endDate.getTime() - now.getTime();
+    const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    res.status(200).json({ ...subscription, daysRemaining });
+  } catch (error) {
+    console.error('Error fetching subscription by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getTransactionById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const transaction = await prisma.transaction.findUnique({
+      where: { id },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+        property: { select: { id: true, title: true, location: true, type: true } },
+        booking: {
+          include: {
+            leaseAgreement: { select: { id: true, status: true, cryptographicHash: true } }
+          }
+        }
+      }
+    });
+
+    if (!transaction) {
+      res.status(404).json({ message: 'Transaction not found' });
+      return;
+    }
+
+    res.status(200).json(transaction);
+  } catch (error) {
+    console.error('Error fetching transaction by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getDisputeById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const dispute = await prisma.breachReport.findUnique({
+      where: { id },
+      include: {
+        reporter: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, reputationScore: true } },
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, reputationScore: true, isSuspended: true } },
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+          }
+        }
+      }
+    });
+
+    if (!dispute) {
+      res.status(404).json({ message: 'Dispute case not found' });
+      return;
+    }
+
+    res.status(200).json(dispute);
+  } catch (error) {
+    console.error('Error fetching dispute by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getReviewById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const review = await prisma.review.findUnique({
+      where: { id },
+      include: {
+        author: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true } },
+        booking: {
+          include: {
+            property: {
+              include: {
+                landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!review) {
+      res.status(404).json({ message: 'Review not found' });
+      return;
+    }
+
+    res.status(200).json(review);
+  } catch (error) {
+    console.error('Error fetching review by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const searchEntities = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const q = String(req.query.q || '').trim();
+    if (!q || q.length < 2) {
+      res.status(200).json({ results: [] });
+      return;
+    }
+
+    const [users, properties, bookings, transactions] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          OR: [
+            { firstName: { contains: q, mode: 'insensitive' } },
+            { lastName: { contains: q, mode: 'insensitive' } },
+            { email: { contains: q, mode: 'insensitive' } },
+            { phoneNumber: { contains: q } }
+          ]
+        },
+        select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true },
+        take: 6
+      }),
+      prisma.property.findMany({
+        where: {
+          OR: [
+            { title: { contains: q, mode: 'insensitive' } },
+            { location: { contains: q, mode: 'insensitive' } },
+            { type: { contains: q, mode: 'insensitive' } }
+          ]
+        },
+        select: { id: true, title: true, location: true, price: true, approvalStatus: true },
+        take: 6
+      }),
+      prisma.booking.findMany({
+        where: {
+          OR: [
+            { id: { contains: q, mode: 'insensitive' } },
+            { property: { title: { contains: q, mode: 'insensitive' } } },
+            { tenant: { firstName: { contains: q, mode: 'insensitive' } } },
+            { tenant: { lastName: { contains: q, mode: 'insensitive' } } }
+          ]
+        },
+        include: {
+          property: { select: { title: true } },
+          tenant: { select: { firstName: true, lastName: true } }
+        },
+        take: 6
+      }),
+      prisma.transaction.findMany({
+        where: {
+          OR: [
+            { reference: { contains: q, mode: 'insensitive' } },
+            { id: { contains: q, mode: 'insensitive' } }
+          ]
+        },
+        select: { id: true, reference: true, amount: true, status: true, createdAt: true },
+        take: 5
+      })
+    ]);
+
+    const results = [
+      ...users.map(u => ({
+        id: u.id,
+        type: u.role === 'LANDLORD' ? 'LANDLORD' : (u.role === 'ADMIN' ? 'ADMIN' : 'TENANT'),
+        title: `${u.firstName} ${u.lastName}`,
+        subtitle: u.email,
+        status: u.isSuspended ? 'SUSPENDED' : 'ACTIVE',
+        url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : `/admin/tenants/${u.id}`
+      })),
+      ...properties.map(p => ({
+        id: p.id,
+        type: 'PROPERTY',
+        title: p.title,
+        subtitle: p.location,
+        status: p.approvalStatus,
+        url: `/admin/properties/${p.id}`
+      })),
+      ...bookings.map(b => ({
+        id: b.id,
+        type: 'BOOKING',
+        title: `Booking #${b.id.slice(0, 8)}`,
+        subtitle: `${b.tenant?.firstName || 'Tenant'} - ${b.property?.title || 'Property'}`,
+        status: b.status,
+        url: `/admin/bookings/${b.id}`
+      })),
+      ...transactions.map(t => ({
+        id: t.id,
+        type: 'TRANSACTION',
+        title: `Ref: ${t.reference}`,
+        subtitle: `GH₵ ${t.amount.toLocaleString()}`,
+        status: t.status,
+        url: `/admin/transactions/${t.id}`
+      }))
+    ];
+
+    res.status(200).json({ results });
+  } catch (error) {
+    console.error('Error performing global search:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getAdministrators = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const admins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
       select: {
         id: true,
         firstName: true,
@@ -241,40 +882,115 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
         email: true,
         role: true,
         phoneNumber: true,
-        gender: true,
-        campus: true,
-        studentId: true,
-        programmeOfStudy: true,
-        studentType: true,
         isSuspended: true,
-        isProfileLocked: true,
-        profileUnlockRequested: true,
-        profileUnlockReason: true,
-        ghanaCardStatus: true,
-        ghanaCardNumber: true,
-        ghanaCardFrontUrl: true,
-        ghanaCardBackUrl: true,
-        ghanaCardRejectionReason: true,
-        ghanaCardReviewedAt: true,
-        ghanaCardReviewedBy: true,
-        landlordDocUrl: true,
-        isVerifiedLandlord: true,
-        landlordVerificationStatus: true,
-        reputationScore: true,
-        createdAt: true
-      }
+        twoFactorEnabled: true,
+        createdAt: true,
+        updatedAt: true
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.status(200).json(admins);
+  } catch (error) {
+    console.error('Error fetching administrators:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const createAdministrator = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { firstName, lastName, email, password, role, phoneNumber } = req.body;
+    if (!firstName || !lastName || !email || !password) {
+      res.status(400).json({ message: 'Missing required administrator fields' });
+      return;
+    }
+
+    const assignedRole = role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN';
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing) {
+      res.status(409).json({ message: 'A user with this email address already exists' });
+      return;
+    }
+
+    const bcrypt = await import('bcrypt');
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const newAdmin = await prisma.user.create({
+      data: {
+        firstName,
+        lastName,
+        email: normalizedEmail,
+        phoneNumber: phoneNumber || null,
+        passwordHash,
+        role: assignedRole,
+        isEmailVerified: true
+      },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true }
     });
 
-    const decryptedUsers = users.map(user => ({
-      ...user,
-      ghanaCardNumber: user.ghanaCardNumber ? decryptData(user.ghanaCardNumber) : null,
-      ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
-      ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl),
-      landlordDocUrl: generateSignedDocumentUrl(user.landlordDocUrl)
-    }));
+    await logAudit(
+      req.user.id,
+      'CREATE_ADMINISTRATOR',
+      'User',
+      newAdmin.id,
+      null,
+      { email: normalizedEmail, role: assignedRole },
+      req.ip || req.socket.remoteAddress
+    );
 
-    res.status(200).json(decryptedUsers);
+    res.status(201).json({ message: 'Administrator account provisioned successfully', admin: newAdmin });
   } catch (error) {
+    console.error('Error creating administrator:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const toggleAdminStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { isSuspended } = req.body;
+
+    if (id === req.user.id) {
+      res.status(400).json({ message: 'Security restriction: You cannot suspend your own administrative account.' });
+      return;
+    }
+
+    const target = await prisma.user.findUnique({ where: { id } });
+    if (!target || !['ADMIN', 'SUPER_ADMIN'].includes(target.role)) {
+      res.status(404).json({ message: 'Administrator account not found.' });
+      return;
+    }
+
+    if (target.role === 'SUPER_ADMIN' && isSuspended) {
+      const superAdminCount = await prisma.user.count({
+        where: { role: 'SUPER_ADMIN', isSuspended: false }
+      });
+      if (superAdminCount <= 1) {
+        res.status(400).json({ message: 'Operation aborted: Cannot suspend the last active Super Administrator.' });
+        return;
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { isSuspended: Boolean(isSuspended) },
+      select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true }
+    });
+
+    await logAudit(
+      req.user.id,
+      isSuspended ? 'SUSPEND_ADMIN' : 'REINSTATE_ADMIN',
+      'User',
+      id,
+      { isSuspended: target.isSuspended },
+      { isSuspended },
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({ message: `Administrator status updated to ${isSuspended ? 'Suspended' : 'Active'}`, admin: updated });
+  } catch (error) {
+    console.error('Error toggling admin status:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

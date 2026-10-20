@@ -3,15 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
-import { 
-  LogOut, Loader2, LayoutDashboard, Users, Building, CalendarCheck, 
-  CreditCard, Star, Activity, Megaphone, BarChart3, Wrench, Scale, 
-  Settings, Radio, FileCheck, Menu, BadgeCheck, FileText 
-} from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
-import NotificationBell from '@/components/NotificationBell';
-import ThemeToggle from '@/components/ThemeToggle';
-import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
+import AdminShell from '@/components/admin/AdminShell';
 import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -39,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     if (!isLoading) {
       if (error || !user) {
         router.push('/admin/login');
-      } else if (user.role !== 'ADMIN') {
+      } else if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
         // If a non-admin somehow gets here, kick them out
         window.location.href = '/login';
       }
@@ -71,79 +65,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!user || user.role !== 'ADMIN') return null;
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) return null;
 
   const handleLogout = async () => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch {}
+    localStorage.removeItem('akwaaba_access_token');
+    localStorage.removeItem('akwaaba_refresh_token');
     window.location.href = '/admin/login';
   };
 
-  const adminSidebarGroups: SidebarGroup[] = [
-    {
-      title: 'CORE PLATFORM',
-      links: [
-        { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'User management', href: '/admin/users', icon: Users },
-        { name: 'Landlord verification', href: '/admin/users?filter=landlords', icon: BadgeCheck },
-        { name: 'Property approvals', href: '/admin/properties', icon: Building },
-        { name: 'Booking monitoring', href: '/admin/bookings', icon: CalendarCheck },
-        { name: 'Subscription monitoring', href: '/admin/transactions', icon: CreditCard },
-      ]
-    },
-    {
-      title: 'GOVERNANCE & AUDIT',
-      links: [
-        { name: 'Dispute management', href: '/admin/breaches', icon: Scale },
-        { name: 'Review moderation', href: '/admin/reviews', icon: Star },
-        { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-        { name: 'Audit logs', href: '/admin/audit', icon: FileText },
-        { name: 'System settings', href: '/admin/config', icon: Settings },
-      ]
-    }
-  ];
-
   return (
-    <div className="flex h-screen w-full bg-[#FBFBFC] dark:bg-[#0B0D12] overflow-hidden -mt-20">
+    <AdminShell user={user} onLogout={handleLogout}>
       <link rel="manifest" href="/admin-manifest.json" />
       <meta name="theme-color" content="#0A0F1D" />
       <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
-
-      <ModernSidebar 
-        user={user} 
-        groups={adminSidebarGroups} 
-        onLogout={handleLogout}
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
-
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto bg-[#FBFBFC] dark:bg-[#0B0D12] flex flex-col min-w-0">
-        {/* Admin Header with Notification Bell */}
-        <div className="h-16 md:h-20 shrink-0 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 sm:px-6 md:px-8 bg-white/95 dark:bg-[#0B0D12]/95 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-1.5 rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
-              aria-label="Open admin navigation menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-zinc-950 dark:text-white font-extrabold tracking-tight capitalize truncate">
-              {pathname.split('/').pop()?.replace(/-/g, ' ') || 'Dashboard'}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <NotificationBell />
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-6 md:p-8">
-          {children}
-        </div>
-      </div>
+      {children}
       <AdminPwaInstallPrompt />
-    </div>
+    </AdminShell>
   );
 }

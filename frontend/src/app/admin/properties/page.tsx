@@ -1,50 +1,47 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import toast from 'react-hot-toast';
-import Link from 'next/link';
-import { 
-  Loader2, 
-  Building, 
-  CheckCircle, 
-  XCircle, 
-  MapPin, 
-  Clock, 
-  Search, 
-  Filter, 
-  LayoutGrid, 
-  Table as TableIcon, 
-  Eye, 
-  ExternalLink, 
-  BadgeCheck, 
-  AlertTriangle, 
-  Check, 
-  X, 
-  Layers, 
-  Home, 
-  User, 
-  Banknote,
-  Info,
-  Calendar,
-  AlertCircle
+import {
+  Building,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  ExternalLink,
+  MapPin,
+  Layers,
+  LayoutGrid,
+  Table as TableIcon,
+  Check,
+  X,
+  User as UserIcon,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
-
-type ApprovalFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
+import AdminFilterBar, { FilterConfig } from '@/components/admin/AdminFilterBar';
+import AdminDataTable, { Column } from '@/components/admin/AdminDataTable';
+import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
 export default function AdminPropertiesPage() {
   const queryClient = useQueryClient();
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ApprovalFilter>('ALL');
-  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [typeFilter, setTypeFilter] = useState('ALL');
+  const [rejectDialog, setRejectDialog] = useState<{ isOpen: boolean; propertyId: string | null; title: string }>({
+    isOpen: false,
+    propertyId: null,
+    title: ''
+  });
 
-
-
-  const { data: properties, isLoading } = useQuery({
+  const { data: properties = [], isLoading } = useQuery({
     queryKey: ['admin-properties'],
     queryFn: async () => {
       const res = await api.get('/admin/properties');
@@ -53,508 +50,320 @@ export default function AdminPropertiesPage() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: async ({ id, approvalStatus }: { id: string, approvalStatus: string }) => {
-      await api.put(`/admin/properties/${id}/status`, { approvalStatus });
+    mutationFn: async ({ id, approvalStatus, rejectionReason }: { id: string; approvalStatus: string; rejectionReason?: string }) => {
+      const res = await api.put(`/admin/properties/${id}/status`, { approvalStatus, rejectionReason });
+      return res.data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       toast.success(
-        variables.approvalStatus === 'APPROVED' 
-          ? 'Property listing approved & published!' 
-          : 'Property status updated.'
+        variables.approvalStatus === 'APPROVED'
+          ? 'Listing approved and published to public catalog'
+          : 'Listing status updated'
       );
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
     },
-    onError: () => {
-      toast.error('Failed to update property status');
-    },
-    onSettled: () => setProcessingId(null)
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update property status');
+    }
   });
 
-  const handleStatusUpdate = (id: string, approvalStatus: string) => {
-    setProcessingId(id);
-    statusMutation.mutate({ id, approvalStatus });
-  };
-
-  // KPI calculations
-  const stats = useMemo(() => {
-    if (!properties || !Array.isArray(properties)) {
-      return { total: 0, pending: 0, approved: 0, rejected: 0, apartments: 0, houses: 0, studios: 0 };
-    }
-    const total = properties.length;
-    const pending = properties.filter((p: any) => p.approvalStatus === 'PENDING').length;
-    const approved = properties.filter((p: any) => p.approvalStatus === 'APPROVED').length;
-    const rejected = properties.filter((p: any) => p.approvalStatus === 'REJECTED').length;
-    const apartments = properties.filter((p: any) => (p.type || '').toLowerCase().includes('apartment')).length;
-    const houses = properties.filter((p: any) => (p.type || '').toLowerCase().includes('house') || (p.type || '').toLowerCase().includes('homestay')).length;
-    const studios = properties.filter((p: any) => (p.type || '').toLowerCase().includes('studio')).length;
-
-    return { total, pending, approved, rejected, apartments, houses, studios };
-  }, [properties]);
-
-  // Unique property types for filter
-  const availableTypes = useMemo(() => {
-    if (!properties || !Array.isArray(properties)) return [];
+  const propertyTypes = useMemo(() => {
+    if (!Array.isArray(properties)) return [];
     const types = new Set<string>();
     properties.forEach((p: any) => {
       if (p.type) types.add(p.type);
     });
-    return Array.from(types);
+    return Array.from(types).map(t => ({ label: t, value: t }));
   }, [properties]);
 
-  // Filtered properties
   const filteredProperties = useMemo(() => {
-    if (!properties || !Array.isArray(properties)) return [];
-
+    if (!Array.isArray(properties)) return [];
     return properties.filter((p: any) => {
-      // Status filter
       if (statusFilter !== 'ALL' && p.approvalStatus !== statusFilter) return false;
-
-      // Type filter
       if (typeFilter !== 'ALL' && p.type !== typeFilter) return false;
-
-      // Search Query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
+      if (search.trim()) {
+        const q = search.toLowerCase().trim();
         const title = (p.title || '').toLowerCase();
-        const location = (p.location || '').toLowerCase();
+        const loc = (p.location || '').toLowerCase();
         const landlordName = `${p.landlord?.firstName || ''} ${p.landlord?.lastName || ''}`.toLowerCase();
-        const landlordEmail = (p.landlord?.email || '').toLowerCase();
-
-        return title.includes(query) || location.includes(query) || landlordName.includes(query) || landlordEmail.includes(query);
+        const email = (p.landlord?.email || '').toLowerCase();
+        return title.includes(q) || loc.includes(q) || landlordName.includes(q) || email.includes(q);
       }
-
       return true;
     });
-  }, [properties, statusFilter, typeFilter, searchQuery]);
+  }, [properties, statusFilter, typeFilter, search]);
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Loader2 className="w-9 h-9 animate-spin text-[#0F5132]" />
-        <p className="text-sm font-semibold text-slate-500">Loading property inventory & approvals...</p>
-      </div>
-    );
-  }
+  const stats = useMemo(() => {
+    if (!Array.isArray(properties)) return { total: 0, pending: 0, approved: 0, rejected: 0 };
+    return {
+      total: properties.length,
+      pending: properties.filter((p: any) => p.approvalStatus === 'PENDING').length,
+      approved: properties.filter((p: any) => p.approvalStatus === 'APPROVED').length,
+      rejected: properties.filter((p: any) => p.approvalStatus === 'REJECTED').length
+    };
+  }, [properties]);
+
+  const filterConfigs: FilterConfig[] = [
+    {
+      id: 'status',
+      label: 'Approval Status',
+      value: statusFilter,
+      options: [
+        { label: 'All Statuses', value: 'ALL' },
+        { label: `Pending Review (${stats.pending})`, value: 'PENDING' },
+        { label: `Approved (${stats.approved})`, value: 'APPROVED' },
+        { label: `Rejected (${stats.rejected})`, value: 'REJECTED' }
+      ],
+      onChange: setStatusFilter
+    },
+    ...(propertyTypes.length > 0
+      ? [
+          {
+            id: 'type',
+            label: 'Property Type',
+            value: typeFilter,
+            options: [{ label: 'All Categories', value: 'ALL' }, ...propertyTypes],
+            onChange: setTypeFilter
+          }
+        ]
+      : [])
+  ];
+
+  const columns: Column<any>[] = [
+    {
+      key: 'property',
+      header: 'Listing & Location',
+      render: (p) => {
+        const img = p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : null;
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+              {img ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={img} alt={p.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                  <Building className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <Link
+                href={`/admin/properties/${p.id}`}
+                className="font-bold text-zinc-900 dark:text-white hover:text-emerald-600 transition truncate max-w-xs block text-xs"
+              >
+                {p.title}
+              </Link>
+              <div className="text-[11px] text-zinc-500 truncate flex items-center gap-1 mt-0.5">
+                <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
+                <span>{p.location || 'Location unlisted'}</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+    },
+    {
+      key: 'type',
+      header: 'Category',
+      render: (p) => (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+          {p.type || 'Apartment'}
+        </span>
+      )
+    },
+    {
+      key: 'price',
+      header: 'Rent Rate',
+      render: (p) => (
+        <div className="font-mono font-bold text-xs text-zinc-900 dark:text-white">
+          GH₵ {Number(p.price || 0).toLocaleString()}
+          <span className="text-[10px] text-zinc-400 font-normal ml-1">
+            /{p.pricePeriod ? p.pricePeriod.toLowerCase().replace('academic year', 'yr') : 'yr'}
+          </span>
+        </div>
+      )
+    },
+    {
+      key: 'landlord',
+      header: 'Landlord / Owner',
+      render: (p) => (
+        <div className="text-xs">
+          {p.landlord ? (
+            <Link
+              href={`/admin/landlords/${p.landlord.id}`}
+              className="font-semibold text-zinc-800 dark:text-zinc-200 hover:text-emerald-600 transition block truncate max-w-[160px]"
+            >
+              {p.landlord.firstName} {p.landlord.lastName}
+            </Link>
+          ) : (
+            <span className="text-zinc-400">Unassigned Host</span>
+          )}
+          <span className="text-[10px] text-zinc-400 block truncate">{p.landlord?.email}</span>
+        </div>
+      )
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (p) => <AdminStatusBadge status={p.approvalStatus || 'PENDING'} />
+    },
+    {
+      key: 'actions',
+      header: 'Adjudication',
+      align: 'right',
+      render: (p) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <Link
+            href={`/admin/properties/${p.id}`}
+            className="px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition flex items-center gap-1"
+          >
+            <Eye className="w-3 h-3" /> Inspect
+          </Link>
+          {p.approvalStatus !== 'APPROVED' && (
+            <button
+              type="button"
+              disabled={statusMutation.isPending}
+              onClick={() => statusMutation.mutate({ id: p.id, approvalStatus: 'APPROVED' })}
+              className="px-2 py-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+              title="Approve & Publish"
+            >
+              <Check className="w-3 h-3" />
+            </button>
+          )}
+          {p.approvalStatus !== 'REJECTED' && (
+            <button
+              type="button"
+              onClick={() => setRejectDialog({ isOpen: true, propertyId: p.id, title: p.title })}
+              className="px-2 py-1 text-xs font-bold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition flex items-center gap-1 cursor-pointer"
+              title="Reject Listing"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div className="space-y-7 animate-in">
-      {/* ─── HEADER CONTAINER ───────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Property Listing Governance
+    <div className="space-y-6">
+      <AdminPageHeader
+        title="Property Moderation & Catalog"
+        subtitle="Audit rental listings, inspect physical amenities, verify advance rent rates, and moderate live market visibility."
+        badge={
+          stats.pending > 0 ? (
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+              {stats.pending} Awaiting Moderation
             </span>
-            <span className="text-xs font-semibold text-slate-400">•</span>
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              {stats.total} Total Inventory Units
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            Property Approvals & Inventory Hub
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            Audit rental listings, inspect property deeds and photo quality, enforce statutory advance rent standards, and moderate live availability.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-[#0F5132]/10 text-[#0F5132] dark:bg-emerald-950/50 dark:text-emerald-400 rounded-2xl border border-emerald-200/60 dark:border-emerald-800/40 shadow-xs">
-            <Building className="w-6 h-6" />
-          </div>
-        </div>
-      </div>
-
-      {/* ─── 4-CARD EXECUTIVE KPI STRIP ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Listings */}
-        <div 
-          onClick={() => { setStatusFilter('ALL'); setTypeFilter('ALL'); }}
-          className="cursor-pointer bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-slate-400 transition-all shadow-xs group"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Listings</span>
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
-              <Layers className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
-            {stats.total}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {stats.apartments} Apartments • {stats.studios} Studios • {stats.houses} Houses
-          </p>
-        </div>
-
-        {/* Pending Approvals */}
-        <div 
-          onClick={() => setStatusFilter('PENDING')}
-          className={`cursor-pointer bg-white dark:bg-slate-900 p-5 rounded-2xl border transition-all shadow-xs group ${
-            stats.pending > 0 
-              ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/20 dark:bg-amber-950/10 hover:border-amber-400' 
-              : 'border-slate-200/80 dark:border-slate-800 hover:border-slate-400'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Review</span>
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-              stats.pending > 0 ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-            }`}>
-              <Clock className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {stats.pending}
-            </div>
-            {stats.pending > 0 && (
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-white animate-pulse">
-                Action Req
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            {stats.pending === 0 ? 'All listings reviewed' : 'Awaiting administrative verification'}
-          </p>
-        </div>
-
-        {/* Approved & Live */}
-        <div 
-          onClick={() => setStatusFilter('APPROVED')}
-          className="cursor-pointer bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-slate-400 transition-all shadow-xs group"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Approved & Live</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
-              <CheckCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
-            {stats.approved}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Publicly searchable across Ghana
-          </p>
-        </div>
-
-        {/* Rejected Listings */}
-        <div 
-          onClick={() => setStatusFilter('REJECTED')}
-          className="cursor-pointer bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 hover:border-slate-400 transition-all shadow-xs group"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rejected / Flagged</span>
-            <div className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
-              <XCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-slate-900 dark:text-white mb-1">
-            {stats.rejected}
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Withheld for quality or policy issues
-          </p>
-        </div>
-      </div>
-
-      {/* ─── SEARCH & FILTER CONTROLS ─────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search by property title, location, or landlord..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F5132] dark:focus:ring-emerald-500 placeholder:text-slate-400"
-            />
-            {searchQuery && (
+          ) : undefined
+        }
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin/dashboard' },
+          { label: 'Marketplace', href: '/admin/properties' },
+          { label: 'Properties' }
+        ]}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700">
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-
-          {/* View Toggle & Count */}
-          <div className="flex items-center gap-3">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Showing <strong className="text-slate-800 dark:text-slate-200">{filteredProperties.length}</strong> of {stats.total}
-            </div>
-
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-white dark:bg-slate-900 text-[#0F5132] shadow-xs' 
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                }`}
-                title="Grid Card View"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button
+                type="button"
                 onClick={() => setViewMode('table')}
-                className={`p-1.5 rounded-lg transition-all ${
-                  viewMode === 'table' 
-                    ? 'bg-white dark:bg-slate-900 text-[#0F5132] shadow-xs' 
-                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                className={`p-1.5 rounded-lg transition ${
+                  viewMode === 'table'
+                    ? 'bg-white dark:bg-zinc-900 text-emerald-600 shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                 }`}
                 title="Table View"
               >
                 <TableIcon className="w-4 h-4" />
               </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-lg transition ${
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-zinc-900 text-emerald-600 shadow-xs'
+                    : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                }`}
+                title="Grid Cards View"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        </div>
+        }
+      />
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 scrollbar-none text-xs">
-          <button
-            onClick={() => setStatusFilter('ALL')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
-              statusFilter === 'ALL'
-                ? 'bg-[#0F5132] text-white shadow-sm'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            All Listings ({stats.total})
-          </button>
+      <AdminFilterBar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Filter listings by title, location, or landlord..."
+        filters={filterConfigs}
+        totalCount={filteredProperties.length}
+      />
 
-          <button
-            onClick={() => setStatusFilter('PENDING')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-              statusFilter === 'PENDING'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            Pending Review ({stats.pending})
-            {stats.pending > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-            )}
-          </button>
-
-          <button
-            onClick={() => setStatusFilter('APPROVED')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
-              statusFilter === 'APPROVED'
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            Approved ({stats.approved})
-          </button>
-
-          <button
-            onClick={() => setStatusFilter('REJECTED')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
-              statusFilter === 'REJECTED'
-                ? 'bg-red-700 text-white shadow-sm'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-            }`}
-          >
-            Rejected ({stats.rejected})
-          </button>
-
-          {/* Type Select */}
-          {availableTypes.length > 0 && (
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase">Type:</span>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#0F5132]"
-              >
-                <option value="ALL">All Categories</option>
-                {availableTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ─── CONTENT DISPLAY: GRID OR TABLE ──────────────────────────────── */}
-      {filteredProperties.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-12 text-center text-slate-500 shadow-xs">
-          <AlertCircle className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-          <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200 mb-1">No property listings found</h3>
-          <p className="text-xs text-slate-400 max-w-sm mx-auto mb-4">
-            No properties match your current search and filter settings.
-          </p>
-          <button
-            onClick={() => { setStatusFilter('ALL'); setTypeFilter('ALL'); setSearchQuery(''); }}
-            className="px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-extrabold shadow-sm hover:bg-[#146c43] transition-colors"
-          >
-            Clear All Filters
-          </button>
-        </div>
-      ) : viewMode === 'grid' ? (
-        /* ─── GRID CARD VIEW ───────────────────────────────────────────── */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property: any) => {
-            const hasImages = property.images && Array.isArray(property.images) && property.images.length > 0;
-            const primaryImage = hasImages ? getImageUrl(property.images[0]) : null;
-
+      {viewMode === 'table' ? (
+        <AdminDataTable
+          columns={columns}
+          data={filteredProperties}
+          keyExtractor={(p) => p.id}
+          isLoading={isLoading}
+          emptyTitle="No property listings match criteria"
+          emptyDescription="Try clearing your search query or status filter to view all listings in catalog."
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredProperties.map((p: any) => {
+            const img = p.images && p.images.length > 0 ? getImageUrl(p.images[0]) : null;
             return (
-              <div 
-                key={property.id} 
-                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-all group"
+              <div
+                key={p.id}
+                className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-xs hover:border-zinc-300 dark:hover:border-zinc-700 transition flex flex-col"
               >
-                {/* Photo & Badge Area */}
-                <div className="h-52 overflow-hidden relative bg-slate-100 dark:bg-slate-800">
-                  {primaryImage ? (
-                    <img 
-                      src={primaryImage} 
-                      alt={property.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = 'none';
-                      }}
-                    />
+                <div className="h-44 bg-zinc-100 dark:bg-zinc-800 relative">
+                  {img ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={img} alt={p.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
-                      <Building className="w-8 h-8 mb-1" />
-                      <span className="text-xs font-semibold">No Image Uploaded</span>
+                    <div className="w-full h-full flex items-center justify-center text-zinc-400">
+                      <Building className="w-8 h-8" />
                     </div>
                   )}
-
-                  {/* Top Floating Badges */}
-                  <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1.5">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-extrabold shadow-md flex items-center gap-1 text-white ${
-                      property.approvalStatus === 'APPROVED' ? 'bg-[#0F5132]' :
-                      property.approvalStatus === 'PENDING' ? 'bg-amber-500' :
-                      'bg-red-600'
-                    }`}>
-                      {property.approvalStatus === 'PENDING' && <Clock className="w-3 h-3" />}
-                      {property.approvalStatus === 'APPROVED' && <CheckCircle className="w-3 h-3" />}
-                      {property.approvalStatus === 'REJECTED' && <XCircle className="w-3 h-3" />}
-                      {property.approvalStatus}
-                    </span>
-
-                    {property.type && (
-                      <span className="bg-slate-950/80 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-[11px] font-bold shadow-xs">
-                        {property.type}
-                      </span>
-                    )}
+                  <div className="absolute top-2.5 left-2.5">
+                    <AdminStatusBadge status={p.approvalStatus || 'PENDING'} />
                   </div>
-
-                  {/* Photo Count badge */}
-                  {hasImages && (
-                    <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1">
-                      <Layers className="w-3 h-3" />
-                      {property.images.length} Photos
-                    </div>
+                  {p.type && (
+                    <span className="absolute top-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                      {p.type}
+                    </span>
                   )}
                 </div>
 
-                {/* Card Details */}
-                <div className="p-5 flex flex-col flex-grow space-y-3">
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                   <div>
-                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white line-clamp-1 group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors">
-                      {property.title}
+                    <h3 className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1">
+                      {p.title}
                     </h3>
-                    
-                    <div className="flex items-center text-slate-500 dark:text-slate-400 text-xs mt-1">
-                      <MapPin className="w-3.5 h-3.5 mr-1 shrink-0 text-[#0F5132] dark:text-emerald-400" />
-                      <span className="truncate">{property.location || 'Location not specified'}</span>
-                    </div>
+                    <p className="text-xs text-zinc-500 flex items-center gap-1 mt-1 truncate">
+                      <MapPin className="w-3 h-3 text-emerald-600 shrink-0" />
+                      {p.location || 'Location unlisted'}
+                    </p>
                   </div>
 
-                  {/* Price Tag (Clean GH₵ without double dollar sign) */}
-                  <div className="bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Rent Rate</span>
-                      <span className="text-base font-black text-slate-900 dark:text-white">
-                        GH₵ {Number(property.price || 0).toLocaleString()}
-                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">
-                          /{property.pricePeriod ? property.pricePeriod.toLowerCase().replace('academic year', 'yr') : 'yr'}
-                        </span>
-                      </span>
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
+                      GH₵ {Number(p.price || 0).toLocaleString()}
+                      <span className="text-[10px] text-zinc-400 font-normal ml-0.5">/yr</span>
                     </div>
-                    {property.targetAudience && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100/60 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                        {property.targetAudience}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Landlord Snapshot */}
-                  <div className="text-xs p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/60 dark:border-slate-800 space-y-1">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 uppercase">
-                      <span>Landlord Contact</span>
-                      <User className="w-3 h-3" />
-                    </div>
-                    <div className="font-extrabold text-slate-800 dark:text-slate-200 truncate">
-                      {property.landlord ? `${property.landlord.firstName} ${property.landlord.lastName}` : 'Unknown Host'}
-                    </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                      {property.landlord?.email}
-                    </div>
-                  </div>
-
-                  {/* Action Buttons Strip */}
-                  <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
-                    {/* Inspect Button */}
-                    <Link
-                      href={`/admin/properties/${property.id}`}
-                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      Inspect
-                    </Link>
-
-                    {/* View Public Listing */}
-                    <Link
-                      href={`/properties/${property.id}`}
-                      target="_blank"
-                      className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="View live public page"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </Link>
-
-                    <div className="flex-1 flex justify-end gap-1.5">
-                      {property.approvalStatus !== 'APPROVED' && (
-                        <button 
-                          onClick={() => handleStatusUpdate(property.id, 'APPROVED')}
-                          disabled={processingId === property.id}
-                          className="px-3 py-2 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
-                        >
-                          {processingId === property.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5" />
-                              Approve
-                            </>
-                          )}
-                        </button>
-                      )}
-
-                      {property.approvalStatus !== 'REJECTED' && (
-                        <button 
-                          onClick={() => handleStatusUpdate(property.id, 'REJECTED')}
-                          disabled={processingId === property.id}
-                          className="px-3 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
-                        >
-                          {processingId === property.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <>
-                              <XCircle className="w-3.5 h-3.5" />
-                              Reject
-                            </>
-                          )}
-                        </button>
-                      )}
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/admin/properties/${p.id}`}
+                        className="px-2.5 py-1 text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg transition"
+                      >
+                        Inspect
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -562,137 +371,28 @@ export default function AdminPropertiesPage() {
             );
           })}
         </div>
-      ) : (
-        /* ─── DENSE TABLE VIEW ─────────────────────────────────────────── */
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs uppercase bg-[#0F5132] text-white shadow-xs">
-                <tr>
-                  <th className="px-6 py-4 font-black tracking-wider text-white">Property</th>
-                  <th className="px-6 py-4 font-black tracking-wider text-white">Category</th>
-                  <th className="px-6 py-4 font-black tracking-wider text-white">Rent Rate</th>
-                  <th className="px-6 py-4 font-black tracking-wider text-white">Landlord</th>
-                  <th className="px-6 py-4 font-black tracking-wider text-white">Status</th>
-                  <th className="px-6 py-4 font-black tracking-wider text-white text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                {filteredProperties.map((property: any) => (
-                  <tr key={property.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700">
-                          {property.images && property.images.length > 0 ? (
-                            <img 
-                              src={getImageUrl(property.images[0])} 
-                              alt={property.title} 
-                              className="w-full h-full object-cover" 
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400">
-                              <Building className="w-4 h-4" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-extrabold text-slate-900 dark:text-white truncate max-w-xs">
-                            {property.title}
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-3 h-3 text-[#0F5132] shrink-0" />
-                            <span>{property.location || 'Location not specified'}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                        {property.type || 'Apartment'}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-black text-slate-900 dark:text-white text-sm">
-                        GH₵ {Number(property.price || 0).toLocaleString()}
-                        <span className="text-xs font-normal text-slate-400 ml-1">
-                          /{property.pricePeriod ? property.pricePeriod.toLowerCase().replace('academic year', 'yr') : 'yr'}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                        {property.landlord ? `${property.landlord.firstName} ${property.landlord.lastName}` : 'Unknown'}
-                      </div>
-                      <div className="text-[11px] text-slate-400 truncate">
-                        {property.landlord?.email}
-                      </div>
-                    </td>
-
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        property.approvalStatus === 'APPROVED' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200' :
-                        property.approvalStatus === 'PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200' :
-                        'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 border border-red-200'
-                      }`}>
-                        {property.approvalStatus === 'APPROVED' && <CheckCircle className="w-3 h-3 text-emerald-600" />}
-                        {property.approvalStatus === 'PENDING' && <Clock className="w-3 h-3 text-amber-600" />}
-                        {property.approvalStatus === 'REJECTED' && <XCircle className="w-3 h-3 text-red-600" />}
-                        {property.approvalStatus}
-                      </span>
-                    </td>
-
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/admin/properties/${property.id}`}
-                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Inspect
-                        </Link>
-
-                        <Link
-                          href={`/properties/${property.id}`}
-                          target="_blank"
-                          className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          title="Open public page"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                        </Link>
-
-                        {property.approvalStatus !== 'APPROVED' && (
-                          <button
-                            onClick={() => handleStatusUpdate(property.id, 'APPROVED')}
-                            disabled={processingId === property.id}
-                            className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
-                          >
-                            {processingId === property.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                            Approve
-                          </button>
-                        )}
-
-                        {property.approvalStatus !== 'REJECTED' && (
-                          <button
-                            onClick={() => handleStatusUpdate(property.id, 'REJECTED')}
-                            disabled={processingId === property.id}
-                            className="px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-400 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
-                          >
-                            {processingId === property.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />}
-                            Reject
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
+
+      {/* Audited Listing Rejection Dialog */}
+      <AdminConfirmDialog
+        isOpen={rejectDialog.isOpen}
+        onClose={() => setRejectDialog({ isOpen: false, propertyId: null, title: '' })}
+        title={`Reject Listing: "${rejectDialog.title}"`}
+        description="Provide the statutory or quality compliance reason for rejecting this property listing. The landlord will receive this notice."
+        confirmLabel="Reject Listing"
+        confirmVariant="danger"
+        requireReason={true}
+        reasonLabel="Audited Rejection Explanation"
+        reasonPlaceholder="e.g. Advance rent requested exceeds Ghana Rent Act statutory cap, or uploaded photos fail resolution and authenticity requirements."
+        onConfirm={async (reason) => {
+          if (!rejectDialog.propertyId) return;
+          await statusMutation.mutateAsync({
+            id: rejectDialog.propertyId,
+            approvalStatus: 'REJECTED',
+            rejectionReason: reason
+          });
+        }}
+      />
     </div>
   );
 }

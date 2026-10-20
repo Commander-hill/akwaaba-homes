@@ -57,10 +57,18 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
 export const authorizeRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user || (!roles.includes(req.user.role) && req.user.role !== 'SUPER_ADMIN')) {
       res.status(403).json({ message: 'You do not have permission to perform this action.' });
       return;
     }
     next();
   };
+};
+
+export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user || req.user.role !== 'SUPER_ADMIN') {
+    res.status(403).json({ message: 'Elevated authorization required: Super Administrator clearance is required for this action.' });
+    return;
+  }
+  next();
 };
