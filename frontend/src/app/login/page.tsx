@@ -10,6 +10,7 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  ShieldAlert,
   Building2,
   Check,
   Compass,
@@ -49,14 +50,24 @@ function LoginForm() {
   });
 
   const redirectByRole = (user: any) => {
+    if (user.role === 'ADMIN') {
+      (async () => {
+        try {
+          await api.post('/auth/logout');
+        } catch {}
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+      })();
+      setError('ADMIN_PORTAL_REQUIRED');
+      return;
+    }
+
     if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
       window.location.href = redirectParam;
       return;
     }
 
-    if (user.role === 'ADMIN') {
-      window.location.href = '/admin/dashboard';
-    } else if (user.role === 'LANDLORD') {
+    if (user.role === 'LANDLORD') {
       window.location.href = '/dashboard/landlord';
     } else if (user.role === 'CARETAKER' || user.role === 'STAFF') {
       window.location.href = '/dashboard/caretaker';
@@ -71,7 +82,18 @@ function LoginForm() {
 
   useEffect(() => {
     if (sessionData && !isTimeout) {
-      redirectByRole(sessionData);
+      if (sessionData.role === 'ADMIN') {
+        (async () => {
+          try {
+            await api.post('/auth/logout');
+          } catch {}
+          localStorage.removeItem('akwaaba_access_token');
+          localStorage.removeItem('akwaaba_refresh_token');
+        })();
+        setError('ADMIN_PORTAL_REQUIRED');
+      } else {
+        redirectByRole(sessionData);
+      }
     }
   }, [sessionData, isTimeout]);
 
@@ -101,6 +123,17 @@ function LoginForm() {
         return;
       }
 
+      if (response.data?.user?.role === 'ADMIN') {
+        try {
+          await api.post('/auth/logout');
+        } catch {}
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+        setError('ADMIN_PORTAL_REQUIRED');
+        setIsLoading(false);
+        return;
+      }
+
       if (response.data?.accessToken) {
         localStorage.setItem('akwaaba_access_token', response.data.accessToken);
       }
@@ -110,7 +143,19 @@ function LoginForm() {
 
       redirectByRole(response.data.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid email or password.');
+      if (
+        err.response?.data?.code === 'ADMIN_PORTAL_REQUIRED' ||
+        err.response?.data?.message?.includes('Administrator accounts cannot sign in')
+      ) {
+        try {
+          await api.post('/auth/logout');
+        } catch {}
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+        setError('ADMIN_PORTAL_REQUIRED');
+      } else {
+        setError(err.response?.data?.message || 'Invalid email or password.');
+      }
       setIsLoading(false);
     }
   };
@@ -126,6 +171,17 @@ function LoginForm() {
         code: twoFactorCode.trim(),
       });
 
+      if (response.data?.user?.role === 'ADMIN') {
+        try {
+          await api.post('/auth/logout');
+        } catch {}
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+        setError('ADMIN_PORTAL_REQUIRED');
+        setIsLoading(false);
+        return;
+      }
+
       if (response.data?.accessToken) {
         localStorage.setItem('akwaaba_access_token', response.data.accessToken);
       }
@@ -135,7 +191,19 @@ function LoginForm() {
 
       redirectByRole(response.data.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid 2FA code or recovery code.');
+      if (
+        err.response?.data?.code === 'ADMIN_PORTAL_REQUIRED' ||
+        err.response?.data?.message?.includes('Administrator accounts cannot sign in')
+      ) {
+        try {
+          await api.post('/auth/logout');
+        } catch {}
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+        setError('ADMIN_PORTAL_REQUIRED');
+      } else {
+        setError(err.response?.data?.message || 'Invalid 2FA code or recovery code.');
+      }
       setIsLoading(false);
     }
   };
@@ -151,12 +219,10 @@ function LoginForm() {
   }
 
   // Active session already verified
-  if (sessionData && !isTimeout) {
+  if (sessionData && sessionData.role !== 'ADMIN' && !isTimeout) {
     const roleTitle =
       sessionData.role === 'LANDLORD'
         ? 'Landlord Dashboard'
-        : sessionData.role === 'ADMIN'
-        ? 'Admin Hub'
         : sessionData.role === 'CARETAKER' || sessionData.role === 'STAFF'
         ? 'Operations Hub'
         : 'Tenant Dashboard';
@@ -279,13 +345,38 @@ function LoginForm() {
             />
           )}
 
-          {error && (
+          {error === 'ADMIN_PORTAL_REQUIRED' ? (
+            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 dark:border-amber-700/40 space-y-3 animate-in fade-in">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-xs font-bold text-amber-900 dark:text-amber-200">
+                    Administrator Access Restricted
+                  </h3>
+                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                    Administrator accounts are barred from signing in through the public tenant and landlord portal. For system security and regulatory audit compliance, administrative access requires the dedicated security gateway.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-1">
+                <Link
+                  href="/admin/login"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <span>Open Admin Login Gateway</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          ) : error ? (
             <AlertBanner
               type="error"
               message={error}
               className="mb-5"
             />
-          )}
+          ) : null}
 
           {/* Two-Factor Verification Challenge */}
           {requireTwoFactor ? (

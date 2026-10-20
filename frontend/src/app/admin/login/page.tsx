@@ -69,7 +69,10 @@ function AdminLoginForm() {
     setError('');
 
     try {
-      const response = await api.post('/auth/login', formData);
+      const response = await api.post('/auth/login', {
+        ...formData,
+        portal: 'ADMIN',
+      });
       if (response.data?.requireTwoFactor) {
         setRequireTwoFactor(true);
         setTempToken(response.data.tempToken);
@@ -107,7 +110,8 @@ function AdminLoginForm() {
     try {
       const response = await api.post('/auth/login/2fa', {
         tempToken,
-        code: twoFactorCode.trim()
+        code: twoFactorCode.trim(),
+        portal: 'ADMIN',
       });
 
       if (response.status === 200) {

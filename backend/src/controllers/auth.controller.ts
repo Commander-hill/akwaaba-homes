@@ -229,7 +229,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, portal } = req.body;
 
     if (!email || !password) {
       res.status(400).json({ message: 'Missing email or password' });
@@ -295,6 +295,34 @@ export const login = async (req: Request, res: Response): Promise<void> => {
         where: { id: user.id },
         data: { failedLoginAttempts: 0, lockoutUntil: null }
       });
+    }
+
+    // ── 2. DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
+    // Admin accounts must NOT log in through the public tenant/landlord portal
+    if (user.role === 'ADMIN' && portal !== 'ADMIN') {
+      try {
+        await logAudit(user.id, 'ADMIN_PUBLIC_LOGIN_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
+      } catch (e) { /* non-blocking */ }
+
+      res.status(403).json({
+        message: 'Access restricted: Administrator accounts cannot sign in through public portals. Please use the administrative security portal.',
+        code: 'ADMIN_PORTAL_REQUIRED',
+        portalUrl: '/admin/login'
+      });
+      return;
+    }
+
+    // Non-admin accounts must NOT log in through the admin portal
+    if (portal === 'ADMIN' && user.role !== 'ADMIN') {
+      try {
+        await logAudit(user.id, 'UNAUTHORIZED_ADMIN_PORTAL_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
+      } catch (e) { /* non-blocking */ }
+
+      res.status(403).json({
+        message: 'Access restricted: This portal is reserved for administrative personnel only.',
+        code: 'ADMIN_ROLE_REQUIRED'
+      });
+      return;
     }
 
     // BLOCK SUSPENDED USERS
@@ -456,7 +484,7 @@ const establishUserSessionAndRespond = async (
 
 export const login2FA = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { tempToken, code } = req.body;
+    const { tempToken, code, portal } = req.body;
 
     if (!tempToken || !code) {
       res.status(400).json({ message: 'Missing temporary token or verification code' });
@@ -510,6 +538,32 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
 
     // Invalidate the pending 2FA token
     appCache.del(`2fa_pending_${tempToken}`);
+
+    // ── DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
+    if (user.role === 'ADMIN' && portal !== 'ADMIN') {
+      try {
+        await logAudit(user.id, 'ADMIN_PUBLIC_2FA_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
+      } catch (e) { /* non-blocking */ }
+
+      res.status(403).json({
+        message: 'Access restricted: Administrator accounts cannot sign in through public portals. Please use the administrative security portal.',
+        code: 'ADMIN_PORTAL_REQUIRED',
+        portalUrl: '/admin/login'
+      });
+      return;
+    }
+
+    if (portal === 'ADMIN' && user.role !== 'ADMIN') {
+      try {
+        await logAudit(user.id, 'UNAUTHORIZED_ADMIN_2FA_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
+      } catch (e) { /* non-blocking */ }
+
+      res.status(403).json({
+        message: 'Access restricted: This portal is reserved for administrative personnel only.',
+        code: 'ADMIN_ROLE_REQUIRED'
+      });
+      return;
+    }
 
     try {
       await logAudit(user.id, 'LOGIN_2FA_SUCCESS', 'User', user.id, null, { method: isRecoveryValid ? 'RECOVERY_CODE' : 'TOTP' }, req.ip);
