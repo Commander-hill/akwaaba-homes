@@ -473,8 +473,8 @@ function LoginForm() {
       {/* ──── RIGHT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
       <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
         <Image
-          src="/images/auth-bg.png"
-          alt="Verified Ghanaian student and residential community"
+          src="/images/auth-roommates.jpg"
+          alt="Happy verified Ghanaian residents holding the keys to their new apartment"
           fill
           sizes="60vw"
           className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
