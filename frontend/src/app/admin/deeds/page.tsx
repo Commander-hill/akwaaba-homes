@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import { useSocket } from '@/providers/SocketProvider';
 import { 
   Loader2, 
   FileCheck, 
@@ -57,19 +58,43 @@ interface LandlordDeedRecord {
 }
 
 export default function AdminLandlordDeedsPage() {
+  const { socket } = useSocket();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PENDING' | 'VERIFIED' | 'REJECTED'>('PENDING');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['admin-landlord-deeds', statusFilter],
     queryFn: async () => {
       const res = await api.get('/admin/landlord-deeds', {
         params: { status: statusFilter === 'ALL' ? undefined : statusFilter }
       });
       return res.data;
-    }
+    },
+    refetchInterval: 10000,
+    staleTime: 5000,
   });
+
+  // Real-time synchronization via Socket.IO
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSync = () => {
+      refetch();
+    };
+
+    socket.on('deed_submitted', handleSync);
+    socket.on('landlord_deeds_updated', handleSync);
+    socket.on('verification_updated', handleSync);
+    socket.on('user_updated', handleSync);
+
+    return () => {
+      socket.off('deed_submitted', handleSync);
+      socket.off('landlord_deeds_updated', handleSync);
+      socket.off('verification_updated', handleSync);
+      socket.off('user_updated', handleSync);
+    };
+  }, [socket, refetch]);
 
   const landlords: LandlordDeedRecord[] = data?.landlords || [];
 

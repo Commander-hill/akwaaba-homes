@@ -17,7 +17,7 @@ import {
   emailCardHtml,
   emailMetaTableHtml
 } from '../utils/emailTemplate';
-import { emitToAll, emitToUser, getIO } from '../socket';
+import { emitToAll, emitToUser, emitToAdmins, getIO } from '../socket';
 import appCache from '../utils/cache';
 import {
   generateTOTPSecret,
@@ -890,24 +890,54 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
     // Bust user cache so next /auth/me returns fresh Ghana Card data
     appCache.del(`user:me:${req.user.id}`);
 
-    // Notify admins of new KYC Ghana Card submission
-    const cardAdmins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    // Notify all admins of new KYC Ghana Card submission in realtime
+    const cardAdmins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+      select: { id: true }
+    });
+    const masked = maskGhanaCardNumber(cleanCard);
+    const applicantName = `${existingUser.firstName || ''} ${existingUser.lastName || ''}`.trim() || 'User';
+
     if (cardAdmins.length > 0) {
-      const masked = maskGhanaCardNumber(cleanCard);
       await prisma.notification.createMany({
         data: cardAdmins.map(a => ({
           userId: a.id,
           type: 'SYSTEM_ALERT',
           title: '🪪 New Ghana Card KYC Submission',
-          message: `${existingUser.firstName || 'User'} submitted Ghana Card (${masked}) for identity verification.`,
-          link: '/admin/users'
+          message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+          link: `/admin/verifications/${existingUser.id}`
         }))
       }).catch(() => null);
+
+      // Emit live desktop notification event to all connected admin sockets
+      cardAdmins.forEach(a => {
+        emitToUser(a.id, 'notification', {
+          title: '🪪 New Ghana Card KYC Submission',
+          message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+          type: 'SYSTEM_ALERT'
+        });
+      });
     }
 
     try {
       emitToUser(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING', ghanaCardRejectionReason: null });
-      emitToAll('user_updated', { userId: req.user.id });
+      emitToAdmins('kyc_submitted', {
+        userId: existingUser.id,
+        name: applicantName,
+        role: existingUser.role,
+        ghanaCardStatus: 'PENDING',
+        submittedAt: new Date().toISOString()
+      });
+      emitToAdmins('admin_action_required', {
+        type: 'KYC_VERIFICATION',
+        userId: existingUser.id,
+        name: applicantName,
+        title: '🪪 New Ghana Card KYC Submission',
+        message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+        timestamp: new Date().toISOString()
+      });
+      emitToAll('user_updated', { userId: existingUser.id });
+      emitToAll('verification_updated', { userId: existingUser.id, type: 'GHANA_CARD' });
     } catch (e) { /* non-blocking */ }
 
     res.status(200).json({ message: 'Ghana Card submitted successfully for verification' });
@@ -952,22 +982,51 @@ export const submitLandlordVerification = async (req: Request, res: Response): P
     appCache.del(`user:me:${req.user.id}`);
 
     // Notify admins of new Landlord verification document submission
-    const landlordAdmins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+    const landlordAdmins = await prisma.user.findMany({
+      where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+      select: { id: true }
+    });
+    const landlordName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || 'Landlord';
+
     if (landlordAdmins.length > 0) {
       await prisma.notification.createMany({
         data: landlordAdmins.map(a => ({
           userId: a.id,
           type: 'SYSTEM_ALERT',
-          title: 'Landlord Verification Document Submitted',
-          message: `Landlord submitted property ownership & Ghana Card for verification.`,
-          link: '/admin/deeds'
+          title: '📜 Landlord Verification Document Submitted',
+          message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+          link: `/admin/verifications/${req.user.id}`
         }))
       }).catch(() => null);
+
+      landlordAdmins.forEach(a => {
+        emitToUser(a.id, 'notification', {
+          title: '📜 Landlord Verification Document Submitted',
+          message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+          type: 'SYSTEM_ALERT'
+        });
+      });
     }
 
     try {
       emitToUser(req.user.id, 'user_updated', { landlordVerificationStatus: 'PENDING' });
+      emitToAdmins('deed_submitted', {
+        userId: req.user.id,
+        name: landlordName,
+        landlordVerificationStatus: 'PENDING',
+        submittedAt: new Date().toISOString()
+      });
+      emitToAdmins('admin_action_required', {
+        type: 'LANDLORD_DEED',
+        userId: req.user.id,
+        name: landlordName,
+        title: '📜 Landlord Verification Document Submitted',
+        message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+        timestamp: new Date().toISOString()
+      });
       emitToAll('user_updated', { userId: req.user.id });
+      emitToAll('verification_updated', { userId: req.user.id, type: 'LANDLORD_DEED' });
+      emitToAll('landlord_deeds_updated', { userId: req.user.id });
     } catch (e) {}
 
     res.status(200).json({ message: 'Landlord verification document submitted successfully for admin review' });

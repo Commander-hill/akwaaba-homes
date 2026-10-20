@@ -80,6 +80,61 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     // --- REAL-TIME TARGETED CACHE INVALIDATIONS (Zero-Logout, Lightning Speed) ---
     const eventQueryMap: Record<string, string[][]> = {
+      // User & Identity Verifications (Instant Real-time Sync for Admin Portal)
+      user_updated: [
+        ['admin-users'],
+        ['admin-user-verification'],
+        ['admin-stats'],
+        ['admin-action-queue'],
+        ['admin-activity'],
+        ['admin-landlords'],
+        ['admin-tenants'],
+        ['admin-landlord-deeds'],
+        ['auth', 'me']
+      ],
+      kyc_submitted: [
+        ['admin-users'],
+        ['admin-user-verification'],
+        ['admin-stats'],
+        ['admin-action-queue'],
+        ['admin-activity'],
+        ['admin-tenants'],
+        ['admin-landlords'],
+        ['notifications']
+      ],
+      deed_submitted: [
+        ['admin-users'],
+        ['admin-landlord-deeds'],
+        ['admin-stats'],
+        ['admin-action-queue'],
+        ['admin-activity'],
+        ['admin-landlords'],
+        ['notifications']
+      ],
+      verification_updated: [
+        ['admin-users'],
+        ['admin-user-verification'],
+        ['admin-stats'],
+        ['admin-action-queue'],
+        ['admin-activity'],
+        ['admin-landlord-deeds'],
+        ['admin-landlords'],
+        ['admin-tenants'],
+        ['notifications']
+      ],
+      landlord_deeds_updated: [
+        ['admin-landlord-deeds'],
+        ['admin-users'],
+        ['admin-stats'],
+        ['admin-action-queue']
+      ],
+      admin_action_required: [
+        ['admin-action-queue'],
+        ['admin-stats'],
+        ['admin-activity'],
+        ['admin-users'],
+        ['notifications']
+      ],
       ticket_created: [['tickets'], ['staff'], ['notifications'], ['landlord', 'stats']],
       ticket_updated: [['tickets'], ['staff'], ['notifications'], ['landlord', 'stats']],
       ticket_deleted: [['tickets'], ['staff'], ['notifications'], ['landlord', 'stats']],
@@ -142,6 +197,50 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
           queryClient.invalidateQueries({ queryKey: key });
         });
       });
+    });
+
+    socketInstance.on('kyc_submitted', (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
+      if (data?.userId) {
+        queryClient.invalidateQueries({ queryKey: ['admin-user-verification', data.userId] });
+      }
+
+      toast(
+        <div>
+          <p className="font-bold text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            🪪 New Ghana Card KYC Submission
+          </p>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-white">
+            {data?.name || 'A user'} submitted Ghana Card credentials
+          </p>
+          <p className="text-[10px] text-zinc-500">Verification queue updated in real time</p>
+        </div>,
+        { id: `kyc-${data?.userId || Date.now()}`, duration: 6000, position: 'top-right' }
+      );
+    });
+
+    socketInstance.on('deed_submitted', (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-landlord-deeds'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-activity'] });
+
+      toast(
+        <div>
+          <p className="font-bold text-xs uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            📜 New Title Deed Submission
+          </p>
+          <p className="text-xs font-semibold text-zinc-900 dark:text-white">
+            {data?.name || 'A landlord'} submitted ownership deed
+          </p>
+          <p className="text-[10px] text-zinc-500">Deed registry updated in real time</p>
+        </div>,
+        { id: `deed-${data?.userId || Date.now()}`, duration: 6000, position: 'top-right' }
+      );
     });
 
     socketInstance.on('receive_message', () => {

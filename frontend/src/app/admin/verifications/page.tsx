@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import Link from 'next/link';
+import { useSocket } from '@/providers/SocketProvider';
 import {
   BadgeCheck,
   FileCheck,
@@ -20,17 +21,43 @@ import AdminFilterBar, { FilterOption } from '@/components/admin/AdminFilterBar'
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 
 export default function AdminVerificationsQueuePage() {
+  const { socket } = useSocket();
   const [activeTab, setActiveTab] = useState<'ALL' | 'GHANA_CARD' | 'LANDLORD_DEED'>('ALL');
   const [statusFilter, setStatusFilter] = useState('PENDING');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: users = [], isLoading } = useQuery({
+  const { data: rawUsers = [], isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
       const res = await api.get('/admin/users');
-      return res.data;
-    }
+      return Array.isArray(res.data) ? res.data : (res.data?.users || []);
+    },
+    refetchInterval: 10000, // 10s auto-refresh fallback
+    staleTime: 5000,
   });
+
+  const users = Array.isArray(rawUsers) ? rawUsers : [];
+
+  // Instant real-time socket synchronization for new submissions & status updates
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSync = () => {
+      refetch();
+    };
+
+    socket.on('kyc_submitted', handleSync);
+    socket.on('deed_submitted', handleSync);
+    socket.on('verification_updated', handleSync);
+    socket.on('user_updated', handleSync);
+
+    return () => {
+      socket.off('kyc_submitted', handleSync);
+      socket.off('deed_submitted', handleSync);
+      socket.off('verification_updated', handleSync);
+      socket.off('user_updated', handleSync);
+    };
+  }, [socket, refetch]);
 
   // Extract all verification submissions
   const verificationQueue = useMemo(() => {

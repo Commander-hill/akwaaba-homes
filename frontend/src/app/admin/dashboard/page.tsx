@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { useSocket } from '@/providers/SocketProvider';
 import {
   Users,
   Building,
@@ -33,6 +34,8 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 
 export default function AdminDashboardPage() {
+  const { socket } = useSocket();
+
   // 1. Executive Metrics
   const {
     data: stats,
@@ -44,28 +47,60 @@ export default function AdminDashboardPage() {
       const res = await api.get('/admin/stats');
       return res.data;
     },
-    staleTime: 30 * 1000
+    staleTime: 10 * 1000,
+    refetchInterval: 15000,
   });
 
   // 2. Action Required Priority Queue
-  const { data: actionQueue = [], isLoading: queueLoading } = useQuery({
+  const { data: actionQueue = [], isLoading: queueLoading, refetch: refetchQueue } = useQuery({
     queryKey: ['admin-action-queue'],
     queryFn: async () => {
       const res = await api.get('/admin/action-queue');
       return res.data;
     },
-    staleTime: 30 * 1000
+    staleTime: 10 * 1000,
+    refetchInterval: 15000,
   });
 
   // 3. Telemetry Activity Stream
-  const { data: activityData = [] } = useQuery({
+  const { data: activityData = [], refetch: refetchActivity } = useQuery({
     queryKey: ['admin-activity'],
     queryFn: async () => {
       const res = await api.get('/admin/activity');
       return res.data;
     },
-    staleTime: 30 * 1000
+    staleTime: 10 * 1000,
+    refetchInterval: 15000,
   });
+
+  // Real-time synchronization on socket events
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDashboardSync = () => {
+      refetchStats();
+      refetchQueue();
+      refetchActivity();
+    };
+
+    socket.on('kyc_submitted', handleDashboardSync);
+    socket.on('deed_submitted', handleDashboardSync);
+    socket.on('admin_action_required', handleDashboardSync);
+    socket.on('verification_updated', handleDashboardSync);
+    socket.on('user_updated', handleDashboardSync);
+    socket.on('ticket_created', handleDashboardSync);
+    socket.on('breach_created', handleDashboardSync);
+
+    return () => {
+      socket.off('kyc_submitted', handleDashboardSync);
+      socket.off('deed_submitted', handleDashboardSync);
+      socket.off('admin_action_required', handleDashboardSync);
+      socket.off('verification_updated', handleDashboardSync);
+      socket.off('user_updated', handleDashboardSync);
+      socket.off('ticket_created', handleDashboardSync);
+      socket.off('breach_created', handleDashboardSync);
+    };
+  }, [socket, refetchStats, refetchQueue, refetchActivity]);
 
   const totalUsers = stats?.totalUsers || 0;
   const totalLandlords = stats?.totalLandlords || 0;

@@ -239,3 +239,15 @@ export const emitToAll = (event: string, payload: any) => {
     console.error(`Failed to broadcast socket event ${event}:`, err);
   }
 };
+
+// Safe helper to emit an event strictly to the admin room
+export const emitToAdmins = (event: string, payload: any) => {
+  try {
+    if (io) {
+      io.to('admin_room').emit(event, payload);
+    }
+  } catch (err) {
+    console.error(`Failed to emit socket event ${event} to admin_room:`, err);
+  }
+};
+

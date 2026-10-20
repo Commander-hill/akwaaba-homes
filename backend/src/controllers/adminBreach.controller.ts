@@ -271,6 +271,8 @@ export const auditLandlordDeed = async (req: Request, res: Response): Promise<vo
     try {
       emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: status === 'VERIFIED' });
       emitToAll('user_updated', { userId: id });
+      emitToAll('verification_updated', { userId: id, type: 'LANDLORD_DEED' });
+      emitToAll('landlord_deeds_updated', { userId: id });
     } catch (e) {}
 
     // Send notification

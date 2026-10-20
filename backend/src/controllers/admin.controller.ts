@@ -1408,9 +1408,9 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
       }
     }).catch(() => {});
 
-    // Notify the user in real-time
+    // Notify the user in real-time and broadcast update to all admins
     try {
-      const { getIO } = await import('../socket');
+      const { getIO, emitToAdmins, emitToAll } = await import('../socket');
       getIO().to(id).emit('notification', {
         title: notificationTitle,
         message: notificationMessage,
@@ -1420,6 +1420,9 @@ export const verifyUserCard = async (req: Request, res: Response): Promise<void>
         ghanaCardStatus: status,
         ghanaCardRejectionReason: user.ghanaCardRejectionReason
       });
+      emitToAdmins('verification_updated', { userId: id, ghanaCardStatus: status, type: 'GHANA_CARD' });
+      emitToAll('user_updated', { userId: id, ghanaCardStatus: status });
+      emitToAll('verification_updated', { userId: id, ghanaCardStatus: status, type: 'GHANA_CARD' });
     } catch (e) { /* socket optional */ }
 
     res.status(200).json({ 
@@ -1469,9 +1472,12 @@ export const verifyLandlord = async (req: Request, res: Response): Promise<void>
     }).catch(() => {});
 
     try {
-      const { emitToUser, emitToAll } = await import('../socket');
+      const { emitToUser, emitToAll, emitToAdmins } = await import('../socket');
       emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
+      emitToAdmins('verification_updated', { userId: id, landlordVerificationStatus: status, isVerifiedLandlord: isVerified, type: 'LANDLORD_DEED' });
       emitToAll('user_updated', { userId: id });
+      emitToAll('verification_updated', { userId: id, type: 'LANDLORD_DEED' });
+      emitToAll('landlord_deeds_updated', { userId: id });
     } catch (e) {}
 
     // Dispatch SMS & Email Notification
