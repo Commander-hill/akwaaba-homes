@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Lock, 
@@ -15,13 +15,21 @@ import {
   KeyRound,
   ShieldAlert,
   Server,
-  Building
+  Building,
+  Copy,
+  Check,
+  Download,
+  AlertCircle,
+  HelpCircle,
+  X,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 import AlertBanner from '@/components/AlertBanner';
+import toast from 'react-hot-toast';
 
 function AdminLoginForm() {
   const router = useRouter();
@@ -30,6 +38,9 @@ function AdminLoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedCodes, setCopiedCodes] = useState(false);
 
   // Check if admin is already authenticated
   const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
@@ -57,15 +68,19 @@ function AdminLoginForm() {
     password: '',
   });
 
-  // 2FA State
+  // 2FA Challenge State
   const [requireTwoFactor, setRequireTwoFactor] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
 
-  // Mandatory 2FA enrollment state (admins without 2FA configured)
+  // Mandatory 2FA Enrollment State (admins without 2FA configured)
   const [requireSetup, setRequireSetup] = useState(false);
-  const [setupData, setSetupData] = useState<{ qrCodeSvg?: string; formattedSecret?: string; rawCodes?: string[] } | null>(null);
+  const [setupData, setSetupData] = useState<{ 
+    qrCodeSvg?: string; 
+    formattedSecret?: string; 
+    rawCodes?: string[] 
+  } | null>(null);
   const [codesAcknowledged, setCodesAcknowledged] = useState(false);
 
   const finalizeAdminSession = async (data: any) => {
@@ -77,10 +92,11 @@ function AdminLoginForm() {
       if (data?.refreshToken) {
         localStorage.setItem('akwaaba_refresh_token', data.refreshToken);
       }
+      toast.success(`Welcome back, ${data?.user?.firstName || 'Administrator'}`);
       window.location.href = '/admin/dashboard';
     } else {
       await api.post('/auth/logout');
-      setError('Unauthorized. This portal is for administrative personnel only.');
+      setError('Unauthorized. This portal is strictly for administrative personnel.');
     }
   };
 
@@ -91,9 +107,11 @@ function AdminLoginForm() {
 
     try {
       const response = await api.post('/auth/login', {
-        ...formData,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password,
         portal: 'ADMIN',
       });
+
       if (response.data?.requireTwoFactor) {
         setRequireTwoFactor(true);
         setTempToken(response.data.tempToken);
@@ -117,7 +135,9 @@ function AdminLoginForm() {
         await finalizeAdminSession(response.data);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid credentials or security key.');
+      const msg = err.response?.data?.message || 'Invalid credentials or security key.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +159,9 @@ function AdminLoginForm() {
         await finalizeAdminSession(response.data);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Invalid 2FA code or backup key.');
+      const msg = err.response?.data?.message || 'Invalid 2FA code or backup key.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -159,16 +181,52 @@ function AdminLoginForm() {
         await finalizeAdminSession(response.data);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Could not verify the authenticator code.');
+      const msg = err.response?.data?.message || 'Could not verify the authenticator code.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const copyToClipboard = (text: string, isSecretKey: boolean = false) => {
+    navigator.clipboard.writeText(text);
+    if (isSecretKey) {
+      setCopiedKey(true);
+      setTimeout(() => setCopiedKey(false), 2500);
+      toast.success('Manual secret key copied to clipboard');
+    } else {
+      setCopiedCodes(true);
+      setTimeout(() => setCopiedCodes(false), 2500);
+      toast.success('All recovery codes copied to clipboard');
+    }
+  };
+
+  const downloadRecoveryCodes = () => {
+    if (!setupData?.rawCodes) return;
+    const content = `AKWAABA HOMES — ADMINISTRATOR RECOVERY CODES
+Date Generated: ${new Date().toUTCString()}
+Account: ${formData.email || 'Administrator'}
+
+IMPORTANT: Keep these recovery codes in a secure password manager or offline vault.
+Each code can only be used once if you lose access to your authenticator app.
+
+${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
+`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `akwaaba-admin-recovery-codes-${Date.now()}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Recovery codes downloaded (.txt)');
+  };
+
   // Checking Auth State
   if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#080A0E] text-white p-4 space-y-3">
+      <div className="-mt-16 min-h-screen flex flex-col items-center justify-center bg-[#080A0E] text-white p-4 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
         <p className="text-xs font-mono text-zinc-400">Verifying administrative authority...</p>
       </div>
@@ -178,24 +236,27 @@ function AdminLoginForm() {
   // Active Authenticated State
   if (sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
     return (
-      <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#080A0E] text-white p-4">
-        <div className="max-w-md w-full p-8 bg-[#0D1017]/90 backdrop-blur-xl border border-zinc-800 rounded-3xl text-center space-y-5 shadow-2xl">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-950/60 border border-emerald-800/80 flex items-center justify-center mx-auto text-emerald-400 shadow-lg">
-            <CheckCircle2 className="w-8 h-8" />
+      <div className="-mt-16 min-h-screen flex items-center justify-center bg-[#080A0E] text-white p-4">
+        <div className="max-w-md w-full p-8 bg-[#0D1017]/95 backdrop-blur-xl border border-zinc-800 rounded-3xl text-center space-y-5 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-950/60 border border-emerald-700/80 flex items-center justify-center mx-auto text-emerald-400 shadow-lg">
+            <CheckCircle2 className="w-9 h-9" />
           </div>
           <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-2">
+              {sessionData.role === 'SUPER_ADMIN' ? 'Super Administrator' : 'Executive Administrator'}
+            </div>
             <h2 className="text-xl font-bold text-white">Administrator Authenticated</h2>
             <p className="text-xs text-zinc-400 mt-1.5 font-mono">
-              Active session as {sessionData.firstName || sessionData.email}.
+              Active clearance for {sessionData.firstName} {sessionData.lastName} ({sessionData.email})
             </p>
           </div>
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => { window.location.href = '/admin/dashboard'; }}
-              className="w-full py-3 px-4 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer"
             >
-              <span>Open Admin Console</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <span>Access Executive Console</span>
+              <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={async () => {
@@ -208,7 +269,7 @@ function AdminLoginForm() {
               }}
               className="w-full py-2.5 px-4 text-xs font-semibold text-zinc-500 hover:text-rose-400 transition-colors cursor-pointer"
             >
-              Sign out of administrative session
+              Sign out of authority session
             </button>
           </div>
         </div>
@@ -217,31 +278,31 @@ function AdminLoginForm() {
   }
 
   return (
-    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#080A0E] text-zinc-100 relative overflow-hidden select-none">
+    <div className="-mt-16 min-h-screen flex flex-col justify-between bg-[#080A0E] text-zinc-100 relative overflow-hidden select-none">
       
       {/* ── Ambient Background Glow & Micro Grid ── */}
-      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[550px] bg-emerald-500/8 blur-[160px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[600px] bg-emerald-500/10 blur-[170px] pointer-events-none rounded-full" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
       {/* ── Top Executive Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-800/60 flex items-center justify-between relative z-10 bg-[#080A0E]/70 backdrop-blur-md">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-gradient-to-br from-emerald-500 to-[#0F5132] border border-emerald-400/30 flex items-center justify-center shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-[#0F5132] border border-emerald-400/30 flex items-center justify-center shadow-md p-1.5">
             <Image 
               src="/logo.png" 
               alt="Akwaaba Homes" 
-              width={22} 
-              height={22} 
-              className="w-5 h-5 object-contain" 
+              width={32} 
+              height={32} 
+              className="w-full h-full object-contain" 
               priority 
             />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold tracking-tight text-white">
-              Akwaaba<span className="text-emerald-400">Homes</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-base font-extrabold tracking-tight text-white">
+              Akwaaba<span className="text-emerald-400">Admin</span>
             </span>
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Ops Console
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Authority Gateway
             </span>
           </div>
         </div>
@@ -251,17 +312,17 @@ function AdminLoginForm() {
           className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to Platform</span>
+          <span>Return to Marketplace</span>
         </Link>
       </header>
 
       {/* ── Main 2-Sided Executive Workspace ── */}
-      <main className="flex-1 flex items-center justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-14 relative z-10">
-        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16 items-center">
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-8 lg:px-16 py-8 sm:py-12 relative z-10">
+        <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-14 items-center">
           
-          {/* ──── Left Column: Operations Command Suite Showcase (45% Desktop, Hidden Mobile) ──── */}
+          {/* ──── Left Column: Operations Command Suite Showcase (Desktop) ──── */}
           <div className="hidden lg:block lg:col-span-5 xl:col-span-5">
-            <div className="relative w-full aspect-[4/5] min-h-[520px] max-h-[580px] rounded-3xl overflow-hidden border border-emerald-900/40 shadow-2xl shadow-black/80 group bg-[#0A0D12]">
+            <div className="relative w-full aspect-[4/5] min-h-[540px] max-h-[600px] rounded-3xl overflow-hidden border border-emerald-900/40 shadow-2xl shadow-black/90 group bg-[#0A0D12]">
               
               <Image
                 src="/images/auth-admin.jpg"
@@ -274,44 +335,53 @@ function AdminLoginForm() {
               />
 
               {/* Vignette Gradient for Legibility */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/15" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-black/20" />
 
               {/* Top Telemetry Pills */}
               <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-700/50 backdrop-blur-md">
+                <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-700/50 backdrop-blur-md">
                   Accra HQ // Main Command
                 </span>
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono text-zinc-300 bg-black/60 backdrop-blur-md border border-zinc-700/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono text-zinc-300 bg-black/70 backdrop-blur-md border border-zinc-700/60">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   Live Telemetry
                 </span>
               </div>
 
               {/* Editorial Caption Card */}
-              <div className="absolute bottom-0 inset-x-0 p-6 sm:p-7 text-white space-y-2">
-                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 font-semibold">
-                  National Infrastructure // Tier-4 Cloud
+              <div className="absolute bottom-0 inset-x-0 p-6 sm:p-7 text-white space-y-2.5">
+                <div className="text-[10px] uppercase font-mono tracking-widest text-emerald-400 font-bold">
+                  National Real Estate Infrastructure
                 </div>
                 <h3 className="text-xl font-bold tracking-tight text-white leading-snug">
-                  Executive Operations &amp; Tenancy Oversight
+                  Executive Operations &amp; Statutory Tenancy Oversight
                 </h3>
                 <p className="text-xs text-zinc-300/80 leading-relaxed font-normal">
-                  Direct supervision over digital tenancy deeds, automated Paystack escrow settlements, and statutory dispute arbitration across Ghana.
+                  Centralized supervision over Ghana Card identity compliance, Land Title registry deeds, and automated Paystack escrow settlements across all regions.
                 </p>
-                <div className="pt-2 flex items-center gap-2 text-[10px] text-zinc-400 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>ACCRA-PRIMARY • KUMASI HUB • CAPE COAST PORTAL</span>
+
+                {/* Statutory Badges */}
+                <div className="pt-3 flex flex-wrap items-center gap-2">
+                  <span className="px-2 py-1 rounded-md text-[9px] font-mono font-bold uppercase bg-white/10 text-zinc-300 border border-white/10">
+                    256-Bit TLS
+                  </span>
+                  <span className="px-2 py-1 rounded-md text-[9px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Act 843 Audited
+                  </span>
+                  <span className="px-2 py-1 rounded-md text-[9px] font-mono font-bold uppercase bg-white/10 text-zinc-300 border border-white/10">
+                    MFA Enforced
+                  </span>
                 </div>
               </div>
 
             </div>
           </div>
 
-          {/* ──── Right Column: Command Gateway Card (55% Desktop, 100% Mobile) ──── */}
+          {/* ──── Right Column: Command Gateway Card ──── */}
           <div className="lg:col-span-7 xl:col-span-7 w-full max-w-[460px] mx-auto lg:mx-0">
             
-            {/* Mobile / Tablet Visual Header (visible below lg) */}
-            <div className="lg:hidden mb-6 relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden border border-emerald-900/40 shadow-md bg-[#0A0D12]">
+            {/* Mobile Visual Header */}
+            <div className="lg:hidden mb-5 relative w-full h-44 sm:h-52 rounded-2xl overflow-hidden border border-emerald-900/40 shadow-md bg-[#0A0D12]">
               <Image
                 src="/images/auth-admin.jpg"
                 alt="AkwaabaHomes National Operations Command Suite"
@@ -321,9 +391,9 @@ function AdminLoginForm() {
                 className="object-cover object-center"
                 priority
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
               <div className="absolute bottom-0 inset-x-0 p-4 text-white">
-                <div className="text-[9px] uppercase font-mono tracking-widest text-emerald-400 font-semibold">
+                <div className="text-[9px] uppercase font-mono tracking-widest text-emerald-400 font-bold">
                   Executive Operations
                 </div>
                 <h3 className="text-sm font-bold text-white">
@@ -333,13 +403,13 @@ function AdminLoginForm() {
             </div>
 
             {/* Frosted Command Card */}
-            <div className="relative rounded-3xl bg-[#0D1017]/90 backdrop-blur-xl border border-zinc-800/80 shadow-2xl shadow-black/80 p-7 sm:p-9 overflow-hidden">
+            <div className="relative rounded-3xl bg-[#0D1017]/95 backdrop-blur-xl border border-zinc-800/90 shadow-2xl shadow-black/80 p-6 sm:p-9 overflow-hidden">
               
               {/* Top Accent Gradient Line */}
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-[#0F5132]" />
 
               {/* Console Branding */}
-              <div className="flex flex-col items-center text-center mb-7">
+              <div className="flex flex-col items-center text-center mb-6">
                 <div className="relative mb-3.5">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700/80 flex items-center justify-center shadow-lg text-emerald-400 ring-4 ring-emerald-500/10">
                     <ShieldCheck className="w-7 h-7 text-emerald-400" />
@@ -364,7 +434,7 @@ function AdminLoginForm() {
                 <AlertBanner
                   type="warning"
                   message="Administrative session timed out due to inactivity. Re-authenticate to access the console."
-                  className="mb-6"
+                  className="mb-5"
                 />
               )}
 
@@ -373,7 +443,7 @@ function AdminLoginForm() {
                 <AlertBanner
                   type="error"
                   message={error}
-                  className="mb-6"
+                  className="mb-5"
                 />
               )}
 
@@ -381,54 +451,105 @@ function AdminLoginForm() {
                 /* ── Mandatory 2FA Enrollment View ── */
                 <form onSubmit={handleSetupSubmit} className="space-y-5 animate-in fade-in duration-300">
                   <div className="text-center pb-1">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-2.5">
-                      <ShieldAlert className="w-5 h-5 text-amber-400" />
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto mb-2 text-amber-400">
+                      <ShieldAlert className="w-5 h-5" />
                     </div>
-                    <h2 className="text-sm font-bold text-white tracking-wide">Set Up Two-Factor Authentication</h2>
+                    <h2 className="text-sm font-bold text-white tracking-wide">
+                      Set Up Two-Factor Authentication
+                    </h2>
                     <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
-                      Two-factor authentication is required for all administrator accounts. Scan the QR code with an authenticator app, then enter the 6-digit code.
+                      Two-factor authentication is required for all administrator accounts. Scan the QR code with an authenticator app (Google Authenticator, Authy, or 1Password), then confirm with your 6-digit code.
                     </p>
                   </div>
 
+                  {/* QR Code Container */}
                   {setupData?.qrCodeSvg && (
-                    <div
-                      className="mx-auto w-[200px] h-[200px] bg-white rounded-xl p-2 [&>svg]:w-full [&>svg]:h-full"
-                      aria-label="Authenticator QR code"
-                      dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
-                    />
-                  )}
-
-                  {setupData?.formattedSecret && (
-                    <div className="text-center">
-                      <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Manual entry key</p>
-                      <p className="text-xs font-mono text-emerald-400 break-all select-all">{setupData.formattedSecret}</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className="mx-auto w-[180px] h-[180px] bg-white rounded-2xl p-2.5 shadow-md border border-zinc-200 [&>svg]:w-full [&>svg]:h-full"
+                        aria-label="Authenticator QR code"
+                        dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
+                      />
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                        Scan with your authenticator app
+                      </span>
                     </div>
                   )}
 
+                  {/* Manual Key with 1-Click Copy */}
+                  {setupData?.formattedSecret && (
+                    <div className="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
+                          Manual Entry Secret
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(setupData.formattedSecret || '', true)}
+                          className="text-[10px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer transition"
+                        >
+                          {copiedKey ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
+                        </button>
+                      </div>
+                      <div className="text-xs font-mono text-emerald-400 break-all select-all font-bold">
+                        {setupData.formattedSecret}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Emergency Recovery Codes */}
                   {setupData?.rawCodes && setupData.rawCodes.length > 0 && (
-                    <div className="rounded-xl border border-amber-800/60 bg-amber-950/20 p-3 space-y-2">
-                      <p className="text-[11px] text-amber-300 font-semibold">
-                        Recovery codes — save these somewhere safe. They are shown only once.
-                      </p>
+                    <div className="rounded-2xl border border-amber-800/60 bg-amber-950/20 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-amber-300 font-bold flex items-center gap-1.5">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          Emergency Recovery Codes
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard((setupData.rawCodes || []).join('\n'), false)}
+                            className="text-[10px] font-mono text-amber-300 hover:text-white flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedCodes ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedCodes ? 'Copied' : 'Copy'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={downloadRecoveryCodes}
+                            className="text-[10px] font-mono text-amber-300 hover:text-white flex items-center gap-1 cursor-pointer"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download</span>
+                          </button>
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-2 gap-1.5 font-mono text-xs text-zinc-200 select-all">
                         {setupData.rawCodes.map((c) => (
-                          <span key={c} className="bg-zinc-900/80 rounded px-2 py-1 text-center">{c}</span>
+                          <span key={c} className="bg-zinc-900/90 border border-zinc-800 rounded px-2 py-1 text-center font-bold">
+                            {c}
+                          </span>
                         ))}
                       </div>
-                      <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer">
+
+                      <label className="flex items-start gap-2.5 text-[11px] text-zinc-300 cursor-pointer pt-1">
                         <input
                           type="checkbox"
+                          className="mt-0.5 rounded border-zinc-700 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                           checked={codesAcknowledged}
                           onChange={(e) => setCodesAcknowledged(e.target.checked)}
                         />
-                        I have saved my recovery codes
+                        <span>I have securely saved these emergency recovery codes in a safe vault.</span>
                       </label>
                     </div>
                   )}
 
+                  {/* 6-Digit TOTP Confirmation Input */}
                   <div className="space-y-1.5">
                     <label htmlFor="setup-code" className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
-                      Authenticator code
+                      Enter 6-Digit Code from App
                     </label>
                     <input
                       id="setup-code"
@@ -437,20 +558,27 @@ function AdminLoginForm() {
                       autoComplete="one-time-code"
                       required
                       maxLength={6}
-                      className="block w-full px-4 py-3 border border-zinc-800 rounded-xl bg-zinc-900/90 text-center text-lg font-mono font-bold tracking-widest text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="block w-full px-4 py-3 border border-zinc-800 rounded-xl bg-zinc-900/90 text-center text-lg font-mono font-bold tracking-widest text-emerald-400 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all placeholder:text-zinc-700"
                       placeholder="000000"
                       value={twoFactorCode}
                       onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
                     />
                   </div>
 
-                  <div className="pt-1 space-y-2.5">
+                  <div className="pt-2 space-y-2.5">
                     <button
                       type="submit"
                       disabled={isLoading || twoFactorCode.length !== 6 || !codesAcknowledged}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify &amp; Activate 2FA</span>}
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <span>Verify &amp; Activate 2FA</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                     <button
                       type="button"
@@ -470,9 +598,9 @@ function AdminLoginForm() {
               ) : requireTwoFactor ? (
                 /* ── 2FA Verification View ── */
                 <form onSubmit={handle2FASubmit} className="space-y-5 animate-in fade-in duration-300">
-                  <div className="text-center pb-2">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-2.5 text-zinc-400">
-                      <KeyRound className="w-5 h-5 text-emerald-400" />
+                  <div className="text-center pb-1">
+                    <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-2 text-emerald-400">
+                      <KeyRound className="w-5 h-5" />
                     </div>
                     <h2 className="text-sm font-bold text-white tracking-wide">
                       Two-Factor Security Verification
@@ -480,7 +608,7 @@ function AdminLoginForm() {
                     <p className="text-[11px] text-zinc-400 mt-1 font-mono">
                       {useRecoveryCode
                         ? 'Enter an unused 8-character recovery backup key.'
-                        : 'Enter 6-digit TOTP code from your authority authenticator app.'}
+                        : 'Enter the 6-digit TOTP code from your authenticator app.'}
                     </p>
                   </div>
 
@@ -523,7 +651,7 @@ function AdminLoginForm() {
                     <button
                       type="submit"
                       disabled={isLoading || !twoFactorCode.trim()}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -579,9 +707,13 @@ function AdminLoginForm() {
                       <label className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
                         Security Key
                       </label>
-                      <span className="text-[10px] font-mono text-zinc-500">
-                        256-Bit TLS
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowRecoveryModal(true)}
+                        className="text-[10px] font-mono text-zinc-500 hover:text-emerald-400 transition-colors cursor-pointer"
+                      >
+                        Lost Credentials?
+                      </button>
                     </div>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
@@ -612,7 +744,7 @@ function AdminLoginForm() {
                     <button
                       type="submit"
                       disabled={isLoading || !formData.email.trim() || !formData.password}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950/50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -627,11 +759,11 @@ function AdminLoginForm() {
                 </form>
               )}
 
-              {/* Security Notice */}
-              <div className="mt-7 pt-5 border-t border-zinc-800/80 text-center">
+              {/* Security Monitored Notice */}
+              <div className="mt-6 pt-5 border-t border-zinc-800/80 text-center">
                 <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-zinc-500">
                   <ShieldAlert className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>UNAUTHORIZED ACCESS IS STRICTLY MONITORED</span>
+                  <span>UNAUTHORIZED ACCESS IS STRICTLY MONITORED &amp; AUDITED</span>
                 </div>
               </div>
 
@@ -645,12 +777,53 @@ function AdminLoginForm() {
       <footer className="w-full px-6 sm:px-10 lg:px-16 py-4 border-t border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between text-[11px] font-mono text-zinc-500 relative z-10 gap-2 bg-[#080A0E]/70 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>GATEWAY: ACCRA-PRIMARY // 256-BIT ENCRYPTION</span>
+          <span>GATEWAY: ACCRA-PRIMARY // 256-BIT TLS ENCRYPTION</span>
         </div>
         <div>
           GHANA DATA PROTECTION ACT (ACT 843) AUDITED
         </div>
       </footer>
+
+      {/* ── Lost Credentials Emergency Recovery Modal ── */}
+      {showRecoveryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="max-w-md w-full rounded-3xl bg-[#0D1017] border border-zinc-800 p-6 sm:p-7 space-y-4 shadow-2xl relative text-left">
+            <button
+              onClick={() => setShowRecoveryModal(false)}
+              className="absolute top-5 right-5 p-1 rounded-lg text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+              <KeyRound className="w-6 h-6" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-bold text-white">Administrative Key Recovery</h3>
+              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                For security reasons under the Ghana Data Protection Act, administrative credentials cannot be self-reset through automated email links without active 2FA.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2 text-xs">
+              <div className="font-semibold text-zinc-200">Emergency Protocol:</div>
+              <ul className="list-disc pl-4 space-y-1 text-zinc-400 text-[11px]">
+                <li>Use one of your 10 Emergency Recovery Codes if 2FA device is lost.</li>
+                <li>Contact a Super Administrator at HQ to rotate your credentials.</li>
+                <li>For engineering emergency, reach: <span className="font-mono text-emerald-400">security@akwaabahomes.com.gh</span></li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => setShowRecoveryModal(false)}
+              className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            >
+              Close Protocol Notice
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
@@ -658,7 +831,7 @@ function AdminLoginForm() {
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="-mt-18 md:-mt-20 min-h-screen bg-[#080A0E]" />}>
+    <Suspense fallback={<div className="-mt-16 min-h-screen bg-[#080A0E]" />}>
       <AdminLoginForm />
     </Suspense>
   );
