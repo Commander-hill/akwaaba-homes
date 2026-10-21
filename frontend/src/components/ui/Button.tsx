@@ -15,7 +15,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     {
       className,
       variant = 'blue',
-      size = 'md',
+      size = 'sm',
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -56,12 +56,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       gold: 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-zinc-950 border border-amber-700/30 shadow-xs focus-visible:ring-amber-400',
     };
 
-    // Sizing scales
+    // Sizing scales (sm: 36px height)
     const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
-      sm: 'h-9 px-3.5 text-xs rounded-lg gap-1.5',
+      sm: 'h-9 px-4 text-xs rounded-xl gap-2',
       md: 'h-11 px-5 text-sm rounded-xl gap-2',
       lg: 'h-12 px-6 text-base rounded-2xl gap-2.5',
-      icon: 'h-11 w-11 p-0 rounded-xl',
+      icon: 'h-9 w-9 p-0 rounded-xl',
     };
 
     return (

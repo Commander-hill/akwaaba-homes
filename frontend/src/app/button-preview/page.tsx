@@ -22,7 +22,7 @@ export default function ButtonPreviewPage() {
   const [clickCount, setClickCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [activeSize, setActiveSize] = useState<'sm' | 'md' | 'lg'>('md');
+  const [activeSize, setActiveSize] = useState<'sm' | 'md' | 'lg'>('sm');
 
   const handleRefreshClick = () => {
     setIsRefreshing(true);
@@ -82,7 +82,7 @@ export default function ButtonPreviewPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#0062BA] dark:text-blue-400">
-                Direct 1:1 Recreation
+                Direct 1:1 Recreation (SM &bull; 36px)
               </span>
               <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
                 Uploaded Reference Buttons in Context
@@ -97,12 +97,12 @@ export default function ButtonPreviewPage() {
             {/* Card A: Light Background (media_1792623409597.png) */}
             <div className="p-8 rounded-2xl bg-[#EDF5FD] border border-blue-200/80 flex flex-col items-center justify-center space-y-4 shadow-xs">
               <span className="text-[11px] font-mono uppercase tracking-wider text-blue-900 font-bold">
-                Reference 1 (Light Canvas: &quot;See more matches&quot;)
+                Reference 1 (Light Canvas: &quot;See more matches&quot; &bull; 36px)
               </span>
               <div className="py-4">
                 <Button
                   variant="blue"
-                  size="md"
+                  size="sm"
                   isLoading={isLoadingMore}
                   onClick={handleLoadMoreClick}
                 >
@@ -110,19 +110,19 @@ export default function ButtonPreviewPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-blue-800/80 text-center max-w-xs">
-                Rendered on ice-blue container with squircle corners, dark outer stroke, and pure white bold text.
+                Rendered on ice-blue container with 36px squircle height, dark outer stroke, and pure white bold text.
               </p>
             </div>
 
             {/* Card B: Dark Background (media_1792623418450.png) */}
             <div className="p-8 rounded-2xl bg-[#1E2322] border border-zinc-800 flex flex-col items-center justify-center space-y-4 shadow-xs">
               <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 font-bold">
-                Reference 2 (Dark Canvas: &quot;Refresh&quot;)
+                Reference 2 (Dark Canvas: &quot;Refresh&quot; &bull; 36px)
               </span>
               <div className="py-4">
                 <Button
                   variant="blue"
-                  size="md"
+                  size="sm"
                   isLoading={isRefreshing}
                   onClick={handleRefreshClick}
                 >
@@ -130,7 +130,7 @@ export default function ButtonPreviewPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-zinc-400 text-center max-w-xs">
-                Rendered on dark slate canvas. High contrast ensures 100% legibility in night mode.
+                Rendered on dark slate canvas at 36px height. High contrast ensures 100% legibility in night mode.
               </p>
             </div>
           </div>
