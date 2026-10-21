@@ -12,6 +12,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import ModernSidebar, { SidebarGroup } from '@/components/ModernSidebar';
 import NotificationBell from '@/components/NotificationBell';
+import BrandLoader from '@/components/BrandLoader';
 import TenantShell from '@/components/tenant-ui/TenantShell';
 import LandlordShell from '@/components/landlord-ui/LandlordShell';
 
@@ -75,12 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, isLoading, error, router, pathname, isGuestAllowedRoute]);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
-        <Loader2 className="w-7 h-7 animate-spin text-[#173D32]" />
-        <span className="text-xs font-medium text-[#6F756F] mt-2.5">Loading your workspace...</span>
-      </div>
-    );
+    return <BrandLoader message="LOADING YOUR WORKSPACE" fullScreen={true} />;
   }
 
   // Allow guest access on /dashboard/wishlist (renders inside public shell)

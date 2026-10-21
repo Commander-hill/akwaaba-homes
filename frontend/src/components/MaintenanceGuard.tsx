@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import api from '@/lib/axios';
+import BrandLoader from './BrandLoader';
 import MaintenanceScreen from './MaintenanceScreen';
 
 export default function MaintenanceGuard({ children }: { children: React.ReactNode }) {
@@ -52,14 +53,7 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
   //       Only block non-admin, non-login routes to avoid a flash of the dark
   //       loading screen for administrators.
   if (isConfigLoading && !isAdminRoute && !isLoginRoute) {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-[#09090B] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500 text-xs font-medium tracking-wide">Checking system status…</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader message="LOADING AKWAABA HOMES" fullScreen={true} />;
   }
 
   // ── 4. Admin users and admin/login routes are ALWAYS exempt ──────────────

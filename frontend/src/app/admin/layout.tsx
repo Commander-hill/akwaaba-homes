@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
+import BrandLoader from '@/components/BrandLoader';
 import AdminShell from '@/components/admin/AdminShell';
 import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
@@ -54,15 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (isLoading && !user) {
-    return (
-      <div className="min-h-screen flex flex-col bg-slate-950">
-        <div className="h-1 w-full bg-[#0F5132] animate-pulse" />
-        <div className="flex flex-1 flex-col items-center justify-center text-white">
-          <Loader2 className="w-12 h-12 animate-spin text-[#198754] mb-4" />
-          <p className="text-slate-400 font-mono text-sm uppercase tracking-widest">Verifying Security Clearance...</p>
-        </div>
-      </div>
-    );
+    return <BrandLoader message="VERIFYING SECURITY CLEARANCE" fullScreen={true} />;
   }
 
   if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) return null;
