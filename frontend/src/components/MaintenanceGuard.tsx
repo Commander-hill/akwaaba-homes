@@ -11,6 +11,7 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
 
   const isAdminRoute = pathname?.startsWith('/admin') || pathname?.startsWith('/dashboard/admin');
   const isLoginRoute = pathname === '/login' || pathname === '/register';
+  const isExemptRoute = isLoginRoute || pathname === '/button-preview' || pathname?.startsWith('/button-preview');
 
   // ── 1. Fetch public system config (source of truth for maintenance state) ──
   const { data: config, isLoading: isConfigLoading } = useQuery({
@@ -50,14 +51,14 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
   const isAdminUser = currentUser?.role === 'ADMIN';
 
   // ── 3. FOUC prevention: block UI render until we know the maintenance state.
-  //       Only block non-admin, non-login routes to avoid a flash of the dark
+  //       Only block non-admin, non-exempt routes to avoid a flash of the dark
   //       loading screen for administrators.
-  if (isConfigLoading && !isAdminRoute && !isLoginRoute) {
+  if (isConfigLoading && !isAdminRoute && !isExemptRoute) {
     return <BrandLoader message="LOADING AKWAABA HOMES" fullScreen={true} />;
   }
 
-  // ── 4. Admin users and admin/login routes are ALWAYS exempt ──────────────
-  if (isAdminUser || isAdminRoute || isLoginRoute) {
+  // ── 4. Admin users and admin/login/exempt routes are ALWAYS exempt ─────────
+  if (isAdminUser || isAdminRoute || isExemptRoute) {
     return <>{children}</>;
   }
 

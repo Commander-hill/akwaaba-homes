@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 
+// Trigger router reload for newly added design-system routes
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
