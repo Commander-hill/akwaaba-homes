@@ -8,6 +8,20 @@ import PwaRegister from '../components/PwaRegister';
 import PwaInstallPrompt from '../components/PwaInstallPrompt';
 import MaintenanceGuard from '../components/MaintenanceGuard';
 
+// Suppress React 19 false-positive warning for next-themes' SSR inline script
+if (typeof console !== 'undefined') {
+  const originalError = console.error;
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('Encountered a script tag while rendering React component')
+    ) {
+      return;
+    }
+    originalError.apply(console, args);
+  };
+}
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
