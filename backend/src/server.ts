@@ -378,14 +378,19 @@ process.on('SIGTERM', () => {
 
 import { cleanupExpiredBookings } from './utils/bookingCleanup';
 
-httpServer.listen(port, () => {
-  console.log(`✅ Server running on port ${port} [${process.env.NODE_ENV || 'development'}]`);
-  
-  // Initial startup cleanup for expired bed reservations
-  cleanupExpiredBookings().catch(console.error);
-  
-  // Periodic background cleanup every 2 minutes
-  setInterval(() => {
+if (process.env.NODE_ENV !== 'test') {
+  httpServer.listen(port, () => {
+    console.log(`✅ Server running on port ${port} [${process.env.NODE_ENV || 'development'}]`);
+    
+    // Initial startup cleanup for expired bed reservations
     cleanupExpiredBookings().catch(console.error);
-  }, 2 * 60 * 1000);
-});
+    
+    // Periodic background cleanup every 2 minutes
+    setInterval(() => {
+      cleanupExpiredBookings().catch(console.error);
+    }, 2 * 60 * 1000);
+  });
+}
+
+export { app, httpServer };
+

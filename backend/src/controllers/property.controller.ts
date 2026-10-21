@@ -560,19 +560,21 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role);
+
+    if (property.landlordId !== landlordId && !isAdmin) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }
 
     const landlordUser = await prisma.user.findUnique({ where: { id: landlordId }, select: { isSuspended: true } });
-    if (landlordUser?.isSuspended && req.user.role !== 'ADMIN') {
+    if (landlordUser?.isSuspended && !isAdmin) {
       res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot edit property details.' });
       return;
     }
 
     // Strict Publication Gating: If enabling availability, require an active unexpired subscription
-    if (isAvailable === true && !property.isAvailable && req.user.role !== 'ADMIN') {
+    if (isAvailable === true && !property.isAvailable && !isAdmin) {
       const activeSub = await prisma.propertySubscription.findUnique({
         where: { propertyId: id }
       });
@@ -659,7 +661,8 @@ export const deleteProperty = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role);
+    if (property.landlordId !== landlordId && !isAdmin) {
       res.status(403).json({ message: 'Forbidden: You do not own this property' });
       return;
     }

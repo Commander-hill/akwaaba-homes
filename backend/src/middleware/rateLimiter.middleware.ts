@@ -72,3 +72,24 @@ export const apiRateLimiter = rateLimit({
   statusCode: 429,
   skip: (req) => req.path.startsWith('/api/health') || req.method === 'OPTIONS',
 });
+
+// ─── Chat Message Rate Limiter (Prevent automated spamming & flood attacks) ──
+export const chatRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 30, // 30 messages per minute
+  message: { message: 'Message rate limit exceeded. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+});
+
+// ─── KYC Document Submission Rate Limiter ────────────────────────────────────
+export const kycRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes window
+  max: 10,
+  message: { message: 'Too many identity verification submission attempts. Please try again in 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+});
+

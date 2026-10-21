@@ -49,9 +49,13 @@ export const verifySignedDocumentUrl = (url: string, expiresStr: string, signatu
     .update(`${url}:${expires}`)
     .digest('hex');
 
-  if (signatureStr !== expectedSignature) {
+  const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+  const actualBuf = Buffer.from(signatureStr, 'utf8');
+
+  if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
     return { valid: false, error: 'Invalid document signature' };
   }
 
   return { valid: true };
 };
+

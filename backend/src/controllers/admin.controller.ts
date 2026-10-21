@@ -1001,14 +1001,17 @@ export const toggleUserSuspension = async (req: Request, res: Response): Promise
     const { isSuspended } = req.body;
     const targetSuspensionState = Boolean(isSuspended);
 
-    // Prevent suspending self or other admins
     const targetUser = await prisma.user.findUnique({ where: { id } });
     if (!targetUser) {
       res.status(404).json({ message: 'User not found' });
       return;
     }
-    if (targetUser.role === 'ADMIN') {
-      res.status(403).json({ message: 'Cannot suspend an administrator account' });
+
+    // Security policy: General user suspension cannot target administrators or super administrators
+    if (['ADMIN', 'SUPER_ADMIN'].includes(targetUser.role)) {
+      res.status(403).json({ 
+        message: 'Security Policy: Administrative accounts cannot be suspended via general user moderation. Only an authorized Super Administrator can manage administrator lifecycle.' 
+      });
       return;
     }
 

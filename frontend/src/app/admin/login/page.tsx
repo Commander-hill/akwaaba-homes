@@ -47,7 +47,7 @@ function AdminLoginForm() {
   });
 
   useEffect(() => {
-    if (sessionData && sessionData.role === 'ADMIN' && !isTimeout) {
+    if (sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
       window.location.href = '/admin/dashboard';
     }
   }, [sessionData, isTimeout]);
@@ -62,6 +62,27 @@ function AdminLoginForm() {
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+
+  // Mandatory 2FA enrollment state (admins without 2FA configured)
+  const [requireSetup, setRequireSetup] = useState(false);
+  const [setupData, setSetupData] = useState<{ qrCodeSvg?: string; formattedSecret?: string; rawCodes?: string[] } | null>(null);
+  const [codesAcknowledged, setCodesAcknowledged] = useState(false);
+
+  const finalizeAdminSession = async (data: any) => {
+    const userRole = data?.user?.role;
+    if (['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
+      if (data?.accessToken) {
+        localStorage.setItem('akwaaba_access_token', data.accessToken);
+      }
+      if (data?.refreshToken) {
+        localStorage.setItem('akwaaba_refresh_token', data.refreshToken);
+      }
+      window.location.href = '/admin/dashboard';
+    } else {
+      await api.post('/auth/logout');
+      setError('Unauthorized. This portal is for administrative personnel only.');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,20 +101,20 @@ function AdminLoginForm() {
         return;
       }
 
+      if (response.data?.requireTwoFactorSetup) {
+        setRequireSetup(true);
+        setTempToken(response.data.tempToken);
+        setSetupData({
+          qrCodeSvg: response.data.qrCodeSvg,
+          formattedSecret: response.data.formattedSecret,
+          rawCodes: response.data.rawCodes,
+        });
+        setIsLoading(false);
+        return;
+      }
+
       if (response.status === 200) {
-        const userRole = response.data.user.role;
-        if (userRole === 'ADMIN') {
-          if (response.data?.accessToken) {
-            localStorage.setItem('akwaaba_access_token', response.data.accessToken);
-          }
-          if (response.data?.refreshToken) {
-            localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
-          }
-          window.location.href = '/admin/dashboard';
-        } else {
-          await api.post('/auth/logout');
-          setError('Unauthorized. This portal is for administrative personnel only.');
-        }
+        await finalizeAdminSession(response.data);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid credentials or security key.');
@@ -115,22 +136,30 @@ function AdminLoginForm() {
       });
 
       if (response.status === 200) {
-        const userRole = response.data.user.role;
-        if (userRole === 'ADMIN') {
-          if (response.data?.accessToken) {
-            localStorage.setItem('akwaaba_access_token', response.data.accessToken);
-          }
-          if (response.data?.refreshToken) {
-            localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
-          }
-          window.location.href = '/admin/dashboard';
-        } else {
-          await api.post('/auth/logout');
-          setError('Unauthorized. This portal is for administrative personnel only.');
-        }
+        await finalizeAdminSession(response.data);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid 2FA code or backup key.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSetupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await api.post('/auth/login/2fa/mandatory-setup', {
+        tempToken,
+        code: twoFactorCode.trim(),
+      });
+      if (response.status === 200) {
+        await finalizeAdminSession(response.data);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Could not verify the authenticator code.');
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +176,7 @@ function AdminLoginForm() {
   }
 
   // Active Authenticated State
-  if (sessionData && sessionData.role === 'ADMIN' && !isTimeout) {
+  if (sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
     return (
       <div className="-mt-18 md:-mt-20 min-h-screen flex items-center justify-center bg-[#080A0E] text-white p-4">
         <div className="max-w-md w-full p-8 bg-[#0D1017]/90 backdrop-blur-xl border border-zinc-800 rounded-3xl text-center space-y-5 shadow-2xl">
@@ -348,7 +377,97 @@ function AdminLoginForm() {
                 />
               )}
 
-              {requireTwoFactor ? (
+              {requireSetup ? (
+                /* ── Mandatory 2FA Enrollment View ── */
+                <form onSubmit={handleSetupSubmit} className="space-y-5 animate-in fade-in duration-300">
+                  <div className="text-center pb-1">
+                    <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-2.5">
+                      <ShieldAlert className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <h2 className="text-sm font-bold text-white tracking-wide">Set Up Two-Factor Authentication</h2>
+                    <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
+                      Two-factor authentication is required for all administrator accounts. Scan the QR code with an authenticator app, then enter the 6-digit code.
+                    </p>
+                  </div>
+
+                  {setupData?.qrCodeSvg && (
+                    <div
+                      className="mx-auto w-[200px] h-[200px] bg-white rounded-xl p-2 [&>svg]:w-full [&>svg]:h-full"
+                      aria-label="Authenticator QR code"
+                      dangerouslySetInnerHTML={{ __html: setupData.qrCodeSvg }}
+                    />
+                  )}
+
+                  {setupData?.formattedSecret && (
+                    <div className="text-center">
+                      <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">Manual entry key</p>
+                      <p className="text-xs font-mono text-emerald-400 break-all select-all">{setupData.formattedSecret}</p>
+                    </div>
+                  )}
+
+                  {setupData?.rawCodes && setupData.rawCodes.length > 0 && (
+                    <div className="rounded-xl border border-amber-800/60 bg-amber-950/20 p-3 space-y-2">
+                      <p className="text-[11px] text-amber-300 font-semibold">
+                        Recovery codes — save these somewhere safe. They are shown only once.
+                      </p>
+                      <div className="grid grid-cols-2 gap-1.5 font-mono text-xs text-zinc-200 select-all">
+                        {setupData.rawCodes.map((c) => (
+                          <span key={c} className="bg-zinc-900/80 rounded px-2 py-1 text-center">{c}</span>
+                        ))}
+                      </div>
+                      <label className="flex items-center gap-2 text-[11px] text-zinc-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={codesAcknowledged}
+                          onChange={(e) => setCodesAcknowledged(e.target.checked)}
+                        />
+                        I have saved my recovery codes
+                      </label>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="setup-code" className="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                      Authenticator code
+                    </label>
+                    <input
+                      id="setup-code"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      required
+                      maxLength={6}
+                      className="block w-full px-4 py-3 border border-zinc-800 rounded-xl bg-zinc-900/90 text-center text-lg font-mono font-bold tracking-widest text-emerald-400 focus:ring-1 focus:ring-emerald-500 outline-none"
+                      placeholder="000000"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, ''))}
+                    />
+                  </div>
+
+                  <div className="pt-1 space-y-2.5">
+                    <button
+                      type="submit"
+                      disabled={isLoading || twoFactorCode.length !== 6 || !codesAcknowledged}
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Verify &amp; Activate 2FA</span>}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRequireSetup(false);
+                        setSetupData(null);
+                        setTwoFactorCode('');
+                        setCodesAcknowledged(false);
+                        setError('');
+                      }}
+                      className="w-full text-center text-xs font-mono text-zinc-500 hover:text-zinc-300 cursor-pointer py-1"
+                    >
+                      &larr; Cancel and return to sign in
+                    </button>
+                  </div>
+                </form>
+              ) : requireTwoFactor ? (
                 /* ── 2FA Verification View ── */
                 <form onSubmit={handle2FASubmit} className="space-y-5 animate-in fade-in duration-300">
                   <div className="text-center pb-2">

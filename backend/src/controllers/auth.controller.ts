@@ -298,8 +298,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // ── 2. DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
+    const isElevatedAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role);
+
     // Admin accounts must NOT log in through the public tenant/landlord portal
-    if (user.role === 'ADMIN' && portal !== 'ADMIN') {
+    if (isElevatedAdmin && portal !== 'ADMIN') {
       try {
         await logAudit(user.id, 'ADMIN_PUBLIC_LOGIN_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
       } catch (e) { /* non-blocking */ }
@@ -313,7 +315,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Non-admin accounts must NOT log in through the admin portal
-    if (portal === 'ADMIN' && user.role !== 'ADMIN') {
+    if (portal === 'ADMIN' && !isElevatedAdmin) {
       try {
         await logAudit(user.id, 'UNAUTHORIZED_ADMIN_PORTAL_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
       } catch (e) { /* non-blocking */ }
@@ -343,16 +345,51 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // CHECK TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE)
-    if (user.twoFactorEnabled) {
-      const tempToken = crypto.randomBytes(32).toString('hex');
-      appCache.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
-      res.status(200).json({
-        requireTwoFactor: true,
-        tempToken,
-        message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
-      });
-      return;
+    // ── 3. TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE) ──
+    // Mandatory for ADMIN & SUPER_ADMIN accounts, or any user with 2FA enabled
+    if (isElevatedAdmin || user.twoFactorEnabled) {
+      if (user.twoFactorEnabled && user.twoFactorSecret) {
+        const tempToken = crypto.randomBytes(32).toString('hex');
+        appCache.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
+        res.status(200).json({
+          requireTwoFactor: true,
+          tempToken,
+          message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
+        });
+        return;
+      }
+
+      // Mandatory enrollment for administrators who have not yet configured 2FA
+      if (isElevatedAdmin) {
+        const tempToken = crypto.randomBytes(32).toString('hex');
+        const secret = generateTOTPSecret();
+        const generated = generateRecoveryCodes(8);
+
+        appCache.set(`2fa_mandatory_setup_${tempToken}`, {
+          userId: user.id,
+          secret,
+          hashedCodes: generated.hashedCodes,
+          rawCodes: generated.rawCodes
+        }, 600); // 10 minutes TTL
+
+        const uri = getTOTPUri(user.email, secret, 'Akwaaba Homes Admin');
+        let qrCodeSvg = '';
+        try {
+          qrCodeSvg = generateQRCodeSvg(uri, 240);
+        } catch (e) {}
+
+        res.status(200).json({
+          requireTwoFactorSetup: true,
+          tempToken,
+          secret,
+          formattedSecret: formatSecretKey(secret),
+          qrCodeSvg,
+          rawCodes: generated.rawCodes,
+          otpauthUri: uri,
+          message: 'Mandatory Security Setup: All Administrator and Super Administrator accounts must configure Two-Factor Authentication before accessing administrative systems.'
+        });
+        return;
+      }
     }
 
     await establishUserSessionAndRespond(user, req, res);
@@ -540,7 +577,9 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
     appCache.del(`2fa_pending_${tempToken}`);
 
     // ── DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
-    if (user.role === 'ADMIN' && portal !== 'ADMIN') {
+    const isElevatedAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role);
+
+    if (isElevatedAdmin && portal !== 'ADMIN') {
       try {
         await logAudit(user.id, 'ADMIN_PUBLIC_2FA_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
       } catch (e) { /* non-blocking */ }
@@ -553,7 +592,7 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (portal === 'ADMIN' && user.role !== 'ADMIN') {
+    if (portal === 'ADMIN' && !isElevatedAdmin) {
       try {
         await logAudit(user.id, 'UNAUTHORIZED_ADMIN_2FA_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
       } catch (e) { /* non-blocking */ }
@@ -1475,6 +1514,14 @@ export const disable2FA = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Security policy: Administrative personnel cannot disable 2FA
+    if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+      res.status(403).json({ 
+        message: 'Security Policy: Two-factor authentication is mandatory for administrative accounts and cannot be disabled.' 
+      });
+      return;
+    }
+
     // Require either correct account password or valid current TOTP code to disable
     let isAuthorized = false;
 
@@ -1679,3 +1726,63 @@ export const regenerateRecoveryCodes = async (req: Request, res: Response): Prom
     res.status(500).json({ message: 'Failed to regenerate recovery codes' });
   }
 };
+
+/**
+ * Completes mandatory TOTP 2FA enrollment for administrative accounts during login
+ */
+export const completeMandatory2FASetup = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { tempToken, code } = req.body;
+    if (!tempToken || !code) {
+      res.status(400).json({ message: 'Missing temporary token or verification code.' });
+      return;
+    }
+
+    const pendingSetup = appCache.get(`2fa_mandatory_setup_${tempToken}`) as {
+      userId: string;
+      secret: string;
+      hashedCodes: string[];
+      rawCodes: string[];
+    } | undefined;
+
+    if (!pendingSetup) {
+      res.status(401).json({ message: 'Two-factor enrollment session expired or invalid. Please sign in again.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: pendingSetup.userId } });
+    if (!user) {
+      res.status(404).json({ message: 'User not found.' });
+      return;
+    }
+
+    const cleanCode = String(code).trim();
+    const isValid = verifyTOTPCode(cleanCode, pendingSetup.secret);
+    if (!isValid) {
+      res.status(400).json({ message: 'Invalid 6-digit TOTP code. Please verify the code displayed in your authenticator app.' });
+      return;
+    }
+
+    const encryptedSecret = encryptData(pendingSetup.secret);
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        twoFactorEnabled: true,
+        twoFactorSecret: encryptedSecret,
+        twoFactorRecoveryCodes: JSON.stringify(pendingSetup.hashedCodes)
+      }
+    });
+
+    appCache.del(`2fa_mandatory_setup_${tempToken}`);
+
+    try {
+      await logAudit(user.id, 'MANDATORY_ADMIN_2FA_CONFIGURED', 'User', user.id, null, { role: user.role }, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    await establishUserSessionAndRespond(updatedUser, req, res, 'Two-factor authentication configured and verified successfully');
+  } catch (error) {
+    console.error('completeMandatory2FASetup error:', error);
+    res.status(500).json({ message: 'Internal server error during 2FA enrollment.' });
+  }
+};
+

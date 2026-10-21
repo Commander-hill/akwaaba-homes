@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { getSystemConfig } from '../utils/config.service';
 import { generateGRATaxReportPDF } from '../utils/pdf.service';
+import { logAudit } from '../utils/auditLogger';
 
 export const getLandlordCashflows = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -348,6 +349,45 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
         return;
       }
 
+      // ── SECURITY DEFENSE: REPLAY & DUPLICATE TRANSACTION PREVENTION ──
+      if (reference) {
+        const existingTx = await prisma.transaction.findFirst({ where: { reference } });
+        if (existingTx) {
+          console.log(`[Paystack Webhook] Duplicate transaction reference ignored: ${reference}`);
+          res.status(200).json({ message: 'Transaction reference already recorded' });
+          return;
+        }
+      }
+
+      // ── SECURITY DEFENSE: CURRENCY VALIDATION ──
+      if (data?.currency && data.currency.toUpperCase() !== 'GHS') {
+        console.error(`[Paystack Webhook] Currency mismatch for booking ${booking.id}: expected GHS, received ${data.currency}`);
+        res.status(400).json({ message: 'Invalid transaction currency. Only GHS accepted.' });
+        return;
+      }
+
+      // ── SECURITY DEFENSE: PRICE TAMPERING & AMOUNT MISMATCH GUARD ──
+      const expectedPrice = booking.room ? booking.room.price : 0;
+      const paidAmountGhs = data?.amount ? Number(data.amount) / 100 : expectedPrice;
+
+      if (expectedPrice > 0 && paidAmountGhs < expectedPrice) {
+        console.error(`[Paystack Webhook] Price tampering blocked for booking ${booking.id}: expected GHS ${expectedPrice}, received GHS ${paidAmountGhs}`);
+        try {
+          await logAudit(
+            booking.tenantId,
+            'PAYMENT_PRICE_TAMPERING_BLOCKED',
+            'Booking',
+            booking.id,
+            { expectedPrice, paidAmountGhs, reference },
+            null,
+            req.ip || 'PAYSTACK_WEBHOOK'
+          );
+        } catch (e) { /* non-blocking */ }
+
+        res.status(400).json({ message: 'Payment rejected: amount paid does not cover room price.' });
+        return;
+      }
+
       // Prepare atomic transaction operations
       const operations: any[] = [
         prisma.booking.update({
@@ -361,7 +401,7 @@ export const handlePaystackWebhook = async (req: Request, res: Response): Promis
             landlordId: booking.property.landlordId,
             propertyId: booking.propertyId,
             roomId: booking.roomId,
-            amount: data.amount ? data.amount / 100 : booking.room!.price,
+            amount: paidAmountGhs,
             reference: reference || `WEBHOOK_${Date.now()}`,
             status: 'SUCCESS'
           }

@@ -43,12 +43,24 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       res.status(403).json({ message: 'Your account has been suspended by an administrator.' });
       return;
     }
-    // Verify token version to revoke stale sessions upon password reset or logout from all devices
-    if (user.tokenVersion > 0 && decoded.tokenVersion !== user.tokenVersion) {
+    // Verify token version to immediately invalidate stale sessions upon password reset or administrative revocation
+    if ((user.tokenVersion || 0) !== (decoded.tokenVersion || 0)) {
       res.status(401).json({ message: 'Session has expired or was revoked. Please log in again.' });
       return;
     }
-    req.user = decoded;
+
+    // Hydrate req.user from the fresh, trusted database state rather than stale token claims
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      isSuspended: user.isSuspended,
+      isEmailVerified: user.isEmailVerified,
+      twoFactorEnabled: user.twoFactorEnabled,
+      tokenVersion: user.tokenVersion,
+    };
     next();
   } catch (error) {
     res.status(500).json({ message: 'Internal server error during authentication.' });
@@ -65,6 +77,14 @@ export const authorizeRole = (roles: string[]) => {
   };
 };
 
+export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+    res.status(403).json({ message: 'Access denied: Administrator clearance required.' });
+    return;
+  }
+  next();
+};
+
 export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction): void => {
   if (!req.user || req.user.role !== 'SUPER_ADMIN') {
     res.status(403).json({ message: 'Elevated authorization required: Super Administrator clearance is required for this action.' });
@@ -72,3 +92,4 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
   }
   next();
 };
+

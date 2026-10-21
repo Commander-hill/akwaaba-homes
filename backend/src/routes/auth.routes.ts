@@ -3,6 +3,7 @@ import {
   register,
   login,
   login2FA,
+  completeMandatory2FASetup,
   get2FAStatus,
   setup2FA,
   enable2FA,
@@ -24,7 +25,7 @@ import {
 } from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter } from '../middleware/rateLimiter.middleware';
+import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter, kycRateLimiter } from '../middleware/rateLimiter.middleware';
 import { validate, registerValidation, loginValidation } from '../middleware/validation.middleware';
 
 const router = Router();
@@ -32,11 +33,12 @@ const router = Router();
 router.post('/register', authRateLimiter, validate(registerValidation), register);
 router.post('/login', loginRateLimiter, validate(loginValidation), login);
 router.post('/login/2fa', loginRateLimiter, login2FA);
+router.post('/login/2fa/mandatory-setup', loginRateLimiter, completeMandatory2FASetup);
 router.post('/logout', logout);
 router.post('/refresh', authRateLimiter, refresh);
 router.post('/verify-email', otpRateLimiter, verifyEmail);
-router.post('/ghana-card', authenticate, submitGhanaCard);
-router.post('/landlord-verification', authenticate, submitLandlordVerification);
+router.post('/ghana-card', authenticate, kycRateLimiter, submitGhanaCard);
+router.post('/landlord-verification', authenticate, kycRateLimiter, submitLandlordVerification);
 router.post('/student-verification', authenticate, submitStudentVerification);
 router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
 router.post('/reset-password', passwordResetRateLimiter, resetPassword);
