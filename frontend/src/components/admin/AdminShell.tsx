@@ -17,6 +17,7 @@ import {
   Scale,
   BarChart3,
   FileText,
+  FileCheck,
   ShieldCheck,
   Settings,
   ChevronLeft,
@@ -98,7 +99,13 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       links: [
         { name: 'Landlords & Owners', href: '/admin/landlords', icon: UserCheck },
         { name: 'Tenants & Residents', href: '/admin/tenants', icon: Users },
-        { name: 'Identity Verification', href: '/admin/verifications', icon: BadgeCheck }
+      ]
+    },
+    {
+      title: 'TRUST & VERIFICATION',
+      links: [
+        { name: 'Ghana Card KYC', href: '/admin/verifications', icon: BadgeCheck },
+        { name: 'Title Deeds & Ownership', href: '/admin/deeds', icon: FileCheck },
       ]
     },
     {

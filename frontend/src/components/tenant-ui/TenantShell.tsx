@@ -47,6 +47,8 @@ interface NavItem {
   matchPrefixes: string[];
   icon: React.ElementType;
   badge?: number;
+  statusBadge?: string;
+  statusBadgeClass?: string;
 }
 
 export default function TenantShell({
@@ -93,6 +95,11 @@ export default function TenantShell({
     setMobileDrawerOpen(false);
   }, [pathname]);
 
+  const fullName = `${user?.firstName || 'Resident'} ${user?.lastName || ''}`.trim();
+  const initials = `${user?.firstName?.[0] || 'A'}${user?.lastName?.[0] || 'H'}`.toUpperCase();
+  const isVerifiedId = user?.ghanaCardStatus === 'VERIFIED';
+  const isPendingId = user?.ghanaCardStatus === 'PENDING';
+
   const navItems: NavItem[] = [
     {
       label: 'Dashboard',
@@ -126,9 +133,21 @@ export default function TenantShell({
       badge: unreadNotificationsCount,
     },
     {
+      label: 'Identity Verification',
+      href: '/dashboard/verification',
+      matchPrefixes: ['/dashboard/verification'],
+      icon: ShieldCheck,
+      statusBadge: isVerifiedId ? 'Verified' : isPendingId ? 'Pending' : 'Verify ID',
+      statusBadgeClass: isVerifiedId
+        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+        : isPendingId
+        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+        : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+    },
+    {
       label: 'Profile & Settings',
       href: '/dashboard/profile',
-      matchPrefixes: ['/dashboard/profile', '/profile', '/settings', '/dashboard/verification'],
+      matchPrefixes: ['/dashboard/profile', '/profile', '/settings'],
       icon: User,
     },
     {
@@ -147,9 +166,6 @@ export default function TenantShell({
   };
 
   const activeNav = navItems.find(isNavItemActive) || navItems[0];
-  const fullName = `${user?.firstName || 'Resident'} ${user?.lastName || ''}`.trim();
-  const initials = `${user?.firstName?.[0] || 'A'}${user?.lastName?.[0] || 'H'}`.toUpperCase();
-  const isVerifiedId = user?.ghanaCardStatus === 'VERIFIED';
 
   const renderSidebarLinks = (onNavigate?: () => void) => (
     <nav aria-label="Resident Portal Navigation" className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
@@ -191,6 +207,19 @@ export default function TenantShell({
                 )}
               >
                 {item.badge}
+              </span>
+            )}
+
+            {item.statusBadge && (
+              <span
+                className={clsx(
+                  'px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0',
+                  active
+                    ? 'bg-white text-[#173D32]'
+                    : item.statusBadgeClass
+                )}
+              >
+                {item.statusBadge}
               </span>
             )}
           </Link>

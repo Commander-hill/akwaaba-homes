@@ -115,7 +115,7 @@ export default function LandlordShell({
           badge: unreadNotificationsCount,
         },
         {
-          label: 'Verification',
+          label: 'ID & Title Deeds',
           href: '/dashboard/verification',
           prefixes: ['/dashboard/verification'],
           icon: ShieldCheck,
