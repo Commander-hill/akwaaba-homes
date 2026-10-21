@@ -66,8 +66,64 @@ export default function ForgotPasswordPage() {
   return (
     <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ──── LEFT COLUMN (40% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] relative z-10 shrink-0">
+      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
+      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
+        <Image
+          src="/images/auth-recovery.jpg"
+          alt="Authentic Ghanaian resident verifying account recovery"
+          fill
+          sizes="60vw"
+          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
+          priority
+        />
+
+        {/* Cinematic Vignette */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+
+        {/* Top-Left Floating Action */}
+        <div className="absolute top-8 left-8 z-10">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to sign in</span>
+          </Link>
+        </div>
+
+        {/* Bottom Overlay Content */}
+        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
+            <span>ACCOUNT RECOVERY • PROTECTED ACCESS</span>
+          </div>
+
+          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
+            Safe and verified home tenancies across Ghana
+          </h2>
+
+          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
+            Your account holds your verified agreements, payment ledgers, and resident access passes. We safeguard every account through secure, time-limited verification.
+          </p>
+
+          {/* Trust Markers */}
+          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Time-Limited Recovery
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1.5">
+              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Verified Resident Passes
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ──── RIGHT COLUMN: RECOVERY FORM (40% Desktop, 100% Mobile) ──── */}
+      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
         
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
@@ -239,62 +295,6 @@ export default function ForgotPasswordPage() {
             <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
             <span>•</span>
             <Link href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ──── RIGHT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-        <Image
-          src="/images/auth-recovery.jpg"
-          alt="Authentic Ghanaian resident verifying account recovery"
-          fill
-          sizes="60vw"
-          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
-          priority
-        />
-
-        {/* Cinematic Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
-
-        {/* Top-Right Floating Action */}
-        <div className="absolute top-8 right-8 z-10">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back to sign in</span>
-          </Link>
-        </div>
-
-        {/* Bottom Overlay Content */}
-        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
-            <span>ACCOUNT RECOVERY • PROTECTED ACCESS</span>
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-            Safe and verified home tenancies across Ghana
-          </h2>
-
-          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-            Your account holds your verified agreements, payment ledgers, and resident access passes. We safeguard every account through secure, time-limited verification.
-          </p>
-
-          {/* Trust Markers */}
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Time-Limited Recovery
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Verified Resident Passes
-            </span>
           </div>
         </div>
       </div>
