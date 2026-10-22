@@ -686,7 +686,7 @@ export default function FloorplanOccupancyTab({
                     setSelectedOccupant(null);
                     onStartInspection(bId);
                   }}
-                  className="w-full mt-2 py-2.5 px-3 bg-[#0F5132] hover:bg-[#0c4128] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                  className="w-full mt-2 py-2.5 px-3 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
                   <ClipboardCheck className="w-4 h-4" /> Start Inspection (Move-In / Move-Out)
                 </button>

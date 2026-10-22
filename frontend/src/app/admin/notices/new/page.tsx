@@ -497,7 +497,7 @@ function NewAdminNoticeContent() {
             <button
               type="button"
               onClick={handleNextStep}
-              className="px-6 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </button>
@@ -505,7 +505,7 @@ function NewAdminNoticeContent() {
             <button
               type="submit"
               disabled={saveNoticeMutation.isPending}
-              className="px-6 py-3 rounded-xl bg-[#0F5132] hover:bg-[#0B3D26] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
+              className="px-6 py-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
             >
               {saveNoticeMutation.isPending ? (
                 <>

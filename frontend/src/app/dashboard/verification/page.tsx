@@ -783,7 +783,7 @@ export default function VerificationPage() {
             <div className="pt-2">
               <Link
                 href="/dashboard/caretaker"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
               >
                 <Wrench className="w-3.5 h-3.5" />
                 <span>Open Caretaker Operations Hub &rarr;</span>

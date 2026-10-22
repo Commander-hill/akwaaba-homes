@@ -266,7 +266,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                         href={rawDeedUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition shadow-md"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition shadow-md"
                       >
                         <ExternalLink className="w-4 h-4" /> Open Full PDF in New Tab
                       </a>
@@ -541,7 +541,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                     type="button"
                     disabled={auditMutation.isPending}
                     onClick={() => auditMutation.mutate({ status: 'VERIFIED' })}
-                    className="w-full py-3.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-2xl font-black text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-2xl font-black text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {auditMutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

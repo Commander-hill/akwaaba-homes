@@ -274,7 +274,7 @@ export default function GateLogbookTab({ properties = [] }: GateLogbookTabProps)
             <button
               type="submit"
               disabled={verifyPinMutation.isPending || !accessCodeInput}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0c4128] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm cursor-pointer whitespace-nowrap"
             >
               {verifyPinMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

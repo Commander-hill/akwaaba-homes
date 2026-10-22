@@ -234,7 +234,7 @@ export default function HelpFaqPage() {
             </div>
             <Link
               href="/support"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs shrink-0 cursor-pointer"
             >
               <span>Open Support &amp; Issue Center</span>
               <ArrowRight className="w-3.5 h-3.5" />

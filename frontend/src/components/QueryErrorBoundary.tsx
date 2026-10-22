@@ -70,7 +70,7 @@ export class QueryErrorBoundary extends Component<Props, State> {
           )}
           <button
             onClick={this.resetErrorBoundary}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#0F5132] hover:bg-[#0B3D26] text-white text-xs font-bold rounded-xl shadow transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow transition-all active:scale-95"
           >
             <RefreshCw className="w-3.5 h-3.5" /> Retry Fetch
           </button>

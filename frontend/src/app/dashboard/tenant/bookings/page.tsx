@@ -142,7 +142,7 @@ export default function TenantBookingsOverviewPage() {
 
         <Link
           href="/search"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium transition-colors self-start sm:self-auto"
         >
           <span>Find Another Home</span>
           <ArrowRight className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function TenantBookingsOverviewPage() {
             activeTab === 'ALL' ? (
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium transition-colors"
               >
                 <span>Browse Properties</span>
                 <ArrowRight className="w-4 h-4" />

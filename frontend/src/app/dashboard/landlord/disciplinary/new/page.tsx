@@ -444,7 +444,7 @@ function NewDisciplinaryIncidentContent() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Infraction &amp; Strike</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -568,7 +568,7 @@ function NewDisciplinaryIncidentContent() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Incident Report</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -673,7 +673,7 @@ function NewDisciplinaryIncidentContent() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Sanction &amp; Review</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -783,7 +783,7 @@ function NewDisciplinaryIncidentContent() {
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
               <span>Record Disciplinary Citation</span>

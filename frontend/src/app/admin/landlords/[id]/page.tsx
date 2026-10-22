@@ -110,7 +110,7 @@ export default function AdminLandlordDetailPage({
         <p className="text-xs text-zinc-500">The requested landlord record does not exist or has been removed.</p>
         <Link
           href="/admin/landlords"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#16A34A] text-white rounded-xl text-xs font-bold"
         >
           Return to Landlords Directory
         </Link>
@@ -521,7 +521,7 @@ export default function AdminLandlordDetailPage({
                     href={getImageUrl(landlord.landlordDocUrl)}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition flex items-center gap-1.5"
                   >
                     <span>Open Document</span>
                     <ExternalLink className="w-3.5 h-3.5" />

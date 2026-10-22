@@ -50,7 +50,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const variantClasses: Record<ButtonVariant, string> = {
       primary:
-        'bg-[#0F5132] hover:bg-[#0A3D24] active:bg-[#08301C] text-white border border-[#062415]/40 shadow-xs focus-visible:ring-[#0F5132]/50',
+        'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#16A34A]/50',
       blue:
         'bg-[#0062BA] hover:bg-[#00529E] active:bg-[#004687] text-white border border-[#00488A]/40 shadow-xs focus-visible:ring-[#0062BA]/50',
       secondary:
@@ -78,7 +78,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled || isLoading}
         className={clsx(
           'inline-flex items-center justify-center transition-all duration-150 select-none cursor-pointer active:scale-[0.98]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F5132] focus-visible:ring-offset-2',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] focus-visible:ring-offset-2',
           'disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:active:scale-100',
           variantClasses[variant],
           sizeClasses[size],
@@ -539,7 +539,7 @@ export function EmptyState({
         <div className="mt-6">
           <Link
             href={actionHref}
-            className="inline-flex items-center justify-center h-10 px-5 rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-semibold transition-colors"
+            className="inline-flex items-center justify-center h-10 px-5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold transition-colors"
           >
             {actionLabel}
           </Link>

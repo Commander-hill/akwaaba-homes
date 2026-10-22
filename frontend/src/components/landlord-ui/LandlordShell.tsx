@@ -250,7 +250,7 @@ export default function LandlordShell({
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/landlord/new"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold"
             >
               <Plus className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">Add property</span>

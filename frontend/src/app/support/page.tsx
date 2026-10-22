@@ -437,7 +437,7 @@ function SupportContent() {
               <button
                 type="submit"
                 disabled={submitMutation.isPending}
-                className="h-11 px-6 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                className="h-11 px-6 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {submitMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

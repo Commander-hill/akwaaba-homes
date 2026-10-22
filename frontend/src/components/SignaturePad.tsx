@@ -170,7 +170,7 @@ export default function SignaturePad({ onSave, label = 'Sign Below', disabled = 
         <button
           type="button"
           onClick={confirmSignature}
-          className="w-full py-3 px-4 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
+          className="w-full py-3 px-4 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-95"
         >
           <CheckCircle2 className="w-4 h-4 text-amber-300" /> Confirm & Attach E-Signature
         </button>

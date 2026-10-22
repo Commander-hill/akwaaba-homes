@@ -42,10 +42,10 @@
     --background: #F8F7F2;
     --foreground: #242925;
 
-    /* Primary Brand: Deep Forest Green */
-    --primary: #173D32;
+    /* Primary Brand: Vibrant Emerald (#16A34A per user uploaded spec) */
+    --primary: #16A34A;
     --primary-foreground: #FFFFFF;
-    --primary-hover: #102C24;
+    --primary-hover: #15803D;
 
     /* Secondary Brand: Muted Botanical Green */
     --secondary: #557A67;

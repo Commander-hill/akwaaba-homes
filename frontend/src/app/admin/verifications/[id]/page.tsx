@@ -110,7 +110,7 @@ function DocumentPreviewCard({
               href={resolvedUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-[#0F5132] text-white dark:text-zinc-900 dark:hover:text-white text-xs font-bold transition shadow-xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-[#16A34A] text-white dark:text-zinc-900 dark:hover:text-white text-xs font-bold transition shadow-xs"
             >
               <ExternalLink className="w-3.5 h-3.5" /> Inspect PDF Document
             </a>
@@ -138,7 +138,7 @@ function DocumentPreviewCard({
                 href={resolvedUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="px-3 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold inline-flex items-center gap-1.5 text-xs transition"
+                className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-bold inline-flex items-center gap-1.5 text-xs transition"
               >
                 <ExternalLink className="w-3 h-3" /> Open Directly
               </a>

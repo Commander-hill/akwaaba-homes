@@ -445,7 +445,7 @@ function LandlordDashboardContent() {
             <Link
               href="/dashboard/landlord/new"
               id="tour-add-property"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>List Property</span>
@@ -845,7 +845,7 @@ function LandlordDashboardContent() {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/dashboard/landlord/new"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>New Property</span>
@@ -1043,7 +1043,7 @@ function LandlordDashboardContent() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={handleDownloadGRATaxPDF}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Download Tax PDF</span>
@@ -1254,7 +1254,7 @@ function LandlordDashboardContent() {
                           <button
                             onClick={() => { setProcessingId(pending.id); updateStatusMutation.mutate({ id: pending.id, status: 'APPROVED' }); }}
                             disabled={processingId === pending.id}
-                            className="flex-1 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                            className="flex-1 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer disabled:opacity-50"
                           >
                             {processingId === pending.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                             <span>Approve &amp; Issue Lease</span>
@@ -1338,7 +1338,7 @@ function LandlordDashboardContent() {
                                   <button
                                     onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'APPROVED' }); }}
                                     disabled={processingId === booking.id}
-                                    className="px-2.5 py-1 bg-[#0F5132] text-white rounded-lg text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
+                                    className="px-2.5 py-1 bg-[#16A34A] text-white rounded-lg text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
                                   >
                                     Accept
                                   </button>
@@ -1448,7 +1448,7 @@ function LandlordDashboardContent() {
                             href={`/dashboard/agreements/${item.bookingId}`}
                             className={clsx(
                               "px-3.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition shadow-xs",
-                              needsLandlordSig ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-[#0F5132] hover:bg-[#0A3D24] text-white"
+                              needsLandlordSig ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-[#16A34A] hover:bg-[#15803D] text-white"
                             )}
                           >
                             <FileSignature className="w-3.5 h-3.5" />
@@ -1795,7 +1795,7 @@ function LandlordDashboardContent() {
                   "px-6 py-2.5 rounded-xl text-xs font-bold text-white transition shadow-xs",
                   ticketActionModal.mode === 'SCHEDULE' 
                     ? "bg-indigo-600 hover:bg-indigo-700" 
-                    : "bg-[#0F5132] hover:bg-[#0A3D24]"
+                    : "bg-[#16A34A] hover:bg-[#15803D]"
                 )}
               >
                 {updateTicketMutation.isPending ? 'Saving...' : ticketActionModal.mode === 'SCHEDULE' ? 'Save Schedule' : 'Confirm Resolution'}

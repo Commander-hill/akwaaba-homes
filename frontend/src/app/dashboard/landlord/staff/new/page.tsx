@@ -349,7 +349,7 @@ export default function NewStaffAppointmentPage() {
               type="button"
               onClick={handleNext}
               disabled={propertyList.length === 0}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               <span>Next: Staff Identity</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -425,7 +425,7 @@ export default function NewStaffAppointmentPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Role Designation</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export default function NewStaffAppointmentPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Access &amp; Review</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -654,7 +654,7 @@ export default function NewStaffAppointmentPage() {
               type="button"
               onClick={handleSubmit}
               disabled={assignStaffMutation.isPending}
-              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               {assignStaffMutation.isPending ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

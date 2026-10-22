@@ -400,7 +400,7 @@ export default function OnboardingPage() {
                   <button
                     type="submit"
                     disabled={mutation.isPending || !isFormValid}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0F5132] cursor-pointer shadow-xs disabled:shadow-none"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#16A34A] cursor-pointer shadow-xs disabled:shadow-none"
                   >
                     {mutation.isPending ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

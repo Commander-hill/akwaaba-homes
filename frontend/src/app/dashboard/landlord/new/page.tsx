@@ -421,7 +421,7 @@ export default function NewPropertyPage() {
             </Link>
           )}
           {isVerificationIncomplete && (
-            <Link href="/dashboard/verification" className="px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold">
+            <Link href="/dashboard/verification" className="px-4 py-2 bg-[#16A34A] text-white rounded-xl text-xs font-bold">
               Submit Ghana Card KYC
             </Link>
           )}

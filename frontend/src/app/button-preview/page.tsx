@@ -168,10 +168,10 @@ export default function ButtonPreviewPage() {
               </p>
             </div>
 
-            {/* Akwaaba Emerald */}
+            {/* Akwaaba Vivid Green (#16A34A) */}
             <div className="p-5 rounded-2xl bg-white dark:bg-[#121614] border border-zinc-200 dark:border-zinc-800/90 space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                <span>Akwaaba Forest Emerald</span>
+                <span>Akwaaba Green (#16A34A)</span>
                 <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">PRIMARY ACTIONS</span>
               </div>
               <div className="py-2">

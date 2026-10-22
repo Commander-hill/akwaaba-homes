@@ -245,7 +245,7 @@ export default function AdminUsersPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Members</span>
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-[#16A34A] group-hover:text-white transition-colors">
               <Users className="w-4 h-4" />
             </div>
           </div>
@@ -682,7 +682,7 @@ export default function AdminUsersPage() {
                           {(['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'].includes(user.ghanaCardStatus) || user.ghanaCardFrontUrl || (user.role === 'LANDLORD' && user.landlordDocUrl)) && (
                             <Link
                               href={`/admin/verifications/${user.id}`}
-                              className="px-2.5 py-1.5 bg-[#0F5132] hover:bg-[#146c43] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                               title="Audit submitted statutory documents"
                             >
                               <Eye className="w-3.5 h-3.5" />

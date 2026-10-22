@@ -224,7 +224,7 @@ export default function AgreementPage() {
           {canSign && (
             <button
               onClick={() => setShowSignModal(true)}
-              className="px-4 py-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
             >
               <FileSignature className="w-3.5 h-3.5" />
               <span>Sign Agreement</span>
@@ -682,7 +682,7 @@ export default function AgreementPage() {
                   type="button"
                   onClick={handleConfirmSignature}
                   disabled={signMutation.isPending || !signatureData}
-                  className="flex-[2] py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
+                  className="flex-[2] py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl font-semibold text-xs shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
                 >
                   {signMutation.isPending ? (
                     <>

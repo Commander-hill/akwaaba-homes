@@ -190,7 +190,7 @@ export default function AdminVerificationsQueuePage() {
       render: (row) => (
         <Link
           href={`/admin/verifications/${row.userId}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-[#0F5132] text-white dark:text-zinc-900 dark:hover:text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 dark:bg-zinc-100 hover:bg-[#16A34A] text-white dark:text-zinc-900 dark:hover:text-white text-xs font-bold transition shadow-2xs cursor-pointer"
         >
           <span>Audit Document</span>
           <ArrowRight className="w-3.5 h-3.5" />

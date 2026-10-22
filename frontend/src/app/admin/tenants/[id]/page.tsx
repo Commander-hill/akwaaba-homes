@@ -105,7 +105,7 @@ export default function AdminTenantDetailPage({
         <p className="text-xs text-zinc-500">The requested tenant record does not exist or has been removed.</p>
         <Link
           href="/admin/tenants"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#16A34A] text-white rounded-xl text-xs font-bold"
         >
           Return to Tenants Directory
         </Link>
@@ -396,7 +396,7 @@ export default function AdminTenantDetailPage({
                     </div>
                     <Link
                       href={`/admin/disputes/${b.id}`}
-                      className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-[#0F5132] text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-white transition"
+                      className="px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-[#16A34A] text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-white transition"
                     >
                       Inspect Docket
                     </Link>

@@ -528,7 +528,7 @@ export default function AdminNoticesPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleEdit(notice)}
-                            className="p-2 text-slate-600 hover:text-white hover:bg-[#0F5132] rounded-lg transition-all cursor-pointer"
+                            className="p-2 text-slate-600 hover:text-white hover:bg-[#16A34A] rounded-lg transition-all cursor-pointer"
                             title="Edit Notice"
                           >
                             <Edit2 className="w-3.5 h-3.5" />

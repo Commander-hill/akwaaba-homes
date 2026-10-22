@@ -487,7 +487,7 @@ export default function LandlordWithdrawalPage() {
                   <button
                     type="submit"
                     disabled={withdrawMutation.isPending || !stepUpCode.trim()}
-                    className="w-2/3 h-11 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                    className="w-2/3 h-11 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer active:scale-[0.99]"
                   >
                     {withdrawMutation.isPending ? (
                       <>
@@ -718,7 +718,7 @@ export default function LandlordWithdrawalPage() {
                   <button
                     type="submit"
                     disabled={withdrawMutation.isPending || !amount || parseFloat(amount) < 10 || parseFloat(amount) > availableBalance}
-                    className="w-full h-12 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+                    className="w-full h-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
                   >
                     <span>Proceed to Security Verification</span>
                     <ArrowRight className="w-4 h-4" />

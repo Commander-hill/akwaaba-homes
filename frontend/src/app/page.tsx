@@ -280,7 +280,7 @@ export default function HomePage() {
                 <div className="sm:col-span-2 flex items-center">
                   <button
                     type="submit"
-                    className="w-full h-full min-h-[48px] rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="w-full h-full min-h-[48px] rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
                     <span>Search</span>

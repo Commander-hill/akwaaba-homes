@@ -463,7 +463,7 @@ export default function NewInventoryAssetPage() {
               type="button"
               onClick={handleNext}
               disabled={propertyList.length === 0}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               <span>Next: Fixture Identity</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -595,7 +595,7 @@ export default function NewInventoryAssetPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Condition &amp; Value</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -684,7 +684,7 @@ export default function NewInventoryAssetPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
             >
               <span>Next: Notes &amp; Review</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -773,7 +773,7 @@ export default function NewInventoryAssetPage() {
               type="button"
               onClick={handleSubmit}
               disabled={saveAssetMutation.isPending}
-              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
             >
               {saveAssetMutation.isPending ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

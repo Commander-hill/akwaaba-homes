@@ -104,7 +104,7 @@ export default function SecurityPage() {
 
         <Link
           href="/dashboard/profile/security/2fa"
-          className="px-4 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
+          className="px-4 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shrink-0 shadow-xs cursor-pointer"
         >
           <span>Manage 2FA</span>
           <ArrowRight className="w-3.5 h-3.5" />

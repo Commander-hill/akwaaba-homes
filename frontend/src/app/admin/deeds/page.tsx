@@ -387,7 +387,7 @@ export default function AdminLandlordDeedsPage() {
                     <td className="px-6 py-4 text-right whitespace-nowrap">
                       <Link
                         href={`/admin/deeds/${landlord.id}`}
-                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-[#0F5132] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0F5132] text-[var(--foreground)] rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-[#16A34A] hover:text-white dark:bg-slate-800 dark:hover:bg-[#16A34A] text-[var(--foreground)] rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
                       >
                         <Eye className="w-3.5 h-3.5" /> Inspect Deed
                       </Link>

@@ -174,7 +174,7 @@ export default function AdminLandlordsPage() {
       render: (row) => (
         <Link
           href={`/admin/landlords/${row.id}`}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-[#0F5132] text-zinc-800 dark:text-zinc-200 hover:text-white dark:hover:text-white text-xs font-bold transition shadow-2xs cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-[#16A34A] text-zinc-800 dark:text-zinc-200 hover:text-white dark:hover:text-white text-xs font-bold transition shadow-2xs cursor-pointer"
         >
           <span>View Profile</span>
           <ArrowRight className="w-3.5 h-3.5" />

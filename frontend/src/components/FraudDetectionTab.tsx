@@ -247,7 +247,7 @@ export default function FraudDetectionTab() {
                     type="button"
                     onClick={() => resolveMutation.mutate({ propertyId: report.propertyId, action: 'APPROVE' })}
                     disabled={resolveMutation.isPending}
-                    className="px-3 py-1 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                    className="px-3 py-1 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
                   >
                     Approve Listing
                   </button>

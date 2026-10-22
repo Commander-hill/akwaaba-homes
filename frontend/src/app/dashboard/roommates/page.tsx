@@ -311,7 +311,7 @@ export default function RoommatesPage() {
             <button 
               type="submit" 
               disabled={createProfileMutation.isPending}
-              className="w-full py-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full py-3 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {createProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               <span>Save Lifestyle Profile &amp; Discover Matches</span>
@@ -518,7 +518,7 @@ export default function RoommatesPage() {
                       </button>
                       <button 
                         onClick={() => setInviteModalUser(match)}
-                        className="py-2 px-3 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                        className="py-2 px-3 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
                       >
                         <UserPlus className="w-3.5 h-3.5" />
                         <span>Split Lease</span>
@@ -565,7 +565,7 @@ export default function RoommatesPage() {
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => respondInviteMutation.mutate({ id: invite.id, status: 'ACCEPTED' })}
-                          className="px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                          className="px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <CheckCircle className="w-3.5 h-3.5" /> Accept
                         </button>
@@ -672,7 +672,7 @@ export default function RoommatesPage() {
                 type="button"
                 onClick={() => sendInviteMutation.mutate({ receiverId: inviteModalUser.userId, message: inviteMessage })}
                 disabled={sendInviteMutation.isPending}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#0F5132] hover:bg-[#0A3D24] text-white flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#16A34A] hover:bg-[#15803D] text-white flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {sendInviteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 <span>Send Co-Living Invite</span>

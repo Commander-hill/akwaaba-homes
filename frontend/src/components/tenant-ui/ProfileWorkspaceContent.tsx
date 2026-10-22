@@ -241,7 +241,7 @@ export function ProfileWorkspaceContent({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium rounded-[10px] shadow-xs transition-colors disabled:opacity-60 cursor-pointer self-start sm:self-auto"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium rounded-[10px] shadow-xs transition-colors disabled:opacity-60 cursor-pointer self-start sm:self-auto"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -258,7 +258,7 @@ export function ProfileWorkspaceContent({
                   <button
                     type="button"
                     onClick={() => setRequestModalOpen(true)}
-                    className="bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-[10px] transition-colors cursor-pointer"
+                    className="bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-medium px-4 py-2.5 rounded-[10px] transition-colors cursor-pointer"
                   >
                     Request Edit Access
                   </button>
@@ -696,7 +696,7 @@ export function ProfileWorkspaceContent({
               <div className="shrink-0">
                 <Link
                   href="/dashboard/profile/security/2fa"
-                  className="bg-[#173D32] hover:bg-[#102C24] text-white font-medium text-xs sm:text-sm px-4 py-2.5 rounded-[10px] transition-colors inline-flex items-center gap-2"
+                  className="bg-[#16A34A] hover:bg-[#15803D] text-white font-medium text-xs sm:text-sm px-4 py-2.5 rounded-[10px] transition-colors inline-flex items-center gap-2"
                 >
                   <KeyRound className="w-4 h-4" />
                   <span>
@@ -903,7 +903,7 @@ export function ProfileWorkspaceContent({
                 type="button"
                 disabled={!requestReason.trim() || requestUnlockMutation.isPending}
                 onClick={() => requestUnlockMutation.mutate(requestReason)}
-                className="px-5 py-2 text-xs sm:text-sm font-medium text-white bg-[#173D32] hover:bg-[#102C24] rounded-[10px] transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                className="px-5 py-2 text-xs sm:text-sm font-medium text-white bg-[#16A34A] hover:bg-[#15803D] rounded-[10px] transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
               >
                 {requestUnlockMutation.isPending && (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

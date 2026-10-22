@@ -93,7 +93,7 @@ export default function InvoicePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center gap-1.5 bg-[#0F5132] hover:bg-[#0B3D26] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Download Official PDF</span>

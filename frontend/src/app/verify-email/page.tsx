@@ -112,7 +112,7 @@ function VerifyEmailContent() {
                 <div className="pt-2">
                   <Link
                     href="/login"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                   >
                     <span>Proceed to Sign In</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -142,7 +142,7 @@ function VerifyEmailContent() {
                 <div className="space-y-2.5 pt-2">
                   <Link
                     href="/login"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                   >
                     <span>Try Signing In</span>
                     <ArrowRight className="w-3.5 h-3.5" />

@@ -137,7 +137,7 @@ export default function AdminConfirmDialog({
                 'px-4 py-2 text-xs font-bold text-white rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-60',
                 confirmVariant === 'danger' && 'bg-rose-600 hover:bg-rose-700',
                 confirmVariant === 'warning' && 'bg-amber-600 hover:bg-amber-700',
-                confirmVariant === 'primary' && 'bg-[#0F5132] hover:bg-[#0A3D24]'
+                confirmVariant === 'primary' && 'bg-[#16A34A] hover:bg-[#15803D]'
               )}
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

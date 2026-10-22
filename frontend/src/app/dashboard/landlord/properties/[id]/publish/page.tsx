@@ -326,7 +326,7 @@ export default function PublishPropertyPage() {
             <Link
               href={`/properties/${property.id}`}
               target="_blank"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold"
             >
               <ExternalLink className="w-4 h-4" /> View public listing
             </Link>
@@ -429,7 +429,7 @@ export default function PublishPropertyPage() {
               type="button"
               onClick={() => initPaymentMutation.mutate({ provider: selectedProvider })}
               disabled={initPaymentMutation.isPending || fee === undefined}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {initPaymentMutation.isPending ? (
                 <>

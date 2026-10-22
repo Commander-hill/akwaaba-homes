@@ -162,7 +162,7 @@ export default function LandlordSubscriptionPage() {
                         {!isLive ? (
                           <Link 
                             href={`/dashboard/landlord/properties/${item.propertyId}/publish`}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-lg font-bold text-[11px] shadow-xs transition-colors"
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg font-bold text-[11px] shadow-xs transition-colors"
                           >
                             <CreditCard className="w-3 h-3" /> Pay to Publish
                           </Link>

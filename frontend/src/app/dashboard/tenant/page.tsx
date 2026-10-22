@@ -255,7 +255,7 @@ function TenantDashboardContent() {
           {primaryBooking ? (
             <Link
               href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium transition-colors"
             >
               <span>View Active Booking</span>
               <ArrowRight className="w-4 h-4" />
@@ -263,7 +263,7 @@ function TenantDashboardContent() {
           ) : (
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium transition-colors"
             >
               <Search className="w-4 h-4" />
               <span>Find a Home</span>
@@ -584,7 +584,7 @@ function TenantDashboardContent() {
             <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto pt-4 lg:pt-0 border-t lg:border-t-0 border-[#E7E7DF] dark:border-[#262E29]">
               <Link
                 href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-medium transition-colors"
               >
                 <span>View Booking Details</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -694,7 +694,7 @@ function TenantDashboardContent() {
             {dashboardState.needsReview && (
               <Link
                 href="/dashboard/tenant/reviews/new"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-medium transition-colors"
               >
                 <Star className="w-4 h-4" />
                 <span>Leave a Verified Review</span>
@@ -966,7 +966,7 @@ function TenantDashboardContent() {
           </Link>
           <Link
             href="/search"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium transition-colors"
           >
             <span>Browse All Properties</span>
             <ArrowRight className="w-3.5 h-3.5" />

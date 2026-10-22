@@ -1070,7 +1070,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   <div className="space-y-2 pt-1">
                     <Link
                       href={`/bookings/${myActiveBookingData.id}`}
-                      className="w-full h-10 bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2"
+                      className="w-full h-10 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2"
                     >
                       <span>View Booking Details</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -1466,7 +1466,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <div className="flex gap-2.5 pt-2">
                   <Link
                     href={`/bookings/${createdBookingId}`}
-                    className="flex-1 h-11 rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-xs font-semibold flex items-center justify-center gap-2"
+                    className="flex-1 h-11 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold flex items-center justify-center gap-2"
                   >
                     <span>Open Booking Details</span>
                     <ArrowRight className="w-4 h-4" />

@@ -184,7 +184,7 @@ export default function AdminTicketsPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Reports</span>
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-300 group-hover:bg-[#16A34A] group-hover:text-white transition-colors">
               <Wrench className="w-4 h-4" />
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function AdminTicketsPage() {
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Resolved</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-[#0F5132] group-hover:text-white transition-colors">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-[#16A34A] group-hover:text-white transition-colors">
               <CheckCircle className="w-4 h-4" />
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function AdminTicketsPage() {
                             {hasPhoto && (
                               <button
                                 onClick={() => setZoomedPhoto({ url: getImageUrl(ticket.imageUrl), title: ticket.title })}
-                                className="p-1 text-[#0F5132] hover:bg-[#0F5132]/10 rounded-md shrink-0"
+                                className="p-1 text-[#0F5132] hover:bg-[#16A34A]/10 rounded-md shrink-0"
                                 title="Click to inspect photo evidence"
                               >
                                 <Camera className="w-3.5 h-3.5" />
@@ -504,7 +504,7 @@ export default function AdminTicketsPage() {
                       <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Link
                           href={`/admin/tickets/${ticket.id}`}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#0F5132] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0F5132] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1 ml-auto shadow-xs w-fit"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#16A34A] hover:text-white dark:bg-slate-800 dark:hover:bg-[#16A34A] text-slate-700 dark:text-slate-200 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1 ml-auto shadow-xs w-fit"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           Audit Ticket

@@ -538,7 +538,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
                     <button
                       onClick={() => dispatchBillMutation.mutate({ unit, totalAmount: roomSubtotal, perResident })}
                       disabled={dispatchBillMutation.isPending || unit.occupants.length === 0}
-                      className="flex-1 py-2 px-3 bg-[#0F5132] hover:bg-[#0c4128] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+                      className="flex-1 py-2 px-3 bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-50 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
                     >
                       {dispatchBillMutation.isPending ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -88,7 +88,7 @@ export default function AdminTicketDetailPage({
         </p>
         <Link
           href="/admin/tickets"
-          className="px-4 py-2 bg-[#0F5132] text-white rounded-xl text-xs font-bold transition"
+          className="px-4 py-2 bg-[#16A34A] text-white rounded-xl text-xs font-bold transition"
         >
           Return to Tickets Queue
         </Link>

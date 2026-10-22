@@ -444,7 +444,7 @@ export default function AuditLogsPage() {
                             e.stopPropagation();
                             setSelectedLog(log);
                           }}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#0F5132] hover:text-white dark:bg-slate-800 dark:hover:bg-[#0F5132] text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-[#16A34A] hover:text-white dark:bg-slate-800 dark:hover:bg-[#16A34A] text-slate-700 dark:text-slate-300 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1"
                         >
                           <Eye className="w-3.5 h-3.5" /> Inspect
                         </button>

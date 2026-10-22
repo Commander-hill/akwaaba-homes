@@ -512,7 +512,7 @@ function TwoFactorStudioContent() {
               <button
                 type="button"
                 onClick={() => refetchSetup()}
-                className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 Retry Setup
               </button>
@@ -595,7 +595,7 @@ function TwoFactorStudioContent() {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
                     >
                       <span>Next: Backup Codes</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -699,7 +699,7 @@ function TwoFactorStudioContent() {
                       type="button"
                       disabled={!savedCodesConfirmed}
                       onClick={() => setCurrentStep(3)}
-                      className="inline-flex items-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl px-6 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
                     >
                       <span>Next: Verify & Activate</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -779,7 +779,7 @@ function TwoFactorStudioContent() {
                         type="button"
                         disabled={totpCode.join('').length !== 6 || enableMutation.isPending}
                         onClick={() => enableMutation.mutate(totpCode.join(''))}
-                        className="w-full sm:w-auto min-w-[240px] py-3 px-6 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="w-full sm:w-auto min-w-[240px] py-3 px-6 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {enableMutation.isPending ? (
                           <>
@@ -850,7 +850,7 @@ function TwoFactorStudioContent() {
                         type="button"
                         disabled={smsCode.join('').length !== 6 || verifySmsMutation.isPending}
                         onClick={() => verifySmsMutation.mutate(smsCode.join(''))}
-                        className="w-full sm:w-auto min-w-[240px] py-3 px-6 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="w-full sm:w-auto min-w-[240px] py-3 px-6 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {verifySmsMutation.isPending ? (
                           <>
@@ -984,7 +984,7 @@ function TwoFactorStudioContent() {
                 type="button"
                 disabled={!regenAuthValue.trim() || regenCodesMutation.isPending}
                 onClick={() => regenCodesMutation.mutate()}
-                className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-xl text-xs font-medium flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-medium flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {regenCodesMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 Generate 8 Codes

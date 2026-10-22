@@ -483,7 +483,7 @@ function CaretakerPortalContent() {
           <button
             type="button"
             onClick={handleCopyEmail}
-            className="px-2.5 py-1 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
           >
             {copiedEmail ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             <span>{copiedEmail ? 'Copied' : 'Copy'}</span>
@@ -709,7 +709,7 @@ function CaretakerPortalContent() {
                     )}
                     <Link
                       href="/dashboard/messages"
-                      className="px-3 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium inline-flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium inline-flex items-center gap-1.5"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       <span>Message</span>
@@ -831,7 +831,7 @@ function CaretakerPortalContent() {
                             setCollectModalParcel(p);
                             setCollectOtp('');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium shrink-0 cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium shrink-0 cursor-pointer"
                         >
                           Hand Over
                         </button>
@@ -884,7 +884,7 @@ function CaretakerPortalContent() {
             {gatehouseSub === 'parcels' && (
               <Link
                 href={`/dashboard/caretaker/parcels/new?propertyId=${activeProperty?.id || ''}`}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Log Incoming Package</span>
@@ -924,7 +924,7 @@ function CaretakerPortalContent() {
                   <button
                     type="submit"
                     disabled={verifyGatePinMutation.isPending || gatePinInput.trim().length < 4}
-                    className="h-9 px-4 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    className="h-9 px-4 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {verifyGatePinMutation.isPending ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1059,7 +1059,7 @@ function CaretakerPortalContent() {
                                     type="button"
                                     onClick={() => verifyGatePinMutation.mutate(v.accessCode)}
                                     disabled={verifyGatePinMutation.isPending}
-                                    className="px-2.5 py-1 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium cursor-pointer"
+                                    className="px-2.5 py-1 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium cursor-pointer"
                                   >
                                     Check In
                                   </button>
@@ -1173,7 +1173,7 @@ function CaretakerPortalContent() {
                                       setCollectModalParcel(parcel);
                                       setCollectOtp('');
                                     }}
-                                    className="px-3 py-1 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium cursor-pointer"
+                                    className="px-3 py-1 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium cursor-pointer"
                                   >
                                     Verify OTP
                                   </button>
@@ -1256,7 +1256,7 @@ function CaretakerPortalContent() {
             {residentsSub === 'assets' && (
               <Link
                 href={`/dashboard/landlord/inventory/new?propertyId=${activeProperty?.id || ''}`}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Log Room Fixture</span>
@@ -1266,7 +1266,7 @@ function CaretakerPortalContent() {
             {residentsSub === 'conduct' && (
               <Link
                 href={`/dashboard/landlord/disciplinary/new?propertyId=${activeProperty?.id || ''}`}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>File Conduct Report</span>
@@ -1399,7 +1399,7 @@ function CaretakerPortalContent() {
                                       type="button"
                                       onClick={() => checkInResidentMutation.mutate(b.id)}
                                       disabled={checkInResidentMutation.isPending}
-                                      className="px-2.5 py-1 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium cursor-pointer"
+                                      className="px-2.5 py-1 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium cursor-pointer"
                                     >
                                       Check In
                                     </button>
@@ -1726,7 +1726,7 @@ function CaretakerPortalContent() {
                                       resolutionNotes: ticket.resolutionNotes || '',
                                     })
                                   }
-                                  className="px-2.5 py-1 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-medium cursor-pointer"
+                                  className="px-2.5 py-1 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-medium cursor-pointer"
                                 >
                                   Resolve
                                 </button>
@@ -1794,7 +1794,7 @@ function CaretakerPortalContent() {
               <button
                 type="button"
                 onClick={() => setShowMeterForm(!showMeterForm)}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>{showMeterForm ? 'Cancel' : 'Record Meter Reading'}</span>
@@ -1804,7 +1804,7 @@ function CaretakerPortalContent() {
             {utilitiesSub === 'notices' && activeAssignment?.canPostNotices !== false && (
               <Link
                 href={`/dashboard/landlord/notices/new?propertyId=${activeProperty?.id || ''}`}
-                className="px-3.5 py-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold inline-flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold inline-flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Post Compound Notice</span>
@@ -1924,7 +1924,7 @@ function CaretakerPortalContent() {
                         !meterForm.meterNumber.trim() ||
                         !meterForm.currentReading
                       }
-                      className="px-4 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
+                      className="px-4 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold disabled:opacity-40 cursor-pointer"
                     >
                       {saveMeterReadingMutation.isPending ? 'Saving...' : 'Save Reading'}
                     </button>
@@ -2136,7 +2136,7 @@ function CaretakerPortalContent() {
                       resolutionNotes: ticketModal.resolutionNotes.trim() || undefined,
                     });
                   }}
-                  className="px-4 py-2 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white font-semibold disabled:opacity-40 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold disabled:opacity-40 cursor-pointer"
                 >
                   {updateTicketMutation.isPending ? 'Saving...' : 'Save Update'}
                 </button>
@@ -2198,7 +2198,7 @@ function CaretakerPortalContent() {
                       pickupCode: collectOtp,
                     })
                   }
-                  className="px-4 py-2 rounded-lg bg-[#0F5132] hover:bg-[#0A3D24] text-white font-semibold disabled:opacity-40 cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold disabled:opacity-40 cursor-pointer"
                 >
                   {collectParcelMutation.isPending ? 'Verifying...' : 'Confirm Handover'}
                 </button>

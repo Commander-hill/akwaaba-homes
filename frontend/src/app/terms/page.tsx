@@ -457,7 +457,7 @@ export default function TermsPage() {
 
               <Link
                 href="/support"
-                className="h-10 px-4 inline-flex items-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="h-10 px-4 inline-flex items-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
                 <span>Legal Inquiries</span>

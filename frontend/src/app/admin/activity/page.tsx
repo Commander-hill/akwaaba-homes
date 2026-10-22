@@ -597,7 +597,7 @@ export default function AdminActivityPage() {
                             e.stopPropagation();
                             setSelectedEvent(event);
                           }}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1 group-hover:bg-[#0F5132] group-hover:text-white"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1 group-hover:bg-[#16A34A] group-hover:text-white"
                         >
                           Inspect <ChevronRight className="w-3 h-3" />
                         </button>
@@ -758,7 +758,7 @@ export default function AdminActivityPage() {
             <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-wrap gap-2">
               <Link
                 href="/admin/properties"
-                className="flex-1 text-center py-2 px-3 rounded-xl bg-[#0F5132] hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
+                className="flex-1 text-center py-2 px-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
               >
                 Inspect Properties <ExternalLink className="w-3 h-3" />
               </Link>

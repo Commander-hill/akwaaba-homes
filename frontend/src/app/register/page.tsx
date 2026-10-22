@@ -267,7 +267,7 @@ export default function RegisterPage() {
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => redirectByRole(sessionData)}
-              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
+              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
             >
               <span>Continue to {roleTitle}</span>
               <ArrowRight className="w-4 h-4" />

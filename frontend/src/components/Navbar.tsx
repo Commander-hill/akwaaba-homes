@@ -197,7 +197,7 @@ export default function Navbar() {
                   <NotificationBell />
                   <Link
                     href={dashboardHref}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold bg-[#173D32] hover:bg-[#102C24] text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors"
                   >
                     <UserCircle className="w-3.5 h-3.5" />
                     <span>{role === 'TENANT' ? 'My Account' : 'Dashboard'}</span>
@@ -213,7 +213,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/register"
-                    className="h-9 px-4 inline-flex items-center justify-center rounded-lg text-xs font-semibold text-white bg-[#173D32] hover:bg-[#102C24] transition-colors shadow-2xs"
+                    className="h-9 px-4 inline-flex items-center justify-center rounded-lg text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] transition-colors shadow-2xs"
                   >
                     Create account
                   </Link>

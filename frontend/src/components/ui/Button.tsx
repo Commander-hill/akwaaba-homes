@@ -34,8 +34,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       // 1. Royal Sapphire Blue (exact match to user's uploaded buttons)
       blue: 'bg-[#0062BA] hover:bg-[#00529E] active:bg-[#004687] text-white border border-[#00488A]/40 shadow-xs focus-visible:ring-[#0062BA]/50',
 
-      // 2. Akwaaba Signature Forest Emerald
-      emerald: 'bg-[#0F5132] hover:bg-[#0A3D24] active:bg-[#08301C] text-white border border-[#062415]/40 shadow-xs focus-visible:ring-[#0F5132]/50',
+      // 2. Akwaaba Signature Green (Exact match to uploaded hex #16A34A)
+      emerald: 'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#16A34A]/50',
 
       // 3. Secondary Filled Neutral
       secondary:
