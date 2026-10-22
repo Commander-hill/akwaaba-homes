@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
+  RefreshCw,
 } from 'lucide-react';
 import api from '@/lib/axios';
 import PropertyCard, {
@@ -121,7 +122,7 @@ function SearchDiscoveryContent() {
     router.replace(`${pathname}${qs ? `?${qs}` : ''}`, { scroll: false });
   };
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: [
       'properties-search',
       searchQuery,
@@ -481,11 +482,22 @@ function SearchDiscoveryContent() {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* Refresh Action */}
+                <Button
+                  variant="blue"
+                  size="sm"
+                  onClick={() => refetch()}
+                  disabled={isFetching}
+                  leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />}
+                >
+                  Refresh
+                </Button>
+
                 {/* Mobile Filter Trigger */}
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="lg:hidden h-10 px-3.5 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold flex items-center gap-2 cursor-pointer"
+                  className="lg:hidden h-9 px-3.5 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold flex items-center gap-2 cursor-pointer"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-[#173D32]" />
                   <span>Filters</span>
@@ -506,7 +518,7 @@ function SearchDiscoveryContent() {
                       setSortBy(e.target.value);
                       updateUrlParams({ sort: e.target.value });
                     }}
-                    className="h-10 pl-8 pr-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
+                    className="h-9 pl-8 pr-3 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                   >
                     {SORT_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -602,45 +614,62 @@ function SearchDiscoveryContent() {
                   ))}
                 </div>
 
-                {/* Pagination */}
+                {/* Pagination & "See more matches" */}
                 {totalPages > 1 && (
-                  <nav
-                    aria-label="Pagination"
-                    className="pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between"
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1}
-                      onClick={() => {
-                        const prev = Math.max(1, page - 1);
-                        setPage(prev);
-                        updateUrlParams({ page: prev });
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      leftIcon={<ChevronLeft className="w-4 h-4" />}
+                  <div className="pt-8 border-t border-[#E7E7DF] dark:border-[#262E2A] flex flex-col items-center gap-6">
+                    {page < totalPages && (
+                      <Button
+                        variant="blue"
+                        size="sm"
+                        onClick={() => {
+                          const next = Math.min(totalPages, page + 1);
+                          setPage(next);
+                          updateUrlParams({ page: next });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                      >
+                        See more matches
+                      </Button>
+                    )}
+
+                    <nav
+                      aria-label="Pagination"
+                      className="w-full flex items-center justify-between"
                     >
-                      Previous
-                    </Button>
-                    <span className="text-xs font-medium text-[#6F756F]">
-                      Page <strong className="text-[#242925] dark:text-white">{page}</strong> of{' '}
-                      <strong className="text-[#242925] dark:text-white">{totalPages}</strong>
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page >= totalPages}
-                      onClick={() => {
-                        const next = Math.min(totalPages, page + 1);
-                        setPage(next);
-                        updateUrlParams({ page: next });
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                      rightIcon={<ChevronRight className="w-4 h-4" />}
-                    >
-                      Next
-                    </Button>
-                  </nav>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => {
+                          const prev = Math.max(1, page - 1);
+                          setPage(prev);
+                          updateUrlParams({ page: prev });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        leftIcon={<ChevronLeft className="w-4 h-4" />}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-xs font-medium text-[#6F756F]">
+                        Page <strong className="text-[#242925] dark:text-white">{page}</strong> of{' '}
+                        <strong className="text-[#242925] dark:text-white">{totalPages}</strong>
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => {
+                          const next = Math.min(totalPages, page + 1);
+                          setPage(next);
+                          updateUrlParams({ page: next });
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        rightIcon={<ChevronRight className="w-4 h-4" />}
+                      >
+                        Next
+                      </Button>
+                    </nav>
+                  </div>
                 )}
               </>
             )}

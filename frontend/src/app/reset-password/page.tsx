@@ -19,6 +19,7 @@ import {
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
 import AlertBanner from '@/components/AlertBanner';
+import { Button } from '@/components/ui/Button';
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -193,12 +194,16 @@ function ResetPasswordForm() {
               </div>
 
               <div className="pt-2">
-                <Link
-                  href="/login"
-                  className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs cursor-pointer active:scale-[0.99]"
-                >
-                  <span>Proceed to Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
+                <Link href="/login" className="block w-full">
+                  <Button
+                    type="button"
+                    variant="emerald"
+                    size="sm"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                    className="w-full"
+                  >
+                    Proceed to Sign In
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -327,28 +332,28 @@ function ResetPasswordForm() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3 pt-2">
-                  <Link
-                    href="/login"
-                    className="h-11 px-4 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1.5"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Back</span>
+                  <Link href="/login">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back
+                    </Button>
                   </Link>
 
-                  <button
+                  <Button
                     type="submit"
+                    variant="emerald"
+                    size="sm"
+                    isLoading={isLoading}
                     disabled={isLoading || !isPasswordReady}
-                    className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-[0.99]"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                    className="flex-1"
                   >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Update Password</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
+                    Update Password
+                  </Button>
                 </div>
               </form>
             </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/Button';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -52,15 +53,13 @@ export default function AdminPwaInstallPrompt() {
       <div className="rounded-2xl p-4 border border-slate-700 bg-[#0A0F1D] text-white shadow-xl relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-600 p-0.5 shadow-md shrink-0">
-              <div className="w-full h-full bg-[#0A0F1D] rounded-[10px] flex items-center justify-center overflow-hidden">
-                <Image src="/logo.png" alt="Akwaaba Admin Logo" width={28} height={28} className="object-contain" />
-              </div>
+            <div className="w-10 h-10 rounded-xl bg-[#0F5132] p-0.5 shadow-md shrink-0 flex items-center justify-center">
+              <Image src="/logo.png" alt="Akwaaba Admin Logo" width={28} height={28} className="object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h4 className="font-extrabold text-xs text-white">Akwaaba Admin App</h4>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-0.5 uppercase">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-0.5 uppercase">
                   <Download className="w-2.5 h-2.5" /> PWA
                 </span>
               </div>
@@ -70,7 +69,7 @@ export default function AdminPwaInstallPrompt() {
 
           <button
             onClick={handleDismiss}
-            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
             aria-label="Dismiss"
           >
             <X className="w-3.5 h-3.5" />
@@ -78,18 +77,23 @@ export default function AdminPwaInstallPrompt() {
         </div>
 
         <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleDismiss}
-            className="flex-1 py-1.5 text-xs font-bold text-slate-400 hover:text-white transition-colors"
+            className="flex-1 text-slate-400 hover:text-white hover:bg-white/10"
           >
             Later
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="emerald"
+            size="sm"
             onClick={handleInstallClick}
-            className="flex-1 py-2 px-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02] cursor-pointer"
+            leftIcon={<Download className="w-3.5 h-3.5" />}
+            className="flex-1"
           >
-            <Download className="w-3.5 h-3.5" /> Install App
-          </button>
+            Install App
+          </Button>
         </div>
       </div>
     </div>

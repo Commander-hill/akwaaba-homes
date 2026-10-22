@@ -20,6 +20,7 @@ import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 import AlertBanner from '@/components/AlertBanner';
 import ThemeToggle from '@/components/ThemeToggle';
+import { Button } from '@/components/ui/Button';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -480,13 +481,16 @@ function LoginForm() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <button
+                <Button
                   type="submit"
+                  variant="emerald"
+                  size="sm"
+                  isLoading={isLoading}
                   disabled={isLoading || !twoFactorCode.trim()}
-                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs disabled:opacity-60 cursor-pointer"
+                  className="w-full"
                 >
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Verify and continue'}
-                </button>
+                  Verify and continue
+                </Button>
 
                 <button
                   type="button"
@@ -581,13 +585,15 @@ function LoginForm() {
 
                 {/* Primary Submit Button */}
                 <div className="pt-2">
-                  <button
+                  <Button
                     type="submit"
-                    disabled={isLoading}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs disabled:opacity-60 cursor-pointer active:scale-[0.99]"
+                    variant="emerald"
+                    size="sm"
+                    isLoading={isLoading}
+                    className="w-full"
                   >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Sign in</span>}
-                  </button>
+                    Sign in
+                  </Button>
                 </div>
               </form>
 

@@ -22,6 +22,7 @@ import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import AlertBanner from '@/components/AlertBanner';
 import ThemeToggle from '@/components/ThemeToggle';
+import { Button } from '@/components/ui/Button';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -597,15 +598,17 @@ export default function RegisterPage() {
 
               {/* Continue Action */}
               <div className="pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="emerald"
+                  size="sm"
                   onClick={handleNextStep}
                   disabled={!isStep1Valid}
-                  className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer active:scale-[0.99]"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                  className="w-full"
                 >
-                  <span>Continue to Credentials</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                  Continue to Credentials
+                </Button>
               </div>
 
             </div>
@@ -825,29 +828,27 @@ export default function RegisterPage() {
 
               {/* Form Buttons */}
               <div className="flex items-center gap-3 pt-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={handleBackStep}
-                  className="h-11 px-4 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-xl text-xs font-bold text-zinc-700 dark:text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
                 >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back</span>
-                </button>
+                  Back
+                </Button>
 
-                <button
+                <Button
                   type="submit"
+                  variant="emerald"
+                  size="sm"
+                  isLoading={isLoading}
                   disabled={isLoading || !isStep1Valid || !isStep2Valid}
-                  className="flex-1 h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-xs active:scale-[0.99]"
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                  className="flex-1"
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>Complete Registration</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+                  Complete Registration
+                </Button>
               </div>
 
             </form>

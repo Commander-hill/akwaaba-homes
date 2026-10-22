@@ -17,6 +17,7 @@ import {
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
 import AlertBanner from '@/components/AlertBanner';
+import { Button } from '@/components/ui/Button';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -251,20 +252,17 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <div className="pt-2">
-                  <button
+                  <Button
                     type="submit"
+                    variant="emerald"
+                    size="sm"
+                    isLoading={isLoading}
                     disabled={isLoading || !email.trim().includes('@') || !email.trim().includes('.')}
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer active:scale-[0.99]"
+                    rightIcon={<ArrowRight className="w-4 h-4" />}
+                    className="w-full"
                   >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Send recovery link</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
+                    Send recovery link
+                  </Button>
                 </div>
 
                 <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center text-xs text-zinc-500 dark:text-zinc-400">

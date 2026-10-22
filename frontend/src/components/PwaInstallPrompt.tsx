@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Download, X, Smartphone } from 'lucide-react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/Button';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -53,15 +54,13 @@ export default function PwaInstallPrompt() {
       <div className="rounded-2xl p-4 sm:p-5 border border-slate-700 shadow-xl bg-slate-900 text-white relative overflow-hidden">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 p-0.5 shadow-lg flex-shrink-0">
-              <div className="w-full h-full bg-[#0A1136] rounded-[10px] flex items-center justify-center overflow-hidden relative">
-                <Image src="/logo.png" alt="Akwaaba Homes" width={32} height={32} className="object-contain" />
-              </div>
+            <div className="w-11 h-11 rounded-xl bg-[#0F5132] p-0.5 shadow-lg flex-shrink-0 flex items-center justify-center">
+              <Image src="/logo.png" alt="Akwaaba Homes" width={32} height={32} className="object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <h4 className="font-extrabold text-sm text-white">Install Akwaaba Homes</h4>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 flex items-center gap-0.5">
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 flex items-center gap-0.5">
                   <Smartphone className="w-2.5 h-2.5" /> App
                 </span>
               </div>
@@ -71,7 +70,7 @@ export default function PwaInstallPrompt() {
 
           <button
             onClick={handleDismiss}
-            className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+            className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
             aria-label="Dismiss prompt"
           >
             <X className="w-3.5 h-3.5" />
@@ -79,18 +78,23 @@ export default function PwaInstallPrompt() {
         </div>
 
         <div className="flex items-center gap-2 pt-2 border-t border-white/10">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleDismiss}
-            className="flex-1 py-2 text-xs font-bold text-slate-300 hover:text-white transition-colors"
+            className="flex-1 text-slate-300 hover:text-white hover:bg-white/10"
           >
             Not now
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="blue"
+            size="sm"
             onClick={handleInstallClick}
-            className="flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-xs rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all hover:scale-[1.02]"
+            leftIcon={<Download className="w-3.5 h-3.5" />}
+            className="flex-1"
           >
-            <Download className="w-3.5 h-3.5" /> Install App
-          </button>
+            Install App
+          </Button>
         </div>
       </div>
     </div>
