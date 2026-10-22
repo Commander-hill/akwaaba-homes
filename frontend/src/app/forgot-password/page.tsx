@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
           src="/images/auth-recovery.jpg"
           alt="Authentic Ghanaian resident verifying account recovery"
           fill
-          sizes="60vw"
+          sizes="70vw"
           className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
           priority
         />
@@ -123,8 +123,8 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
 
-      {/* ──── RIGHT COLUMN: RECOVERY FORM (40% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[42%] xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
+      {/* ──── RIGHT COLUMN: RECOVERY FORM (30% Desktop, 100% Mobile) ──── */}
+      <div className="w-full lg:w-[30%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-8 xl:p-10 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
         
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
