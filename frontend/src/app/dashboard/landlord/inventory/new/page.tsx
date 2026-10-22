@@ -447,7 +447,7 @@ export default function NewInventoryAssetPage() {
                     className={clsx(
                       'px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors cursor-pointer',
                       roomUnit === u
-                        ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                        ? 'bg-[#16A34A] text-white border-[#16A34A]'
                         : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
                     )}
                   >
@@ -498,7 +498,7 @@ export default function NewInventoryAssetPage() {
                     key={idx}
                     type="button"
                     onClick={() => applyTemplate(tmpl)}
-                    className="text-left p-2.5 rounded-xl bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#0F5132]/40 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all flex items-center justify-between gap-2 cursor-pointer"
+                    className="text-left p-2.5 rounded-xl bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A]/40 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all flex items-center justify-between gap-2 cursor-pointer"
                   >
                     <span className="truncate">{tmpl.name}</span>
                     <span className="text-[10px] font-bold text-[#0F5132] dark:text-emerald-400 shrink-0">
@@ -526,7 +526,7 @@ export default function NewInventoryAssetPage() {
                       className={clsx(
                         'p-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center gap-2 cursor-pointer',
                         isSelected
-                          ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-2xs'
+                          ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-2xs'
                           : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
                       )}
                     >
@@ -642,7 +642,7 @@ export default function NewInventoryAssetPage() {
                       className={clsx(
                         'py-2.5 px-3 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer',
                         isSelected
-                          ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-2xs'
+                          ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-2xs'
                           : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100'
                       )}
                     >

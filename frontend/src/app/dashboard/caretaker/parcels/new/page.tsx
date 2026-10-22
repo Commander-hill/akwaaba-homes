@@ -282,7 +282,7 @@ function CaretakerParcelContent() {
                       onClick={() => setCourierName(preset.id)}
                       className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 cursor-pointer ${
                         isSelected
-                          ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30 ring-2 ring-[#0F5132]/20'
+                          ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 ring-2 ring-[#16A34A]/20'
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/40 dark:bg-zinc-900/40'
                       }`}
                     >
@@ -389,7 +389,7 @@ function CaretakerParcelContent() {
                         onClick={() => setStorageLocation(loc)}
                         className={`p-3.5 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                           active
-                            ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30 text-[#0F5132] dark:text-emerald-300'
+                            ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 text-[#16A34A] dark:text-emerald-300'
                             : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 text-zinc-700 dark:text-zinc-300'
                         }`}
                       >

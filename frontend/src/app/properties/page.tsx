@@ -293,7 +293,7 @@ function SearchDiscoveryContent() {
                 }}
                 className={`w-full px-3 py-2 rounded-lg text-xs font-medium text-left flex items-center justify-between transition-colors cursor-pointer ${
                   active
-                    ? 'bg-[#173D32] text-white font-semibold'
+                    ? 'bg-[#16A34A] text-white font-semibold shadow-xs'
                     : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
                 }`}
               >
@@ -389,7 +389,7 @@ function SearchDiscoveryContent() {
                 onClick={() => toggleAmenity(amenity)}
                 className={`px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
                   checked
-                    ? 'bg-[#EDF6F0] border-[#173D32] text-[#173D32] dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-600 font-semibold'
+                    ? 'bg-[#16A34A]/10 border-[#16A34A] text-[#16A34A] dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-500 font-semibold'
                     : 'bg-[#F8F7F2] dark:bg-[#1B211E] border-[#E7E7DF] dark:border-[#262E2A] text-[#5E645E] dark:text-[#9EA69F] hover:border-[#557A67]'
                 }`}
               >
@@ -499,10 +499,10 @@ function SearchDiscoveryContent() {
                   onClick={() => setMobileFiltersOpen(true)}
                   className="lg:hidden h-9 px-3.5 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold flex items-center gap-2 cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#173D32]" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Filters</span>
                   {activePills.length > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-[#173D32] text-white text-[10px] font-bold">
+                    <span className="px-1.5 py-0.5 rounded-full bg-[#16A34A] text-white text-[10px] font-bold">
                       {activePills.length}
                     </span>
                   )}
@@ -518,7 +518,7 @@ function SearchDiscoveryContent() {
                       setSortBy(e.target.value);
                       updateUrlParams({ sort: e.target.value });
                     }}
-                    className="h-9 pl-8 pr-3 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
+                    className="h-9 pl-8 pr-3 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#16A34A] cursor-pointer"
                   >
                     {SORT_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -537,7 +537,7 @@ function SearchDiscoveryContent() {
               {activePills.map((pill) => (
                 <span
                   key={pill.key}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#C5E2D0] dark:border-emerald-800/60 text-xs font-medium text-[#173D32] dark:text-emerald-300"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#C5E2D0] dark:border-emerald-800/60 text-xs font-medium text-[#16A34A] dark:text-emerald-300"
                 >
                   <span>{pill.label}</span>
                   <button

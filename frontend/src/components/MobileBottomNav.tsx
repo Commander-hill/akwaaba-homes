@@ -190,16 +190,16 @@ export default function MobileBottomNav() {
               href={tab.href}
               aria-current={tab.isActive ? 'page' : undefined}
               className={clsx(
-                'flex flex-col items-center justify-center min-h-[44px] py-1 px-2.5 rounded-xl transition-all duration-150 min-w-[56px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F5132] active:scale-[0.93]',
+                'flex flex-col items-center justify-center min-h-[44px] py-1 px-2.5 rounded-xl transition-all duration-150 min-w-[56px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] active:scale-[0.93]',
                 tab.isActive
-                  ? 'text-[#0F5132] dark:text-emerald-400 font-bold bg-[#0F5132]/8 dark:bg-emerald-400/10 shadow-2xs'
+                  ? 'text-[#16A34A] dark:text-emerald-400 font-bold bg-[#16A34A]/10 dark:bg-emerald-400/10 shadow-2xs'
                   : 'text-[#6F756F] dark:text-[#9EA69F] hover:text-[#242925] dark:hover:text-white font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800/40'
               )}
             >
               <div className="relative">
                 <Icon className={clsx('w-5 h-5', tab.isActive && 'stroke-[2.3]')} />
                 {tab.isActive && (
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#0F5132] dark:bg-emerald-400 rounded-full" />
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#16A34A] dark:bg-emerald-400 rounded-full" />
                 )}
               </div>
               <span className="text-[10px] mt-1 tracking-tight leading-none">{tab.name}</span>

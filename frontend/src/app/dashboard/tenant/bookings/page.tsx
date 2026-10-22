@@ -161,7 +161,7 @@ export default function TenantBookingsOverviewPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? 'bg-[#173D32] text-white shadow-xs'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] border border-[#E7E7DF] dark:border-[#262E29] hover:text-[#242925] dark:hover:text-white'
               }`}
             >

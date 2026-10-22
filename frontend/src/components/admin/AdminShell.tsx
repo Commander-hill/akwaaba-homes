@@ -142,7 +142,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         collapsed && !isMobile ? 'justify-center' : ''
       )}>
         <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#0F5132] flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/20">
+          <div className="w-9 h-9 rounded-xl bg-[#16A34A] flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/20">
             <Image
               src="/logo.png"
               alt="Akwaaba Homes"
@@ -205,7 +205,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
                       className={clsx(
                         'flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-bold transition-all group relative',
                         isActive
-                          ? 'bg-[#0F5132] text-white shadow-xs'
+                          ? 'bg-[#16A34A] text-white shadow-xs'
                           : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60',
                         collapsed && !isMobile && 'justify-center px-2'
                       )}

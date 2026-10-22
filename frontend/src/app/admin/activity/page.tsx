@@ -436,7 +436,7 @@ export default function AdminActivityPage() {
                 className={clsx(
                   "px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer whitespace-nowrap",
                   categoryFilter === tab.id
-                    ? "bg-[#0F5132] text-white shadow-sm"
+                    ? "bg-[#16A34A] text-white shadow-sm"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-[var(--foreground)]"
                 )}
               >

@@ -350,7 +350,7 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
 
               <button
                 onClick={handleNext}
-                className="px-5 py-2.5 bg-gradient-to-r from-[#0F5132] via-[#15803D] to-[#0A3D24] hover:from-[#0A3D24] hover:to-[#0F5132] text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-950/30 flex items-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-black rounded-xl shadow-lg shadow-emerald-950/30 flex items-center gap-1.5 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               >
                 {currentStep === steps.length - 1 ? (
                   <>

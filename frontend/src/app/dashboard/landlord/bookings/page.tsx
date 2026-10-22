@@ -75,7 +75,7 @@ function Queue() {
             }}
             className={`px-3 py-2.5 text-sm whitespace-nowrap border-b-2 -mb-px cursor-pointer ${
               tab.key === t.key
-                ? 'border-[#173D32] font-semibold text-[#173D32] dark:text-emerald-400'
+                ? 'border-[#16A34A] font-semibold text-[#16A34A] dark:text-emerald-400'
                 : 'border-transparent text-[#6F756F] hover:text-[#242925]'
             }`}
           >

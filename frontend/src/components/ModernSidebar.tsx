@@ -206,7 +206,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                       "w-full flex items-center rounded-xl text-xs font-medium transition-all duration-150 relative group select-none",
                       collapsed ? "justify-center p-2.5 my-1" : "gap-3 px-3 py-2.5 my-0.5",
                       isActive
-                        ? "bg-gradient-to-r from-emerald-600 to-[#0F5132] text-white font-bold shadow-md shadow-emerald-950/40 border border-emerald-500/40"
+                        ? "bg-[#16A34A] text-white font-bold shadow-md shadow-emerald-950/40 border border-[#14532D]/40"
                         : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60"
                     )}
                     title={collapsed ? link.name : undefined}

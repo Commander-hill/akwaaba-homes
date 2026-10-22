@@ -396,7 +396,7 @@ export default function HomePage() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                     isSelected
-                      ? 'bg-[#173D32] text-white border-[#173D32] shadow-xs'
+                      ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-xs'
                       : 'bg-[#F8F7F2] dark:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#557A67]'
                   }`}
                 >

@@ -160,9 +160,9 @@ export default function LandlordShell({
                   aria-current={active ? 'page' : undefined}
                   className={clsx(
                     'flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
                     active
-                      ? 'bg-[#173D32] text-white'
+                      ? 'bg-[#16A34A] text-white shadow-xs'
                       : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E] hover:text-[#242925] dark:hover:text-white'
                   )}
                 >

@@ -219,7 +219,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => setActiveTab(tab)}
             className={`py-3 px-4 text-xs font-bold border-b-2 transition -mb-px shrink-0 cursor-pointer ${
               activeTab === tab
-                ? 'border-[#0F5132] text-[#0F5132] dark:text-emerald-400'
+                ? 'border-[#16A34A] text-[#16A34A] dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >

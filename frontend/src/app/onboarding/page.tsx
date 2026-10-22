@@ -267,7 +267,7 @@ export default function OnboardingPage() {
                       onClick={() => setFormData({ ...formData, isStudent: true })}
                       className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                         formData.isStudent 
-                          ? 'bg-[#0F5132] text-white shadow-2xs' 
+                          ? 'bg-[#16A34A] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >
@@ -278,7 +278,7 @@ export default function OnboardingPage() {
                       onClick={() => setFormData({ ...formData, isStudent: false })}
                       className={`px-3 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
                         !formData.isStudent 
-                          ? 'bg-[#0F5132] text-white shadow-2xs' 
+                          ? 'bg-[#16A34A] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >

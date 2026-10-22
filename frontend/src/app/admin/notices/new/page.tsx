@@ -233,7 +233,7 @@ function NewAdminNoticeContent() {
                     onClick={() => setIconType(t.id)}
                     className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 cursor-pointer ${
                       isSelected
-                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 ring-2 ring-[#0F5132]/20'
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 ring-2 ring-[#16A34A]/20'
                         : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50'
                     }`}
                   >

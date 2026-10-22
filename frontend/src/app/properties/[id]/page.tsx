@@ -443,7 +443,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#173D32] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5 text-[#557A67]" />
               <span>Share</span>
@@ -452,7 +452,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <button
               type="button"
               onClick={handleCopyLink}
-              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#173D32] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copiedLink ? (
                 <Check className="w-3.5 h-3.5 text-[#165B36]" />
@@ -892,7 +892,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   variant="outline"
                   size="sm"
                   onClick={handleStartChat}
-                  leftIcon={<MessageSquare className="w-3.5 h-3.5 text-[#173D32]" />}
+                  leftIcon={<MessageSquare className="w-3.5 h-3.5 text-[#16A34A]" />}
                 >
                   Message Host
                 </Button>
@@ -1283,7 +1283,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                                   className={clsx(
                                     'p-2 rounded-md border text-left text-xs transition-all',
                                     isBedSelected
-                                      ? 'bg-[#173D32] text-white border-[#173D32] font-semibold'
+                                      ? 'bg-[#16A34A] text-white border-[#16A34A] font-semibold shadow-xs'
                                       : isAvail
                                       ? 'bg-white dark:bg-[#141816] border-[#E7E7DF] text-[#242925] dark:text-white cursor-pointer'
                                       : 'opacity-50 cursor-not-allowed'

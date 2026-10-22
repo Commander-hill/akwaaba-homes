@@ -412,7 +412,7 @@ export default function AdminNoticesPage() {
                 className={clsx(
                   "px-3.5 py-1.5 text-xs font-extrabold rounded-lg transition-all capitalize cursor-pointer",
                   statusFilter === tab.id
-                    ? "bg-[#0F5132] text-white shadow-sm"
+                    ? "bg-[#16A34A] text-white shadow-sm"
                     : "text-slate-600 dark:text-slate-400 hover:text-[var(--foreground)]"
                 )}
               >

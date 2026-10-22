@@ -124,8 +124,8 @@ function AudioVoiceNotePlayer({ src, duration, isMine }: { src: string; duration
         className={clsx(
           'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-xs',
           isMine
-            ? 'bg-white text-[#0F5132] hover:bg-zinc-100'
-            : 'bg-[#0F5132] text-white hover:bg-[#0A3D24]'
+            ? 'bg-white text-[#16A34A] hover:bg-zinc-100'
+            : 'bg-[#16A34A] text-white hover:bg-[#15803D]'
         )}
       >
         {isPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
@@ -543,7 +543,7 @@ export default function MessagesPage() {
                   className={clsx(
                     'px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap cursor-pointer',
                     activeFilter === tab.key
-                      ? 'bg-[#0F5132] text-white shadow-xs'
+                      ? 'bg-[#16A34A] text-white shadow-xs'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                   )}
                 >
@@ -826,7 +826,7 @@ export default function MessagesPage() {
                       key={chip}
                       type="button"
                       onClick={() => setNewMessage(chip)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-[#0F5132] hover:text-[#0F5132] dark:hover:text-emerald-400 whitespace-nowrap transition cursor-pointer shrink-0 shadow-2xs"
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:border-[#16A34A] hover:text-[#16A34A] dark:hover:text-emerald-400 whitespace-nowrap transition cursor-pointer shrink-0 shadow-2xs"
                     >
                       {chip}
                     </button>

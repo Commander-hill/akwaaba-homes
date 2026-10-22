@@ -557,7 +557,7 @@ function SupportContent() {
                     onClick={() => setFaqCategory(cat.id)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
                       isActive
-                        ? 'bg-[#173D32] text-white'
+                        ? 'bg-[#16A34A] text-white shadow-xs'
                         : 'bg-[#F8F7F2] dark:bg-[#111513] text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#242925] dark:hover:text-white border border-[#E7E7DF] dark:border-[#262E29]'
                     }`}
                   >

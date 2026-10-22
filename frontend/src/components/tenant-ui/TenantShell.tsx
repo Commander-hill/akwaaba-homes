@@ -180,9 +180,9 @@ export default function TenantShell({
             aria-current={active ? 'page' : undefined}
             className={clsx(
               'flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs sm:text-[13px] font-medium transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
               active
-                ? 'bg-[#173D32] text-white font-semibold shadow-2xs'
+                ? 'bg-[#16A34A] text-white font-semibold shadow-2xs'
                 : 'text-[#5E645E] dark:text-[#9EA69F] hover:text-[#242925] dark:hover:text-white hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E]'
             )}
           >
@@ -202,7 +202,7 @@ export default function TenantShell({
                 className={clsx(
                   'px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
                   active
-                    ? 'bg-white text-[#173D32]'
+                    ? 'bg-white text-[#16A34A]'
                     : 'bg-[#C77B59] text-white'
                 )}
               >
@@ -215,7 +215,7 @@ export default function TenantShell({
                 className={clsx(
                   'px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0',
                   active
-                    ? 'bg-white text-[#173D32]'
+                    ? 'bg-white text-[#16A34A]'
                     : item.statusBadgeClass
                 )}
               >

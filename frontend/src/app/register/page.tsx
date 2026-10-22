@@ -444,11 +444,11 @@ export default function RegisterPage() {
                     onClick={() => setFormData({ ...formData, role: 'TENANT' })}
                     className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                       formData.role === 'TENANT'
-                        ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30 ring-1 ring-[#0F5132]'
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 ring-1 ring-[#16A34A]'
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mb-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mb-2.5">
                       <User className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-bold text-zinc-950 dark:text-white">
@@ -465,7 +465,7 @@ export default function RegisterPage() {
                     onClick={() => setFormData({ ...formData, role: 'LANDLORD', isStudent: false })}
                     className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                       formData.role === 'LANDLORD'
-                        ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/30 ring-1 ring-[#0F5132]'
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 ring-1 ring-[#16A34A]'
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30'
                     }`}
                   >
@@ -505,7 +505,7 @@ export default function RegisterPage() {
                       onClick={() => setFormData({ ...formData, isStudent: true })}
                       className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
                         formData.isStudent 
-                          ? 'bg-[#0F5132] text-white shadow-2xs' 
+                          ? 'bg-[#16A34A] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >
@@ -516,7 +516,7 @@ export default function RegisterPage() {
                       onClick={() => setFormData({ ...formData, isStudent: false })}
                       className={`px-3 py-1 rounded-md font-bold text-xs transition-colors cursor-pointer ${
                         !formData.isStudent 
-                          ? 'bg-[#0F5132] text-white shadow-2xs' 
+                          ? 'bg-[#16A34A] text-white shadow-2xs' 
                           : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
                       }`}
                     >

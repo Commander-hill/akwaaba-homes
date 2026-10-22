@@ -325,7 +325,7 @@ function NewReviewContent() {
                           onClick={() => updateCriteria(crit.id, val)}
                           className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             score === val
-                              ? 'bg-[#0F5132] text-white shadow-xs'
+                              ? 'bg-[#16A34A] text-white shadow-xs'
                               : 'bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700'
                           }`}
                         >
@@ -366,7 +366,7 @@ function NewReviewContent() {
                       onClick={() => toggleTag(tag)}
                       className={`text-xs px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[#0F5132] bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-300 font-bold'
+                          ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-300 font-bold'
                           : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-600 dark:text-zinc-400'
                       }`}
                     >

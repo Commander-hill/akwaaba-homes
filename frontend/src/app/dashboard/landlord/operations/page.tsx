@@ -600,7 +600,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'properties'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -611,7 +611,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'occupancy'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -622,7 +622,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'assets'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -639,7 +639,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'payouts'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -650,7 +650,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'expenses'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -661,7 +661,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'utilities'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -672,7 +672,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'installments'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -683,7 +683,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'subscriptions'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -700,7 +700,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5",
                     activeSubTab === 'bookings'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -716,7 +716,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'agreements'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -727,7 +727,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'disciplinary'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -738,7 +738,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'reviews'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -755,7 +755,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5",
                     activeSubTab === 'tickets'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -771,7 +771,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'staff'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -782,7 +782,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'gatepass'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -793,7 +793,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'notices'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -804,7 +804,7 @@ function LandlordDashboardContent() {
                   className={clsx(
                     "px-3 py-1.5 text-xs font-bold rounded-xl transition-colors cursor-pointer",
                     activeSubTab === 'messages'
-                      ? "bg-[#0F5132] text-white"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50"
                   )}
                 >
@@ -888,7 +888,7 @@ function LandlordDashboardContent() {
                   {!propertySearchQuery && (
                     <Link
                       href="/dashboard/landlord/new"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] text-white text-xs font-bold rounded-xl shadow-xs"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                       <span>Create First Property Listing</span>
@@ -1159,7 +1159,7 @@ function LandlordDashboardContent() {
                 </div>
                 <Link
                   href="/dashboard/landlord/subscription"
-                  className="px-4 py-2 bg-[#0F5132] text-white text-xs font-bold rounded-xl shadow-xs"
+                  className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
                 >
                   Manage Subscription Tiers &rarr;
                 </Link>
@@ -1338,7 +1338,7 @@ function LandlordDashboardContent() {
                                   <button
                                     onClick={() => { setProcessingId(booking.id); updateStatusMutation.mutate({ id: booking.id, status: 'APPROVED' }); }}
                                     disabled={processingId === booking.id}
-                                    className="px-2.5 py-1 bg-[#16A34A] text-white rounded-lg text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
+                                    className="px-2.5 py-1 bg-[#16A34A] text-white rounded-lg text-xs font-bold hover:bg-[#15803D] transition cursor-pointer"
                                   >
                                     Accept
                                   </button>
@@ -1635,7 +1635,7 @@ function LandlordDashboardContent() {
                                       completionImageUrl: '',
                                     });
                                   }}
-                                  className="px-3 py-1.5 rounded-xl bg-[#0F5132] text-white text-xs font-bold hover:bg-[#0A3D24] transition cursor-pointer"
+                                  className="px-3 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
                                 >
                                   Resolve
                                 </button>
@@ -1682,7 +1682,7 @@ function LandlordDashboardContent() {
               <div className="flex items-center gap-3">
                 <div className={clsx(
                   "w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-white shadow-xs",
-                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600" : "bg-[#0F5132]"
+                  ticketActionModal.mode === 'SCHEDULE' ? "bg-indigo-600" : "bg-[#16A34A] hover:bg-[#15803D]"
                 )}>
                   {ticketActionModal.mode === 'SCHEDULE' ? <Calendar className="w-5 h-5 text-white" /> : <Wrench className="w-5 h-5 text-white" />}
                 </div>

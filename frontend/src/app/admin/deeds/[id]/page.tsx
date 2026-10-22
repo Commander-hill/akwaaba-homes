@@ -112,7 +112,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
           <p className="text-xs text-slate-500">The deed record you are inspecting may have been archived or removed.</p>
           <Link
             href="/admin/deeds"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0F5132] text-white text-xs font-bold rounded-xl"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Deeds Registry
           </Link>
@@ -243,7 +243,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
-                      className="p-2 rounded-xl bg-[#0F5132] text-white hover:bg-[#146c43]"
+                      className="p-2 rounded-xl bg-[#16A34A] text-white hover:bg-[#15803D] transition-colors shadow-xs"
                       title="Fullscreen Lightbox"
                     >
                       <Maximize2 className="w-4 h-4" />

@@ -53,7 +53,7 @@ export default function AdminPwaInstallPrompt() {
       <div className="rounded-2xl p-4 border border-slate-700 bg-[#0A0F1D] text-white shadow-xl relative overflow-hidden space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0F5132] p-0.5 shadow-md shrink-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#16A34A] p-0.5 shadow-md shrink-0 flex items-center justify-center">
               <Image src="/logo.png" alt="Akwaaba Admin Logo" width={28} height={28} className="object-contain" />
             </div>
             <div>

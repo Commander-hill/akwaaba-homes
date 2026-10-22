@@ -54,7 +54,7 @@ export default function PwaInstallPrompt() {
       <div className="rounded-2xl p-4 sm:p-5 border border-slate-700 shadow-xl bg-slate-900 text-white relative overflow-hidden">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-[#0F5132] p-0.5 shadow-lg flex-shrink-0 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-xl bg-[#16A34A] p-0.5 shadow-lg flex-shrink-0 flex items-center justify-center">
               <Image src="/logo.png" alt="Akwaaba Homes" width={32} height={32} className="object-contain" />
             </div>
             <div>

@@ -381,7 +381,7 @@ export default function AdminUsersPage() {
             onClick={() => setActiveFilter('ALL')}
             className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
               activeFilter === 'ALL'
-                ? 'bg-[#0F5132] text-white shadow-sm'
+                ? 'bg-[#16A34A] text-white shadow-sm'
                 : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
             }`}
           >

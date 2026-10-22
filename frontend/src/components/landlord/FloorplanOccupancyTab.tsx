@@ -320,7 +320,7 @@ export default function FloorplanOccupancyTab({
                 className={clsx(
                   "px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
                   floorFilter === 'ALL'
-                    ? "bg-[#0F5132] text-white shadow-xs"
+                    ? "bg-[#16A34A] text-white shadow-xs"
                     : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100"
                 )}
               >
@@ -333,7 +333,7 @@ export default function FloorplanOccupancyTab({
                   className={clsx(
                     "px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
                     floorFilter === floor
-                      ? "bg-[#0F5132] text-white shadow-xs"
+                      ? "bg-[#16A34A] text-white shadow-xs"
                       : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100"
                   )}
                 >

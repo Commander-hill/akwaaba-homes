@@ -65,7 +65,7 @@
     /* Borders & Focus */
     --border: #E7E7DF;
     --input: #E7E7DF;
-    --ring: #173D32;
+    --ring: #16A34A;
 
     /* Semantic Status Colors */
     --status-success-bg: #EDF6F0;
@@ -126,7 +126,7 @@
   }
 
   ::selection {
-    background-color: #173D32;
+    background-color: #16A34A;
     color: #FFFFFF;
   }
 }

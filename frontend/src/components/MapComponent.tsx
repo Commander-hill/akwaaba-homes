@@ -179,7 +179,7 @@ export default function MapComponent({
                       <div className="text-[#0F5132] font-bold">GH₵ {prop.price.toLocaleString()}</div>
                       <a 
                         href={`/properties/${prop.id}`}
-                        className="block text-center bg-[#0F5132] text-white py-1.5 rounded-lg text-xs font-bold hover:bg-[#0A3D24] transition-colors mt-1"
+                        className="block text-center bg-[#16A34A] text-white py-1.5 rounded-lg text-xs font-bold hover:bg-[#15803D] active:bg-[#166534] transition-colors mt-1 shadow-xs"
                       >
                         View Details
                       </a>

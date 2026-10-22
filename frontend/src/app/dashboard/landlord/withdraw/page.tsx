@@ -818,7 +818,7 @@ export default function LandlordWithdrawalPage() {
                     className={clsx(
                       'px-2.5 py-1 rounded-lg font-bold transition cursor-pointer shrink-0',
                       historyFilter === st
-                        ? 'bg-[#0F5132] text-white shadow-2xs'
+                        ? 'bg-[#16A34A] text-white shadow-2xs'
                         : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
                     )}
                   >

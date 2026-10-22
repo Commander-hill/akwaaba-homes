@@ -779,7 +779,7 @@ export default function NewPropertyPage() {
                             className={clsx(
                               "px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer border text-left",
                               sel
-                                ? "bg-[#0F5132] text-white border-emerald-700 shadow-xs"
+                                ? "bg-[#16A34A] text-white border-[#16A34A] shadow-xs"
                                 : "bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400"
                             )}
                           >

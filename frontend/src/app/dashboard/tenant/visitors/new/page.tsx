@@ -306,7 +306,7 @@ function NewVisitorPassContent() {
                       onClick={() => handleSelectPreset(preset)}
                       className={`p-4 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
+                          ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 text-[#16A34A] dark:text-emerald-300 ring-2 ring-[#16A34A]/20'
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
                       }`}
                     >
@@ -411,7 +411,7 @@ function NewVisitorPassContent() {
                     onClick={() => setDurationHours(opt.hours)}
                     className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       active
-                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 text-[#16A34A] dark:text-emerald-300 ring-2 ring-[#16A34A]/20'
                         : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
                     }`}
                   >

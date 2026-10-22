@@ -352,7 +352,7 @@ export function ProfileWorkspaceContent({
           className={clsx(
             'px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
             activeTab === 'basic'
-              ? 'bg-[#173D32] text-white shadow-xs'
+              ? 'bg-[#16A34A] text-white shadow-xs'
               : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] border border-[#E7E7DF] dark:border-[#262E29] hover:text-[#242925] dark:hover:text-white'
           )}
         >
@@ -367,7 +367,7 @@ export function ProfileWorkspaceContent({
             className={clsx(
               'px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
               activeTab === 'school'
-                ? 'bg-[#173D32] text-white shadow-xs'
+                ? 'bg-[#16A34A] text-white shadow-xs'
                 : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] border border-[#E7E7DF] dark:border-[#262E29] hover:text-[#242925] dark:hover:text-white'
             )}
           >
@@ -382,7 +382,7 @@ export function ProfileWorkspaceContent({
           className={clsx(
             'px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap',
             activeTab === 'security'
-              ? 'bg-[#173D32] text-white shadow-xs'
+              ? 'bg-[#16A34A] text-white shadow-xs'
               : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] border border-[#E7E7DF] dark:border-[#262E29] hover:text-[#242925] dark:hover:text-white'
           )}
         >

@@ -458,7 +458,7 @@ export default function NewCompoundNoticePage() {
                       className={clsx(
                         'px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 cursor-pointer',
                         isSelected
-                          ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-2xs'
+                          ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-2xs'
                           : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                       )}
                     >
@@ -481,7 +481,7 @@ export default function NewCompoundNoticePage() {
                     key={idx}
                     type="button"
                     onClick={() => applyPreset(preset)}
-                    className="text-left p-3 rounded-xl bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#0F5132]/40 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all truncate cursor-pointer"
+                    className="text-left p-3 rounded-xl bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A]/40 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition-all truncate cursor-pointer"
                   >
                     {preset.title}
                   </button>

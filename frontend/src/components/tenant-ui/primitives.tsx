@@ -139,7 +139,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
             className={clsx(
               'w-full h-11 bg-white dark:bg-[#141816] border rounded-lg text-sm text-[#242925] dark:text-[#F2F2EE] placeholder:text-[#6F756F]/70',
-              'transition-colors outline-none focus:border-[#173D32] focus:ring-1 focus:ring-[#173D32]',
+              'transition-colors outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]',
               'disabled:bg-[#F1EFE8] disabled:text-[#6F756F] disabled:cursor-not-allowed',
               leftIcon ? 'pl-10' : 'px-3.5',
               rightElement ? 'pr-10' : 'pr-3.5',
@@ -198,7 +198,7 @@ export const SelectField = React.forwardRef<HTMLSelectElement, SelectFieldProps>
           aria-invalid={!!error}
           className={clsx(
             'w-full h-11 px-3.5 bg-white dark:bg-[#141816] border rounded-lg text-sm text-[#242925] dark:text-[#F2F2EE]',
-            'transition-colors outline-none focus:border-[#173D32] focus:ring-1 focus:ring-[#173D32] cursor-pointer',
+            'transition-colors outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A] cursor-pointer',
             'disabled:bg-[#F1EFE8] disabled:text-[#6F756F] disabled:cursor-not-allowed',
             error
               ? 'border-[#9E2A2B]'

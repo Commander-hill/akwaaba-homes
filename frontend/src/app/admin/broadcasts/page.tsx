@@ -363,7 +363,7 @@ export default function AdminBroadcastPage() {
                     className={clsx(
                       "py-2 px-1 text-center rounded-xl text-[11px] font-bold border transition-all cursor-pointer",
                       category === cat.id
-                        ? "bg-[#0F5132] text-white border-[#0F5132] shadow-xs"
+                        ? "bg-[#16A34A] text-white border-[#16A34A] shadow-xs"
                         : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                     )}
                   >

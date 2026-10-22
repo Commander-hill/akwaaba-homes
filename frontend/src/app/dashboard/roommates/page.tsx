@@ -223,7 +223,7 @@ export default function RoommatesPage() {
                       className={clsx(
                         "p-3 rounded-xl text-left border transition-all cursor-pointer",
                         isSelected 
-                          ? "bg-[#0F5132]/5 dark:bg-emerald-950/30 border-[#0F5132] ring-1 ring-[#0F5132]" 
+                          ? "bg-[#16A34A]/10 dark:bg-emerald-950/30 border-[#16A34A] ring-1 ring-[#16A34A]" 
                           : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300"
                       )}
                     >
@@ -252,7 +252,7 @@ export default function RoommatesPage() {
                       className={clsx(
                         "p-3 rounded-xl text-left border transition-all cursor-pointer",
                         isSelected 
-                          ? "bg-[#0F5132]/5 dark:bg-emerald-950/30 border-[#0F5132] ring-1 ring-[#0F5132]" 
+                          ? "bg-[#16A34A]/10 dark:bg-emerald-950/30 border-[#16A34A] ring-1 ring-[#16A34A]" 
                           : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300"
                       )}
                     >
@@ -281,7 +281,7 @@ export default function RoommatesPage() {
                       className={clsx(
                         "p-3 rounded-xl text-left border transition-all cursor-pointer",
                         isSelected 
-                          ? "bg-[#0F5132]/5 dark:bg-emerald-950/30 border-[#0F5132] ring-1 ring-[#0F5132]" 
+                          ? "bg-[#16A34A]/10 dark:bg-emerald-950/30 border-[#16A34A] ring-1 ring-[#16A34A]" 
                           : "bg-zinc-50 dark:bg-zinc-800/40 border-zinc-200 dark:border-zinc-700 hover:border-zinc-300"
                       )}
                     >

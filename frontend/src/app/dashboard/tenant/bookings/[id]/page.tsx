@@ -292,7 +292,7 @@ export default function TenantBookingDetailsPage() {
 
         <Link
           href={`/properties/${prop.id}`}
-          className="px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:border-[#173D32] text-xs sm:text-sm font-medium text-[#242925] dark:text-white shrink-0 transition-colors"
+          className="px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:border-[#16A34A] text-xs sm:text-sm font-medium text-[#242925] dark:text-white shrink-0 transition-colors"
         >
           View Property Listing
         </Link>

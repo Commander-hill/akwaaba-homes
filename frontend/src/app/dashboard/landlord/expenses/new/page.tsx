@@ -569,7 +569,7 @@ export default function NewExpensePage() {
                     key={i}
                     type="button"
                     onClick={() => setTitle(sug)}
-                    className="px-3 py-1.5 rounded-lg bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#0F5132]/40 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-zinc-50 hover:bg-emerald-50/50 dark:bg-zinc-900 dark:hover:bg-emerald-950/20 border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A]/40 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
                   >
                     + {sug}
                   </button>
@@ -725,7 +725,7 @@ export default function NewExpensePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingReceipt}
-                  className="w-full border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] rounded-xl p-6 text-center bg-zinc-50 dark:bg-zinc-800/30 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
+                  className="w-full border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#16A34A] rounded-xl p-6 text-center bg-zinc-50 dark:bg-zinc-800/30 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1.5"
                 >
                   {isUploadingReceipt ? (
                     <>

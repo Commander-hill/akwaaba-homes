@@ -654,7 +654,7 @@ function TenantDashboardContent() {
               </Button>
               <Link
                 href="/dashboard/roommates"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border border-[#E7E7DF] dark:border-[#262E29] hover:border-[#173D32] transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-white border border-[#E7E7DF] dark:border-[#262E29] hover:border-[#16A34A] transition-colors"
               >
                 <Users className="w-3.5 h-3.5" />
                 <span>Roommate Match</span>
@@ -810,7 +810,7 @@ function TenantDashboardContent() {
                 action={
                   <Link
                     href="/search"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#173D32] text-white text-xs font-medium"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-medium transition-colors shadow-xs"
                   >
                     Browse Properties
                   </Link>
@@ -954,13 +954,13 @@ function TenantDashboardContent() {
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           <Link
             href="/search?type=HOSTEL"
-            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#173D32] transition-colors"
+            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#16A34A] transition-colors"
           >
             Student Hostels
           </Link>
           <Link
             href="/search?type=APARTMENT"
-            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#173D32] transition-colors"
+            className="px-3.5 py-2 rounded-[10px] bg-white dark:bg-[#111513] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white hover:border-[#16A34A] transition-colors"
           >
             Apartments
           </Link>

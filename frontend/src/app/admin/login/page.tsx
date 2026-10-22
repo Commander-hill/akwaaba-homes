@@ -253,7 +253,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => { window.location.href = '/admin/dashboard'; }}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer"
+              className="w-full py-3.5 px-4 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer"
             >
               <span>Access Executive Console</span>
               <ArrowRight className="w-4 h-4" />
@@ -569,7 +569,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                     <button
                       type="submit"
                       disabled={isLoading || twoFactorCode.length !== 6 || !codesAcknowledged}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -651,7 +651,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                     <button
                       type="submit"
                       disabled={isLoading || !twoFactorCode.trim()}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -744,7 +744,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                     <button
                       type="submit"
                       disabled={isLoading || !formData.email.trim() || !formData.password}
-                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-[#0F5132] hover:from-emerald-500 hover:to-[#12633e] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       {isLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

@@ -122,7 +122,7 @@ export default function LandlordTenantsPage() {
                 className={clsx(
                   "px-3 py-1 text-[11px] font-bold rounded-lg whitespace-nowrap transition-all cursor-pointer",
                   statusFilter === status
-                    ? "bg-[#0F5132] text-white shadow-xs"
+                    ? "bg-[#16A34A] text-white shadow-xs"
                     : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white"
                 )}
               >

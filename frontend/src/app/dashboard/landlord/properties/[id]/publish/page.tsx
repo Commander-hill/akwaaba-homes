@@ -232,9 +232,9 @@ export default function PublishPropertyPage() {
               className={clsx(
                 'py-2 text-center font-bold rounded-lg truncate px-1',
                 s.state === 'current'
-                  ? 'bg-[#0F5132] text-white shadow-xs'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
                   : s.state === 'done'
-                    ? 'text-[#0F5132] dark:text-emerald-400'
+                    ? 'text-[#16A34A] dark:text-emerald-400'
                     : 'text-zinc-400 dark:text-zinc-500'
               )}
             >
@@ -399,13 +399,13 @@ export default function PublishPropertyPage() {
                   className={clsx(
                     'p-3.5 rounded-xl border text-left transition-all cursor-pointer',
                     selectedProvider === key
-                      ? 'border-[#0F5132] dark:border-emerald-500 bg-[#0F5132]/5 ring-2 ring-[#0F5132]/20'
+                      ? 'border-[#16A34A] dark:border-emerald-500 bg-[#16A34A]/10 ring-2 ring-[#16A34A]/20'
                       : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'
                   )}
                 >
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-bold text-xs text-zinc-950 dark:text-white">{name}</span>
-                    <Icon className={clsx('w-4 h-4', selectedProvider === key ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400')} />
+                    <Icon className={clsx('w-4 h-4', selectedProvider === key ? 'text-[#16A34A] dark:text-emerald-400' : 'text-zinc-400')} />
                   </div>
                   <p className="text-[11px] text-zinc-500 leading-tight">{desc}</p>
                 </button>

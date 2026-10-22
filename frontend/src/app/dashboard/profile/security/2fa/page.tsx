@@ -727,7 +727,7 @@ function TwoFactorStudioContent() {
                       onClick={() => setVerificationMethod('app')}
                       className={`text-xs font-bold pb-2 transition-all cursor-pointer flex items-center gap-2 border-b-2 -mb-2.5 ${
                         verificationMethod === 'app'
-                          ? 'border-[#0F5132] text-[#0F5132] dark:border-emerald-400 dark:text-emerald-400'
+                          ? 'border-[#16A34A] text-[#16A34A] dark:border-emerald-400 dark:text-emerald-400'
                           : 'border-transparent text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
                       }`}
                     >
@@ -739,7 +739,7 @@ function TwoFactorStudioContent() {
                       onClick={() => setVerificationMethod('sms')}
                       className={`text-xs font-bold pb-2 transition-all cursor-pointer flex items-center gap-2 border-b-2 -mb-2.5 ${
                         verificationMethod === 'sms'
-                          ? 'border-[#0F5132] text-[#0F5132] dark:border-emerald-400 dark:text-emerald-400'
+                          ? 'border-[#16A34A] text-[#16A34A] dark:border-emerald-400 dark:text-emerald-400'
                           : 'border-transparent text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
                       }`}
                     >

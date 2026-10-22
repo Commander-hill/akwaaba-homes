@@ -438,15 +438,15 @@ function ReportIssueContent() {
                       onClick={() => setSelectedCategory(cat.id)}
                       className={`p-4 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
                         isSelected
-                          ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-300 ring-2 ring-[#0F5132]/20'
+                          ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 text-[#16A34A] dark:text-emerald-300 ring-2 ring-[#16A34A]/20'
                           : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50 text-zinc-700 dark:text-zinc-300'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#0F5132] dark:text-emerald-400">
+                        <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#16A34A] dark:text-emerald-400">
                           <Icon className="w-4 h-4" />
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />}
+                        {isSelected && <Check className="w-4 h-4 text-[#16A34A] dark:text-emerald-400" />}
                       </div>
                       <span className="text-xs font-bold leading-tight">{cat.label}</span>
                     </button>
@@ -605,13 +605,13 @@ function ReportIssueContent() {
                     onClick={() => setPriority(p.id)}
                     className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-[#0F5132] bg-emerald-50/40 dark:bg-emerald-950/20 ring-2 ring-[#0F5132]/20'
+                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 ring-2 ring-[#16A34A]/20'
                         : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-900/40'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-zinc-900 dark:text-white">{p.label}</span>
-                      <span className="text-[10px] font-mono font-bold text-[#0F5132] dark:text-emerald-400">
+                      <span className="text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400">
                         {p.sla}
                       </span>
                     </div>

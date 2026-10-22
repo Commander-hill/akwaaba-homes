@@ -291,7 +291,7 @@ export default function AdminTicketDetailPage({
                     onClick={() => updateStatusMutation.mutate({ id: ticket.id, status: s.key })}
                     className={`py-2.5 px-3 rounded-xl text-xs font-extrabold border transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
                       ticket.status === s.key
-                        ? 'bg-[#0F5132] text-white border-[#0F5132] shadow-xs'
+                        ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-xs'
                         : `bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 ${s.color}`
                     }`}
                   >

@@ -45,11 +45,11 @@ export default function ButtonPreviewPage() {
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <Link href="/" className="inline-flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#16A34A] flex items-center justify-center shadow-xs">
                   <Image src="/logo.png" alt="Akwaaba Homes" width={32} height={32} className="w-full h-full object-cover" />
                 </div>
                 <span className="text-sm font-black tracking-tight text-zinc-950 dark:text-white">
-                  Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+                  Akwaaba<span className="text-[#16A34A] dark:text-emerald-400">Homes</span>
                 </span>
               </Link>
               <span className="text-zinc-300 dark:text-zinc-700">&bull;</span>
@@ -253,7 +253,7 @@ export default function ButtonPreviewPage() {
 
         {/* Section 4: Implementation Roadmap */}
         <div className="p-6 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#16A34A] dark:text-emerald-400">
             <CheckCircle2 className="w-4 h-4" />
             <span>Next Steps: Platform Rollout</span>
           </div>

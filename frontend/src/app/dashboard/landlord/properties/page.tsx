@@ -235,7 +235,7 @@ function Inventory() {
                     {state === 'NEEDS_SUBSCRIPTION' && (
                       <Link
                         href={`/dashboard/landlord/properties/${p.id}/publish`}
-                        className="h-8 px-3 inline-flex items-center rounded-lg bg-[#173D32] text-white"
+                        className="h-8 px-3 inline-flex items-center rounded-lg bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white transition-colors shadow-xs"
                       >
                         Activate subscription
                       </Link>
