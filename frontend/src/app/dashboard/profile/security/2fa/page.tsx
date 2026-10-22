@@ -460,7 +460,7 @@ function TwoFactorStudioContent() {
                   <button
                     type="button"
                     onClick={() => handleCopyAllCodes(freshRecoveryCodes)}
-                    className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     {copiedAllCodes ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     Copy All
@@ -468,7 +468,7 @@ function TwoFactorStudioContent() {
                   <button
                     type="button"
                     onClick={() => handleDownloadCodes(freshRecoveryCodes)}
-                    className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" /> Download
                   </button>
@@ -571,7 +571,7 @@ function TwoFactorStudioContent() {
                       <button
                         type="button"
                         onClick={handleCopySecret}
-                        className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer text-xs"
+                        className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer text-xs"
                       >
                         {copiedSecret ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedSecret ? 'Copied' : 'Copy Key'}</span>
@@ -625,7 +625,7 @@ function TwoFactorStudioContent() {
                       <button
                         type="button"
                         onClick={() => handleCopyAllCodes(setupData.rawCodes)}
-                        className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                        className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
                       >
                         {copiedAllCodes ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         Copy All
@@ -634,7 +634,7 @@ function TwoFactorStudioContent() {
                       <button
                         type="button"
                         onClick={() => handleDownloadCodes(setupData.rawCodes)}
-                        className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                        className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" /> Download .txt
                       </button>
@@ -642,7 +642,7 @@ function TwoFactorStudioContent() {
                       <button
                         type="button"
                         onClick={handlePrintSheet}
-                        className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
+                        className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline flex items-center gap-1.5 cursor-pointer"
                       >
                         <Printer className="w-3.5 h-3.5" /> Print
                       </button>
@@ -677,7 +677,7 @@ function TwoFactorStudioContent() {
                         type="checkbox"
                         checked={savedCodesConfirmed}
                         onChange={(e) => setSavedCodesConfirmed(e.target.checked)}
-                        className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132] cursor-pointer"
+                        className="mt-0.5 w-4 h-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer"
                       />
                       <div className="text-xs font-medium text-zinc-700 dark:text-zinc-300 leading-relaxed">
                         I confirm that I have safely copied, downloaded, or printed my backup recovery codes.

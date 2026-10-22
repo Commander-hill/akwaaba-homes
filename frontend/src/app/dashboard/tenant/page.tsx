@@ -393,7 +393,7 @@ function TenantDashboardContent() {
             </div>
             <Link
               href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-              className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+              className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
             >
               <span>Full Booking Details</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -524,7 +524,7 @@ function TenantDashboardContent() {
             </div>
             <Link
               href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-              className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+              className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
             >
               <span>Manage Residency</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -729,7 +729,7 @@ function TenantDashboardContent() {
               </div>
               <Link
                 href={bookings.length > 0 ? '/dashboard/tenant/bookings' : '/search'}
-                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline inline-flex items-center gap-1"
+                className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
               >
                 <span>{bookings.length > 0 ? 'View All' : 'Explore All'}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -760,7 +760,7 @@ function TenantDashboardContent() {
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/dashboard/tenant/bookings/${b.id}`}
-                            className="text-sm font-semibold text-[#242925] dark:text-white hover:text-[#173D32] dark:hover:text-[#86B59C] truncate"
+                            className="text-sm font-semibold text-[#242925] dark:text-white hover:text-[#16A34A] dark:hover:text-emerald-400 truncate"
                           >
                             {prop.title || 'Accommodation'}
                           </Link>
@@ -833,7 +833,7 @@ function TenantDashboardContent() {
               </div>
               <Link
                 href="/dashboard/wishlist"
-                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline"
+                className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
               >
                 View All
               </Link>
@@ -848,7 +848,7 @@ function TenantDashboardContent() {
                 </p>
                 <Link
                   href="/search"
-                  className="inline-block text-xs font-semibold text-[#173D32] dark:text-[#86B59C] hover:underline"
+                  className="inline-block text-xs font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                 >
                   Explore homes to shortlist &rarr;
                 </Link>
@@ -904,7 +904,7 @@ function TenantDashboardContent() {
               </div>
               <Link
                 href="/dashboard/notifications"
-                className="text-xs font-medium text-[#173D32] dark:text-[#86B59C] hover:underline"
+                className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
               >
                 View All
               </Link>

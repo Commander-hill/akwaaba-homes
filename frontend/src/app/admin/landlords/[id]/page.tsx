@@ -273,7 +273,7 @@ export default function AdminLandlordDetailPage({
                     href={landlord.landlordDocUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>View Submitted Title Deed (Secure Link)</span>
@@ -354,7 +354,7 @@ export default function AdminLandlordDetailPage({
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/admin/properties/${prop.id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                         >
                           <span>Inspect</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -408,7 +408,7 @@ export default function AdminLandlordDetailPage({
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/admin/bookings/${booking.id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                         >
                           <span>View</span>
                           <ArrowRight className="w-3.5 h-3.5" />

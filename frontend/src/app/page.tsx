@@ -372,7 +372,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/search"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#173D32] dark:text-emerald-400 hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               <span>View full directory</span>
               <ArrowRight className="w-4 h-4" />
@@ -450,7 +450,7 @@ export default function HomePage() {
                   ? '/search'
                   : `/search?type=${encodeURIComponent(selectedCategory)}`
               }
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#173D32] dark:text-emerald-400 hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               <span>Explore all matching listings</span>
               <ArrowRight className="w-4 h-4" />
@@ -515,14 +515,14 @@ export default function HomePage() {
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#557A67]">
                     {loc.city}
                   </span>
-                  <h3 className="text-base font-bold text-[#242925] dark:text-white group-hover:text-[#173D32] dark:group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-base font-bold text-[#242925] dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-emerald-400 transition-colors">
                     {loc.name}
                   </h3>
                   <p className="text-xs text-[#6F756F] dark:text-[#9EA69F] leading-relaxed">
                     {loc.subtitle}
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-center text-[#173D32] dark:text-emerald-400 group-hover:bg-[#173D32] group-hover:text-white transition-colors shrink-0 mt-1">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-center text-[#16A34A] dark:text-emerald-400 group-hover:bg-[#16A34A] group-hover:text-white transition-colors shrink-0 mt-1">
                   <ArrowRight className="w-4 h-4" />
                 </div>
               </Link>

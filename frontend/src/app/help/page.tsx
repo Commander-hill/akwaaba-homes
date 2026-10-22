@@ -181,7 +181,7 @@ export default function HelpFaqPage() {
               <p>No answers found matching &ldquo;{searchQuery}&rdquo;.</p>
               <button
                 onClick={() => { setSearchQuery(''); setActiveCategory('ALL'); }}
-                className="text-[#0F5132] dark:text-emerald-400 font-semibold underline cursor-pointer"
+                className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-semibold underline cursor-pointer"
               >
                 Clear search filters
               </button>
@@ -201,12 +201,12 @@ export default function HelpFaqPage() {
                       <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-semibold block">
                         {faq.categoryLabel}
                       </span>
-                      <h3 className="text-base sm:text-[17px] font-semibold text-zinc-900 dark:text-white group-hover:text-[#0F5132] dark:group-hover:text-emerald-400 transition-colors leading-snug">
+                      <h3 className="text-base sm:text-[17px] font-semibold text-zinc-900 dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-emerald-400 transition-colors leading-snug">
                         {faq.question}
                       </h3>
                     </div>
                     <div className="pt-1 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#0F5132] dark:text-emerald-400' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#16A34A] dark:text-emerald-400' : ''}`} />
                     </div>
                   </button>
 

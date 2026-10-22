@@ -305,7 +305,7 @@ export default function AdminTenantDetailPage({
                 <div className="pt-2">
                   <Link
                     href={`/admin/verifications/${tenant.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                   >
                     <span>Open Full Document Audit Workspace</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -356,7 +356,7 @@ export default function AdminTenantDetailPage({
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/admin/bookings/${booking.id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                         >
                           <span>View</span>
                           <ArrowRight className="w-3.5 h-3.5" />

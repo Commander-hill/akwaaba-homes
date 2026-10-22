@@ -471,7 +471,7 @@ export function BreadcrumbNav({ items }: { items: BreadcrumbItem[] }) {
             {item.href && !isLast ? (
               <Link
                 href={item.href}
-                className="hover:text-[#173D32] dark:hover:text-white transition-colors font-medium"
+                className="hover:text-[#16A34A] dark:hover:text-emerald-400 transition-colors font-medium"
               >
                 {item.label}
               </Link>

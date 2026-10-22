@@ -545,7 +545,7 @@ export default function VerificationPage() {
                       setIsEditingStudent(true);
                       setStudentMsg(null);
                     }}
-                    className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
+                    className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
                   >
                     Update Academic Information &rarr;
                   </button>

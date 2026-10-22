@@ -210,11 +210,11 @@ export default function LandlordTenantsPage() {
                         <div className="flex flex-col gap-1">
                           {isApproved ? (
                             <>
-                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#0F5132] transition-colors">
+                              <a href={`mailto:${t?.email}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] transition-colors">
                                 <Mail className="w-3 h-3 text-zinc-400" /> {t?.email || 'N/A'}
                               </a>
                               {t?.phoneNumber && (
-                                <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#0F5132] transition-colors">
+                                <a href={`tel:${t?.phoneNumber}`} className="flex items-center gap-1 text-[11px] text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] transition-colors">
                                   <Phone className="w-3 h-3 text-zinc-400" /> {t.phoneNumber}
                                 </a>
                               )}

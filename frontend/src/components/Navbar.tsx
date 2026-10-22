@@ -127,7 +127,7 @@ export default function Navbar() {
               <Link
                 href="/"
                 className={clsx(
-                  'items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32] rounded-lg',
+                  'items-center gap-2.5 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A] rounded-lg',
                   pathname.startsWith('/dashboard') ? 'hidden xl:flex' : 'flex'
                 )}
               >
@@ -164,9 +164,9 @@ export default function Navbar() {
                       href={link.href}
                       aria-current={isActive ? 'page' : undefined}
                       className={clsx(
-                        'px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]',
+                        'px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
                         isActive
-                          ? 'text-[#173D32] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40'
+                          ? 'text-[#16A34A] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40'
                           : 'text-[#5E645E] hover:text-[#242925] dark:text-[#9EA69F] dark:hover:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
                       )}
                     >
@@ -261,7 +261,7 @@ export default function Navbar() {
                     className={clsx(
                       'block px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-colors',
                       pathname === link.href
-                        ? 'bg-[#EDF6F0] text-[#173D32] dark:bg-emerald-950/40 dark:text-emerald-400'
+                        ? 'bg-[#EDF6F0] text-[#16A34A] dark:bg-emerald-950/40 dark:text-emerald-400'
                         : 'text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
                     )}
                   >
@@ -276,7 +276,7 @@ export default function Navbar() {
                     <Link
                       href={dashboardHref}
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#173D32] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
                     >
                       My Account
                     </Link>
@@ -300,7 +300,7 @@ export default function Navbar() {
                     <Link
                       href="/register"
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#173D32] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
                     >
                       Create account
                     </Link>

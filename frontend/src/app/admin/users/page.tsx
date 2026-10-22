@@ -502,7 +502,7 @@ export default function AdminUsersPage() {
                     <p className="font-bold text-sm">No accounts found matching your criteria.</p>
                     <button 
                       onClick={() => { setActiveFilter('ALL'); setSearchQuery(''); }}
-                      className="mt-2 text-xs font-bold text-[#0F5132] hover:underline"
+                      className="mt-2 text-xs font-bold text-[#16A34A] hover:text-[#15803D] hover:underline cursor-pointer"
                     >
                       Clear search filters
                     </button>

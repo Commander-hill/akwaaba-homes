@@ -156,7 +156,7 @@ function Queue() {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/dashboard/landlord/bookings/${b.id}`}
-                        className="text-xs font-semibold text-[#173D32] dark:text-emerald-400 hover:underline"
+                        className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                       >
                         {b.status === 'PENDING' ? 'Review' : 'View'}
                       </Link>

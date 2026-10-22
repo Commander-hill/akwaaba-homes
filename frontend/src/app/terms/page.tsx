@@ -101,7 +101,7 @@ export default function TermsPage() {
             By accessing or utilizing the AkwaabaHomes platform (website, progressive web application, or authorized service portals), registering an account, publishing a property listing, or executing an accommodation reservation, you enter into a legally enforceable agreement with <strong>AkwaabaHomes Ghana PropTech Limited</strong>.
           </p>
           <p>
-            These Platform Terms and Conditions, together with our <Link href="/privacy" className="text-[#0F5132] dark:text-emerald-400 font-bold hover:underline">Privacy Policy</Link>, govern your access to our marketplace, escrow infrastructure, and digital tenancy instruments.
+            These Platform Terms and Conditions, together with our <Link href="/privacy" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Privacy Policy</Link>, govern your access to our marketplace, escrow infrastructure, and digital tenancy instruments.
           </p>
           <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-950 dark:text-emerald-200 space-y-1.5">
             <div className="flex items-center gap-2 font-bold text-sm text-[#0F5132] dark:text-emerald-400">
@@ -594,7 +594,7 @@ export default function TermsPage() {
               <div className="space-y-2 text-xs">
                 <Link 
                   href="/privacy" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] dark:hover:text-emerald-400 transition"
+                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
                 >
                   <span className="flex items-center gap-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
@@ -605,7 +605,7 @@ export default function TermsPage() {
 
                 <Link 
                   href="/support" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] dark:hover:text-emerald-400 transition"
+                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
                 >
                   <span className="flex items-center gap-2">
                     <LifeBuoy className="w-3.5 h-3.5 text-zinc-400" />
@@ -691,7 +691,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                If you have questions regarding our Escrow rules, university hostel quotas, or move-in dispute timelines, please contact our Legal &amp; Regulatory Compliance Desk at <a href="mailto:legal@akwaabahomes.com" className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">legal@akwaabahomes.com</a> or open a ticket through our <Link href="/support" className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">Dispute Desk</Link>.
+                If you have questions regarding our Escrow rules, university hostel quotas, or move-in dispute timelines, please contact our Legal &amp; Regulatory Compliance Desk at <a href="mailto:legal@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">legal@akwaabahomes.com</a> or open a ticket through our <Link href="/support" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">Dispute Desk</Link>.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
@@ -701,7 +701,7 @@ export default function TermsPage() {
 
                 <Link
                   href="/privacy"
-                  className="inline-flex items-center gap-1.5 font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                 >
                   <span>Review Privacy Policy</span>
                   <ArrowRight className="w-3.5 h-3.5" />

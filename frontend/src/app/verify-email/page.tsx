@@ -61,7 +61,7 @@ function VerifyEmailContent() {
           <ThemeToggle />
           <Link 
             href="/login" 
-            className="text-xs font-semibold text-[#0F5132] dark:text-emerald-400 hover:text-[#0A3D24] dark:hover:text-emerald-300 transition-colors"
+            className="text-xs font-semibold text-[#16A34A] dark:text-emerald-400 hover:text-[#15803D] dark:hover:text-emerald-300 transition-colors"
           >
             Sign in &rarr;
           </Link>

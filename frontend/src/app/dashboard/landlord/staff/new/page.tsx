@@ -296,7 +296,7 @@ export default function NewStaffAppointmentPage() {
                 <p className="font-bold">No active properties found under your landlord account.</p>
                 <Link
                   href="/dashboard/landlord/new"
-                  className="inline-flex items-center gap-1.5 text-[#0F5132] dark:text-emerald-400 font-bold underline"
+                  className="inline-flex items-center gap-1.5 text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold underline"
                 >
                   Publish a property listing first
                 </Link>
@@ -407,7 +407,7 @@ export default function NewStaffAppointmentPage() {
               <button
                 type="button"
                 onClick={() => setCurrentStep(1)}
-                className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
               >
                 Change
               </button>

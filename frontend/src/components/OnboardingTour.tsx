@@ -236,10 +236,10 @@ export default function OnboardingTour({ role, user }: OnboardingTourProps) {
       {/* Replay Tour Trigger Button */}
       <button
         onClick={handleReplay}
-        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#0F5132] dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-xs cursor-pointer"
+        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#16A34A] dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors shadow-xs cursor-pointer"
         title="Replay Onboarding Tour"
       >
-        <HelpCircle className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+        <HelpCircle className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
         <span>Platform Tour</span>
       </button>
 

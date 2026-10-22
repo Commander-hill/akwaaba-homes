@@ -553,7 +553,7 @@ function SearchDiscoveryContent() {
               <button
                 type="button"
                 onClick={resetAllFilters}
-                className="text-xs font-semibold text-[#6F756F] hover:text-[#173D32] underline ml-1 cursor-pointer"
+                className="text-xs font-semibold text-[#6F756F] hover:text-[#16A34A] underline ml-1 cursor-pointer"
               >
                 Clear all
               </button>

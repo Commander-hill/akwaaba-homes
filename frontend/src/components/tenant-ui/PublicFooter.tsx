@@ -42,27 +42,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm text-[#6F756F] dark:text-[#9EA69F]">
               <li>
-                <Link href="/search" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/search" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   All Properties
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=HOSTEL" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/search?type=HOSTEL" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   University &amp; Student Hostels
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=APARTMENT" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/search?type=APARTMENT" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Apartments &amp; Studios
                 </Link>
               </li>
               <li>
-                <Link href="/search?type=SINGLE_ROOM" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/search?type=SINGLE_ROOM" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Private &amp; Shared Rooms
                 </Link>
               </li>
               <li>
-                <Link href="/saved" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/saved" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Saved Properties
                 </Link>
               </li>
@@ -76,27 +76,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm text-[#6F756F] dark:text-[#9EA69F]">
               <li>
-                <Link href="/dashboard/tenant" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/dashboard/tenant" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Resident Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/bookings" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/bookings" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Bookings &amp; Escrow Status
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/profile" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Account &amp; Profile Settings
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/login" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Sign In
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/register" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Create an Account
                 </Link>
               </li>
@@ -110,27 +110,27 @@ export default function PublicFooter() {
             </h3>
             <ul className="space-y-2 text-xs sm:text-sm text-[#6F756F] dark:text-[#9EA69F]">
               <li>
-                <Link href="/support" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/support" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Support &amp; Issue Reporting
                 </Link>
               </li>
               <li>
-                <Link href="/help" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/help" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Help Center &amp; FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/about" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   About Akwaaba Homes
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/terms" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#173D32] dark:hover:text-white transition-colors">
+                <Link href="/privacy" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>

@@ -731,7 +731,7 @@ function CaretakerPortalContent() {
                 <button
                   type="button"
                   onClick={() => navigateTab('maintenance')}
-                  className="text-xs font-medium text-[#0F5132] dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
                 >
                   <span>View all</span>
                   <ArrowRight className="w-3 h-3" />
@@ -790,7 +790,7 @@ function CaretakerPortalContent() {
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/dashboard/caretaker/parcels/new?propertyId=${activeProperty?.id || ''}`}
-                    className="text-xs font-medium text-[#0F5132] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-medium text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Log package</span>

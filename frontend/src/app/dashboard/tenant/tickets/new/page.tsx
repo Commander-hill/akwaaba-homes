@@ -479,7 +479,7 @@ function ReportIssueContent() {
                     key={idx}
                     type="button"
                     onClick={() => setTitle(suggestion)}
-                    className="text-xs px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-emerald-50 hover:text-[#0F5132] dark:bg-zinc-800/80 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition text-left cursor-pointer border border-zinc-200/60 dark:border-zinc-700/60"
+                    className="text-xs px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-emerald-50 hover:text-[#16A34A] dark:bg-zinc-800/80 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition text-left cursor-pointer border border-zinc-200/60 dark:border-zinc-700/60"
                   >
                     + {suggestion}
                   </button>

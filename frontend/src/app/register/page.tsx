@@ -380,7 +380,7 @@ export default function RegisterPage() {
             <ThemeToggle />
             <Link 
               href="/login" 
-              className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+              className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               Sign in
             </Link>
@@ -810,15 +810,15 @@ export default function RegisterPage() {
                     required 
                     checked={formData.acceptTerms} 
                     onChange={(e) => setFormData({ ...formData, acceptTerms: e.target.checked })} 
-                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132] cursor-pointer" 
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer" 
                   />
                   <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     I agree to the{' '}
-                    <Link href="/terms" target="_blank" className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">
+                    <Link href="/terms" target="_blank" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                       Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="/privacy" target="_blank" className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">
+                    <Link href="/privacy" target="_blank" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                       Privacy Policy
                     </Link>
                     .
@@ -859,7 +859,7 @@ export default function RegisterPage() {
             Already have an account?{' '}
             <Link 
               href="/login" 
-              className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+              className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               Sign in
             </Link>

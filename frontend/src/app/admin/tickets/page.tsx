@@ -382,7 +382,7 @@ export default function AdminTicketsPage() {
                     <p className="font-bold text-sm">No maintenance tickets found matching criteria.</p>
                     <button 
                       onClick={() => { setStatusFilter('ALL'); setSearchTerm(''); }}
-                      className="mt-2 text-xs font-bold text-[#0F5132] hover:underline"
+                      className="mt-2 text-xs font-bold text-[#16A34A] hover:text-[#15803D] hover:underline cursor-pointer"
                     >
                       Clear search filters
                     </button>

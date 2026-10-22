@@ -91,7 +91,7 @@ export default function TenantAssetInventoryTab({
         </div>
         <Link
           href="/properties"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-colors"
         >
           <span>Explore Accommodations</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -228,11 +228,11 @@ export default function TenantAssetInventoryTab({
               value={newFixtureName}
               onChange={(e) => setNewFixtureName(e.target.value)}
               placeholder="Add room item to inspect (e.g., Ceiling Fan, Wardrobe, Washbasin)..."
-              className="flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132]"
+              className="flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs text-zinc-900 dark:text-white focus:outline-none focus:border-[#16A34A]"
             />
             <button
               type="submit"
-              className="px-4 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Item</span>
@@ -287,7 +287,7 @@ export default function TenantAssetInventoryTab({
                         onClick={() => handleVerifyGood(asset.id)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 cursor-pointer ${
                           asset.tenantVerified && !asset.flaggedDefect
-                            ? 'bg-[#0F5132] text-white'
+                            ? 'bg-[#16A34A] text-white'
                             : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300'
                         }`}
                       >
@@ -364,7 +364,7 @@ export default function TenantAssetInventoryTab({
                 type="button"
                 onClick={handleLockLedger}
                 disabled={!allVerified}
-                className="px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] disabled:opacity-40 text-white text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-40 text-white text-xs font-bold inline-flex items-center gap-2 transition-colors cursor-pointer"
               >
                 <ClipboardCheck className="w-4 h-4" />
                 <span>Sign &amp; Lock Move-In Report</span>

@@ -869,7 +869,7 @@ export default function MessagesPage() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                      className="p-2 rounded-xl text-zinc-500 hover:text-[#0F5132] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer shrink-0"
+                      className="p-2 rounded-xl text-zinc-500 hover:text-[#16A34A] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer shrink-0"
                       title="Attach photo"
                     >
                       <ImageIcon className="w-4 h-4" />
@@ -880,7 +880,7 @@ export default function MessagesPage() {
                       type="button"
                       onClick={() => documentInputRef.current?.click()}
                       disabled={isUploading}
-                      className="p-2 rounded-xl text-zinc-500 hover:text-[#0F5132] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer shrink-0"
+                      className="p-2 rounded-xl text-zinc-500 hover:text-[#16A34A] hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer shrink-0"
                       title="Attach document (PDF)"
                     >
                       <Paperclip className="w-4 h-4" />

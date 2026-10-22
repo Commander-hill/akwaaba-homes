@@ -165,7 +165,7 @@ function ResetPasswordForm() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+              className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
             >
               Sign in
             </Link>

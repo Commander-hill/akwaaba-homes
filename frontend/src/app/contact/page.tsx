@@ -161,7 +161,7 @@ export default function ContactPage() {
             <button
               type="button"
               onClick={() => setSubmittedRef(null)}
-              className="text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline shrink-0 self-end sm:self-center cursor-pointer"
+              className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline shrink-0 self-end sm:self-center cursor-pointer"
             >
               Dismiss
             </button>

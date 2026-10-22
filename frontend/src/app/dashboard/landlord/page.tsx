@@ -182,7 +182,7 @@ export default function LandlordDashboardPage() {
                     </div>
                     <Link
                       href={a.href}
-                      className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-[#173D32] dark:text-emerald-400 hover:underline"
+                      className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                     >
                       {a.cta} <ArrowRight className="w-3 h-3" aria-hidden="true" />
                     </Link>
@@ -198,7 +198,7 @@ export default function LandlordDashboardPage() {
                 <h2 id="props-h" className="text-sm font-semibold">
                   Your properties
                 </h2>
-                <Link href="/dashboard/landlord/properties" className="text-xs font-semibold text-[#173D32] hover:underline">
+                <Link href="/dashboard/landlord/properties" className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] hover:underline">
                   View all
                 </Link>
               </div>
@@ -249,7 +249,7 @@ export default function LandlordDashboardPage() {
                           </StatusBadge>
                           <Link
                             href={`/dashboard/landlord/properties/${p.id}/edit`}
-                            className="text-xs font-semibold text-[#173D32] hover:underline"
+                            className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] hover:underline"
                           >
                             Edit
                           </Link>
@@ -271,7 +271,7 @@ export default function LandlordDashboardPage() {
                 <h2 id="recent-h" className="text-sm font-semibold">
                   Recent booking activity
                 </h2>
-                <Link href="/dashboard/landlord/bookings" className="text-xs font-semibold text-[#173D32] hover:underline">
+                <Link href="/dashboard/landlord/bookings" className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] hover:underline">
                   All bookings
                 </Link>
               </div>

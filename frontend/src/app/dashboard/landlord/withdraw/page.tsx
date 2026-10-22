@@ -455,7 +455,7 @@ export default function LandlordWithdrawalPage() {
                           setAuthMethod('TOTP');
                         }
                       }}
-                      className="font-bold text-[#0F5132] hover:text-[#0A3D24] dark:text-emerald-400 hover:underline cursor-pointer"
+                      className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
                     >
                       {authMethod === 'TOTP'
                         ? 'Lost access to authenticator? Request Email OTP'
@@ -466,7 +466,7 @@ export default function LandlordWithdrawalPage() {
                       type="button"
                       disabled={isSendingEmailOtp}
                       onClick={handleRequestEmailOtp}
-                      className="font-bold text-[#0F5132] hover:text-[#0A3D24] dark:text-emerald-400 hover:underline cursor-pointer"
+                      className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
                     >
                       {isSendingEmailOtp ? 'Dispatching...' : "Didn't receive code? Resend Email OTP"}
                     </button>
@@ -601,7 +601,7 @@ export default function LandlordWithdrawalPage() {
                         type="button"
                         onClick={handleVerifyPayee}
                         disabled={isVerifyingPayee || !accountNumber.trim()}
-                        className="text-[11px] font-bold text-[#0F5132] hover:text-[#0A3D24] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-lg transition cursor-pointer disabled:opacity-40 flex items-center gap-1"
+                        className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 px-2.5 py-0.5 rounded-lg transition cursor-pointer disabled:opacity-40 flex items-center gap-1"
                       >
                         {isVerifyingPayee ? (
                           <>
@@ -683,7 +683,7 @@ export default function LandlordWithdrawalPage() {
                     <button
                       type="button"
                       onClick={() => setAmount(availableBalance.toFixed(2))}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-1 rounded-lg hover:bg-emerald-100 transition cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-800/60 px-2 py-1 rounded-lg hover:bg-emerald-100 transition cursor-pointer"
                     >
                       MAX
                     </button>

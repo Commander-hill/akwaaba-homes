@@ -241,13 +241,13 @@ function Inventory() {
                       </Link>
                     )}
                     {state === 'LIVE' && (
-                      <Link href={`/properties/${p.id}`} className="text-[#173D32] dark:text-emerald-400 hover:underline">
+                      <Link href={`/properties/${p.id}`} className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                         View public page
                       </Link>
                     )}
                     <Link
                       href={`/dashboard/landlord/properties/${p.id}/edit`}
-                      className="text-[#173D32] dark:text-emerald-400 hover:underline"
+                      className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                     >
                       Edit
                     </Link>

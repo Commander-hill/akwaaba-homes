@@ -78,7 +78,7 @@ export default function BookingDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Link href="/dashboard/landlord/bookings" className="inline-flex items-center gap-1.5 text-sm text-[#6F756F] hover:text-[#173D32]">
+      <Link href="/dashboard/landlord/bookings" className="inline-flex items-center gap-1.5 text-sm text-[#6F756F] hover:text-[#16A34A]">
         <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Bookings
       </Link>
 

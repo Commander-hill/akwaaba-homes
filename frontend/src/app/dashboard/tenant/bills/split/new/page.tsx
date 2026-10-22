@@ -486,7 +486,7 @@ function BillSplitterContent() {
                 <button
                   type="button"
                   onClick={addParticipant}
-                  className="inline-flex items-center gap-1 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 rounded-xl text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 rounded-xl text-xs font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 transition cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Roommate
                 </button>

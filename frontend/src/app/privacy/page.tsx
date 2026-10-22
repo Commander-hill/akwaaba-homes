@@ -293,7 +293,7 @@ export default function PrivacyPage() {
             </div>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            To exercise any of these rights, contact our Data Protection Officer directly or submit a request via our <Link href="/support" className="text-[#0F5132] dark:text-emerald-400 font-bold hover:underline">Support Portal</Link>. Requests are processed within 14 calendar days.
+            To exercise any of these rights, contact our Data Protection Officer directly or submit a request via our <Link href="/support" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Support Portal</Link>. Requests are processed within 14 calendar days.
           </p>
         </div>
       )
@@ -342,10 +342,10 @@ export default function PrivacyPage() {
               Office of the Data Protection Officer &bull; AkwaabaHomes Ghana
             </div>
             <div className="text-zinc-600 dark:text-zinc-400">
-              <strong>Official Inquiries:</strong> <a href="mailto:privacy@akwaabahomes.com" className="text-[#0F5132] dark:text-emerald-400 font-bold hover:underline">privacy@akwaabahomes.com</a>
+              <strong>Official Inquiries:</strong> <a href="mailto:privacy@akwaabahomes.com" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">privacy@akwaabahomes.com</a>
             </div>
             <div className="text-zinc-600 dark:text-zinc-400">
-              <strong>Legal Desk:</strong> <a href="mailto:legal@akwaabahomes.com" className="text-[#0F5132] dark:text-emerald-400 font-bold hover:underline">legal@akwaabahomes.com</a>
+              <strong>Legal Desk:</strong> <a href="mailto:legal@akwaabahomes.com" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">legal@akwaabahomes.com</a>
             </div>
             <div className="text-zinc-600 dark:text-zinc-400">
               <strong>Physical Headquarters:</strong> Accra Digital Centre, Ring Road West, Accra, Republic of Ghana
@@ -589,7 +589,7 @@ export default function PrivacyPage() {
               <div className="space-y-2 text-xs">
                 <Link 
                   href="/terms" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] dark:hover:text-emerald-400 transition"
+                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
                 >
                   <span className="flex items-center gap-2">
                     <FileText className="w-3.5 h-3.5 text-zinc-400" />
@@ -600,7 +600,7 @@ export default function PrivacyPage() {
 
                 <Link 
                   href="/support" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] dark:hover:text-emerald-400 transition"
+                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
                 >
                   <span className="flex items-center gap-2">
                     <LifeBuoy className="w-3.5 h-3.5 text-zinc-400" />
@@ -686,7 +686,7 @@ export default function PrivacyPage() {
               </div>
 
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                To submit a Subject Access Request (SAR), request account erasure, or report an identity security concern, email our Data Protection Office at <a href="mailto:privacy@akwaabahomes.com" className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline">privacy@akwaabahomes.com</a>.
+                To submit a Subject Access Request (SAR), request account erasure, or report an identity security concern, email our Data Protection Office at <a href="mailto:privacy@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">privacy@akwaabahomes.com</a>.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
@@ -696,7 +696,7 @@ export default function PrivacyPage() {
 
                 <Link
                   href="/terms"
-                  className="inline-flex items-center gap-1.5 font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                 >
                   <span>Review Terms &amp; Conditions</span>
                   <ArrowRight className="w-3.5 h-3.5" />

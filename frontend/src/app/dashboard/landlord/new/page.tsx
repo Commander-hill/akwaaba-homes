@@ -719,7 +719,7 @@ export default function NewPropertyPage() {
             <button
               type="button"
               onClick={handleAddRoom}
-              className="inline-flex items-center gap-1.5 px-4 py-2 border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#0F5132] text-zinc-700 dark:text-zinc-300 hover:text-[#0F5132] text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 border border-dashed border-zinc-300 dark:border-zinc-700 hover:border-[#16A34A] text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Another Room Type / Wing</span>

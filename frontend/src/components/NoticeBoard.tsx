@@ -117,7 +117,7 @@ export default function NoticeBoard() {
           {notice.buttonText && notice.buttonLink && (
             <Link 
               href={notice.buttonLink}
-              className="inline-flex items-center justify-center px-4 py-2 bg-white hover:bg-emerald-50 text-[#0F5132] font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center px-4 py-2 bg-white hover:bg-emerald-50 text-[#16A34A] font-extrabold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               {notice.buttonText}
             </Link>

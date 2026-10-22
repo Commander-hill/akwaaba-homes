@@ -578,7 +578,7 @@ function SupportContent() {
                       setFaqSearch('');
                       setFaqCategory('ALL');
                     }}
-                    className="text-[#173D32] dark:text-[#86B59C] font-semibold underline cursor-pointer"
+                    className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-semibold underline cursor-pointer"
                   >
                     Reset search
                   </button>

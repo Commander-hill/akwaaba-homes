@@ -40,7 +40,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
         </div>
         <Link
           href="/properties"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-colors"
         >
           <span>Browse Accommodations</span>
           <ArrowRight className="w-3.5 h-3.5" />
@@ -171,7 +171,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
 
                 <Link
                   href={`/dashboard/tenant/bookings/${activeBooking.id}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                 >
                   <FileText className="w-3.5 h-3.5" />
                   <span>View Booking &amp; PDF Agreement</span>
@@ -183,7 +183,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
           <div className="p-5 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <p className="text-xs font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                <Lock className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                 <span>
                   {isPaid
                     ? 'Booking marked as settled'
@@ -199,7 +199,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
 
             <Link
               href={`/dashboard/tenant/bookings/${activeBooking.id}`}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0b3e26] text-white text-xs font-bold shrink-0 self-start sm:self-center"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shrink-0 self-start sm:self-center"
             >
               <span>{isPaid ? 'View Booking Details' : 'Proceed to Lease & Payment'}</span>
               <ArrowRight className="w-3.5 h-3.5" />

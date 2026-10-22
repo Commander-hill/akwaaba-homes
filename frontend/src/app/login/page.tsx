@@ -474,7 +474,7 @@ function LoginForm() {
                     setTwoFactorCode('');
                     setError('');
                   }}
-                  className="text-[#0F5132] dark:text-emerald-400 hover:underline cursor-pointer font-bold"
+                  className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer font-bold"
                 >
                   {useRecoveryCode ? 'Use 6-digit authenticator code' : 'Lost device? Use emergency recovery key'}
                 </button>
@@ -539,7 +539,7 @@ function LoginForm() {
                     </label>
                     <Link
                       href="/forgot-password"
-                      className="text-xs text-[#0F5132] dark:text-emerald-400 hover:underline font-bold"
+                      className="text-xs text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline font-bold"
                     >
                       Forgot password?
                     </Link>
@@ -550,7 +550,7 @@ function LoginForm() {
                       type={showPassword ? 'text' : 'password'}
                       required
                       autoComplete="current-password"
-                      className="w-full h-11 pl-3.5 pr-10 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition"
+                      className="w-full h-11 pl-3.5 pr-10 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#16A34A] focus:ring-4 focus:ring-[#16A34A]/10 outline-none transition"
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -575,7 +575,7 @@ function LoginForm() {
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#0F5132] focus:ring-[#0F5132] accent-[#0F5132] cursor-pointer"
+                      className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer"
                     />
                     <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
                       Keep me signed in on this device
@@ -602,7 +602,7 @@ function LoginForm() {
                 Don&apos;t have an account?{' '}
                 <Link
                   href={redirectParam ? `/register?redirect=${encodeURIComponent(redirectParam)}` : '/register'}
-                  className="font-bold text-[#0F5132] dark:text-emerald-400 hover:underline"
+                  className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
                 >
                   Create an account
                 </Link>

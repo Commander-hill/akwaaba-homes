@@ -48,7 +48,7 @@ export default function LogoutControl({
             type="button"
             onClick={onLogout}
             aria-label="Yes, sign out"
-            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#9E2A2B] hover:bg-[#FCEEEE] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]"
+            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#9E2A2B] hover:bg-[#FCEEEE] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]"
           >
             <Check className="w-4 h-4" />
           </button>
@@ -56,7 +56,7 @@ export default function LogoutControl({
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Cancel, stay signed in"
-            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#173D32] dark:text-white hover:bg-[#E7E7DF] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32]"
+            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#16A34A] dark:text-emerald-400 hover:bg-[#E7E7DF] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]"
           >
             <X className="w-4 h-4" />
           </button>
