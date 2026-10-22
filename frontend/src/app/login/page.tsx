@@ -11,6 +11,9 @@ import {
   EyeOff,
   Compass,
   ShieldAlert,
+  Home,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -273,26 +276,25 @@ function LoginForm() {
   return (
     <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (70% Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:flex flex-1 min-h-screen lg:h-screen overflow-hidden items-center justify-center bg-[#070B09]">
-        {/* Ambient Blurred Fill (seamlessly fills wide 70% viewport without distortion) */}
-        <div className="absolute inset-0 select-none pointer-events-none overflow-hidden">
-          <Image
-            src="/images/auth-student-login.png"
-            alt=""
-            fill
-            sizes="70vw"
-            className="object-cover object-center blur-3xl opacity-35 scale-125"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/50" />
-        </div>
+      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (70% Desktop, Full Bleed Landscape) ──── */}
+      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
+        <Image
+          src="/images/auth-student-landscape.jpg"
+          alt="Happy verified Ghanaian resident enjoying modern residential community"
+          fill
+          sizes="70vw"
+          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
+          priority
+        />
+
+        {/* Cinematic Vignette Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/20" />
 
         {/* Top-Left Floating Explore Action */}
         <div className="absolute top-8 left-8 z-20">
           <Link
             href="/search"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
           >
             <Compass className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-45 transition-transform" />
             <span>Explore homes</span>
@@ -300,17 +302,42 @@ function LoginForm() {
           </Link>
         </div>
 
-        {/* Foreground Hero Graphic (uncropped, sharp, preserving student portrait & embedded badges) */}
-        <div className="relative z-10 h-full max-h-screen w-full flex items-center justify-center p-4 xl:p-8">
-          <div className="relative h-full max-h-[96vh] aspect-[300/979] drop-shadow-2xl">
-            <Image
-              src="/images/auth-student-login.png"
-              alt="Welcome Back - Akwaaba Homes"
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-contain object-center"
-              priority
-            />
+        {/* Bottom Overlay Content (matching the user's design) */}
+        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-4 z-10 max-w-2xl">
+          {/* Green accent line */}
+          <div className="w-12 h-1 rounded-full bg-[#16A34A]" />
+
+          <div className="space-y-2">
+            <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
+              Welcome Back
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
+              Sign in to access your bookings, saved properties, and more.
+            </p>
+          </div>
+
+          {/* Trust Markers */}
+          <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-zinc-200 font-medium">
+            <span className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <Home className="w-3.5 h-3.5" />
+              </span>
+              <span>Trusted Listings</span>
+            </span>
+
+            <span className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </span>
+              <span>Secure Transactions</span>
+            </span>
+
+            <span className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
+                <Sparkles className="w-3.5 h-3.5" />
+              </span>
+              <span>Ghana&apos;s Best Homes</span>
+            </span>
           </div>
         </div>
       </div>
