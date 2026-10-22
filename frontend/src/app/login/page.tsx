@@ -9,11 +9,8 @@ import {
   CheckCircle2,
   Eye,
   EyeOff,
-  ShieldCheck,
-  ShieldAlert,
-  Building2,
-  Check,
   Compass,
+  ShieldAlert,
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -276,25 +273,26 @@ function LoginForm() {
   return (
     <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-        <Image
-          src="/images/auth-roommates.jpg"
-          alt="Happy verified Ghanaian residents holding the keys to their new apartment"
-          fill
-          sizes="70vw"
-          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
-          priority
-        />
-
-        {/* Cinematic Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (70% Desktop, Full Bleed) ──── */}
+      <div className="relative hidden lg:flex flex-1 min-h-screen lg:h-screen overflow-hidden items-center justify-center bg-[#070B09]">
+        {/* Ambient Blurred Fill (seamlessly fills wide 70% viewport without distortion) */}
+        <div className="absolute inset-0 select-none pointer-events-none overflow-hidden">
+          <Image
+            src="/images/auth-student-login.png"
+            alt=""
+            fill
+            sizes="70vw"
+            className="object-cover object-center blur-3xl opacity-35 scale-125"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/50" />
+        </div>
 
         {/* Top-Left Floating Explore Action */}
-        <div className="absolute top-8 left-8 z-10">
+        <div className="absolute top-8 left-8 z-20">
           <Link
             href="/search"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
           >
             <Compass className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-45 transition-transform" />
             <span>Explore homes</span>
@@ -302,33 +300,17 @@ function LoginForm() {
           </Link>
         </div>
 
-        {/* Bottom Overlay Content */}
-        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
-            <span>VERIFIED HOUSING • ACCRA • KUMASI • CAPE COAST</span>
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-            Trusted homes for students &amp; residents across Ghana
-          </h2>
-
-          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-            Review room availability, compare transparent GH₵ pricing, and manage your reservations in one calm workspace.
-          </p>
-
-          {/* Trust Markers */}
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-400" /> Ghana Card Verified
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Direct Host Chat
-            </span>
+        {/* Foreground Hero Graphic (uncropped, sharp, preserving student portrait & embedded badges) */}
+        <div className="relative z-10 h-full max-h-screen w-full flex items-center justify-center p-4 xl:p-8">
+          <div className="relative h-full max-h-[96vh] aspect-[300/979] drop-shadow-2xl">
+            <Image
+              src="/images/auth-student-login.png"
+              alt="Welcome Back - Akwaaba Homes"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-contain object-center"
+              priority
+            />
           </div>
         </div>
       </div>
