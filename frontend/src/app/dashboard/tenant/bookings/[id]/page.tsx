@@ -28,7 +28,7 @@ import {
   Phone,
   Mail,
 } from 'lucide-react';
-import { StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
+import { Button, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
 import { getImageUrl } from '@/lib/utils';
 
 export default function TenantBookingDetailsPage() {
@@ -431,29 +431,25 @@ export default function TenantBookingDetailsPage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Link
-                href={`/dashboard/agreements/${booking.id}`}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors"
-              >
-                <FileText className="w-4 h-4" />
-                <span>
+              <Link href={`/dashboard/agreements/${booking.id}`}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  leftIcon={<FileText className="w-4 h-4" />}
+                >
                   {isLeaseCompleted ? 'View Signed Agreement' : 'Review & Sign Lease Agreement'}
-                </span>
+                </Button>
               </Link>
 
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleDownloadPdf}
-                disabled={isDownloadingPdf}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-xs sm:text-sm font-medium text-[#242925] dark:text-white transition-colors cursor-pointer"
+                isLoading={isDownloadingPdf}
+                leftIcon={<Download className="w-4 h-4" />}
               >
-                {isDownloadingPdf ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                <span>Download PDF Copy</span>
-              </button>
+                Download PDF Copy
+              </Button>
             </div>
           </div>
 
@@ -554,34 +550,33 @@ export default function TenantBookingDetailsPage() {
                     Both you and the landlord must sign the digital tenancy agreement before escrow payment is unlocked.
                   </div>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="primary"
+                  size="sm"
                   onClick={() => payMutation.mutate()}
+                  isLoading={payMutation.isPending}
                   disabled={payMutation.isPending || !isLeaseCompleted}
-                  className="w-full h-11 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] disabled:opacity-50 text-white text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  leftIcon={<CreditCard className="w-4 h-4" />}
+                  className="w-full h-11"
                 >
-                  {payMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CreditCard className="w-4 h-4" />
-                  )}
-                  <span>Pay {formatCedis(totalPayable)} into Escrow</span>
-                </button>
+                  Pay {formatCedis(totalPayable)} into Escrow
+                </Button>
               </div>
             ) : isPending ? (
               <div className="space-y-3">
                 <div className="p-3.5 rounded-[12px] bg-[#FFFAEB] dark:bg-[#451A03]/30 border border-[#FDE68A] dark:border-[#78350F] text-xs text-[#B45309] dark:text-[#FCD34D] leading-relaxed">
                   Your booking request is awaiting landlord confirmation. You can cancel this request at any time before payment without penalty.
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="danger"
+                  size="sm"
                   onClick={() => setShowCancelModal(true)}
                   disabled={cancelMutation.isPending}
-                  className="w-full h-11 rounded-[10px] border border-[#FECACA] dark:border-[#991B1B] hover:bg-[#FEF3F2] dark:hover:bg-[#450A0A]/40 text-[#B42318] dark:text-[#FCA5A5] text-xs sm:text-sm font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  leftIcon={<XCircle className="w-4 h-4" />}
+                  className="w-full h-11"
                 >
-                  <XCircle className="w-4 h-4" />
-                  <span>Cancel Booking Request</span>
-                </button>
+                  Cancel Booking Request
+                </Button>
               </div>
             ) : null}
 
@@ -699,23 +694,22 @@ export default function TenantBookingDetailsPage() {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setShowCancelModal(false)}
                 disabled={cancelMutation.isPending}
-                className="px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] text-xs sm:text-sm font-medium text-[#242925] dark:text-white hover:bg-[#F1EFE7] dark:hover:bg-[#222925] transition-colors cursor-pointer"
               >
                 Keep Request
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => cancelMutation.mutate()}
-                disabled={cancelMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#B42318] hover:bg-[#912018] text-white text-xs sm:text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                isLoading={cancelMutation.isPending}
               >
-                {cancelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>Confirm Cancellation</span>
-              </button>
+                Confirm Cancellation
+              </Button>
             </div>
           </div>
         </div>

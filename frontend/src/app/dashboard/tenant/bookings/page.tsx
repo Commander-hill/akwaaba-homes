@@ -18,6 +18,7 @@ import {
   Building2,
 } from 'lucide-react';
 import {
+  Button,
   StatusBadge,
   EmptyState,
   ErrorState,
@@ -329,32 +330,36 @@ export default function TenantBookingsOverviewPage() {
 
                     <div className="flex flex-wrap items-center gap-2">
                       {booking.status === 'PENDING' && (
-                        <button
-                          type="button"
+                        <Button
+                          variant="danger"
+                          size="sm"
                           onClick={() => setBookingToCancel(booking)}
-                          className="px-3.5 py-2 rounded-[10px] border border-[#FECACA] dark:border-[#991B1B] text-[#B42318] dark:text-[#FCA5A5] hover:bg-[#FEF3F2] dark:hover:bg-[#450A0A]/40 text-xs font-medium transition-colors cursor-pointer"
                         >
                           Cancel Request
-                        </button>
+                        </Button>
                       )}
 
                       {['APPROVED', 'CONFIRMED'].includes(booking.status) &&
                         booking.leaseAgreement?.status !== 'COMPLETED' && (
-                          <Link
-                            href={`/dashboard/agreements/${booking.id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] border border-[#173D32] text-[#173D32] dark:border-[#86B59C] dark:text-[#86B59C] hover:bg-[#173D32]/5 text-xs font-medium transition-colors"
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                            <span>Sign Lease</span>
+                          <Link href={`/dashboard/agreements/${booking.id}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              leftIcon={<FileText className="w-3.5 h-3.5" />}
+                            >
+                              Sign Lease
+                            </Button>
                           </Link>
                         )}
 
-                      <Link
-                        href={`/dashboard/tenant/bookings/${booking.id}`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#102C24] text-white text-xs sm:text-sm font-medium transition-colors"
-                      >
-                        <span>View Details</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
+                      <Link href={`/dashboard/tenant/bookings/${booking.id}`}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                        >
+                          View Details
+                        </Button>
                       </Link>
                     </div>
                   </div>
@@ -395,23 +400,22 @@ export default function TenantBookingsOverviewPage() {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setBookingToCancel(null)}
                 disabled={cancelMutation.isPending}
-                className="px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] text-xs sm:text-sm font-medium text-[#242925] dark:text-white hover:bg-[#F1EFE7] dark:hover:bg-[#222925] transition-colors cursor-pointer"
               >
                 Keep Booking
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => cancelMutation.mutate(bookingToCancel.id)}
-                disabled={cancelMutation.isPending}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#B42318] hover:bg-[#912018] text-white text-xs sm:text-sm font-medium transition-colors cursor-pointer disabled:opacity-50"
+                isLoading={cancelMutation.isPending}
               >
-                {cancelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-                <span>Confirm Cancellation</span>
-              </button>
+                Confirm Cancellation
+              </Button>
             </div>
           </div>
         </div>

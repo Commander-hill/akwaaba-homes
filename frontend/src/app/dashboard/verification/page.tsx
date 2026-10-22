@@ -21,6 +21,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { Button } from '@/components/ui/Button';
 
 export default function VerificationPage() {
   const queryClient = useQueryClient();
@@ -445,23 +446,16 @@ export default function VerificationPage() {
               </div>
 
               <div className="pt-2">
-                <button
+                <Button
                   type="submit"
+                  variant="emerald"
+                  size="sm"
+                  isLoading={isSubmitting}
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                 >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Submit for Verification</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
+                  Submit for Verification
+                </Button>
               </div>
             </form>
           )}
@@ -698,35 +692,29 @@ export default function VerificationPage() {
                 </div>
 
                 <div className="flex items-center gap-3 pt-2">
-                  <button
+                  <Button
                     type="submit"
+                    variant="emerald"
+                    size="sm"
+                    isLoading={isSubmittingStudent}
                     disabled={isSubmittingStudent}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                   >
-                    {isSubmittingStudent ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Saving Academic Credentials...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Save &amp; Verify Student Status</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
+                    Save &amp; Verify Student Status
+                  </Button>
 
                   {isEditingStudent && (
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="sm"
                       onClick={() => {
                         setIsEditingStudent(false);
                         setStudentMsg(null);
                       }}
-                      className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   )}
                 </div>
               </form>
@@ -908,23 +896,16 @@ export default function VerificationPage() {
                 </div>
 
                 <div className="pt-2">
-                  <button
+                  <Button
                     type="submit"
+                    variant="emerald"
+                    size="sm"
+                    isLoading={isSubmittingLandlord}
                     disabled={isSubmittingLandlord}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
                   >
-                    {isSubmittingLandlord ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Uploading Deed &amp; Submitting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Submit Ownership Proof</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </>
-                    )}
-                  </button>
+                    Submit Ownership Proof
+                  </Button>
                 </div>
               </form>
             )}

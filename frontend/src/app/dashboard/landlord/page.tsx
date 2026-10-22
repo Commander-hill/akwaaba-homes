@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { AlertCircle, ArrowRight, Building2, CalendarCheck, CheckCircle2 } from 'lucide-react';
 import api from '@/lib/axios';
-import { ErrorState, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
+import { Button, ErrorState, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
 
 interface Action {
   key: string;
@@ -130,11 +130,14 @@ export default function LandlordDashboardPage() {
             {user?.firstName ? `Welcome back, ${user.firstName}.` : 'Welcome back.'}
           </p>
         </div>
-        <Link
-          href="/dashboard/landlord/new"
-          className="h-10 px-4 inline-flex items-center rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-semibold"
-        >
-          Add property
+        <Link href="/dashboard/landlord/new">
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Building2 className="w-4 h-4" />}
+          >
+            Add property
+          </Button>
         </Link>
       </header>
 
@@ -200,12 +203,16 @@ export default function LandlordDashboardPage() {
                 </Link>
               </div>
               {properties.length === 0 ? (
-                <div className="p-6 rounded-lg border border-dashed border-[#D8D8CE] text-center">
+                <div className="p-6 rounded-lg border border-dashed border-[#D8D8CE] dark:border-[#262E2A] text-center space-y-3">
                   <Building2 className="w-6 h-6 mx-auto text-[#557A67]" aria-hidden="true" />
-                  <p className="text-sm mt-2">You have not listed a property yet.</p>
-                  <Link href="/dashboard/landlord/new" className="text-sm font-semibold text-[#173D32] hover:underline">
-                    Add your first property
-                  </Link>
+                  <p className="text-sm">You have not listed a property yet.</p>
+                  <div>
+                    <Link href="/dashboard/landlord/new">
+                      <Button variant="primary" size="sm" leftIcon={<Building2 className="w-3.5 h-3.5" />}>
+                        Add your first property
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               ) : (
                 <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">

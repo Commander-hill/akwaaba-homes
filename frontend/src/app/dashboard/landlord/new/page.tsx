@@ -16,6 +16,7 @@ import { getImageUrl } from '@/lib/utils';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import AlertBanner from '@/components/AlertBanner';
+import { Button } from '@/components/ui/Button';
 
 interface RoomInput {
   id: string;
@@ -604,14 +605,15 @@ export default function NewPropertyPage() {
           </div>
 
           <div className="flex justify-end pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <button
+            <Button
               type="button"
+              variant="emerald"
+              size="sm"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
             >
-              <span>Next: Units &amp; Pricing</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+              Next: Units &amp; Pricing
+            </Button>
           </div>
         </div>
       )}
@@ -725,21 +727,23 @@ export default function NewPropertyPage() {
           </div>
 
           <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleBack}
-              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="emerald"
+              size="sm"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
             >
-              <span>Next: Utilities &amp; Rules</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+              Next: Utilities &amp; Rules
+            </Button>
           </div>
         </div>
       )}
@@ -888,21 +892,23 @@ export default function NewPropertyPage() {
           </div>
 
           <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleBack}
-              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="emerald"
+              size="sm"
               onClick={handleNext}
-              className="px-5 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors"
+              rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
             >
-              <span>Next: Media &amp; Review</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+              Next: Media &amp; Review
+            </Button>
           </div>
         </div>
       )}
@@ -1017,22 +1023,25 @@ export default function NewPropertyPage() {
           </div>
 
           <div className="flex justify-between pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={handleBack}
-              className="px-4 py-2 text-zinc-600 dark:text-zinc-300 text-xs font-bold rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               Back
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="emerald"
+              size="sm"
               onClick={handleSubmit}
+              isLoading={createMutation.isPending}
               disabled={createMutation.isPending}
-              className="px-6 py-2.5 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+              rightIcon={<Check className="w-3.5 h-3.5" />}
             >
-              {createMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-              <span>Publish Listing</span>
-            </button>
+              Publish Listing
+            </Button>
           </div>
         </div>
       )}

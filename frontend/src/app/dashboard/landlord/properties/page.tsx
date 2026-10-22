@@ -123,11 +123,14 @@ function Inventory() {
             A listing is visible to tenants only when it is approved and has an active subscription.
           </p>
         </div>
-        <Link
-          href="/dashboard/landlord/new"
-          className="h-10 px-4 inline-flex items-center rounded-lg bg-[#173D32] hover:bg-[#102C24] text-white text-sm font-semibold"
-        >
-          Add property
+        <Link href="/dashboard/landlord/new">
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Building2 className="w-4 h-4" />}
+          >
+            Add property
+          </Button>
         </Link>
       </header>
 
@@ -266,20 +269,22 @@ function Inventory() {
                 Page {page} of {pages}
               </span>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
-                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
                 >
                   Previous
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   disabled={page === pages}
                   onClick={() => setPage(page + 1)}
-                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}
