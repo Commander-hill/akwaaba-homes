@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 interface BrandLoaderProps {
   /**
-   * The text displayed in the pill container under the logo.
+   * The text displayed under the logo.
    * Default: 'LOADING AKWAABA HOMES'
    */
   message?: string;
@@ -59,12 +59,12 @@ export default function BrandLoader({
           </div>
         </div>
 
-        {/* NSS-Style Status Pill */}
-        <div className="inline-flex items-center justify-center px-5 py-2 rounded-md border border-[#E7E7DF] dark:border-[#262E2A] bg-white/95 dark:bg-[#141816]/95 shadow-sm">
+        {/* Clean Status Text (Uncarded) */}
+        <div className="inline-flex items-center justify-center">
           <span className="text-[11px] sm:text-xs font-bold tracking-widest text-[#242925] dark:text-[#E2E8F0] uppercase">
             {cleanMessage}
           </span>
-          <span className="inline-block text-[11px] sm:text-xs font-bold text-[#173D32] dark:text-emerald-400 w-5 text-left ml-0.5">
+          <span className="inline-block text-[11px] sm:text-xs font-bold text-[#16A34A] dark:text-emerald-400 w-5 text-left ml-0.5">
             {dots}
           </span>
         </div>
