@@ -87,4 +87,6 @@ export const updatePropertyValidation = [
   body('location').optional().notEmpty().withMessage('Location is required').trim().escape(),
   body('amenities').optional().isArray().withMessage('Amenities must be an array'),
   body('images').optional().isArray().withMessage('Images must be an array'),
+  body('price').optional().isFloat({ min: 0 }),
+  body('rooms').optional().isArray(),
 ];

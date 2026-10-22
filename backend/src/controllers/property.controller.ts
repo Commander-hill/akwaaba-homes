@@ -550,7 +550,8 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
       title, type, targetAudience, furnishing, pricePeriod, 
       gateLockTime, visitorPolicy, quietHours, 
       paymentSchedule, cautionDeposit, includedUtilities,
-      description, location, latitude, longitude, amenities, images, videoUrl, isAvailable 
+      description, location, latitude, longitude, amenities, images, videoUrl, isAvailable,
+      price, rooms
     } = req.body;
 
     const property = await prisma.property.findUnique({ where: { id } });
@@ -590,6 +591,97 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
       }
     }
 
+    // Calculate price
+    let priceToUpdate = property.price;
+    if (price !== undefined && !isNaN(parseFloat(price))) {
+      priceToUpdate = parseFloat(price);
+    } else if (rooms && Array.isArray(rooms) && rooms.length > 0) {
+      const validPrices = rooms.map((r: any) => parseFloat(r.price)).filter(p => !isNaN(p) && p > 0);
+      if (validPrices.length > 0) {
+        priceToUpdate = Math.min(...validPrices);
+      }
+    }
+
+    // Sync rooms if provided
+    if (rooms && Array.isArray(rooms)) {
+      const existingRooms = await prisma.room.findMany({ where: { propertyId: id } });
+      const existingRoomIds = new Set(existingRooms.map(r => r.id));
+      const incomingRoomIds = new Set(rooms.filter((r: any) => r.id && existingRoomIds.has(r.id)).map((r: any) => r.id));
+
+      for (const r of rooms) {
+        const bedsPerRoom = parseBedsPerRoom(r.roomType);
+        const numRooms = parseInt(r.numberOfRooms, 10) || 1;
+        const blockName = r.blockName || null;
+        const gender = r.gender || 'MIXED';
+        const roomPrice = parseFloat(r.price) || 0;
+
+        if (r.id && existingRoomIds.has(r.id)) {
+          await prisma.room.update({
+            where: { id: r.id },
+            data: {
+              blockName,
+              gender,
+              roomType: r.roomType,
+              bedsPerRoom,
+              numberOfRooms: numRooms,
+              price: roomPrice
+            }
+          });
+        } else {
+          const createdRoom = await prisma.room.create({
+            data: {
+              propertyId: id,
+              blockName,
+              gender,
+              roomType: r.roomType,
+              bedsPerRoom,
+              numberOfRooms: numRooms,
+              price: roomPrice
+            }
+          });
+          const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+          for (let i = 1; i <= numRooms; i++) {
+            const unitNumber = `${prefix}${100 + i}`;
+            const roomUnit = await prisma.roomUnit.create({
+              data: {
+                roomId: createdRoom.id,
+                unitNumber,
+                floor: Math.ceil(i / 10),
+                genderLock: gender !== 'MIXED' ? gender : 'UNASSIGNED',
+                bedsPerRoom,
+              }
+            });
+            for (let b = 1; b <= bedsPerRoom; b++) {
+              await prisma.bed.create({
+                data: {
+                  roomUnitId: roomUnit.id,
+                  bedNumber: `Bed ${b}`,
+                  status: 'AVAILABLE'
+                }
+              });
+            }
+          }
+        }
+      }
+
+      for (const exRoom of existingRooms) {
+        if (!incomingRoomIds.has(exRoom.id)) {
+          const hasBookings = await prisma.booking.findFirst({
+            where: { roomId: exRoom.id, status: { in: ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE', 'CHECKED_IN'] } }
+          });
+          if (!hasBookings) {
+            const units = await prisma.roomUnit.findMany({ where: { roomId: exRoom.id }, select: { id: true } });
+            const unitIds = units.map(u => u.id);
+            if (unitIds.length > 0) {
+              await prisma.bed.deleteMany({ where: { roomUnitId: { in: unitIds } } }).catch(() => {});
+              await prisma.roomUnit.deleteMany({ where: { id: { in: unitIds } } }).catch(() => {});
+            }
+            await prisma.room.delete({ where: { id: exRoom.id } }).catch(() => {});
+          }
+        }
+      }
+    }
+
     const updatedProperty = await prisma.property.update({
       where: { id },
       data: {
@@ -605,6 +697,7 @@ export const updateProperty = async (req: Request, res: Response): Promise<void>
         cautionDeposit: cautionDeposit !== undefined ? parseFloat(cautionDeposit) : property.cautionDeposit,
         includedUtilities: includedUtilities !== undefined ? JSON.stringify(includedUtilities) : property.includedUtilities,
         description: description || property.description,
+        price: priceToUpdate,
         location: location || property.location,
         latitude: latitude !== undefined ? (latitude !== null ? parseFloat(latitude) : null) : property.latitude,
         longitude: longitude !== undefined ? (longitude !== null ? parseFloat(longitude) : null) : property.longitude,
