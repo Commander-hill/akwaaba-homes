@@ -41,6 +41,8 @@ import { getImageUrl } from '@/lib/utils';
 import VisitorPassTab from '@/components/tenant/VisitorPassTab';
 import PackageDeliveriesTab from '@/components/tenant/PackageDeliveriesTab';
 import TenantPaymentScheduleTab from '@/components/tenant/TenantPaymentScheduleTab';
+import NoticeBoard from '@/components/NoticeBoard';
+import ResidentNoticeCard from '@/components/tenant/ResidentNoticeCard';
 
 type ActiveResidentModalTool = 'visitors' | 'deliveries' | 'payments' | null;
 
@@ -271,6 +273,9 @@ function TenantDashboardContent() {
           )}
         </div>
       </div>
+
+      {/* ── Official Platform Advisory NoticeBoard ── */}
+      <NoticeBoard />
 
       {/* ── 2. Primary Focus Card (Adapts to State A, B, C, or D) ── */}
       {dashboardState.mode === 'NEW_TENANT' && (
@@ -509,6 +514,11 @@ function TenantDashboardContent() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* ── Building & Compound Advisories (if active booking/property exists) ── */}
+      {primaryBooking && (primaryBooking.propertyId || primaryBooking.property?.id) && (
+        <ResidentNoticeCard propertyId={primaryBooking.propertyId || primaryBooking.property?.id} />
       )}
 
       {dashboardState.mode === 'CONFIRMED_STAY' && primaryBooking && (
