@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import Link from 'next/link';
 import { 
   Loader2, Settings, BadgeCheck, CreditCard, Users, 
   Save, Power, Clock, AlertTriangle, CheckCircle2,
-  Percent, Calendar, HelpCircle
+  Percent, Calendar, HelpCircle, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -253,11 +254,20 @@ export default function AdminConfigPage() {
 
       {/* ── SECTION 4: PLATFORM AVAILABILITY & MAINTENANCE SAFEGUARDS ── */}
       <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-rose-200 dark:border-rose-900/50 p-5 space-y-4 shadow-xs">
-        <div className="flex items-center gap-2 border-b border-rose-100 dark:border-rose-900/40 pb-3">
-          <AlertTriangle className="w-4 h-4 text-rose-600" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
-            4. System Maintenance Safeguards (High Priority)
-          </h2>
+        <div className="flex items-center justify-between border-b border-rose-100 dark:border-rose-900/40 pb-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-600" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400">
+              4. System Maintenance Safeguards (High Priority)
+            </h2>
+          </div>
+          <Link
+            href="/admin/maintenance"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 dark:text-rose-400 hover:underline"
+          >
+            <span>Open Dedicated Maintenance Hub</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         <div className="space-y-4 pt-1">

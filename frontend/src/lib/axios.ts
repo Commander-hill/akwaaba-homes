@@ -106,6 +106,18 @@ api.interceptors.response.use(
       }
     }
 
+    if (
+      error.response?.status === 503 &&
+      (error.response?.data?.code === 'MAINTENANCE_MODE' || error.response?.data?.maintenanceMode)
+    ) {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname;
+        if (!path.startsWith('/admin') && path !== '/maintenance') {
+          window.location.href = '/maintenance';
+        }
+      }
+    }
+
     return Promise.reject(error);
   }
 );

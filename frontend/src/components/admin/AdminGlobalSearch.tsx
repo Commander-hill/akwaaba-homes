@@ -2,19 +2,90 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Loader2, X, Building, Users, CalendarCheck, CreditCard, ArrowRight } from 'lucide-react';
+import {
+  Search,
+  Loader2,
+  X,
+  Building,
+  Users,
+  CalendarCheck,
+  CreditCard,
+  ArrowRight,
+  Megaphone,
+  Radio,
+  Wrench,
+  Power,
+  Settings,
+} from 'lucide-react';
 import api from '@/lib/axios';
 import clsx from 'clsx';
 import AdminStatusBadge from './AdminStatusBadge';
 
 interface SearchResult {
   id: string;
-  type: 'LANDLORD' | 'TENANT' | 'ADMIN' | 'PROPERTY' | 'BOOKING' | 'TRANSACTION';
+  type: 'LANDLORD' | 'TENANT' | 'ADMIN' | 'PROPERTY' | 'BOOKING' | 'TRANSACTION' | 'GOVERNANCE' | 'OPERATIONS' | 'COMMUNICATIONS' | string;
   title: string;
   subtitle: string;
   status: string;
   url: string;
 }
+
+const STATIC_ADMIN_PAGES = [
+  {
+    id: 'page-maintenance-mode',
+    type: 'GOVERNANCE',
+    title: 'Platform Maintenance Mode',
+    subtitle: 'Activate/deactivate global maintenance mode & countdown timer',
+    status: 'PAGE',
+    url: '/admin/maintenance',
+    keywords: ['maintenance', 'mode', 'system', 'offline', 'timer', 'downtime', 'outage'],
+  },
+  {
+    id: 'page-maintenance-tickets',
+    type: 'OPERATIONS',
+    title: 'Property Maintenance & Repairs Hub',
+    subtitle: 'Manage resident repairs, work orders & artisan tickets',
+    status: 'PAGE',
+    url: '/admin/tickets',
+    keywords: ['maintenance', 'repair', 'ticket', 'plumbing', 'electrical', 'artisan', 'damage'],
+  },
+  {
+    id: 'page-notices',
+    type: 'COMMUNICATIONS',
+    title: 'Platform Notices & Announcements',
+    subtitle: 'Manage global marketplace announcements and policy notices',
+    status: 'PAGE',
+    url: '/admin/notices',
+    keywords: ['notice', 'announcement', 'broadcast', 'banner', 'alert', 'policy'],
+  },
+  {
+    id: 'page-notices-new',
+    type: 'COMMUNICATIONS',
+    title: 'Broadcast a New Notice',
+    subtitle: 'Compose and publish a new platform announcement banner',
+    status: 'PAGE',
+    url: '/admin/notices/new',
+    keywords: ['notice', 'announcement', 'create', 'new', 'post', 'broadcast'],
+  },
+  {
+    id: 'page-broadcasts',
+    type: 'COMMUNICATIONS',
+    title: 'System Broadcasts & Live Alerts',
+    subtitle: 'Instant push notifications to all tenants, landlords, or users',
+    status: 'PAGE',
+    url: '/admin/broadcasts',
+    keywords: ['broadcast', 'socket', 'instant', 'alert', 'message', 'push'],
+  },
+  {
+    id: 'page-config',
+    type: 'GOVERNANCE',
+    title: 'Platform Configuration & Settings',
+    subtitle: 'Commission percentages, grace periods & platform parameters',
+    status: 'PAGE',
+    url: '/admin/config',
+    keywords: ['settings', 'config', 'commission', 'grace', 'parameters', 'maintenance'],
+  },
+];
 
 export default function AdminGlobalSearch() {
   const router = useRouter();
@@ -57,14 +128,31 @@ export default function AdminGlobalSearch() {
       return;
     }
 
+    const q = query.trim().toLowerCase();
+    const matchedPages: SearchResult[] = STATIC_ADMIN_PAGES.filter((p) => {
+      const matchTitle = p.title.toLowerCase().includes(q);
+      const matchSubtitle = p.subtitle.toLowerCase().includes(q);
+      const matchKeywords = p.keywords.some((k) => k.includes(q) || q.includes(k));
+      return matchTitle || matchSubtitle || matchKeywords;
+    }).map((p) => ({
+      id: p.id,
+      type: p.type,
+      title: p.title,
+      subtitle: p.subtitle,
+      status: p.status,
+      url: p.url,
+    }));
+
     setIsLoading(true);
     const timer = setTimeout(async () => {
       try {
         const res = await api.get(`/admin/search?q=${encodeURIComponent(query.trim())}`);
-        setResults(res.data?.results || []);
+        const apiResults = res.data?.results || [];
+        setResults([...matchedPages, ...apiResults]);
         setSelectedIndex(0);
       } catch (err) {
         console.error('Search error:', err);
+        setResults(matchedPages);
       } finally {
         setIsLoading(false);
       }
@@ -103,6 +191,12 @@ export default function AdminGlobalSearch() {
         return CalendarCheck;
       case 'TRANSACTION':
         return CreditCard;
+      case 'GOVERNANCE':
+        return Power;
+      case 'OPERATIONS':
+        return Wrench;
+      case 'COMMUNICATIONS':
+        return Megaphone;
       default:
         return Search;
     }

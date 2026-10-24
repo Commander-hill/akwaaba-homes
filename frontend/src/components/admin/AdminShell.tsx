@@ -26,7 +26,11 @@ import {
   X,
   LogOut,
   ShieldAlert,
-  Sparkles
+  Sparkles,
+  Megaphone,
+  Radio,
+  Wrench,
+  Power
 } from 'lucide-react';
 import clsx from 'clsx';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -114,8 +118,16 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
         { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
         { name: 'Payments & Escrow', href: '/admin/transactions', icon: Receipt },
+        { name: 'Maintenance & Repairs', href: '/admin/tickets', icon: Wrench },
         { name: 'Review Moderation', href: '/admin/reviews', icon: Star },
         { name: 'Disputes & Support', href: '/admin/disputes', icon: Scale }
+      ]
+    },
+    {
+      title: 'COMMUNICATIONS',
+      links: [
+        { name: 'Notices & Announcements', href: '/admin/notices', icon: Megaphone },
+        { name: 'Live Broadcasts & Alerts', href: '/admin/broadcasts', icon: Radio },
       ]
     },
     {
@@ -128,6 +140,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       title: 'GOVERNANCE',
       links: [
         { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
+        { name: 'Maintenance Mode', href: '/admin/maintenance', icon: Power },
         { name: 'Administrators & Roles', href: '/admin/administrators', icon: ShieldAlert, superAdminOnly: true },
         { name: 'Platform Settings', href: '/admin/config', icon: Settings, superAdminOnly: true }
       ]

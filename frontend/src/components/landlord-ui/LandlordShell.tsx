@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Plus,
+  Megaphone,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
@@ -89,6 +90,12 @@ export default function LandlordShell({
           href: '/dashboard/landlord/tenants',
           prefixes: ['/dashboard/landlord/tenants'],
           icon: Users,
+        },
+        {
+          label: 'Resident Notices',
+          href: '/dashboard/landlord/notices',
+          prefixes: ['/dashboard/landlord/notices'],
+          icon: Megaphone,
         },
       ],
     },
