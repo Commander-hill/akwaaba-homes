@@ -297,3 +297,117 @@ export const auditLandlordDeed = async (req: Request, res: Response): Promise<vo
     res.status(500).json({ message: 'Failed to audit landlord deed' });
   }
 };
+
+/**
+ * Request Additional Title Deed Documentation from Landlord
+ */
+export const requestAdditionalDeedDocuments = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { documentsRequested, instructions } = req.body;
+
+    const landlord = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!landlord || landlord.role !== 'LANDLORD') {
+      res.status(404).json({ message: 'Landlord record not found' });
+      return;
+    }
+
+    const requestedList = Array.isArray(documentsRequested) && documentsRequested.length > 0
+      ? documentsRequested.join(', ')
+      : 'Clarification on property ownership documents';
+
+    const message = instructions
+      ? `Additional verification documents requested: ${requestedList}. Instructions: ${instructions}`
+      : `Additional verification documents requested: ${requestedList}. Please upload these to your landlord dashboard.`;
+
+    await prisma.notification.create({
+      data: {
+        userId: id,
+        type: 'ANNOUNCEMENT',
+        title: '📋 Additional Ownership Documents Required',
+        message,
+        link: '/dashboard/landlord'
+      }
+    });
+
+    try {
+      emitToUser(id, 'notification', { title: 'Additional Ownership Documents Required', message });
+      emitToAll('landlord_deeds_updated', { userId: id });
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Documentation request dispatched to landlord successfully.' });
+  } catch (error) {
+    console.error('Error requesting deed documents:', error);
+    res.status(500).json({ message: 'Failed to dispatch document request' });
+  }
+};
+
+/**
+ * Admin directly attaches/replaces a Title Deed document for a Landlord
+ */
+export const attachLandlordDeed = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = req.params.id as string;
+    const { documentUrl, status = 'PENDING' } = req.body;
+
+    if (!documentUrl) {
+      res.status(400).json({ message: 'Document URL is required' });
+      return;
+    }
+
+    const landlord = await prisma.user.findUnique({
+      where: { id }
+    });
+
+    if (!landlord || landlord.role !== 'LANDLORD') {
+      res.status(404).json({ message: 'Landlord record not found' });
+      return;
+    }
+
+    const isVerified = status === 'VERIFIED';
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        landlordDocUrl: documentUrl,
+        landlordVerificationStatus: status,
+        isVerifiedLandlord: isVerified
+      }
+    });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+
+    try {
+      emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
+      emitToAll('user_updated', { userId: id });
+      emitToAll('verification_updated', { userId: id, type: 'LANDLORD_DEED' });
+      emitToAll('landlord_deeds_updated', { userId: id });
+    } catch (e) {}
+
+    await prisma.notification.create({
+      data: {
+        userId: id,
+        type: 'ANNOUNCEMENT',
+        title: 'Title Deed Document Uploaded',
+        message: 'A title deed or ownership document has been updated for your profile by system administration.',
+        link: '/dashboard/landlord'
+      }
+    });
+
+    res.status(200).json({
+      message: 'Deed document attached successfully',
+      landlord: {
+        ...updated,
+        landlordDocUrl: generateSignedDocumentUrl(updated.landlordDocUrl)
+      }
+    });
+  } catch (error) {
+    console.error('Error attaching deed document:', error);
+    res.status(500).json({ message: 'Failed to attach deed document' });
+  }
+};
+

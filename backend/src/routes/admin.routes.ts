@@ -51,7 +51,9 @@ import {
   getAdminBreachReports, 
   resolveBreachReport, 
   getLandlordDeedAudits, 
-  auditLandlordDeed 
+  auditLandlordDeed,
+  requestAdditionalDeedDocuments,
+  attachLandlordDeed
 } from '../controllers/adminBreach.controller';
 
 const router = Router();
@@ -81,6 +83,8 @@ router.get('/disputes/:id', getDisputeById);
 router.put('/breaches/:id/resolve', resolveBreachReport);
 router.get('/landlord-deeds', getLandlordDeedAudits);
 router.put('/landlord-deeds/:id/audit', auditLandlordDeed);
+router.post('/landlord-deeds/:id/request-docs', requestAdditionalDeedDocuments);
+router.post('/landlord-deeds/:id/attach', attachLandlordDeed);
 
 // Properties & Moderation
 router.get('/properties', getAllProperties);
