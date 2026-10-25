@@ -12,13 +12,163 @@ import { emitToAll } from '../socket';
 
 export const getAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
-    const logs = await prisma.auditLog.findMany({
-      include: {
-        user: { select: { firstName: true, lastName: true, email: true, role: true } }
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+    const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit || '50'), 10) || 50));
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    const category = typeof req.query.category === 'string' ? req.query.category.toUpperCase().trim() : 'ALL';
+    const entity = typeof req.query.entity === 'string' ? req.query.entity.trim() : 'ALL';
+    const actorId = typeof req.query.actorId === 'string' ? req.query.actorId.trim() : '';
+    const startDate = typeof req.query.startDate === 'string' ? req.query.startDate.trim() : '';
+    const endDate = typeof req.query.endDate === 'string' ? req.query.endDate.trim() : '';
+
+    const where: any = {};
+
+    if (actorId && actorId !== 'ALL') {
+      where.userId = actorId;
+    }
+
+    if (entity && entity !== 'ALL') {
+      where.entity = entity;
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (endDate.length === 10) {
+          end.setHours(23, 59, 59, 999);
+        }
+        where.createdAt.lte = end;
+      }
+    }
+
+    // Category mapping
+    if (category && category !== 'ALL') {
+      if (category === 'VERIFICATIONS' || category === 'APPROVALS') {
+        where.OR = [
+          { action: { contains: 'APPROVE', mode: 'insensitive' } },
+          { action: { contains: 'VERIF', mode: 'insensitive' } },
+          { action: { contains: 'ACTIVATE', mode: 'insensitive' } },
+          { action: { contains: 'ACCEPT', mode: 'insensitive' } }
+        ];
+      } else if (category === 'SANCTIONS') {
+        where.OR = [
+          { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+          { action: { contains: 'REJECT', mode: 'insensitive' } },
+          { action: { contains: 'DELETE', mode: 'insensitive' } },
+          { action: { contains: 'LOCK', mode: 'insensitive' } },
+          { action: { contains: 'PENAL', mode: 'insensitive' } },
+          { action: { contains: 'STRIKE', mode: 'insensitive' } },
+          { action: { contains: 'BAN', mode: 'insensitive' } }
+        ];
+      } else if (category === 'FINANCIAL') {
+        where.OR = [
+          { action: { contains: 'PAY', mode: 'insensitive' } },
+          { action: { contains: 'REFUND', mode: 'insensitive' } },
+          { action: { contains: 'DISBURSE', mode: 'insensitive' } },
+          { action: { contains: 'TRANSACTION', mode: 'insensitive' } },
+          { action: { contains: 'ESCROW', mode: 'insensitive' } },
+          { action: { contains: 'RENT', mode: 'insensitive' } }
+        ];
+      } else if (category === 'CONFIG') {
+        where.OR = [
+          { action: { contains: 'CONFIG', mode: 'insensitive' } },
+          { action: { contains: 'BROADCAST', mode: 'insensitive' } },
+          { action: { contains: 'NOTICE', mode: 'insensitive' } },
+          { action: { contains: 'SETTING', mode: 'insensitive' } },
+          { action: { contains: 'FEE', mode: 'insensitive' } }
+        ];
+      } else if (category === 'UPDATES') {
+        where.OR = [
+          { action: { contains: 'UPDATE', mode: 'insensitive' } },
+          { action: { contains: 'EDIT', mode: 'insensitive' } },
+          { action: { contains: 'CHANGE', mode: 'insensitive' } },
+          { action: { contains: 'ASSIGN', mode: 'insensitive' } }
+        ];
+      }
+    }
+
+    // Search query
+    if (search) {
+      const searchCondition = [
+        { action: { contains: search, mode: 'insensitive' } },
+        { entity: { contains: search, mode: 'insensitive' } },
+        { entityId: { contains: search, mode: 'insensitive' } },
+        { ipAddress: { contains: search, mode: 'insensitive' } },
+        { user: { firstName: { contains: search, mode: 'insensitive' } } },
+        { user: { lastName: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } }
+      ];
+
+      if (where.OR) {
+        where.AND = [{ OR: where.OR }, { OR: searchCondition }];
+        delete where.OR;
+      } else {
+        where.OR = searchCondition;
+      }
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [logs, total, totalSanctions, totalApprovals, allEntitiesRaw] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true, role: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.auditLog.count({ where }),
+      prisma.auditLog.count({
+        where: {
+          OR: [
+            { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+            { action: { contains: 'REJECT', mode: 'insensitive' } },
+            { action: { contains: 'DELETE', mode: 'insensitive' } },
+            { action: { contains: 'LOCK', mode: 'insensitive' } },
+            { action: { contains: 'PENAL', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.auditLog.count({
+        where: {
+          OR: [
+            { action: { contains: 'APPROVE', mode: 'insensitive' } },
+            { action: { contains: 'VERIF', mode: 'insensitive' } },
+            { action: { contains: 'ACTIVATE', mode: 'insensitive' } }
+          ]
+        }
+      }),
+      prisma.auditLog.findMany({
+        distinct: ['entity'],
+        select: { entity: true }
+      })
+    ]);
+
+    const availableEntities = allEntitiesRaw.map((e: { entity: string }) => e.entity).filter(Boolean).sort();
+    const uniqueIpsCount = new Set(logs.map((l: { ipAddress: string | null }) => l.ipAddress).filter(Boolean)).size;
+
+    res.status(200).json({
+      logs,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1
       },
-      orderBy: { createdAt: 'desc' }
+      metrics: {
+        total,
+        sanctions: totalSanctions,
+        approvals: totalApprovals,
+        uniqueIps: uniqueIpsCount
+      },
+      availableEntities
     });
-    res.status(200).json(logs);
   } catch (error) {
     console.error('Error fetching audit logs:', error);
     res.status(500).json({ message: 'Internal server error' });

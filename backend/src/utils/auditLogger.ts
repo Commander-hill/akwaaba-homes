@@ -1,4 +1,5 @@
 import prisma from './prisma';
+import { emitToAll } from '../socket';
 
 const SENSITIVE_KEY_REGEX = /password|hash|token|secret|recoverycode|cvv|authorization|cookie|cardnumber/i;
 
@@ -52,7 +53,7 @@ export const logAudit = async (
     const sanitizedOld = oldData ? JSON.stringify(redactSensitiveData(oldData)) : null;
     const sanitizedNew = newData ? JSON.stringify(redactSensitiveData(newData)) : null;
 
-    await prisma.auditLog.create({
+    const log = await prisma.auditLog.create({
       data: {
         user: { connect: { id: userId } },
         action,
@@ -61,9 +62,17 @@ export const logAudit = async (
         oldData: sanitizedOld,
         newData: sanitizedNew,
         ipAddress: ipAddress ? String(ipAddress).split(',')[0].trim() : 'Unknown'
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true, email: true, role: true } }
       }
     });
+
+    // Real-time broadcast to admin control mesh
+    emitToAll('audit_event_logged', log);
+    return log;
   } catch (error) {
     console.error('Audit Logger Error:', error);
+    return null;
   }
 };
