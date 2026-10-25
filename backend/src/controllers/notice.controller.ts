@@ -149,3 +149,33 @@ export const deleteNotice = async (req: Request, res: Response): Promise<void> =
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const reorderNotices = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { items } = req.body; // Array<{ id: string; orderIndex: number }>
+    if (!Array.isArray(items)) {
+      res.status(400).json({ message: 'Invalid items array' });
+      return;
+    }
+
+    await prisma.$transaction(
+      items.map((item) =>
+        prisma.notice.update({
+          where: { id: item.id },
+          data: { orderIndex: item.orderIndex }
+        })
+      )
+    );
+
+    try {
+      getIO().emit('notice_updated', { reordered: true });
+      appCache.flushAll();
+    } catch (e) {}
+
+    res.status(200).json({ message: 'Notices reordered successfully' });
+  } catch (error) {
+    console.error('Error reordering notices:', error);
+    res.status(500).json({ message: 'Failed to reorder notices' });
+  }
+};
+

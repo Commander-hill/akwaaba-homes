@@ -18,20 +18,26 @@ import {
   Loader2,
   ExternalLink,
   Globe,
-  Check
+  Check,
+  CreditCard,
+  Scale,
+  BadgeCheck,
+  Wrench,
+  Eye,
+  Radio,
+  ArrowRight,
+  Sparkles,
+  Layers,
+  MapPin,
+  Users
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
-const ICON_TYPES = [
-  { id: 'INFO', label: 'General Info', icon: Info },
-  { id: 'WARNING', label: 'Advisory / Caution', icon: AlertTriangle },
-  { id: 'SUCCESS', label: 'Good News / Feature', icon: CheckCircle },
-  { id: 'URGENT', label: 'Urgent Emergency', icon: Flame }
-];
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import { ICON_MAP, GHANA_TEMPLATES } from '@/components/admin/notices/NoticeDrawer';
 
 const GHANA_REGIONS = [
-  'All Ghana (Nationwide)',
-  'Greater Accra (Accra, Tema, Madina)',
+  'All Ghana (Nationwide Broadcast)',
+  'Greater Accra (Accra, Tema, Madina, Legon)',
   'Ashanti Region (Kumasi, KNUST Corridor)',
   'Central Region (Cape Coast, UCC Corridor)',
   'Western Region (Takoradi, Tarkwa)',
@@ -40,31 +46,36 @@ const GHANA_REGIONS = [
 ];
 
 const TARGET_ROLES = [
-  { id: 'ALL', label: 'All Users (Tenants, Landlords, Caretakers)' },
+  { id: 'ALL', label: 'All Platform Users (Tenants, Landlords, Caretakers)' },
   { id: 'TENANT', label: 'Tenants & University Students Only' },
   { id: 'LANDLORD', label: 'Property Owners & Hostel Operators Only' },
-  { id: 'CARETAKER', label: 'Estate Staff & Caretakers Only' }
+  { id: 'CARETAKER', label: 'Estate Staff & Gate Caretakers Only' }
 ];
 
-function NewAdminNoticeContent() {
+function AdminNoticeComposerContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('editId');
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState(1);
-  const [topLabel, setTopLabel] = useState('PLATFORM UPDATE');
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+
+  // Notice fields
+  const [topLabel, setTopLabel] = useState('PLATFORM ADVISORY');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [buttonText, setButtonText] = useState('Learn More');
-  const [buttonLink, setButtonLink] = useState('/rent-act');
+  const [buttonLink, setButtonLink] = useState('/help');
   const [iconType, setIconType] = useState('INFO');
   const [orderIndex, setOrderIndex] = useState(1);
   const [isActive, setIsActive] = useState(true);
+
+  // Audience & Regional Metadata
   const [targetRegion, setTargetRegion] = useState(GHANA_REGIONS[0]);
   const [targetRole, setTargetRole] = useState('ALL');
 
-  const { data: notices } = useQuery({
+  // Load existing notice for edit mode
+  const { data: notices, isLoading: isLoadingNotices } = useQuery({
     queryKey: ['admin-notices'],
     queryFn: async () => {
       const res = await api.get('/admin/notices');
@@ -89,451 +100,492 @@ function NewAdminNoticeContent() {
     }
   }, [editId, notices]);
 
-  const saveNoticeMutation = useMutation({
-    mutationFn: async (payload: any) => {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        orderIndex: Number(orderIndex) || 0,
+        topLabel: topLabel.trim() || null,
+        title: title.trim(),
+        description: description.trim(),
+        buttonText: buttonText.trim() || null,
+        buttonLink: buttonLink.trim() || null,
+        iconType: iconType || 'INFO',
+        isActive
+      };
+
       if (editId) {
-        const res = await api.put(`/admin/notices/${editId}`, payload);
-        return res.data;
+        return api.put(`/admin/notices/${editId}`, payload);
       }
-      const res = await api.post('/admin/notices', payload);
-      return res.data;
+      return api.post('/admin/notices', payload);
     },
     onSuccess: () => {
-      toast.success(editId ? 'Announcement updated!' : 'Announcement broadcast published!');
       queryClient.invalidateQueries({ queryKey: ['admin-notices'] });
+      queryClient.invalidateQueries({ queryKey: ['active-notices'] });
+      toast.success(editId ? 'Announcement updated successfully!' : 'Announcement broadcasted successfully!');
       router.push('/admin/notices');
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to publish announcement notice');
+      toast.error(err.response?.data?.message || 'Failed to save announcement.');
     }
   });
 
-  const handleNextStep = () => {
-    if (step === 2 && (!title.trim() || !description.trim())) {
-      toast.error('Please enter both a notice headline and narrative description');
-      return;
-    }
-    setStep((prev) => Math.min(prev + 1, 4));
+  const handleApplyTemplate = (tmpl: typeof GHANA_TEMPLATES[0]) => {
+    setTopLabel(tmpl.topLabel);
+    setTitle(tmpl.title);
+    setDescription(tmpl.description);
+    setButtonText(tmpl.buttonText);
+    setButtonLink(tmpl.buttonLink);
+    setIconType(tmpl.iconType);
+    toast.success(`Template loaded: "${tmpl.name}"`);
   };
 
-  const handlePrevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  const previewConfig = ICON_MAP[iconType] || ICON_MAP.INFO;
+  const PreviewIcon = previewConfig.icon;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 4) {
-      handleNextStep();
-      return;
-    }
-    if (!title.trim() || !description.trim()) {
-      toast.error('Notice title and description are required');
-      return;
-    }
-
-    saveNoticeMutation.mutate({
-      orderIndex: Number(orderIndex) || 1,
-      topLabel: topLabel.trim() || 'BULLETIN',
-      title: title.trim(),
-      description: description.trim(),
-      buttonText: buttonText.trim() || null,
-      buttonLink: buttonLink.trim() || null,
-      iconType,
-      isActive
-    });
-  };
-
-  const selectedIcon = ICON_TYPES.find((i) => i.id === iconType) || ICON_TYPES[0];
-  const IconComponent = selectedIcon.icon;
+  if (editId && isLoadingNotices) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-zinc-400">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <span className="text-xs font-semibold">Loading announcement data...</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-6 pb-24">
+    <div className="space-y-6 max-w-5xl mx-auto pb-16">
+      
       {/* Header */}
-      <div>
-        <button
-          onClick={() => router.push('/admin/notices')}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Announcements Console
-        </button>
+      <AdminPageHeader
+        title={editId ? 'Edit Announcement' : 'Announcement Composer Wizard'}
+        subtitle="Step-by-step administrative wizard for composing, targeting, previewing, and broadcasting platform notices across Akwaaba Homes."
+        backUrl="/admin/notices"
+        backLabel="Back to Notices"
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin' },
+          { label: 'Notices & Announcements', href: '/admin/notices' },
+          { label: editId ? 'Edit Notice' : 'New Notice' }
+        ]}
+      />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
-              {editId ? 'Update System Broadcast Notice' : 'Broadcast System Announcement'}
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Publish nationwide or regional banners across tenant, landlord, and caretaker dashboards.
-            </p>
-          </div>
-          <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 w-fit">
-            Step {step} of 4
-          </span>
+      {/* Progress Steps Header */}
+      <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 p-4 shadow-sm">
+        <div className="flex items-center justify-between text-xs font-semibold">
+          {[
+            { num: 1, label: '1. Content & Copy' },
+            { num: 2, label: '2. Icon & Action Link' },
+            { num: 3, label: '3. Audience & Region' },
+            { num: 4, label: '4. Preview & Publish' }
+          ].map((item, idx) => (
+            <React.Fragment key={item.num}>
+              {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 hidden sm:block" />}
+              <button
+                type="button"
+                onClick={() => setStep(item.num as any)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl transition ${
+                  step === item.num
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/30'
+                    : step > item.num
+                    ? 'text-zinc-800 dark:text-zinc-200'
+                    : 'text-zinc-400'
+                }`}
+              >
+                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                  step === item.num
+                    ? 'bg-emerald-600 text-white'
+                    : step > item.num
+                    ? 'bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300'
+                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400'
+                }`}>
+                  {step > item.num ? <Check className="w-3 h-3" /> : item.num}
+                </span>
+                <span className="hidden sm:inline">{item.label}</span>
+              </button>
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* 4-Step Segmented Bar */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { num: 1, label: '1. Classification' },
-          { num: 2, label: '2. Notice Copy & CTA' },
-          { num: 3, label: '3. Audience & Status' },
-          { num: 4, label: '4. Preview & Publish' }
-        ].map((s) => {
-          const active = step === s.num;
-          const completed = step > s.num;
-          return (
-            <button
-              key={s.num}
-              type="button"
-              onClick={() => {
-                if (s.num < step) setStep(s.num);
-              }}
-              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                active
-                  ? 'border-[#0F5132] bg-emerald-50/50 dark:bg-emerald-950/20 text-[#0F5132] dark:text-emerald-400'
-                  : completed
-                  ? 'border-emerald-200 dark:border-emerald-900/40 bg-white dark:bg-[#12151D] text-zinc-800 dark:text-zinc-200'
-                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] text-zinc-400'
-              }`}
-            >
-              <div className="text-[11px] font-bold truncate">{s.label}</div>
-              <div className="h-1 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 mt-2 overflow-hidden">
-                <div
-                  className={`h-full transition-all ${
-                    active || completed ? 'w-full bg-[#0F5132] dark:bg-emerald-500' : 'w-0'
-                  }`}
-                />
+      {/* Live Interactive Preview Box (Always Visible Across Steps) */}
+      <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 p-5 space-y-2 shadow-sm">
+        <div className="flex items-center justify-between text-xs text-zinc-500 font-semibold mb-1">
+          <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px] text-zinc-400">
+            <Eye className="w-3.5 h-3.5 text-emerald-600" />
+            Live Portal Preview
+          </span>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+            Renders on Tenant & Landlord Notice Boards
+          </span>
+        </div>
+
+        {/* Live Banner */}
+        <div className="relative w-full bg-gradient-to-br from-[#0F5132] via-[#0D4428] to-[#072718] rounded-2xl p-5 overflow-hidden shadow-sm border border-emerald-800/60 text-white">
+          <div className="relative z-10 max-w-2xl">
+            {topLabel && (
+              <div className="text-emerald-200/90 text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{topLabel}</span>
               </div>
-            </button>
-          );
-        })}
+            )}
+            
+            <div className="flex items-center gap-3 mb-1.5">
+              <div className="w-8 h-8 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center text-white shrink-0">
+                <PreviewIcon className="w-4 h-4" />
+              </div>
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-tight leading-snug">
+                {title || 'Announcement Headline Appears Here'}
+              </h3>
+            </div>
+
+            <p className="text-emerald-100/90 text-xs leading-relaxed max-w-xl mb-3">
+              {description || 'Your announcement body copy will display here to guide students, tenants, and property owners across Ghana...'}
+            </p>
+
+            {buttonText && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-[#0F5132] font-bold text-xs shadow-xs">
+                <span>{buttonText}</span>
+                <ArrowRight className="w-3 h-3" />
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* STEP 1: Classification */}
+      {/* Step Form Body */}
+      <div className="border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 p-6 space-y-6 shadow-sm">
+        
+        {/* STEP 1: Content & Copy */}
         {step === 1 && (
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+          <div className="space-y-4">
+            {/* Quick Template Selector */}
             <div>
-              <h2 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                <Bell className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                Notice Classification &amp; Display Priority
-              </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Choose the visual severity theme and banner display order.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {ICON_TYPES.map((t) => {
-                const Icon = t.icon;
-                const isSelected = iconType === t.id;
-                return (
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-400 mb-2">
+                Load Preset Template (Optional)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {GHANA_TEMPLATES.map((tmpl) => (
                   <button
-                    key={t.id}
+                    key={tmpl.name}
                     type="button"
-                    onClick={() => setIconType(t.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all flex flex-col justify-between gap-2.5 cursor-pointer ${
-                      isSelected
-                        ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/20 ring-2 ring-[#16A34A]/20'
-                        : 'border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50'
-                    }`}
+                    onClick={() => handleApplyTemplate(tmpl)}
+                    className="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-emerald-500 bg-zinc-50/50 dark:bg-zinc-800/40 text-left transition text-xs group"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="p-2 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#0F5132] dark:text-emerald-400">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />}
+                    <div className="font-semibold text-zinc-800 dark:text-zinc-200 group-hover:text-emerald-600 truncate">
+                      {tmpl.name}
                     </div>
-                    <span className="text-xs font-bold text-zinc-900 dark:text-white">{t.label}</span>
+                    <div className="text-[10px] text-zinc-400 truncate mt-0.5">
+                      {tmpl.topLabel}
+                    </div>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Top Category Pill Label *
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1">
+                  Top Category Label
                 </label>
                 <input
                   type="text"
                   value={topLabel}
                   onChange={(e) => setTopLabel(e.target.value)}
-                  placeholder="e.g. POLICY ADVISORY"
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  placeholder="e.g. PLATFORM ADVISORY, STATUTORY KYC"
+                  className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Display Priority Order
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1">
+                  Display Sequence Order
                 </label>
                 <input
                   type="number"
-                  min="1"
+                  min={1}
                   value={orderIndex}
-                  onChange={(e) => setOrderIndex(Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
+                  onChange={(e) => setOrderIndex(Number(e.target.value) || 1)}
+                  className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
-          </div>
-        )}
 
-        {/* STEP 2: Notice Copy & CTA */}
-        {step === 2 && (
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
             <div>
-              <h2 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                <Megaphone className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                Announcement Headline &amp; Call-to-Action
-              </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Draft the official announcement copy and optional link button.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Notice Headline / Title *
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Mandatory 6-Month Rent Advance Compliance Reminder"
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Notice Narrative / Details *
-                </label>
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Write complete notice details, dates, relevant statutory guidelines, and instructions..."
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-sm font-medium text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] leading-relaxed"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    Action Button Text (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={buttonText}
-                    onChange={(e) => setButtonText(e.target.value)}
-                    placeholder="e.g. View Policy Guidelines"
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                    Action Destination Link (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={buttonLink}
-                    onChange={(e) => setButtonLink(e.target.value)}
-                    placeholder="e.g. /rent-act"
-                    className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-mono font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* STEP 3: Audience & Status */}
-        {step === 3 && (
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
-            <div>
-              <h2 className="text-base font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                <Globe className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                Target Audience &amp; Regional Scope
-              </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Configure which user roles and Ghanaian regions receive this announcement banner.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  Geographic Region
-                </label>
-                <select
-                  value={targetRegion}
-                  onChange={(e) => setTargetRegion(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
-                >
-                  {GHANA_REGIONS.map((r, i) => (
-                    <option key={i} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  User Role Segment
-                </label>
-                <select
-                  value={targetRole}
-                  onChange={(e) => setTargetRole(e.target.value)}
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
-                >
-                  {TARGET_ROLES.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="p-4 bg-zinc-50 dark:bg-zinc-900/60 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-zinc-900 dark:text-white block">
-                  Immediate Active &amp; Published Status
-                </span>
-                <span className="text-[11px] text-zinc-500">
-                  When enabled, the banner displays immediately on targeted user dashboards.
-                </span>
-              </div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1">
+                Announcement Headline *
+              </label>
               <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-5 h-5 rounded text-[#0F5132] focus:ring-[#0F5132] border-zinc-300"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Standard Advance Rent Schedule (Act 220 Ceiling Guidelines)"
+                required
+                className="w-full text-xs p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-1">
+                Announcement Content Body *
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Write clear, comprehensive instructions or operational notices for platform users..."
+                rows={4}
+                required
+                className="w-full text-xs p-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"
               />
             </div>
           </div>
         )}
 
-        {/* STEP 4: Preview & Publish */}
-        {step === 4 && (
-          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
+        {/* STEP 2: Icon & Action Link */}
+        {step === 2 && (
+          <div className="space-y-4">
             <div>
-              <h2 className="text-base font-bold text-zinc-950 dark:text-white">
-                Banner Simulation &amp; Final Confirmation
-              </h2>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Verify how the announcement banner will render across user dashboards.
-              </p>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-2">
+                Choose Semantic Icon Category
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {Object.entries(ICON_MAP).map(([key, config]) => {
+                  const Icon = config.icon;
+                  const isSelected = iconType === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setIconType(key)}
+                      className={`p-3 rounded-xl border text-left flex items-center gap-2.5 transition text-xs ${
+                        isSelected
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-bold shadow-xs'
+                          : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <div className={`p-1.5 rounded-lg border ${config.bg} ${config.color} border-zinc-200/50 dark:border-zinc-700`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="truncate text-xs">{config.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="bg-zinc-900 text-white rounded-2xl p-5 border border-zinc-800 space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-zinc-800 text-[10px] text-zinc-400 uppercase font-mono">
-                <span>Live Dashboard Banner Preview</span>
-                <span className="text-emerald-400 font-bold">{targetRegion}</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="p-2.5 rounded-xl bg-white/10 text-emerald-400 shrink-0">
-                  <IconComponent className="w-4 h-4" />
+            <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/30 space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 flex items-center gap-1.5">
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Call to Action Button (Optional)</span>
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-500 mb-1">
+                    Button Label
+                  </label>
+                  <input
+                    type="text"
+                    value={buttonText}
+                    onChange={(e) => setButtonText(e.target.value)}
+                    placeholder="e.g. View Guidelines"
+                    className="w-full text-xs p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
                 </div>
-                <div className="space-y-1">
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300">
-                    {topLabel || 'ANNOUNCEMENT'}
-                  </span>
-                  <h4 className="text-sm font-black text-white leading-snug">
-                    {title || 'Announcement Headline'}
-                  </h4>
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    {description || 'Detailed announcement narrative...'}
-                  </p>
-                  {buttonText && (
-                    <div className="pt-2">
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#0F5132] text-white text-xs font-bold rounded-lg">
-                        {buttonText} <ExternalLink className="w-3 h-3" />
-                      </span>
-                    </div>
-                  )}
+                <div>
+                  <label className="block text-[11px] font-semibold text-zinc-500 mb-1">
+                    Target Route / Deep Link
+                  </label>
+                  <input
+                    type="text"
+                    value={buttonLink}
+                    onChange={(e) => setButtonLink(e.target.value)}
+                    placeholder="e.g. /help or /dashboard/profile"
+                    className="w-full text-xs p-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                  />
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Horizontal Summary Bar */}
-        <div className="bg-zinc-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-0.5">
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">
-              National Broadcast Summary
+        {/* STEP 3: Audience & Regional Targeting */}
+        {step === 3 && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-2">
+                Target User Audience
+              </label>
+              <div className="space-y-2">
+                {TARGET_ROLES.map((role) => (
+                  <label
+                    key={role.id}
+                    className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer text-xs transition ${
+                      targetRole === role.id
+                        ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 font-semibold'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="radio"
+                        name="targetRole"
+                        checked={targetRole === role.id}
+                        onChange={() => setTargetRole(role.id)}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>{role.label}</span>
+                    </div>
+                    <Users className="w-4 h-4 text-zinc-400" />
+                  </label>
+                ))}
+              </div>
             </div>
-            <div className="text-sm font-bold">
-              {topLabel}: {title || 'Untitled Notice'}
-            </div>
-          </div>
-          <div className="text-xs text-zinc-400 font-mono">
-            {isActive ? 'Status: Active' : 'Status: Draft'} &bull; Order #{orderIndex}
-          </div>
-        </div>
 
-        {/* Wizard Footer Navigation */}
-        <div className="flex items-center justify-between pt-2">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 mb-2">
+                Geographic / Regional Scope
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {GHANA_REGIONS.map((region) => (
+                  <label
+                    key={region}
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-xs transition ${
+                      targetRegion === region
+                        ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 font-semibold'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="targetRegion"
+                      checked={targetRegion === region}
+                      onChange={() => setTargetRegion(region)}
+                      className="text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                    <span className="truncate">{region}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 4: Review & Publish */}
+        {step === 4 && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-800/40 space-y-2 text-xs">
+              <div className="flex justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-700/50">
+                <span className="text-zinc-500">Headline:</span>
+                <span className="font-bold text-zinc-900 dark:text-white">{title}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-700/50">
+                <span className="text-zinc-500">Category Tag:</span>
+                <span className="font-semibold text-emerald-600">{topLabel || 'General Notice'}</span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-700/50">
+                <span className="text-zinc-500">Target Role Audience:</span>
+                <span className="text-zinc-900 dark:text-white">
+                  {TARGET_ROLES.find((r) => r.id === targetRole)?.label}
+                </span>
+              </div>
+              <div className="flex justify-between py-1.5 border-b border-zinc-200/50 dark:border-zinc-700/50">
+                <span className="text-zinc-500">Geographic Region:</span>
+                <span className="text-zinc-900 dark:text-white">{targetRegion}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-zinc-500">Call to Action:</span>
+                <span className="font-mono text-zinc-900 dark:text-white">
+                  {buttonText ? `${buttonText} (${buttonLink})` : 'None'}
+                </span>
+              </div>
+            </div>
+
+            {/* Active Switch */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-zinc-900 dark:text-white">
+                  Publish & Broadcast Live Immediately
+                </div>
+                <div className="text-[11px] text-zinc-500">
+                  When enabled, this notice is active and visible on live portals right away.
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-emerald-600"></div>
+              </label>
+            </div>
+          </div>
+        )}
+
+        {/* Wizard Footer Controls */}
+        <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
           {step > 1 ? (
             <button
               type="button"
-              onClick={handlePrevStep}
-              className="px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-1.5 transition cursor-pointer"
+              onClick={() => setStep((s) => (s - 1) as any)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition"
             >
-              <ChevronLeft className="w-4 h-4" /> Previous Step
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back</span>
             </button>
-          ) : (
-            <div />
-          )}
+          ) : <div />}
 
-          {step < 4 ? (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleNextStep}
-              className="px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              onClick={() => router.push('/admin/notices')}
+              className="px-4 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition"
             >
-              Continue <ChevronRight className="w-4 h-4" />
+              Cancel
             </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={saveNoticeMutation.isPending}
-              className="px-6 py-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition cursor-pointer"
-            >
-              {saveNoticeMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Broadcasting Notice...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" /> {editId ? 'Save Notice Changes' : 'Publish Announcement'}
-                </>
-              )}
-            </button>
-          )}
+
+            {step < 4 ? (
+              <button
+                type="button"
+                disabled={step === 1 && (!title.trim() || !description.trim())}
+                onClick={() => setStep((s) => (s + 1) as any)}
+                className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition disabled:opacity-50"
+              >
+                <span>Continue</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={saveMutation.isPending || !title.trim() || !description.trim()}
+                onClick={() => saveMutation.mutate()}
+                className="inline-flex items-center gap-2 px-6 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition disabled:opacity-50"
+              >
+                {saveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                <span>{editId ? 'Save Changes' : 'Publish Announcement'}</span>
+              </button>
+            )}
+          </div>
         </div>
-      </form>
+
+      </div>
+
     </div>
   );
 }
 
-export default function NewAdminNoticePage() {
+export default function AdminNoticeComposerPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-        </div>
-      }
-    >
-      <NewAdminNoticeContent />
+    <Suspense fallback={
+      <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3 text-zinc-400">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+        <span className="text-xs font-semibold">Loading Composer...</span>
+      </div>
+    }>
+      <AdminNoticeComposerContent />
     </Suspense>
   );
 }

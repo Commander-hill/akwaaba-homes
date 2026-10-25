@@ -42,7 +42,8 @@ import {
   getAllNotices, 
   createNotice, 
   updateNotice, 
-  deleteNotice 
+  deleteNotice,
+  reorderNotices
 } from '../controllers/notice.controller';
 import { checkExpirations } from '../controllers/subscription.controller';
 import { authenticate, authorizeRole, requireSuperAdmin } from '../middleware/auth.middleware';
@@ -114,6 +115,7 @@ router.put('/tickets/:id/status', adminUpdateTicketStatus);
 // Notices
 router.get('/notices', getAllNotices);
 router.post('/notices', createNotice);
+router.put('/notices/reorder', reorderNotices);
 router.put('/notices/:id', updateNotice);
 router.delete('/notices/:id', deleteNotice);
 
