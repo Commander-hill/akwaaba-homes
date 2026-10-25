@@ -53,6 +53,8 @@ async function runLaunchAudit() {
         passwordHash,
         isEmailVerified: true,
         role: 'LANDLORD',
+        isSuspended: false,
+        tokenVersion: 0,
         twoFactorEnabled: false,
         twoFactorSecret: null,
       },
@@ -74,6 +76,8 @@ async function runLaunchAudit() {
         passwordHash,
         isEmailVerified: true,
         role: 'TENANT',
+        isSuspended: false,
+        tokenVersion: 0,
         firstName: 'Kwesi',
         lastName: 'Mensah',
         phoneNumber: '+233241998877',
@@ -259,6 +263,25 @@ async function runLaunchAudit() {
         include: { rooms: { include: { roomUnits: { include: { beds: true } } } } },
       });
     }
+
+    // Ensure test property has an active listing subscription
+    await prisma.propertySubscription.upsert({
+      where: { propertyId: property.id },
+      update: {
+        isActive: true,
+        paymentStatus: 'COMPLETED',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      },
+      create: {
+        propertyId: property.id,
+        paymentReference: `AUDIT-SUB-${Date.now()}`,
+        paymentStatus: 'COMPLETED',
+        isActive: true,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      },
+    });
 
     const testRoom = property.rooms[0];
     const testRoomUnit = testRoom.roomUnits[0];
