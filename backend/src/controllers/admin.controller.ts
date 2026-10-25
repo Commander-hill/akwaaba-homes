@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
-import { notifyPropertyApproval, notifyLandlordVerification } from '../utils/notification.service';
+import { notifyPropertyApproval, notifyLandlordVerification, notifyAdminAnnouncement } from '../utils/notification.service';
 import { decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
@@ -2078,56 +2078,124 @@ export const adminUpdateTicketStatus = async (req: Request, res: Response): Prom
 
 export const broadcastNotification = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { target, title, message } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
+    const { 
+      target, 
+      title, 
+      message, 
+      category = 'GENERAL_ANNOUNCEMENT',
+      priority = 'NORMAL',
+      channels = ['IN_APP', 'SOCKET']
+    } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
     
     if (!['ALL_TENANTS', 'ALL_LANDLORDS', 'ALL_USERS'].includes(target)) {
       res.status(400).json({ message: 'Invalid target group' });
       return;
     }
 
-    let users = [];
-    if (target === 'ALL_TENANTS') {
-      users = await prisma.user.findMany({ where: { role: 'TENANT' }, select: { id: true } });
-    } else if (target === 'ALL_LANDLORDS') {
-      users = await prisma.user.findMany({ where: { role: 'LANDLORD' }, select: { id: true } });
-    } else {
-      users = await prisma.user.findMany({ select: { id: true } });
-    }
-
-    if (users.length === 0) {
-      res.status(200).json({ message: 'No users found for the target group', count: 0 });
+    if (!title?.trim() || !message?.trim()) {
+      res.status(400).json({ message: 'Broadcast title and message are required' });
       return;
     }
 
-    // Create DB notifications
-    const notificationsData = users.map(u => ({
-      userId: u.id,
-      title,
-      message,
-      type: 'ANNOUNCEMENT'
-    }));
-
-    await prisma.notification.createMany({
-      data: notificationsData
-    });
-
-    // Broadcast via socket
-    try {
-      const { emitToUser } = await import('../socket');
-      users.forEach(u => {
-        emitToUser(u.id, 'notification', { title, message, type: 'ANNOUNCEMENT' });
+    let users = [];
+    if (target === 'ALL_TENANTS') {
+      users = await prisma.user.findMany({ 
+        where: { role: 'TENANT', isSuspended: false }, 
+        select: { id: true, email: true, firstName: true, lastName: true } 
       });
-    } catch (e) {
-      console.error('Socket emission failed for broadcast', e);
+    } else if (target === 'ALL_LANDLORDS') {
+      users = await prisma.user.findMany({ 
+        where: { role: 'LANDLORD', isSuspended: false }, 
+        select: { id: true, email: true, firstName: true, lastName: true } 
+      });
+    } else {
+      users = await prisma.user.findMany({ 
+        where: { isSuspended: false },
+        select: { id: true, email: true, firstName: true, lastName: true } 
+      });
     }
 
+    if (users.length === 0) {
+      res.status(200).json({ message: 'No eligible users found for the selected target group', count: 0 });
+      return;
+    }
+
+    // 1. In-App Notifications (Database Persistence)
+    if (channels.includes('IN_APP')) {
+      const notificationsData = users.map(u => ({
+        userId: u.id,
+        title,
+        message,
+        type: 'ANNOUNCEMENT'
+      }));
+
+      await prisma.notification.createMany({
+        data: notificationsData
+      });
+    }
+
+    // 2. Real-Time Socket.IO Alert Push
+    if (channels.includes('SOCKET')) {
+      try {
+        const { emitToUser } = await import('../socket');
+        users.forEach(u => {
+          emitToUser(u.id, 'notification', { 
+            title, 
+            message, 
+            type: 'ANNOUNCEMENT',
+            category,
+            priority
+          });
+        });
+      } catch (e) {
+        console.error('Socket emission failed for broadcast', e);
+      }
+    }
+
+    // 3. Institutional Email Dispatch
+    if (channels.includes('EMAIL')) {
+      try {
+        await notifyAdminAnnouncement({
+          userIds: users.map(u => u.id),
+          emailList: users.map(u => ({ email: u.email, name: `${u.firstName} ${u.lastName}` })),
+          subject: title,
+          message
+        });
+      } catch (e) {
+        console.error('Email broadcast failed', e);
+      }
+    }
+
+    // Record Immutable Audit Log
     await logAudit(
       req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS',
-      null, { target, count: users.length, title, message },
+      null, { 
+        target, 
+        count: users.length, 
+        title, 
+        message,
+        category,
+        priority,
+        channels
+      },
       req.ip || req.socket.remoteAddress
     );
 
-    res.status(200).json({ message: 'Broadcast successful', count: users.length });
+    // Notify all admin dashboards of new broadcast
+    try {
+      emitToAll('broadcast_dispatched', { 
+        target, 
+        count: users.length, 
+        title, 
+        category,
+        createdAt: new Date().toISOString() 
+      });
+    } catch (e) {}
+
+    res.status(200).json({ 
+      message: `Broadcast successfully dispatched to ${users.length} recipient(s)`, 
+      count: users.length 
+    });
   } catch (error) {
     console.error('Error broadcasting notification:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -2140,7 +2208,7 @@ export const getBroadcastHistory = async (req: Request, res: Response): Promise<
       where: { action: 'ADMIN_BROADCAST_NOTIFICATION' },
       include: { user: { select: { firstName: true, lastName: true, email: true } } },
       orderBy: { createdAt: 'desc' },
-      take: 15
+      take: 50
     });
 
     const history = logs.map(log => {
@@ -2154,6 +2222,9 @@ export const getBroadcastHistory = async (req: Request, res: Response): Promise<
         message: details.message || '',
         target: details.target || 'ALL_USERS',
         count: details.count || 0,
+        category: details.category || 'GENERAL_ANNOUNCEMENT',
+        priority: details.priority || 'NORMAL',
+        channels: Array.isArray(details.channels) ? details.channels : ['IN_APP', 'SOCKET'],
         dispatchedBy: `${log.user?.firstName || 'Admin'} ${log.user?.lastName || ''}`.trim(),
         createdAt: log.createdAt
       };
