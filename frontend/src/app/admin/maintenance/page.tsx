@@ -33,7 +33,9 @@ import {
   ShieldCheck,
   Server,
   WifiOff,
-  Activity
+  Activity,
+  Code2,
+  ArrowRight
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useDialog } from '@/providers/DialogProvider';
@@ -57,6 +59,14 @@ interface MaintenanceAuditRecord {
     email: string;
     role: string;
   } | null;
+}
+
+interface StructuredDiffRow {
+  fieldKey: string;
+  label: string;
+  before: string;
+  after: string;
+  changed: boolean;
 }
 
 /**
@@ -87,8 +97,75 @@ function parseAuditPayload(payload: any): Record<string, any> | null {
   return null;
 }
 
+function formatAuditValue(key: string, val: any): string {
+  if (val === undefined || val === null || val === '') return '—';
+  if (key === 'maintenanceMode') return val ? 'Active (Offline)' : 'Normal (Online)';
+  if (key === 'maintenanceScheduled') return val ? 'Scheduled' : 'Not Scheduled';
+  if (key === 'maintenanceScope') {
+    if (val === 'TENANTS_ONLY') return 'Tenant Portal Only';
+    if (val === 'LANDLORDS_ONLY') return 'Landlord Operations Only';
+    return 'Entire Platform (Global)';
+  }
+  if (key === 'maintenanceStartTime' || key === 'maintenanceEndTime') {
+    const d = new Date(val);
+    if (Number.isNaN(d.getTime())) return String(val);
+    return d.toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+  return String(val);
+}
+
 /**
- * Computes human-readable field-level diff summaries between `oldData` and `newData`.
+ * Builds structured field-by-field comparison rows for the Audit Trail inspection drawer.
+ */
+function computeStructuredDiffRows(oldRaw: any, newRaw: any): StructuredDiffRow[] {
+  const oldObj = parseAuditPayload(oldRaw) || {};
+  const newObj = parseAuditPayload(newRaw) || {};
+
+  const fields: Array<{ key: string; label: string }> = [
+    { key: 'maintenanceMode', label: 'Availability State' },
+    { key: 'maintenanceScope', label: 'Enforcement Scope' },
+    { key: 'maintenanceScheduled', label: 'Window Automation' },
+    { key: 'maintenanceStartTime', label: 'Effective Start Time' },
+    { key: 'maintenanceEndTime', label: 'Target Restoration Time' },
+    { key: 'maintenanceTitle', label: 'Advisory Headline' },
+    { key: 'maintenanceMessage', label: 'Public Advisory Copy' },
+    { key: 'maintenanceReason', label: 'Internal Ticket / Reason' },
+    { key: 'maintenanceContactEmail', label: 'Support Contact Email' },
+    { key: 'maintenanceContactPhone', label: 'Support Hotline' },
+  ];
+
+  const rows: StructuredDiffRow[] = [];
+
+  for (const { key, label } of fields) {
+    const rawOld = key === 'maintenanceReason' ? (oldObj.maintenanceReason ?? oldObj.reason) : oldObj[key];
+    const rawNew = key === 'maintenanceReason' ? (newObj.maintenanceReason ?? newObj.reason) : newObj[key];
+
+    if (rawOld === undefined && rawNew === undefined) continue;
+
+    const before = formatAuditValue(key, rawOld);
+    const after = formatAuditValue(key, rawNew);
+    const changed = before !== after && rawOld !== undefined;
+
+    rows.push({
+      fieldKey: key,
+      label,
+      before,
+      after,
+      changed,
+    });
+  }
+
+  return rows;
+}
+
+/**
+ * Computes compact summary pills for the Audit Trail table row.
  */
 function computeAuditDiffPills(oldRaw: any, newRaw: any, action: string): string[] {
   const oldObj = parseAuditPayload(oldRaw) || {};
@@ -189,6 +266,7 @@ export default function AdminMaintenancePage() {
   const [historySearchInput, setHistorySearchInput] = useState('');
   const [historySearch, setHistorySearch] = useState('');
   const [expandedAuditId, setExpandedAuditId] = useState<string | null>(null);
+  const [showRawJsonIds, setShowRawJsonIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -251,7 +329,6 @@ export default function AdminMaintenancePage() {
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [reason, setReason] = useState('');
-  const [activeTab, setActiveTab] = useState<'policy' | 'message' | 'schedule'>('policy');
 
   // ── Confirmation Modal State ──
   const [impactModalOpen, setImpactModalOpen] = useState(false);
@@ -532,14 +609,14 @@ export default function AdminMaintenancePage() {
     return (
       <div className="min-h-[55vh] flex flex-col items-center justify-center space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132] dark:text-emerald-400" />
-        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
           Loading platform availability &amp; maintenance governance controls...
         </p>
       </div>
     );
   }
 
-  // ── Explicit Telemetry Error / Unknown State (Never infer "Online" when backend query fails) ──
+  // ── Explicit Telemetry Error / Unknown State ──
   if (isConfigError || !configData) {
     return (
       <div className="space-y-6 pb-20 animate-in fade-in">
@@ -555,22 +632,22 @@ export default function AdminMaintenancePage() {
           </div>
         </div>
 
-        <div className="p-8 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900/60 max-w-2xl mx-auto my-8 text-center space-y-4">
+        <div className="p-8 rounded-2xl bg-white dark:bg-[#12151D] border border-rose-300 dark:border-rose-900/70 border-l-4 border-l-rose-600 max-w-2xl mx-auto my-8 text-center space-y-4 shadow-xs">
           <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center border border-rose-500/20">
             <WifiOff className="w-6 h-6" />
           </div>
           <div className="space-y-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
               Status Unknown • Telemetry Unreachable
             </span>
             <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
               Unable to Verify Live Platform Availability State
             </h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
-              The administration portal could not retrieve the current <code className="font-mono">SystemConfig</code> state from <code className="font-mono">/api/v1/admin/config</code>. For operational safety, maintenance controls are locked until live state verification succeeds.
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
+              The administration portal could not retrieve the current <code className="font-mono text-xs">SystemConfig</code> state from <code className="font-mono text-xs">/api/v1/admin/config</code>. For operational safety, maintenance controls are locked until live state verification succeeds.
             </p>
             {(configError as any)?.response?.data?.message && (
-              <p className="text-[11px] font-mono text-rose-600 dark:text-rose-400 pt-1">
+              <p className="text-xs font-mono text-rose-600 dark:text-rose-400 pt-1">
                 Server response: {(configError as any).response.data.message}
               </p>
             )}
@@ -616,8 +693,8 @@ export default function AdminMaintenancePage() {
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-            <Server className="w-3 h-3 text-[#0F5132] dark:text-emerald-400" />
-            <span>Environment: Production (GMT / UTC+00:00)</span>
+            <Server className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+            <span>Production • GMT (UTC+00:00)</span>
           </span>
 
           <button
@@ -628,7 +705,7 @@ export default function AdminMaintenancePage() {
             }}
             disabled={isFetchingConfig}
             className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
-            title="Refresh status"
+            title="Refresh live telemetry"
           >
             <RefreshCw className={clsx('w-3.5 h-3.5', isFetchingConfig && 'animate-spin text-[#0F5132]')} />
           </button>
@@ -639,7 +716,7 @@ export default function AdminMaintenancePage() {
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
           >
             <Eye className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-            <span>Preview Advisory</span>
+            <span>Open Public Advisory</span>
             <ExternalLink className="w-3 h-3 opacity-60" />
           </Link>
         </div>
@@ -647,17 +724,17 @@ export default function AdminMaintenancePage() {
 
       {/* ── READ-ONLY CLEARANCE BANNER FOR STANDARD ADMINS ── */}
       {isReadOnlyAdmin && (
-        <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+        <div className="p-4 rounded-xl bg-zinc-100 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 border-l-4 border-l-amber-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-xs sm:text-sm text-zinc-700 dark:text-zinc-300">
             <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
             <div>
               <span className="font-bold text-zinc-900 dark:text-white">Observer Mode (Read-Only Clearance): </span>
               <span>
-                Your account role (<code className="font-mono font-semibold">{userRole}</code>) can inspect maintenance telemetry and audit logs, but <code className="font-mono font-semibold">SUPER_ADMIN</code> clearance is required to modify configuration or toggle platform availability.
+                Your account role (<code className="font-mono text-xs font-semibold">{userRole}</code>) can inspect maintenance telemetry and audit logs, but <code className="font-mono text-xs font-semibold">SUPER_ADMIN</code> clearance is required to modify configuration or toggle platform availability.
               </span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 shrink-0">
+          <span className="px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 shrink-0">
             Controls Locked
           </span>
         </div>
@@ -667,29 +744,28 @@ export default function AdminMaintenancePage() {
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white flex items-center gap-2.5">
           <ShieldAlert className={clsx('w-6 h-6', isServerMaintenanceActive ? 'text-rose-600 dark:text-rose-400' : 'text-[#0F5132] dark:text-emerald-400')} />
-          <span>Maintenance Mode</span>
+          <span>Maintenance Mode &amp; Availability Governance</span>
         </h1>
-        <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-3xl leading-relaxed">
-          Control planned downtime, restrict access during maintenance, and manage the return to normal platform operations.
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 max-w-3xl leading-relaxed">
+          Manage planned infrastructure windows, enforce portal-level HTTP 503 access restrictions, and coordinate service restoration.
         </p>
       </div>
 
-      {/* ── OPERATIONAL STATUS SECTION ── */}
+      {/* ── OPERATIONAL STATUS & TELEMETRY BANNER ── */}
       <div
         className={clsx(
-          'p-5 sm:p-6 rounded-2xl border transition-all',
+          'rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 border-l-4 shadow-xs overflow-hidden transition-all',
           isServerMaintenanceActive
-            ? 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-300 dark:border-rose-900/60'
+            ? 'border-l-rose-600 dark:border-l-rose-500'
             : serverScheduled
-            ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300 dark:border-amber-900/60'
-            : 'bg-white dark:bg-[#12151D] border-zinc-200/90 dark:border-zinc-800'
+            ? 'border-l-amber-500 dark:border-l-amber-400'
+            : 'border-l-[#0F5132] dark:border-l-emerald-500'
         )}
       >
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          
-          {/* Status Badge & Headline */}
-          <div className="space-y-3 max-w-3xl flex-1">
-            <div className="flex flex-wrap items-center gap-2">
+        {/* Top Row: Primary Status & Principal Actions */}
+        <div className="p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2.5 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span
                 className={clsx(
                   'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border',
@@ -697,114 +773,68 @@ export default function AdminMaintenancePage() {
                     ? 'bg-rose-600 text-white border-rose-700'
                     : serverScheduled
                     ? 'bg-amber-500 text-white border-amber-600'
-                    : 'bg-emerald-600 text-white border-emerald-700'
+                    : 'bg-[#0F5132] text-white border-emerald-800'
                 )}
               >
-                <Power className="w-3 h-3" />
+                <Power className="w-3.5 h-3.5" />
                 {isServerMaintenanceActive
-                  ? 'Maintenance Active: Platform Disrupted'
+                  ? 'Maintenance Active • HTTP 503 Enforced'
                   : serverScheduled
-                  ? 'Maintenance Scheduled'
-                  : 'Normal Operation: All Services Online'}
+                  ? 'Scheduled Window Queued'
+                  : 'Normal Operation • All Portals Online'}
               </span>
 
-              <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800/80 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
-                Scope: {configData?.maintenanceScope === 'TENANTS_ONLY'
-                  ? 'Tenant Portal Only'
+              <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800/90 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
+                Active Scope:{' '}
+                {configData?.maintenanceScope === 'TENANTS_ONLY'
+                  ? 'Tenant & Resident Portal Only'
                   : configData?.maintenanceScope === 'LANDLORDS_ONLY'
                   ? 'Landlord Operations Only'
                   : 'Entire Platform (Global)'}
               </span>
             </div>
 
-            <div>
-              <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
+            <div className="space-y-1">
+              <h2 className="text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
                 {isServerMaintenanceActive
-                  ? 'Platform is Currently Offline for Maintenance'
+                  ? 'Platform Traffic is Currently Held at the Maintenance Advisory Barrier'
                   : serverScheduled
-                  ? 'Planned Maintenance Window Scheduled'
-                  : 'Public Services and Portals are Fully Operational'}
+                  ? 'Upcoming Maintenance Window is Armed for Automatic Execution'
+                  : 'Public Discovery, Room Bookings, and Landlord Operations are Live'}
               </h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 {isServerMaintenanceActive
-                  ? 'Public listing discovery and student/tenant room reservations are temporarily blocked with HTTP 503 Service Unavailable. Authenticated administrators retain full governance access.'
+                  ? 'Non-exempt API requests within the active scope are receiving HTTP 503 Service Unavailable with a Retry-After header. Administrator sessions bypass restrictions.'
                   : serverScheduled
-                  ? `Maintenance is configured to commence at ${serverStartTime ? new Date(serverStartTime).toLocaleString() : 'scheduled time'}. Public visitors will see advance warning.`
-                  : 'Students and tenants can search accommodations, book beds, and complete payments. Landlords have uninterrupted property management access.'}
+                  ? `The server will automatically transition into maintenance mode at ${serverStartTime ? new Date(serverStartTime).toLocaleString() : 'the scheduled start time'}.`
+                  : 'All marketplace microservices, Paystack/MoMo escrow callbacks, and resident portals are serving traffic normally.'}
               </p>
-            </div>
-
-            {/* Metadata & Blast-Radius Telemetry Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1 text-xs">
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Effective Start</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
-                  {serverStartTime ? new Date(serverStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Immediate'}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Target Restoration</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
-                  {serverEndTime ? new Date(serverEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Unspecified'}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">In-Flight Bookings</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
-                  {operationalContext.activeBookingsInFlight} Pending
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Notify Queue</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
-                  {operationalContext.pendingSubscribersCount} Subscribers
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Last Modified</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
-                  {configData?.updatedAt ? new Date(configData.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Just now'}
-                </span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Updated By</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5" title={configData?.maintenanceUpdatedBy || 'Administrator'}>
-                  {configData?.maintenanceUpdatedBy ? configData.maintenanceUpdatedBy.split(' ')[0] : 'System'}
-                </span>
-              </div>
             </div>
           </div>
 
-          {/* Action Center & Countdown */}
-          <div className="flex flex-col items-start lg:items-end justify-between gap-4 shrink-0">
-            {/* Live Countdown Display */}
+          {/* Right Column: Live Countdown & Primary CTAs */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3.5 shrink-0">
             {countdown && !countdown.isExpired && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
+              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <Clock className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
                 <div className="text-left">
-                  <div className="text-[10px] uppercase font-bold text-zinc-500">
-                    {isServerMaintenanceActive ? 'Target Completion In' : 'Starts In'}
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">
+                    {isServerMaintenanceActive ? 'Target Restoration In' : 'Window Commences In'}
                   </div>
-                  <div className="font-mono text-sm font-bold text-zinc-900 dark:text-white">
-                    {String(countdown.hours).padStart(2, '0')}:{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}
+                  <div className="font-mono text-base font-bold text-zinc-950 dark:text-white">
+                    {String(countdown.hours).padStart(2, '0')}h : {String(countdown.minutes).padStart(2, '0')}m : {String(countdown.seconds).padStart(2, '0')}s
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Principal Actions */}
             <div className="flex flex-wrap items-center gap-2.5">
               {isServerMaintenanceActive ? (
                 <button
                   type="button"
                   onClick={handleDeactivate}
                   disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0c4027] text-white text-sm font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionInProgress === 'DEACTIVATE' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -818,7 +848,7 @@ export default function AdminMaintenancePage() {
                   type="button"
                   onClick={handleOpenActivationModal}
                   disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Power className="w-4 h-4" />
                   <span>Activate Maintenance Mode</span>
@@ -838,113 +868,124 @@ export default function AdminMaintenancePage() {
             </div>
           </div>
         </div>
+
+        {/* Bottom Strip: Full-Width 6-Metric Operational Telemetry Bar */}
+        <div className="bg-zinc-50/80 dark:bg-zinc-900/50 border-t border-zinc-200/80 dark:border-zinc-800/80 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-zinc-200/80 dark:divide-zinc-800/80 text-xs">
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Effective Start</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 block mt-0.5">
+              {serverStartTime
+                ? new Date(serverStartTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Manual / Immediate'}
+            </span>
+          </div>
+
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Target Restoration</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 block mt-0.5">
+              {serverEndTime
+                ? new Date(serverEndTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Open-Ended'}
+            </span>
+          </div>
+
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">In-Flight Bookings</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 block mt-0.5">
+              {operationalContext.activeBookingsInFlight} Pending Reservation{operationalContext.activeBookingsInFlight === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Restoration Queue</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 block mt-0.5">
+              {operationalContext.pendingSubscribersCount} Subscriber{operationalContext.pendingSubscribersCount === 1 ? '' : 's'}
+            </span>
+          </div>
+
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Last Modified</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 block mt-0.5">
+              {configData?.updatedAt
+                ? new Date(configData.updatedAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : 'Just now'}
+            </span>
+          </div>
+
+          <div className="px-4 py-3">
+            <span className="block text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">Updated By</span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 truncate block mt-0.5" title={configData?.maintenanceUpdatedBy || 'System'}>
+              {configData?.maintenanceUpdatedBy || 'System'}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ── UNSAVED CHANGES BANNER ── */}
       {hasUnsavedChanges && isSuperAdmin && (
-        <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
-          <div className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-200">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>You have unsaved maintenance configuration changes. Save draft or apply when ready.</span>
+        <div className="p-4 rounded-xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5 text-sm font-medium text-amber-950 dark:text-amber-200">
+            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>You have unsaved maintenance configuration changes. Save your configuration draft or activate when ready.</span>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
               onClick={handleDiscardChanges}
               className="px-3 py-1.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
             >
-              Discard
+              Discard Changes
             </button>
             <button
               type="button"
               onClick={handleSaveDraft}
               disabled={updateConfigMutation.isPending}
-              className="px-4 py-1.5 rounded-lg bg-[#0F5132] hover:bg-[#0c4027] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-[#0F5132] hover:bg-[#0c4027] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
             >
               <Save className="w-3.5 h-3.5" />
-              <span>Save Draft</span>
+              <span>Save Configuration</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* ── CONFIGURATION WORKSPACE (TABS) ── */}
-      <div className="rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs overflow-hidden">
+      {/* ── TWO-COLUMN SPLIT WORKSPACE: CONFIGURATION STACK (LEFT) + LIVE PREVIEW & EXEMPTIONS (RIGHT) ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 px-6 pt-3 gap-6 text-xs font-bold overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab('policy')}
-            className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'policy'
-                ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-            )}
-          >
-            <Sliders className="w-4 h-4" />
-            <span>Scope &amp; Access Policy</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('message')}
-            className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'message'
-                ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-            )}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Public Advisory Message</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('schedule')}
-            className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
-              activeTab === 'schedule'
-                ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
-                : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
-            )}
-          >
-            <Calendar className="w-4 h-4" />
-            <span>Scheduled Maintenance Window</span>
-          </button>
-        </div>
-
-        {/* Tab 1: Scope & Access Policy */}
-        {activeTab === 'policy' && (
-          <div className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                Application Maintenance Scope
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Specify which platform users and endpoints are held in maintenance mode. Restrictions are enforced by server middleware.
-              </p>
+        {/* Left Column (7/12): Unified Configuration Stack */}
+        <div className="xl:col-span-7 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs divide-y divide-zinc-200 dark:divide-zinc-800 overflow-hidden">
+          
+          {/* Section 1: Scope & Enforcement Policy */}
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2 text-sm font-bold text-zinc-950 dark:text-white">
+                  <Sliders className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                  <span>1. Maintenance Scope &amp; Portal Restriction</span>
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Choose which portals and API route groups are intercepted by server middleware.
+                </p>
+              </div>
+              <span className="text-[11px] font-mono font-semibold text-zinc-400">HTTP 503</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {/* Option 1: Global */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border transition flex flex-col justify-between space-y-3',
                   !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'GLOBAL'
-                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
+                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5 ring-1 ring-[#0F5132]/30 dark:ring-emerald-500/30'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 )}
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
-                      <Globe className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                      <span>Entire Platform (Global)</span>
+                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-950 dark:text-white">
+                      <Globe className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                      <span>Entire Platform</span>
                     </div>
                     <input
                       type="radio"
@@ -956,30 +997,30 @@ export default function AdminMaintenancePage() {
                       className="text-[#0F5132] focus:ring-[#0F5132]"
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Suspends all public discovery, room searches, resident portals, and landlord management tools. Full platform outage.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Suspends public discovery, room reservations, tenant tools, and landlord operations.
                   </p>
                 </div>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">
-                  Enforcement: All Non-Admin API Routes Blocked (503)
+                <span className="text-[10px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-200/60 dark:border-zinc-800/60">
+                  Blocks: All Non-Admin APIs
                 </span>
               </label>
 
               {/* Option 2: Tenant Portal Only */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border transition flex flex-col justify-between space-y-3',
                   !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'TENANTS_ONLY'
-                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
+                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5 ring-1 ring-[#0F5132]/30 dark:ring-emerald-500/30'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 )}
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
-                      <Users className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                      <span>Tenant &amp; Resident Portal Only</span>
+                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-950 dark:text-white">
+                      <Users className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                      <span>Tenant Portal Only</span>
                     </div>
                     <input
                       type="radio"
@@ -991,30 +1032,30 @@ export default function AdminMaintenancePage() {
                       className="text-[#0F5132] focus:ring-[#0F5132]"
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Suspends tenant listings search, room bookings, and resident tools. Landlord and Caretaker portals remain fully functional.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Pauses tenant search, room bookings, and resident portals. Landlord tools stay online.
                   </p>
                 </div>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">
-                  Enforcement: Public &amp; Tenant Routes Blocked
+                <span className="text-[10px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-200/60 dark:border-zinc-800/60">
+                  Blocks: Public &amp; Tenant APIs
                 </span>
               </label>
 
               {/* Option 3: Landlord Portal Only */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border transition flex flex-col justify-between space-y-3',
                   !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'LANDLORDS_ONLY'
-                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
+                    ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5 ring-1 ring-[#0F5132]/30 dark:ring-emerald-500/30'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
                 )}
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
-                      <Building2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                      <span>Landlord Operations Only</span>
+                    <div className="flex items-center gap-2 text-xs font-bold text-zinc-950 dark:text-white">
+                      <Building2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                      <span>Landlord Portal Only</span>
                     </div>
                     <input
                       type="radio"
@@ -1026,172 +1067,35 @@ export default function AdminMaintenancePage() {
                       className="text-[#0F5132] focus:ring-[#0F5132]"
                     />
                   </div>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Pauses landlord property creation, payouts, and utility sub-meters. Public tenant browsing and booking remains live.
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    Pauses property publishing, payouts, and landlord operations. Tenant browsing stays live.
                   </p>
                 </div>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">
-                  Enforcement: Landlord Endpoints Paused
+                <span className="text-[10px] font-mono font-semibold text-zinc-500 dark:text-zinc-400 pt-1 border-t border-zinc-200/60 dark:border-zinc-800/60">
+                  Blocks: Landlord APIs Only
                 </span>
               </label>
             </div>
-
-            {/* Access Exemptions Summary */}
-            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
-                <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                <span>Server-Enforced Access Exemptions &amp; Recovery Guarantees</span>
-              </div>
-              <ul className="text-[11px] text-zinc-600 dark:text-zinc-400 space-y-1 list-disc pl-5">
-                <li>
-                  <strong>Administrators &amp; Super Admins:</strong> All requests bearing valid admin JWT tokens bypass maintenance mode automatically via server middleware.
-                </li>
-                <li>
-                  <strong>Admin Gateway &amp; Auth:</strong> Routes <code className="text-zinc-800 dark:text-zinc-200 font-mono">/admin/*</code> and <code className="text-zinc-800 dark:text-zinc-200 font-mono">/api/v1/auth/login</code> remain 100% accessible to ensure platform recovery.
-                </li>
-                <li>
-                  <strong>Health Monitoring:</strong> The operational health endpoint <code className="text-zinc-800 dark:text-zinc-200 font-mono">/api/health</code> is unthrottled and exempt from maintenance barriers.
-                </li>
-              </ul>
-            </div>
           </div>
-        )}
 
-        {/* Tab 2: Public Advisory Message */}
-        {activeTab === 'message' && (
-          <div className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                Public Advisory Banner &amp; Content
-              </h3>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Configure the advisory copy displayed to affected visitors when maintenance mode is active.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
-              {/* Form Fields */}
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Advisory Headline
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    disabled={!isSuperAdmin}
-                    onChange={(e) => setTitle(e.target.value)}
-                    maxLength={100}
-                    placeholder="e.g. Scheduled Platform Infrastructure Upgrade"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                  <span className="text-[10px] text-zinc-400 block text-right">{title.length}/100</span>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Explanatory Message (Displayed to users)
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={message}
-                    disabled={!isSuperAdmin}
-                    onChange={(e) => setMessage(e.target.value)}
-                    maxLength={500}
-                    placeholder="Provide a concise, professional explanation of the maintenance purpose..."
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                  <span className="text-[10px] text-zinc-400 block text-right">{message.length}/500</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                      Support Contact Email
-                    </label>
-                    <input
-                      type="email"
-                      value={contactEmail}
-                      disabled={!isSuperAdmin}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      placeholder="support@akwaabahomes.com"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                      Support Phone Hotline
-                    </label>
-                    <input
-                      type="text"
-                      value={contactPhone}
-                      disabled={!isSuperAdmin}
-                      onChange={(e) => setContactPhone(e.target.value)}
-                      placeholder="+233 24 000 0000"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
-                    />
-                  </div>
-                </div>
+          {/* Section 2: Schedule & Change Management Ticket */}
+          <div className="p-6 space-y-5">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-zinc-950 dark:text-white">
+                <Calendar className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                <span>2. Maintenance Window Schedule &amp; Change Reference</span>
               </div>
-
-              {/* Real-time Preview Container */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5">
-                    <Eye className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
-                    <span>Live Public Advisory Screen Preview</span>
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-medium">Exact visitor render</span>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-[#F8F7F2] dark:bg-[#070B09] border border-zinc-200 dark:border-zinc-800 text-center space-y-4">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                    {scope === 'TENANTS_ONLY'
-                      ? 'Tenant Portal Advisory'
-                      : scope === 'LANDLORDS_ONLY'
-                      ? 'Landlord Operations Advisory'
-                      : 'Scheduled System Maintenance'}
-                  </span>
-
-                  <h4 className="text-base font-black text-zinc-950 dark:text-white leading-tight">
-                    {title || 'Scheduled Platform Maintenance'}
-                  </h4>
-
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
-                    {message || 'Our engineering team is currently conducting scheduled database performance enhancements...'}
-                  </p>
-
-                  <div className="pt-2 text-[10px] text-zinc-500 border-t border-zinc-200 dark:border-zinc-800/80 flex items-center justify-center gap-3">
-                    <span>Hotline: {contactPhone || '+233 24 000 0000'}</span>
-                    <span>•</span>
-                    <span>{contactEmail || 'support@akwaabahomes.com'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: Scheduled Maintenance Window */}
-        {activeTab === 'schedule' && (
-          <div className="p-6 space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-                Scheduled Maintenance Window &amp; Automation
-              </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Plan ahead for routine deployments. The server automatically activates maintenance when the start time is reached and deactivates when the end time expires (local browser time; Ghana operates on GMT / UTC+00:00).
+                Set an automated start/end window (GMT / local time) and record an internal change ticket reference.
               </p>
             </div>
 
             {/* Quick Duration Presets */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                 Quick Target Duration Presets (Relative to Start Time or Now)
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {[
                   { label: '+15 Mins', mins: 15 },
                   { label: '+30 Mins', mins: 30 },
@@ -1205,7 +1109,7 @@ export default function AdminMaintenancePage() {
                     type="button"
                     disabled={!isSuperAdmin}
                     onClick={() => handleApplyPresetMinutes(preset.mins)}
-                    className="px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-[#0F5132]/10 hover:border-[#0F5132] dark:hover:border-emerald-500 hover:text-[#0F5132] dark:hover:text-emerald-400 transition cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2.5 py-2 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/60 hover:bg-[#0F5132]/10 hover:border-[#0F5132] dark:hover:border-emerald-500 hover:text-[#0F5132] dark:hover:text-emerald-400 transition cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {preset.label}
                   </button>
@@ -1215,102 +1119,314 @@ export default function AdminMaintenancePage() {
 
             {/* Date Pickers */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  Planned Start Date &amp; Time (Local / GMT)
-                </label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Planned Start Date &amp; Time
+                  </label>
+                  {startTime && isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setStartTime('')}
+                      className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <input
                   type="datetime-local"
                   value={startTime}
                   disabled={!isSuperAdmin}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
-                <span className="text-[10px] text-zinc-400">Leave blank to activate manually</span>
+                <span className="text-[11px] text-zinc-400 block">Leave blank to trigger manually</span>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  Target End / Restoration Time (Local / GMT)
-                </label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Target End / Restoration Time
+                  </label>
+                  {endTime && isSuperAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setEndTime('')}
+                      className="text-[11px] text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 <input
                   type="datetime-local"
                   value={endTime}
                   disabled={!isSuperAdmin}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
-                <span className="text-[10px] text-zinc-400">Used for countdown and automatic restoration</span>
+                <span className="text-[11px] text-zinc-400 block">Powers public countdown &amp; Retry-After header</span>
               </div>
             </div>
 
             {/* Internal Reason */}
-            <div className="space-y-1">
-              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                Internal Operational Reason / Change Management Ticket Ref
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                Internal Operational Reason / Change Management Ticket Reference
               </label>
               <input
                 type="text"
                 value={reason}
                 disabled={!isSuperAdmin}
                 onChange={(e) => setReason(e.target.value)}
-                placeholder="e.g. INFRA-2026-Q4-01: PostgreSQL high-availability failover and SSL cert rotation"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="e.g. INFRA-2026-Q4-01: PostgreSQL index maintenance and SSL certificate rotation"
+                className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
               />
-              <span className="text-[10px] text-zinc-400">Recorded strictly in administrator audit logs</span>
+              <span className="text-[11px] text-zinc-400 block">Logged strictly in the internal administrator audit trail</span>
             </div>
           </div>
-        )}
 
-        {/* Action Footer */}
-        <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-xs text-zinc-500">
-            {!isSuperAdmin ? (
-              <span className="text-zinc-500">Read-only observer view • Super Admin required for edits</span>
-            ) : hasUnsavedChanges ? (
-              <span className="text-amber-600 dark:text-amber-400 font-semibold">Unsaved edits pending</span>
-            ) : (
-              <span>Configuration synchronized with database</span>
-            )}
+          {/* Section 3: Public Advisory Copy & Support Contacts */}
+          <div className="p-6 space-y-5">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-zinc-950 dark:text-white">
+                <FileText className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                <span>3. Public Advisory Copy &amp; Support Desk Contacts</span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Customize the message displayed on <code className="font-mono">/maintenance</code> and returned in HTTP 503 JSON payloads.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Advisory Headline
+                  </label>
+                  <span className="text-[11px] text-zinc-400 font-mono">{title.length}/100</span>
+                </div>
+                <input
+                  type="text"
+                  value={title}
+                  disabled={!isSuperAdmin}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={100}
+                  placeholder="e.g. Scheduled Platform Infrastructure Upgrade"
+                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Explanatory Advisory Message
+                  </label>
+                  <span className="text-[11px] text-zinc-400 font-mono">{message.length}/500</span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={message}
+                  disabled={!isSuperAdmin}
+                  onChange={(e) => setMessage(e.target.value)}
+                  maxLength={500}
+                  placeholder="Provide a clear explanation of the maintenance window and reassure residents..."
+                  className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Support Desk Email
+                  </label>
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    disabled={!isSuperAdmin}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="support@akwaabahomes.com"
+                    className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                    Emergency Support Hotline
+                  </label>
+                  <input
+                    type="text"
+                    value={contactPhone}
+                    disabled={!isSuperAdmin}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    placeholder="+233 24 000 0000"
+                    className="w-full px-3.5 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[#0F5132]/30 focus:border-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {hasUnsavedChanges && isSuperAdmin && (
-              <button
-                type="button"
-                onClick={handleDiscardChanges}
-                className="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
-              >
-                Discard
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={handleSaveDraft}
-              disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
-              className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-            >
-              {actionInProgress === 'SAVE' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          {/* Action Footer */}
+          <div className="px-6 py-4 bg-zinc-50/70 dark:bg-zinc-900/50 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-zinc-500">
+              {!isSuperAdmin ? (
+                <span>Observer mode • Super Admin clearance required for modifications</span>
+              ) : hasUnsavedChanges ? (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold">Unsaved configuration edits pending</span>
               ) : (
-                <Save className="w-3.5 h-3.5" />
+                <span>All configuration fields synchronized with database</span>
               )}
-              <span>Save Configuration</span>
-            </button>
+            </div>
 
-            {!isServerMaintenanceActive && (
+            <div className="flex items-center gap-2.5">
+              {hasUnsavedChanges && isSuperAdmin && (
+                <button
+                  type="button"
+                  onClick={handleDiscardChanges}
+                  className="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  Discard
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={handleOpenActivationModal}
+                onClick={handleSaveDraft}
                 disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
-                <Power className="w-3.5 h-3.5" />
-                <span>Review &amp; Activate</span>
+                {actionInProgress === 'SAVE' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                <span>Save Configuration</span>
               </button>
-            )}
+
+              {!isServerMaintenanceActive && (
+                <button
+                  type="button"
+                  onClick={handleOpenActivationModal}
+                  disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  <Power className="w-3.5 h-3.5" />
+                  <span>Review &amp; Activate</span>
+                </button>
+              )}
+            </div>
           </div>
+        </div>
+
+        {/* Right Column (5/12): Sticky Live Advisory Preview & Exemptions */}
+        <div className="xl:col-span-5 space-y-6 xl:sticky xl:top-6">
+          
+          {/* Live Institutional Public Advisory Preview */}
+          <div className="rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-900 dark:text-white">
+                <Eye className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                <span>Live Public Advisory Preview</span>
+              </div>
+              <Link
+                href="/maintenance"
+                target="_blank"
+                className="text-[11px] font-semibold text-[#0F5132] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+              >
+                <span>Open /maintenance</span>
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+
+            {/* Simulated Public Canvas matching /maintenance */}
+            <div className="p-5 bg-[#F8F7F2] dark:bg-[#0B0E14]">
+              <div className="rounded-xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
+                {/* Simulated Top Status Strip */}
+                <div className="px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-[11px]">
+                  <span className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      {scope === 'TENANTS_ONLY'
+                        ? 'Tenant Portal Advisory'
+                        : scope === 'LANDLORDS_ONLY'
+                        ? 'Landlord Operations Advisory'
+                        : 'Scheduled System Maintenance'}
+                    </span>
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-500">HTTP 503 • GMT</span>
+                </div>
+
+                {/* Simulated Card Body */}
+                <div className="p-5 space-y-4">
+                  <div className="space-y-1.5">
+                    <h4 className="text-base font-bold text-zinc-950 dark:text-white leading-snug">
+                      {title || 'Scheduled Platform Maintenance'}
+                    </h4>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                      {message || 'Our engineering team is currently conducting scheduled database performance enhancements...'}
+                    </p>
+                  </div>
+
+                  {/* Simulated Schedule Box */}
+                  <div className="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-900/80 border border-zinc-200/80 dark:border-zinc-800 grid grid-cols-2 gap-3 text-[11px]">
+                    <div>
+                      <span className="block text-[10px] uppercase font-bold text-zinc-400">Commenced</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5 block truncate">
+                        {startTime
+                          ? new Date(startTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'Immediate Window'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-[10px] uppercase font-bold text-zinc-400">Est. Restoration</span>
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5 block truncate">
+                        {endTime
+                          ? new Date(endTime).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'Upon verification'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Simulated Support Bar */}
+                  <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-[11px] text-zinc-500">
+                    <span>Support: <strong className="text-zinc-800 dark:text-zinc-200">{contactPhone || '+233 24 000 0000'}</strong></span>
+                    <span className="truncate">{contactEmail || 'support@akwaabahomes.com'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Server-Enforced Access Exemptions & Recovery Guarantees */}
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs space-y-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-950 dark:text-white">
+              <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+              <span>Server-Enforced Exemptions &amp; Recovery Guarantees</span>
+            </div>
+            <ul className="text-xs text-zinc-600 dark:text-zinc-400 space-y-2 leading-relaxed">
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-zinc-900 dark:text-zinc-200">Administrator Bypass:</strong> Requests carrying a valid <code className="font-mono text-[11px]">ADMIN</code> or <code className="font-mono text-[11px]">SUPER_ADMIN</code> JWT bypass maintenance middleware automatically.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-zinc-900 dark:text-zinc-200">Admin Gateway &amp; Auth:</strong> <code className="font-mono text-[11px]">/admin/*</code> and <code className="font-mono text-[11px]">/api/v1/auth/login</code> remain 100% reachable so operators can never lock themselves out.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="text-zinc-900 dark:text-zinc-200">Uptime Probes:</strong> <code className="font-mono text-[11px]">/api/health</code> and <code className="font-mono text-[11px]">/api/v1/config/public</code> remain unthrottled during downtime.
+                </span>
+              </li>
+            </ul>
+          </div>
+
         </div>
       </div>
 
@@ -1323,7 +1439,7 @@ export default function AdminMaintenancePage() {
               <span>Maintenance Governance Audit Trail</span>
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Immutable server records of administrator actions, downtime toggles, and field-level configuration diffs.
+              Immutable server records of administrator actions, downtime toggles, and structured field-level diffs.
             </p>
           </div>
 
@@ -1336,7 +1452,7 @@ export default function AdminMaintenancePage() {
                 value={historySearchInput}
                 onChange={(e) => setHistorySearchInput(e.target.value)}
                 placeholder="Search admin, reason, scope..."
-                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] w-48 sm:w-56"
+                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] w-48 sm:w-60"
               />
             </div>
 
@@ -1378,7 +1494,7 @@ export default function AdminMaintenancePage() {
                 <th className="px-5 py-3">Responsible Administrator</th>
                 <th className="px-5 py-3">Scope &amp; Reason</th>
                 <th className="px-5 py-3">Field-Level Changes</th>
-                <th className="px-4 py-3 text-right">Inspect</th>
+                <th className="px-4 py-3 text-right">Changes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200/80 dark:divide-zinc-800/80 text-zinc-700 dark:text-zinc-300">
@@ -1400,7 +1516,9 @@ export default function AdminMaintenancePage() {
                   const newObj = parseAuditPayload(record.newData) || {};
                   const oldObj = parseAuditPayload(record.oldData) || {};
                   const diffPills = computeAuditDiffPills(record.oldData, record.newData, record.action);
+                  const structuredRows = computeStructuredDiffRows(record.oldData, record.newData);
                   const isExpanded = expandedAuditId === record.id;
+                  const showRawJson = Boolean(showRawJsonIds[record.id]);
 
                   const actionStyle =
                     record.action === 'MAINTENANCE_ACTIVATED'
@@ -1419,8 +1537,8 @@ export default function AdminMaintenancePage() {
                   return (
                     <React.Fragment key={record.id}>
                       <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
-                        <td className="px-5 py-3 whitespace-nowrap text-zinc-500">
-                          <div>
+                        <td className="px-5 py-3.5 whitespace-nowrap text-zinc-500">
+                          <div className="font-medium text-zinc-800 dark:text-zinc-200">
                             {new Date(record.createdAt).toLocaleString([], {
                               month: 'short',
                               day: 'numeric',
@@ -1433,38 +1551,38 @@ export default function AdminMaintenancePage() {
                           )}
                         </td>
 
-                        <td className="px-5 py-3 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${actionStyle}`}>
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${actionStyle}`}>
                             {record.action}
                           </span>
                         </td>
 
-                        <td className="px-5 py-3 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-200">
+                        <td className="px-5 py-3.5 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-200">
                           <div>
                             <span>
                               {record.user
                                 ? `${record.user.firstName} ${record.user.lastName}`
                                 : 'System Administrator'}
                             </span>
-                            <span className="block text-[10px] text-zinc-400">
+                            <span className="block text-[11px] text-zinc-400">
                               {record.user?.email || 'superadmin'}
                             </span>
                           </div>
                         </td>
 
-                        <td className="px-5 py-3 max-w-xs truncate text-zinc-600 dark:text-zinc-400" title={reasonText}>
+                        <td className="px-5 py-3.5 max-w-xs truncate text-zinc-600 dark:text-zinc-400" title={reasonText}>
                           <div className="font-semibold text-zinc-800 dark:text-zinc-200">
                             {newObj?.maintenanceScope || oldObj?.maintenanceScope || 'GLOBAL'}
                           </div>
                           <div className="truncate text-[11px] text-zinc-500">{reasonText}</div>
                         </td>
 
-                        <td className="px-5 py-3">
-                          <div className="flex flex-wrap gap-1">
+                        <td className="px-5 py-3.5">
+                          <div className="flex flex-wrap gap-1.5">
                             {diffPills.map((pill, i) => (
                               <span
                                 key={i}
-                                className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700"
+                                className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700"
                               >
                                 {pill}
                               </span>
@@ -1472,39 +1590,101 @@ export default function AdminMaintenancePage() {
                           </div>
                         </td>
 
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setExpandedAuditId(isExpanded ? null : record.id)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+                            className={clsx(
+                              'inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition cursor-pointer',
+                              isExpanded
+                                ? 'border-[#0F5132] bg-[#0F5132]/10 text-[#0F5132] dark:border-emerald-500 dark:text-emerald-400'
+                                : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
+                            )}
                           >
-                            <span>Diff</span>
-                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            <span>Inspect</span>
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
                         </td>
                       </tr>
 
                       {isExpanded && (
-                        <tr className="bg-zinc-50/70 dark:bg-zinc-900/40">
-                          <td colSpan={6} className="px-5 py-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
-                              <div className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
-                                <div className="font-bold text-zinc-500 uppercase tracking-wider text-[10px]">
-                                  Previous State Snapshot (oldData)
-                                </div>
-                                <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
-                                  {Object.keys(oldObj).length > 0 ? JSON.stringify(oldObj, null, 2) : 'No prior state recorded'}
-                                </pre>
+                        <tr className="bg-zinc-50/80 dark:bg-zinc-900/40">
+                          <td colSpan={6} className="px-6 py-4">
+                            <div className="rounded-xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                              <div className="px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">
+                                  Structured Field-Level Audit Comparison
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowRawJsonIds((prev) => ({
+                                      ...prev,
+                                      [record.id]: !prev[record.id],
+                                    }))
+                                  }
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer"
+                                >
+                                  <Code2 className="w-3.5 h-3.5" />
+                                  <span>{showRawJson ? 'Show Structured Table' : 'View Raw JSON'}</span>
+                                </button>
                               </div>
 
-                              <div className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
-                                <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-[10px]">
-                                  Applied State Snapshot (newData)
+                              {showRawJson ? (
+                                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                                  <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                    <div className="font-bold text-zinc-500 uppercase tracking-wider text-[10px]">
+                                      Previous State (oldData)
+                                    </div>
+                                    <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
+                                      {Object.keys(oldObj).length > 0 ? JSON.stringify(oldObj, null, 2) : 'No prior state recorded'}
+                                    </pre>
+                                  </div>
+                                  <div className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1">
+                                    <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-[10px]">
+                                      Applied State (newData)
+                                    </div>
+                                    <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
+                                      {Object.keys(newObj).length > 0 ? JSON.stringify(newObj, null, 2) : 'No new state recorded'}
+                                    </pre>
+                                  </div>
                                 </div>
-                                <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
-                                  {Object.keys(newObj).length > 0 ? JSON.stringify(newObj, null, 2) : 'No new state recorded'}
-                                </pre>
-                              </div>
+                              ) : structuredRows.length === 0 ? (
+                                <div className="p-4 text-xs text-zinc-500">
+                                  No structured field parameters recorded for this event.
+                                </div>
+                              ) : (
+                                <div className="divide-y divide-zinc-200/70 dark:divide-zinc-800/70 text-xs">
+                                  {structuredRows.map((row) => (
+                                    <div
+                                      key={row.fieldKey}
+                                      className={clsx(
+                                        'px-4 py-2.5 grid grid-cols-1 md:grid-cols-12 gap-2 items-center',
+                                        row.changed && 'bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04]'
+                                      )}
+                                    >
+                                      <div className="md:col-span-3 font-semibold text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                                        <span>{row.label}</span>
+                                        {row.changed && (
+                                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-amber-500/15 text-amber-700 dark:text-amber-300">
+                                            Modified
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="md:col-span-4 text-zinc-500 dark:text-zinc-400 truncate" title={row.before}>
+                                        <span className="text-[10px] uppercase font-bold text-zinc-400 mr-1.5">Before:</span>
+                                        <span className={clsx(row.changed && 'line-through opacity-75')}>{row.before}</span>
+                                      </div>
+                                      <div className="md:col-span-5 font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 truncate" title={row.after}>
+                                        <ArrowRight className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                        <span className={clsx(row.changed && 'text-[#0F5132] dark:text-emerald-400')}>
+                                          {row.after}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1519,7 +1699,7 @@ export default function AdminMaintenancePage() {
 
         {/* Pagination Bar */}
         {historyData && historyData.pagination.totalPages > 1 && (
-          <div className="p-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-500">
+          <div className="p-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-500">
             <span>
               Page {historyData.pagination.page} of {historyData.pagination.totalPages} ({historyData.pagination.total} events)
             </span>
@@ -1548,25 +1728,25 @@ export default function AdminMaintenancePage() {
       {/* ── TWO-STEP IMPACT CONFIRMATION MODAL ── */}
       {impactModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden space-y-5 p-6 sm:p-8 animate-in zoom-in-95">
+          <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-2xl overflow-hidden space-y-5 p-6 sm:p-8 animate-in zoom-in-95">
             
             {/* Header */}
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20">
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-lg font-black text-zinc-950 dark:text-white">
+                <h3 className="text-lg font-bold text-zinc-950 dark:text-white">
                   Confirm Platform Maintenance Mode Activation
                 </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  You are about to suspend live public services on AkwaabaHomes. Please review the operational blast radius before confirming.
+                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  You are about to suspend live public services on AkwaabaHomes. Review the operational blast radius below before confirming.
                 </p>
               </div>
             </div>
 
             {/* Impact Summary & Live Blast-Radius Telemetry */}
-            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2.5 text-xs">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-2">
                 <span className="text-zinc-500">Enforced Scope:</span>
                 <span className="font-bold text-zinc-900 dark:text-white">
@@ -1582,7 +1762,7 @@ export default function AdminMaintenancePage() {
               </div>
 
               <div className="flex justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-2">
-                <span className="text-zinc-500 flex items-center gap-1">
+                <span className="text-zinc-500 flex items-center gap-1.5">
                   <Activity className="w-3.5 h-3.5 text-amber-500" />
                   <span>In-Flight Pending Bookings:</span>
                 </span>
@@ -1617,7 +1797,7 @@ export default function AdminMaintenancePage() {
                 value={confirmPhraseInput}
                 onChange={(e) => setConfirmPhraseInput(e.target.value)}
                 placeholder="Type ENABLE MAINTENANCE"
-                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono font-bold"
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-rose-500 font-mono font-bold"
               />
             </div>
 
