@@ -24,9 +24,12 @@ import {
   Wrench,
   Lock,
   HelpCircle,
-  Loader2,
   Phone,
   Mail,
+  Receipt,
+  KeyRound,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { Button, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
 import { getImageUrl } from '@/lib/utils';
@@ -39,6 +42,7 @@ export default function TenantBookingDetailsPage() {
   const paymentRef = searchParams.get('reference') || searchParams.get('trxref');
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['booking-detail', bookingId],
@@ -128,6 +132,13 @@ export default function TenantBookingDetailsPage() {
     }
   };
 
+  const handleCopyCheckInCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(true);
+    toast.success('Check-in clearance code copied!');
+    setTimeout(() => setCopiedCode(false), 2500);
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto py-4 space-y-6 animate-pulse">
@@ -176,6 +187,8 @@ export default function TenantBookingDetailsPage() {
   const isCancelledOrRejected = booking.status === 'CANCELLED' || booking.status === 'REJECTED';
   const leaseStatus = booking.leaseAgreement?.status || 'NONE';
   const isLeaseCompleted = leaseStatus === 'COMPLETED';
+  const checkInReferenceCode =
+    booking.checkInCode || `AKW-${booking.id.slice(0, 6).toUpperCase()}`;
 
   const statusTone = isCompletedOrActive
     ? 'success'
@@ -206,17 +219,20 @@ export default function TenantBookingDetailsPage() {
     },
     {
       label: 'Digital Tenancy Lease',
-      desc:
-        leaseStatus === 'COMPLETED'
-          ? 'Countersigned by both parties'
-          : leaseStatus === 'SIGNED_BY_TENANT'
-          ? 'Signed by you • Awaiting host'
-          : 'Review & sign digital lease',
+      desc: isCancelledOrRejected
+        ? 'Closed'
+        : leaseStatus === 'COMPLETED'
+        ? 'Countersigned by both parties'
+        : leaseStatus === 'SIGNED_BY_TENANT'
+        ? 'Signed by you • Awaiting host'
+        : 'Review & sign digital lease',
       done: isLeaseCompleted || isCompletedOrActive,
     },
     {
       label: 'Escrow Payment & Move-In',
-      desc: isCompletedOrActive
+      desc: isCancelledOrRejected
+        ? 'No payment collected'
+        : isCompletedOrActive
         ? booking.isCheckedIn
           ? 'Checked in • Active Residency'
           : 'Paid into Escrow • Ready for Check-In'
@@ -250,7 +266,11 @@ export default function TenantBookingDetailsPage() {
             </strong>
           </span>
           <StatusBadge tone={statusTone}>
-            {booking.isCheckedIn ? 'Checked In' : booking.status}
+            {booking.isCheckedIn
+              ? 'Active • Checked In'
+              : booking.status === 'COMPLETED'
+              ? 'Confirmed Stay'
+              : booking.status}
           </StatusBadge>
         </div>
       </div>
@@ -422,7 +442,7 @@ export default function TenantBookingDetailsPage() {
                 <span>Digital Tenancy Agreement (Act 220)</span>
               </h2>
               <StatusBadge tone={isLeaseCompleted ? 'success' : 'neutral'}>
-                {leaseStatus.replace(/_/g, ' ')}
+                {isCancelledOrRejected ? 'CANCELLED' : leaseStatus.replace(/_/g, ' ')}
               </StatusBadge>
             </div>
 
@@ -430,27 +450,33 @@ export default function TenantBookingDetailsPage() {
               Your tenancy agreement records the agreed rent, refundable caution deposit, utility responsibilities, and statutory rights under the Ghana Rent Act, 1963 (Act 220).
             </p>
 
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <Link href={`/dashboard/agreements/${booking.id}`}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  leftIcon={<FileText className="w-4 h-4" />}
-                >
-                  {isLeaseCompleted ? 'View Signed Agreement' : 'Review & Sign Lease Agreement'}
-                </Button>
-              </Link>
+            {isCancelledOrRejected ? (
+              <div className="p-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] text-xs text-[#5E645E] dark:text-[#A0A8A2]">
+                This reservation request is {booking.status.toLowerCase()}. Lease execution is disabled.
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <Link href={`/dashboard/agreements/${booking.id}`}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<FileText className="w-4 h-4" />}
+                  >
+                    {isLeaseCompleted ? 'View Signed Agreement' : 'Review & Sign Lease Agreement'}
+                  </Button>
+                </Link>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadPdf}
-                isLoading={isDownloadingPdf}
-                leftIcon={<Download className="w-4 h-4" />}
-              >
-                Download PDF Copy
-              </Button>
-            </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadPdf}
+                  isLoading={isDownloadingPdf}
+                  leftIcon={<Download className="w-4 h-4" />}
+                >
+                  Download PDF Copy
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Landlord / Host Contact Card */}
@@ -490,7 +516,7 @@ export default function TenantBookingDetailsPage() {
           </div>
         </div>
 
-        {/* Right Column: Price Breakdown, Payment & Actions */}
+        {/* Right Column: Price Breakdown, Payment, Check-in Pass & Actions */}
         <div className="lg:col-span-5 space-y-6">
           <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-5">
             <div className="flex items-center justify-between border-b border-[#E7E7DF] dark:border-[#262E29] pb-3">
@@ -532,16 +558,61 @@ export default function TenantBookingDetailsPage() {
 
             {/* Payment / Action Controls depending on Booking Status */}
             {isCompletedOrActive ? (
-              <div className="p-4 rounded-[12px] bg-[#ECFDF3] dark:bg-[#064E3B]/30 border border-[#A7F3D0] dark:border-[#065F46] space-y-1.5">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1F7A4C] dark:text-[#6EE7B7]">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                  <span>Payment Confirmed &amp; Protected</span>
+              <div className="space-y-3">
+                <div className="p-4 rounded-[12px] bg-[#ECFDF3] dark:bg-[#064E3B]/30 border border-[#A7F3D0] dark:border-[#065F46] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1F7A4C] dark:text-[#6EE7B7]">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>Payment Confirmed &amp; Protected</span>
+                    </div>
+                    <Link
+                      href={`/dashboard/invoice/${booking.id}`}
+                      className="text-xs font-bold text-[#173D32] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>Official Receipt</span>
+                    </Link>
+                  </div>
+                  <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
+                    {booking.isCheckedIn
+                      ? 'You have checked in to this property. Your residency is active.'
+                      : 'Your payment is held safely in escrow. Present your Gatehouse Clearance Code below upon arrival to complete check-in.'}
+                  </p>
                 </div>
-                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
-                  {booking.isCheckedIn
-                    ? 'You have checked in to this property. Your residency is active.'
-                    : 'Your payment is held safely in escrow. Present your booking reference at the property to complete check-in.'}
-                </p>
+
+                {/* Gatehouse Handover / Check-In Reference Card */}
+                <div className="p-3.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-[#173D32]/10 dark:bg-emerald-500/10 text-[#173D32] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <KeyRound className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
+                        Check-In Clearance Reference
+                      </span>
+                      <span className="font-mono text-sm font-bold text-[#242925] dark:text-white">
+                        {checkInReferenceCode}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyCheckInCode(checkInReferenceCode)}
+                    className="px-2.5 py-1.5 rounded-lg border border-[#D4D6CE] dark:border-[#2E3832] bg-white dark:bg-[#171C19] text-xs font-semibold text-[#242925] dark:text-white hover:border-[#16A34A] transition cursor-pointer inline-flex items-center gap-1"
+                  >
+                    {copiedCode ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                        <span>Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             ) : isApproved ? (
               <div className="space-y-3">
@@ -582,10 +653,18 @@ export default function TenantBookingDetailsPage() {
 
             {/* Recorded Transactions */}
             {Array.isArray(booking.transactions) && booking.transactions.length > 0 && (
-              <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29] space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2]">
-                  Transaction Receipts
-                </h3>
+              <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2]">
+                    Transaction Receipts
+                  </h3>
+                  <Link
+                    href={`/dashboard/invoice/${booking.id}`}
+                    className="text-xs font-semibold text-[#16A34A] hover:underline"
+                  >
+                    Printable Invoice &rarr;
+                  </Link>
+                </div>
                 {booking.transactions.map((tx: any) => (
                   <div
                     key={tx.id}
@@ -615,7 +694,7 @@ export default function TenantBookingDetailsPage() {
             {isCompletedOrActive && (
               <>
                 <Link
-                  href="/dashboard/tenant/tickets/new"
+                  href={`/dashboard/tenant/tickets/new?bookingId=${booking.id}&propertyId=${prop.id || ''}`}
                   className="w-full py-2.5 px-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] border border-[#E7E7DF] dark:border-[#262E29] text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
                 >
                   <span className="flex items-center gap-2">
@@ -627,7 +706,7 @@ export default function TenantBookingDetailsPage() {
 
                 {!booking.review ? (
                   <Link
-                    href="/dashboard/tenant/reviews/new"
+                    href={`/dashboard/tenant/reviews/new?bookingId=${booking.id}&propertyId=${prop.id || ''}`}
                     className="w-full py-2.5 px-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] border border-[#E7E7DF] dark:border-[#262E29] text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
                   >
                     <span className="flex items-center gap-2">
