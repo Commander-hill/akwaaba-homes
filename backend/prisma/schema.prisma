@@ -476,6 +476,15 @@ model SystemConfig {
   roommateFinderEnabled        Boolean   @default(true)
   maintenanceMode              Boolean   @default(false)
   maintenanceEndTime           DateTime?
+  maintenanceStartTime         DateTime?
+  maintenanceScheduled         Boolean   @default(false)
+  maintenanceTitle             String    @default("Scheduled Platform Maintenance")
+  maintenanceMessage           String    @default("AkwaabaHomes is currently undergoing scheduled maintenance to upgrade our infrastructure and improve your rental experience. We will be back online shortly.")
+  maintenanceScope             String    @default("GLOBAL") // "GLOBAL" | "TENANTS_ONLY" | "LANDLORDS_ONLY"
+  maintenanceReason            String?
+  maintenanceContactEmail      String    @default("support@akwaabahomes.com")
+  maintenanceContactPhone      String    @default("+233 24 000 0000")
+  maintenanceUpdatedBy         String?
   updatedAt                    DateTime  @updatedAt
 }
 

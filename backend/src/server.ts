@@ -246,7 +246,14 @@ app.get('/api/v1/config/public', async (req: Request, res: Response) => {
       platformCommissionPercent: config.platformCommissionPercent,
       roommateFinderEnabled: config.roommateFinderEnabled,
       maintenanceMode: config.maintenanceMode,
-      maintenanceEndTime: config.maintenanceEndTime
+      maintenanceEndTime: config.maintenanceEndTime,
+      maintenanceStartTime: config.maintenanceStartTime,
+      maintenanceScheduled: config.maintenanceScheduled,
+      maintenanceTitle: config.maintenanceTitle || 'Scheduled Platform Maintenance',
+      maintenanceMessage: config.maintenanceMessage || 'AkwaabaHomes is currently undergoing scheduled maintenance to upgrade our infrastructure and improve your rental experience. We will be back online shortly.',
+      maintenanceScope: config.maintenanceScope || 'GLOBAL',
+      maintenanceContactEmail: config.maintenanceContactEmail || 'support@akwaabahomes.com',
+      maintenanceContactPhone: config.maintenanceContactPhone || '+233 24 000 0000',
     });
   } catch (err) {
     res.status(500).json({ message: 'Error reading config' });

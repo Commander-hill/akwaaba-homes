@@ -2084,8 +2084,29 @@ export const getConfig = async (req: Request, res: Response): Promise<void> => {
 
 export const updateConfig = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime } = req.body;
+    const { 
+      ghanaCardVerificationEnabled, 
+      bookingGracePeriodHours, 
+      platformCommissionPercent, 
+      roommateFinderEnabled, 
+      maintenanceMode, 
+      maintenanceEndTime,
+      maintenanceStartTime,
+      maintenanceScheduled,
+      maintenanceTitle,
+      maintenanceMessage,
+      maintenanceScope,
+      maintenanceReason,
+      maintenanceContactEmail,
+      maintenanceContactPhone,
+    } = req.body;
     
+    const previousConfig = await prisma.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
+
+    const adminIdentity = req.user?.firstName 
+      ? `${req.user.firstName} ${req.user.lastName} (${req.user.email})` 
+      : req.user?.email || 'Administrator';
+
     const updatedConfig = await prisma.systemConfig.upsert({
       where: { id: 'GLOBAL' },
       update: {
@@ -2095,6 +2116,15 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
         ...(maintenanceMode !== undefined && { maintenanceMode }),
         ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
+        ...(maintenanceStartTime !== undefined && { maintenanceStartTime: maintenanceStartTime ? new Date(maintenanceStartTime) : null }),
+        ...(maintenanceScheduled !== undefined && { maintenanceScheduled }),
+        ...(maintenanceTitle !== undefined && { maintenanceTitle }),
+        ...(maintenanceMessage !== undefined && { maintenanceMessage }),
+        ...(maintenanceScope !== undefined && { maintenanceScope }),
+        ...(maintenanceReason !== undefined && { maintenanceReason }),
+        ...(maintenanceContactEmail !== undefined && { maintenanceContactEmail }),
+        ...(maintenanceContactPhone !== undefined && { maintenanceContactPhone }),
+        maintenanceUpdatedBy: adminIdentity,
       },
       create: {
         id: 'GLOBAL',
@@ -2104,6 +2134,15 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         roommateFinderEnabled: roommateFinderEnabled ?? true,
         maintenanceMode: maintenanceMode ?? false,
         maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,
+        maintenanceStartTime: maintenanceStartTime ? new Date(maintenanceStartTime) : null,
+        maintenanceScheduled: maintenanceScheduled ?? false,
+        maintenanceTitle: maintenanceTitle ?? 'Scheduled Platform Maintenance',
+        maintenanceMessage: maintenanceMessage ?? 'AkwaabaHomes is currently undergoing scheduled maintenance to upgrade our infrastructure and improve your rental experience. We will be back online shortly.',
+        maintenanceScope: maintenanceScope ?? 'GLOBAL',
+        maintenanceReason: maintenanceReason ?? null,
+        maintenanceContactEmail: maintenanceContactEmail ?? 'support@akwaabahomes.com',
+        maintenanceContactPhone: maintenanceContactPhone ?? '+233 24 000 0000',
+        maintenanceUpdatedBy: adminIdentity,
       }
     });
 
@@ -2115,15 +2154,97 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
       console.error('Failed to emit config_updated socket event', e);
     }
 
+    // Determine granular audit action
+    let auditAction = 'MAINTENANCE_CONFIG_UPDATED';
+    if (previousConfig?.maintenanceMode !== true && updatedConfig.maintenanceMode === true) {
+      auditAction = 'MAINTENANCE_ACTIVATED';
+    } else if (previousConfig?.maintenanceMode === true && updatedConfig.maintenanceMode === false) {
+      auditAction = 'MAINTENANCE_DEACTIVATED';
+    } else if (!previousConfig?.maintenanceScheduled && updatedConfig.maintenanceScheduled === true) {
+      auditAction = 'MAINTENANCE_SCHEDULED';
+    } else if (previousConfig?.maintenanceScheduled && updatedConfig.maintenanceScheduled === false && !updatedConfig.maintenanceMode) {
+      auditAction = 'MAINTENANCE_SCHEDULE_CANCELLED';
+    }
+
     await logAudit(
-      req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL',
-      null, updatedConfig,
+      req.user.id, auditAction, 'SystemConfig', 'GLOBAL',
+      previousConfig ? {
+        maintenanceMode: previousConfig.maintenanceMode,
+        maintenanceScheduled: previousConfig.maintenanceScheduled,
+        maintenanceScope: previousConfig.maintenanceScope,
+        maintenanceEndTime: previousConfig.maintenanceEndTime,
+        maintenanceTitle: previousConfig.maintenanceTitle
+      } : null,
+      {
+        maintenanceMode: updatedConfig.maintenanceMode,
+        maintenanceScheduled: updatedConfig.maintenanceScheduled,
+        maintenanceScope: updatedConfig.maintenanceScope,
+        maintenanceStartTime: updatedConfig.maintenanceStartTime,
+        maintenanceEndTime: updatedConfig.maintenanceEndTime,
+        maintenanceTitle: updatedConfig.maintenanceTitle,
+        maintenanceReason: updatedConfig.maintenanceReason,
+        updatedBy: adminIdentity
+      },
       req.ip || req.socket.remoteAddress
     );
 
-    res.status(200).json({ message: 'Configuration updated successfully', config: updatedConfig });
+    res.status(200).json({ 
+      message: 'Configuration updated successfully', 
+      config: updatedConfig,
+      action: auditAction 
+    });
   } catch (error) {
     console.error('Error updating config:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const getMaintenanceHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit || '15'), 10) || 15));
+    const skip = (page - 1) * limit;
+
+    const where: any = {
+      OR: [
+        { entity: 'SystemConfig' },
+        { action: { startsWith: 'MAINTENANCE_' } },
+        { action: 'ADMIN_UPDATE_CONFIG' }
+      ]
+    };
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true
+            }
+          }
+        }
+      }),
+      prisma.auditLog.count({ where })
+    ]);
+
+    res.status(200).json({
+      history: logs,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching maintenance audit history:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

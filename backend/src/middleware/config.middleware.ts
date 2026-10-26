@@ -29,7 +29,7 @@ export const checkMaintenanceMode = async (req: Request, res: Response, next: Ne
         return next();
       }
 
-      // Allow authenticated ADMIN users to bypass maintenance mode
+      // Allow authenticated ADMIN and SUPER_ADMIN users to bypass maintenance mode
       let user = (req as any).user;
       if (!user) {
         let token = req.cookies?.accessToken;
@@ -37,22 +37,71 @@ export const checkMaintenanceMode = async (req: Request, res: Response, next: Ne
           token = req.headers.authorization.split(' ')[1];
         }
         if (token) {
-          const decoded = verifyAccessToken(token) as any;
-          if (decoded) {
-            user = decoded;
-            (req as any).user = decoded;
+          try {
+            const decoded = verifyAccessToken(token) as any;
+            if (decoded) {
+              user = decoded;
+              (req as any).user = decoded;
+            }
+          } catch {
+            // Invalid token, proceed as unauthenticated
           }
         }
       }
 
-      if (user && user.role === 'ADMIN') {
+      if (user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
         return next();
       }
 
+      const scope = config.maintenanceScope || 'GLOBAL';
+
+      // Selective Scope Enforcement:
+      // If maintenance is scoped to TENANTS_ONLY, permit Landlord and Caretaker traffic
+      if (scope === 'TENANTS_ONLY') {
+        if (user && (user.role === 'LANDLORD' || user.role === 'CARETAKER')) {
+          return next();
+        }
+        const isLandlordOnlyRoute = 
+          path.startsWith('/v1/payouts') || 
+          path.startsWith('/v1/expenses') || 
+          path.startsWith('/v1/occupancy') || 
+          path.startsWith('/v1/staff');
+        if (isLandlordOnlyRoute) {
+          return next();
+        }
+      }
+
+      // If maintenance is scoped to LANDLORDS_ONLY, permit Tenant traffic
+      if (scope === 'LANDLORDS_ONLY') {
+        if (user && user.role === 'TENANT') {
+          return next();
+        }
+        const isPublicTenantRoute = 
+          path.startsWith('/v1/properties') || 
+          path.startsWith('/v1/rooms') || 
+          path.startsWith('/v1/reviews') || 
+          path.startsWith('/v1/wishlist') || 
+          path.startsWith('/v1/roommates');
+        if (isPublicTenantRoute) {
+          return next();
+        }
+      }
+
+      // Compute truthful Retry-After header in seconds
+      if (config.maintenanceEndTime) {
+        const secondsLeft = Math.max(1, Math.ceil((new Date(config.maintenanceEndTime).getTime() - Date.now()) / 1000));
+        res.setHeader('Retry-After', String(secondsLeft));
+      }
+
       res.status(503).json({
-        message: 'Platform is currently undergoing scheduled maintenance. Please try again shortly.',
+        code: 'MAINTENANCE_MODE',
+        message: config.maintenanceMessage || 'Platform is currently undergoing scheduled maintenance. Please try again shortly.',
+        title: config.maintenanceTitle || 'Scheduled Platform Maintenance',
         maintenanceMode: true,
-        maintenanceEndTime: config.maintenanceEndTime
+        maintenanceScope: scope,
+        maintenanceEndTime: config.maintenanceEndTime,
+        supportEmail: config.maintenanceContactEmail || 'support@akwaabahomes.com',
+        supportPhone: config.maintenanceContactPhone || '+233 24 000 0000',
       });
       return;
     }

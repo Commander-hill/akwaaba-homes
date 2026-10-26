@@ -31,6 +31,7 @@ import {
   adminUpdateTicketStatus,
   getConfig,
   updateConfig,
+  getMaintenanceHistory,
   broadcastNotification,
   getBroadcastHistory,
   searchEntities,
@@ -125,6 +126,7 @@ router.post('/administrators', requireSuperAdmin, createAdministrator);
 router.put('/administrators/:id/status', requireSuperAdmin, toggleAdminStatus);
 router.get('/config', getConfig);
 router.put('/config', requireSuperAdmin, updateConfig);
+router.get('/maintenance/history', getMaintenanceHistory);
 router.post('/check-expirations', requireSuperAdmin, checkExpirations);
 router.post('/notifications/broadcast', requireSuperAdmin, broadcastNotification);
 router.get('/notifications/broadcasts/history', requireSuperAdmin, getBroadcastHistory);
