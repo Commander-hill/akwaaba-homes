@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
@@ -9,7 +9,6 @@ import {
   ShieldAlert,
   Power,
   Clock,
-  CheckCircle2,
   AlertTriangle,
   Loader2,
   Calendar,
@@ -20,21 +19,21 @@ import {
   Users,
   Building2,
   Globe,
-  Radio,
   Save,
-  RotateCcw,
   History,
   FileText,
   Check,
-  X,
   AlertCircle,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Search,
   Sliders,
   ShieldCheck,
-  Server
+  Server,
+  WifiOff,
+  Activity
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useDialog } from '@/providers/DialogProvider';
@@ -60,19 +59,119 @@ interface MaintenanceAuditRecord {
   } | null;
 }
 
+/**
+ * Converts a Date or ISO timestamp into a local `YYYY-MM-DDTHH:mm` string
+ * suitable for `<input type="datetime-local">` without shifting by UTC offset.
+ */
+function toLocalDateTimeInput(isoOrDate?: string | Date | null): string {
+  if (!isoOrDate) return '';
+  const d = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  if (Number.isNaN(d.getTime())) return '';
+  const tzOffsetMs = d.getTimezoneOffset() * 60 * 1000;
+  return new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 16);
+}
+
+/**
+ * Safely parses `oldData` or `newData` from an AuditLog entry whether stored as a JSON string or object.
+ */
+function parseAuditPayload(payload: any): Record<string, any> | null {
+  if (!payload) return null;
+  if (typeof payload === 'object') return payload;
+  if (typeof payload === 'string') {
+    try {
+      return JSON.parse(payload);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * Computes human-readable field-level diff summaries between `oldData` and `newData`.
+ */
+function computeAuditDiffPills(oldRaw: any, newRaw: any, action: string): string[] {
+  const oldObj = parseAuditPayload(oldRaw) || {};
+  const newObj = parseAuditPayload(newRaw) || {};
+  const pills: string[] = [];
+
+  if (oldObj.maintenanceMode !== undefined || newObj.maintenanceMode !== undefined) {
+    if (oldObj.maintenanceMode !== newObj.maintenanceMode && newObj.maintenanceMode !== undefined) {
+      pills.push(`Mode: ${oldObj.maintenanceMode ? 'Offline' : 'Online'} → ${newObj.maintenanceMode ? 'Offline' : 'Online'}`);
+    }
+  }
+
+  if (newObj.maintenanceScope && oldObj.maintenanceScope && oldObj.maintenanceScope !== newObj.maintenanceScope) {
+    pills.push(`Scope: ${oldObj.maintenanceScope} → ${newObj.maintenanceScope}`);
+  } else if (newObj.maintenanceScope && !oldObj.maintenanceScope) {
+    pills.push(`Scope: ${newObj.maintenanceScope}`);
+  }
+
+  if (newObj.maintenanceScheduled !== undefined && oldObj.maintenanceScheduled !== newObj.maintenanceScheduled) {
+    pills.push(newObj.maintenanceScheduled ? 'Window Scheduled' : 'Schedule Cleared');
+  }
+
+  if (newObj.maintenanceEndTime !== oldObj.maintenanceEndTime) {
+    if (newObj.maintenanceEndTime) {
+      const formatted = new Date(newObj.maintenanceEndTime).toLocaleString([], {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      pills.push(`Target End: ${formatted}`);
+    } else if (oldObj.maintenanceEndTime && !newObj.maintenanceEndTime) {
+      pills.push('Target End Cleared');
+    }
+  }
+
+  if (newObj.maintenanceTitle && oldObj.maintenanceTitle && newObj.maintenanceTitle !== oldObj.maintenanceTitle) {
+    pills.push('Headline Updated');
+  }
+
+  if (newObj.maintenanceMessage && oldObj.maintenanceMessage && newObj.maintenanceMessage !== oldObj.maintenanceMessage) {
+    pills.push('Advisory Copy Updated');
+  }
+
+  if (
+    (newObj.maintenanceContactEmail && newObj.maintenanceContactEmail !== oldObj.maintenanceContactEmail) ||
+    (newObj.maintenanceContactPhone && newObj.maintenanceContactPhone !== oldObj.maintenanceContactPhone)
+  ) {
+    pills.push('Support Contacts Updated');
+  }
+
+  if (pills.length === 0) {
+    if (action === 'MAINTENANCE_ACTIVATED') pills.push('Mode: Online → Offline');
+    else if (action === 'MAINTENANCE_DEACTIVATED') pills.push('Mode: Offline → Online');
+    else if (action === 'MAINTENANCE_SCHEDULED') pills.push('Maintenance Window Scheduled');
+    else if (action === 'MAINTENANCE_SCHEDULE_CANCELLED') pills.push('Scheduled Window Cancelled');
+    else pills.push('Configuration Synchronized');
+  }
+
+  return pills;
+}
+
 export default function AdminMaintenancePage() {
   const queryClient = useQueryClient();
   const { confirm } = useDialog();
   const { socket } = useSocket();
 
   // ── Queries ──
-  const { data: configData, isLoading: isLoadingConfig, refetch: refetchConfig, isFetching: isFetchingConfig } = useQuery({
+  const {
+    data: configData,
+    isLoading: isLoadingConfig,
+    isError: isConfigError,
+    error: configError,
+    refetch: refetchConfig,
+    isFetching: isFetchingConfig,
+  } = useQuery({
     queryKey: ['admin-config'],
     queryFn: async () => {
       const res = await api.get('/admin/config');
       return res.data;
     },
     staleTime: 10 * 1000,
+    retry: 1,
   });
 
   const { data: authData } = useQuery({
@@ -84,26 +183,62 @@ export default function AdminMaintenancePage() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // ── Audit History Filtering & Pagination State ──
   const [historyPage, setHistoryPage] = useState(1);
-  const { data: historyData, isLoading: isLoadingHistory, refetch: refetchHistory } = useQuery<{
+  const [historyActionFilter, setHistoryActionFilter] = useState<string>('ALL');
+  const [historySearchInput, setHistorySearchInput] = useState('');
+  const [historySearch, setHistorySearch] = useState('');
+  const [expandedAuditId, setExpandedAuditId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHistorySearch(historySearchInput.trim());
+      setHistoryPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [historySearchInput]);
+
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    refetch: refetchHistory,
+    isFetching: isFetchingHistory,
+  } = useQuery<{
     history: MaintenanceAuditRecord[];
     pagination: { page: number; limit: number; total: number; totalPages: number };
   }>({
-    queryKey: ['admin-maintenance-history', historyPage],
+    queryKey: ['admin-maintenance-history', historyPage, historyActionFilter, historySearch],
     queryFn: async () => {
-      const res = await api.get(`/admin/maintenance/history?page=${historyPage}&limit=8`);
+      const params = new URLSearchParams({
+        page: String(historyPage),
+        limit: '8',
+      });
+      if (historyActionFilter && historyActionFilter !== 'ALL') {
+        params.set('action', historyActionFilter);
+      }
+      if (historySearch) {
+        params.set('search', historySearch);
+      }
+      const res = await api.get(`/admin/maintenance/history?${params.toString()}`);
       return res.data;
     },
     staleTime: 30 * 1000,
   });
 
-  const isSuperAdmin = authData?.user?.role === 'SUPER_ADMIN';
+  const userRole = authData?.user?.role;
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const isReadOnlyAdmin = Boolean(authData?.user && userRole !== 'SUPER_ADMIN');
 
   // ── Server-derived Live State ──
   const isServerMaintenanceActive = Boolean(configData?.maintenanceMode);
   const serverEndTime = configData?.maintenanceEndTime || null;
   const serverStartTime = configData?.maintenanceStartTime || null;
   const serverScheduled = Boolean(configData?.maintenanceScheduled);
+  const operationalContext = configData?.operationalContext || {
+    pendingSubscribersCount: 0,
+    totalSubscribersCount: 0,
+    activeBookingsInFlight: 0,
+  };
 
   // ── Local Form / Configuration State ──
   const [scope, setScope] = useState<MaintenanceScope>('GLOBAL');
@@ -117,7 +252,6 @@ export default function AdminMaintenancePage() {
   const [endTime, setEndTime] = useState('');
   const [reason, setReason] = useState('');
   const [activeTab, setActiveTab] = useState<'policy' | 'message' | 'schedule'>('policy');
-  const [showPreview, setShowPreview] = useState(false);
 
   // ── Confirmation Modal State ──
   const [impactModalOpen, setImpactModalOpen] = useState(false);
@@ -136,12 +270,8 @@ export default function AdminMaintenancePage() {
       setContactEmail(configData.maintenanceContactEmail || 'support@akwaabahomes.com');
       setContactPhone(configData.maintenanceContactPhone || '+233 24 000 0000');
       setReason(configData.maintenanceReason || '');
-      setStartTime(
-        configData.maintenanceStartTime ? new Date(configData.maintenanceStartTime).toISOString().slice(0, 16) : ''
-      );
-      setEndTime(
-        configData.maintenanceEndTime ? new Date(configData.maintenanceEndTime).toISOString().slice(0, 16) : ''
-      );
+      setStartTime(toLocalDateTimeInput(configData.maintenanceStartTime));
+      setEndTime(toLocalDateTimeInput(configData.maintenanceEndTime));
     }
   }, [configData]);
 
@@ -169,8 +299,8 @@ export default function AdminMaintenancePage() {
     const origEmail = configData.maintenanceContactEmail || 'support@akwaabahomes.com';
     const origPhone = configData.maintenanceContactPhone || '+233 24 000 0000';
     const origReason = configData.maintenanceReason || '';
-    const origEnd = configData.maintenanceEndTime ? new Date(configData.maintenanceEndTime).toISOString().slice(0, 16) : '';
-    const origStart = configData.maintenanceStartTime ? new Date(configData.maintenanceStartTime).toISOString().slice(0, 16) : '';
+    const origEnd = toLocalDateTimeInput(configData.maintenanceEndTime);
+    const origStart = toLocalDateTimeInput(configData.maintenanceStartTime);
 
     return (
       scope !== origScope ||
@@ -264,9 +394,11 @@ export default function AdminMaintenancePage() {
 
   // ── Preset Handlers ──
   const handleApplyPresetMinutes = (minutes: number) => {
-    const start = new Date();
-    const future = new Date(start.getTime() + minutes * 60 * 1000);
-    setEndTime(future.toISOString().slice(0, 16));
+    if (!isSuperAdmin) return;
+    const baseTime = startTime ? new Date(startTime) : new Date();
+    const effectiveStart = Number.isNaN(baseTime.getTime()) ? new Date() : baseTime;
+    const future = new Date(effectiveStart.getTime() + minutes * 60 * 1000);
+    setEndTime(toLocalDateTimeInput(future));
   };
 
   // ── Save Draft (Without immediate activation) ──
@@ -389,12 +521,8 @@ export default function AdminMaintenancePage() {
       setContactEmail(configData.maintenanceContactEmail || 'support@akwaabahomes.com');
       setContactPhone(configData.maintenanceContactPhone || '+233 24 000 0000');
       setReason(configData.maintenanceReason || '');
-      setStartTime(
-        configData.maintenanceStartTime ? new Date(configData.maintenanceStartTime).toISOString().slice(0, 16) : ''
-      );
-      setEndTime(
-        configData.maintenanceEndTime ? new Date(configData.maintenanceEndTime).toISOString().slice(0, 16) : ''
-      );
+      setStartTime(toLocalDateTimeInput(configData.maintenanceStartTime));
+      setEndTime(toLocalDateTimeInput(configData.maintenanceEndTime));
       toast.success('Unsaved changes discarded.');
     }
   };
@@ -407,6 +535,66 @@ export default function AdminMaintenancePage() {
         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
           Loading platform availability &amp; maintenance governance controls...
         </p>
+      </div>
+    );
+  }
+
+  // ── Explicit Telemetry Error / Unknown State (Never infer "Online" when backend query fails) ──
+  if (isConfigError || !configData) {
+    return (
+      <div className="space-y-6 pb-20 animate-in fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-zinc-200 dark:border-zinc-800/80 pb-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <Link href="/admin/dashboard" className="hover:text-zinc-900 dark:hover:text-white transition">
+              Admin
+            </Link>
+            <span>/</span>
+            <span className="text-zinc-400">Governance &amp; Operations</span>
+            <span>/</span>
+            <span className="font-semibold text-zinc-900 dark:text-zinc-200">Maintenance Mode</span>
+          </div>
+        </div>
+
+        <div className="p-8 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-300 dark:border-rose-900/60 max-w-2xl mx-auto my-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 mx-auto flex items-center justify-center border border-rose-500/20">
+            <WifiOff className="w-6 h-6" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
+              Status Unknown • Telemetry Unreachable
+            </span>
+            <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
+              Unable to Verify Live Platform Availability State
+            </h2>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 max-w-lg mx-auto leading-relaxed">
+              The administration portal could not retrieve the current <code className="font-mono">SystemConfig</code> state from <code className="font-mono">/api/v1/admin/config</code>. For operational safety, maintenance controls are locked until live state verification succeeds.
+            </p>
+            {(configError as any)?.response?.data?.message && (
+              <p className="text-[11px] font-mono text-rose-600 dark:text-rose-400 pt-1">
+                Server response: {(configError as any).response.data.message}
+              </p>
+            )}
+          </div>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => refetchConfig()}
+              disabled={isFetchingConfig}
+              className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-950 text-xs font-bold transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={clsx('w-3.5 h-3.5', isFetchingConfig && 'animate-spin')} />
+              <span>Retry State Verification</span>
+            </button>
+            <Link
+              href="/maintenance"
+              target="_blank"
+              className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition flex items-center gap-1.5"
+            >
+              <span>Inspect Public Page</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }
@@ -426,10 +614,10 @@ export default function AdminMaintenancePage() {
           <span className="font-semibold text-zinc-900 dark:text-zinc-200">Maintenance Mode</span>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700">
             <Server className="w-3 h-3 text-[#0F5132] dark:text-emerald-400" />
-            <span>Environment: Production (Mainnet)</span>
+            <span>Environment: Production (GMT / UTC+00:00)</span>
           </span>
 
           <button
@@ -457,6 +645,24 @@ export default function AdminMaintenancePage() {
         </div>
       </div>
 
+      {/* ── READ-ONLY CLEARANCE BANNER FOR STANDARD ADMINS ── */}
+      {isReadOnlyAdmin && (
+        <div className="p-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-900/90 border border-zinc-300 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 text-xs text-zinc-700 dark:text-zinc-300">
+            <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div>
+              <span className="font-bold text-zinc-900 dark:text-white">Observer Mode (Read-Only Clearance): </span>
+              <span>
+                Your account role (<code className="font-mono font-semibold">{userRole}</code>) can inspect maintenance telemetry and audit logs, but <code className="font-mono font-semibold">SUPER_ADMIN</code> clearance is required to modify configuration or toggle platform availability.
+              </span>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 shrink-0">
+            Controls Locked
+          </span>
+        </div>
+      )}
+
       {/* ── PAGE TITLE & PURPOSE ── */}
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-white flex items-center gap-2.5">
@@ -482,13 +688,13 @@ export default function AdminMaintenancePage() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           
           {/* Status Badge & Headline */}
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 max-w-3xl flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={clsx(
                   'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border',
                   isServerMaintenanceActive
-                    ? 'bg-rose-500 text-white border-rose-600 animate-pulse'
+                    ? 'bg-rose-600 text-white border-rose-700'
                     : serverScheduled
                     ? 'bg-amber-500 text-white border-amber-600'
                     : 'bg-emerald-600 text-white border-emerald-700'
@@ -528,31 +734,45 @@ export default function AdminMaintenancePage() {
               </p>
             </div>
 
-            {/* Metadata Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+            {/* Metadata & Blast-Radius Telemetry Chips */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1 text-xs">
               <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-600 dark:text-zinc-400">Effective Start</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Effective Start</span>
                 <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
                   {serverStartTime ? new Date(serverStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Immediate'}
                 </span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-600 dark:text-zinc-400">Target Restoration</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Target Restoration</span>
                 <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
                   {serverEndTime ? new Date(serverEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Unspecified'}
                 </span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-600 dark:text-zinc-400">Last Modified</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">In-Flight Bookings</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
+                  {operationalContext.activeBookingsInFlight} Pending
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Notify Queue</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
+                  {operationalContext.pendingSubscribersCount} Subscribers
+                </span>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Last Modified</span>
                 <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5">
                   {configData?.updatedAt ? new Date(configData.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : 'Just now'}
                 </span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200/60 dark:border-zinc-800/60">
-                <span className="block text-[10px] uppercase font-bold text-zinc-600 dark:text-zinc-400">Updated By</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-500 dark:text-zinc-400">Updated By</span>
                 <span className="font-semibold text-zinc-900 dark:text-zinc-200 truncate block mt-0.5" title={configData?.maintenanceUpdatedBy || 'Administrator'}>
                   {configData?.maintenanceUpdatedBy ? configData.maintenanceUpdatedBy.split(' ')[0] : 'System'}
                 </span>
@@ -583,8 +803,8 @@ export default function AdminMaintenancePage() {
                 <button
                   type="button"
                   onClick={handleDeactivate}
-                  disabled={updateConfigMutation.isPending || actionInProgress !== null}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionInProgress === 'DEACTIVATE' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -597,8 +817,8 @@ export default function AdminMaintenancePage() {
                 <button
                   type="button"
                   onClick={handleOpenActivationModal}
-                  disabled={updateConfigMutation.isPending || actionInProgress !== null}
-                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
+                  className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs font-bold shadow-sm transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Power className="w-4 h-4" />
                   <span>Activate Maintenance Mode</span>
@@ -609,8 +829,8 @@ export default function AdminMaintenancePage() {
                 <button
                   type="button"
                   onClick={handleCancelSchedule}
-                  disabled={updateConfigMutation.isPending}
-                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
+                  disabled={!isSuperAdmin || updateConfigMutation.isPending}
+                  className="px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel Schedule
                 </button>
@@ -621,7 +841,7 @@ export default function AdminMaintenancePage() {
       </div>
 
       {/* ── UNSAVED CHANGES BANNER ── */}
-      {hasUnsavedChanges && (
+      {hasUnsavedChanges && isSuperAdmin && (
         <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-900/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in">
           <div className="flex items-center gap-2 text-xs font-semibold text-amber-900 dark:text-amber-200">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
@@ -652,12 +872,12 @@ export default function AdminMaintenancePage() {
       <div className="rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs overflow-hidden">
         
         {/* Navigation Tabs */}
-        <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 px-6 pt-3 gap-6 text-xs font-bold">
+        <div className="flex border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 px-6 pt-3 gap-6 text-xs font-bold overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab('policy')}
             className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2',
+              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
               activeTab === 'policy'
                 ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -671,7 +891,7 @@ export default function AdminMaintenancePage() {
             type="button"
             onClick={() => setActiveTab('message')}
             className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2',
+              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
               activeTab === 'message'
                 ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -685,7 +905,7 @@ export default function AdminMaintenancePage() {
             type="button"
             onClick={() => setActiveTab('schedule')}
             className={clsx(
-              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2',
+              'pb-3 border-b-2 transition-colors cursor-pointer flex items-center gap-2 whitespace-nowrap',
               activeTab === 'schedule'
                 ? 'border-[#0F5132] dark:border-emerald-500 text-[#0F5132] dark:text-emerald-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
@@ -713,7 +933,8 @@ export default function AdminMaintenancePage() {
               {/* Option 1: Global */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'GLOBAL'
                     ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
@@ -729,6 +950,7 @@ export default function AdminMaintenancePage() {
                       type="radio"
                       name="scope"
                       value="GLOBAL"
+                      disabled={!isSuperAdmin}
                       checked={scope === 'GLOBAL'}
                       onChange={() => setScope('GLOBAL')}
                       className="text-[#0F5132] focus:ring-[#0F5132]"
@@ -746,7 +968,8 @@ export default function AdminMaintenancePage() {
               {/* Option 2: Tenant Portal Only */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'TENANTS_ONLY'
                     ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
@@ -762,6 +985,7 @@ export default function AdminMaintenancePage() {
                       type="radio"
                       name="scope"
                       value="TENANTS_ONLY"
+                      disabled={!isSuperAdmin}
                       checked={scope === 'TENANTS_ONLY'}
                       onChange={() => setScope('TENANTS_ONLY')}
                       className="text-[#0F5132] focus:ring-[#0F5132]"
@@ -779,7 +1003,8 @@ export default function AdminMaintenancePage() {
               {/* Option 3: Landlord Portal Only */}
               <label
                 className={clsx(
-                  'p-4 rounded-xl border-2 cursor-pointer transition flex flex-col justify-between space-y-3',
+                  'p-4 rounded-xl border-2 transition flex flex-col justify-between space-y-3',
+                  !isSuperAdmin ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer',
                   scope === 'LANDLORDS_ONLY'
                     ? 'border-[#0F5132] dark:border-emerald-500 bg-emerald-500/5'
                     : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
@@ -795,6 +1020,7 @@ export default function AdminMaintenancePage() {
                       type="radio"
                       name="scope"
                       value="LANDLORDS_ONLY"
+                      disabled={!isSuperAdmin}
                       checked={scope === 'LANDLORDS_ONLY'}
                       onChange={() => setScope('LANDLORDS_ONLY')}
                       className="text-[#0F5132] focus:ring-[#0F5132]"
@@ -854,10 +1080,11 @@ export default function AdminMaintenancePage() {
                   <input
                     type="text"
                     value={title}
+                    disabled={!isSuperAdmin}
                     onChange={(e) => setTitle(e.target.value)}
                     maxLength={100}
                     placeholder="e.g. Scheduled Platform Infrastructure Upgrade"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                   <span className="text-[10px] text-zinc-400 block text-right">{title.length}/100</span>
                 </div>
@@ -869,10 +1096,11 @@ export default function AdminMaintenancePage() {
                   <textarea
                     rows={4}
                     value={message}
+                    disabled={!isSuperAdmin}
                     onChange={(e) => setMessage(e.target.value)}
                     maxLength={500}
                     placeholder="Provide a concise, professional explanation of the maintenance purpose..."
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                   <span className="text-[10px] text-zinc-400 block text-right">{message.length}/500</span>
                 </div>
@@ -885,9 +1113,10 @@ export default function AdminMaintenancePage() {
                     <input
                       type="email"
                       value={contactEmail}
+                      disabled={!isSuperAdmin}
                       onChange={(e) => setContactEmail(e.target.value)}
                       placeholder="support@akwaabahomes.com"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -898,9 +1127,10 @@ export default function AdminMaintenancePage() {
                     <input
                       type="text"
                       value={contactPhone}
+                      disabled={!isSuperAdmin}
                       onChange={(e) => setContactPhone(e.target.value)}
                       placeholder="+233 24 000 0000"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -918,7 +1148,11 @@ export default function AdminMaintenancePage() {
 
                 <div className="p-6 rounded-2xl bg-[#F8F7F2] dark:bg-[#070B09] border border-zinc-200 dark:border-zinc-800 text-center space-y-4">
                   <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                    {scope === 'TENANTS_ONLY' ? 'Tenant Portal Advisory' : 'System Maintenance'}
+                    {scope === 'TENANTS_ONLY'
+                      ? 'Tenant Portal Advisory'
+                      : scope === 'LANDLORDS_ONLY'
+                      ? 'Landlord Operations Advisory'
+                      : 'Scheduled System Maintenance'}
                   </span>
 
                   <h4 className="text-base font-black text-zinc-950 dark:text-white leading-tight">
@@ -948,14 +1182,14 @@ export default function AdminMaintenancePage() {
                 Scheduled Maintenance Window &amp; Automation
               </h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Plan ahead for routine deployments. The server automatically activates maintenance when the start time is reached and deactivates when the end time expires.
+                Plan ahead for routine deployments. The server automatically activates maintenance when the start time is reached and deactivates when the end time expires (local browser time; Ghana operates on GMT / UTC+00:00).
               </p>
             </div>
 
             {/* Quick Duration Presets */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                Quick Target Duration Presets (From Now)
+                Quick Target Duration Presets (Relative to Start Time or Now)
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
                 {[
@@ -969,8 +1203,9 @@ export default function AdminMaintenancePage() {
                   <button
                     key={preset.label}
                     type="button"
+                    disabled={!isSuperAdmin}
                     onClick={() => handleApplyPresetMinutes(preset.mins)}
-                    className="px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-[#0F5132]/10 hover:border-[#0F5132] dark:hover:border-emerald-500 hover:text-[#0F5132] dark:hover:text-emerald-400 transition cursor-pointer text-center"
+                    className="px-3 py-2 text-xs font-semibold rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-[#0F5132]/10 hover:border-[#0F5132] dark:hover:border-emerald-500 hover:text-[#0F5132] dark:hover:text-emerald-400 transition cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {preset.label}
                   </button>
@@ -982,26 +1217,28 @@ export default function AdminMaintenancePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  Planned Start Date &amp; Time
+                  Planned Start Date &amp; Time (Local / GMT)
                 </label>
                 <input
                   type="datetime-local"
                   value={startTime}
+                  disabled={!isSuperAdmin}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <span className="text-[10px] text-zinc-400">Leave blank to activate manually</span>
               </div>
 
               <div className="space-y-1">
                 <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  Target End / Restoration Time
+                  Target End / Restoration Time (Local / GMT)
                 </label>
                 <input
                   type="datetime-local"
                   value={endTime}
+                  disabled={!isSuperAdmin}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <span className="text-[10px] text-zinc-400">Used for countdown and automatic restoration</span>
               </div>
@@ -1015,9 +1252,10 @@ export default function AdminMaintenancePage() {
               <input
                 type="text"
                 value={reason}
+                disabled={!isSuperAdmin}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="e.g. INFRA-2026-Q4-01: PostgreSQL high-availability failover and SSL cert rotation"
-                className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+                className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <span className="text-[10px] text-zinc-400">Recorded strictly in administrator audit logs</span>
             </div>
@@ -1027,7 +1265,9 @@ export default function AdminMaintenancePage() {
         {/* Action Footer */}
         <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-3">
           <div className="text-xs text-zinc-500">
-            {hasUnsavedChanges ? (
+            {!isSuperAdmin ? (
+              <span className="text-zinc-500">Read-only observer view • Super Admin required for edits</span>
+            ) : hasUnsavedChanges ? (
               <span className="text-amber-600 dark:text-amber-400 font-semibold">Unsaved edits pending</span>
             ) : (
               <span>Configuration synchronized with database</span>
@@ -1035,7 +1275,7 @@ export default function AdminMaintenancePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {hasUnsavedChanges && (
+            {hasUnsavedChanges && isSuperAdmin && (
               <button
                 type="button"
                 onClick={handleDiscardChanges}
@@ -1048,8 +1288,8 @@ export default function AdminMaintenancePage() {
             <button
               type="button"
               onClick={handleSaveDraft}
-              disabled={updateConfigMutation.isPending || actionInProgress !== null}
-              className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+              disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
+              className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-black dark:bg-zinc-100 dark:hover:bg-white text-white dark:text-zinc-950 text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {actionInProgress === 'SAVE' ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1063,8 +1303,8 @@ export default function AdminMaintenancePage() {
               <button
                 type="button"
                 onClick={handleOpenActivationModal}
-                disabled={updateConfigMutation.isPending || actionInProgress !== null}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
               >
                 <Power className="w-3.5 h-3.5" />
                 <span>Review &amp; Activate</span>
@@ -1076,25 +1316,54 @@ export default function AdminMaintenancePage() {
 
       {/* ── GENUINE MAINTENANCE AUDIT TRAIL ── */}
       <div className="rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200/90 dark:border-zinc-800 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="p-5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-0.5">
             <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-2">
               <History className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
               <span>Maintenance Governance Audit Trail</span>
             </h3>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Immutable server records of administrator actions, downtime toggles, and configuration changes.
+              Immutable server records of administrator actions, downtime toggles, and field-level configuration diffs.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Search & Filter Controls */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={historySearchInput}
+                onChange={(e) => setHistorySearchInput(e.target.value)}
+                placeholder="Search admin, reason, scope..."
+                className="pl-8 pr-3 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-1 focus:ring-[#0F5132] w-48 sm:w-56"
+              />
+            </div>
+
+            <select
+              value={historyActionFilter}
+              onChange={(e) => {
+                setHistoryActionFilter(e.target.value);
+                setHistoryPage(1);
+              }}
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 focus:outline-hidden focus:ring-1 focus:ring-[#0F5132]"
+            >
+              <option value="ALL">All Events</option>
+              <option value="MAINTENANCE_ACTIVATED">Activated</option>
+              <option value="MAINTENANCE_DEACTIVATED">Deactivated</option>
+              <option value="MAINTENANCE_SCHEDULED">Scheduled</option>
+              <option value="MAINTENANCE_SCHEDULE_CANCELLED">Schedule Cancelled</option>
+              <option value="MAINTENANCE_CONFIG_UPDATED">Config Updated</option>
+            </select>
+
             <button
               type="button"
               onClick={() => refetchHistory()}
+              disabled={isFetchingHistory}
               className="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
               title="Refresh audit log"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className={clsx('w-3.5 h-3.5', isFetchingHistory && 'animate-spin text-[#0F5132]')} />
             </button>
           </div>
         </div>
@@ -1108,25 +1377,31 @@ export default function AdminMaintenancePage() {
                 <th className="px-5 py-3">Action Event</th>
                 <th className="px-5 py-3">Responsible Administrator</th>
                 <th className="px-5 py-3">Scope &amp; Reason</th>
-                <th className="px-5 py-3">State Change Summary</th>
+                <th className="px-5 py-3">Field-Level Changes</th>
+                <th className="px-4 py-3 text-right">Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200/80 dark:divide-zinc-800/80 text-zinc-700 dark:text-zinc-300">
               {isLoadingHistory ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-zinc-400">
+                  <td colSpan={6} className="py-8 text-center text-zinc-400">
                     <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2 text-[#0F5132]" />
                     <span>Loading audit records...</span>
                   </td>
                 </tr>
               ) : !historyData?.history || historyData.history.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-zinc-400">
-                    No maintenance audit events recorded in database yet.
+                  <td colSpan={6} className="py-8 text-center text-zinc-400">
+                    No matching maintenance audit events found.
                   </td>
                 </tr>
               ) : (
                 historyData.history.map((record) => {
+                  const newObj = parseAuditPayload(record.newData) || {};
+                  const oldObj = parseAuditPayload(record.oldData) || {};
+                  const diffPills = computeAuditDiffPills(record.oldData, record.newData, record.action);
+                  const isExpanded = expandedAuditId === record.id;
+
                   const actionStyle =
                     record.action === 'MAINTENANCE_ACTIVATED'
                       ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
@@ -1137,59 +1412,104 @@ export default function AdminMaintenancePage() {
                       : 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/20';
 
                   const reasonText =
-                    record.newData?.reason ||
-                    record.newData?.maintenanceReason ||
+                    newObj?.reason ||
+                    newObj?.maintenanceReason ||
                     (record.action === 'MAINTENANCE_DEACTIVATED' ? 'Routine restoration' : 'Administrative update');
 
                   return (
-                    <tr key={record.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
-                      <td className="px-5 py-3 whitespace-nowrap text-zinc-500">
-                        {new Date(record.createdAt).toLocaleString([], {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
+                    <React.Fragment key={record.id}>
+                      <tr className="hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20 transition-colors">
+                        <td className="px-5 py-3 whitespace-nowrap text-zinc-500">
+                          <div>
+                            {new Date(record.createdAt).toLocaleString([], {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </div>
+                          {record.ipAddress && (
+                            <span className="text-[10px] font-mono text-zinc-400">{record.ipAddress}</span>
+                          )}
+                        </td>
 
-                      <td className="px-5 py-3 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${actionStyle}`}>
-                          {record.action}
-                        </span>
-                      </td>
-
-                      <td className="px-5 py-3 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-200">
-                        <div>
-                          <span>
-                            {record.user
-                              ? `${record.user.firstName} ${record.user.lastName}`
-                              : 'System Administrator'}
+                        <td className="px-5 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${actionStyle}`}>
+                            {record.action}
                           </span>
-                          <span className="block text-[10px] text-zinc-400">
-                            {record.user?.email || 'superadmin'}
-                          </span>
-                        </div>
-                      </td>
+                        </td>
 
-                      <td className="px-5 py-3 max-w-xs truncate text-zinc-600 dark:text-zinc-400" title={reasonText}>
-                        <div className="font-semibold text-zinc-800 dark:text-zinc-200">
-                          {record.newData?.maintenanceScope || 'GLOBAL'}
-                        </div>
-                        <div className="truncate text-[11px] text-zinc-500">{reasonText}</div>
-                      </td>
+                        <td className="px-5 py-3 whitespace-nowrap font-medium text-zinc-900 dark:text-zinc-200">
+                          <div>
+                            <span>
+                              {record.user
+                                ? `${record.user.firstName} ${record.user.lastName}`
+                                : 'System Administrator'}
+                            </span>
+                            <span className="block text-[10px] text-zinc-400">
+                              {record.user?.email || 'superadmin'}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td className="px-5 py-3 text-[11px] text-zinc-500">
-                        {record.action === 'MAINTENANCE_ACTIVATED' ? (
-                          <span className="text-rose-600 dark:text-rose-400 font-semibold">Active (Offline)</span>
-                        ) : record.action === 'MAINTENANCE_DEACTIVATED' ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Normal (Online)</span>
-                        ) : record.newData?.maintenanceEndTime ? (
-                          <span>Target: {new Date(record.newData.maintenanceEndTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        ) : (
-                          <span>Settings updated</span>
-                        )}
-                      </td>
-                    </tr>
+                        <td className="px-5 py-3 max-w-xs truncate text-zinc-600 dark:text-zinc-400" title={reasonText}>
+                          <div className="font-semibold text-zinc-800 dark:text-zinc-200">
+                            {newObj?.maintenanceScope || oldObj?.maintenanceScope || 'GLOBAL'}
+                          </div>
+                          <div className="truncate text-[11px] text-zinc-500">{reasonText}</div>
+                        </td>
+
+                        <td className="px-5 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {diffPills.map((pill, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700"
+                              >
+                                {pill}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedAuditId(isExpanded ? null : record.id)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[11px] font-semibold text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+                          >
+                            <span>Diff</span>
+                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr className="bg-zinc-50/70 dark:bg-zinc-900/40">
+                          <td colSpan={6} className="px-5 py-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[11px]">
+                              <div className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                                <div className="font-bold text-zinc-500 uppercase tracking-wider text-[10px]">
+                                  Previous State Snapshot (oldData)
+                                </div>
+                                <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
+                                  {Object.keys(oldObj).length > 0 ? JSON.stringify(oldObj, null, 2) : 'No prior state recorded'}
+                                </pre>
+                              </div>
+
+                              <div className="p-3 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 space-y-1.5">
+                                <div className="font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider text-[10px]">
+                                  Applied State Snapshot (newData)
+                                </div>
+                                <pre className="font-mono text-[11px] text-zinc-700 dark:text-zinc-300 overflow-x-auto whitespace-pre-wrap">
+                                  {Object.keys(newObj).length > 0 ? JSON.stringify(newObj, null, 2) : 'No new state recorded'}
+                                </pre>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })
               )}
@@ -1240,12 +1560,12 @@ export default function AdminMaintenancePage() {
                   Confirm Platform Maintenance Mode Activation
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  You are about to suspend live public services on AkwaabaHomes. Please review the operational impact before confirming.
+                  You are about to suspend live public services on AkwaabaHomes. Please review the operational blast radius before confirming.
                 </p>
               </div>
             </div>
 
-            {/* Impact Summary Checklist */}
+            {/* Impact Summary & Live Blast-Radius Telemetry */}
             <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 space-y-2.5 text-xs">
               <div className="flex justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-2">
                 <span className="text-zinc-500">Enforced Scope:</span>
@@ -1258,6 +1578,16 @@ export default function AdminMaintenancePage() {
                 <span className="text-zinc-500">Affected User Traffic:</span>
                 <span className="font-bold text-zinc-900 dark:text-white">
                   {scope === 'GLOBAL' ? 'Students, Tenants & Landlords' : scope === 'TENANTS_ONLY' ? 'Students & Tenants' : 'Landlords'}
+                </span>
+              </div>
+
+              <div className="flex justify-between border-b border-zinc-200/60 dark:border-zinc-800/60 pb-2">
+                <span className="text-zinc-500 flex items-center gap-1">
+                  <Activity className="w-3.5 h-3.5 text-amber-500" />
+                  <span>In-Flight Pending Bookings:</span>
+                </span>
+                <span className="font-bold text-zinc-900 dark:text-white">
+                  {operationalContext.activeBookingsInFlight} active reservation(s)
                 </span>
               </div>
 

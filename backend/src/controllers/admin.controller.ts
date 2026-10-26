@@ -2074,8 +2074,21 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
 
 export const getConfig = async (req: Request, res: Response): Promise<void> => {
   try {
-    const config = await getSystemConfig();
-    res.status(200).json(config);
+    const [config, pendingSubscribersCount, totalSubscribersCount, activeBookingsInFlight] = await Promise.all([
+      getSystemConfig(),
+      prisma.maintenanceSubscriber.count({ where: { notified: false } }).catch(() => 0),
+      prisma.maintenanceSubscriber.count().catch(() => 0),
+      prisma.booking.count({ where: { status: { in: ['PENDING', 'APPROVED'] } } }).catch(() => 0),
+    ]);
+
+    res.status(200).json({
+      ...config,
+      operationalContext: {
+        pendingSubscribersCount,
+        totalSubscribersCount,
+        activeBookingsInFlight,
+      },
+    });
   } catch (error) {
     console.error('Error fetching config:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -2172,8 +2185,13 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         maintenanceMode: previousConfig.maintenanceMode,
         maintenanceScheduled: previousConfig.maintenanceScheduled,
         maintenanceScope: previousConfig.maintenanceScope,
+        maintenanceStartTime: previousConfig.maintenanceStartTime,
         maintenanceEndTime: previousConfig.maintenanceEndTime,
-        maintenanceTitle: previousConfig.maintenanceTitle
+        maintenanceTitle: previousConfig.maintenanceTitle,
+        maintenanceMessage: previousConfig.maintenanceMessage,
+        maintenanceReason: previousConfig.maintenanceReason,
+        maintenanceContactEmail: previousConfig.maintenanceContactEmail,
+        maintenanceContactPhone: previousConfig.maintenanceContactPhone,
       } : null,
       {
         maintenanceMode: updatedConfig.maintenanceMode,
@@ -2182,7 +2200,10 @@ export const updateConfig = async (req: Request, res: Response): Promise<void> =
         maintenanceStartTime: updatedConfig.maintenanceStartTime,
         maintenanceEndTime: updatedConfig.maintenanceEndTime,
         maintenanceTitle: updatedConfig.maintenanceTitle,
+        maintenanceMessage: updatedConfig.maintenanceMessage,
         maintenanceReason: updatedConfig.maintenanceReason,
+        maintenanceContactEmail: updatedConfig.maintenanceContactEmail,
+        maintenanceContactPhone: updatedConfig.maintenanceContactPhone,
         updatedBy: adminIdentity
       },
       req.ip || req.socket.remoteAddress
@@ -2203,15 +2224,38 @@ export const getMaintenanceHistory = async (req: Request, res: Response): Promis
   try {
     const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit || '15'), 10) || 15));
+    const actionFilter = typeof req.query.action === 'string' ? req.query.action.trim() : '';
+    const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      OR: [
-        { entity: 'SystemConfig' },
-        { action: { startsWith: 'MAINTENANCE_' } },
-        { action: 'ADMIN_UPDATE_CONFIG' }
-      ]
-    };
+    const andConditions: any[] = [
+      {
+        OR: [
+          { entity: 'SystemConfig' },
+          { action: { startsWith: 'MAINTENANCE_' } },
+          { action: 'ADMIN_UPDATE_CONFIG' }
+        ]
+      }
+    ];
+
+    if (actionFilter && actionFilter !== 'ALL') {
+      andConditions.push({ action: actionFilter });
+    }
+
+    if (search) {
+      andConditions.push({
+        OR: [
+          { action: { contains: search, mode: 'insensitive' } },
+          { newData: { contains: search, mode: 'insensitive' } },
+          { oldData: { contains: search, mode: 'insensitive' } },
+          { user: { firstName: { contains: search, mode: 'insensitive' } } },
+          { user: { lastName: { contains: search, mode: 'insensitive' } } },
+          { user: { email: { contains: search, mode: 'insensitive' } } },
+        ]
+      });
+    }
+
+    const where: any = andConditions.length === 1 ? andConditions[0] : { AND: andConditions };
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({

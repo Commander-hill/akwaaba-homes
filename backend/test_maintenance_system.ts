@@ -52,10 +52,13 @@ async function runMaintenanceTests() {
       baseURL: BASE_URL
     });
 
-    // Test 1: Fetch Admin Config
-    console.log('[Test 1] Fetch initial admin maintenance config...');
+    // Test 1: Fetch Admin Config & Operational Context
+    console.log('[Test 1] Fetch initial admin maintenance config & blast-radius telemetry...');
     const initRes = await adminClient.get('/v1/admin/config');
-    console.log(`  ✅ HTTP ${initRes.status} — Current Mode: ${initRes.data.maintenanceMode ? 'ACTIVE' : 'NORMAL'}`);
+    if (!initRes.data.operationalContext || typeof initRes.data.operationalContext.activeBookingsInFlight !== 'number') {
+      throw new Error(`Missing operationalContext in /v1/admin/config: ${JSON.stringify(initRes.data)}`);
+    }
+    console.log(`  ✅ HTTP ${initRes.status} — Current Mode: ${initRes.data.maintenanceMode ? 'ACTIVE' : 'NORMAL'} | In-Flight Bookings: ${initRes.data.operationalContext.activeBookingsInFlight}, Subscribers: ${initRes.data.operationalContext.pendingSubscribersCount}`);
 
     // Test 2: Activate Maintenance Mode with custom advisory parameters
     console.log('\n[Test 2] Activating Maintenance Mode via PUT /v1/admin/config...');
@@ -102,12 +105,15 @@ async function runMaintenanceTests() {
     const adminCheckRes = await adminClient.get('/v1/admin/users?limit=5');
     console.log(`  ✅ HTTP ${adminCheckRes.status} — Administrator bypass confirmed!`);
 
-    // Test 6: Verify Maintenance Audit History records the activation
-    console.log('\n[Test 6] Verifying Maintenance Audit History endpoint...');
-    const historyRes = await adminClient.get('/v1/admin/maintenance/history');
+    // Test 6: Verify Maintenance Audit History, Diff Snapshots & Search/Filter
+    console.log('\n[Test 6] Verifying Maintenance Audit History endpoint (action filter + search + oldData/newData diffs)...');
+    const historyRes = await adminClient.get('/v1/admin/maintenance/history?action=MAINTENANCE_ACTIVATED&search=re-optimization');
     const logs = historyRes.data.history || [];
     const latestEvent = logs[0];
-    console.log(`  ✅ Found ${logs.length} audit records. Latest event: [${latestEvent?.action}] by ${latestEvent?.user?.email || 'Admin'}`);
+    if (!latestEvent || latestEvent.action !== 'MAINTENANCE_ACTIVATED') {
+      throw new Error(`Filtered audit query did not return MAINTENANCE_ACTIVATED record: ${JSON.stringify(historyRes.data)}`);
+    }
+    console.log(`  ✅ Found ${logs.length} matching audit records. Latest event: [${latestEvent?.action}] by ${latestEvent?.user?.email || 'Admin'}`);
 
     // Test 7: Deactivate Maintenance Mode
     console.log('\n[Test 7] Deactivating Maintenance Mode & restoring public access...');
