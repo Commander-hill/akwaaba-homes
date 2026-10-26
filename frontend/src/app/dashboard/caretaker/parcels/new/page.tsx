@@ -113,13 +113,15 @@ function CaretakerParcelContent() {
 
   const logParcelMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await api.post('/parcels', payload);
+      const res = await api.post('/deliveries', payload);
       return res.data;
     },
     onSuccess: (data: any) => {
       const otp = data?.delivery?.pickupCode || 'Generated';
       toast.success(`Parcel logged! Resident pickup OTP: ${otp}`);
+      queryClient.invalidateQueries({ queryKey: ['deliveries'] });
       queryClient.invalidateQueries({ queryKey: ['parcels'] });
+      queryClient.invalidateQueries({ queryKey: ['staff', 'mine'] });
       router.push('/dashboard/caretaker');
     },
     onError: (err: any) => {

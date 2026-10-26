@@ -28,12 +28,7 @@ import HostelDisciplinaryTab from '@/components/landlord/HostelDisciplinaryTab';
 import AlertBanner from '@/components/AlertBanner';
 import toast from 'react-hot-toast';
 
-function getImageUrl(path?: string | null): string {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  return `${backendUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-}
+import { getImageUrl } from '@/lib/utils';
 
 export type LandlordPillar = 'portfolio' | 'financials' | 'tenancies' | 'operations';
 

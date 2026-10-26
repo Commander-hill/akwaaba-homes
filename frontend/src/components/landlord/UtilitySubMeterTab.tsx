@@ -110,7 +110,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
     queryKey: ['propertyBillSplits', selectedPropertyId],
     queryFn: async () => {
       if (!selectedPropertyId) return { billSplits: [] };
-      const res = await api.get(`/billsplits/property/${selectedPropertyId}`);
+      const res = await api.get(`/bill-splits/property/${selectedPropertyId}`);
       return res.data;
     },
     enabled: Boolean(selectedPropertyId)
@@ -176,7 +176,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
         }))
       };
 
-      const res = await api.post('/billsplits', payload);
+      const res = await api.post('/bill-splits', payload);
       return res.data;
     },
     onSuccess: (resData) => {
@@ -191,7 +191,7 @@ export default function UtilitySubMeterTab({ properties = [] }: UtilitySubMeterT
   // Toggle participant payment status mutation
   const togglePaidMutation = useMutation({
     mutationFn: async ({ participantId, isPaid }: { participantId: string; isPaid: boolean }) => {
-      const res = await api.patch(`/billsplits/participants/${participantId}/status`, { isPaid });
+      const res = await api.patch(`/bill-splits/participants/${participantId}/status`, { isPaid });
       return res.data;
     },
     onSuccess: () => {

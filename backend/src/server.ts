@@ -350,6 +350,7 @@ app.use('/api/v1/lease-renewals', leaseRenewalRoutes);
 app.use('/api/v1/deliveries', deliveryRoutes);
 app.use('/api/v1/parcels', deliveryRoutes);
 app.use('/api/v1/bill-splits', billSplitRoutes);
+app.use('/api/v1/billsplits', billSplitRoutes);
 
 // ─── 404 & Global Error Handlers (must be LAST) ──────────────────────────────
 app.use(notFoundHandler);

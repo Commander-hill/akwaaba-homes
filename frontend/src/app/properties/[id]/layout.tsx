@@ -14,20 +14,46 @@ export async function generateMetadata(
   const id = unwrappedParams.id;
 
   try {
-    const res = await axios.get(`http://localhost:5000/api/v1/properties/${id}`);
-    const property = res.data.property;
+    const apiBase = (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1').replace(/\/$/, '');
+    const res = await axios.get(`${apiBase}/properties/${id}`);
+    const property = res.data?.property;
 
-    const parsedImages = property.images ? JSON.parse(property.images) : [];
-    const mainImage = parsedImages.length > 0 
-      ? `http://localhost:5000${parsedImages[0]}` 
-      : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
+    if (!property) {
+      return {
+        title: 'Property Not Found | AkwaabaHomes',
+        description: 'The property you are looking for does not exist.',
+      };
+    }
+
+    let parsedImages: string[] = [];
+    if (Array.isArray(property.images)) {
+      parsedImages = property.images;
+    } else if (typeof property.images === 'string') {
+      try {
+        parsedImages = JSON.parse(property.images);
+      } catch {
+        parsedImages = [property.images];
+      }
+    }
+
+    const defaultImg = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
+    let mainImage = defaultImg;
+    if (parsedImages.length > 0 && parsedImages[0]) {
+      const first = parsedImages[0];
+      if (first.startsWith('http://') || first.startsWith('https://')) {
+        mainImage = first;
+      } else {
+        const rootBase = apiBase.replace(/\/api(\/v1)?\/?$/, '');
+        mainImage = `${rootBase}${first.startsWith('/') ? '' : '/'}${first}`;
+      }
+    }
 
     return {
       title: `${property.title} | AkwaabaHomes`,
-      description: `${property.type} at ${property.location} - ₵${property.price}/year. ${property.description.substring(0, 100)}...`,
+      description: `${property.type || 'Property'} in ${property.location || 'Ghana'} - GH₵${property.price || 0}/yr. ${property.description ? property.description.substring(0, 100) : ''}...`,
       openGraph: {
         title: property.title,
-        description: property.description.substring(0, 150),
+        description: property.description ? property.description.substring(0, 150) : '',
         images: [mainImage],
       },
     };

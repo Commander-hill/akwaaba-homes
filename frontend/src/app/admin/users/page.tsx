@@ -31,15 +31,7 @@ import {
   Ban
 } from 'lucide-react';
 
-// Helper to safely format image URLs (Cloudinary, S3, data URIs, or local backend paths)
-const getImageUrl = (url: string | null | undefined) => {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
-  }
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  return `${baseUrl.replace(/\/$/, '')}${url.startsWith('/') ? '' : '/'}${url}`;
-};
+import { getImageUrl } from '@/lib/utils';
 
 type FilterRole = 'ALL' | 'LANDLORD' | 'TENANT' | 'CARETAKER' | 'ADMIN' | 'PENDING_KYC' | 'UNDER_REVIEW' | 'RESUBMISSION_REQUIRED' | 'UNLOCK_REQUESTS' | 'SUSPENDED';
 
