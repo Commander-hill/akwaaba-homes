@@ -436,25 +436,39 @@ export async function generateTenancyAgreementPDF(data: {
 
 /**
  * Generate official Payment Receipt / Invoice PDF
- * Crafted in traditional Ghanaian Accounting & Statutory Rent Receipt format (Rent Act, 1963 Act 220, s. 20)
+ * Human-engineered fintech/proptech accounting layout (compliant with Rent Act, 1963 Act 220, s. 20)
  */
 export async function generateReceiptPDF(data: {
   transactionId: string;
+  bookingId?: string;
   reference: string;
   studentName: string;
   studentEmail: string;
   studentPhone?: string | null;
+  studentId?: string | null;
+  studentCampus?: string | null;
+  landlordName?: string | null;
+  landlordPhone?: string | null;
+  landlordEmail?: string | null;
   propertyTitle: string;
+  propertyLocation?: string | null;
   roomType: string;
+  unitAllocation?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  pricePeriod?: string | null;
+  baseRentAmount?: number;
+  cautionDepositAmount?: number;
   grossAmount: number;
   platformFee: number;
   netAmount: number;
   paymentMethod: string;
   paymentStatus: string;
+  checkInCode?: string | null;
   paidAt: string;
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 54, size: 'A4' });
+    const doc = new PDFDocument({ margin: 48, size: 'A4' });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk) => chunks.push(chunk));
@@ -462,216 +476,319 @@ export async function generateReceiptPDF(data: {
     doc.on('error', (err) => reject(err));
 
     const issueDate = new Date(data.paidAt).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
+      day: '2-digit',
+      month: 'short',
       year: 'numeric',
     });
-    const receiptNo = data.reference || `AKW/REC/${new Date(data.paidAt).getFullYear()}/${data.transactionId.slice(0, 6).toUpperCase()}`;
-    const formattedAmount = Number(data.grossAmount || 0).toLocaleString('en-GH', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+    const receiptNo = data.reference || `RCP-${data.transactionId.slice(0, 8).toUpperCase()}`;
+    const fmt = (val: number) =>
+      Number(val || 0).toLocaleString('en-GH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
 
-    // Top Classical Header
+    const totalPaid = Number(data.grossAmount || 0);
+    const cautionDeposit = Number(data.cautionDepositAmount || 0);
+    const baseRent = data.baseRentAmount !== undefined
+      ? Number(data.baseRentAmount)
+      : Math.max(0, totalPaid - cautionDeposit);
+    const isPaid = ['SUCCESS', 'COMPLETED', 'PAID'].includes((data.paymentStatus || '').toUpperCase());
+
+    const leftX = 48;
+    const rightEdge = 547;
+    const contentWidth = rightEdge - leftX; // 499
+
+    // ── Top Accent Bar ──
+    doc.rect(leftX, 42, contentWidth, 4).fill('#173D32');
+
+    // ── Brand & Document Title (Left) ──
+    doc
+      .fillColor('#173D32')
+      .font('Helvetica-Bold')
+      .fontSize(13)
+      .text('AKWAABAHOMES', leftX, 60, { characterSpacing: 0.8 });
+
     doc
       .fillColor('#111827')
-      .font('Times-Bold')
-      .fontSize(10)
-      .text('REPUBLIC OF GHANA', 54, 54, { characterSpacing: 1.5 });
+      .font('Helvetica-Bold')
+      .fontSize(18)
+      .text('Rent Payment Receipt', leftX, 80);
 
     doc
-      .font('Times-Bold')
+      .fillColor('#6B7280')
+      .font('Helvetica')
+      .fontSize(9)
+      .text(`Receipt No: ${receiptNo}   •   Issued: ${issueDate}`, leftX, 104);
+
+    // ── Amount & Status Pill (Right) ──
+    const badgeText = isPaid ? 'PAID' : (data.paymentStatus || 'PENDING').toUpperCase();
+    const badgeBg = isPaid ? '#ECFDF3' : '#FEF3C7';
+    const badgeColor = isPaid ? '#166534' : '#92400E';
+
+    doc.roundedRect(rightEdge - 72, 58, 72, 18, 4).fill(badgeBg);
+    doc
+      .fillColor(badgeColor)
+      .font('Helvetica-Bold')
+      .fontSize(8.5)
+      .text(badgeText, rightEdge - 72, 63, { width: 72, align: 'center' });
+
+    doc
+      .fillColor('#6B7280')
+      .font('Helvetica')
+      .fontSize(8.5)
+      .text('TOTAL PAID', rightEdge - 180, 82, { width: 180, align: 'right' });
+
+    doc
+      .fillColor('#111827')
+      .font('Helvetica-Bold')
       .fontSize(16)
-      .text('OFFICIAL RENT PAYMENT RECEIPT', 54, 70);
+      .text(`GHS ${fmt(totalPaid)}`, rightEdge - 180, 94, { width: 180, align: 'right' });
+
+    // Divider
+    doc.moveTo(leftX, 126).lineTo(rightEdge, 126).lineWidth(0.75).strokeColor('#E5E7EB').stroke();
+
+    // ── Two-Column Counterparty Section (Received From vs. Property & Landlord) ──
+    const partyY = 142;
+    const colW = 235;
+    const col2X = leftX + colW + 29;
 
     doc
-      .font('Times-Italic')
-      .fontSize(10)
-      .fillColor('#374151')
-      .text('Issued Pursuant to Section 20 of the Rent Act, 1963 (Act 220)', 54, 90);
+      .fillColor('#6B7280')
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .text('RECEIVED FROM (TENANT)', leftX, partyY, { characterSpacing: 0.6 });
 
-    // Right-aligned Voucher Metadata
     doc
-      .font('Times-Bold')
-      .fontSize(9.5)
       .fillColor('#111827')
-      .text(`Voucher No.: ${receiptNo}`, 320, 54, { width: 221, align: 'right' })
-      .font('Times-Roman')
-      .text(`Date of Issue: ${issueDate}`, 320, 69, { width: 221, align: 'right' })
-      .text(`Settlement Status: ${data.paymentStatus.toUpperCase()}`, 320, 84, { width: 221, align: 'right' });
+      .font('Helvetica-Bold')
+      .fontSize(10.5)
+      .text(data.studentName, leftX, partyY + 14, { width: colW });
 
-    // Double Horizontal Rule
-    doc.moveTo(54, 112).lineTo(541, 112).lineWidth(1.5).strokeColor('#111827').stroke();
-    doc.moveTo(54, 115).lineTo(541, 115).lineWidth(0.5).strokeColor('#111827').stroke();
-
-    // Formal Acknowledgment Paragraph
+    let leftPartyCurY = partyY + 29;
     doc
-      .font('Times-Roman')
-      .fontSize(11)
-      .fillColor('#111827')
-      .text(
-        `RECEIVED with thanks from ${data.studentName} the sum of GHS ${formattedAmount} being lawful rent advance and tenancy settlement in respect of the demised residential premises known as ${data.propertyTitle} (${data.roomType}), as detailed in the Schedule below.`,
-        54,
-        132,
-        { width: 487, align: 'justify', lineGap: 3 }
-      );
+      .fillColor('#4B5563')
+      .font('Helvetica')
+      .fontSize(9)
+      .text(data.studentEmail, leftX, leftPartyCurY, { width: colW });
+    leftPartyCurY += 13;
 
-    // Schedule I: Particulars Table
-    const schedY = 188;
+    if (data.studentPhone && data.studentPhone !== 'N/A') {
+      doc.text(data.studentPhone, leftX, leftPartyCurY, { width: colW });
+      leftPartyCurY += 13;
+    }
+    if (data.studentId || data.studentCampus) {
+      const studentMeta = [
+        data.studentId ? `ID: ${data.studentId}` : null,
+        data.studentCampus || null,
+      ]
+        .filter(Boolean)
+        .join(' • ');
+      doc.text(studentMeta, leftX, leftPartyCurY, { width: colW });
+    }
+
+    // Right Column: Property & Landlord
     doc
-      .font('Times-Bold')
-      .fontSize(9.5)
-      .fillColor('#111827')
-      .text('SCHEDULE I — PARTICULARS OF PAYER & DEMISED PREMISES', 54, schedY);
+      .fillColor('#6B7280')
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .text('PROPERTY & LANDLORD', col2X, partyY, { characterSpacing: 0.6 });
 
-    const rows: [string, string][] = [
-      ['Tenant / Payer Full Name', data.studentName],
-      ['Contact Particulars', `${data.studentPhone || 'Recorded on File'}  |  ${data.studentEmail}`],
-      ['Demised Premises', data.propertyTitle],
-      ['Unit / Room Allocation', data.roomType || 'Self-Contained Residential Unit'],
-      ['Remittance Instrument', `${data.paymentMethod} (Escrow Custodianship Account)`],
+    doc
+      .fillColor('#111827')
+      .font('Helvetica-Bold')
+      .fontSize(10.5)
+      .text(data.propertyTitle, col2X, partyY + 14, { width: colW });
+
+    let rightPartyCurY = partyY + 29;
+    doc
+      .fillColor('#4B5563')
+      .font('Helvetica')
+      .fontSize(9);
+
+    if (data.propertyLocation) {
+      doc.text(data.propertyLocation, col2X, rightPartyCurY, { width: colW });
+      rightPartyCurY += 13;
+    }
+    if (data.landlordName) {
+      doc.text(`Landlord: ${data.landlordName}`, col2X, rightPartyCurY, { width: colW });
+      rightPartyCurY += 13;
+    }
+    if (data.landlordPhone && data.landlordPhone !== 'N/A') {
+      doc.text(`Tel: ${data.landlordPhone}`, col2X, rightPartyCurY, { width: colW });
+    }
+
+    // ── 4-Column Tenancy & Allocation Metadata Strip ──
+    const stripY = 224;
+    const stripH = 48;
+    doc.roundedRect(leftX, stripY, contentWidth, stripH, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
+
+    const cellW = contentWidth / 4;
+    const periodText =
+      data.startDate && data.endDate ? `${data.startDate} – ${data.endDate}` : 'Current Tenancy Term';
+    const metaCells = [
+      { label: 'ROOM / UNIT TYPE', value: data.roomType || 'Residential Unit' },
+      { label: 'ASSIGNED UNIT', value: data.unitAllocation || 'Standard Unit' },
+      { label: 'TENANCY PERIOD', value: periodText },
+      { label: 'PAYMENT CHANNEL', value: data.paymentMethod || 'Paystack (MoMo / Card)' },
     ];
 
-    let curY = schedY + 16;
-    const col1W = 165;
-    const col2W = 322;
-    const rowH = 24;
-
-    rows.forEach(([label, val]) => {
-      doc.rect(54, curY, col1W, rowH).fillAndStroke('#F9FAFB', '#9CA3AF');
-      doc.rect(54 + col1W, curY, col2W, rowH).fillAndStroke('#FFFFFF', '#9CA3AF');
-
+    metaCells.forEach((cell, idx) => {
+      const cx = leftX + idx * cellW + 10;
+      if (idx > 0) {
+        doc
+          .moveTo(leftX + idx * cellW, stripY + 8)
+          .lineTo(leftX + idx * cellW, stripY + stripH - 8)
+          .lineWidth(0.5)
+          .strokeColor('#E5E7EB')
+          .stroke();
+      }
+      doc
+        .fillColor('#6B7280')
+        .font('Helvetica-Bold')
+        .fontSize(7)
+        .text(cell.label, cx, stripY + 10, { width: cellW - 16 });
       doc
         .fillColor('#111827')
-        .font('Times-Bold')
-        .fontSize(9.5)
-        .text(label, 62, curY + 7, { width: col1W - 16 });
-
-      doc
-        .fillColor('#111827')
-        .font('Times-Roman')
-        .fontSize(9.5)
-        .text(val, 54 + col1W + 10, curY + 7, { width: col2W - 20 });
-
-      curY += rowH;
+        .font('Helvetica-Bold')
+        .fontSize(8.5)
+        .text(cell.value, cx, stripY + 23, { width: cellW - 16, ellipsis: true });
     });
 
-    // Schedule II: Statement of Account Table
-    const tableTitleY = curY + 24;
-    doc
-      .font('Times-Bold')
-      .fontSize(9.5)
-      .fillColor('#111827')
-      .text('SCHEDULE II — STATEMENT OF ACCOUNT & RENT ASSESSMENT', 54, tableTitleY);
-
-    const tableY = tableTitleY + 16;
-    // Header Row
-    doc.rect(54, tableY, 45, 24).fillAndStroke('#F3F4F6', '#4B5563');
-    doc.rect(99, tableY, 322, 24).fillAndStroke('#F3F4F6', '#4B5563');
-    doc.rect(421, tableY, 120, 24).fillAndStroke('#F3F4F6', '#4B5563');
+    // ── Line-Item Charge Breakdown Table ──
+    const tableY = 294;
+    doc.rect(leftX, tableY, contentWidth, 26).fill('#F3F4F6');
+    doc.moveTo(leftX, tableY + 26).lineTo(rightEdge, tableY + 26).lineWidth(0.75).strokeColor('#D1D5DB').stroke();
 
     doc
-      .fillColor('#111827')
-      .font('Times-Bold')
-      .fontSize(9.5)
-      .text('ITEM', 62, tableY + 7)
-      .text('DESCRIPTION OF CHARGE', 107, tableY + 7)
-      .text('AMOUNT (GHS)', 429, tableY + 7, { width: 104, align: 'right' });
-
-    // Row 1
-    const r1Y = tableY + 24;
-    doc.rect(54, r1Y, 45, 34).strokeColor('#9CA3AF').stroke();
-    doc.rect(99, r1Y, 322, 34).strokeColor('#9CA3AF').stroke();
-    doc.rect(421, r1Y, 120, 34).strokeColor('#9CA3AF').stroke();
-
-    doc
-      .font('Times-Roman')
-      .fontSize(9.5)
       .fillColor('#374151')
-      .text('01', 62, r1Y + 11)
-      .font('Times-Bold')
+      .font('Helvetica-Bold')
+      .fontSize(8)
+      .text('DESCRIPTION', leftX + 12, tableY + 9)
+      .text('TERM / BILLING BASIS', leftX + 250, tableY + 9)
+      .text('AMOUNT (GHS)', rightEdge - 120, tableY + 9, { width: 108, align: 'right' });
+
+    let rowY = tableY + 26;
+
+    // Row 1: Base Rent
+    doc
       .fillColor('#111827')
-      .text(`Residential Tenancy Advance Rent (${data.roomType})`, 107, r1Y + 7)
-      .font('Times-Roman')
+      .font('Helvetica-Bold')
+      .fontSize(9.5)
+      .text(`Rent — ${data.propertyTitle}`, leftX + 12, rowY + 10, { width: 228 });
+    doc
+      .fillColor('#6B7280')
+      .font('Helvetica')
       .fontSize(8.5)
-      .fillColor('#4B5563')
-      .text(`Principal rent assessment for ${data.propertyTitle}`, 107, r1Y + 19)
-      .font('Times-Bold')
-      .fontSize(10)
-      .fillColor('#111827')
-      .text(formattedAmount, 429, r1Y + 11, { width: 104, align: 'right' });
-
-    // Row 2
-    const r2Y = r1Y + 34;
-    doc.rect(54, r2Y, 45, 28).strokeColor('#9CA3AF').stroke();
-    doc.rect(99, r2Y, 322, 28).strokeColor('#9CA3AF').stroke();
-    doc.rect(421, r2Y, 120, 28).strokeColor('#9CA3AF').stroke();
-
-    doc
-      .font('Times-Roman')
-      .fontSize(9.5)
-      .fillColor('#374151')
-      .text('02', 62, r2Y + 9)
-      .fillColor('#111827')
-      .text('Agency & Viewing Surcharge (Direct Landlord-to-Tenant Settlement)', 107, r2Y + 9)
-      .text('0.00', 429, r2Y + 9, { width: 104, align: 'right' });
-
-    // Total Row
-    const totY = r2Y + 28;
-    doc.rect(54, totY, 367, 28).fillAndStroke('#F9FAFB', '#111827');
-    doc.rect(421, totY, 120, 28).fillAndStroke('#F9FAFB', '#111827');
-
-    doc
-      .font('Times-Bold')
-      .fontSize(10)
-      .fillColor('#111827')
-      .text('TOTAL SUM RECEIVED (GHS)', 62, totY + 9, { width: 349, align: 'right' })
-      .fontSize(11)
-      .text(`GHS ${formattedAmount}`, 429, totY + 8, { width: 104, align: 'right' });
-
-    // Statutory Notice & Sign-off Block
-    const signY = totY + 52;
-    doc
-      .font('Times-Bold')
-      .fontSize(9)
-      .fillColor('#111827')
-      .text('STATUTORY NOTICE (RENT ACT, 1963 ACT 220, SECTION 20):', 54, signY);
-
-    doc
-      .font('Times-Roman')
-      .fontSize(9)
-      .fillColor('#374151')
       .text(
-        'This receipt constitutes conclusive evidence of rent payment for the premises stated herein. Retain this original voucher for inspection by the Rent Officer, University Bursar, or Landlord Representative.',
-        54,
-        signY + 14,
-        { width: 260, align: 'justify', lineGap: 2 }
+        [data.roomType, data.unitAllocation].filter(Boolean).join(' • '),
+        leftX + 12,
+        rowY + 24,
+        { width: 228 }
+      );
+    doc
+      .fillColor('#374151')
+      .font('Helvetica')
+      .fontSize(8.5)
+      .text(periodText, leftX + 250, rowY + 16, { width: 145 });
+    doc
+      .fillColor('#111827')
+      .font('Courier-Bold')
+      .fontSize(10)
+      .text(fmt(baseRent), rightEdge - 120, rowY + 15, { width: 108, align: 'right' });
+
+    rowY += 44;
+    doc.moveTo(leftX, rowY).lineTo(rightEdge, rowY).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
+
+    // Row 2: Refundable Security / Caution Deposit (if > 0)
+    if (cautionDeposit > 0) {
+      doc
+        .fillColor('#111827')
+        .font('Helvetica-Bold')
+        .fontSize(9.5)
+        .text('Refundable Security / Caution Deposit', leftX + 12, rowY + 10, { width: 228 });
+      doc
+        .fillColor('#6B7280')
+        .font('Helvetica')
+        .fontSize(8.5)
+        .text('Held in escrow against move-out inspection', leftX + 12, rowY + 24, { width: 228 });
+      doc
+        .fillColor('#374151')
+        .font('Helvetica')
+        .fontSize(8.5)
+        .text('One-time refundable', leftX + 250, rowY + 16, { width: 145 });
+      doc
+        .fillColor('#111827')
+        .font('Courier-Bold')
+        .fontSize(10)
+        .text(fmt(cautionDeposit), rightEdge - 120, rowY + 15, { width: 108, align: 'right' });
+
+      rowY += 44;
+      doc.moveTo(leftX, rowY).lineTo(rightEdge, rowY).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
+    }
+
+    // ── Summary Totals Block (Right-aligned) ──
+    const summaryX = rightEdge - 230;
+    let sumY = rowY + 14;
+
+    const drawSummaryLine = (label: string, val: string, bold = false) => {
+      doc
+        .fillColor(bold ? '#111827' : '#4B5563')
+        .font(bold ? 'Helvetica-Bold' : 'Helvetica')
+        .fontSize(bold ? 10 : 9)
+        .text(label, summaryX, sumY, { width: 120, align: 'left' });
+      doc
+        .fillColor('#111827')
+        .font(bold ? 'Courier-Bold' : 'Courier')
+        .fontSize(bold ? 10.5 : 9.5)
+        .text(val, rightEdge - 108, sumY, { width: 96, align: 'right' });
+      sumY += 18;
+    };
+
+    drawSummaryLine('Subtotal', `GHS ${fmt(totalPaid)}`);
+    drawSummaryLine('Tenant Service Fee', 'GHS 0.00');
+
+    doc.moveTo(summaryX, sumY - 2).lineTo(rightEdge, sumY - 2).lineWidth(0.75).strokeColor('#111827').stroke();
+    sumY += 6;
+    drawSummaryLine('Total Paid', `GHS ${fmt(totalPaid)}`, true);
+    drawSummaryLine('Balance Due', isPaid ? 'GHS 0.00' : `GHS ${fmt(totalPaid)}`);
+
+    // ── Escrow & Statutory Compliance Box ──
+    const noteY = Math.max(sumY + 24, 480);
+    doc.roundedRect(leftX, noteY, contentWidth, 68, 6).fillAndStroke('#F8FAFC', '#E2E8F0');
+
+    doc
+      .fillColor('#111827')
+      .font('Helvetica-Bold')
+      .fontSize(8.5)
+      .text('Statutory Rent Receipt & Escrow Protection', leftX + 14, noteY + 12);
+
+    doc
+      .fillColor('#475569')
+      .font('Helvetica')
+      .fontSize(8.5)
+      .text(
+        'Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). Payment is held in AkwaabaHomes Escrow on behalf of the Landlord and released upon resident check-in verification.',
+        leftX + 14,
+        noteY + 26,
+        { width: contentWidth - 28, lineGap: 2 }
       );
 
-    // Collector Signature Line on Right
-    doc.moveTo(355, signY + 38).lineTo(541, signY + 38).lineWidth(0.75).strokeColor('#111827').stroke();
-    doc
-      .font('Times-Italic')
-      .fontSize(10)
-      .fillColor('#111827')
-      .text('Akwaaba Homes Tenancy Comptroller', 355, signY + 22, { width: 186, align: 'center' });
-    doc
-      .font('Times-Bold')
-      .fontSize(8.5)
-      .fillColor('#374151')
-      .text('AUTHORIZED RECEIVING OFFICER', 355, signY + 43, { width: 186, align: 'center' })
-      .font('Times-Roman')
-      .fontSize(8)
-      .text('For & on behalf of the Landlord', 355, signY + 54, { width: 186, align: 'center' });
+    if (data.checkInCode) {
+      doc
+        .fillColor('#173D32')
+        .font('Helvetica-Bold')
+        .fontSize(8.5)
+        .text(`Gatehouse Check-In Clearance Code: ${data.checkInCode}`, leftX + 14, noteY + 50);
+    }
 
-    // Bottom Ledger Audit Line
-    doc.moveTo(54, 745).lineTo(541, 745).lineWidth(0.5).strokeColor('#D1D5DB').stroke();
+    // ── Bottom Audit Footer ──
+    doc.moveTo(leftX, 755).lineTo(rightEdge, 755).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
     doc
-      .font('Times-Roman')
-      .fontSize(8)
       .fillColor('#6B7280')
-      .text(`Ledger Reference: ${receiptNo}  |  Voucher ID: ${data.transactionId}`, 54, 754)
-      .text('Page 1 of 1', 54, 754, { width: 487, align: 'right' });
+      .font('Helvetica')
+      .fontSize(8)
+      .text(`Reference: ${receiptNo}   •   Transaction ID: ${data.transactionId}`, leftX, 764)
+      .text('AkwaabaHomes — Verified Rental Marketplace', leftX, 764, { width: contentWidth, align: 'right' });
 
     doc.end();
   });

@@ -238,19 +238,53 @@ export const downloadReceiptPDF = async (req: Request, res: Response): Promise<v
       ? transaction.createdAt.toISOString()
       : new Date(transaction.createdAt).toISOString();
 
+    const landlord = transaction.property?.landlord;
+    const booking = transaction.booking;
+    const room = transaction.room || booking?.room;
+    const unitParts = [
+      room?.blockName ? `Block ${room.blockName}` : null,
+      booking?.roomUnit?.unitNumber ? `Unit ${booking.roomUnit.unitNumber}` : null,
+      booking?.bed?.bedNumber ? `Bed ${booking.bed.bedNumber}` : null
+    ].filter(Boolean);
+
+    const startStr = booking?.startDate
+      ? new Date(booking.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : null;
+    const endStr = booking?.endDate
+      ? new Date(booking.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : null;
+
+    const cautionAmount = Number(booking?.cautionDepositAmount ?? transaction.property?.cautionDeposit ?? 0);
+    const totalPaid = Number(transaction.amount || 0);
+    const baseRentAmount = cautionAmount > 0 && totalPaid > cautionAmount ? totalPaid - cautionAmount : totalPaid;
+
     const pdfBuffer = await generateReceiptPDF({
       transactionId: transaction.id,
+      bookingId: booking?.id || transaction.bookingId,
       reference: transaction.reference,
       studentName: `${transaction.tenant.firstName} ${transaction.tenant.lastName}`,
       studentEmail: transaction.tenant.email,
       studentPhone: transaction.tenant.phoneNumber || 'N/A',
+      studentId: transaction.tenant.studentId || null,
+      studentCampus: transaction.tenant.campus || null,
+      landlordName: landlord ? `${landlord.firstName} ${landlord.lastName}` : null,
+      landlordPhone: landlord?.phoneNumber || null,
+      landlordEmail: landlord?.email || null,
       propertyTitle: transaction.property.title,
-      roomType: transaction.room?.roomType || transaction.booking?.room?.roomType || transaction.property?.type || 'Residential Unit',
-      grossAmount: transaction.amount,
+      propertyLocation: transaction.property.location || null,
+      roomType: room?.roomType || transaction.property?.type || 'Residential Unit',
+      unitAllocation: unitParts.length > 0 ? unitParts.join(' • ') : 'Standard Allocation',
+      startDate: startStr,
+      endDate: endStr,
+      pricePeriod: transaction.property?.pricePeriod || null,
+      baseRentAmount,
+      cautionDepositAmount: totalPaid > baseRentAmount ? cautionAmount : 0,
+      grossAmount: totalPaid,
       platformFee,
       netAmount,
-      paymentMethod: transaction.paymentMethod || 'Paystack MoMo / Card',
+      paymentMethod: transaction.paymentMethod || 'Paystack (MoMo / Card)',
       paymentStatus: transaction.status,
+      checkInCode: booking?.checkInCode || null,
       paidAt: createdAtIso
     });
 
