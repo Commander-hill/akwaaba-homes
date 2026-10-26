@@ -516,7 +516,7 @@ export default function TenantBookingsOverviewPage() {
                       )}
 
                       {isPaid && (
-                        <Link href={`/dashboard/invoice/${booking.id}`}>
+                        <Link href={`/dashboard/invoice/${booking.transactions?.[0]?.id || booking.id}`}>
                           <Button
                             variant="outline"
                             size="sm"

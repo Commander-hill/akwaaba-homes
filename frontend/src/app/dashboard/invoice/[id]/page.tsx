@@ -31,10 +31,40 @@ export default function InvoicePage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['transaction', transactionId],
     queryFn: async () => {
-      const { data } = await api.get(`/transactions/${transactionId}`);
-      return data.transaction;
+      try {
+        const { data } = await api.get(`/transactions/${transactionId}`);
+        return data.transaction;
+      } catch (err) {
+        // Fallback: resolve receipt directly from /bookings/:id if transaction lookup fails
+        const { data: bookingRes } = await api.get(`/bookings/${transactionId}`);
+        const booking = bookingRes.booking || bookingRes;
+        if (!booking || !booking.id) throw err;
+
+        const tx = booking.transactions?.[0] || booking.transaction;
+        const baseRent = booking.room?.price ?? booking.property?.price ?? booking.price ?? 0;
+        const caution = booking.cautionDepositAmount ?? booking.property?.cautionDeposit ?? 0;
+        const totalAmount = tx?.amount ?? (baseRent + caution);
+        const isPaid = ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'CHECKED_OUT'].includes(booking.status);
+        const ref = tx?.reference || (booking.checkInCode ? `ESCROW-${booking.checkInCode}` : `INV-${booking.id.slice(0, 8).toUpperCase()}`);
+
+        return {
+          id: tx?.id || booking.id,
+          bookingId: booking.id,
+          amount: totalAmount,
+          reference: ref,
+          paymentReference: ref,
+          paymentMethod: isPaid ? 'Paystack Escrow (MoMo / Card)' : 'Pending Escrow Settlement',
+          status: tx?.status || (isPaid ? 'SUCCESS' : 'PENDING'),
+          createdAt: tx?.createdAt || booking.updatedAt || booking.createdAt,
+          tenant: booking.tenant,
+          property: booking.property,
+          room: booking.room,
+          booking
+        };
+      }
     },
-    enabled: !!transactionId
+    enabled: !!transactionId,
+    retry: 1
   });
 
   if (isLoading) {
@@ -63,6 +93,12 @@ export default function InvoicePage() {
   }
 
   const { tenant, property, booking } = data;
+  const unitClassification = [
+    data.room?.roomType || booking?.room?.roomType || property?.type || 'Self-Contained Residential Unit',
+    booking?.room?.blockName ? `Block: ${booking.room.blockName}` : null,
+    booking?.roomUnit?.unitNumber ? `Unit ${booking.roomUnit.unitNumber}` : null,
+    booking?.bed?.bedNumber ? `Bed ${booking.bed.bedNumber}` : null,
+  ].filter(Boolean).join(' • ');
   const receiptRef = data.reference || `AKW/REC/${new Date(data.createdAt).getFullYear()}/${transactionId.slice(0, 6).toUpperCase()}`;
   const issuedDate = new Date(data.createdAt).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -202,7 +238,7 @@ export default function InvoicePage() {
                     Unit / Room Classification
                   </td>
                   <td className="py-2.5 px-3.5 text-zinc-900 dark:text-zinc-100">
-                    {property?.roomType || 'Self-Contained Residential Unit'}
+                    {unitClassification}
                   </td>
                 </tr>
                 <tr className="border-b border-zinc-300 dark:border-zinc-800">
@@ -250,7 +286,7 @@ export default function InvoicePage() {
                       Residential Rent Advance ({bookingYear}/{nextYear} Term)
                     </div>
                     <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
-                      Principal rent assessment for {property?.title} ({property?.roomType || 'Standard Unit'})
+                      Principal rent assessment for {property?.title} ({unitClassification})
                     </div>
                   </td>
                   <td className="py-3 px-3.5 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">

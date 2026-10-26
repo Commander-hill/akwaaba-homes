@@ -83,20 +83,98 @@ export const getTenantTransactions = async (req: Request, res: Response): Promis
   }
 };
 
+const resolveTransactionOrBookingReceipt = async (id: string) => {
+  let transaction: any = await prisma.transaction.findFirst({
+    where: {
+      OR: [
+        { id },
+        { bookingId: id },
+        { reference: id }
+      ]
+    },
+    include: {
+      tenant: true,
+      property: {
+        include: {
+          landlord: {
+            select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+          }
+        }
+      },
+      room: true,
+      booking: {
+        include: {
+          room: true,
+          roomUnit: true,
+          bed: true
+        }
+      }
+    }
+  });
+
+  if (transaction) {
+    return {
+      ...transaction,
+      paymentReference: transaction.reference,
+      paymentMethod: 'Paystack Escrow (MoMo / Card)',
+      room: transaction.room || transaction.booking?.room || null
+    };
+  }
+
+  // Fallback: look up directly by Booking ID if no Transaction row exists yet
+  const booking: any = await prisma.booking.findUnique({
+    where: { id },
+    include: {
+      tenant: true,
+      property: {
+        include: {
+          landlord: {
+            select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+          }
+        }
+      },
+      room: true,
+      roomUnit: true,
+      bed: true,
+      transaction: true
+    }
+  });
+
+  if (!booking) return null;
+
+  const baseRent = booking.room?.price ?? booking.property?.price ?? 0;
+  const caution = booking.cautionDepositAmount ?? booking.property?.cautionDeposit ?? 0;
+  const totalAmount = booking.transaction?.amount ?? (baseRent + caution);
+  const isPaid = ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'CHECKED_OUT'].includes(booking.status);
+  const syntheticRef = booking.transaction?.reference || (booking.checkInCode ? `ESCROW-${booking.checkInCode}` : `INV-${booking.id.slice(0, 8).toUpperCase()}`);
+
+  return {
+    id: booking.transaction?.id || booking.id,
+    bookingId: booking.id,
+    tenantId: booking.tenantId,
+    landlordId: booking.property.landlordId,
+    propertyId: booking.propertyId,
+    roomId: booking.roomId,
+    amount: totalAmount,
+    reference: syntheticRef,
+    paymentReference: syntheticRef,
+    paymentMethod: isPaid ? 'Paystack Escrow (MoMo / Card)' : 'Pending Escrow Settlement',
+    status: booking.transaction?.status || (isPaid ? 'SUCCESS' : 'PENDING'),
+    createdAt: booking.transaction?.createdAt || booking.updatedAt || booking.createdAt,
+    tenant: booking.tenant,
+    property: booking.property,
+    room: booking.room,
+    booking
+  };
+};
+
 export const getTransactionById = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
     const role = req.user.role;
     const id = req.params.id as string;
 
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
-      include: {
-        tenant: true, // We need all details for the invoice (campus, programmeOfStudy, etc.)
-        property: true,
-        booking: true
-      }
-    });
+    const transaction = await resolveTransactionOrBookingReceipt(id);
 
     if (!transaction) {
       res.status(404).json({ message: 'Transaction not found' });
@@ -108,7 +186,10 @@ export const getTransactionById = async (req: Request, res: Response): Promise<v
       where: { propertyId: transaction.propertyId, userId }
     });
 
-    if (role !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(role);
+    const isOwnerLandlord = transaction.landlordId === userId || transaction.property?.landlordId === userId;
+
+    if (!isAdmin && transaction.tenantId !== userId && !isOwnerLandlord && !isStaff) {
       res.status(403).json({ message: 'Forbidden' });
       return;
     }
@@ -125,14 +206,7 @@ import { generateReceiptPDF } from '../utils/pdf.service';
 export const downloadReceiptPDF = async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
-      include: {
-        tenant: true,
-        property: true,
-        room: true
-      }
-    });
+    const transaction = await resolveTransactionOrBookingReceipt(id);
 
     if (!transaction) {
       res.status(404).json({ message: 'Transaction record not found' });
@@ -146,8 +220,11 @@ export const downloadReceiptPDF = async (req: Request, res: Response): Promise<v
       where: { propertyId: transaction.propertyId, userId }
     });
 
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
+    const isOwnerLandlord = transaction.landlordId === userId || transaction.property?.landlordId === userId;
+
     // Check authorization: must be tenant who paid, property landlord, authorized property staff, or admin
-    if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
+    if (!isAdmin && transaction.tenantId !== userId && !isOwnerLandlord && !isStaff) {
       res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
       return;
     }
@@ -157,20 +234,24 @@ export const downloadReceiptPDF = async (req: Request, res: Response): Promise<v
     const platformFee = (transaction.amount * commissionPercent) / 100;
     const netAmount = transaction.amount - platformFee;
 
+    const createdAtIso = transaction.createdAt instanceof Date
+      ? transaction.createdAt.toISOString()
+      : new Date(transaction.createdAt).toISOString();
+
     const pdfBuffer = await generateReceiptPDF({
       transactionId: transaction.id,
       reference: transaction.reference,
       studentName: `${transaction.tenant.firstName} ${transaction.tenant.lastName}`,
       studentEmail: transaction.tenant.email,
-      studentPhone: transaction.tenant.phoneNumber,
+      studentPhone: transaction.tenant.phoneNumber || 'N/A',
       propertyTitle: transaction.property.title,
-      roomType: transaction.room?.roomType || 'Hostel Room',
+      roomType: transaction.room?.roomType || transaction.booking?.room?.roomType || transaction.property?.type || 'Residential Unit',
       grossAmount: transaction.amount,
       platformFee,
       netAmount,
-      paymentMethod: 'Paystack MoMo / Card',
+      paymentMethod: transaction.paymentMethod || 'Paystack MoMo / Card',
       paymentStatus: transaction.status,
-      paidAt: transaction.createdAt.toISOString()
+      paidAt: createdAtIso
     });
 
     res.setHeader('Content-Type', 'application/pdf');
@@ -181,6 +262,7 @@ export const downloadReceiptPDF = async (req: Request, res: Response): Promise<v
     res.status(500).json({ message: 'Failed to generate PDF receipt document' });
   }
 };
+
 
 export const getLandlordEarningsReport = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -566,7 +566,7 @@ export default function TenantBookingDetailsPage() {
                       <span>Payment Confirmed &amp; Protected</span>
                     </div>
                     <Link
-                      href={`/dashboard/invoice/${booking.id}`}
+                      href={`/dashboard/invoice/${booking.transactions?.[0]?.id || booking.id}`}
                       className="text-xs font-bold text-[#173D32] dark:text-emerald-400 hover:underline inline-flex items-center gap-1"
                     >
                       <Receipt className="w-3.5 h-3.5" />
@@ -659,27 +659,28 @@ export default function TenantBookingDetailsPage() {
                     Transaction Receipts
                   </h3>
                   <Link
-                    href={`/dashboard/invoice/${booking.id}`}
+                    href={`/dashboard/invoice/${booking.transactions?.[0]?.id || booking.id}`}
                     className="text-xs font-semibold text-[#16A34A] hover:underline"
                   >
                     Printable Invoice &rarr;
                   </Link>
                 </div>
                 {booking.transactions.map((tx: any) => (
-                  <div
+                  <Link
                     key={tx.id}
-                    className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] flex items-center justify-between text-xs"
+                    href={`/dashboard/invoice/${tx.id}`}
+                    className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] hover:border-[#16A34A]/60 transition flex items-center justify-between text-xs block"
                   >
                     <div>
                       <p className="font-semibold text-[#242925] dark:text-white">
                         {formatCedis(tx.amount)}
                       </p>
                       <p className="text-[11px] font-mono text-[#6F756F] dark:text-[#A0A8A2]">
-                        Ref: {tx.paymentReference || tx.id.slice(0, 10)}
+                        Ref: {tx.paymentReference || tx.reference || tx.id.slice(0, 10)}
                       </p>
                     </div>
                     <StatusBadge tone="success">{tx.status}</StatusBadge>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
