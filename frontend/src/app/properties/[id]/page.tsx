@@ -226,10 +226,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
     }
 
     try {
-      await api.post('/chat/conversations', { partnerId: landlordId });
-      router.push('/dashboard/messages');
+      const res = await api.post('/chat/conversations', { partnerId: landlordId });
+      const convId = res.data?.id;
+      router.push(convId ? `/dashboard/messages?conversationId=${convId}` : `/dashboard/messages?partnerId=${landlordId}`);
     } catch {
-      router.push('/dashboard/messages');
+      router.push(`/dashboard/messages?partnerId=${landlordId}`);
     }
   };
 

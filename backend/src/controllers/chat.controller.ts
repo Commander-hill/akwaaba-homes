@@ -11,8 +11,6 @@ export const getConversations = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const role = req.user?.role;
-
     // Find all conversations where this user is either participant
     const conversations = await prisma.conversation.findMany({
       where: {
@@ -24,24 +22,85 @@ export const getConversations = async (req: Request, res: Response): Promise<voi
       include: {
         messages: {
           orderBy: { createdAt: 'desc' },
-          take: 1, // Just get the latest message for the preview
+          take: 1, // Latest message for thread preview
         },
       },
       orderBy: { updatedAt: 'desc' }
     });
 
-    // Resolve the other participant's profile dynamically regardless of role
+    // Resolve the other participant's profile, unread count, and tenancy/property context
     const formattedConversations = await Promise.all(
       conversations.map(async (conv) => {
         const partnerId = conv.tenantId === userId ? conv.landlordId : conv.tenantId;
-        const partner = await prisma.user.findUnique({
-          where: { id: partnerId },
-          select: { id: true, firstName: true, lastName: true, avatarUrl: true, role: true }
-        });
+
+        const [partner, unreadCount, sharedBooking] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: partnerId },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatarUrl: true,
+              role: true,
+              isVerifiedLandlord: true,
+              phoneNumber: true,
+              ghanaCardStatus: true
+            }
+          }),
+          prisma.message.count({
+            where: {
+              conversationId: conv.id,
+              senderId: { not: userId },
+              isRead: false
+            }
+          }),
+          prisma.booking.findFirst({
+            where: {
+              tenantId: conv.tenantId,
+              property: { landlordId: conv.landlordId }
+            },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              status: true,
+              property: { select: { id: true, title: true, location: true } },
+              room: { select: { roomType: true } }
+            }
+          })
+        ]);
+
+        let contextProperty = sharedBooking?.property || null;
+        if (!contextProperty) {
+          contextProperty = await prisma.property.findFirst({
+            where: { landlordId: conv.landlordId },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, title: true, location: true }
+          });
+        }
+
+        // Only expose phoneNumber if there is an active/approved/completed booking between them
+        const canSharePhone =
+          sharedBooking &&
+          ['APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(sharedBooking.status);
 
         return {
           ...conv,
-          partner
+          unreadCount,
+          partner: partner
+            ? {
+                ...partner,
+                phoneNumber: canSharePhone ? partner.phoneNumber : null
+              }
+            : null,
+          contextBooking: sharedBooking
+            ? {
+                id: sharedBooking.id,
+                status: sharedBooking.status,
+                roomType: sharedBooking.room?.roomType || null,
+                property: sharedBooking.property
+              }
+            : null,
+          contextProperty
         };
       })
     );
@@ -84,7 +143,7 @@ export const getMessages = async (req: Request, res: Response): Promise<void> =>
     });
 
     // Mark unread messages from the OTHER user as read
-    await prisma.message.updateMany({
+    const updateRes = await prisma.message.updateMany({
       where: {
         conversationId,
         senderId: { not: userId },
@@ -92,6 +151,16 @@ export const getMessages = async (req: Request, res: Response): Promise<void> =>
       },
       data: { isRead: true }
     });
+
+    if (updateRes.count > 0) {
+      try {
+        const io = getIO();
+        const otherUserId =
+          conversation.tenantId === userId ? conversation.landlordId : conversation.tenantId;
+        io.to(conversationId).emit('messages_read', { conversationId, readerId: userId });
+        io.to(otherUserId).emit('messages_read', { conversationId, readerId: userId });
+      } catch (e) { /* non-blocking */ }
+    }
 
     res.status(200).json(messages);
   } catch (error) {

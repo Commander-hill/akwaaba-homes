@@ -507,7 +507,7 @@ export default function TenantBookingDetailsPage() {
             </div>
 
             <Link
-              href="/dashboard/messages"
+              href={landlord.id ? `/dashboard/messages?partnerId=${landlord.id}` : '/dashboard/messages'}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-[#242925] dark:text-white text-xs sm:text-sm font-medium shrink-0 self-start sm:self-center transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
