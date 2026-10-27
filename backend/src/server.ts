@@ -375,18 +375,37 @@ process.on('uncaughtException', (err: Error) => {
   httpServer.close(() => process.exit(1));
 });
 
-// ─── Graceful shutdown on SIGTERM (Render / Docker) ─────────────────────────
-process.on('SIGTERM', () => {
-  console.log('📴 SIGTERM received — starting graceful shutdown...');
+// ─── Graceful shutdown on SIGTERM / SIGINT ──────────────────────────────────
+const shutdownGracefully = (signal: string) => {
+  console.log(`📴 ${signal} received — starting graceful shutdown...`);
   httpServer.close(() => {
     console.log('✅ HTTP server closed.');
     process.exit(0);
   });
-});
+};
+process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
+process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 
 import { cleanupExpiredBookings } from './utils/bookingCleanup';
 
 if (process.env.NODE_ENV !== 'test') {
+  let listenRetries = 0;
+  const maxRetries = 5;
+
+  httpServer.on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE' && listenRetries < maxRetries) {
+      listenRetries += 1;
+      console.warn(`⏳ Port ${port} busy, retrying in 800ms (${listenRetries}/${maxRetries})...`);
+      setTimeout(() => {
+        httpServer.close();
+        httpServer.listen(port);
+      }, 800);
+    } else {
+      console.error('🔥 Server listen error:', err);
+      process.exit(1);
+    }
+  });
+
   httpServer.listen(port, () => {
     console.log(`✅ Server running on port ${port} [${process.env.NODE_ENV || 'development'}]`);
     
