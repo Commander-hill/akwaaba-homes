@@ -91,7 +91,7 @@ export default function AdminConfigPage() {
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            Manage platform policies, Paystack escrow rates, and operational safeguards without redeploying.
+            Manage platform policies, Paystack commission rates, and operational safeguards without redeploying.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export default function AdminConfigPage() {
               </span>
             </div>
             <p className="text-xs text-zinc-500 max-w-xl leading-relaxed">
-              When enabled, both landlords and tenants must submit verified Ghana Card credentials before executing leases or receiving Paystack escrow payouts.
+              When enabled, both landlords and tenants must submit verified Ghana Card credentials before executing leases or receiving Paystack payouts.
             </p>
           </div>
 
@@ -145,12 +145,12 @@ export default function AdminConfigPage() {
         </div>
       </div>
 
-      {/* ── SECTION 2: FINANCIAL PARAMETERS & ESCROW SETTLEMENTS ── */}
+      {/* ── SECTION 2: FINANCIAL PARAMETERS & SETTLEMENTS ── */}
       <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-xs">
         <div className="flex items-center gap-2 border-b border-zinc-100 dark:border-zinc-800 pb-3">
           <CreditCard className="w-4 h-4 text-[#0F5132]" />
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-            2. Financial Settlements &amp; Escrow Fees
+            2. Financial Settlements &amp; Platform Fees
           </h2>
         </div>
 
@@ -160,7 +160,7 @@ export default function AdminConfigPage() {
           <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 space-y-2">
             <div className="flex items-baseline justify-between">
               <label className="text-xs font-bold text-zinc-900 dark:text-white">
-                Platform Escrow Commission Rate (%)
+                Platform Commission Rate (%)
               </label>
               <span className="text-xs font-black text-[#0F5132]">
                 {formData.platformCommissionPercent}%
@@ -194,7 +194,7 @@ export default function AdminConfigPage() {
               </span>
             </div>
             <p className="text-[11px] text-zinc-500">
-              Maximum window allowed for prospective tenants to complete escrow funding before a locked room slot auto-cancels.
+              Maximum window allowed for prospective tenants to complete payment before a locked room slot auto-cancels.
             </p>
             <div className="relative">
               <input

@@ -18,14 +18,14 @@ interface TourStep {
 const TENANT_STEPS: TourStep[] = [
   {
     title: "Welcome to Akwaaba Homes",
-    description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, official digital tenancy agreements, and secure rent escrow protection.",
+    description: "Ghana's trusted residential tenancy platform. Explore certified accommodations, official digital tenancy agreements, and secure online rent payments.",
     icon: Compass,
     badge: "Step 1 of 4 • Overview",
     statutoryNote: "Verified Tenancy Standard"
   },
   {
     title: "Account Setup & Ghana Card (NIA) Verification",
-    description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast escrow clearance.",
+    description: "Complete your resident profile and verify your National Identification Authority (NIA) Ghana Card to unlock verified tenancy applications, digital leases, and fast booking clearance.",
     targetSelector: '#tour-progress-widget',
     icon: BadgeCheck,
     badge: "Step 2 of 4 • Identity Verification",
@@ -41,7 +41,7 @@ const TENANT_STEPS: TourStep[] = [
   },
   {
     title: "Tenancy Leases & Resident Workspaces",
-    description: "Access your core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent escrow deposits, and submit maintenance requests.",
+    description: "Access your core resident workspaces to review legally binding tenancy agreements, track Mobile Money rent payments, and submit maintenance requests.",
     targetSelector: '#tour-tenant-workspaces',
     icon: FileText,
     badge: "Step 4 of 4 • Operations & Leases",
@@ -52,7 +52,7 @@ const TENANT_STEPS: TourStep[] = [
 const LANDLORD_STEPS: TourStep[] = [
   {
     title: "Welcome to your Landlord Hub",
-    description: "Manage your rental properties in Ghana with confidence. Seamlessly manage multi-unit properties, screen verified tenants, track advance rent escrow, and monitor rental returns.",
+    description: "Manage your rental properties in Ghana with confidence. Seamlessly manage multi-unit properties, screen verified tenants, track rent payments, and monitor rental returns.",
     icon: Compass,
     badge: "Step 1 of 4 • Portfolio Management",
     statutoryNote: "Ghana Real Estate Governance Standard"

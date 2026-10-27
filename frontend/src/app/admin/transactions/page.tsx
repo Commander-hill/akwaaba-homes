@@ -90,7 +90,7 @@ export default function AdminTransactionsPage() {
       options: [
         { label: 'All Transactions', value: 'ALL' },
         { label: `Settled (${stats.successful})`, value: 'SUCCESS' },
-        { label: `Pending Escrow (${stats.pending})`, value: 'PENDING' },
+        { label: `Pending (${stats.pending})`, value: 'PENDING' },
         { label: `Failed / Cancelled (${stats.failed})`, value: 'FAILED' }
       ],
       onChange: setStatusFilter
@@ -179,7 +179,7 @@ export default function AdminTransactionsPage() {
     },
     {
       key: 'amount',
-      header: 'Escrow Amount',
+      header: 'Amount Paid',
       render: (t) => (
         <div className="text-xs font-mono font-bold text-zinc-900 dark:text-white">
           GH₵ {Number(t.amount || 0).toLocaleString()}
@@ -214,8 +214,8 @@ export default function AdminTransactionsPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Financial Transactions & Escrow Ledger"
-        subtitle="Oversight of tenant advance rent escrow deposits, Paystack gateway settlements, and landlord disbursements."
+        title="Financial Transactions & Payment Ledger"
+        subtitle="Oversight of tenant advance rent payments, Paystack gateway settlements, and landlord disbursements."
         badge={
           <span className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Total Volume: GH₵ {stats.totalVolume.toLocaleString()}

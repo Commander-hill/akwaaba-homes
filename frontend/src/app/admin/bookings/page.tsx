@@ -177,7 +177,7 @@ export default function AdminBookingsPage() {
     },
     {
       key: 'amount',
-      header: 'Escrow Rent',
+      header: 'Rent Amount',
       render: (b) => {
         const amount = b.transaction?.amount || b.property?.price || 0;
         return (
@@ -186,7 +186,7 @@ export default function AdminBookingsPage() {
               GH₵ {Number(amount).toLocaleString()}
             </div>
             <span className="text-[10px] text-zinc-400 uppercase font-medium">
-              {b.transaction ? b.transaction.paymentMethod || 'MoMo / Card' : 'Escrow Reserved'}
+              {b.transaction ? b.transaction.paymentMethod || 'MoMo / Card' : 'Pending Payment'}
             </span>
           </div>
         );
@@ -236,8 +236,8 @@ export default function AdminBookingsPage() {
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Residential Bookings & Escrow Monitor"
-        subtitle="System-wide registry of active leases, advance rent escrow deposits, digital tenancy agreements, and landlord-tenant fulfillments."
+        title="Residential Bookings & Tenancy Monitor"
+        subtitle="System-wide registry of active leases, advance rent payments, digital tenancy agreements, and landlord-tenant fulfillments."
         badge={
           stats.pending > 0 ? (
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">

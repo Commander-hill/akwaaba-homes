@@ -180,7 +180,7 @@ export default function ButtonPreviewPage() {
                 </Button>
               </div>
               <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Recommended for bookings, sign-in, tenant verification, and escrow payments.
+                Recommended for bookings, sign-in, tenant verification, and rent payments.
               </p>
             </div>
 

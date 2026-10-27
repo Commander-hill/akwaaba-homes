@@ -138,7 +138,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
             letter-spacing: 1px;
             margin-top: 4px;
           }
-          .escrow-pill {
+          .verified-pill {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -302,7 +302,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
               <div class="brand-title">AKWAABA <span>HOMES</span></div>
               <div class="doc-badge">Official Financial Rent Payment Receipt</div>
             </div>
-            <div class="escrow-pill">&#x2713; Paystack Verified Escrow</div>
+            <div class="verified-pill">&#x2713; Paystack Verified Payment</div>
           </div>
 
           <!-- Hero Strip -->
@@ -370,8 +370,8 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
                   <td class="text-right font-bold">GHS ${(tx.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 </tr>
                 <tr>
-                  <td>Protected Tenant Escrow Coverage</td>
-                  <td>Active Coverage</td>
+                  <td>Tenant Booking Service Fee</td>
+                  <td>Standard Terms</td>
                   <td class="text-right font-bold" style="color: #0F5132;">INCLUDED (GHS 0.00)</td>
                 </tr>
                 <tr>
@@ -393,7 +393,7 @@ export function printPaymentReceipt(tx: PaymentReceiptData) {
                 Authentic Financial Document &bull; Issued by Akwaaba Homes Clearing System
               </div>
               <div class="audit-seal">
-                &#x2713; Escrow Verified &bull; ${issueDate}
+                &#x2713; Payment Verified &bull; ${issueDate}
               </div>
             </div>
 

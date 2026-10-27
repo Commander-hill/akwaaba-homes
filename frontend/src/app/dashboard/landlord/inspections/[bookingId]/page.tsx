@@ -372,7 +372,7 @@ export default function InspectionDetailPage({
                 <h3 className="text-sm font-extrabold text-red-600 dark:text-red-400 flex items-center gap-2">
                   <DollarSign className="w-4 h-4" /> Caution Deposit Settlement
                 </h3>
-                <span className="text-[11px] font-bold text-slate-400">Held in Escrow</span>
+                <span className="text-[11px] font-bold text-slate-400">Refundable Deposit</span>
               </div>
 
               <div className="space-y-3">

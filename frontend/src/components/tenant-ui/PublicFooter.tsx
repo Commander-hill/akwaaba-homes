@@ -82,7 +82,7 @@ export default function PublicFooter() {
               </li>
               <li>
                 <Link href="/bookings" className="hover:text-[#16A34A] dark:hover:text-white transition-colors">
-                  Bookings &amp; Escrow Status
+                  My Bookings
                 </Link>
               </li>
               <li>

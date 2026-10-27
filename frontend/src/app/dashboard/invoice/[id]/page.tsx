@@ -64,7 +64,7 @@ export default function InvoicePage() {
         const ref =
           tx?.reference ||
           (booking.checkInCode
-            ? `ESCROW-${booking.checkInCode}`
+            ? `PAY-${booking.checkInCode}`
             : `RCP-${booking.id.slice(0, 8).toUpperCase()}`);
 
         return {
@@ -73,7 +73,7 @@ export default function InvoicePage() {
           amount: totalAmount,
           reference: ref,
           paymentReference: ref,
-          paymentMethod: isPaid ? 'Paystack Escrow (MoMo / Card)' : 'Pending Settlement',
+          paymentMethod: isPaid ? 'Paystack (MoMo / Card)' : 'Pending Settlement',
           status: tx?.status || (isPaid ? 'SUCCESS' : 'PENDING'),
           createdAt: tx?.createdAt || booking.updatedAt || booking.createdAt,
           tenant: booking.tenant,
@@ -230,7 +230,7 @@ export default function InvoicePage() {
                 </span>
                 <span className="text-[#C8CEC9] dark:text-[#333D37]">&bull;</span>
                 <span className="text-xs font-medium text-[#6F756F] dark:text-[#9CA59E]">
-                  Escrow &amp; Rent Settlement
+                  Rent &amp; Tenancy Settlement
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#181C19] dark:text-white">
@@ -266,7 +266,7 @@ export default function InvoicePage() {
                 {isSettled ? (
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
-                    <span>Paid &bull; Escrow Verified</span>
+                    <span>Paid &bull; Verified</span>
                   </>
                 ) : (
                   <>
@@ -410,7 +410,7 @@ export default function InvoicePage() {
                           Refundable Security / Caution Deposit
                         </p>
                         <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] mt-0.5">
-                          Held in escrow against move-out room condition inspection
+                          Refundable security deposit subject to move-out room condition inspection
                         </p>
                       </td>
                       <td className="py-4 px-4 text-[#5E645E] dark:text-[#A0A8A2] hidden sm:table-cell">
@@ -448,18 +448,18 @@ export default function InvoicePage() {
             </div>
           </div>
 
-          {/* Escrow Protection & Statutory Rent Act Note */}
+          {/* Statutory Rent Act Note */}
           <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center p-4 rounded-xl bg-[#F4F7F4] dark:bg-[#19221D] border border-[#DCE5DC] dark:border-[#26352C]">
             <div className="sm:col-span-8 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-[#173D32] dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-1 text-xs">
                 <p className="font-semibold text-[#181C19] dark:text-white">
-                  Escrow Protected &bull; Statutory Rent Receipt (Act 220, s. 20)
+                  Official Rent Receipt &bull; Statutory Compliance (Act 220, s. 20)
                 </p>
                 <p className="text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
-                  Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). Your payment
-                  is safeguarded in AkwaabaHomes Escrow on behalf of the Landlord and disbursed upon
-                  verified move-in.
+                  Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). This receipt
+                  serves as official proof of rent and security deposit payment for the tenancy term
+                  stated above.
                 </p>
               </div>
             </div>

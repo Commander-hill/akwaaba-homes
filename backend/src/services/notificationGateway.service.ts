@@ -202,7 +202,7 @@ export const dispatchUtilityBillAlert = async (
     userId,
     phoneNumber: recipientPhone,
     title: '⚡ Shared Utility Bill Split',
-    message: `Hello ${residentName}, your share for ${utilityType} at ${propertyTitle} is GH₵ ${amountGhs.toFixed(2)}. Please confirm receipt and settle via MoMo escrow.`,
+    message: `Hello ${residentName}, your share for ${utilityType} at ${propertyTitle} is GH₵ ${amountGhs.toFixed(2)}. Please confirm receipt and settle via Mobile Money.`,
     type: 'PAYMENT',
     link: '/dashboard/tenant?tab=billsplit',
     priority: 'NORMAL'

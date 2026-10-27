@@ -124,7 +124,7 @@ function TenantDashboardContent() {
     const trxref = urlParams.get('trxref');
 
     if (verifyId && (reference || trxref)) {
-      toast.loading('Verifying Paystack escrow deposit...', { id: 'payment-verifying' });
+      toast.loading('Verifying Paystack payment...', { id: 'payment-verifying' });
       verifyPaymentMutation.mutate(
         { bookingId: verifyId, reference: (reference || trxref) as string },
         {
@@ -311,7 +311,7 @@ function TenantDashboardContent() {
           </h1>
           <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] mt-1">
             {dashboardState.mode === 'CONFIRMED_STAY'
-              ? 'Your accommodation is confirmed and protected in escrow.'
+              ? 'Your accommodation is confirmed and ready for your stay.'
               : dashboardState.mode === 'PENDING_BOOKING'
               ? 'You have an active reservation request in progress.'
               : dashboardState.mode === 'RETURNING_TENANT'
@@ -477,7 +477,7 @@ function TenantDashboardContent() {
               </span>
               <div>
                 <p className="text-xs sm:text-sm font-semibold text-[#242925] dark:text-white">
-                  Protected Escrow Payment
+                  Secure Rent Payment
                 </p>
                 <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
                   Pay securely via Mobile Money or card before move-in.
@@ -498,7 +498,7 @@ function TenantDashboardContent() {
                 {primaryBooking.status === 'PENDING'
                   ? 'Step 2 of 4 • Awaiting Landlord Approval'
                   : primaryBooking.leaseAgreement?.status === 'COMPLETED'
-                  ? 'Step 4 of 4 • Ready for Escrow Deposit'
+                  ? 'Step 4 of 4 • Ready for Rent Payment'
                   : 'Step 3 of 4 • Lease Signature Required'}
               </StatusBadge>
               <span className="text-xs font-mono text-[#6F756F] dark:text-[#A0A8A2]">
@@ -559,8 +559,8 @@ function TenantDashboardContent() {
                   {primaryBooking.status === 'PENDING'
                     ? 'The property host is reviewing your reservation request. You will be notified as soon as it is approved.'
                     : primaryBooking.leaseAgreement?.status !== 'COMPLETED'
-                    ? 'Your request has been approved! Please review and sign the digital tenancy agreement to unlock escrow payment.'
-                    : 'Your digital tenancy agreement is complete. Proceed to secure your room via Paystack escrow.'}
+                    ? 'Your request has been approved! Please review and sign the digital tenancy agreement to unlock rent payment.'
+                    : 'Your digital tenancy agreement is complete. Proceed to pay your rent via Paystack.'}
                 </p>
               </div>
             </div>
@@ -606,7 +606,7 @@ function TenantDashboardContent() {
                       isLoading={payBookingMutation.isPending}
                       leftIcon={<CreditCard className="w-4 h-4" />}
                     >
-                      Complete Escrow Payment
+                      Pay Rent Now
                     </Button>
                   )}
 
@@ -641,7 +641,7 @@ function TenantDashboardContent() {
                 },
                 {
                   step: 4,
-                  title: 'Escrow Deposit',
+                  title: 'Rent Payment',
                   desc: pendingStepIndex === 4 ? 'Awaiting payment' : 'Unlocks move-in PIN',
                 },
               ].map((item) => {
@@ -704,7 +704,7 @@ function TenantDashboardContent() {
                       ? 'Awaiting Landlord Approval'
                       : secondaryPendingBooking.leaseAgreement?.status !== 'COMPLETED'
                       ? 'Lease Signature Required'
-                      : 'Awaiting Escrow Payment'}
+                      : 'Awaiting Rent Payment'}
                     )
                   </span>
                 </div>
@@ -897,7 +897,7 @@ function TenantDashboardContent() {
                   </div>
                 </button>
 
-                {/* Tool 3: Escrow Rent Ledger */}
+                {/* Tool 3: Rent Ledger */}
                 <button
                   type="button"
                   onClick={() =>
@@ -913,7 +913,7 @@ function TenantDashboardContent() {
                   <div className="flex items-center justify-between w-full">
                     <Receipt className="w-4 h-4 text-[#173D32] dark:text-emerald-400" />
                     <span className="text-[10px] font-mono font-bold text-[#557A67] dark:text-emerald-400">
-                      Escrow
+                      Ledger
                     </span>
                   </div>
                   <div>
@@ -957,7 +957,7 @@ function TenantDashboardContent() {
                     ? 'Active Utility • Digital Visitor Passes'
                     : activeResidentTool === 'deliveries'
                     ? 'Active Utility • Gatehouse Parcel Desk'
-                    : 'Active Utility • Escrow Rent Schedule'}
+                    : 'Active Utility • Rent Payment Schedule'}
                 </span>
                 <button
                   type="button"

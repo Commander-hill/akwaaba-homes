@@ -75,7 +75,7 @@ export default function AdminBookingDetailPage({
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-        <p className="text-xs font-semibold text-zinc-500">Retrieving tenancy lease docket & escrow audit records...</p>
+        <p className="text-xs font-semibold text-zinc-500">Retrieving tenancy lease docket & payment records...</p>
       </div>
     );
   }
@@ -137,19 +137,19 @@ export default function AdminBookingDetailPage({
 
       {/* Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Lease & Escrow Details (7 cols) */}
+        {/* Left Column: Lease & Payment Details (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Escrow Settlement Financials */}
+          {/* Settlement Financials */}
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-xs space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
               <Banknote className="w-4 h-4 text-emerald-600" />
-              Escrow Financial Settlement
+              Financial Settlement
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">
                 <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-1">
-                  Gross Escrow Rent
+                  Gross Rent Amount
                 </span>
                 <span className="text-base font-mono font-bold text-emerald-600 dark:text-emerald-400">
                   GH₵ {Number(rentAmount).toLocaleString()}
@@ -171,7 +171,7 @@ export default function AdminBookingDetailPage({
                   Paystack Reference
                 </span>
                 <code className="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 block truncate">
-                  {transaction?.reference || 'ESCROW-PENDING'}
+                  {transaction?.reference || 'PAY-PENDING'}
                 </code>
               </div>
             </div>

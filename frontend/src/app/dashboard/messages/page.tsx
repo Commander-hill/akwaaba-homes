@@ -1061,17 +1061,6 @@ function MessagesWorkspace() {
                 </div>
               </div>
 
-              {/* Escrow Advisory Banner */}
-              <div className="w-full max-w-full min-w-0 px-4 sm:px-5 py-2 bg-[#FFFAEB] dark:bg-[#451A03]/25 border-b border-[#FDE68A] dark:border-[#78350F]/60 flex items-center justify-between gap-2 text-[11px] text-[#92400E] dark:text-[#FCD34D]">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Lock className="w-3.5 h-3.5 text-[#D97706] shrink-0" />
-                  <span className="truncate">
-                    <strong>Escrow Protection:</strong> Keep all rent and deposit payments inside
-                    AkwaabaHomes checkout. Never send cash or direct transfers offline.
-                  </span>
-                </div>
-              </div>
-
               {/* Messages Body */}
               <div className="flex-1 w-full max-w-full min-w-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 bg-[#FBFBF9] dark:bg-[#131715]">
                 {isLoadingMessages ? (
@@ -1360,10 +1349,10 @@ function MessagesWorkspace() {
                 <div className="p-3.5 rounded-xl border border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-[#242925] dark:text-white">
                     <Shield className="w-3.5 h-3.5 text-[#173D32] dark:text-emerald-400" />
-                    <span>Escrow Protected</span>
+                    <span>Verified Hosts</span>
                   </div>
                   <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] leading-relaxed">
-                    Rent and deposits stay protected in escrow until physical key check-in.
+                    Chat directly with verified landlords and hostel managers regarding your stay.
                   </p>
                 </div>
 

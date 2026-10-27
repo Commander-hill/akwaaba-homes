@@ -68,7 +68,7 @@ interface TelemetryEvent {
 
 const CATEGORY_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ElementType }> = {
   BOOKING: { 
-    label: 'Tenancy Escrow', 
+    label: 'Tenancy Booking', 
     color: 'text-emerald-700 dark:text-emerald-300', 
     bg: 'bg-emerald-50 dark:bg-emerald-950/50', 
     border: 'border-emerald-200 dark:border-emerald-800', 
@@ -219,10 +219,10 @@ export default function AdminActivityPage() {
         id: 'sys-init-3',
         type: 'BOOKING',
         severity: 'INFO',
-        title: 'Tenancy Escrow Settlement Gateway',
-        message: `Escrow payment gateway verified with Paystack & MTN Mobile Money channels enabled.`,
-        actor: { name: 'Escrow Settlement Daemon', role: 'SYSTEM' },
-        entity: { type: 'Escrow Ledger', title: 'Statutory 6-Month Advance Reserve' },
+        title: 'Tenancy Settlement Gateway',
+        message: `Payment gateway verified with Paystack & MTN Mobile Money channels enabled.`,
+        actor: { name: 'Settlement Daemon', role: 'SYSTEM' },
+        entity: { type: 'Payment Ledger', title: 'Statutory 6-Month Advance Reserve' },
         status: 'CONFIRMED',
         createdAt: new Date(Date.now() - 7200000).toISOString()
       }
@@ -296,7 +296,7 @@ export default function AdminActivityPage() {
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Real-time audit log of statutory rent escrows, Ghana Card NIA KYC audits, property deed verifications, maintenance SLAs, and landlord annual licenses.
+              Real-time audit log of statutory rent bookings, Ghana Card NIA KYC audits, property deed verifications, maintenance SLAs, and landlord annual licenses.
             </p>
           </div>
 
@@ -356,7 +356,7 @@ export default function AdminActivityPage() {
             </p>
           </div>
 
-          {/* Card 3: Tenancy Escrows */}
+          {/* Card 3: Tenancy Bookings */}
           <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden group">
             <div className="flex justify-between items-start mb-2">
               <span className="text-[10px] font-black uppercase tracking-wider text-[var(--muted-foreground)]">Tenancy Bookings</span>
@@ -367,11 +367,11 @@ export default function AdminActivityPage() {
             <div className="flex items-baseline justify-between">
               <span className="text-2xl sm:text-3xl font-black text-[var(--foreground)]">{stats?.totalBookings || 0}</span>
               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-                Secured Escrow <Zap className="w-3 h-3" />
+                Verified Leases <Zap className="w-3 h-3" />
               </span>
             </div>
             <p className="text-[10px] text-[var(--muted-foreground)] mt-2 font-medium">
-              Verified leases &amp; escrow contracts
+              Verified leases &amp; rental contracts
             </p>
           </div>
 
@@ -422,7 +422,7 @@ export default function AdminActivityPage() {
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {[
               { id: 'ALL', label: 'All Telemetry' },
-              { id: 'BOOKING', label: 'Escrows' },
+              { id: 'BOOKING', label: 'Bookings' },
               { id: 'PROPERTY', label: 'Properties' },
               { id: 'USER', label: 'Users & KYC' },
               { id: 'PAYMENT', label: 'Permits' },
@@ -766,7 +766,7 @@ export default function AdminActivityPage() {
                 href="/admin/bookings"
                 className="flex-1 text-center py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1"
               >
-                Inspect Escrows <ExternalLink className="w-3 h-3" />
+                Inspect Bookings <ExternalLink className="w-3 h-3" />
               </Link>
               <Link
                 href="/admin/users"

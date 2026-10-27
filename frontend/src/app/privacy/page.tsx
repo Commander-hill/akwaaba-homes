@@ -134,7 +134,7 @@ export default function PrivacyPage() {
       number: '02',
       title: 'Lawful Purposes of Data Processing',
       badge: 'Legitimate Interest',
-      summary: 'Legitimate processing purposes including electronic lease generation, escrow security, and gatehouse access.',
+      summary: 'Legitimate processing purposes including electronic lease generation, payment verification, and gatehouse access.',
       content: (
         <div className="space-y-4">
           <p>
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Escrow Payout Auditing:</strong> Recording transactional timestamps to authorize release of advance rent to landlords once move-in protocols are confirmed.</span>
+              <span><strong>Settlement &amp; Payout Auditing:</strong> Recording transactional timestamps to authorize release of advance rent to landlords once move-in protocols are confirmed.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
@@ -159,7 +159,7 @@ export default function PrivacyPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Dispute Mediation &amp; Investigation:</strong> Reviewing move-in defect claims, escrow refunds, and emergency maintenance requests.</span>
+              <span><strong>Dispute Mediation &amp; Investigation:</strong> Reviewing move-in defect claims, rent refunds, and emergency maintenance requests.</span>
             </li>
           </ul>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
@@ -207,9 +207,9 @@ export default function PrivacyPage() {
       )
     },
     {
-      id: 'payment-escrow',
+      id: 'payment-processing',
       number: '04',
-      title: 'Payment Processing & Escrow Privacy',
+      title: 'Payment Processing & Financial Privacy',
       badge: 'PCI-DSS Compliant',
       summary: 'Card and Mobile Money credentials are handled entirely by Bank of Ghana-regulated payment gateways.',
       content: (
@@ -227,7 +227,7 @@ export default function PrivacyPage() {
             </p>
           </div>
           <p>
-            Our internal database retains only the anonymized transaction reference token, transaction status (Escrow Pending, Released, Refunded), currency amount, and payment timestamp for statutory bookkeeping and dispute resolution.
+            Our internal database retains only the anonymized transaction reference token, transaction status (Pending, Settled, Refunded), currency amount, and payment timestamp for statutory bookkeeping and dispute resolution.
           </p>
         </div>
       )
@@ -249,7 +249,7 @@ export default function PrivacyPage() {
           <ul className="space-y-2 text-xs sm:text-sm">
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Your Confirmed Tenancy Counterparty:</strong> Once a reservation deposit is secured in escrow, your full name, verified phone number, and emergency contact details are shared with the property host (and vice versa) to facilitate move-in logistics.</span>
+              <span><strong>Your Confirmed Tenancy Counterparty:</strong> Once a reservation payment is confirmed, your full name, verified phone number, and emergency contact details are shared with the property host (and vice versa) to facilitate move-in logistics.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
@@ -257,7 +257,7 @@ export default function PrivacyPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Licensed Escrow Banking Gateways:</strong> Transmitting necessary transaction identifiers to Paystack and banking partners to execute authorized rent disbursements and refund reversals.</span>
+              <span><strong>Licensed Banking Gateways:</strong> Transmitting necessary transaction identifiers to Paystack and banking partners to execute authorized rent disbursements and refund reversals.</span>
             </li>
           </ul>
         </div>

@@ -807,7 +807,7 @@ export default function AdminMaintenancePage() {
                   ? 'Non-exempt API requests within the active scope are receiving HTTP 503 Service Unavailable with a Retry-After header. Administrator sessions bypass restrictions.'
                   : serverScheduled
                   ? `The server will automatically transition into maintenance mode at ${serverStartTime ? new Date(serverStartTime).toLocaleString() : 'the scheduled start time'}.`
-                  : 'All marketplace microservices, Paystack/MoMo escrow callbacks, and resident portals are serving traffic normally.'}
+                  : 'All marketplace microservices, Paystack/MoMo payment callbacks, and resident portals are serving traffic normally.'}
               </p>
             </div>
           </div>

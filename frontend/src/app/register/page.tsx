@@ -330,13 +330,13 @@ export default function RegisterPage() {
           </h2>
 
           <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-            Digital tenancy agreements, protected escrow payouts, and verified Ghana Card identification uniting property owners and residents across Ghana.
+            Digital tenancy agreements, instant Paystack payouts, and verified Ghana Card identification uniting property owners and residents across Ghana.
           </p>
 
           {/* Trust Markers */}
           <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Listings
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5">

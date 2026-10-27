@@ -32,19 +32,19 @@ interface FaqItem {
 const FAQ_CATEGORIES = [
   { id: 'ALL', label: 'All Topics' },
   { id: 'BOOKING', label: 'Booking & Stays' },
-  { id: 'PAYMENTS', label: 'Payments & Escrow' },
+  { id: 'PAYMENTS', label: 'Rent & Payments' },
   { id: 'PROPERTY_ISSUES', label: 'Property & Maintenance' },
   { id: 'ACCOUNT_SECURITY', label: 'Account & Security' },
 ] as const;
 
 const FAQ_ITEMS: FaqItem[] = [
   {
-    id: 'escrow-how',
+    id: 'rent-payment-how',
     category: 'PAYMENTS',
-    categoryLabel: 'Payments & Escrow',
-    question: 'How does the Akwaaba Homes rent escrow system work?',
+    categoryLabel: 'Rent & Payments',
+    question: 'How do rent payments work on Akwaaba Homes?',
     answer:
-      'When you book a hostel room or residential apartment, your payment is held in escrow via Paystack after both parties sign the digital tenancy agreement. Funds are protected until your move-in is confirmed.',
+      'When you book a hostel room or residential apartment, your rent payment is processed securely via Paystack (Mobile Money or bank card) after both parties sign the digital tenancy agreement.',
   },
   {
     id: 'viewing-fees',
@@ -84,7 +84,7 @@ const FAQ_ITEMS: FaqItem[] = [
     categoryLabel: 'Property & Maintenance',
     question: 'What if the room does not match the listing upon arrival?',
     answer:
-      'If there is a material discrepancy between the listing and the physical room at move-in, submit a support request linked to your booking reference before confirming check-in so our compliance team can review your escrow hold.',
+      'If there is a material discrepancy between the listing and the physical room at move-in, submit a support request linked to your booking reference before confirming check-in so our compliance team can review your booking.',
   },
   {
     id: 'profile-lock',
@@ -104,7 +104,7 @@ function SupportContent() {
   const [faqCategory, setFaqCategory] = useState<string>('ALL');
   const [faqSearch, setFaqSearch] = useState('');
   const [openFaqIds, setOpenFaqIds] = useState<Record<string, boolean>>({
-    'escrow-how': true,
+    'rent-payment-how': true,
   });
 
   // Support / Issue Form State
@@ -382,7 +382,7 @@ function SupportContent() {
                   >
                     <option value="PROPERTY_MAINTENANCE">Property Repair &amp; Maintenance</option>
                     <option value="BOOKING">Booking &amp; Reservation Assistance</option>
-                    <option value="PAYMENT">Escrow Payment &amp; Billing</option>
+                    <option value="PAYMENT">Rent Payment &amp; Billing</option>
                     <option value="DISPUTE">Move-In or Tenancy Dispute</option>
                     <option value="ACCOUNT_SECURITY">Account &amp; Verification</option>
                     <option value="OTHER">Other Inquiry</option>
@@ -529,7 +529,7 @@ function SupportContent() {
                 Frequently Asked Questions
               </h2>
               <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
-                Quick answers about bookings, escrow payments, and tenancy agreements.
+                Quick answers about bookings, rent payments, and tenancy agreements.
               </p>
             </div>
 

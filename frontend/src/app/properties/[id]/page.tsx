@@ -1022,7 +1022,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           {/* ── RIGHT COLUMN: 9.5 BOOKING PANEL (5 cols) ── */}
           <div id="booking-widget" className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-22">
             <div className="bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A] p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(23,61,50,0.06)] space-y-5">
-              {/* Price & Escrow Header */}
+              {/* Price Header */}
               <div className="flex items-baseline justify-between pb-4 border-b border-[#E7E7DF] dark:border-[#262E2A]">
                 <div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block mb-0.5">
@@ -1035,7 +1035,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     size="lg"
                   />
                 </div>
-                <StatusBadge status="PAID_IN_ESCROW" customLabel="Protected Booking" size="xs" />
+                <StatusBadge status="APPROVED" customLabel="Verified Listing" size="xs" />
               </div>
 
               {viewingScheduled && (
@@ -1460,7 +1460,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     <span>Reservation recorded</span>
                   </div>
                   <p className="text-xs leading-relaxed">
-                    Your booking request for <strong>{property.title}</strong> has been created. You can track host approval and complete escrow payment from your booking details page.
+                    Your booking request for <strong>{property.title}</strong> has been created. You can track host approval and complete your rent payment from your booking details page.
                   </p>
                 </div>
 

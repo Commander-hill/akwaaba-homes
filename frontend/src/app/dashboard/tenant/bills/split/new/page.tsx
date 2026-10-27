@@ -258,7 +258,7 @@ function BillSplitterContent() {
           onClick={() => router.push('/dashboard/tenant?tab=payments')}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-900 dark:hover:text-white mb-3 transition-colors cursor-pointer"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Escrow &amp; Payments
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Rent &amp; Payments
         </button>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

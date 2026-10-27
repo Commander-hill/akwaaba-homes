@@ -61,7 +61,7 @@ export default function TenantBookingDetailsPage() {
       api
         .post(`/bookings/${bookingId}/verify-payment`, { reference: paymentRef })
         .then(() => {
-          toast.success('Escrow payment verified!');
+          toast.success('Rent payment verified!');
           refetch();
           queryClient.invalidateQueries({ queryKey: ['bookings', 'tenant'] });
         })
@@ -229,13 +229,13 @@ export default function TenantBookingDetailsPage() {
       done: isLeaseCompleted || isCompletedOrActive,
     },
     {
-      label: 'Escrow Payment & Move-In',
+      label: 'Rent Payment & Move-In',
       desc: isCancelledOrRejected
         ? 'No payment collected'
         : isCompletedOrActive
         ? booking.isCheckedIn
           ? 'Checked in • Active Residency'
-          : 'Paid into Escrow • Ready for Check-In'
+          : 'Payment Verified • Ready for Check-In'
         : 'Pay via Mobile Money / Card',
       done: isCompletedOrActive,
     },
@@ -525,7 +525,7 @@ export default function TenantBookingDetailsPage() {
                 <span>Price Breakdown</span>
               </h2>
               <span className="inline-flex items-center gap-1 text-xs font-medium text-[#1F7A4C] dark:text-[#6EE7B7]">
-                <Lock className="w-3.5 h-3.5" /> Escrow Protected
+                <Lock className="w-3.5 h-3.5" /> Secure Checkout
               </span>
             </div>
 
@@ -563,7 +563,7 @@ export default function TenantBookingDetailsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#1F7A4C] dark:text-[#6EE7B7]">
                       <CheckCircle2 className="w-4 h-4 shrink-0" />
-                      <span>Payment Confirmed &amp; Protected</span>
+                      <span>Payment Confirmed</span>
                     </div>
                     <Link
                       href={`/dashboard/invoice/${booking.transactions?.[0]?.id || booking.id}`}
@@ -576,7 +576,7 @@ export default function TenantBookingDetailsPage() {
                   <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
                     {booking.isCheckedIn
                       ? 'You have checked in to this property. Your residency is active.'
-                      : 'Your payment is held safely in escrow. Present your Gatehouse Clearance Code below upon arrival to complete check-in.'}
+                      : 'Your rent payment is confirmed. Present your Gatehouse Clearance Code below upon arrival to complete check-in.'}
                   </p>
                 </div>
 
@@ -618,7 +618,7 @@ export default function TenantBookingDetailsPage() {
               <div className="space-y-3">
                 {!isLeaseCompleted && (
                   <div className="p-3.5 rounded-[12px] bg-[#FFFAEB] dark:bg-[#451A03]/30 border border-[#FDE68A] dark:border-[#78350F] text-xs text-[#B45309] dark:text-[#FCD34D] leading-relaxed">
-                    Both you and the landlord must sign the digital tenancy agreement before escrow payment is unlocked.
+                    Both you and the landlord must sign the digital tenancy agreement before rent payment is unlocked.
                   </div>
                 )}
                 <Button
@@ -630,7 +630,7 @@ export default function TenantBookingDetailsPage() {
                   leftIcon={<CreditCard className="w-4 h-4" />}
                   className="w-full h-11"
                 >
-                  Pay {formatCedis(totalPayable)} into Escrow
+                  Pay {formatCedis(totalPayable)} Now
                 </Button>
               </div>
             ) : isPending ? (

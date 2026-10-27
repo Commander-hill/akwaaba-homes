@@ -307,7 +307,7 @@ export default function LandlordWithdrawalPage() {
               GH₵ {availableBalance.toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-              Unencumbered rent escrow funds
+              Available rental balance
             </p>
           </div>
         </div>
@@ -361,7 +361,7 @@ export default function LandlordWithdrawalPage() {
               <Lock className="w-3.5 h-3.5" />
             </div>
             <span>
-              Escrow payouts currently use <strong>Email OTP</strong>. Enable TOTP 2FA for instant, tamper-proof authorization.
+              Payouts currently use <strong>Email OTP</strong>. Enable TOTP 2FA for instant, tamper-proof authorization.
             </span>
           </div>
           <Link
@@ -379,7 +379,7 @@ export default function LandlordWithdrawalPage() {
             <span>Two-Factor Authentication is <strong>Active</strong>. Payout authorizations are protected by TOTP step-up verification.</span>
           </div>
           <span className="text-[10px] font-mono uppercase font-bold text-emerald-700 dark:text-emerald-400 hidden sm:inline">
-            SECURED ESCROW
+            2FA PROTECTED
           </span>
         </div>
       ) : null}
@@ -741,7 +741,7 @@ export default function LandlordWithdrawalPage() {
                 <CheckCircle2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
                 <span>Settlement Calculation</span>
               </h3>
-              <span className="text-[10px] font-mono text-zinc-400">PAYSTACK ESCROW</span>
+              <span className="text-[10px] font-mono text-zinc-400">PAYSTACK TRANSFER</span>
             </div>
 
             <div className="space-y-2.5 text-xs">

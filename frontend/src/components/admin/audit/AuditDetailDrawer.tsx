@@ -70,7 +70,7 @@ export function getActionCategory(action: string): { label: string; variant: 'da
   if (upper.includes('APPROVE') || upper.includes('VERIF') || upper.includes('ACTIVATE') || upper.includes('ACCEPT')) {
     return { label: 'REGULATORY APPROVAL', variant: 'success' };
   }
-  if (upper.includes('PAY') || upper.includes('REFUND') || upper.includes('DISBURSE') || upper.includes('ESCROW')) {
+  if (upper.includes('PAY') || upper.includes('REFUND') || upper.includes('DISBURSE') || upper.includes('SETTLE')) {
     return { label: 'FINANCIAL SETTLEMENT', variant: 'info' };
   }
   if (upper.includes('CONFIG') || upper.includes('BROADCAST') || upper.includes('NOTICE') || upper.includes('SETTING')) {

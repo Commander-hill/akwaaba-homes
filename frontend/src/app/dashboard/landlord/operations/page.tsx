@@ -428,7 +428,7 @@ function LandlordDashboardContent() {
                 Host &amp; Asset Management
               </span>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Ghana Act 772 &amp; MoMo Escrow Verified
+                Ghana Act 772 &amp; MoMo Verified
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight mt-1 flex items-center gap-3">
@@ -489,7 +489,7 @@ function LandlordDashboardContent() {
             <div className="text-lg sm:text-xl font-black text-zinc-950 dark:text-white mt-0.5 font-mono">
               GH₵ {(earningsSummary?.totalGrossEarnings || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </div>
-            <div className="text-[10px] text-zinc-500 mt-0.5">100% escrow collected via Paystack</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">100% collected via Paystack</div>
           </div>
 
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 p-3.5 rounded-xl shadow-xs">
@@ -541,7 +541,7 @@ function LandlordDashboardContent() {
               )}
             >
               <CreditCard className={clsx("w-4 h-4", activePillar === 'financials' ? "text-[#0F5132] dark:text-emerald-400" : "text-zinc-400")} />
-              <span>2. Financials &amp; Escrow</span>
+              <span>2. Financials &amp; Payments</span>
               {earningsSummary?.totalNetEarnings > 0 && (
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
               )}
@@ -877,7 +877,7 @@ function LandlordDashboardContent() {
                     <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
                       {propertySearchQuery 
                         ? 'Try clearing your search query to see all listed properties.'
-                        : 'List your student hostel, apartment, or residential flat to start accepting tenant bookings and MoMo escrow deposits.'}
+                        : 'List your student hostel, apartment, or residential flat to start accepting tenant bookings and online rent payments.'}
                     </p>
                   </div>
                   {!propertySearchQuery && (
@@ -1012,7 +1012,7 @@ function LandlordDashboardContent() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
-          PILLAR 2: FINANCIALS & ESCROW LEDGER
+          PILLAR 2: FINANCIALS & PAYMENTS LEDGER
       ═══════════════════════════════════════════════════════════════════ */}
       {activePillar === 'financials' && (
         <div className="space-y-6 animate-in">
@@ -1027,7 +1027,7 @@ function LandlordDashboardContent() {
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <h3 className="text-sm font-black uppercase tracking-wider text-zinc-950 dark:text-white">
-                      Ghana Revenue Authority (GRA) Escrow Compliance
+                      Ghana Revenue Authority (GRA) Tax Compliance
                     </h3>
                   </div>
                   <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl leading-relaxed">
@@ -1058,7 +1058,7 @@ function LandlordDashboardContent() {
                 <div className="p-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
                   <div>
                     <h4 className="font-bold text-xs uppercase tracking-wider text-zinc-900 dark:text-white">
-                      Disbursement Ledger &amp; Escrow Settlements
+                      Disbursement Ledger &amp; Rent Settlements
                     </h4>
                     <p className="text-[11px] text-zinc-400">All Paystack transactions cleared to your Mobile Money account</p>
                   </div>

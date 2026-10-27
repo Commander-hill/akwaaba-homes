@@ -357,7 +357,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                   Executive Operations &amp; Statutory Tenancy Oversight
                 </h3>
                 <p className="text-xs text-zinc-300/80 leading-relaxed font-normal">
-                  Centralized supervision over Ghana Card identity compliance, Land Title registry deeds, and automated Paystack escrow settlements across all regions.
+                  Centralized supervision over Ghana Card identity compliance, Land Title registry deeds, and automated Paystack rent settlements across all regions.
                 </p>
 
                 {/* Statutory Badges */}

@@ -311,10 +311,10 @@ export default function PublicMaintenancePage() {
                 <div className="p-3.5 rounded-xl bg-zinc-50/70 dark:bg-zinc-900/40 border border-zinc-200/70 dark:border-zinc-800/80 space-y-1">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-900 dark:text-white">
                     <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0" />
-                    <span>Escrow Protected</span>
+                    <span>Payments Safeguarded</span>
                   </div>
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    All rental payments and landlord disbursements remain safeguarded in escrow.
+                    All rental payments and landlord disbursements remain securely recorded.
                   </p>
                 </div>
 

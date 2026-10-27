@@ -11,7 +11,7 @@ import api from '@/lib/axios';
 const SUBJECT_LABELS: Record<string, string> = {
   TENANCY_INQUIRY: 'Student Hostel / Accommodation Inquiry',
   LANDLORD_ONBOARDING: 'Landlord Property Registration',
-  ESCROW_ASSISTANCE: 'MoMo Escrow & Payment Support',
+  ESCROW_ASSISTANCE: 'MoMo & Payment Support',
   DISPUTE_REPORT: 'Tenancy or Booking Dispute',
   OTHER: 'General Feedback'
 };
@@ -97,7 +97,7 @@ export default function ContactPage() {
             Get in Touch With Us
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">
-            Have questions about student hostel bookings, statutory leases, landlord listing onboarding, or rent escrow? We are here to help.
+            Have questions about student hostel bookings, statutory leases, landlord listing onboarding, or rent payments? We are here to help.
           </p>
         </div>
 
@@ -222,7 +222,7 @@ export default function ContactPage() {
                 >
                   <option value="TENANCY_INQUIRY">Student Hostel / Accommodation Inquiry</option>
                   <option value="LANDLORD_ONBOARDING">Landlord Property Registration</option>
-                  <option value="ESCROW_ASSISTANCE">MoMo Escrow &amp; Payment Support</option>
+                  <option value="ESCROW_ASSISTANCE">MoMo &amp; Payment Support</option>
                   <option value="DISPUTE_REPORT">Tenancy or Booking Dispute</option>
                   <option value="OTHER">General Feedback</option>
                 </select>

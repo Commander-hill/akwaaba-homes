@@ -24,18 +24,18 @@ const CATEGORIES = [
 
 const FAQ_DATA: FaqItem[] = [
   {
-    id: 'escrow-how',
+    id: 'rent-payments-how',
     category: 'RENT_PAYMENTS',
     categoryLabel: 'Rent & Payments',
-    question: 'How does the AkwaabaHomes rent escrow system work?',
-    answer: 'When you book a room or hostel bed, your payment is placed into an audited trust escrow account via licensed payment partners. The landlord is not paid until you arrive on-site, inspect the accommodation, verify that it matches the listing, and confirm the digital key handover pass.'
+    question: 'How do rent payments work on AkwaabaHomes?',
+    answer: 'When you book a room or hostel bed, your payment is processed securely through Paystack (Mobile Money or bank card) after both parties sign the digital tenancy agreement, generating an instant official rent receipt.'
   },
   {
     id: 'viewing-fees',
     category: 'TENANTS',
     categoryLabel: 'Tenants',
     question: 'Are there any roadside agent viewing fees on AkwaabaHomes?',
-    answer: 'No. AkwaabaHomes strictly prohibits informal viewing fees. All photo galleries, room specs, verified Ghana Post GPS locations, and virtual tours are accessible completely free online. You only pay for your accommodation once you decide to book through escrow.'
+    answer: 'No. AkwaabaHomes strictly prohibits informal viewing fees. All photo galleries, room specs, verified Ghana Post GPS locations, and virtual tours are accessible completely free online. You only pay for your accommodation once your booking is approved and your lease is signed.'
   },
   {
     id: 'gender-lock',
@@ -77,7 +77,7 @@ const FAQ_DATA: FaqItem[] = [
     category: 'RENT_PAYMENTS',
     categoryLabel: 'Rent & Payments',
     question: 'What happens if a room is substandard or misrepresented upon move-in?',
-    answer: 'If the physical accommodation deviates significantly from the listing photos or fails basic habitability standards, you have 24 hours to file a move-in dispute through your dashboard. The escrow funds remain frozen while our mediation team investigates or processes your 100% advance rent refund.'
+    answer: 'If the physical accommodation deviates significantly from the listing photos or fails basic habitability standards, you have 24 hours to file a move-in dispute through your dashboard. Our mediation team investigates and processes any eligible advance rent refund.'
   },
   {
     id: 'student-id-req',
@@ -99,7 +99,7 @@ export default function HelpFaqPage() {
   const [activeCategory, setActiveCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({
-    'escrow-how': true
+    'rent-payments-how': true
   });
 
   const toggleItem = (id: string) => {
@@ -143,7 +143,7 @@ export default function HelpFaqPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search help articles (e.g. escrow, gender lock, lease)..."
+                placeholder="Search help articles (e.g. payments, gender lock, lease)..."
                 className="w-full h-12 pl-11 pr-4 bg-white dark:bg-[#15191E] border border-zinc-300 dark:border-zinc-700 rounded-xl text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] outline-none transition-colors shadow-2xs"
               />
             </div>

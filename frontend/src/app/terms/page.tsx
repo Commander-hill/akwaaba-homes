@@ -101,7 +101,7 @@ export default function TermsPage() {
             By accessing or utilizing the AkwaabaHomes platform (website, progressive web application, or authorized service portals), registering an account, publishing a property listing, or executing an accommodation reservation, you enter into a legally enforceable agreement with <strong>AkwaabaHomes Ghana PropTech Limited</strong>.
           </p>
           <p>
-            These Platform Terms and Conditions, together with our <Link href="/privacy" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Privacy Policy</Link>, govern your access to our marketplace, escrow infrastructure, and digital tenancy instruments.
+            These Platform Terms and Conditions, together with our <Link href="/privacy" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Privacy Policy</Link>, govern your access to our marketplace, payment infrastructure, and digital tenancy instruments.
           </p>
           <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-950 dark:text-emerald-200 space-y-1.5">
             <div className="flex items-center gap-2 font-bold text-sm text-[#0F5132] dark:text-emerald-400">
@@ -136,7 +136,7 @@ export default function TermsPage() {
               </div>
               <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h4>
               <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
-                Authorized to reserve rooms, execute digital lease agreements, and inspect properties with escrow protection.
+                Authorized to reserve rooms, execute digital lease agreements, and inspect verified properties.
               </p>
             </div>
             <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40">
@@ -168,35 +168,35 @@ export default function TermsPage() {
       )
     },
     {
-      id: 'booking-escrow',
+      id: 'booking-payments',
       number: '03',
-      title: 'Hostel Bookings & Paystack Escrow Architecture',
-      badge: 'Protected Escrow',
-      summary: 'Advance rent is held in an audited trust account until the physical key handover protocol is confirmed.',
+      title: 'Hostel Bookings & Paystack Payment Architecture',
+      badge: 'Verified Settlement',
+      summary: 'Advance rent is processed through licensed payment rails with automated move-in verification.',
       content: (
         <div className="space-y-4">
           <p>
-            To protect tenants and hosts from roadside commission extortion and ghost property listings, AkwaabaHomes enforces an automated, bank-grade escrow mechanism powered by Paystack:
+            To protect tenants and hosts from roadside commission extortion and ghost property listings, AkwaabaHomes enforces an automated, bank-grade settlement mechanism powered by Paystack:
           </p>
           <ul className="space-y-2.5 text-xs sm:text-sm">
             <li className="flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Advance Deposit to Trust Account:</strong> When a tenant reserves a hostel or private apartment, the booking payment (including security deposits and utilities) is transferred directly into an audited escrow trust account.</span>
+              <span><strong>Verified Rent Checkout:</strong> When a tenant reserves a hostel or private apartment, the booking payment (including security deposits and utilities) is processed directly through audited Paystack payment rails.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Inspection Lock Window:</strong> Funds are legally locked and cannot be withdrawn by the landlord until the tenant arrives on-site, inspects the designated room, and signs the physical check-in protocol.</span>
+              <span><strong>Inspection Verification Window:</strong> Settlements are tracked until the tenant arrives on-site, inspects the designated room, and signs the physical check-in protocol.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Automated Disbursement:</strong> Once both the tenant and the on-site caretaker validate the Digital Move-In Pass, the escrow engine triggers automated settlement directly into the landlord&apos;s registered Mobile Money (MTN MoMo, Telecel Cash, AirtelTigo) or Ghanaian bank account within 24 banking hours.</span>
+              <span><strong>Automated Disbursement:</strong> Once both the tenant and the on-site caretaker validate the Digital Move-In Pass, the settlement engine triggers automated payout directly into the landlord&apos;s registered Mobile Money (MTN MoMo, Telecel Cash, AirtelTigo) or Ghanaian bank account within 24 banking hours.</span>
             </li>
           </ul>
           <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-2.5">
             <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold block mb-0.5">Strict Prohibition of Offline Cash Transactions</span>
-              <span>AkwaabaHomes will never ask you to pay cash directly to roadside agents, street brokers, or landlords prior to confirmed platform escrow. Payments made outside platform rails are strictly at user risk and void all escrow dispute guarantees.</span>
+              <span>AkwaabaHomes will never ask you to pay cash directly to roadside agents, street brokers, or landlords prior to confirmed platform checkout. Payments made outside platform rails are strictly at user risk and void all dispute guarantees.</span>
             </div>
           </div>
         </div>
@@ -304,7 +304,7 @@ export default function TermsPage() {
       number: '07',
       title: 'Move-In Disputes & 24-Hour Refund Guarantee',
       badge: '100% Protection',
-      summary: '24-hour post-arrival dispute window to halt escrow payout and secure full rent reimbursement.',
+      summary: '24-hour post-arrival dispute window to halt landlord payout and secure full rent reimbursement.',
       content: (
         <div className="space-y-4">
           <p>
@@ -320,7 +320,7 @@ export default function TermsPage() {
                 <strong>1. Dispute Lodging:</strong> If a room is unhabitable, occupied by unauthorized third parties, lacking promised core amenities (running water, electricity), or materially deviates from the listing, the tenant can click &ldquo;Raise Inspection Dispute&rdquo; directly from their booking ledger within 24 hours of scheduled arrival.
               </p>
               <p>
-                <strong>2. Immediate Escrow Freeze:</strong> Lodging a dispute instantly halts all automated settlement transfers to the landlord. Funds remain locked in the secure Paystack escrow trust.
+                <strong>2. Immediate Payout Freeze:</strong> Lodging a dispute instantly halts all automated settlement transfers to the landlord while our compliance team investigates.
               </p>
               <p>
                 <strong>3. 48-Hour Resolution Window:</strong> Our mediation team reviews photographic and video evidence. The landlord is given 24 hours to offer an equivalent room or rectify the grievance.
@@ -345,7 +345,7 @@ export default function TermsPage() {
       content: (
         <div className="space-y-4">
           <p>
-            AkwaabaHomes operates as a secure PropTech marketplace and escrow intermediary. While we deploy rigorous identity checks, fraud detection algorithms, and physical audits, we are not the physical owner, insurer, or direct occupant of third-party rental properties.
+            AkwaabaHomes operates as a secure PropTech marketplace and verified settlement intermediary. While we deploy rigorous identity checks, fraud detection algorithms, and physical audits, we are not the physical owner, insurer, or direct occupant of third-party rental properties.
           </p>
           <p>
             To the maximum extent permissible by Ghanaian law, AkwaabaHomes shall not be liable for indirect, incidental, punitive, or consequential damages resulting from personal conduct, unauthorized property entry, electrical utility surges, or municipal water outages beyond reasonable platform control.
@@ -413,7 +413,7 @@ export default function TermsPage() {
               </h1>
 
               <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl font-normal">
-                The legally binding agreement governing rental reservations, landlord listings, escrow protections, dynamic gender locking, and tenant move-in guarantees on AkwaabaHomes Ghana.
+                The legally binding agreement governing rental reservations, landlord listings, payment protections, dynamic gender locking, and tenant move-in guarantees on AkwaabaHomes Ghana.
               </p>
 
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
@@ -488,9 +488,9 @@ export default function TermsPage() {
             <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shadow-2xs">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Escrow Trust Account</h3>
+            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Verified Rent Payments</h3>
             <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              Your advance rent is never paid straight to landlords or roadside agents. It is held securely until you inspect the property on move-in day.
+              Your advance rent is never paid in cash to roadside agents. It is processed through Paystack with instant receipts and move-in verification.
             </p>
           </div>
 
@@ -542,7 +542,7 @@ export default function TermsPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search clauses (e.g. escrow, gender, refund)..."
+                placeholder="Search clauses (e.g. payments, gender, refund)..."
                 className="w-full h-10 pl-9 pr-3 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl placeholder:text-zinc-400 text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] transition"
               />
             </div>
@@ -691,7 +691,7 @@ export default function TermsPage() {
               </div>
 
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                If you have questions regarding our Escrow rules, university hostel quotas, or move-in dispute timelines, please contact our Legal &amp; Regulatory Compliance Desk at <a href="mailto:legal@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">legal@akwaabahomes.com</a> or open a ticket through our <Link href="/support" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">Dispute Desk</Link>.
+                If you have questions regarding our payment settlement rules, university hostel quotas, or move-in dispute timelines, please contact our Legal &amp; Regulatory Compliance Desk at <a href="mailto:legal@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">legal@akwaabahomes.com</a> or open a ticket through our <Link href="/support" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">Dispute Desk</Link>.
               </p>
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-zinc-100 dark:border-zinc-800/80 pt-4">

@@ -121,7 +121,7 @@ function ResetPasswordForm() {
           {/* Trust Markers */}
           <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 100% Escrow Protection
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Accounts
             </span>
             <span>•</span>
             <span className="flex items-center gap-1.5">

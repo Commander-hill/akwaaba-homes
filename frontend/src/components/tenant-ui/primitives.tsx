@@ -301,8 +301,8 @@ const STATUS_MAP: Record<
 > = {
   CONFIRMED: { label: 'Confirmed', tone: 'success', icon: CheckCircle2 },
   ACTIVE: { label: 'Active Residency', tone: 'success', icon: CheckCircle2 },
-  PAID_IN_ESCROW: { label: 'Paid in Escrow', tone: 'success', icon: ShieldCheck },
-  ESCROW_HELD: { label: 'Held in Escrow', tone: 'info', icon: ShieldCheck },
+  PAID_IN_ESCROW: { label: 'Payment Confirmed', tone: 'success', icon: ShieldCheck },
+  ESCROW_HELD: { label: 'Payment Verified', tone: 'info', icon: ShieldCheck },
   RELEASED: { label: 'Disbursed', tone: 'success', icon: CheckCircle2 },
   COMPLETED: { label: 'Completed', tone: 'neutral', icon: CheckCircle2 },
   APPROVED: { label: 'Approved — Awaiting Payment', tone: 'warning', icon: Clock },

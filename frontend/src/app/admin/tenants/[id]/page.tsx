@@ -335,7 +335,7 @@ export default function AdminTenantDetailPage({
                   <tr className="bg-zinc-50/80 dark:bg-zinc-900/60 border-b border-zinc-200 dark:border-zinc-800 text-[11px] font-bold uppercase tracking-wider text-zinc-500">
                     <th className="py-3 px-4">Booking ID</th>
                     <th className="py-3 px-4">Property</th>
-                    <th className="py-3 px-4">Escrow Status</th>
+                    <th className="py-3 px-4">Booking Status</th>
                     <th className="py-3 px-4">Booking Date</th>
                     <th className="py-3 px-4 text-right">Details</th>
                   </tr>

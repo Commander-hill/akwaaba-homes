@@ -376,7 +376,7 @@ export default function AgreementPage() {
             <p>
               <strong>2.1.</strong> The rent reserved for the tenancy is{' '}
               <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>, paid
-              by the Tenant through the designated settlement channel into escrow custody on behalf of the Landlord.
+              by the Tenant through the designated settlement channel on behalf of the Landlord.
             </p>
             <p>
               <strong>2.2.</strong> In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent

@@ -116,12 +116,12 @@ export const notifyBookingCreated = async (opts: {
         { label: 'Property', value: opts.propertyTitle, highlight: true },
         { label: 'Applicant Name', value: opts.tenantName },
         { label: 'Booking Reference', value: opts.bookingId, isMono: true },
-        { label: 'Escrow Protection', value: 'Paystack Secured Deposit' }
+        { label: 'Payment Method', value: 'Paystack Checkout' }
       ])}
     `, 'Booking Details')}
 
     <p style="color:#52525B;font-size:13px;line-height:1.6;margin:16px 0;">
-      Please review the tenant's details and move-in timeline in your Landlord Hub. You can approve the booking to proceed to the Tenancy Agreement, or decline to release the escrow hold.
+      Please review the tenant's details and move-in timeline in your Landlord Hub. You can approve the booking to proceed to the Tenancy Agreement, or decline the request.
     </p>
 
     ${emailButtonHtml({
@@ -132,7 +132,7 @@ export const notifyBookingCreated = async (opts: {
 
     <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
       <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
-        <strong>Escrow assurance:</strong> The tenant's payment is held securely in escrow. Payouts are transferred directly to your Mobile Money or bank account once the tenancy agreement is signed and keys are handed over.
+        <strong>Settlement info:</strong> Rent payouts are transferred directly to your Mobile Money or bank account once the tenancy agreement is signed and check-in is completed.
       </p>
     </div>
   `;
@@ -165,7 +165,7 @@ export const notifyPaymentReceipt = async (opts: {
         Payment Receipt
       </h2>
       <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
-        Hi ${opts.tenantName}, thank you for your payment. Your rent deposit of <strong>GH₵ ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> has been received and is secured in escrow.
+        Hi ${opts.tenantName}, thank you for your payment. Your rent payment of <strong>GH₵ ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</strong> has been received and verified.
       </p>
     </div>
 
@@ -174,12 +174,12 @@ export const notifyPaymentReceipt = async (opts: {
         { label: 'Property', value: opts.propertyTitle, highlight: true },
         { label: 'Amount Paid', value: `GH₵ ${opts.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`, highlight: true },
         { label: 'Booking Reference', value: opts.bookingId, isMono: true },
-        { label: 'Escrow Status', value: 'Held in Escrow' }
+        { label: 'Payment Status', value: 'Verified & Confirmed' }
       ])}
     `, 'Payment Summary')}
 
     <p style="color:#52525B;font-size:13px;line-height:1.6;margin:16px 0;">
-      Your payment is held safely in escrow. If the landlord declines your booking or fails to confirm within the window, your payment will be <strong>automatically refunded in full (100%)</strong> to your original payment method.
+      Your rent payment is confirmed. If a booking is cancelled prior to check-in in accordance with platform policy, eligible refunds are processed back to your original payment method.
     </p>
 
     ${emailButtonHtml({
@@ -190,7 +190,7 @@ export const notifyPaymentReceipt = async (opts: {
 
     <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
       <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
-        <strong>Next steps:</strong> The landlord has been notified to review your booking. Once approved, you will sign your digital Tenancy Agreement to finalize your stay.
+        <strong>Next steps:</strong> Your official receipt and check-in clearance details are now available in your resident portal.
       </p>
     </div>
   `;
@@ -201,7 +201,7 @@ export const notifyPaymentReceipt = async (opts: {
     recipientName: opts.tenantName,
     type: 'BOOKING',
     title: 'Booking Payment Receipt',
-    message: `Your payment of GH₵ ${opts.amount} for "${opts.propertyTitle}" has been received into escrow.`,
+    message: `Your payment of GH₵ ${opts.amount} for "${opts.propertyTitle}" has been confirmed.`,
     link: '/dashboard/tenant',
     emailSubject: `Payment receipt: GH₵ ${opts.amount.toLocaleString()} for ${opts.propertyTitle}`,
     emailBodyHtml: renderInstitutionalEmail({
@@ -240,7 +240,7 @@ export const notifyBookingStatusChanged = async (opts: {
       ${emailMetaTableHtml([
         { label: 'Property', value: opts.propertyTitle, highlight: true },
         { label: 'Booking Status', value: opts.status },
-        { label: 'Next Action', value: isApproved ? 'Sign Tenancy Agreement' : isRejected ? '100% Refund Processed' : 'Under Review' }
+        { label: 'Next Action', value: isApproved ? 'Sign Tenancy Agreement' : isRejected ? 'Application Closed' : 'Under Review' }
       ])}
     `, 'Booking Status')}
 
@@ -255,9 +255,9 @@ export const notifyBookingStatusChanged = async (opts: {
 
     ${isRejected ? `
       <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:6px;padding:14px 18px;margin:20px 0;">
-        <h4 style="margin:0 0 4px;color:#991B1B;font-size:14px;font-weight:700;">Full Escrow Refund</h4>
+        <h4 style="margin:0 0 4px;color:#991B1B;font-size:14px;font-weight:700;">Booking Declined</h4>
         <p style="margin:0;color:#B91C1C;font-size:13px;line-height:1.5;">
-          Because this booking was declined by the property owner, your deposit has been released from escrow and a 100% refund has been processed back to your original payment channel.
+          Because this booking was declined by the property owner, any payment associated with this reservation is automatically refunded back to your original payment channel.
         </p>
       </div>
     ` : ''}
@@ -552,7 +552,7 @@ export const notifyMaintenanceEnded = async () => {
           Maintenance Complete — We Are Back Online
         </h2>
         <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0;">
-          Our scheduled system upgrade has finished. All services, room bookings, and escrow transactions are fully operational.
+          Our scheduled system upgrade has finished. All services, room bookings, and rent payment transactions are fully operational.
         </p>
       </div>
 
@@ -727,7 +727,8 @@ export const notifyLandlordVerification = async (opts: {
 const CONTACT_SUBJECT_LABELS: Record<string, string> = {
   TENANCY_INQUIRY: 'Student Hostel / Accommodation Inquiry',
   LANDLORD_ONBOARDING: 'Landlord Property Registration',
-  ESCROW_ASSISTANCE: 'MoMo Escrow & Payment Support',
+  ESCROW_ASSISTANCE: 'MoMo & Payment Support',
+  PAYMENT_ASSISTANCE: 'MoMo & Payment Support',
   DISPUTE_REPORT: 'Tenancy or Booking Dispute',
   OTHER: 'General Feedback'
 };

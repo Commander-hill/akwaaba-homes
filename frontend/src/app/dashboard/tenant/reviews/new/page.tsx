@@ -405,7 +405,7 @@ function NewReviewContent() {
                 Confirm &amp; Publish Verified Resident Review
               </h2>
               <p className="text-xs text-zinc-500 mt-0.5">
-                Your review will display the Verified Resident badge because your stay was escrow-backed on Akwaaba Homes.
+                Your review will display the Verified Resident badge because your stay was verified on Akwaaba Homes.
               </p>
             </div>
 

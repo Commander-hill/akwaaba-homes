@@ -47,7 +47,7 @@ interface BroadcastComposerModalProps {
 
 export const BROADCAST_CATEGORIES = [
   { id: 'STATUTORY_ALERT', label: 'Statutory / Legal', icon: Scale, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
-  { id: 'FINANCIAL_ESCROW', label: 'Payment & Escrow', icon: CreditCard, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
+  { id: 'FINANCIAL_SETTLEMENT', label: 'Payments & Billing', icon: CreditCard, color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
   { id: 'MAINTENANCE_UPDATE', label: 'Repairs & SLA', icon: Wrench, color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-950/50' },
   { id: 'SECURITY_ADVISORY', label: 'Security & KYC', icon: BadgeCheck, color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/50' },
   { id: 'GENERAL_ANNOUNCEMENT', label: 'General Alert', icon: BellRing, color: 'text-zinc-700 dark:text-zinc-300', bg: 'bg-zinc-100 dark:bg-zinc-800' }
@@ -58,7 +58,7 @@ export const GHANA_BROADCAST_PRESETS = [
     name: 'Advance Rent Policy Advisory',
     target: 'ALL_LANDLORDS' as const,
     title: 'Standard Advance Rent Schedule Guidance',
-    message: 'Platform policy recommends advance rent schedules up to 6 months for residential leases. All listing terms and escrow requests should adhere to verified terms.',
+    message: 'Platform policy recommends advance rent schedules up to 6 months for residential leases. All listing terms and payment requests should adhere to verified terms.',
     category: 'STATUTORY_ALERT'
   },
   {
@@ -71,9 +71,9 @@ export const GHANA_BROADCAST_PRESETS = [
   {
     name: 'Paystack & MoMo Gateway Maintenance',
     target: 'ALL_USERS' as const,
-    title: 'Scheduled Escrow Gateway Maintenance (1:00 AM - 3:00 AM)',
+    title: 'Scheduled Payment Gateway Maintenance (1:00 AM - 3:00 AM)',
     message: 'Routine banking settlement maintenance scheduled for Mobile Money and Paystack channels. Active tenancies and lease renewals remain secure.',
-    category: 'FINANCIAL_ESCROW'
+    category: 'FINANCIAL_SETTLEMENT'
   },
   {
     name: 'Rainy Season & Drainage Safety Advisory',
@@ -87,7 +87,7 @@ export const GHANA_BROADCAST_PRESETS = [
     target: 'ALL_LANDLORDS' as const,
     title: 'Annual Landlord Listing Permit Renewal Active (GH₵ 100)',
     message: 'Ensure your GH₵ 100/yr property listing licenses are current to keep your residential listings visible to verified prospective tenants across Ghana.',
-    category: 'FINANCIAL_ESCROW'
+    category: 'FINANCIAL_SETTLEMENT'
   }
 ];
 

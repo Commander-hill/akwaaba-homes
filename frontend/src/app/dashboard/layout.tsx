@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         links: [
           { name: 'Overview', href: '/dashboard/landlord', icon: LayoutDashboard },
           { name: 'Portfolio & Units', href: '/dashboard/landlord?tab=portfolio', icon: Building2 },
-          { name: 'Financials & Escrow', href: '/dashboard/landlord?tab=financials', icon: CreditCard },
+          { name: 'Financials & Payments', href: '/dashboard/landlord?tab=financials', icon: CreditCard },
           { name: 'Tenancies & Leases', href: '/dashboard/landlord?tab=tenancies', icon: Users },
           { name: 'Facility & Operations', href: '/dashboard/landlord?tab=operations', icon: Wrench },
         ]

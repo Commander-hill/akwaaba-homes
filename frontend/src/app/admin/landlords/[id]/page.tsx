@@ -193,7 +193,7 @@ export default function AdminLandlordDetailPage({
           >
             {tab === 'OVERVIEW' && 'Executive Profile'}
             {tab === 'PROPERTIES' && `Managed Properties (${properties.length})`}
-            {tab === 'BOOKINGS' && `Tenancy Escrow (${bookings.length})`}
+            {tab === 'BOOKINGS' && `Tenancy Bookings (${bookings.length})`}
             {tab === 'DOCUMENTS' && 'Ownership Proof & Deed'}
             {tab === 'AUDIT' && `Audit Trail (${auditLogs.length})`}
           </button>

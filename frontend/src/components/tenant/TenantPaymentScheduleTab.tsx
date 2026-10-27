@@ -35,7 +35,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
             No Active Rent Schedule Yet
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            Once you apply for a student hostel or residential unit, your rent breakdown, caution deposit ledger, and Paystack escrow receipts will appear here.
+            Once you apply for a student hostel or residential unit, your rent breakdown, caution deposit ledger, and payment receipts will appear here.
           </p>
         </div>
         <Link
@@ -65,7 +65,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 text-[10px] font-bold uppercase tracking-wider mb-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Escrow Rent Ledger</span>
+            <span>Rent Payment Ledger</span>
           </div>
           <h3 className="text-lg font-bold text-zinc-950 dark:text-white">
             {prop.title || 'Tenancy Financial Schedule'}
@@ -112,7 +112,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
 
         <div className="p-5">
           <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 block">
-            Escrow Settlement Status
+            Payment Settlement Status
           </span>
           <div className="mt-1.5 flex items-center gap-2">
             {isPaid ? (
@@ -131,7 +131,7 @@ export default function TenantPaymentScheduleTab({ activeBooking: propActiveBook
             {activeBooking.isCheckedIn
               ? 'Checked in • Active tenancy'
               : isPaid
-              ? 'Held in escrow awaiting check-in'
+              ? 'Payment confirmed • Ready for check-in'
               : `Lease status: ${leaseStatus.replace(/_/g, ' ')}`}
           </span>
         </div>

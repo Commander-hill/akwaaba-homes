@@ -70,7 +70,6 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
           { action: { contains: 'REFUND', mode: 'insensitive' } },
           { action: { contains: 'DISBURSE', mode: 'insensitive' } },
           { action: { contains: 'TRANSACTION', mode: 'insensitive' } },
-          { action: { contains: 'ESCROW', mode: 'insensitive' } },
           { action: { contains: 'RENT', mode: 'insensitive' } }
         ];
       } else if (category === 'CONFIG') {
@@ -213,7 +212,7 @@ export const getSystemStats = async (req: Request, res: Response): Promise<void>
       prisma.propertySubscription.count({ where: { isActive: true } })
     ]);
     
-    // Sum all successful transaction amounts (total platform escrow volume)
+    // Sum all successful transaction amounts (total platform payment volume)
     const transactionSum = await prisma.transaction.aggregate({
       _sum: { amount: true },
       where: { status: 'SUCCESS' }
@@ -381,7 +380,7 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
     });
     const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
 
-    // 2. Revenue Metrics (Escrow volume)
+    // 2. Revenue Metrics (Transaction volume)
     const totalTransactions = await prisma.transaction.aggregate({
       _sum: { amount: true },
       where: { status: 'SUCCESS' }
@@ -1919,7 +1918,7 @@ export const getSystemActivity = async (req: Request, res: Response): Promise<vo
         id: `booking-${b.id}`,
         type: 'BOOKING',
         severity: b.status === 'CANCELLED' ? 'NOTICE' : (b.status === 'CONFIRMED' || b.status === 'COMPLETED' ? 'COMPLIANCE' : 'INFO'),
-        title: 'Tenancy Escrow Booking',
+        title: 'Tenancy Booking',
         message: `${b.tenant?.firstName || 'Tenant'} ${b.tenant?.lastName || ''} booked residential lease on "${b.property?.title || 'Property'}"`,
         actor: {
           name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Tenant',

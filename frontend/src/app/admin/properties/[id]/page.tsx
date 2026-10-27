@@ -201,7 +201,7 @@ export default function AdminPropertyDetailPage({
                 <span className="text-sm font-mono font-bold text-zinc-900 dark:text-white">
                   GH₵ {Number(property.cautionDeposit || 0).toLocaleString()}
                 </span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Refundable escrow</span>
+                <span className="text-[10px] text-zinc-400 block mt-0.5">Refundable deposit</span>
               </div>
 
               <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800">

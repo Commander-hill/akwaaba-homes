@@ -64,7 +64,7 @@ export default function AdminAnalyticsPage() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Macroeconomic Platform Analytics & Intelligence"
-        subtitle="Real-time aggregation of residential lease conversion, escrow velocity, regional inventory density, and category performance."
+        subtitle="Real-time aggregation of residential lease conversion, transaction velocity, regional inventory density, and category performance."
         badge={
           <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Database Aggregated
@@ -91,7 +91,7 @@ export default function AdminAnalyticsPage() {
       {/* 4-Card Macro Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
-          title="Total Escrow Volume"
+          title="Total Rent Volume"
           value={formatGhc(analytics?.totalRevenueGhs || 0)}
           subtitle="Processed via Paystack & MoMo"
           icon={Banknote}
@@ -118,12 +118,12 @@ export default function AdminAnalyticsPage() {
 
       {/* 6-Month Growth & Conversion Visualizations */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: 6-Month Booking & Escrow Trajectory (7 cols) */}
+        {/* Left: 6-Month Booking & Revenue Trajectory (7 cols) */}
         <div className="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-600" />
-              6-Month Tenancy Escrow Volume (GH₵)
+              6-Month Tenancy Payment Volume (GH₵)
             </h3>
             <span className="text-[11px] font-semibold text-zinc-400">Authentic Timestamps</span>
           </div>
@@ -132,7 +132,7 @@ export default function AdminAnalyticsPage() {
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={monthlyTrends}>
                 <defs>
-                  <linearGradient id="escrowGrad" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
                   </linearGradient>
@@ -141,10 +141,10 @@ export default function AdminAnalyticsPage() {
                 <XAxis dataKey="month" stroke="#71717a" fontSize={11} tickLine={false} axisLine={false} />
                 <YAxis stroke="#71717a" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v) => `GH₵${v}`} />
                 <Tooltip
-                  formatter={(value: any) => [`GH₵ ${Number(value).toLocaleString()}`, 'Escrow Volume']}
+                  formatter={(value: any) => [`GH₵ ${Number(value).toLocaleString()}`, 'Rent Volume']}
                   contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '0.75rem', color: '#fff', fontSize: '11px' }}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#escrowGrad)" />
+                <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2.5} fillOpacity={1} fill="url(#revenueGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

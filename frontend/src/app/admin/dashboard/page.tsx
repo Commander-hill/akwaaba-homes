@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
       {/* ── A. COMPACT PERFORMANCE SUMMARY ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AdminStatCard
-          title="Escrow Volume"
+          title="Transaction Volume"
           value={`GH₵ ${totalRevenue.toLocaleString()}`}
           subtitle="Total transaction throughput"
           icon={CreditCard}

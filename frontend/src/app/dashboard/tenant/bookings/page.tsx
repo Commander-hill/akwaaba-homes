@@ -83,7 +83,7 @@ export default function TenantBookingsOverviewPage() {
     },
     onSuccess: (data) => {
       if (data?.authorization_url) {
-        toast.loading('Redirecting to secure Paystack escrow checkout...');
+        toast.loading('Redirecting to secure Paystack checkout...');
         window.location.href = data.authorization_url;
       } else {
         setPayingBookingId(null);
@@ -124,7 +124,7 @@ export default function TenantBookingsOverviewPage() {
       (b) => ['APPROVED', 'CONFIRMED'].includes(b.status)
     ).length;
 
-    const totalEscrowProtected = allBookings
+    const totalRentPaid = allBookings
       .filter((b) => ['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status))
       .reduce((acc, b) => {
         const rent = Number(b.price || b.room?.price || b.property?.price || 0);
@@ -135,7 +135,7 @@ export default function TenantBookingsOverviewPage() {
     return {
       activeOrUpcoming: counts.UPCOMING,
       actionRequired: actionRequiredCount,
-      totalEscrowProtected,
+      totalRentPaid,
     };
   }, [allBookings, counts.UPCOMING]);
 
@@ -176,14 +176,14 @@ export default function TenantBookingsOverviewPage() {
       Array.isArray(b.transactions) &&
       b.transactions.some((tx: any) => tx.status === 'COMPLETED' || tx.status === 'SUCCESS');
     if (hasCompletedTx || ['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(b.status)) {
-      return { label: 'Paid in Escrow', tone: 'success' as const };
+      return { label: 'Payment Confirmed', tone: 'success' as const };
     }
     if (['CANCELLED', 'REJECTED'].includes(b.status)) {
       return { label: 'No Payment Due', tone: 'neutral' as const };
     }
     if (['APPROVED', 'CONFIRMED'].includes(b.status)) {
       if (b.leaseAgreement?.status === 'COMPLETED') {
-        return { label: 'Lease Signed • Awaiting Escrow Payment', tone: 'warning' as const };
+        return { label: 'Lease Signed • Ready for Payment', tone: 'warning' as const };
       }
       return { label: 'Lease Signature Required', tone: 'warning' as const };
     }
@@ -202,7 +202,7 @@ export default function TenantBookingsOverviewPage() {
             My Bookings
           </h1>
           <p className="text-sm text-[#5E645E] dark:text-[#A0A8A2] mt-1">
-            Track your reservation requests, digital Act 220 tenancy agreements, and Paystack escrow payments.
+            Track your reservation requests, digital Act 220 tenancy agreements, and rent payments.
           </p>
         </div>
 
@@ -249,10 +249,10 @@ export default function TenantBookingsOverviewPage() {
           <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] flex items-center justify-between">
             <div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
-                Total Protected in Escrow
+                Total Rent Paid
               </span>
               <span className="text-xl sm:text-2xl font-bold text-[#173D32] dark:text-emerald-400 mt-0.5 block">
-                {formatCedis(summaryStats.totalEscrowProtected)}
+                {formatCedis(summaryStats.totalRentPaid)}
               </span>
             </div>
             <div className="w-10 h-10 rounded-xl bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#173D32] dark:text-emerald-400 flex items-center justify-center">
@@ -511,7 +511,7 @@ export default function TenantBookingsOverviewPage() {
                           isLoading={payBookingMutation.isPending && payingBookingId === booking.id}
                           leftIcon={<CreditCard className="w-3.5 h-3.5" />}
                         >
-                          Pay Escrow Now
+                          Pay Rent Now
                         </Button>
                       )}
 

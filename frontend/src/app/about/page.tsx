@@ -29,11 +29,11 @@ export default function AboutPage() {
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-zinc-950 dark:text-white tracking-tight leading-tight">
             Fixing Ghana's Rental Crisis <br />
-            With <span className="text-[#0F5132] dark:text-emerald-400">Trust &amp; Escrow Security</span>
+            With <span className="text-[#0F5132] dark:text-emerald-400">Trust &amp; Verified Homes</span>
           </h1>
           <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
             Akwaaba Homes is Ghana's certified digital accommodation platform. We eliminate non-refundable roadside viewing fees, 
-            prevent double-allocation fraud, and provide lawful, e-signed tenancy contracts backed by MoMo escrow.
+            prevent double-allocation fraud, and provide lawful, e-signed tenancy contracts with seamless Mobile Money &amp; card payments.
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export default function AboutPage() {
                 <li>• Zero viewing fees — free online photo tours</li>
                 <li>• Direct landlord contact with zero agent surcharge</li>
                 <li>• Legally binding digital lease agreements</li>
-                <li>• MoMo Escrow: Payout released only upon key handover</li>
+                <li>• Verified Paystack Mobile Money &amp; Card checkout</li>
               </ul>
             </div>
           </div>
@@ -91,9 +91,9 @@ export default function AboutPage() {
               <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-800/40">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
-              <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">MoMo Escrow Settlement</h3>
+              <h3 className="font-extrabold text-sm text-zinc-950 dark:text-white">Verified MoMo &amp; Card Settlement</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                When a tenant books, funds are locked in an audited escrow account. The landlord or facility manager receives payout only after the on-site caretaker executes the move-in inspection and hands over the keys.
+                When a tenant books, payments are processed through licensed Paystack channels with instant digital receipts and automated move-in verification.
               </p>
             </div>
 

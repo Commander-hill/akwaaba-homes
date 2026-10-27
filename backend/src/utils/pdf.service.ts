@@ -187,7 +187,7 @@ export async function generateTenancyAgreementPDF(data: {
       .fontSize(10)
       .fillColor('#1C1917')
       .text(
-        `2.1. The rent reserved for the tenancy is GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}, paid by the Tenant through the designated settlement channel into escrow custody on behalf of the Landlord.\n2.2. In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent made under this Agreement shall be acknowledged by an official written or electronic rent receipt issued to the Tenant stating the period covered and the sum received.`,
+        `2.1. The rent reserved for the tenancy is GHS ${Number(data.rentAmount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}, paid by the Tenant through the designated settlement channel on behalf of the Landlord.\n2.2. In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent made under this Agreement shall be acknowledged by an official written or electronic rent receipt issued to the Tenant stating the period covered and the sum received.`,
         54,
         y,
         { width: 487, align: 'justify', lineGap: 2.5 }
@@ -710,7 +710,7 @@ export async function generateReceiptPDF(data: {
         .fillColor('#6B7280')
         .font('Helvetica')
         .fontSize(8.5)
-        .text('Held in escrow against move-out inspection', leftX + 12, rowY + 24, { width: 228 });
+        .text('Refundable deposit subject to move-out inspection', leftX + 12, rowY + 24, { width: 228 });
       doc
         .fillColor('#374151')
         .font('Helvetica')
@@ -752,7 +752,7 @@ export async function generateReceiptPDF(data: {
     drawSummaryLine('Total Paid', `GHS ${fmt(totalPaid)}`, true);
     drawSummaryLine('Balance Due', isPaid ? 'GHS 0.00' : `GHS ${fmt(totalPaid)}`);
 
-    // ── Escrow & Statutory Compliance Box ──
+    // ── Statutory Compliance Box ──
     const noteY = Math.max(sumY + 24, 480);
     doc.roundedRect(leftX, noteY, contentWidth, 68, 6).fillAndStroke('#F8FAFC', '#E2E8F0');
 
@@ -760,14 +760,14 @@ export async function generateReceiptPDF(data: {
       .fillColor('#111827')
       .font('Helvetica-Bold')
       .fontSize(8.5)
-      .text('Statutory Rent Receipt & Escrow Protection', leftX + 14, noteY + 12);
+      .text('Statutory Rent Receipt (Rent Act, 1963 Act 220)', leftX + 14, noteY + 12);
 
     doc
       .fillColor('#475569')
       .font('Helvetica')
       .fontSize(8.5)
       .text(
-        'Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). Payment is held in AkwaabaHomes Escrow on behalf of the Landlord and released upon resident check-in verification.',
+        'Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). This document serves as official verification of rent and deposit payment for the tenancy period stated above.',
         leftX + 14,
         noteY + 26,
         { width: contentWidth - 28, lineGap: 2 }
@@ -901,7 +901,7 @@ export async function generateGRATaxReportPDF(data: {
       .text('PART II — SUMMARY OF GROSS RENTAL RECEIPTS & TAX COMPUTATION', 54, part2Y);
 
     const compRows: [string, string, boolean][] = [
-      ['01. Gross Rental Revenue Collected (Escrow & Direct Settlements)', `GHS ${fmt(data.grossRevenue)}`, false],
+      ['01. Gross Rental Revenue Collected (Verified Rent Settlements)', `GHS ${fmt(data.grossRevenue)}`, false],
       ['02. Less: Allowable Property Maintenance & Repair Deductions', `(GHS ${fmt(data.totalMaintenanceDeductions)})`, false],
       ['03. Net Assessable Rental Income', `GHS ${fmt(data.netTaxableIncome)}`, true],
       ['04. Estimated Statutory Rent Tax Liability (Withholding Assessment)', `GHS ${fmt(data.withholdingTax5Percent)}`, true],

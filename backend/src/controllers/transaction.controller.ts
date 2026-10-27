@@ -116,7 +116,7 @@ const resolveTransactionOrBookingReceipt = async (id: string) => {
     return {
       ...transaction,
       paymentReference: transaction.reference,
-      paymentMethod: 'Paystack Escrow (MoMo / Card)',
+      paymentMethod: 'Paystack (MoMo / Card)',
       room: transaction.room || transaction.booking?.room || null
     };
   }
@@ -146,7 +146,7 @@ const resolveTransactionOrBookingReceipt = async (id: string) => {
   const caution = booking.cautionDepositAmount ?? booking.property?.cautionDeposit ?? 0;
   const totalAmount = booking.transaction?.amount ?? (baseRent + caution);
   const isPaid = ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'CHECKED_OUT'].includes(booking.status);
-  const syntheticRef = booking.transaction?.reference || (booking.checkInCode ? `ESCROW-${booking.checkInCode}` : `INV-${booking.id.slice(0, 8).toUpperCase()}`);
+  const syntheticRef = booking.transaction?.reference || (booking.checkInCode ? `PAY-${booking.checkInCode}` : `INV-${booking.id.slice(0, 8).toUpperCase()}`);
 
   return {
     id: booking.transaction?.id || booking.id,
@@ -158,7 +158,7 @@ const resolveTransactionOrBookingReceipt = async (id: string) => {
     amount: totalAmount,
     reference: syntheticRef,
     paymentReference: syntheticRef,
-    paymentMethod: isPaid ? 'Paystack Escrow (MoMo / Card)' : 'Pending Escrow Settlement',
+    paymentMethod: isPaid ? 'Paystack (MoMo / Card)' : 'Pending Settlement',
     status: booking.transaction?.status || (isPaid ? 'SUCCESS' : 'PENDING'),
     createdAt: booking.transaction?.createdAt || booking.updatedAt || booking.createdAt,
     tenant: booking.tenant,

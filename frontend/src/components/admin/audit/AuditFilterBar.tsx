@@ -29,7 +29,7 @@ const CATEGORY_TABS: { id: AuditCategory; label: string }[] = [
   { id: 'ALL', label: 'All Records' },
   { id: 'VERIFICATIONS', label: 'Approvals & KYC' },
   { id: 'SANCTIONS', label: 'Sanctions & Locks' },
-  { id: 'FINANCIAL', label: 'Settlements & Escrow' },
+  { id: 'FINANCIAL', label: 'Settlements & Payouts' },
   { id: 'CONFIG', label: 'Configuration' },
   { id: 'UPDATES', label: 'State Updates' }
 ];

@@ -117,7 +117,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       links: [
         { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
         { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
-        { name: 'Payments & Escrow', href: '/admin/transactions', icon: Receipt },
+        { name: 'Payments & Ledger', href: '/admin/transactions', icon: Receipt },
         { name: 'Maintenance & Repairs', href: '/admin/tickets', icon: Wrench },
         { name: 'Review Moderation', href: '/admin/reviews', icon: Star },
         { name: 'Disputes & Support', href: '/admin/disputes', icon: Scale }

@@ -49,7 +49,7 @@ interface NoticeDrawerProps {
 
 export const ICON_MAP: Record<string, { label: string; icon: React.ElementType; color: string; bg: string }> = {
   INFO: { label: 'Information', icon: Info, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/50' },
-  PAYMENT: { label: 'Payment & Escrow', icon: CreditCard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
+  PAYMENT: { label: 'Payments & Billing', icon: CreditCard, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/50' },
   CAUTION: { label: 'Caution & Warning', icon: AlertTriangle, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
   WARNING: { label: 'Urgent Advisory', icon: AlertTriangle, color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-50 dark:bg-rose-950/50' },
   LEGAL: { label: 'Policy & Legal (Act 220)', icon: Scale, color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/50' },
@@ -63,7 +63,7 @@ export const GHANA_TEMPLATES = [
     name: 'Standard Advance Rent Schedule (Act 220)',
     topLabel: 'PLATFORM RENTAL POLICY',
     title: 'Standard Advance Rent Schedule',
-    description: 'Landlords are encouraged to offer flexible advance rent terms with a standard 6-month advance ceiling for residential tenancies. All platform escrow arrangements adhere to these principles.',
+    description: 'Landlords are encouraged to offer flexible advance rent terms with a standard 6-month advance ceiling for residential tenancies. All platform payment arrangements adhere to these principles.',
     buttonText: 'View Rental Policy',
     buttonLink: '/help',
     iconType: 'LEGAL'
@@ -98,7 +98,7 @@ export const GHANA_TEMPLATES = [
   {
     name: 'Scheduled Banking & MoMo Gateway Maintenance',
     topLabel: 'SYSTEM MAINTENANCE',
-    title: 'Scheduled Escrow Gateway Maintenance (1:00 AM - 3:00 AM)',
+    title: 'Scheduled Payment Gateway Maintenance (1:00 AM - 3:00 AM)',
     description: 'Routine banking settlement maintenance scheduled for Mobile Money and Paystack channels. Active tenancies and ongoing lease renewals remain secure.',
     buttonText: 'Status Page',
     buttonLink: '/maintenance',
@@ -359,7 +359,7 @@ export default function NoticeDrawer({
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData((p) => ({ ...p, title: e.target.value }))}
-                placeholder="e.g. Scheduled System Maintenance for Mobile Money Escrow"
+                placeholder="e.g. Scheduled System Maintenance for Mobile Money Payments"
                 required
                 className="w-full text-xs p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
               />

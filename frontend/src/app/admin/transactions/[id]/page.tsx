@@ -86,7 +86,7 @@ export default function AdminTransactionDetailPage({
     <div className="space-y-6">
       <AdminPageHeader
         title={`Payment Docket: ${transaction.reference}`}
-        subtitle={`Escrow Deposit • GH₵ ${Number(transaction.amount || 0).toLocaleString()} • ${transaction.paymentMethod || 'Paystack'}`}
+        subtitle={`Rent Payment • GH₵ ${Number(transaction.amount || 0).toLocaleString()} • ${transaction.paymentMethod || 'Paystack'}`}
         badge={<AdminStatusBadge status={transaction.status || 'PENDING'} />}
         breadcrumbs={[
           { label: 'Admin', href: '/admin/dashboard' },
@@ -114,7 +114,7 @@ export default function AdminTransactionDetailPage({
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 shadow-xs space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
               <Banknote className="w-4 h-4 text-emerald-600" />
-              Settlement & Escrow Financial Breakdown
+              Settlement & Financial Breakdown
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -161,7 +161,7 @@ export default function AdminTransactionDetailPage({
                 </code>
               </div>
               <div className="flex justify-between py-1">
-                <span>Escrow Release Policy</span>
+                <span>Disbursement Policy</span>
                 <span className="font-medium text-emerald-600 dark:text-emerald-400">
                   Disbursed 24 hours post-tenant verified check-in
                 </span>
