@@ -87,10 +87,12 @@ export default function PropertyCard({
   property,
   initialIsSaved,
   onRemoveWishlist,
+  footerSlot,
 }: {
   property: PropertyCardData;
   initialIsSaved?: boolean;
   onRemoveWishlist?: (id: string) => void;
+  footerSlot?: React.ReactNode;
 }) {
   const images = parseStringArray(property.images);
   const primaryImage = images[0] || '';
@@ -122,7 +124,7 @@ export default function PropertyCard({
         <WishlistButton
           propertyId={property.id}
           initialIsSaved={initialIsSaved}
-          className="w-9 h-9 rounded-full bg-white/95 dark:bg-[#141816]/95 backdrop-blur-xs border border-[#E7E7DF] dark:border-[#262E2A] shadow-xs flex items-center justify-center hover:scale-105 transition-transform"
+          className="hover:scale-105 transition-transform"
         />
       </div>
 
@@ -213,7 +215,7 @@ export default function PropertyCard({
             <PriceDisplay
               amount={displayPrice}
               propertyType={property.type}
-              billingCycle={property.billingCycle}
+              billingCycle={property.billingCycle || (property as any).pricePeriod}
               size="md"
             />
             <VerificationIndicator
@@ -224,6 +226,11 @@ export default function PropertyCard({
           </div>
         </div>
       </Link>
+      {footerSlot && (
+        <div className="px-4 sm:px-5 py-2.5 bg-[#F8F7F2]/80 dark:bg-[#191E1B] border-t border-[#E7E7DF] dark:border-[#262E2A]">
+          {footerSlot}
+        </div>
+      )}
     </article>
   );
 }

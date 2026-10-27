@@ -128,15 +128,15 @@ export default function WishlistButton({
       aria-pressed={isSaved}
       aria-label={isSaved ? 'Remove from saved properties' : 'Save property'}
       title={isSaved ? 'Remove from saved properties' : 'Save property'}
-      className={`p-2.5 rounded-full backdrop-blur-md transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 cursor-pointer ${
+      className={`p-2 rounded-full backdrop-blur-md transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32] cursor-pointer border ${
         isSaved
-          ? 'bg-red-500/95 text-white hover:bg-red-600'
-          : 'bg-slate-900/65 text-white hover:bg-slate-900/85 border border-white/20'
-      } ${showText ? 'px-3.5 py-2 rounded-xl text-xs font-bold' : ''} ${
+          ? 'bg-white/95 dark:bg-[#141816]/95 text-[#E11D48] border-[#FECDD3] dark:border-[#881337]/60 hover:bg-[#FFF1F2] dark:hover:bg-[#1F1216]'
+          : 'bg-white/90 dark:bg-[#141816]/90 text-[#242925] dark:text-[#F2F2EE] border-[#E7E7DF] dark:border-[#262E2A] hover:text-[#E11D48] dark:hover:text-[#FB7185]'
+      } ${showText ? 'px-3.5 py-2 rounded-xl text-xs font-semibold' : 'w-9 h-9'} ${
         isLoading ? 'opacity-60 cursor-wait' : ''
       } ${className}`}
     >
-      <Heart className={`w-4 h-4 transition-transform duration-200 ${isSaved ? 'fill-current scale-110' : ''}`} />
+      <Heart className={`w-4 h-4 transition-transform duration-200 ${isSaved ? 'fill-current scale-110 text-[#E11D48]' : ''}`} />
       {showText && <span>{isSaved ? 'Saved' : 'Save'}</span>}
     </button>
   );
