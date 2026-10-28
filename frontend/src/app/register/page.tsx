@@ -127,14 +127,51 @@ export default function RegisterPage() {
       triggerError('Please specify your gender and nationality.');
       return;
     }
+    if (formData.role === 'TENANT' && !formData.dateOfBirth) {
+      triggerError('Date of birth is required for tenant verification.');
+      return;
+    }
 
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleReviewStep = () => {
+    setError('');
+
+    if (!formData.email.trim()) {
+      triggerError('Please enter a valid email address.');
+      return;
+    }
+
+    if (formData.role === 'TENANT' && formData.isStudent) {
+      if (!formData.guardianName.trim() || !formData.guardianPhone.trim()) {
+        triggerError('Please provide emergency guardian contact details.');
+        return;
+      }
+      if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim()) {
+        triggerError('Please complete your university and student details.');
+        return;
+      }
+    }
+
+    if (formData.password.length < 8) {
+      triggerError('Password must be at least 8 characters long.');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      triggerError('Passwords do not match. Please re-enter your password.');
+      return;
+    }
+
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleBackStep = () => {
     setError('');
-    setCurrentStep(1);
+    setCurrentStep((prev) => Math.max(1, prev - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -143,7 +180,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError('');
 
-    // Step 2 Validations
+    // Final Validations
     if (!formData.email.trim()) {
       triggerError('Please enter a valid email address.');
       setIsLoading(false);
@@ -203,7 +240,8 @@ export default function RegisterPage() {
     formData.lastName.trim() &&
     formData.phoneNumber.trim() &&
     formData.gender &&
-    formData.nationality.trim()
+    formData.nationality.trim() &&
+    (formData.role !== 'TENANT' || Boolean(formData.dateOfBirth))
   );
 
   const isStep2Valid = Boolean(
@@ -211,18 +249,31 @@ export default function RegisterPage() {
     formData.password.length >= 8 &&
     formData.confirmPassword.length >= 8 &&
     formData.password === formData.confirmPassword &&
-    formData.acceptTerms &&
     (formData.role !== 'TENANT' ||
-      (Boolean(formData.dateOfBirth) &&
-        (!formData.isStudent ||
-          (Boolean(formData.campus) &&
-            Boolean(formData.studentId.trim()) &&
-            Boolean(formData.yearOfStudy) &&
-            Boolean(formData.dateOfAdmission) &&
-            Boolean(formData.programmeOfStudy.trim()) &&
-            Boolean(formData.guardianName.trim()) &&
-            Boolean(formData.guardianPhone.trim())))))
+      !formData.isStudent ||
+      (Boolean(formData.campus) &&
+        Boolean(formData.studentId.trim()) &&
+        Boolean(formData.yearOfStudy) &&
+        Boolean(formData.dateOfAdmission) &&
+        Boolean(formData.programmeOfStudy.trim()) &&
+        Boolean(formData.guardianName.trim()) &&
+        Boolean(formData.guardianPhone.trim())))
   );
+
+  const campusLabels: Record<string, string> = {
+    KNUST: 'KNUST — Kwame Nkrumah Univ. of Science & Tech.',
+    UG: 'UG — University of Ghana, Legon',
+    UCC: 'UCC — University of Cape Coast',
+    UPSA: 'UPSA — Univ. of Professional Studies',
+    ATU: 'ATU — Accra Technical University',
+    UDS: 'UDS — Univ. for Development Studies',
+    OTHER: 'Other Tertiary Institution',
+  };
+
+  const fullNameDisplay = [formData.firstName, formData.otherNames, formData.lastName]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(' ');
 
   const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
@@ -394,28 +445,35 @@ export default function RegisterPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
-                Step {currentStep} of 2 &bull; {currentStep === 1 ? 'Personal Profile' : 'Credentials & Verification'}
+                Step {currentStep} of 3 &bull;{' '}
+                {currentStep === 1
+                  ? 'Personal Profile'
+                  : currentStep === 2
+                  ? 'Credentials & Verification'
+                  : 'Review & Confirm'}
               </span>
               <span className="text-[10px] font-mono font-bold text-zinc-400">
-                {currentStep === 1 ? '50%' : '100%'}
+                {currentStep === 1 ? '33%' : currentStep === 2 ? '66%' : '100%'}
               </span>
             </div>
             
             <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-[#0F5132] dark:bg-emerald-500 rounded-full transition-all duration-300"
-                style={{ width: currentStep === 1 ? '50%' : '100%' }}
+                style={{ width: currentStep === 1 ? '33.33%' : currentStep === 2 ? '66.66%' : '100%' }}
               />
             </div>
 
             <div className="pt-2">
               <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-                Create your account
+                {currentStep === 3 ? 'Review your details' : 'Create your account'}
               </h1>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1">
                 {currentStep === 1 
                   ? 'Select your role and provide your basic personal details.' 
-                  : 'Set your secure password and university enrollment information.'}
+                  : currentStep === 2
+                  ? 'Set your secure password and university enrollment information.'
+                  : 'Verify your registration summary before creating your AkwaabaHomes account.'}
               </p>
             </div>
           </div>
@@ -583,7 +641,19 @@ export default function RegisterPage() {
                     <option value="FEMALE">Female</option>
                   </select>
                 </div>
-                <div className="sm:col-span-2">
+                {formData.role === 'TENANT' && (
+                  <div>
+                    <label className={labelClass}>Date of Birth *</label>
+                    <input 
+                      type="date" 
+                      required 
+                      className={inputClass} 
+                      value={formData.dateOfBirth} 
+                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} 
+                    />
+                  </div>
+                )}
+                <div className={formData.role === 'TENANT' ? '' : 'sm:col-span-2'}>
                   <label className={labelClass}>Nationality *</label>
                   <input 
                     type="text" 
@@ -616,7 +686,7 @@ export default function RegisterPage() {
 
           {/* ──── STEP 2: Credentials & Verification Information ──── */}
           {currentStep === 2 && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               
               {/* Email Address */}
               <div>
@@ -632,126 +702,110 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Tenant Specific: Date of Birth & Guardian */}
-              {formData.role === 'TENANT' && (
-                <div className="space-y-4 pt-1">
-                  <div>
-                    <label className={labelClass}>Date of Birth *</label>
-                    <input 
-                      type="date" 
-                      required 
-                      className={inputClass} 
-                      value={formData.dateOfBirth} 
-                      onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} 
-                    />
+              {/* Student Campus Verification Fields */}
+              {formData.role === 'TENANT' && formData.isStudent && (
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
+                  <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                    <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                    <span>Student Enrollment Verification</span>
                   </div>
 
-                  {/* Student Campus Verification Fields */}
-                  {formData.isStudent && (
-                    <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
-                      <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-                        <span>Student Enrollment Verification</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="sm:col-span-2">
+                      <label className={labelClass}>Campus / University *</label>
+                      <select 
+                        required 
+                        className={`${inputClass} appearance-none cursor-pointer`} 
+                        value={formData.campus} 
+                        onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
+                      >
+                        <option value="KNUST">KNUST — Kwame Nkrumah University of Science and Technology</option>
+                        <option value="UG">UG — University of Ghana, Legon</option>
+                        <option value="UCC">UCC — University of Cape Coast</option>
+                        <option value="UPSA">UPSA — University of Professional Studies</option>
+                        <option value="ATU">ATU — Accra Technical University</option>
+                        <option value="UDS">UDS — University for Development Studies</option>
+                        <option value="OTHER">Other Tertiary Institution</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Student ID / Index No *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        className={inputClass} 
+                        value={formData.studentId} 
+                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
+                        placeholder="e.g. 20849201" 
+                      />
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Year of Study *</label>
+                      <select 
+                        required 
+                        className={`${inputClass} appearance-none cursor-pointer`} 
+                        value={formData.yearOfStudy} 
+                        onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
+                      >
+                        <option value="100">Level 100 (Freshman)</option>
+                        <option value="200">Level 200</option>
+                        <option value="300">Level 300</option>
+                        <option value="400">Level 400</option>
+                        <option value="500">Postgraduate / Masters</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Date of Admission *</label>
+                      <input 
+                        type="date" 
+                        required 
+                        className={inputClass} 
+                        value={formData.dateOfAdmission} 
+                        onChange={(e) => setFormData({ ...formData, dateOfAdmission: e.target.value })} 
+                      />
+                    </div>
+
+                    <div>
+                      <label className={labelClass}>Degree / Programme *</label>
+                      <input 
+                        type="text" 
+                        required 
+                        className={inputClass} 
+                        value={formData.programmeOfStudy} 
+                        onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })} 
+                        placeholder="e.g. Computer Science" 
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
+                      <div>
+                        <label className={labelClass}>Guardian / Emergency Contact *</label>
+                        <input 
+                          type="text" 
+                          required 
+                          className={inputClass} 
+                          value={formData.guardianName} 
+                          onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })} 
+                          placeholder="Parent or Guardian Name" 
+                        />
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="sm:col-span-2">
-                          <label className={labelClass}>Campus / University *</label>
-                          <select 
-                            required 
-                            className={`${inputClass} appearance-none cursor-pointer`} 
-                            value={formData.campus} 
-                            onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
-                          >
-                            <option value="KNUST">KNUST — Kwame Nkrumah University of Science and Technology</option>
-                            <option value="UG">UG — University of Ghana, Legon</option>
-                            <option value="UCC">UCC — University of Cape Coast</option>
-                            <option value="UPSA">UPSA — University of Professional Studies</option>
-                            <option value="ATU">ATU — Accra Technical University</option>
-                            <option value="UDS">UDS — University for Development Studies</option>
-                            <option value="OTHER">Other Tertiary Institution</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Student ID / Index No *</label>
-                          <input 
-                            type="text" 
-                            required 
-                            className={inputClass} 
-                            value={formData.studentId} 
-                            onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
-                            placeholder="e.g. 20849201" 
-                          />
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Year of Study *</label>
-                          <select 
-                            required 
-                            className={`${inputClass} appearance-none cursor-pointer`} 
-                            value={formData.yearOfStudy} 
-                            onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
-                          >
-                            <option value="100">Level 100 (Freshman)</option>
-                            <option value="200">Level 200</option>
-                            <option value="300">Level 300</option>
-                            <option value="400">Level 400</option>
-                            <option value="500">Postgraduate / Masters</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Date of Admission *</label>
-                          <input 
-                            type="date" 
-                            required 
-                            className={inputClass} 
-                            value={formData.dateOfAdmission} 
-                            onChange={(e) => setFormData({ ...formData, dateOfAdmission: e.target.value })} 
-                          />
-                        </div>
-
-                        <div>
-                          <label className={labelClass}>Degree / Programme *</label>
-                          <input 
-                            type="text" 
-                            required 
-                            className={inputClass} 
-                            value={formData.programmeOfStudy} 
-                            onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })} 
-                            placeholder="e.g. Computer Science" 
-                          />
-                        </div>
-
-                        <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800">
-                          <div>
-                            <label className={labelClass}>Guardian / Emergency Contact *</label>
-                            <input 
-                              type="text" 
-                              required 
-                              className={inputClass} 
-                              value={formData.guardianName} 
-                              onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })} 
-                              placeholder="Parent or Guardian Name" 
-                            />
-                          </div>
-                          <div>
-                            <label className={labelClass}>Guardian Phone Number *</label>
-                            <input 
-                              type="tel" 
-                              required 
-                              className={inputClass} 
-                              value={formData.guardianPhone} 
-                              onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })} 
-                              placeholder="054XXXXXXX" 
-                            />
-                          </div>
-                        </div>
-
+                      <div>
+                        <label className={labelClass}>Guardian Phone Number *</label>
+                        <input 
+                          type="tel" 
+                          required 
+                          className={inputClass} 
+                          value={formData.guardianPhone} 
+                          onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })} 
+                          placeholder="054XXXXXXX" 
+                        />
                       </div>
                     </div>
-                  )}
+
+                  </div>
                 </div>
               )}
 
@@ -802,6 +856,167 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* Step 2 Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBackStep}
+                  leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                >
+                  Back
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="emerald"
+                  size="sm"
+                  onClick={handleReviewStep}
+                  disabled={!isStep1Valid || !isStep2Valid}
+                  rightIcon={<ArrowRight className="w-4 h-4" />}
+                  className="flex-1"
+                >
+                  Review Summary
+                </Button>
+              </div>
+
+            </div>
+          )}
+
+          {/* ──── STEP 3: Review Summary & Confirm ──── */}
+          {currentStep === 3 && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {/* Summary Card 1: Personal Identity */}
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-zinc-950 dark:text-white">
+                      Personal Identity
+                    </span>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                      {formData.role === 'LANDLORD'
+                        ? 'Landlord & Host'
+                        : formData.isStudent
+                        ? 'Student Tenant'
+                        : 'Residential Tenant'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(1)}
+                    className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
+                  <div className="col-span-2 sm:col-span-1">
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Legal Full Name</dt>
+                    <dd className="font-bold text-zinc-950 dark:text-white truncate">{fullNameDisplay}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Phone Number</dt>
+                    <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">{formData.phoneNumber}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Gender</dt>
+                    <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
+                      {formData.gender === 'MALE' ? 'Male' : 'Female'}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Nationality</dt>
+                    <dd className="font-semibold text-zinc-900 dark:text-zinc-100">{formData.nationality}</dd>
+                  </div>
+                  {formData.role === 'TENANT' && formData.dateOfBirth && (
+                    <div className="col-span-2">
+                      <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Date of Birth</dt>
+                      <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">{formData.dateOfBirth}</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              {/* Summary Card 2: Credentials & Campus Verification */}
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <span className="text-xs font-bold text-zinc-950 dark:text-white">
+                      {formData.role === 'TENANT' && formData.isStudent
+                        ? 'Credentials & Campus Enrolment'
+                        : 'Account Credentials'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">
+                  <div className="col-span-2 sm:col-span-1">
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Email Address</dt>
+                    <dd className="font-semibold text-zinc-950 dark:text-white break-all">{formData.email}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Password</dt>
+                    <dd className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                      <span>••••••••</span>
+                      <Check className="w-3 h-3" />
+                    </dd>
+                  </div>
+
+                  {formData.role === 'TENANT' && formData.isStudent && (
+                    <>
+                      <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Institution / Campus</dt>
+                        <dd className="font-bold text-zinc-950 dark:text-white">
+                          {campusLabels[formData.campus] || formData.campus}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Student ID / Index No.</dt>
+                        <dd className="font-mono font-bold text-zinc-950 dark:text-white">{formData.studentId}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Academic Level</dt>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          {formData.yearOfStudy === '500' ? 'Postgraduate' : `Level ${formData.yearOfStudy}`}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Programme</dt>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100 truncate">{formData.programmeOfStudy}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Admission Date</dt>
+                        <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">{formData.dateOfAdmission}</dd>
+                      </div>
+                      <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Emergency Guardian Contact</dt>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          {formData.guardianName} &bull; <span className="font-mono">{formData.guardianPhone}</span>
+                        </dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+              </div>
+
+              {/* Statutory Verification Note */}
+              <div className="rounded-xl bg-emerald-50/70 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-900/50 px-3.5 py-2.5 text-[11px] text-zinc-600 dark:text-zinc-300 leading-relaxed">
+                <span className="font-bold text-[#0F5132] dark:text-emerald-400">Please verify: </span>
+                Your full name, gender, and contact details are used on digital tenancy agreements (Rent Act, Act 220) and gender-matched hostel room allocations.
+              </div>
+
               {/* Terms and Privacy Checkbox */}
               <div className="pt-1">
                 <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
@@ -813,7 +1028,7 @@ export default function RegisterPage() {
                     className="mt-0.5 h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer" 
                   />
                   <span className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    I agree to the{' '}
+                    I confirm that the details above are accurate and agree to the{' '}
                     <Link href="/terms" target="_blank" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
                       Terms of Service
                     </Link>{' '}
@@ -826,7 +1041,7 @@ export default function RegisterPage() {
                 </label>
               </div>
 
-              {/* Form Buttons */}
+              {/* Step 3 Action Buttons */}
               <div className="flex items-center gap-3 pt-2">
                 <Button
                   type="button"
@@ -843,7 +1058,7 @@ export default function RegisterPage() {
                   variant="emerald"
                   size="sm"
                   isLoading={isLoading}
-                  disabled={isLoading || !isStep1Valid || !isStep2Valid}
+                  disabled={isLoading || !isStep1Valid || !isStep2Valid || !formData.acceptTerms}
                   rightIcon={<ArrowRight className="w-4 h-4" />}
                   className="flex-1"
                 >
