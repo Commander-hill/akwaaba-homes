@@ -148,14 +148,16 @@ function LandlordDashboardContent() {
   });
 
   // Session Query
-  const { data: session } = useQuery({
+  const { data: sessionData } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
-      return res.data.user;
+      return res.data;
     },
     staleTime: 5 * 60 * 1000
   });
+
+  const session = sessionData?.user || sessionData;
 
   // Fetch Bookings
   const { data: bookingsResponse, isLoading: isLoadingBookings, refetch: refetchBookings } = useQuery({

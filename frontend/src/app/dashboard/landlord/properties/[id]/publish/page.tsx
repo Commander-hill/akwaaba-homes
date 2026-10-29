@@ -33,14 +33,16 @@ export default function PublishPropertyPage() {
   const [waitingForMomo, setWaitingForMomo] = useState(false);
 
   // 1. Fetch Current Landlord Session
-  const { data: session } = useQuery({
+  const { data: sessionData } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
-      return res.data.user;
+      return res.data;
     },
     staleTime: 5 * 60 * 1000
   });
+
+  const session = sessionData?.user || sessionData;
 
   // Pre-fill phone number from session if available
   useEffect(() => {

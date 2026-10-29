@@ -24,6 +24,7 @@ import {
   MessageSquare,
   Building2,
   ShieldCheck,
+  GraduationCap,
   Loader2,
   KeyRound,
   Package,
@@ -57,13 +58,15 @@ function TenantDashboardContent() {
   const [activeResidentTool, setActiveResidentTool] = useState<ActiveResidentModalTool>(null);
 
   // 1. Authenticated User Session
-  const { data: session, isLoading: sessionLoading } = useQuery({
+  const { data: sessionData, isLoading: sessionLoading } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const res = await api.get('/auth/me');
-      return res.data?.user;
+      return res.data;
     },
   });
+
+  const session = sessionData?.user || sessionData;
 
   // 2. Tenant Bookings
   const { data: bookingsResponse, isLoading: bookingsLoading } = useQuery({
@@ -281,6 +284,11 @@ function TenantDashboardContent() {
   const primaryBooking = dashboardState.primaryBooking;
   const secondaryPendingBooking = dashboardState.secondaryPendingBooking;
   const ghanaCardStatus = session?.ghanaCardStatus || 'UNVERIFIED';
+  const isGhanaCardVerified = ghanaCardStatus === 'VERIFIED';
+  const isStudentVerified = Boolean(session?.studentId && session?.campus);
+  const isPendingReview = ghanaCardStatus === 'PENDING' || ghanaCardStatus === 'UNDER_REVIEW';
+  const isResubmissionRequired = ghanaCardStatus === 'RESUBMISSION_REQUIRED';
+  const isRejected = ghanaCardStatus === 'REJECTED';
 
   // Compute 4-Step Pipeline for PENDING_BOOKING
   const pendingStepIndex =
@@ -299,10 +307,16 @@ function TenantDashboardContent() {
             <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C]">
               Resident Workspace
             </p>
-            {ghanaCardStatus === 'VERIFIED' && (
+            {isGhanaCardVerified && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#1F7A4C] dark:text-[#6EE7B7] border border-[#1F7A4C]/20">
                 <ShieldCheck className="w-3 h-3" />
                 <span>Ghana Card Verified</span>
+              </span>
+            )}
+            {isStudentVerified && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-300/40 dark:border-sky-800/50">
+                <GraduationCap className="w-3 h-3" />
+                <span>{session?.campus ? `${session.campus} Student` : 'Student Verified'}</span>
               </span>
             )}
           </div>
@@ -343,34 +357,60 @@ function TenantDashboardContent() {
         </div>
       </div>
 
-      {/* ── 2. KYC / Identity Readiness Banner (When Not Verified) ── */}
-      {ghanaCardStatus !== 'VERIFIED' && (
+      {/* ── 2. KYC / Identity Readiness Banner (Only When Ghana Card Not Yet Verified) ── */}
+      {!isGhanaCardVerified && (
         <div
           className={clsx(
             'rounded-[14px] p-4 sm:px-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-3.5',
-            ghanaCardStatus === 'PENDING'
+            isPendingReview
               ? 'bg-amber-50/70 dark:bg-amber-950/20 border-amber-300/80 dark:border-amber-900/50'
+              : isResubmissionRequired || isRejected
+              ? 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-300/80 dark:border-rose-900/50'
               : 'bg-white dark:bg-[#171C19] border-[#E7E7DF] dark:border-[#262E29] border-l-4 border-l-[#173D32] dark:border-l-emerald-500 shadow-2xs'
           )}
         >
           <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#173D32] dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <div className={clsx(
+              "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+              isPendingReview
+                ? "bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400"
+                : isResubmissionRequired || isRejected
+                ? "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400"
+                : "bg-[#ECFDF3] dark:bg-[#064E3B]/40 text-[#173D32] dark:text-emerald-400"
+            )}>
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-[#242925] dark:text-white">
-                  {ghanaCardStatus === 'PENDING'
+                  {isPendingReview
                     ? 'Identity Verification Under Review'
-                    : 'Complete Your Ghana Card / Student ID Verification'}
+                    : isResubmissionRequired
+                    ? 'Document Resubmission Requested'
+                    : isRejected
+                    ? 'Identity Verification Rejected'
+                    : session?.studentId
+                    ? 'Complete Your Ghana Card / Student ID Verification'
+                    : 'Complete Your Ghana Card Verification'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300">
-                  {ghanaCardStatus === 'PENDING' ? 'Pending Review' : 'Recommended'}
+                <span className={clsx(
+                  "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
+                  isPendingReview
+                    ? "bg-amber-500/15 text-amber-800 dark:text-amber-300"
+                    : isResubmissionRequired || isRejected
+                    ? "bg-rose-500/15 text-rose-800 dark:text-rose-300"
+                    : "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300"
+                )}>
+                  {isPendingReview ? 'Pending Review' : isResubmissionRequired || isRejected ? 'Action Required' : 'Recommended'}
                 </span>
               </div>
               <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2]">
-                {ghanaCardStatus === 'PENDING'
+                {isPendingReview
                   ? 'Our compliance team is verifying your submitted identification. You can continue browsing and reserving rooms in the meantime.'
+                  : isResubmissionRequired
+                  ? 'Our compliance team requested updated or clearer photos for your Ghana Card. Please review the notes and resubmit.'
+                  : isRejected
+                  ? 'Your submitted identity document could not be verified. Please provide a valid Ghana Card matching your legal profile.'
                   : 'Verified residents receive priority host approval and instant Act 220 digital lease execution.'}
               </p>
             </div>
@@ -380,7 +420,13 @@ function TenantDashboardContent() {
             href="/dashboard/verification"
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] bg-[#173D32] hover:bg-[#122e26] text-white text-xs font-semibold shrink-0 self-start sm:self-auto transition-colors"
           >
-            <span>{ghanaCardStatus === 'PENDING' ? 'Check Status' : 'Verify Identity'}</span>
+            <span>
+              {isPendingReview
+                ? 'Check Status'
+                : isResubmissionRequired || isRejected
+                ? 'Update Identity'
+                : 'Verify Identity'}
+            </span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
