@@ -235,13 +235,13 @@ export default function TenantShell({
         {/* Brand Header */}
         <div className="h-16 px-5 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between shrink-0">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#173D32] flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
-                width={28}
-                height={28}
-                className="w-full h-full object-cover"
+                width={32}
+                height={32}
+                className="w-full h-full object-contain"
               />
             </div>
             <div>
@@ -366,13 +366,13 @@ export default function TenantShell({
                 onClick={() => setMobileDrawerOpen(false)}
                 className="flex items-center gap-2.5"
               >
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#173D32] flex items-center justify-center">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Akwaaba Homes"
-                    width={26}
-                    height={26}
-                    className="w-full h-full object-cover"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
                   />
                 </div>
                 <div>

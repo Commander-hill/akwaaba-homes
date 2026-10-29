@@ -196,8 +196,8 @@ export default function LandlordShell({
 
   const brand = (
     <Link href="/dashboard/landlord" className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#173D32] flex items-center justify-center shrink-0">
-        <Image src="/logo.png" alt="Akwaaba Homes" width={28} height={28} className="w-full h-full object-cover" />
+      <div className="w-8 h-8 flex items-center justify-center shrink-0">
+        <Image src="/logo.png" alt="Akwaaba Homes" width={32} height={32} className="w-full h-full object-contain" />
       </div>
       <div>
         <span className="font-editorial text-base text-[#242925] dark:text-white block leading-none">

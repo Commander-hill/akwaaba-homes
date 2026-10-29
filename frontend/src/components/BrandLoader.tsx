@@ -44,16 +44,15 @@ export default function BrandLoader({
   return (
     <div className={`${containerClasses} ${className}`} role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-6 animate-fade-in">
-        {/* Brand Logo with Gentle Breathing Glow */}
+        {/* Brand Logo - Design Only (No borders, no cards) */}
         <div className="relative flex items-center justify-center">
-          <div className="absolute -inset-3 rounded-2xl bg-[#173D32]/10 dark:bg-emerald-500/15 blur-lg animate-pulse" />
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-[#173D32] shadow-md flex items-center justify-center p-2 border border-[#173D32]/20 dark:border-emerald-500/30">
+          <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center">
             <Image
               src="/logo.png"
               alt="Akwaaba Homes"
-              width={80}
-              height={80}
-              className="w-full h-full object-contain"
+              width={96}
+              height={96}
+              className="w-full h-full object-contain drop-shadow-sm transition-transform duration-300"
               priority
             />
           </div>

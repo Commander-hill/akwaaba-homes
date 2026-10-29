@@ -131,13 +131,13 @@ export default function Navbar() {
                   pathname.startsWith('/dashboard') ? 'hidden xl:flex' : 'flex'
                 )}
               >
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#173D32] flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 flex items-center justify-center shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Akwaaba Homes"
-                    width={30}
-                    height={30}
-                    className="w-full h-full object-cover"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
                     priority
                   />
                 </div>

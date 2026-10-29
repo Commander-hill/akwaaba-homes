@@ -407,13 +407,13 @@ export default function RegisterPage() {
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
           <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
                 width={36}
                 height={36}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 priority
               />
             </div>
