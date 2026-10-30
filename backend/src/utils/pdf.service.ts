@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Generate official signed Tenancy Agreement PDF (Human-Crafted Ghanaian Conveyancing Standard)
@@ -498,27 +500,59 @@ export async function generateReceiptPDF(data: {
     const rightEdge = 547;
     const contentWidth = rightEdge - leftX; // 499
 
+    // ── Watermark: Akwaaba Homes Official Logo Emblem ──
+    const possibleLogoPaths = [
+      path.resolve(process.cwd(), '../frontend/public/logo-light.png'),
+      path.resolve(process.cwd(), 'frontend/public/logo-light.png'),
+      path.resolve(__dirname, '../../../../frontend/public/logo-light.png'),
+      path.resolve(__dirname, '../../../frontend/public/logo-light.png'),
+    ];
+    const logoLightPath = possibleLogoPaths.find((p) => fs.existsSync(p));
+
+    if (logoLightPath) {
+      try {
+        doc.save();
+        doc.opacity(0.045);
+        // Centered watermark on A4 (595.28 x 841.89 pt)
+        const watermarkSize = 280;
+        const wmX = (595.28 - watermarkSize) / 2;
+        const wmY = (841.89 - watermarkSize) / 2 - 20;
+        doc.image(logoLightPath, wmX, wmY, { width: watermarkSize, height: watermarkSize });
+        doc.restore();
+      } catch (err) {
+        // Fallback silently if watermark rendering encounters format warning
+      }
+    }
+
     // ── Top Accent Bar ──
-    doc.rect(leftX, 42, contentWidth, 4).fill('#173D32');
+    doc.rect(leftX, 42, contentWidth, 4).fill('#16A34A');
 
     // ── Brand & Document Title (Left) ──
+    let textLeftX = leftX;
+    if (logoLightPath) {
+      try {
+        doc.image(logoLightPath, leftX, 56, { fit: [42, 42] });
+        textLeftX = leftX + 50;
+      } catch (e) {}
+    }
+
     doc
-      .fillColor('#173D32')
+      .fillColor('#0F5132')
       .font('Helvetica-Bold')
       .fontSize(13)
-      .text('AKWAABAHOMES', leftX, 60, { characterSpacing: 0.8 });
+      .text('AKWAABA HOMES', textLeftX, 58, { characterSpacing: 0.8 });
 
     doc
       .fillColor('#111827')
       .font('Helvetica-Bold')
-      .fontSize(18)
-      .text('Rent Payment Receipt', leftX, 80);
+      .fontSize(16)
+      .text('Rent Payment Receipt', textLeftX, 76);
 
     doc
       .fillColor('#6B7280')
       .font('Helvetica')
-      .fontSize(9)
-      .text(`Receipt No: ${receiptNo}   •   Issued: ${issueDate}`, leftX, 104);
+      .fontSize(8.5)
+      .text(`Receipt No: ${receiptNo}   •   Issued: ${issueDate}`, textLeftX, 96);
 
     // ── Amount & Status Pill (Right) ──
     const badgeText = isPaid ? 'PAID' : (data.paymentStatus || 'PENDING').toUpperCase();

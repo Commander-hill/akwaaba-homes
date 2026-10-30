@@ -88,6 +88,7 @@ function AdminLoginForm() {
     if (['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
       if (data?.accessToken) {
         localStorage.setItem('akwaaba_access_token', data.accessToken);
+        localStorage.setItem('akwaaba_last_active', String(Date.now()));
       }
       if (data?.refreshToken) {
         localStorage.setItem('akwaaba_refresh_token', data.refreshToken);

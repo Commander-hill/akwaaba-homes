@@ -116,6 +116,24 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     };
   }, [isAuthenticated, resetTimer]);
 
+  const authTimestampRef = useRef<number>(Date.now());
+  const prevAuthRef = useRef(false);
+
+  // When user successfully authenticates or session is resolved, reset timers immediately
+  useEffect(() => {
+    if (isAuthenticated && !prevAuthRef.current) {
+      authTimestampRef.current = Date.now();
+      isLoggingOutRef.current = false;
+      setIsWarningOpen(false);
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, String(Date.now()));
+        }
+      } catch {}
+    }
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated]);
+
   // Listen to cross-tab activity updates
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -138,20 +156,43 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
       return;
     }
 
-    // Initialize activity timestamp if not present
-    if (typeof window !== 'undefined' && !localStorage.getItem(STORAGE_KEY)) {
-      localStorage.setItem(STORAGE_KEY, String(Date.now()));
+    // Do not run timeout logic on authentication/public entry paths
+    const isAuthRoute =
+      pathname === '/login' ||
+      pathname === '/admin/login' ||
+      pathname === '/register' ||
+      pathname === '/forgot-password' ||
+      pathname === '/reset-password';
+    if (isAuthRoute) return;
+
+    // Refresh activity timestamp if absent or stale from previous session
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const val = raw ? parseInt(raw, 10) : NaN;
+      if (isNaN(val) || val <= 0 || val > Date.now()) {
+        localStorage.setItem(STORAGE_KEY, String(Date.now()));
+      }
     }
 
     const interval = setInterval(() => {
       if (typeof window === 'undefined') return;
 
+      // 60-second grace period immediately following authentication
+      if (Date.now() - authTimestampRef.current < 60000) {
+        return;
+      }
+
       const rawLastActive = localStorage.getItem(STORAGE_KEY);
-      const lastActiveTime = rawLastActive ? parseInt(rawLastActive, 10) : Date.now();
+      let lastActiveTime = rawLastActive ? parseInt(rawLastActive, 10) : Date.now();
+      if (isNaN(lastActiveTime) || lastActiveTime <= 0 || lastActiveTime > Date.now()) {
+        lastActiveTime = Date.now();
+        localStorage.setItem(STORAGE_KEY, String(lastActiveTime));
+      }
+
       const elapsedMs = Date.now() - lastActiveTime;
       const remainingMs = timeoutDurationMs - elapsedMs;
 
-      // Case 1: Timeout expired (e.g. laptop lid reopened after hours or user left desk)
+      // Case 1: Timeout expired
       if (remainingMs <= 0) {
         clearInterval(interval);
         handleTimeoutLogout();
@@ -172,7 +213,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, timeoutDurationMs, isWarningOpen, handleTimeoutLogout]);
+  }, [isAuthenticated, pathname, timeoutDurationMs, isWarningOpen, handleTimeoutLogout]);
 
   // Handle visibility change (e.g. user switches back to this tab after being away)
   useEffect(() => {
@@ -180,8 +221,24 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
+        const isAuthRoute =
+          pathname === '/login' ||
+          pathname === '/admin/login' ||
+          pathname === '/register';
+        if (isAuthRoute) return;
+
+        // Skip if within 60 seconds of recent login
+        if (Date.now() - authTimestampRef.current < 60000) {
+          return;
+        }
+
         const rawLastActive = localStorage.getItem(STORAGE_KEY);
-        const lastActiveTime = rawLastActive ? parseInt(rawLastActive, 10) : Date.now();
+        let lastActiveTime = rawLastActive ? parseInt(rawLastActive, 10) : Date.now();
+        if (isNaN(lastActiveTime) || lastActiveTime <= 0 || lastActiveTime > Date.now()) {
+          lastActiveTime = Date.now();
+          localStorage.setItem(STORAGE_KEY, String(lastActiveTime));
+        }
+
         const elapsedMs = Date.now() - lastActiveTime;
         if (elapsedMs >= timeoutDurationMs) {
           handleTimeoutLogout();
@@ -191,7 +248,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
     document.addEventListener('visibilitychange', handleVisibility);
     return () => document.removeEventListener('visibilitychange', handleVisibility);
-  }, [isAuthenticated, timeoutDurationMs, handleTimeoutLogout]);
+  }, [isAuthenticated, pathname, timeoutDurationMs, handleTimeoutLogout]);
 
   // Format seconds into MM:SS
   const formatTime = (secs: number) => {

@@ -137,6 +137,7 @@ function LoginForm() {
 
       if (response.data?.accessToken) {
         localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+        localStorage.setItem('akwaaba_last_active', String(Date.now()));
       }
       if (response.data?.refreshToken) {
         localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
@@ -185,6 +186,7 @@ function LoginForm() {
 
       if (response.data?.accessToken) {
         localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+        localStorage.setItem('akwaaba_last_active', String(Date.now()));
       }
       if (response.data?.refreshToken) {
         localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
