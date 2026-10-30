@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -193,9 +194,34 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
             {/* Left Editorial Column (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-medium text-[#557A67]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#173D32]" />
-                <span>Trusted Homes for Students &amp; Residents across Ghana</span>
+              {/* Decarded Standalone Brand Identity Accent */}
+              <div className="inline-flex items-center gap-3">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+                  <Image
+                    src="/logo.png"
+                    alt="Akwaaba Homes"
+                    width={44}
+                    height={44}
+                    className="w-full h-full object-contain hidden dark:block"
+                    priority
+                  />
+                  <Image
+                    src="/logo-light.png"
+                    alt="Akwaaba Homes"
+                    width={44}
+                    height={44}
+                    className="w-full h-full object-contain block dark:hidden"
+                    priority
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs sm:text-sm font-semibold tracking-wide text-[#16A34A] dark:text-emerald-400 uppercase">
+                    Akwaaba Homes
+                  </span>
+                  <span className="text-[11px] sm:text-xs text-[#557A67] dark:text-[#9EA69F]">
+                    Trusted Homes for Students &amp; Residents across Ghana
+                  </span>
+                </div>
               </div>
 
               <h1 className="font-editorial text-4xl sm:text-5xl lg:text-[54px] text-[#242925] dark:text-white leading-[1.08] tracking-tight">

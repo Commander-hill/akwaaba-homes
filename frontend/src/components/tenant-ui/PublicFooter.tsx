@@ -12,12 +12,12 @@ export default function PublicFooter() {
           {/* Column 1: Brand & Mission (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             <Link href="/" className="inline-flex items-center gap-3 group">
-              <div className="w-9 h-9 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 flex items-center justify-center shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Akwaaba Homes"
-                  width={36}
-                  height={36}
+                  width={44}
+                  height={44}
                   className="w-full h-full object-contain"
                 />
               </div>
