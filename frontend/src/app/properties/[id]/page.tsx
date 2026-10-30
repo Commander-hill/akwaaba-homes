@@ -1191,6 +1191,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </label>
                       <select
                         id="booking-room-select"
+                        name="roomType"
                         value={selectedRoomId}
                         onChange={(e) => {
                           setSelectedRoomId(e.target.value);
@@ -1319,6 +1320,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </label>
                       <input
                         id="booking-start-date"
+                        name="startDate"
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
@@ -1334,6 +1336,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </label>
                       <input
                         id="booking-end-date"
+                        name="endDate"
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
@@ -1571,10 +1574,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
             <form onSubmit={handleScheduleViewing} className="space-y-4 text-xs">
               <div>
-                <label className="block font-semibold text-[#242925] dark:text-white mb-1">
+                <label htmlFor="viewing-preferred-date" className="block font-semibold text-[#242925] dark:text-white mb-1">
                   Preferred Date *
                 </label>
                 <input
+                  id="viewing-preferred-date"
+                  name="viewingPreferredDate"
                   type="date"
                   required
                   min={new Date().toISOString().split('T')[0]}
@@ -1585,10 +1590,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
 
               <div>
-                <label className="block font-semibold text-[#242925] dark:text-white mb-1">
+                <label htmlFor="viewing-preferred-time" className="block font-semibold text-[#242925] dark:text-white mb-1">
                   Preferred Time Window *
                 </label>
                 <select
+                  id="viewing-preferred-time"
+                  name="viewingPreferredTime"
                   value={viewingTime}
                   onChange={(e) => setViewingTime(e.target.value)}
                   className="w-full h-10 px-3 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
@@ -1602,10 +1609,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
 
               <div>
-                <label className="block font-semibold text-[#242925] dark:text-white mb-1">
+                <label htmlFor="viewing-contact-phone" className="block font-semibold text-[#242925] dark:text-white mb-1">
                   Contact Phone Number *
                 </label>
                 <input
+                  id="viewing-contact-phone"
+                  name="viewingContactPhone"
                   type="tel"
                   required
                   value={viewingPhone}
@@ -1616,10 +1625,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
 
               <div>
-                <label className="block font-semibold text-[#242925] dark:text-white mb-1">
+                <label htmlFor="viewing-notes" className="block font-semibold text-[#242925] dark:text-white mb-1">
                   Notes (Optional)
                 </label>
                 <textarea
+                  id="viewing-notes"
+                  name="viewingNotes"
                   rows={2}
                   value={viewingNotes}
                   onChange={(e) => setViewingNotes(e.target.value)}

@@ -114,7 +114,8 @@ export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElem
 export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
   ({ label, helperText, error, leftIcon, rightElement, id, className, ...props }, ref) => {
     const generatedId = React.useId();
-    const inputId = id || generatedId;
+    const inputId = id || (props.name ? `input-${props.name}` : generatedId);
+    const inputName = props.name || id || undefined;
 
     return (
       <div className="w-full space-y-1.5">
@@ -135,6 +136,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
           <input
             ref={ref}
             id={inputId}
+            name={inputName}
             aria-invalid={!!error}
             aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
             className={clsx(
@@ -180,7 +182,8 @@ export interface SelectFieldProps extends React.SelectHTMLAttributes<HTMLSelectE
 export const SelectField = React.forwardRef<HTMLSelectElement, SelectFieldProps>(
   ({ label, helperText, error, options, id, className, ...props }, ref) => {
     const generatedId = React.useId();
-    const selectId = id || generatedId;
+    const selectId = id || (props.name ? `select-${props.name}` : generatedId);
+    const selectName = props.name || id || undefined;
 
     return (
       <div className="w-full space-y-1.5">
@@ -195,6 +198,7 @@ export const SelectField = React.forwardRef<HTMLSelectElement, SelectFieldProps>
         <select
           ref={ref}
           id={selectId}
+          name={selectName}
           aria-invalid={!!error}
           className={clsx(
             'w-full h-11 px-3.5 bg-white dark:bg-[#141816] border rounded-lg text-sm text-[#242925] dark:text-[#F2F2EE]',

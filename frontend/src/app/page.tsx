@@ -253,6 +253,7 @@ export default function HomePage() {
                     <MapPin className="w-4 h-4 text-[#557A67] shrink-0" aria-hidden="true" />
                     <input
                       id="hero-location"
+                      name="location"
                       type="text"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
@@ -272,6 +273,7 @@ export default function HomePage() {
                   </label>
                   <select
                     id="hero-type"
+                    name="type"
                     value={searchType}
                     onChange={(e) => setSearchType(e.target.value)}
                     className="w-full mt-1 text-xs sm:text-sm font-medium text-[#242925] dark:text-white bg-transparent outline-none cursor-pointer"
@@ -295,6 +297,7 @@ export default function HomePage() {
                   </label>
                   <input
                     id="hero-budget"
+                    name="budget"
                     type="number"
                     min="0"
                     step="100"
@@ -712,6 +715,7 @@ export default function HomePage() {
               </label>
               <input
                 id="mobile-search-location"
+                name="location"
                 type="text"
                 value={searchLocation}
                 onChange={(e) => setSearchLocation(e.target.value)}
@@ -729,6 +733,7 @@ export default function HomePage() {
               </label>
               <select
                 id="mobile-search-type"
+                name="type"
                 value={searchType}
                 onChange={(e) => setSearchType(e.target.value)}
                 className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"
@@ -752,6 +757,7 @@ export default function HomePage() {
                 </label>
                 <input
                   id="mobile-search-budget"
+                  name="budget"
                   type="number"
                   min="0"
                   value={searchMaxPrice}
@@ -769,6 +775,7 @@ export default function HomePage() {
                 </label>
                 <select
                   id="mobile-search-capacity"
+                  name="capacity"
                   value={searchCapacity}
                   onChange={(e) => setSearchCapacity(e.target.value)}
                   className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"

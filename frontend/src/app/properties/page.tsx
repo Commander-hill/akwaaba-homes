@@ -249,12 +249,12 @@ function SearchDiscoveryContent() {
     });
   });
 
-  const renderFilterControls = () => (
+  const renderFilterControls = (prefix: 'desktop' | 'mobile' = 'desktop') => (
     <div className="space-y-6">
       {/* Location Filter */}
       <div className="space-y-1.5">
         <label
-          htmlFor="filter-location"
+          htmlFor={`${prefix}-filter-location`}
           className="block text-xs font-bold text-[#242925] dark:text-white"
         >
           Location or University
@@ -262,7 +262,8 @@ function SearchDiscoveryContent() {
         <div className="relative flex items-center">
           <MapPin className="w-4 h-4 text-[#557A67] absolute left-3 pointer-events-none" />
           <input
-            id="filter-location"
+            id={`${prefix}-filter-location`}
+            name={`${prefix}-filter-location`}
             type="text"
             value={locationFilter}
             onChange={(e) => {
@@ -312,11 +313,12 @@ function SearchDiscoveryContent() {
         </span>
         <div className="grid grid-cols-2 gap-2.5">
           <div>
-            <label htmlFor="filter-min-price" className="sr-only">
+            <label htmlFor={`${prefix}-filter-min-price`} className="sr-only">
               Minimum Price in GH₵
             </label>
             <input
-              id="filter-min-price"
+              id={`${prefix}-filter-min-price`}
+              name={`${prefix}-filter-min-price`}
               type="number"
               min="0"
               placeholder="Min GH₵"
@@ -329,11 +331,12 @@ function SearchDiscoveryContent() {
             />
           </div>
           <div>
-            <label htmlFor="filter-max-price" className="sr-only">
+            <label htmlFor={`${prefix}-filter-max-price`} className="sr-only">
               Maximum Price in GH₵
             </label>
             <input
-              id="filter-max-price"
+              id={`${prefix}-filter-max-price`}
+              name={`${prefix}-filter-max-price`}
               type="number"
               min="0"
               placeholder="Max GH₵"
@@ -351,13 +354,14 @@ function SearchDiscoveryContent() {
       {/* Occupant Capacity */}
       <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
         <label
-          htmlFor="filter-capacity"
+          htmlFor={`${prefix}-filter-capacity`}
           className="block text-xs font-bold text-[#242925] dark:text-white"
         >
           Minimum Capacity
         </label>
         <select
-          id="filter-capacity"
+          id={`${prefix}-filter-capacity`}
+          name={`${prefix}-filter-capacity`}
           value={capacityFilter}
           onChange={(e) => {
             setCapacityFilter(e.target.value);
@@ -455,7 +459,12 @@ function SearchDiscoveryContent() {
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               <div className="relative flex-1 sm:w-64">
                 <Search className="w-4 h-4 text-[#6F756F] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <label htmlFor="properties-search-query" className="sr-only">
+                  Search property name or keyword
+                </label>
                 <input
+                  id="properties-search-query"
+                  name="searchQuery"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => {
@@ -511,7 +520,12 @@ function SearchDiscoveryContent() {
                 {/* Sort Select */}
                 <div className="relative flex items-center">
                   <ArrowUpDown className="w-3.5 h-3.5 text-[#557A67] absolute left-3 pointer-events-none" />
+                  <label htmlFor="properties-sort-by" className="sr-only">
+                    Sort properties by
+                  </label>
                   <select
+                    id="properties-sort-by"
+                    name="sortBy"
                     aria-label="Sort properties by"
                     value={sortBy}
                     onChange={(e) => {
@@ -581,7 +595,7 @@ function SearchDiscoveryContent() {
                 </span>
               )}
             </div>
-            {renderFilterControls()}
+            {renderFilterControls('desktop')}
           </aside>
 
           {/* Results Grid (9 cols) */}
@@ -703,7 +717,7 @@ function SearchDiscoveryContent() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 p-5 overflow-y-auto">{renderFilterControls()}</div>
+            <div className="flex-1 p-5 overflow-y-auto">{renderFilterControls('mobile')}</div>
             <div className="p-4 border-t border-[#E7E7DF] dark:border-[#262E2A] bg-[#F8F7F2] dark:bg-[#111513]">
               <Button fullWidth onClick={() => setMobileFiltersOpen(false)}>
                 View {totalCount} {totalCount === 1 ? 'Result' : 'Results'}

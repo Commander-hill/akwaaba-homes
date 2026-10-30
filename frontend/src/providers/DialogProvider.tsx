@@ -226,6 +226,9 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
               <div className="my-4">
                 {dialogState.inputType === 'textarea' ? (
                   <textarea
+                    id="dialog-prompt-textarea"
+                    name="promptInput"
+                    aria-label={dialogState.placeholder || dialogState.title || 'Prompt input'}
                     autoFocus
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
@@ -235,6 +238,9 @@ export const DialogProvider = ({ children }: { children: ReactNode }) => {
                   />
                 ) : (
                   <input
+                    id="dialog-prompt-input"
+                    name="promptInput"
+                    aria-label={dialogState.placeholder || dialogState.title || 'Prompt input'}
                     autoFocus
                     type={dialogState.inputType}
                     value={inputValue}

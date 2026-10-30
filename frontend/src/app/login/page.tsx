@@ -468,10 +468,12 @@ function LoginForm() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                <label htmlFor="login-2fa-code" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
                   {useRecoveryCode ? 'Emergency recovery key' : '6-digit verification code'}
                 </label>
                 <input
+                  id="login-2fa-code"
+                  name="twoFactorCode"
                   type="text"
                   required
                   maxLength={useRecoveryCode ? 10 : 6}
@@ -535,6 +537,7 @@ function LoginForm() {
                   </label>
                   <input
                     id="login-email"
+                    name="email"
                     type="email"
                     required
                     autoComplete="email"
@@ -564,6 +567,7 @@ function LoginForm() {
                   <div className="relative">
                     <input
                       id="login-password"
+                      name="password"
                       type={showPassword ? 'text' : 'password'}
                       required
                       autoComplete="current-password"

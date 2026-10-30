@@ -1027,8 +1027,10 @@ export default function RegisterPage() {
 
               {/* Terms and Privacy Checkbox */}
               <div className="pt-1">
-                <label className="inline-flex items-start gap-2.5 cursor-pointer select-none">
+                <label htmlFor="register-accept-terms" className="inline-flex items-start gap-2.5 cursor-pointer select-none">
                   <input 
+                    id="register-accept-terms"
+                    name="acceptTerms"
                     type="checkbox" 
                     required 
                     checked={formData.acceptTerms} 
