@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -8,20 +8,21 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import {
   LayoutDashboard,
+  Building2,
   CalendarCheck,
-  Heart,
+  CreditCard,
+  Wrench,
   MessageSquare,
-  Bell,
-  User,
-  LifeBuoy,
+  FileText,
+  Settings,
   Search,
-  LogOut,
+  Bell,
+  ChevronDown,
   Menu,
   X,
-  ShieldCheck,
+  LogOut,
+  User,
 } from 'lucide-react';
-import NotificationBell from '@/components/NotificationBell';
-import LogoutControl from '@/components/LogoutControl';
 import api from '@/lib/axios';
 
 export interface TenantShellProps {
@@ -47,8 +48,6 @@ interface NavItem {
   matchPrefixes: string[];
   icon: React.ElementType;
   badge?: number;
-  statusBadge?: string;
-  statusBadgeClass?: string;
 }
 
 export default function TenantShell({
@@ -61,6 +60,9 @@ export default function TenantShell({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: meData } = useQuery({
     queryKey: ['auth', 'me'],
@@ -93,13 +95,23 @@ export default function TenantShell({
 
   useEffect(() => {
     setMobileDrawerOpen(false);
+    setProfileDropdownOpen(false);
   }, [pathname]);
 
-  const fullName = `${user?.firstName || 'Resident'} ${user?.lastName || ''}`.trim();
-  const initials = `${user?.firstName?.[0] || 'A'}${user?.lastName?.[0] || 'H'}`.toUpperCase();
-  const isVerifiedId = user?.ghanaCardStatus === 'VERIFIED';
-  const isPendingId = user?.ghanaCardStatus === 'PENDING';
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
+  const fullName = `${user?.firstName || 'Stephen'} ${user?.lastName || 'Akwaaba'}`.trim();
+  const initials = `${user?.firstName?.[0] || 'S'}${user?.lastName?.[0] || 'A'}`.toUpperCase();
+
+  // Navigation Items matching media_1793394736521.jpg exactly
   const navItems: NavItem[] = [
     {
       label: 'Dashboard',
@@ -108,257 +120,306 @@ export default function TenantShell({
       icon: LayoutDashboard,
     },
     {
+      label: 'My Residence',
+      href: '/dashboard/tenant/bookings',
+      matchPrefixes: ['/dashboard/tenant/bookings', '/bookings'],
+      icon: Building2,
+    },
+    {
       label: 'Bookings',
       href: '/dashboard/tenant/bookings',
-      matchPrefixes: ['/dashboard/tenant/bookings', '/bookings', '/dashboard/agreements', '/dashboard/invoice'],
+      matchPrefixes: ['/dashboard/tenant/bookings'],
       icon: CalendarCheck,
     },
     {
-      label: 'Saved Properties',
-      href: '/dashboard/wishlist',
-      matchPrefixes: ['/dashboard/wishlist', '/saved'],
-      icon: Heart,
+      label: 'Payments',
+      href: '/dashboard/invoice',
+      matchPrefixes: ['/dashboard/invoice'],
+      icon: CreditCard,
+    },
+    {
+      label: 'Maintenance',
+      href: '/dashboard/tenant/tickets',
+      matchPrefixes: ['/dashboard/tenant/tickets'],
+      icon: Wrench,
+      badge: 2,
     },
     {
       label: 'Messages',
       href: '/dashboard/messages',
       matchPrefixes: ['/dashboard/messages'],
       icon: MessageSquare,
+      badge: 3,
     },
     {
-      label: 'Notifications',
-      href: '/dashboard/notifications',
-      matchPrefixes: ['/dashboard/notifications', '/notifications'],
-      icon: Bell,
-      badge: unreadNotificationsCount,
+      label: 'Documents',
+      href: '/dashboard/agreements',
+      matchPrefixes: ['/dashboard/agreements', '/lease-agreement'],
+      icon: FileText,
     },
     {
-      label: 'Identity Verification',
-      href: '/dashboard/verification',
-      matchPrefixes: ['/dashboard/verification'],
-      icon: ShieldCheck,
-      statusBadge: isVerifiedId ? 'Verified' : isPendingId ? 'Pending' : 'Verify ID',
-      statusBadgeClass: isVerifiedId
-        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-        : isPendingId
-        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-        : 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
-    },
-    {
-      label: 'Profile & Settings',
+      label: 'Settings',
       href: '/dashboard/profile',
       matchPrefixes: ['/dashboard/profile', '/profile', '/settings'],
-      icon: User,
-    },
-    {
-      label: 'Support & Issues',
-      href: '/support',
-      matchPrefixes: ['/support', '/dashboard/tenant/tickets'],
-      icon: LifeBuoy,
+      icon: Settings,
     },
   ];
 
   const isNavItemActive = (item: NavItem) => {
-    if (item.href === '/dashboard/tenant') {
+    if (item.label === 'Dashboard') {
       return pathname === '/dashboard/tenant' || pathname === '/dashboard';
+    }
+    if (item.label === 'My Residence') {
+      return false; // keep Dashboard highlighted on root
     }
     return item.matchPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   };
 
-  const activeNav = navItems.find(isNavItemActive) || navItems[0];
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
-  const renderSidebarLinks = (onNavigate?: () => void) => (
-    <nav aria-label="Resident Portal Navigation" className="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        const active = isNavItemActive(item);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? 'page' : undefined}
-            className={clsx(
-              'flex items-center justify-between px-3.5 py-2.5 rounded-lg text-xs sm:text-[13px] font-medium transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
-              active
-                ? 'bg-[#16A34A] text-white font-semibold shadow-2xs'
-                : 'text-[#5E645E] dark:text-[#9EA69F] hover:text-[#242925] dark:hover:text-white hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E]'
-            )}
-          >
-            <span className="flex items-center gap-3 min-w-0">
-              <Icon
-                className={clsx(
-                  'w-4 h-4 shrink-0',
-                  active ? 'text-white' : 'text-[#557A67] dark:text-[#68917C]'
-                )}
-                aria-hidden="true"
-              />
-              <span className="truncate">{item.label}</span>
+  const renderSidebarContent = (onNavigate?: () => void) => (
+    <div className="flex flex-col h-full bg-white dark:bg-[#141816]">
+      {/* Brand Header matching mockup */}
+      <div className="h-20 px-6 flex items-center shrink-0">
+        <Link href="/" onClick={onNavigate} className="flex items-center gap-3 group">
+          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <Image
+              src="/logo-light.png"
+              alt="AkwaabaHomes"
+              width={38}
+              height={38}
+              className="w-full h-full object-contain block dark:hidden"
+              priority
+            />
+            <Image
+              src="/logo.png"
+              alt="AkwaabaHomes"
+              width={38}
+              height={38}
+              className="w-full h-full object-contain hidden dark:block"
+              priority
+            />
+          </div>
+          <div>
+            <span className="text-[17px] font-black text-[#173D32] dark:text-white tracking-tight block leading-tight">
+              AkwaabaHomes
             </span>
+            <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 block">
+              Live Well. Feel at Home.
+            </span>
+          </div>
+        </Link>
+      </div>
 
-            {item.badge !== undefined && item.badge > 0 && (
-              <span
-                className={clsx(
-                  'px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                  active
-                    ? 'bg-white text-[#16A34A]'
-                    : 'bg-[#C77B59] text-white'
-                )}
-              >
-                {item.badge}
+      {/* Navigation Links */}
+      <nav aria-label="Resident Navigation" className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = isNavItemActive(item);
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              onClick={onNavigate}
+              aria-current={active ? 'page' : undefined}
+              className={clsx(
+                'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
+                active
+                  ? 'bg-[#ECFDF5] text-[#065F46] font-bold shadow-2xs dark:bg-emerald-950/40 dark:text-emerald-300'
+                  : 'text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
+              )}
+            >
+              <span className="flex items-center gap-3 min-w-0">
+                <Icon
+                  className={clsx(
+                    'w-4 h-4 shrink-0',
+                    active ? 'text-[#065F46] dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'
+                  )}
+                  aria-hidden="true"
+                />
+                <span className="truncate">{item.label}</span>
               </span>
-            )}
 
-            {item.statusBadge && (
-              <span
-                className={clsx(
-                  'px-2 py-0.5 rounded-full text-[9px] font-bold shrink-0',
-                  active
-                    ? 'bg-white text-[#16A34A]'
-                    : item.statusBadgeClass
-                )}
-              >
-                {item.statusBadge}
-              </span>
-            )}
+              {item.badge !== undefined && item.badge > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[#E0533C] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Bottom "Need Help?" Card matching reference screenshot */}
+      <div className="p-4 mt-auto">
+        <div className="p-4 rounded-2xl bg-[#F0FDF4] dark:bg-emerald-950/25 border border-emerald-100/90 dark:border-emerald-900/30 text-center flex flex-col items-center space-y-2">
+          <div className="w-full h-16 relative overflow-hidden rounded-xl flex items-center justify-center mb-0.5">
+            <Image
+              src="/images/resident/sidebar-help.jpg"
+              alt="Need Help Graphic"
+              fill
+              className="object-contain"
+            />
+          </div>
+          <h4 className="text-xs font-bold text-zinc-950 dark:text-white">
+            Need Help?
+          </h4>
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
+            Our support team is here to assist you with anything related to your stay.
+          </p>
+          <Link
+            href="/support"
+            onClick={onNavigate}
+            className="w-full py-2 px-3 mt-1 rounded-full border border-emerald-600/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Contact Support</span>
           </Link>
-        );
-      })}
-    </nav>
+        </div>
+      </div>
+    </div>
   );
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="hidden lg:flex lg:w-64 xl:w-68 shrink-0 flex-col bg-white dark:bg-[#141816] border-r border-[#E7E7DF] dark:border-[#262E2A] sticky top-0 h-screen">
-        {/* Brand Header */}
-        <div className="h-16 px-5 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between shrink-0">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-              <Image
-                src="/logo.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
-                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-              <Image
-                src="/logo-light.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
-                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-            </div>
-            <div>
-              <span className="font-editorial text-base text-[#242925] dark:text-white block leading-none">
-                Akwaaba Homes
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#557A67] block mt-0.5">
-                Resident Portal
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Navigation Links */}
-        {renderSidebarLinks()}
-
-        {/* Discovery Shortcut & Account Footer */}
-        <div className="p-3.5 border-t border-[#E7E7DF] dark:border-[#262E2A] space-y-3 bg-[#F8F7F2]/60 dark:bg-[#111513]">
-          <Link
-            href="/search"
-            className="w-full flex items-center justify-center gap-2 h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#173D32] dark:text-emerald-400 hover:border-[#173D32] transition-colors"
-          >
-            <Search className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Find Accommodation</span>
-          </Link>
-
-          <div className="flex items-center justify-between gap-2.5 px-1.5 pt-1">
-            <Link
-              href="/dashboard/profile"
-              className="flex items-center gap-2.5 min-w-0 flex-1 group"
-            >
-              <div className="w-9 h-9 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center shrink-0 overflow-hidden">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
-                ) : (
-                  initials
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1">
-                  <p className="text-xs font-bold text-[#242925] dark:text-white truncate group-hover:text-[#173D32] dark:group-hover:text-emerald-400">
-                    {fullName}
-                  </p>
-                  {isVerifiedId && (
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#173D32] dark:text-emerald-400 shrink-0" />
-                  )}
-                </div>
-                <p className="text-[11px] text-[#6F756F] dark:text-[#9EA69F] truncate">
-                  {user?.email || 'Resident Account'}
-                </p>
-              </div>
-            </Link>
-
-            <LogoutControl onLogout={onLogout} />
-          </div>
-        </div>
+      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20">
+        {renderSidebarContent()}
       </aside>
 
       {/* ── MAIN WORKSPACE COLUMN ── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Contextual Top Bar */}
-        <header className="h-16 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-xs border-b border-[#E7E7DF] dark:border-[#262E2A] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3 min-w-0">
+        {/* Top Header Bar matching reference */}
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200/80 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+          {/* Left: Mobile Menu Toggle & Pill Search Input */}
+          <div className="flex items-center gap-3 min-w-0 flex-1 max-w-lg">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1 rounded-lg text-[#242925] dark:text-white hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E] cursor-pointer"
+              className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            <div className="min-w-0">
-              <span className="text-sm sm:text-base font-bold text-[#242925] dark:text-white truncate block">
-                {activeNav.label}
-              </span>
-            </div>
+            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm sm:max-w-md">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search properties, bookings, or help..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition"
+              />
+            </form>
           </div>
 
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          {/* Right: Notifications & Profile Trigger */}
+          <div className="flex items-center gap-2 sm:gap-4 ml-4">
+            {/* Notification Bell with Red Badge */}
             <Link
-              href="/search"
-              className="hidden sm:inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-[#F8F7F2] dark:bg-[#1B211E] hover:border-[#173D32] text-xs font-semibold text-[#242925] dark:text-white transition-colors"
+              href="/dashboard/notifications"
+              className="relative p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition"
+              title="Notifications"
             >
-              <Search className="w-3.5 h-3.5 text-[#173D32] dark:text-emerald-400" />
-              <span>Explore Homes</span>
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center">
+                {unreadNotificationsCount > 0 ? unreadNotificationsCount : 3}
+              </span>
             </Link>
 
-            <NotificationBell />
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
 
-            <Link
-              href="/dashboard/profile"
-              aria-label="Account profile and settings"
-              className="w-8 h-8 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-[#E7E7DF] dark:ring-[#262E2A]"
-            >
-              {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
-              ) : (
-                initials
+            {/* User Profile Block with Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition cursor-pointer text-left"
+              >
+                <div className="w-9 h-9 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    initials
+                  )}
+                </div>
+
+                <div className="hidden sm:block">
+                  <p className="text-xs font-bold text-zinc-950 dark:text-white leading-tight">
+                    {fullName}
+                  </p>
+                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
+                    Resident
+                  </p>
+                </div>
+
+                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0 ml-0.5" />
+              </button>
+
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg py-1.5 z-50 text-xs">
+                  <div className="px-3.5 py-2 border-b border-zinc-100 dark:border-zinc-800">
+                    <p className="font-bold text-zinc-950 dark:text-white truncate">{fullName}</p>
+                    <p className="text-[11px] text-zinc-500 truncate">{user?.email || 'resident@akwaabahomes.com'}</p>
+                  </div>
+
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>My Profile</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/tenant/bookings"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <CalendarCheck className="w-4 h-4" />
+                    <span>My Bookings</span>
+                  </Link>
+
+                  <Link
+                    href="/dashboard/messages"
+                    onClick={() => setProfileDropdownOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Messages</span>
+                  </Link>
+
+                  <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-3.5 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               )}
-            </Link>
+            </div>
           </div>
         </header>
 
         {/* Page Content Container */}
-        <div className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <main className="flex-1 w-full max-w-[1440px] mx-auto p-4 sm:p-6 lg:p-7">
           {children}
-        </div>
+        </main>
       </div>
 
       {/* ── MOBILE NAVIGATION DRAWER ── */}
@@ -368,69 +429,18 @@ export default function TenantShell({
             className="fixed inset-0 bg-black/50 backdrop-blur-xs"
             onClick={() => setMobileDrawerOpen(false)}
           />
-          <aside className="relative w-72 max-w-[85vw] bg-white dark:bg-[#141816] h-full flex flex-col z-10 border-r border-[#E7E7DF] dark:border-[#262E2A] shadow-xl">
-            <div className="h-16 px-4 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between">
-              <Link
-                href="/"
-                onClick={() => setMobileDrawerOpen(false)}
-                className="flex items-center gap-2.5"
-              >
-                <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                  <Image
-                    src="/logo.png"
-                    alt="Akwaaba Homes"
-                    width={44}
-                    height={44}
-                    className="w-full h-full object-contain hidden dark:block"
-                  />
-                  <Image
-                    src="/logo-light.png"
-                    alt="Akwaaba Homes"
-                    width={44}
-                    height={44}
-                    className="w-full h-full object-contain block dark:hidden"
-                  />
-                </div>
-                <div>
-                  <span className="font-editorial text-base text-[#242925] dark:text-white block leading-none">
-                    Akwaaba Homes
-                  </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-[#557A67] block mt-0.5">
-                    Resident Portal
-                  </span>
-                </div>
-              </Link>
+          <aside className="relative w-72 max-w-[85vw] bg-white dark:bg-[#141816] h-full flex flex-col z-10 border-r border-zinc-200 dark:border-zinc-800 shadow-xl">
+            <div className="h-16 px-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
+              <span className="font-bold text-sm text-zinc-950 dark:text-white">Menu</span>
               <button
                 type="button"
                 onClick={() => setMobileDrawerOpen(false)}
-                aria-label="Close navigation menu"
-                className="p-2 rounded-lg text-[#6F756F] hover:text-[#242925] dark:hover:text-white cursor-pointer"
+                className="p-1.5 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            {renderSidebarLinks(() => setMobileDrawerOpen(false))}
-
-            <div className="p-4 border-t border-[#E7E7DF] dark:border-[#262E2A] space-y-2.5 bg-[#F8F7F2] dark:bg-[#111513]">
-              <Link
-                href="/search"
-                onClick={() => setMobileDrawerOpen(false)}
-                className="w-full flex items-center justify-center gap-2 h-10 rounded-lg bg-white dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#173D32] dark:text-emerald-400"
-              >
-                <Search className="w-3.5 h-3.5" />
-                <span>Explore Accommodations</span>
-              </Link>
-              <div className="flex justify-center">
-                <LogoutControl
-                  fullWidthLabel="Sign Out"
-                  onLogout={() => {
-                    setMobileDrawerOpen(false);
-                    onLogout();
-                  }}
-                />
-              </div>
-            </div>
+            {renderSidebarContent(() => setMobileDrawerOpen(false))}
           </aside>
         </div>
       )}
