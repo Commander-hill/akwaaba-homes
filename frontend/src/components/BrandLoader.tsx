@@ -50,9 +50,17 @@ export default function BrandLoader({
             <Image
               src="/logo.png"
               alt="Akwaaba Homes"
-              width={96}
-              height={96}
-              className="w-full h-full object-contain drop-shadow-sm transition-transform duration-300"
+              width={112}
+              height={112}
+              className="w-full h-full object-contain hidden dark:block transition-transform duration-300"
+              priority
+            />
+            <Image
+              src="/logo-light.png"
+              alt="Akwaaba Homes"
+              width={112}
+              height={112}
+              className="w-full h-full object-contain block dark:hidden transition-transform duration-300"
               priority
             />
           </div>
