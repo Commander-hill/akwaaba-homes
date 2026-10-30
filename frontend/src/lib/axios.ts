@@ -52,12 +52,17 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
+    const storedAccessToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_access_token') : null;
+
     if (
       error.response?.status === 401 && 
       !originalRequest._retry && 
       originalRequest.url !== '/auth/login' && 
       originalRequest.url !== '/auth/login/2fa' && 
-      originalRequest.url !== '/auth/refresh'
+      originalRequest.url !== '/auth/refresh' &&
+      // Only attempt refresh if the user previously had a session
+      (storedRefreshToken || storedAccessToken)
     ) {
       
       if (isRefreshing) {
@@ -77,7 +82,6 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
         const refreshRes = await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
         const newAccessToken = refreshRes.data?.accessToken;
 
