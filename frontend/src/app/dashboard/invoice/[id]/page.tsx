@@ -239,12 +239,12 @@ export default function InvoicePage() {
 
           {/* 1. Top Merchant Header Card */}
           <div className="border border-zinc-200/90 rounded-xl p-4 sm:p-5 flex items-center gap-4 bg-white/85 backdrop-blur-[1px]">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200/80 p-2 flex items-center justify-center shrink-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
                 alt="Akwaaba Homes"
-                width={48}
-                height={48}
+                width={64}
+                height={64}
                 className="w-full h-full object-contain"
                 priority
               />
