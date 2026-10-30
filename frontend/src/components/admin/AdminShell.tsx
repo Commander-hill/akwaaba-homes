@@ -155,13 +155,14 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         collapsed && !isMobile ? 'justify-center' : ''
       )}>
         <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-[#16A34A] flex items-center justify-center shrink-0 shadow-xs border border-emerald-500/20">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
             <Image
               src="/logo.png"
               alt="Akwaaba Homes"
-              width={22}
-              height={22}
-              className="object-contain"
+              width={44}
+              height={44}
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              priority
             />
           </div>
           {(!collapsed || isMobile) && (

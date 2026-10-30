@@ -311,12 +311,12 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
         {/* Brand Header */}
         <div className="h-16 flex items-center shrink-0 border-b border-zinc-800/80 px-4 justify-between bg-[#090B0E]">
           <Link href="/" className="flex items-center gap-2.5 group overflow-hidden min-w-0">
-            <div className="w-8 h-8 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+            <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <Image
                 src="/logo.png"
                 alt="Akwaaba Homes"
-                width={28}
-                height={28}
+                width={40}
+                height={40}
                 className="w-full h-full object-contain"
                 priority
               />
@@ -354,12 +354,12 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
           <aside className="relative w-72 max-w-[85vw] bg-[#0D0F14] text-zinc-100 border-r border-zinc-800/80 h-full flex flex-col shadow-2xl z-10 select-none">
             <div className="h-16 flex items-center shrink-0 border-b border-zinc-800/80 px-4 justify-between bg-[#090B0E]">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 flex items-center justify-center shrink-0">
                   <Image
                     src="/logo.png"
                     alt="Akwaaba Homes"
-                    width={28}
-                    height={28}
+                    width={40}
+                    height={40}
                     className="w-full h-full object-contain"
                   />
                 </div>

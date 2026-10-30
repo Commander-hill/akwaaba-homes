@@ -287,12 +287,12 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
       {/* ── Top Executive Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-800/60 flex items-center justify-between relative z-10 bg-[#080A0E]/70 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-[#0F5132] border border-emerald-400/30 flex items-center justify-center shadow-md p-1.5">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
             <Image 
               src="/logo.png" 
               alt="Akwaaba Homes" 
-              width={32} 
-              height={32} 
+              width={44} 
+              height={44} 
               className="w-full h-full object-contain" 
               priority 
             />
