@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   CalendarCheck,
   Compass,
+  CheckCircle2,
+  Sparkles,
+  BadgeCheck,
 } from 'lucide-react';
 import api from '@/lib/axios';
 import PropertyCard, { PropertyCardData } from '@/components/tenant-ui/PropertyCard';
@@ -338,8 +341,24 @@ export default function HomePage() {
                 </button>
               </div>
 
+              {/* Authentic Trust Signals Bar */}
+              <div className="flex items-center flex-wrap gap-y-2 gap-x-5 text-xs text-[#557A67] dark:text-[#9EA69F] pt-1">
+                <div className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                  <span className="font-medium">Ghana Card Verified Hosts</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                  <span className="font-medium">Direct Booking &bull; No Hidden Agent Fees</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                  <span className="font-medium">Transparent GH₵ Pricing</span>
+                </div>
+              </div>
+
               {/* Popular Quick Destinations */}
-              <div className="flex items-center flex-wrap gap-2 text-xs">
+              <div className="flex items-center flex-wrap gap-2 text-xs pt-1">
                 <span className="text-[#6F756F] font-medium">Popular areas:</span>
                 {['Legon', 'Kumasi', 'East Legon', 'Cape Coast', 'Osu', 'Spintex'].map((place) => (
                   <Link
@@ -353,30 +372,90 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Right Architectural Photography Composition (5 cols) */}
+            {/* Right Verified Property Showcase (5 cols) */}
             <div className="lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] p-2 shadow-xs">
-                <div className="relative aspect-[4/3] sm:aspect-[5/4] rounded-xl overflow-hidden bg-[#F1EFE8]">
-                  <img
-                    src="/images/hero_accra_apartment.png"
-                    alt="Contemporary residential apartment courtyard in Accra, Ghana"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80';
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-white">
-                    <p className="text-[11px] uppercase tracking-widest text-white/80 font-semibold">
-                      Residential &amp; Campus Living
-                    </p>
-                    <p className="text-sm sm:text-base font-medium mt-0.5">
-                      Clear rental periods, verified host details, and structured booking records.
-                    </p>
+              {listings.length > 0 ? (
+                (() => {
+                  const featured = listings[0];
+                  const featuredImage =
+                    (Array.isArray(featured.images) && featured.images.length > 0
+                      ? featured.images[0]
+                      : typeof featured.images === 'string' && featured.images
+                      ? featured.images
+                      : null) || '/images/hero_accra_apartment.png';
+
+                  return (
+                    <div className="relative group">
+                      <Link
+                        href={`/properties/${featured.id}`}
+                        className="block relative rounded-2xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] p-2.5 shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        <div className="relative aspect-[4/3] sm:aspect-[5/4] rounded-xl overflow-hidden bg-[#F1EFE8] dark:bg-zinc-800">
+                          <img
+                            src={featuredImage}
+                            alt={featured.title}
+                            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src =
+                                'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                          
+                          {/* Live Verification Badge */}
+                          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold">
+                            <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Verified Host &bull; Active Listing</span>
+                          </div>
+
+                          {/* Price Chip */}
+                          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
+                            GH₵ {Number(featured.price).toLocaleString()}
+                            <span className="text-[10px] font-normal opacity-90">/{featured.billingCycle?.toLowerCase() || 'mo'}</span>
+                          </div>
+
+                          {/* Bottom Card Summary */}
+                          <div className="absolute bottom-3 left-3 right-3 text-white">
+                            <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block mb-1">
+                              {featured.type?.replace(/_/g, ' ') || 'Accommodations'}
+                            </span>
+                            <h3 className="text-base sm:text-lg font-bold leading-snug line-clamp-1 group-hover:text-emerald-200 transition-colors">
+                              {featured.title}
+                            </h3>
+                            <div className="flex items-center gap-1.5 text-xs text-white/80 mt-1">
+                              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                              <span className="truncate">{featured.location}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="relative rounded-2xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] p-2 shadow-xs">
+                  <div className="relative aspect-[4/3] sm:aspect-[5/4] rounded-xl overflow-hidden bg-[#F1EFE8]">
+                    <img
+                      src="/images/hero_accra_apartment.png"
+                      alt="Contemporary residential apartment courtyard in Accra, Ghana"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <p className="text-[11px] uppercase tracking-widest text-white/80 font-semibold">
+                        Residential &amp; Campus Living
+                      </p>
+                      <p className="text-sm sm:text-base font-medium mt-0.5">
+                        Clear rental periods, verified host details, and structured booking records.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
