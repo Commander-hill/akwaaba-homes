@@ -213,17 +213,21 @@ export default function InvoicePage() {
         {/* Top Solid Brand Header Bar */}
         <div className="h-4 w-full bg-[#16A34A] print:bg-[#16A34A]" />
 
-        {/* ── Subtle Background Watermark: Akwaaba Homes Emblem ── */}
+        {/* ── Official Watermark: Akwaaba Homes Emblem ── */}
         <div
+          id="receipt-watermark"
           aria-hidden="true"
           className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden z-0"
         >
-          <div className="relative w-80 sm:w-96 h-80 sm:h-96 opacity-[0.045] print:opacity-[0.045] grayscale contrast-125 transform -rotate-12">
+          <div
+            className="relative w-[340px] sm:w-[440px] h-[340px] sm:h-[440px] transform -rotate-12"
+            style={{ opacity: 0.16 }}
+          >
             <Image
               src="/logo-light.png"
-              alt=""
+              alt="Akwaaba Homes Watermark"
               fill
-              sizes="(max-width: 768px) 320px, 384px"
+              sizes="(max-width: 768px) 340px, 440px"
               className="object-contain"
               priority
             />
@@ -234,7 +238,7 @@ export default function InvoicePage() {
         <div className="relative z-10 p-6 sm:p-10 space-y-6">
 
           {/* 1. Top Merchant Header Card */}
-          <div className="border border-zinc-200/90 rounded-xl p-4 sm:p-5 flex items-center gap-4 bg-white">
+          <div className="border border-zinc-200/90 rounded-xl p-4 sm:p-5 flex items-center gap-4 bg-white/85 backdrop-blur-[1px]">
             <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-200/80 p-2 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
@@ -357,7 +361,7 @@ export default function InvoicePage() {
           </div>
 
           {/* 5. Bottom Card with QR Code matching reference */}
-          <div className="mt-8 rounded-2xl bg-zinc-50 border border-zinc-200/70 p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-2">
+          <div className="mt-8 rounded-2xl bg-zinc-50/85 backdrop-blur-[1px] border border-zinc-200/70 p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-2">
             <h4 className="text-xs sm:text-sm font-bold text-zinc-950">
               Download The Akwaaba Homes App
             </h4>
@@ -388,6 +392,11 @@ export default function InvoicePage() {
           #printable-receipt,
           #printable-receipt * {
             visibility: visible;
+          }
+          #receipt-watermark {
+            display: flex !important;
+            opacity: 0.16 !important;
+            visibility: visible !important;
           }
           #printable-receipt {
             position: absolute;

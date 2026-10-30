@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
+import { getQRCodeMatrix } from './qr';
 
 /**
  * Generate official signed Tenancy Agreement PDF (Human-Crafted Ghanaian Conveyancing Standard)
@@ -438,7 +439,7 @@ export async function generateTenancyAgreementPDF(data: {
 
 /**
  * Generate official Payment Receipt / Invoice PDF
- * Human-engineered fintech/proptech accounting layout (compliant with Rent Act, 1963 Act 220, s. 20)
+ * Exact Ghana Transaction Receipt Standard with Akwaaba Homes Watermark & Scannable QR
  */
 export async function generateReceiptPDF(data: {
   transactionId: string;
@@ -470,38 +471,38 @@ export async function generateReceiptPDF(data: {
   paidAt: string;
 }): Promise<Buffer> {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ margin: 48, size: 'A4' });
+    const doc = new PDFDocument({ margin: 45, size: 'A4' });
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', () => resolve(Buffer.concat(chunks)));
     doc.on('error', (err) => reject(err));
 
-    const issueDate = new Date(data.paidAt).toLocaleDateString('en-GB', {
-      day: '2-digit',
+    const dateObj = new Date(data.paidAt);
+    const issueDate = dateObj.toLocaleDateString('en-GB', {
+      day: 'numeric',
       month: 'short',
       year: 'numeric',
     });
+    const issueTime = dateObj.toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
     const receiptNo = data.reference || `RCP-${data.transactionId.slice(0, 8).toUpperCase()}`;
-    const fmt = (val: number) =>
-      Number(val || 0).toLocaleString('en-GH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-
     const totalPaid = Number(data.grossAmount || 0);
-    const cautionDeposit = Number(data.cautionDepositAmount || 0);
-    const baseRent = data.baseRentAmount !== undefined
-      ? Number(data.baseRentAmount)
-      : Math.max(0, totalPaid - cautionDeposit);
-    const isPaid = ['SUCCESS', 'COMPLETED', 'PAID'].includes((data.paymentStatus || '').toUpperCase());
 
-    const leftX = 48;
-    const rightEdge = 547;
-    const contentWidth = rightEdge - leftX; // 499
+    const pageWidth = 595.28;
+    const pageHeight = 841.89;
+    const margin = 45;
+    const contentWidth = pageWidth - margin * 2;
 
-    // ── Watermark: Akwaaba Homes Official Logo Emblem ──
+    // ── Resolve Akwaaba Homes Logo ──
     const possibleLogoPaths = [
+      path.resolve(__dirname, '../../assets/logo-light.png'),
+      path.resolve(__dirname, '../assets/logo-light.png'),
+      path.resolve(process.cwd(), 'assets/logo-light.png'),
+      path.resolve(process.cwd(), 'backend/assets/logo-light.png'),
       path.resolve(process.cwd(), '../frontend/public/logo-light.png'),
       path.resolve(process.cwd(), 'frontend/public/logo-light.png'),
       path.resolve(__dirname, '../../../../frontend/public/logo-light.png'),
@@ -509,320 +510,170 @@ export async function generateReceiptPDF(data: {
     ];
     const logoLightPath = possibleLogoPaths.find((p) => fs.existsSync(p));
 
+    // ── 1. Watermark: Akwaaba Homes Official Logo Emblem (Clearly Visible 0.16 Opacity) ──
     if (logoLightPath) {
       try {
         doc.save();
-        doc.opacity(0.045);
-        // Centered watermark on A4 (595.28 x 841.89 pt)
-        const watermarkSize = 280;
-        const wmX = (595.28 - watermarkSize) / 2;
-        const wmY = (841.89 - watermarkSize) / 2 - 20;
+        doc.opacity(0.16);
+        const watermarkSize = 380;
+        const wmX = (pageWidth - watermarkSize) / 2;
+        const wmY = (pageHeight - watermarkSize) / 2 - 10;
         doc.image(logoLightPath, wmX, wmY, { width: watermarkSize, height: watermarkSize });
         doc.restore();
       } catch (err) {
-        // Fallback silently if watermark rendering encounters format warning
+        // Fallback silently if watermark image encounters unhandled format warning
       }
     }
 
-    // ── Top Accent Bar ──
-    doc.rect(leftX, 42, contentWidth, 4).fill('#16A34A');
+    // ── 2. Top Solid Brand Green Bar ──
+    doc.rect(margin, 40, contentWidth, 8).fill('#16A34A');
 
-    // ── Brand & Document Title (Left) ──
-    let textLeftX = leftX;
+    // ── 3. Top Merchant Card ──
+    const cardY = 60;
+    const cardH = 68;
+    doc.roundedRect(margin, cardY, contentWidth, cardH, 8).strokeColor('#E4E4E7').lineWidth(1).stroke();
+
     if (logoLightPath) {
       try {
-        doc.image(logoLightPath, leftX, 56, { fit: [42, 42] });
-        textLeftX = leftX + 50;
+        doc.image(logoLightPath, margin + 14, cardY + 12, { fit: [44, 44] });
       } catch (e) {}
     }
 
     doc
-      .fillColor('#0F5132')
+      .fillColor('#09090B')
       .font('Helvetica-Bold')
-      .fontSize(13)
-      .text('AKWAABA HOMES', textLeftX, 58, { characterSpacing: 0.8 });
+      .fontSize(14)
+      .text('Akwaaba Homes', margin + 68, cardY + 15);
 
     doc
-      .fillColor('#111827')
-      .font('Helvetica-Bold')
-      .fontSize(16)
-      .text('Rent Payment Receipt', textLeftX, 76);
-
-    doc
-      .fillColor('#6B7280')
+      .fillColor('#52525B')
       .font('Helvetica')
       .fontSize(8.5)
-      .text(`Receipt No: ${receiptNo}   •   Issued: ${issueDate}`, textLeftX, 96);
+      .text(
+        'Akwaaba Technologies Ltd, Plot 14 Independence Avenue,\nAirport City / West Ridge, Accra, Ghana',
+        margin + 68,
+        cardY + 34,
+        { lineGap: 2 }
+      );
 
-    // ── Amount & Status Pill (Right) ──
-    const badgeText = isPaid ? 'PAID' : (data.paymentStatus || 'PENDING').toUpperCase();
-    const badgeBg = isPaid ? '#ECFDF3' : '#FEF3C7';
-    const badgeColor = isPaid ? '#166534' : '#92400E';
-
-    doc.roundedRect(rightEdge - 72, 58, 72, 18, 4).fill(badgeBg);
+    // ── 4. Document Heading ──
+    let curY = cardY + cardH + 24;
     doc
-      .fillColor(badgeColor)
+      .fillColor('#09090B')
       .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .text(badgeText, rightEdge - 72, 63, { width: 72, align: 'center' });
+      .fontSize(18)
+      .text('Transaction receipt', margin, curY);
 
+    curY += 22;
     doc
-      .fillColor('#6B7280')
-      .font('Helvetica')
-      .fontSize(8.5)
-      .text('TOTAL PAID', rightEdge - 180, 82, { width: 180, align: 'right' });
-
-    doc
-      .fillColor('#111827')
-      .font('Helvetica-Bold')
-      .fontSize(16)
-      .text(`GHS ${fmt(totalPaid)}`, rightEdge - 180, 94, { width: 180, align: 'right' });
-
-    // Divider
-    doc.moveTo(leftX, 126).lineTo(rightEdge, 126).lineWidth(0.75).strokeColor('#E5E7EB').stroke();
-
-    // ── Two-Column Counterparty Section (Received From vs. Property & Landlord) ──
-    const partyY = 142;
-    const colW = 235;
-    const col2X = leftX + colW + 29;
-
-    doc
-      .fillColor('#6B7280')
-      .font('Helvetica-Bold')
-      .fontSize(8)
-      .text('RECEIVED FROM (TENANT)', leftX, partyY, { characterSpacing: 0.6 });
-
-    doc
-      .fillColor('#111827')
-      .font('Helvetica-Bold')
-      .fontSize(10.5)
-      .text(data.studentName, leftX, partyY + 14, { width: colW });
-
-    let leftPartyCurY = partyY + 29;
-    doc
-      .fillColor('#4B5563')
+      .fillColor('#52525B')
       .font('Helvetica')
       .fontSize(9)
-      .text(data.studentEmail, leftX, leftPartyCurY, { width: colW });
-    leftPartyCurY += 13;
+      .text('This document serves as a confirmation of your transaction.', margin, curY);
 
-    if (data.studentPhone && data.studentPhone !== 'N/A') {
-      doc.text(data.studentPhone, leftX, leftPartyCurY, { width: colW });
-      leftPartyCurY += 13;
-    }
-    if (data.studentId || data.studentCampus) {
-      const studentMeta = [
-        data.studentId ? `ID: ${data.studentId}` : null,
-        data.studentCampus || null,
-      ]
-        .filter(Boolean)
-        .join(' • ');
-      doc.text(studentMeta, leftX, leftPartyCurY, { width: colW });
-    }
-
-    // Right Column: Property & Landlord
+    curY += 22;
     doc
-      .fillColor('#6B7280')
+      .fillColor('#09090B')
       .font('Helvetica-Bold')
-      .fontSize(8)
-      .text('PROPERTY & LANDLORD', col2X, partyY, { characterSpacing: 0.6 });
+      .fontSize(10)
+      .text('Purchased Tenancy Transaction', margin, curY);
 
-    doc
-      .fillColor('#111827')
-      .font('Helvetica-Bold')
-      .fontSize(10.5)
-      .text(data.propertyTitle, col2X, partyY + 14, { width: colW });
+    curY += 16;
+    doc.moveTo(margin, curY).lineTo(margin + contentWidth, curY).strokeColor('#E4E4E7').lineWidth(1).stroke();
 
-    let rightPartyCurY = partyY + 29;
-    doc
-      .fillColor('#4B5563')
-      .font('Helvetica')
-      .fontSize(9);
+    // ── 5. Clean Key-Value Rows ──
+    const recipientPhone = data.landlordPhone
+      ? data.landlordPhone.replace(/[^0-9]/g, '')
+      : '233247124268';
+    const recipientName = data.landlordName
+      ? data.landlordName.toUpperCase()
+      : (data.propertyTitle ? data.propertyTitle.toUpperCase() : 'AKWAABA HOMES');
 
-    if (data.propertyLocation) {
-      doc.text(data.propertyLocation, col2X, rightPartyCurY, { width: colW });
-      rightPartyCurY += 13;
-    }
-    if (data.landlordName) {
-      doc.text(`Landlord: ${data.landlordName}`, col2X, rightPartyCurY, { width: colW });
-      rightPartyCurY += 13;
-    }
-    if (data.landlordPhone && data.landlordPhone !== 'N/A') {
-      doc.text(`Tel: ${data.landlordPhone}`, col2X, rightPartyCurY, { width: colW });
-    }
+    const accommodationParts = [
+      data.propertyTitle || 'Residential Accommodation',
+      data.unitAllocation || null,
+      data.roomType || null,
+    ].filter(Boolean);
+    const accommodationLabel = accommodationParts.join(' • ');
 
-    // ── 4-Column Tenancy & Allocation Metadata Strip ──
-    const stripY = 224;
-    const stripH = 48;
-    doc.roundedRect(leftX, stripY, contentWidth, stripH, 6).fillAndStroke('#F9FAFB', '#E5E7EB');
+    const paymentMethodLabel = data.paymentMethod
+      ? data.paymentMethod.includes('MoMo')
+        ? 'MoMo'
+        : data.paymentMethod
+      : 'MoMo';
 
-    const cellW = contentWidth / 4;
-    const periodText =
-      data.startDate && data.endDate ? `${data.startDate} – ${data.endDate}` : 'Current Tenancy Term';
-    const metaCells = [
-      { label: 'ROOM / UNIT TYPE', value: data.roomType || 'Residential Unit' },
-      { label: 'ASSIGNED UNIT', value: data.unitAllocation || 'Standard Unit' },
-      { label: 'TENANCY PERIOD', value: periodText },
-      { label: 'PAYMENT CHANNEL', value: data.paymentMethod || 'Paystack (MoMo / Card)' },
+    const rows: [string, string][] = [
+      ["Sender's Name", data.studentName || 'Tenant'],
+      ["Recipient's Number", recipientPhone],
+      ["Recipient's Name", recipientName],
+      ['Transaction ID', receiptNo],
+      ['Amount', `GHS ${totalPaid.toLocaleString('en-GH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`],
+      ['Date', issueDate],
+      ['Time', issueTime],
+      ['Payment Method', paymentMethodLabel],
+      ['Accommodation', accommodationLabel],
     ];
 
-    metaCells.forEach((cell, idx) => {
-      const cx = leftX + idx * cellW + 10;
-      if (idx > 0) {
-        doc
-          .moveTo(leftX + idx * cellW, stripY + 8)
-          .lineTo(leftX + idx * cellW, stripY + stripH - 8)
-          .lineWidth(0.5)
-          .strokeColor('#E5E7EB')
-          .stroke();
-      }
+    rows.forEach(([label, value]) => {
+      curY += 10;
+      doc.fillColor('#52525B').font('Helvetica').fontSize(9.5).text(label, margin + 4, curY);
       doc
-        .fillColor('#6B7280')
-        .font('Helvetica-Bold')
-        .fontSize(7)
-        .text(cell.label, cx, stripY + 10, { width: cellW - 16 });
-      doc
-        .fillColor('#111827')
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .text(cell.value, cx, stripY + 23, { width: cellW - 16, ellipsis: true });
-    });
-
-    // ── Line-Item Charge Breakdown Table ──
-    const tableY = 294;
-    doc.rect(leftX, tableY, contentWidth, 26).fill('#F3F4F6');
-    doc.moveTo(leftX, tableY + 26).lineTo(rightEdge, tableY + 26).lineWidth(0.75).strokeColor('#D1D5DB').stroke();
-
-    doc
-      .fillColor('#374151')
-      .font('Helvetica-Bold')
-      .fontSize(8)
-      .text('DESCRIPTION', leftX + 12, tableY + 9)
-      .text('TERM / BILLING BASIS', leftX + 250, tableY + 9)
-      .text('AMOUNT (GHS)', rightEdge - 120, tableY + 9, { width: 108, align: 'right' });
-
-    let rowY = tableY + 26;
-
-    // Row 1: Base Rent
-    doc
-      .fillColor('#111827')
-      .font('Helvetica-Bold')
-      .fontSize(9.5)
-      .text(`Rent — ${data.propertyTitle}`, leftX + 12, rowY + 10, { width: 228 });
-    doc
-      .fillColor('#6B7280')
-      .font('Helvetica')
-      .fontSize(8.5)
-      .text(
-        [data.roomType, data.unitAllocation].filter(Boolean).join(' • '),
-        leftX + 12,
-        rowY + 24,
-        { width: 228 }
-      );
-    doc
-      .fillColor('#374151')
-      .font('Helvetica')
-      .fontSize(8.5)
-      .text(periodText, leftX + 250, rowY + 16, { width: 145 });
-    doc
-      .fillColor('#111827')
-      .font('Courier-Bold')
-      .fontSize(10)
-      .text(fmt(baseRent), rightEdge - 120, rowY + 15, { width: 108, align: 'right' });
-
-    rowY += 44;
-    doc.moveTo(leftX, rowY).lineTo(rightEdge, rowY).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
-
-    // Row 2: Refundable Security / Caution Deposit (if > 0)
-    if (cautionDeposit > 0) {
-      doc
-        .fillColor('#111827')
+        .fillColor('#09090B')
         .font('Helvetica-Bold')
         .fontSize(9.5)
-        .text('Refundable Security / Caution Deposit', leftX + 12, rowY + 10, { width: 228 });
-      doc
-        .fillColor('#6B7280')
-        .font('Helvetica')
-        .fontSize(8.5)
-        .text('Refundable deposit subject to move-out inspection', leftX + 12, rowY + 24, { width: 228 });
-      doc
-        .fillColor('#374151')
-        .font('Helvetica')
-        .fontSize(8.5)
-        .text('One-time refundable', leftX + 250, rowY + 16, { width: 145 });
-      doc
-        .fillColor('#111827')
-        .font('Courier-Bold')
-        .fontSize(10)
-        .text(fmt(cautionDeposit), rightEdge - 120, rowY + 15, { width: 108, align: 'right' });
+        .text(value, margin + 160, curY, { width: contentWidth - 164, align: 'right' });
+      const valH = doc.heightOfString(value, {
+        width: contentWidth - 164,
+      });
+      curY += Math.max(14, valH) + 8;
+      doc.moveTo(margin, curY).lineTo(margin + contentWidth, curY).strokeColor('#E4E4E7').lineWidth(1).stroke();
+    });
 
-      rowY += 44;
-      doc.moveTo(leftX, rowY).lineTo(rightEdge, rowY).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
-    }
-
-    // ── Summary Totals Block (Right-aligned) ──
-    const summaryX = rightEdge - 230;
-    let sumY = rowY + 14;
-
-    const drawSummaryLine = (label: string, val: string, bold = false) => {
-      doc
-        .fillColor(bold ? '#111827' : '#4B5563')
-        .font(bold ? 'Helvetica-Bold' : 'Helvetica')
-        .fontSize(bold ? 10 : 9)
-        .text(label, summaryX, sumY, { width: 120, align: 'left' });
-      doc
-        .fillColor('#111827')
-        .font(bold ? 'Courier-Bold' : 'Courier')
-        .fontSize(bold ? 10.5 : 9.5)
-        .text(val, rightEdge - 108, sumY, { width: 96, align: 'right' });
-      sumY += 18;
-    };
-
-    drawSummaryLine('Subtotal', `GHS ${fmt(totalPaid)}`);
-    drawSummaryLine('Tenant Service Fee', 'GHS 0.00');
-
-    doc.moveTo(summaryX, sumY - 2).lineTo(rightEdge, sumY - 2).lineWidth(0.75).strokeColor('#111827').stroke();
-    sumY += 6;
-    drawSummaryLine('Total Paid', `GHS ${fmt(totalPaid)}`, true);
-    drawSummaryLine('Balance Due', isPaid ? 'GHS 0.00' : `GHS ${fmt(totalPaid)}`);
-
-    // ── Statutory Compliance Box ──
-    const noteY = Math.max(sumY + 24, 480);
-    doc.roundedRect(leftX, noteY, contentWidth, 68, 6).fillAndStroke('#F8FAFC', '#E2E8F0');
+    // ── 6. Bottom QR Code Container ──
+    curY += 24;
+    const qrBoxH = 140;
+    doc.roundedRect(margin, curY, contentWidth, qrBoxH, 10).strokeColor('#E4E4E7').lineWidth(1).stroke();
 
     doc
-      .fillColor('#111827')
+      .fillColor('#09090B')
       .font('Helvetica-Bold')
-      .fontSize(8.5)
-      .text('Statutory Rent Receipt (Rent Act, 1963 Act 220)', leftX + 14, noteY + 12);
+      .fontSize(10)
+      .text('Download The Akwaaba Homes App', margin, curY + 14, {
+        width: contentWidth,
+        align: 'center',
+      });
 
     doc
-      .fillColor('#475569')
+      .fillColor('#52525B')
       .font('Helvetica')
       .fontSize(8.5)
-      .text(
-        'Issued in compliance with Section 20 of the Rent Act, 1963 (Act 220). This document serves as official verification of rent and deposit payment for the tenancy period stated above.',
-        leftX + 14,
-        noteY + 26,
-        { width: contentWidth - 28, lineGap: 2 }
-      );
+      .text('Scan the QR code to verify this transaction on the official Akwaaba Homes portal.', margin, curY + 28, {
+        width: contentWidth,
+        align: 'center',
+      });
 
-    if (data.checkInCode) {
-      doc
-        .fillColor('#173D32')
-        .font('Helvetica-Bold')
-        .fontSize(8.5)
-        .text(`Gatehouse Check-In Clearance Code: ${data.checkInCode}`, leftX + 14, noteY + 50);
+    // Draw Vector QR Code
+    const verifyUrl = `https://akwaabahomes.com/dashboard/invoice/${data.transactionId}`;
+    const qrMatrix = getQRCodeMatrix(verifyUrl);
+
+    const qrSize = 75;
+    const qrX = margin + (contentWidth - qrSize) / 2;
+    const qrY = curY + 48;
+
+    doc.rect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8).fill('#FFFFFF');
+    doc.rect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8).strokeColor('#E4E4E7').lineWidth(1).stroke();
+
+    if (qrMatrix.length > 0) {
+      const moduleCount = qrMatrix.length;
+      const cellSize = qrSize / moduleCount;
+      for (let r = 0; r < moduleCount; r++) {
+        for (let c = 0; c < moduleCount; c++) {
+          if (qrMatrix[r][c]) {
+            doc.rect(qrX + c * cellSize, qrY + r * cellSize, cellSize, cellSize).fill('#000000');
+          }
+        }
+      }
     }
-
-    // ── Bottom Audit Footer ──
-    doc.moveTo(leftX, 755).lineTo(rightEdge, 755).lineWidth(0.5).strokeColor('#E5E7EB').stroke();
-    doc
-      .fillColor('#6B7280')
-      .font('Helvetica')
-      .fontSize(8)
-      .text(`Reference: ${receiptNo}   •   Transaction ID: ${data.transactionId}`, leftX, 764)
-      .text('AkwaabaHomes — Verified Rental Marketplace', leftX, 764, { width: contentWidth, align: 'right' });
 
     doc.end();
   });
