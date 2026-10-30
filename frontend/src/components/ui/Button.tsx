@@ -58,10 +58,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     // Sizing scales (sm: 36px height)
     const sizes: Record<NonNullable<ButtonProps['size']>, string> = {
-      sm: 'h-9 px-4 text-xs rounded-xl gap-2',
-      md: 'h-11 px-5 text-sm rounded-xl gap-2',
-      lg: 'h-12 px-6 text-base rounded-2xl gap-2.5',
-      icon: 'h-9 w-9 p-0 rounded-xl',
+      sm: 'h-9 px-4 text-xs rounded-lg gap-2',
+      md: 'h-11 px-5 text-sm rounded-lg gap-2',
+      lg: 'h-12 px-6 text-base rounded-xl gap-2.5',
+      icon: 'h-9 w-9 p-0 rounded-lg',
     };
 
     return (

@@ -66,9 +66,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeClasses: Record<ButtonSize, string> = {
-      sm: 'h-9 px-4 text-xs gap-2 rounded-xl font-extrabold',
-      md: 'h-11 px-5 text-xs sm:text-sm gap-2 rounded-xl font-extrabold',
-      lg: 'h-12 px-6 text-sm gap-2.5 rounded-2xl font-extrabold',
+      sm: 'h-9 px-4 text-xs gap-2 rounded-lg font-extrabold',
+      md: 'h-11 px-5 text-xs sm:text-sm gap-2 rounded-lg font-extrabold',
+      lg: 'h-12 px-6 text-sm gap-2.5 rounded-xl font-extrabold',
     };
 
     return (
