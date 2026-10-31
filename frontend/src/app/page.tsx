@@ -12,169 +12,141 @@ import {
   Home,
   BedDouble,
   GraduationCap,
-  KeyRound,
-  ArrowRight,
-  SlidersHorizontal,
-  X,
-  FileText,
   ShieldCheck,
-  CalendarCheck,
-  Compass,
+  Heart,
   CheckCircle2,
-  Sparkles,
-  BadgeCheck,
+  Wifi,
+  Wind,
+  Plus,
+  ArrowRight,
+  Zap,
+  Phone,
+  ChevronDown,
 } from 'lucide-react';
 import api from '@/lib/axios';
-import PropertyCard, { PropertyCardData } from '@/components/tenant-ui/PropertyCard';
 import PublicFooter from '@/components/tenant-ui/PublicFooter';
-import {
-  Button,
-  EmptyState,
-  ErrorState,
-  PropertyCardSkeleton,
-} from '@/components/tenant-ui/primitives';
 
-const ACCOMMODATION_CATEGORIES = [
+// ── SHOWCASE PROPERTY CARDS ──
+const SHOWCASE_PROPERTIES = [
   {
-    id: 'ALL',
-    label: 'All Accommodations',
-    description: 'Browse all verified listings across Ghana',
-    icon: Compass,
+    id: 'glacier-studio',
+    title: 'Glacier Studio',
+    location: 'Legon, Accra',
+    price: 2500,
+    rooms: 1,
+    type: 'Studio',
+    badge: 'Verified',
+    badgeColor: 'green',
+    image: '/images/home/glacier-living.jpg',
+    href: '/properties',
   },
   {
-    id: 'HOSTEL',
-    label: 'Student Hostels',
-    description: 'Campus and off-campus student residences',
-    icon: GraduationCap,
+    id: 'aduana-apartment',
+    title: 'Aduana Apartment',
+    location: 'Kumasi',
+    price: 1800,
+    rooms: 2,
+    type: 'Apartment',
+    badge: 'Verified',
+    badgeColor: 'green',
+    image: '/images/home/aduana-bedroom.jpg',
+    href: '/properties',
   },
   {
-    id: 'SINGLE_ROOM',
-    label: 'Private Rooms',
-    description: 'Self-contained and single room units',
-    icon: BedDouble,
+    id: 'executive-studio',
+    title: 'Executive Studio',
+    location: 'Airport Residential, Accra',
+    price: 4000,
+    rooms: 1,
+    type: 'Studio',
+    badge: 'Popular',
+    badgeColor: 'orange',
+    image: '/images/home/executive-living.jpg',
+    href: '/properties',
   },
   {
-    id: 'APARTMENT',
-    label: 'Apartments',
-    description: '1 to 3+ bedroom residential flats',
-    icon: Building2,
-  },
-  {
-    id: 'STUDIO',
-    label: 'Executive Studios',
-    description: 'Compact modern living for professionals',
-    icon: KeyRound,
-  },
-  {
-    id: 'HOMESTAY',
-    label: 'Homestays & Short Stay',
-    description: 'Flexible stays and family compounds',
-    icon: Home,
-  },
-] as const;
-
-const GHANA_LOCATIONS = [
-  {
-    name: 'Legon & East Legon',
-    city: 'Accra',
-    query: 'Legon',
-    subtitle: 'University of Ghana corridor & residential estates',
-  },
-  {
-    name: 'Ayeduase & Bomso',
-    city: 'Kumasi',
-    query: 'Kumasi',
-    subtitle: 'KNUST campus surroundings & student residences',
-  },
-  {
-    name: 'UCC & Apewosika',
-    city: 'Cape Coast',
-    query: 'Cape Coast',
-    subtitle: 'University of Cape Coast & coastal neighborhoods',
-  },
-  {
-    name: 'Osu, Labone & Cantonments',
-    city: 'Accra',
-    query: 'Osu',
-    subtitle: 'Central apartments, studios & professional rentals',
-  },
-  {
-    name: 'Spintex & Tema Community',
-    city: 'Greater Accra',
-    query: 'Spintex',
-    subtitle: 'Family apartments & commuter residential hubs',
-  },
-  {
-    name: 'Takoradi & Anaji',
-    city: 'Western Region',
-    query: 'Takoradi',
-    subtitle: 'Residential houses, studios & tertiary hostels',
+    id: 'seaside-apartments',
+    title: 'Seaside Apartments',
+    location: 'Cape Coast',
+    price: 2000,
+    rooms: 2,
+    type: 'Apartment',
+    badge: 'Verified',
+    badgeColor: 'green',
+    image: '/images/home/seaside-exterior.jpg',
+    href: '/properties',
   },
 ];
 
-const HOW_IT_WORKS_STEPS = [
+const CATEGORY_PILLS = [
+  { label: 'Hostels', subtitle: 'Comfortable & Affordable', icon: BedDouble },
+  { label: 'Student Housing', subtitle: 'Close to Campus', icon: GraduationCap },
+  { label: 'Apartments', subtitle: 'Modern Living', icon: Building2 },
+  { label: 'Houses', subtitle: 'Spacious & Secure', icon: Home },
+  { label: 'Verified Listings', subtitle: 'Trusted & Secure', icon: ShieldCheck },
+];
+
+const TRUST_PILLARS = [
   {
-    step: '01',
-    title: 'Explore available properties',
-    description:
-      'Search by neighborhood, university corridor, accommodation type, and your budget in Ghanaian Cedis (GH₵).',
-    icon: Search,
-  },
-  {
-    step: '02',
-    title: 'Review property information & rental terms',
-    description:
-      'Inspect room unit options, capacity, amenities, house rules, host verification status, and the exact rental duration before committing.',
-    icon: FileText,
-  },
-  {
-    step: '03',
-    title: 'Submit a booking request or reserve a unit',
-    description:
-      'Select your preferred room or unit, confirm your move-in details, and submit your reservation directly to the property host.',
-    icon: CalendarCheck,
-  },
-  {
-    step: '04',
-    title: 'Track your booking & payment status',
-    description:
-      'Complete payment through our protected checkout once approved, review your digital tenancy agreement, and manage your stay from your account.',
     icon: ShieldCheck,
+    label: 'Verified Properties',
+    desc: '100% genuine listings',
   },
+  {
+    icon: Phone,
+    label: '24/7 Support',
+    desc: 'Always here to help',
+  },
+  {
+    icon: Zap,
+    label: 'Easy Booking',
+    desc: 'Book in minutes',
+  },
+  {
+    icon: CheckCircle2,
+    label: 'Trusted Community',
+    desc: 'Join thousands of happy residents',
+  },
+];
+
+const PROPERTY_TYPES = [
+  { value: '', label: 'All Types' },
+  { value: 'HOSTEL', label: 'Hostel' },
+  { value: 'APARTMENT', label: 'Apartment' },
+  { value: 'STUDIO', label: 'Studio' },
+  { value: 'HOUSE', label: 'House' },
+  { value: 'SINGLE_ROOM', label: 'Single Room' },
+];
+
+const BUDGET_OPTIONS = [
+  { value: '', label: 'Any Budget' },
+  { value: '1000', label: 'GH₵ 1,000' },
+  { value: '2000', label: 'GH₵ 2,000' },
+  { value: '3000', label: 'GH₵ 3,000' },
+  { value: '5000', label: 'GH₵ 5,000' },
+  { value: '10000', label: 'GH₵ 10,000+' },
 ];
 
 export default function HomePage() {
   const router = useRouter();
-
-  // Search Module State
   const [searchLocation, setSearchLocation] = useState('');
   const [searchType, setSearchType] = useState('');
   const [searchMaxPrice, setSearchMaxPrice] = useState('');
-  const [searchCapacity, setSearchCapacity] = useState('');
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [wishlist, setWishlist] = useState<string[]>([]);
 
-  // Featured Category Filter State
-  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-
-  const {
-    data: propertiesResponse,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ['homepage-properties', selectedCategory],
+  const { data: propertiesResponse } = useQuery({
+    queryKey: ['homepage-properties'],
     queryFn: async () => {
-      const params: Record<string, string | number> = { limit: 6, sort: 'newest' };
-      if (selectedCategory !== 'ALL') {
-        params.type = selectedCategory;
+      try {
+        const { data } = await api.get('/properties', { params: { limit: 4, sort: 'newest' } });
+        return data;
+      } catch {
+        return null;
       }
-      const { data } = await api.get('/properties', { params });
-      return data;
     },
   });
 
-  const listings: PropertyCardData[] =
-    propertiesResponse?.data || propertiesResponse?.properties || [];
+  const liveListings = propertiesResponse?.data || propertiesResponse?.properties || [];
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -182,622 +154,453 @@ export default function HomePage() {
     if (searchLocation.trim()) params.set('location', searchLocation.trim());
     if (searchType) params.set('type', searchType);
     if (searchMaxPrice) params.set('maxPrice', searchMaxPrice);
-    if (searchCapacity) params.set('capacity', searchCapacity);
-    setMobileSearchOpen(false);
     router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
+  };
+
+  const toggleWishlist = (id: string) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
-      {/* ──────────────────────────────────────────────────────────────────────
-       * 7.2 & 7.3 EDITORIAL HERO & SEARCH MODULE
-       * ────────────────────────────────────────────────────────────────────── */}
-      <section className="relative pt-8 pb-14 sm:pt-14 sm:pb-20 border-b border-[#E7E7DF] dark:border-[#262E2A]">
-        <div className="container-akwaaba">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-            {/* Left Editorial Column (7 cols) */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Decarded Standalone Brand Identity Accent */}
-              <div className="inline-flex items-center gap-3">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-                  <Image
-                    src="/logo.png"
-                    alt="Akwaaba Homes"
-                    width={44}
-                    height={44}
-                    className="w-full h-full object-contain hidden dark:block"
-                    priority
-                  />
-                  <Image
-                    src="/logo-light.png"
-                    alt="Akwaaba Homes"
-                    width={44}
-                    height={44}
-                    className="w-full h-full object-contain block dark:hidden"
-                    priority
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs sm:text-sm font-semibold tracking-wide text-[#16A34A] dark:text-emerald-400 uppercase">
-                    Akwaaba Homes
-                  </span>
-                  <span className="text-[11px] sm:text-xs text-[#557A67] dark:text-[#9EA69F]">
-                    Trusted Homes for Students &amp; Residents across Ghana
-                  </span>
-                </div>
+
+      {/* ── 1. HERO SECTION ── */}
+      <section className="relative overflow-hidden min-h-[270px] sm:min-h-[320px]">
+        {/* Background: Building Photo on right */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/images/resident/hero-building-clean.jpg"
+            alt="Modern apartment building in Ghana"
+            fill
+            priority
+            className="object-cover object-right"
+          />
+          {/* Green wavy gradient overlay on left (matching reference) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(105deg, #0A3826 0%, #0A3826 35%, #0F5A3E 50%, rgba(15,90,62,0.6) 65%, rgba(15,90,62,0.1) 80%, transparent 100%)',
+            }}
+          />
+          {/* Additional bottom fade for readability */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#F8F7F2] dark:from-[#0D100E] to-transparent" />
+        </div>
+
+        {/* Hero Content */}
+        <div className="relative z-10 container-akwaaba py-10 sm:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left: Text + Search Bar */}
+            <div className="lg:col-span-8 space-y-5">
+              {/* Trusted Partner Pill */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-xs border border-white/20 text-white text-xs font-semibold">
+                <Home className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Ghana's Trusted Housing Partner</span>
               </div>
 
-              <h1 className="font-editorial text-4xl sm:text-5xl lg:text-[54px] text-[#242925] dark:text-white leading-[1.08] tracking-tight">
-                Find a place that feels like home.
-              </h1>
+              {/* Headline */}
+              <div className="space-y-1">
+                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-tight tracking-tight">
+                  Find a place that
+                </h1>
+                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-tight tracking-tight">
+                  feels like{' '}
+                  <em
+                    className="not-italic"
+                    style={{
+                      fontFamily: 'Georgia, "Times New Roman", serif',
+                      fontStyle: 'italic',
+                      color: '#4ADE80',
+                      fontWeight: 700,
+                    }}
+                  >
+                    home.
+                  </em>
+                </h1>
+              </div>
 
-              <p className="text-base sm:text-lg text-[#5E645E] dark:text-[#9EA69F] leading-relaxed max-w-xl">
-                Discover hostels, rooms, apartments, and houses that fit your lifestyle and budget—with clear Ghanaian Cedi pricing and direct booking terms.
+              {/* Subtitle */}
+              <p className="text-sm text-white/80 leading-relaxed max-w-lg">
+                Discover verified hostels, rooms, apartments, and houses across Ghana — with clear pricing and direct booking.
               </p>
 
-              {/* Desktop Multi-Field Search Bar */}
+              {/* Search Bar */}
               <form
                 onSubmit={handleSearchSubmit}
-                aria-label="Search accommodations"
-                className="hidden sm:grid sm:grid-cols-12 gap-2.5 p-2.5 bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl shadow-[0_8px_30px_rgba(23,61,50,0.06)]"
+                className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-full shadow-lg border border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-0 overflow-hidden"
               >
-                {/* Location / University */}
-                <div className="sm:col-span-4 px-3 py-1.5 border-r border-[#E7E7DF] dark:border-[#262E2A]">
-                  <label
-                    htmlFor="hero-location"
-                    className="block text-[11px] font-semibold uppercase tracking-wider text-[#6F756F]"
-                  >
-                    Location or Campus
-                  </label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <MapPin className="w-4 h-4 text-[#557A67] shrink-0" aria-hidden="true" />
+                {/* Location */}
+                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
+                  <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Location</p>
                     <input
-                      id="hero-location"
-                      name="location"
                       type="text"
+                      placeholder="e.g. Accra, Kumasi..."
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
-                      placeholder="Accra, Kumasi, Legon, KNUST..."
-                      className="w-full text-xs sm:text-sm font-medium text-[#242925] dark:text-white placeholder:text-[#6F756F]/70 bg-transparent outline-none"
+                      className="w-full text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 bg-transparent focus:outline-none"
                     />
                   </div>
                 </div>
 
-                {/* Accommodation Category */}
-                <div className="sm:col-span-3 px-3 py-1.5 border-r border-[#E7E7DF] dark:border-[#262E2A]">
-                  <label
-                    htmlFor="hero-type"
-                    className="block text-[11px] font-semibold uppercase tracking-wider text-[#6F756F]"
-                  >
-                    Property Type
-                  </label>
-                  <select
-                    id="hero-type"
-                    name="type"
-                    value={searchType}
-                    onChange={(e) => setSearchType(e.target.value)}
-                    className="w-full mt-1 text-xs sm:text-sm font-medium text-[#242925] dark:text-white bg-transparent outline-none cursor-pointer"
-                  >
-                    <option value="">All types</option>
-                    <option value="HOSTEL">Student Hostel</option>
-                    <option value="SINGLE_ROOM">Private Room</option>
-                    <option value="APARTMENT">Apartment</option>
-                    <option value="STUDIO">Studio</option>
-                    <option value="HOMESTAY">Homestay</option>
-                  </select>
+                {/* Property Type */}
+                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
+                  <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Property Type</p>
+                    <select
+                      value={searchType}
+                      onChange={(e) => setSearchType(e.target.value)}
+                      className="w-full text-xs font-medium text-zinc-900 dark:text-white bg-transparent focus:outline-none cursor-pointer"
+                    >
+                      {PROPERTY_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>{t.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Max Budget */}
-                <div className="sm:col-span-3 px-3 py-1.5">
-                  <label
-                    htmlFor="hero-budget"
-                    className="block text-[11px] font-semibold uppercase tracking-wider text-[#6F756F]"
-                  >
-                    Max Budget (GH₵)
-                  </label>
-                  <input
-                    id="hero-budget"
-                    name="budget"
-                    type="number"
-                    min="0"
-                    step="100"
-                    value={searchMaxPrice}
-                    onChange={(e) => setSearchMaxPrice(e.target.value)}
-                    placeholder="Any budget"
-                    className="w-full mt-1 text-xs sm:text-sm font-medium text-[#242925] dark:text-white placeholder:text-[#6F756F]/70 bg-transparent outline-none"
-                  />
+                <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
+                  <span className="text-zinc-400 text-sm shrink-0 font-bold">₵</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Max Budget (GH₵)</p>
+                    <select
+                      value={searchMaxPrice}
+                      onChange={(e) => setSearchMaxPrice(e.target.value)}
+                      className="w-full text-xs font-medium text-zinc-900 dark:text-white bg-transparent focus:outline-none cursor-pointer"
+                    >
+                      {BUDGET_OPTIONS.map((b) => (
+                        <option key={b.value} value={b.value}>{b.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Submit CTA */}
-                <div className="sm:col-span-2 flex items-center">
+                {/* Search Button */}
+                <div className="p-2">
                   <button
                     type="submit"
-                    className="w-full h-full min-h-[48px] rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="w-full sm:w-auto h-10 px-6 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
                   >
-                    <Search className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <Search className="w-4 h-4" />
                     <span>Search</span>
                   </button>
                 </div>
               </form>
-
-              {/* Mobile Compact Search Trigger (Expands into Focused Search Modal) */}
-              <div className="sm:hidden">
-                <button
-                  type="button"
-                  onClick={() => setMobileSearchOpen(true)}
-                  className="w-full p-3.5 bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl shadow-xs flex items-center justify-between gap-3 text-left cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-lg bg-[#173D32] text-white flex items-center justify-center shrink-0">
-                      <Search className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <span className="text-sm font-bold text-[#242925] dark:text-white block truncate">
-                        Search accommodations
-                      </span>
-                      <span className="text-xs text-[#6F756F] block truncate">
-                        City, campus, property type &bull; Budget in GH₵
-                      </span>
-                    </div>
-                  </div>
-                  <SlidersHorizontal className="w-4 h-4 text-[#557A67] shrink-0" />
-                </button>
-              </div>
-
-              {/* Authentic Trust Signals Bar */}
-              <div className="flex items-center flex-wrap gap-y-2 gap-x-5 text-xs text-[#557A67] dark:text-[#9EA69F] pt-1">
-                <div className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
-                  <span className="font-medium">Ghana Card Verified Hosts</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
-                  <span className="font-medium">Direct Booking &bull; No Hidden Agent Fees</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
-                  <span className="font-medium">Transparent GH₵ Pricing</span>
-                </div>
-              </div>
-
-              {/* Popular Quick Destinations */}
-              <div className="flex items-center flex-wrap gap-2 text-xs pt-1">
-                <span className="text-[#6F756F] font-medium">Popular areas:</span>
-                {['Legon', 'Kumasi', 'East Legon', 'Cape Coast', 'Osu', 'Spintex'].map((place) => (
-                  <Link
-                    key={place}
-                    href={`/search?location=${encodeURIComponent(place)}`}
-                    className="px-2.5 py-1 rounded-md bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-[#242925] dark:text-[#F2F2EE] hover:border-[#173D32] transition-colors font-medium"
-                  >
-                    {place}
-                  </Link>
-                ))}
-              </div>
             </div>
 
-            {/* Right Verified Property Showcase (5 cols) */}
-            <div className="lg:col-span-5">
-              {listings.length > 0 ? (
-                (() => {
-                  const featured = listings[0];
-                  const featuredImage =
-                    (Array.isArray(featured.images) && featured.images.length > 0
-                      ? featured.images[0]
-                      : typeof featured.images === 'string' && featured.images
-                      ? featured.images
-                      : null) || '/images/hero_accra_apartment.png';
-
-                  return (
-                    <div className="relative group">
-                      <Link
-                        href={`/properties/${featured.id}`}
-                        className="block relative rounded-2xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] p-2.5 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <div className="relative aspect-[4/3] sm:aspect-[5/4] rounded-xl overflow-hidden bg-[#F1EFE8] dark:bg-zinc-800">
-                          <img
-                            src={featuredImage}
-                            alt={featured.title}
-                            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-                            onError={(e) => {
-                              (e.currentTarget as HTMLImageElement).src =
-                                'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80';
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-                          
-                          {/* Live Verification Badge */}
-                          <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[11px] font-semibold">
-                            <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Verified Host &bull; Active Listing</span>
-                          </div>
-
-                          {/* Price Chip */}
-                          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
-                            GH₵ {Number(featured.price).toLocaleString()}
-                            <span className="text-[10px] font-normal opacity-90">/{featured.billingCycle?.toLowerCase() || 'mo'}</span>
-                          </div>
-
-                          {/* Bottom Card Summary */}
-                          <div className="absolute bottom-3 left-3 right-3 text-white">
-                            <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-bold block mb-1">
-                              {featured.type?.replace(/_/g, ' ') || 'Accommodations'}
-                            </span>
-                            <h3 className="text-base sm:text-lg font-bold leading-snug line-clamp-1 group-hover:text-emerald-200 transition-colors">
-                              {featured.title}
-                            </h3>
-                            <div className="flex items-center gap-1.5 text-xs text-white/80 mt-1">
-                              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                              <span className="truncate">{featured.location}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    </div>
-                  );
-                })()
-              ) : (
-                <div className="relative rounded-2xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] p-2 shadow-xs">
-                  <div className="relative aspect-[4/3] sm:aspect-[5/4] rounded-xl overflow-hidden bg-[#F1EFE8]">
-                    <img
-                      src="/images/hero_accra_apartment.png"
-                      alt="Contemporary residential apartment courtyard in Accra, Ghana"
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).src =
-                          'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80';
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <p className="text-[11px] uppercase tracking-widest text-white/80 font-semibold">
-                        Residential &amp; Campus Living
-                      </p>
-                      <p className="text-sm sm:text-base font-medium mt-0.5">
-                        Clear rental periods, verified host details, and structured booking records.
-                      </p>
-                    </div>
+            {/* Right: 10K+ Trust Card */}
+            <div className="lg:col-span-4 flex justify-end">
+              <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-4 border border-zinc-100 dark:border-zinc-800 w-full max-w-xs space-y-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 fill-[#16A34A] text-white" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-zinc-950 dark:text-white leading-tight">Verified Listings</p>
+                    <p className="text-[10px] text-zinc-400">Book with confidence</p>
                   </div>
                 </div>
-              )}
+
+                <div className="border-t border-zinc-100 dark:border-zinc-800 pt-3">
+                  <p className="text-3xl font-black text-zinc-950 dark:text-white tracking-tight leading-none">
+                    10K+
+                  </p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+                    Happy Residents
+                  </p>
+                </div>
+
+                {/* Avatar stack */}
+                <div className="flex items-center gap-1.5">
+                  {['/images/messages/chelsea-list.png', '/images/messages/john-avatar.png', '/images/messages/stephen-avatar.png'].map((src, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-zinc-900 relative bg-zinc-100"
+                      style={{ marginLeft: i === 0 ? 0 : '-8px', zIndex: 3 - i }}
+                    >
+                      <Image src={src} alt="Resident" fill className="object-cover" />
+                    </div>
+                  ))}
+                  <div
+                    className="w-8 h-8 rounded-full bg-[#16A34A] border-2 border-white dark:border-zinc-900 flex items-center justify-center"
+                    style={{ marginLeft: '-8px' }}
+                  >
+                    <Plus className="w-3.5 h-3.5 text-white" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ──────────────────────────────────────────────────────────────────────
-       * 7.4 ACCOMMODATION CATEGORIES
-       * ────────────────────────────────────────────────────────────────────── */}
-      <section className="py-12 sm:py-16 border-b border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816]">
-        <div className="container-akwaaba space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#557A67]">
-                Browse by Category
-              </span>
-              <h2 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white mt-1">
-                Accommodation tailored to your stay
-              </h2>
-            </div>
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
-            >
-              <span>View full directory</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div
-            role="tablist"
-            aria-label="Filter featured accommodations by category"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
-          >
-            {ACCOMMODATION_CATEGORIES.map((cat) => {
+      {/* ── 2. CATEGORY PILLS ROW ── */}
+      <div className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 shadow-2xs">
+        <div className="container-akwaaba py-4">
+          <div className="flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
+            {CATEGORY_PILLS.map((cat) => {
               const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
               return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isSelected}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`p-4 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-3 ${
-                    isSelected
-                      ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-xs'
-                      : 'bg-[#F8F7F2] dark:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#557A67]'
-                  }`}
+                <Link
+                  key={cat.label}
+                  href={`/search?type=${cat.label.toUpperCase().replace(/ /g, '_')}`}
+                  className="flex flex-col items-center gap-1.5 min-w-fit px-3 py-2 group cursor-pointer hover:text-[#16A34A] transition"
                 >
-                  <div
-                    className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                      isSelected
-                        ? 'bg-white/15 text-white'
-                        : 'bg-white dark:bg-[#141816] text-[#173D32] dark:text-emerald-400 border border-[#E7E7DF] dark:border-[#262E2A]'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-sm font-bold leading-snug">{cat.label}</div>
-                    <p
-                      className={`text-[11px] mt-1 line-clamp-2 leading-normal ${
-                        isSelected ? 'text-white/80' : 'text-[#6F756F] dark:text-[#9EA69F]'
-                      }`}
-                    >
-                      {cat.description}
-                    </p>
-                  </div>
-                </button>
+                  <Icon className="w-5 h-5 text-zinc-400 group-hover:text-[#16A34A] transition" />
+                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200 group-hover:text-[#16A34A] whitespace-nowrap transition">
+                    {cat.label}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 whitespace-nowrap">{cat.subtitle}</span>
+                </Link>
               );
             })}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ──────────────────────────────────────────────────────────────────────
-       * 7.5 FEATURED ACCOMMODATION (Genuine Backend Listings)
-       * ────────────────────────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20">
-        <div className="container-akwaaba space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#557A67]">
-                Featured Listings
-              </span>
-              <h2 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white mt-1">
-                {selectedCategory === 'ALL'
-                  ? 'Available homes & residences'
-                  : ACCOMMODATION_CATEGORIES.find((c) => c.id === selectedCategory)?.label ||
-                    'Available residences'}
+      {/* ── 3. FEATURED LISTINGS ("Handpicked for you") ── */}
+      <section className="py-10 sm:py-12 bg-[#F8F7F2] dark:bg-[#0D100E]">
+        <div className="container-akwaaba space-y-6">
+          {/* Section Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="w-4 h-0.5 bg-[#16A34A]" />
+                <span className="text-xs font-bold text-[#16A34A] uppercase tracking-wider">Featured Listings</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+                Handpicked for you
               </h2>
             </div>
-
             <Link
-              href={
-                selectedCategory === 'ALL'
-                  ? '/search'
-                  : `/search?type=${encodeURIComponent(selectedCategory)}`
-              }
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+              href="/properties"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] whitespace-nowrap transition"
             >
-              <span>Explore all matching listings</span>
+              <span>View all properties</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <PropertyCardSkeleton key={n} />
-              ))}
-            </div>
-          ) : isError ? (
-            <ErrorState
-              title="Could not load featured accommodations"
-              message="We were unable to retrieve listings from the server. Please try again."
-              onRetry={() => refetch()}
-            />
-          ) : listings.length === 0 ? (
-            <EmptyState
-              icon={Building2}
-              title="No listings in this category yet"
-              description="There are currently no published properties matching this category filter. Try viewing all accommodations or searching another neighborhood."
-              actionLabel="Show all categories"
-              onAction={() => setSelectedCategory('ALL')}
-            />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((property) => (
-                <PropertyCard key={property.id} property={property} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* ──────────────────────────────────────────────────────────────────────
-       * 7.6 DISCOVERY BY LOCATION (Genuine Ghanaian Neighborhoods & Campuses)
-       * ────────────────────────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20 bg-white dark:bg-[#141816] border-t border-b border-[#E7E7DF] dark:border-[#262E2A]">
-        <div className="container-akwaaba space-y-8">
-          <div className="max-w-2xl">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#557A67]">
-              Explore by Location
-            </span>
-            <h2 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white mt-1">
-              Neighborhoods &amp; university corridors
-            </h2>
-            <p className="text-sm text-[#6F756F] dark:text-[#9EA69F] mt-2 leading-relaxed">
-              Select a city or campus area to browse available hostels, private rooms, and residential apartments in that locality.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {GHANA_LOCATIONS.map((loc) => (
+          {/* 4 Property Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {SHOWCASE_PROPERTIES.map((prop) => (
               <Link
-                key={loc.name}
-                href={`/search?location=${encodeURIComponent(loc.query)}`}
-                className="group p-5 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#173D32] dark:hover:border-emerald-500 transition-all flex items-start justify-between gap-4"
+                key={prop.id}
+                href={prop.href}
+                className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/70 dark:border-zinc-800 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden group"
               >
-                <div className="space-y-1">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-[#557A67]">
-                    {loc.city}
-                  </span>
-                  <h3 className="text-base font-bold text-[#242925] dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-emerald-400 transition-colors">
-                    {loc.name}
-                  </h3>
-                  <p className="text-xs text-[#6F756F] dark:text-[#9EA69F] leading-relaxed">
-                    {loc.subtitle}
-                  </p>
+                {/* Card Image */}
+                <div className="relative h-44 overflow-hidden">
+                  <Image
+                    src={prop.image}
+                    alt={prop.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={() => {}}
+                  />
+
+                  {/* Badge (top left) */}
+                  <div
+                    className={`absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-xs text-white ${
+                      prop.badgeColor === 'orange'
+                        ? 'bg-[#F59E0B]'
+                        : 'bg-[#16A34A]'
+                    }`}
+                  >
+                    {prop.badgeColor === 'orange' ? (
+                      <Zap className="w-3 h-3" />
+                    ) : (
+                      <Home className="w-3 h-3" />
+                    )}
+                    <span>{prop.badge}</span>
+                  </div>
+
+                  {/* Wishlist Heart (top right) */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleWishlist(prop.id);
+                    }}
+                    className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 transition cursor-pointer"
+                  >
+                    <Heart
+                      className={`w-3.5 h-3.5 transition ${
+                        wishlist.includes(prop.id)
+                          ? 'fill-rose-500 text-rose-500'
+                          : 'text-zinc-500'
+                      }`}
+                    />
+                  </button>
+
+                  {/* Location + Price Bottom Bar */}
+                  <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-white text-[10px]">
+                      <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span className="truncate">{prop.location}</span>
+                    </div>
+                    <span className="text-white text-[11px] font-black whitespace-nowrap">
+                      GH₵ {Number(prop.price).toLocaleString()}<span className="text-[10px] font-normal opacity-80">/mo</span>
+                    </span>
+                  </div>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-center text-[#16A34A] dark:text-emerald-400 group-hover:bg-[#16A34A] group-hover:text-white transition-colors shrink-0 mt-1">
-                  <ArrowRight className="w-4 h-4" />
+
+                {/* Card Info */}
+                <div className="p-3.5 space-y-2">
+                  <h3 className="font-black text-sm text-zinc-950 dark:text-white leading-tight">
+                    {prop.title}
+                  </h3>
+
+                  {/* Specs */}
+                  <div className="flex items-center gap-3 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <BedDouble className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      {prop.rooms} {prop.rooms === 1 ? 'room' : 'rooms'}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Wifi className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      Wi-Fi
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Wind className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      AC
+                    </span>
+                  </div>
                 </div>
               </Link>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ──────────────────────────────────────────────────────────────────────
-       * 7.7 TRUST AND PROCESS SECTION
-       * ────────────────────────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20">
-        <div className="container-akwaaba space-y-10">
-          <div className="max-w-2xl">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#C77B59]">
-              How Akwaaba Homes Works
-            </span>
-            <h2 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white mt-1">
-              A clear, structured way to rent
-            </h2>
-            <p className="text-sm text-[#6F756F] dark:text-[#9EA69F] mt-2 leading-relaxed">
-              Every listing presents upfront pricing, unit availability, and host verification state so you can evaluate accommodation before committing.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {HOW_IT_WORKS_STEPS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.step}
-                  className="bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl p-6 space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-lg bg-[#EDF6F0] dark:bg-emerald-950/40 text-[#173D32] dark:text-emerald-400 flex items-center justify-center">
-                      <Icon className="w-5 h-5" aria-hidden="true" />
-                    </div>
-                    <span className="font-editorial text-xl text-[#C77B59]">{item.step}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-[#242925] dark:text-white leading-snug">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-[#6F756F] dark:text-[#9EA69F] leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── MOBILE FULL-SCREEN SEARCH MODAL ── */}
-      {mobileSearchOpen && (
-        <div
-          className="sm:hidden fixed inset-0 z-50 bg-[#F8F7F2] dark:bg-[#0D100E] flex flex-col"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Search accommodations"
-        >
-          <div className="h-16 px-4 bg-white dark:bg-[#141816] border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between">
-            <span className="font-editorial text-lg text-[#242925] dark:text-white">
-              Search Accommodations
-            </span>
-            <button
-              type="button"
-              onClick={() => setMobileSearchOpen(false)}
-              aria-label="Close search"
-              className="p-2 rounded-lg text-[#6F756F] hover:text-[#242925]"
+          {/* Mobile View All Link */}
+          <div className="sm:hidden flex justify-center">
+            <Link
+              href="/properties"
+              className="flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D]"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <span>View all properties</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-
-          <form onSubmit={handleSearchSubmit} className="flex-1 p-5 space-y-5 overflow-y-auto">
-            <div>
-              <label
-                htmlFor="mobile-search-location"
-                className="block text-xs font-semibold text-[#242925] dark:text-white mb-1.5"
-              >
-                Destination, Neighborhood, or University
-              </label>
-              <input
-                id="mobile-search-location"
-                name="location"
-                type="text"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                placeholder="e.g. Legon, Kumasi, East Legon, UCC"
-                className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="mobile-search-type"
-                className="block text-xs font-semibold text-[#242925] dark:text-white mb-1.5"
-              >
-                Accommodation Category
-              </label>
-              <select
-                id="mobile-search-type"
-                name="type"
-                value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
-                className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"
-              >
-                <option value="">All accommodation types</option>
-                <option value="HOSTEL">Student Hostel</option>
-                <option value="SINGLE_ROOM">Private Room</option>
-                <option value="APARTMENT">Apartment</option>
-                <option value="STUDIO">Studio</option>
-                <option value="HOMESTAY">Homestay</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label
-                  htmlFor="mobile-search-budget"
-                  className="block text-xs font-semibold text-[#242925] dark:text-white mb-1.5"
-                >
-                  Max Budget (GH₵)
-                </label>
-                <input
-                  id="mobile-search-budget"
-                  name="budget"
-                  type="number"
-                  min="0"
-                  value={searchMaxPrice}
-                  onChange={(e) => setSearchMaxPrice(e.target.value)}
-                  placeholder="Any"
-                  className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="mobile-search-capacity"
-                  className="block text-xs font-semibold text-[#242925] dark:text-white mb-1.5"
-                >
-                  Occupants
-                </label>
-                <select
-                  id="mobile-search-capacity"
-                  name="capacity"
-                  value={searchCapacity}
-                  onChange={(e) => setSearchCapacity(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-sm"
-                >
-                  <option value="">Any</option>
-                  <option value="1">1 Person</option>
-                  <option value="2">2 People</option>
-                  <option value="3">3+ People</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <Button type="submit" fullWidth size="lg" leftIcon={<Search className="w-4 h-4" />}>
-                Show Matching Properties
-              </Button>
-            </div>
-          </form>
         </div>
-      )}
+      </section>
 
-      {/* 7.8 Footer */}
+      {/* ── 4. WHY CHOOSE AKWAABAHOMES ── */}
+      <section className="py-4 pb-10 bg-[#F8F7F2] dark:bg-[#0D100E]">
+        <div className="container-akwaaba">
+          <div className="bg-[#F0FDF4] dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl px-6 sm:px-8 py-6 sm:py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left: Headline & Description */}
+              <div className="lg:col-span-4 space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#16A34A]">
+                  WHY CHOOSE AKWAABAHOMES
+                </p>
+                <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
+                  More than just a place
+                </h2>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                  Enjoy a seamless booking experience, trusted listings, and dedicated support throughout your stay.
+                </p>
+              </div>
+
+              {/* Right: 4 Trust Pillars */}
+              <div className="lg:col-span-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {TRUST_PILLARS.map((pillar) => {
+                  const Icon = pillar.icon;
+                  return (
+                    <div key={pillar.label} className="flex flex-col items-center text-center gap-2">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-2xs flex items-center justify-center text-[#16A34A]">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-zinc-900 dark:text-white leading-tight">
+                          {pillar.label}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">{pillar.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Far Right: CTA */}
+              <div className="lg:col-span-2 flex justify-end">
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition whitespace-nowrap"
+                >
+                  <span>Learn More</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. BOTTOM CTA BANNER ("Ready to find your next home?") ── */}
+      <section className="relative overflow-hidden rounded-none min-h-[120px]" style={{ background: 'linear-gradient(105deg, #0A3826 0%, #0F5A3E 60%, #0A3826 100%)' }}>
+        {/* Independence Arch photo blended on right */}
+        <div className="absolute inset-y-0 right-0 w-1/2 z-0 opacity-30">
+          <Image
+            src="/images/home/arch-blended.jpg"
+            alt="Independence Arch, Ghana"
+            fill
+            className="object-cover object-left"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A3826] via-[#0A3826]/60 to-transparent" />
+        </div>
+
+        {/* Decorative SVG house outlines */}
+        <svg
+          className="absolute left-8 top-1/2 -translate-y-1/2 w-24 h-24 opacity-10 pointer-events-none"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="white"
+          strokeWidth="1.5"
+        >
+          <path d="M10 45 L50 15 L90 45 V90 H10 Z" />
+          <rect x="38" y="60" width="24" height="30" />
+          <rect x="18" y="50" width="16" height="20" />
+          <rect x="66" y="50" width="16" height="20" />
+        </svg>
+
+        {/* Content */}
+        <div className="relative z-10 container-akwaaba py-8 sm:py-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+            {/* Left */}
+            <div className="flex items-center gap-4">
+              {/* White house icon */}
+              <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+                <Home className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg sm:text-xl font-black text-white leading-tight">
+                  Ready to find your next home?
+                </h2>
+                <p className="text-xs text-white/70 mt-0.5">
+                  Explore our listings today and experience the AkwaabaHomes difference.
+                </p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-zinc-50 text-[#0A3826] text-sm font-black shadow-xs transition whitespace-nowrap shrink-0"
+            >
+              <span>Browse Properties</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
       <PublicFooter />
     </div>
   );

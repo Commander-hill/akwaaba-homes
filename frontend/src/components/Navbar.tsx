@@ -3,13 +3,24 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { UserCircle, Menu, X, AlertTriangle, Heart, Search, CalendarCheck } from 'lucide-react';
+import {
+  UserCircle, Menu, X, AlertTriangle, CalendarCheck,
+  ChevronDown, Moon, Bell
+} from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import NotificationBell from './NotificationBell';
-import ThemeToggle from './ThemeToggle';
+
+const PUBLIC_NAV_LINKS = [
+  { name: 'Home', href: '/' },
+  { name: 'Explore', href: '/properties', hasDropdown: true },
+  { name: 'Neighborhoods', href: '/search', hasDropdown: true },
+  { name: 'Services', href: '/about', hasDropdown: true },
+  { name: 'About', href: '/about', hasDropdown: true },
+  { name: 'Support', href: '/support', hasDropdown: true },
+];
 
 export default function Navbar() {
   const pathname = usePathname() || '';
@@ -55,7 +66,6 @@ export default function Navbar() {
   const isLandlord = role === 'LANDLORD' || pathname.startsWith('/dashboard/landlord');
   const isStaff = role === 'CARETAKER' || role === 'STAFF' || pathname.startsWith('/dashboard/caretaker');
 
-  // Check if current route uses the dedicated Authenticated Tenant Shell
   const isTenantShellRoute =
     pathname.startsWith('/dashboard/tenant') ||
     pathname.startsWith('/bookings') ||
@@ -68,7 +78,6 @@ export default function Navbar() {
       !pathname.startsWith('/dashboard/caretaker') &&
       (!isAuthenticated || role === 'TENANT'));
 
-  // Do not render public Navbar on Admin portal, Auth routes, or Authenticated Tenant Shell routes
   if (
     pathname.startsWith('/admin') ||
     pathname === '/login' ||
@@ -82,25 +91,22 @@ export default function Navbar() {
     return null;
   }
 
-  const navLinks = isStaff
-    ? [
-        { name: 'Compound Command', href: '/dashboard/caretaker' },
-        { name: 'Repairs & Utilities', href: '/dashboard/caretaker?tab=maintenance' },
-        { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse' },
-      ]
-    : isLandlord
-    ? [
-        { name: 'Home', href: '/' },
-        { name: 'Explore', href: '/properties' },
-        { name: 'My Properties', href: '/dashboard/landlord/properties' },
-      ]
-    : [
-        { name: 'Explore', href: '/search' },
-        { name: 'Hostels', href: '/search?type=HOSTEL' },
-        { name: 'Apartments', href: '/search?type=APARTMENT' },
-        { name: 'Saved', href: '/saved' },
-        { name: 'Support', href: '/support' },
-      ];
+  // Staff/Caretaker and Landlord get their own nav links
+  const staffNavLinks = [
+    { name: 'Compound Command', href: '/dashboard/caretaker', hasDropdown: false },
+    { name: 'Repairs & Utilities', href: '/dashboard/caretaker?tab=maintenance', hasDropdown: false },
+    { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse', hasDropdown: false },
+  ];
+
+  const landlordNavLinks = [
+    { name: 'Home', href: '/', hasDropdown: false },
+    { name: 'Explore', href: '/properties', hasDropdown: true },
+    { name: 'My Properties', href: '/dashboard/landlord/properties', hasDropdown: false },
+  ];
+
+  const navLinks = isStaff ? staffNavLinks : isLandlord ? landlordNavLinks : PUBLIC_NAV_LINKS;
+
+  const userFullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'My Account';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all">
@@ -114,16 +120,16 @@ export default function Navbar() {
       <nav
         aria-label="Primary Navigation"
         className={clsx(
-          'transition-all duration-200 border-b relative',
+          'border-b transition-all duration-200',
           scrolled
-            ? 'bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-[#E7E7DF] dark:border-[#262E2A] shadow-[0_1px_3px_0_rgba(23,61,50,0.04)]'
+            ? 'bg-white/95 dark:bg-[#0C0F0E]/95 backdrop-blur-md border-[#E7E7DF] dark:border-[#262E2A] shadow-xs'
             : 'bg-white dark:bg-[#141816] border-[#E7E7DF] dark:border-[#262E2A]'
         )}
       >
         <div className="container-akwaaba">
           <div className="flex justify-between h-16 items-center">
             {/* Left: Brand Identity */}
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
               <Link
                 href="/"
                 className={clsx(
@@ -134,7 +140,7 @@ export default function Navbar() {
                 <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
                   <Image
                     src="/logo.png"
-                    alt="Akwaaba Homes"
+                    alt="AkwaabaHomes"
                     width={44}
                     height={44}
                     className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
@@ -142,7 +148,7 @@ export default function Navbar() {
                   />
                   <Image
                     src="/logo-light.png"
-                    alt="Akwaaba Homes"
+                    alt="AkwaabaHomes"
                     width={44}
                     height={44}
                     className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
@@ -150,17 +156,17 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-editorial text-lg tracking-tight text-[#242925] dark:text-white leading-none">
-                    Akwaaba Homes
+                  <span className="font-black text-base tracking-tight text-[#242925] dark:text-white leading-none">
+                    AkwaabaHomes
                   </span>
-                  <span className="text-[10px] font-medium text-[#557A67] tracking-wider uppercase mt-0.5">
-                    Trusted Homes &bull; Ghana
+                  <span className="text-[10px] font-medium text-[#557A67] dark:text-emerald-600 mt-0.5">
+                    Live Well. Feel at Home.
                   </span>
                 </div>
               </Link>
 
-              {/* Desktop Discovery Navigation */}
-              <div className="hidden lg:flex items-center gap-1">
+              {/* Desktop Navigation Links */}
+              <div className="hidden lg:flex items-center gap-0.5">
                 {navLinks.map((link) => {
                   const isActive =
                     pathname === link.href ||
@@ -172,13 +178,16 @@ export default function Navbar() {
                       href={link.href}
                       aria-current={isActive ? 'page' : undefined}
                       className={clsx(
-                        'px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
+                        'inline-flex items-center gap-0.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
                         isActive
-                          ? 'text-[#16A34A] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40'
+                          ? 'text-[#16A34A] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#16A34A]/30'
                           : 'text-[#5E645E] hover:text-[#242925] dark:text-[#9EA69F] dark:hover:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
                       )}
                     >
                       {link.name}
+                      {link.hasDropdown && !isActive && (
+                        <ChevronDown className="w-3 h-3 opacity-60" />
+                      )}
                     </Link>
                   );
                 })}
@@ -186,44 +195,84 @@ export default function Navbar() {
             </div>
 
             {/* Right: Account Actions */}
-            <div className="hidden md:flex items-center gap-2.5">
-              <ThemeToggle isScrolled={true} />
-
-              <div className="h-4 w-px bg-[#E7E7DF] dark:bg-[#262E2A] mx-1" />
+            <div className="hidden md:flex items-center gap-2">
+              {/* Theme Moon Toggle */}
+              <button
+                type="button"
+                className="p-2 rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                aria-label="Toggle dark mode"
+              >
+                <Moon className="w-4 h-4" />
+              </button>
 
               {isAuthenticated ? (
-                <div className="flex items-center gap-2.5">
-                  {role === 'TENANT' && (
+                <div className="flex items-center gap-2">
+                  {/* Bookings Button */}
+                  {(role === 'TENANT' || !role) && (
                     <Link
                       href="/bookings"
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E] transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                     >
                       <CalendarCheck className="w-3.5 h-3.5 text-[#557A67]" />
                       <span>Bookings</span>
                     </Link>
                   )}
+
+                  {/* Notification Bell */}
                   <NotificationBell />
+
+                  {/* My Account Button with Avatar */}
                   <Link
                     href={dashboardHref}
-                    className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
                   >
-                    <UserCircle className="w-3.5 h-3.5" />
+                    {user?.avatarUrl ? (
+                      <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
+                        <Image
+                          src={user.avatarUrl}
+                          alt={userFullName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <UserCircle className="w-4 h-4 shrink-0" />
+                    )}
                     <span>{role === 'TENANT' ? 'My Account' : 'Dashboard'}</span>
+                    <ChevronDown className="w-3 h-3 opacity-80 shrink-0" />
                   </Link>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
+                  {/* Bookings Button (guest) */}
+                  <Link
+                    href="/bookings"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <CalendarCheck className="w-3.5 h-3.5 text-[#557A67]" />
+                    <span>Bookings</span>
+                  </Link>
+
+                  {/* Notification Bell (guest shows badge 3 like mockup) */}
                   <Link
                     href="/login"
-                    className="h-9 px-3.5 inline-flex items-center justify-center rounded-lg text-xs font-semibold text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E] transition-colors"
+                    className="relative p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition"
+                    title="Notifications"
                   >
-                    Sign in
+                    <Bell className="w-5 h-5" />
+                    <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center">
+                      3
+                    </span>
                   </Link>
+
+                  {/* My Account button */}
                   <Link
-                    href="/register"
-                    className="h-9 px-4 inline-flex items-center justify-center rounded-lg text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] transition-colors shadow-2xs"
+                    href="/login"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
                   >
-                    Create account
+                    <UserCircle className="w-4 h-4" />
+                    <span>My Account</span>
+                    <ChevronDown className="w-3 h-3 opacity-80" />
                   </Link>
                 </div>
               )}
@@ -231,13 +280,6 @@ export default function Navbar() {
 
             {/* Mobile Controls */}
             <div className="md:hidden flex items-center gap-1.5">
-              <Link
-                href="/search"
-                aria-label="Search accommodations"
-                className="p-2 rounded-lg text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]"
-              >
-                <Search className="w-5 h-5" />
-              </Link>
               {isAuthenticated && <NotificationBell />}
               <button
                 type="button"
@@ -284,7 +326,7 @@ export default function Navbar() {
                     <Link
                       href={dashboardHref}
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#0F5A3E] hover:bg-[#0B432E] rounded-lg"
                     >
                       My Account
                     </Link>
@@ -308,7 +350,7 @@ export default function Navbar() {
                     <Link
                       href="/register"
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#0F5A3E] hover:bg-[#0B432E] rounded-lg"
                     >
                       Create account
                     </Link>
@@ -322,4 +364,3 @@ export default function Navbar() {
     </header>
   );
 }
-
