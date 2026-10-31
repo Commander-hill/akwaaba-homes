@@ -6,21 +6,41 @@ import { useSearchParams } from 'next/navigation';
 import {
   ArrowRight,
   Loader2,
-  CheckCircle2,
   Eye,
   EyeOff,
-  Compass,
-  ShieldAlert,
-  Home,
   ShieldCheck,
-  Sparkles,
+  Phone,
+  Users,
+  Mail,
+  Lock,
+  MapPin,
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
-import AlertBanner from '@/components/AlertBanner';
-import ThemeToggle from '@/components/ThemeToggle';
-import { Button } from '@/components/ui/Button';
+
+// ── GOOGLE & MICROSOFT SVG ICONS ──
+function GoogleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+  );
+}
+
+function MicrosoftIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+      <rect x="1" y="1" width="10.5" height="10.5" fill="#F25022"/>
+      <rect x="12.5" y="1" width="10.5" height="10.5" fill="#7FBA00"/>
+      <rect x="1" y="12.5" width="10.5" height="10.5" fill="#00A4EF"/>
+      <rect x="12.5" y="12.5" width="10.5" height="10.5" fill="#FFB900"/>
+    </svg>
+  );
+}
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -34,9 +54,10 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   // Check if user is already logged in
-  const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
+  const { data: sessionData } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       try {
@@ -53,9 +74,7 @@ function LoginForm() {
   const redirectByRole = (user: any) => {
     if (user.role === 'ADMIN') {
       (async () => {
-        try {
-          await api.post('/auth/logout');
-        } catch {}
+        try { await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
       })();
@@ -85,9 +104,7 @@ function LoginForm() {
     if (sessionData && !isTimeout) {
       if (sessionData.role === 'ADMIN') {
         (async () => {
-          try {
-            await api.post('/auth/logout');
-          } catch {}
+          try { await api.post('/auth/logout'); } catch {}
           localStorage.removeItem('akwaaba_access_token');
           localStorage.removeItem('akwaaba_refresh_token');
         })();
@@ -102,7 +119,6 @@ function LoginForm() {
   const [requireTwoFactor, setRequireTwoFactor] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
-  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,9 +141,7 @@ function LoginForm() {
       }
 
       if (response.data?.user?.role === 'ADMIN') {
-        try {
-          await api.post('/auth/logout');
-        } catch {}
+        try { await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -149,9 +163,7 @@ function LoginForm() {
         err.response?.data?.code === 'ADMIN_PORTAL_REQUIRED' ||
         err.response?.data?.message?.includes('Administrator accounts cannot sign in')
       ) {
-        try {
-          await api.post('/auth/logout');
-        } catch {}
+        try { await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -174,9 +186,7 @@ function LoginForm() {
       });
 
       if (response.data?.user?.role === 'ADMIN') {
-        try {
-          await api.post('/auth/logout');
-        } catch {}
+        try { await api.post('/auth/logout'); } catch {}
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
@@ -194,466 +204,386 @@ function LoginForm() {
 
       redirectByRole(response.data.user);
     } catch (err: any) {
-      if (
-        err.response?.data?.code === 'ADMIN_PORTAL_REQUIRED' ||
-        err.response?.data?.message?.includes('Administrator accounts cannot sign in')
-      ) {
-        try {
-          await api.post('/auth/logout');
-        } catch {}
-        localStorage.removeItem('akwaaba_access_token');
-        localStorage.removeItem('akwaaba_refresh_token');
-        setError('ADMIN_PORTAL_REQUIRED');
-      } else {
-        setError(err.response?.data?.message || 'Invalid 2FA code or recovery code.');
-      }
+      setError(err.response?.data?.message || 'Invalid verification code. Please try again.');
       setIsLoading(false);
     }
   };
 
-  // Active session loading spinner
-  if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
-    return (
-      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#111513] text-[#242925] dark:text-[#F4F5F2] p-6 space-y-4">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-400" />
-        <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Verifying session...</p>
-      </div>
-    );
-  }
-
-  // Active session already verified
-  if (sessionData && sessionData.role !== 'ADMIN' && !isTimeout) {
-    const roleTitle =
-      sessionData.role === 'LANDLORD'
-        ? 'Landlord Dashboard'
-        : sessionData.role === 'CARETAKER' || sessionData.role === 'STAFF'
-        ? 'Operations Hub'
-        : 'Tenant Dashboard';
-
-    return (
-      <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-white p-6">
-        <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
-            <CheckCircle2 className="w-7 h-7" />
-          </div>
-
-          <div className="space-y-1.5">
-            <h2 className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">Active Session Detected</h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              You are signed in as{' '}
-              <span className="font-bold text-zinc-950 dark:text-white">
-                {sessionData.firstName || sessionData.email}
-              </span>
-              .
-            </p>
-          </div>
-
-          <div className="space-y-2.5 pt-2">
-            <button
-              onClick={() => redirectByRole(sessionData)}
-              className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer"
-            >
-              <span>Continue to {roleTitle}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-            <button
-              onClick={async () => {
-                try {
-                  await api.post('/auth/logout');
-                } catch {}
-                localStorage.removeItem('akwaaba_access_token');
-                localStorage.removeItem('akwaaba_refresh_token');
-                window.location.reload();
-              }}
-              className="w-full h-11 inline-flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-200 rounded-xl transition cursor-pointer"
-            >
-              Sign out &amp; switch account
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const TRUST_PILLARS = [
+    { icon: ShieldCheck, label: 'Verified Listings', sub: 'Stay safe & secure' },
+    { icon: Phone, label: '24/7 Support', sub: "We're always here" },
+    { icon: Users, label: 'Trusted Community', sub: 'Live with confidence' },
+  ];
 
   return (
-    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
-      
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (70% Desktop, Full Bleed Landscape) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-        <Image
-          src="/images/auth-student-landscape.jpg"
-          alt="Happy verified Ghanaian resident enjoying modern residential community"
-          fill
-          sizes="70vw"
-          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
-          priority
-        />
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] font-sans">
+      {/* ── TOP BAR ── */}
+      <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-6 py-4">
+        {/* Brand Logo */}
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <Image
+              src="/logo-light.png"
+              alt="AkwaabaHomes"
+              width={36}
+              height={36}
+              className="w-full h-full object-contain dark:hidden"
+              priority
+            />
+            <Image
+              src="/logo.png"
+              alt="AkwaabaHomes"
+              width={36}
+              height={36}
+              className="w-full h-full object-contain hidden dark:block"
+              priority
+            />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="font-black text-sm text-[#0F5A3E] dark:text-white tracking-tight">AkwaabaHomes</span>
+            <span className="text-[10px] text-[#557A67] dark:text-emerald-600 font-medium">Live Well. Feel at Home.</span>
+          </div>
+        </Link>
 
-        {/* Cinematic Vignette Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-black/20" />
-
-        {/* Top-Left Floating Explore Action */}
-        <div className="absolute top-8 left-8 z-20">
-          <Link
-            href="/search"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+        {/* Light / Dark Toggle Pills */}
+        <div className="hidden sm:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-full p-1 text-xs font-semibold">
+          <button
+            type="button"
+            onClick={() => {
+              setIsDark(false);
+              document.documentElement.classList.remove('dark');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-transparent shadow-xs text-zinc-900 dark:text-zinc-400 transition cursor-pointer"
           >
-            <Compass className="w-3.5 h-3.5 text-emerald-400 group-hover:rotate-45 transition-transform" />
-            <span>Explore homes</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {/* Bottom Overlay Content (matching the user's design) */}
-        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-4 z-10 max-w-2xl">
-          {/* Green accent line */}
-          <div className="w-12 h-1 rounded-full bg-[#16A34A]" />
-
-          <div className="space-y-2">
-            <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-              Welcome Back
-            </h2>
-            <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-              Sign in to access your bookings, saved properties, and more.
-            </p>
-          </div>
-
-          {/* Trust Markers */}
-          <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-zinc-200 font-medium">
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
-                <Home className="w-3.5 h-3.5" />
-              </span>
-              <span>Trusted Listings</span>
-            </span>
-
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-              </span>
-              <span>Secure Transactions</span>
-            </span>
-
-            <span className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
-                <Sparkles className="w-3.5 h-3.5" />
-              </span>
-              <span>Ghana&apos;s Best Homes</span>
-            </span>
-          </div>
+            <span className="text-yellow-400">☀</span>
+            <span>Light</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsDark(true);
+              document.documentElement.classList.add('dark');
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-zinc-700 dark:text-white text-zinc-400 transition cursor-pointer"
+          >
+            <span>🌙</span>
+            <span>Dark</span>
+          </button>
         </div>
       </div>
 
-      {/* ──── RIGHT COLUMN: SIGN-IN FORM (30% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[30%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-8 xl:p-10 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
-        
-        {/* Top Header: Brand + Theme Toggle */}
-        <div className="flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
-              <Image
-                src="/logo.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
-                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-              <Image
-                src="/logo-light.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
-                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-zinc-950 dark:text-white leading-none">
-                Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
-              </span>
-              <span className="text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide mt-0.5">
-                Trusted Ghanaian Housing
-              </span>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-            <Link
-              href="/search"
-              className="lg:hidden inline-flex items-center gap-1 text-xs font-bold text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white"
-            >
-              <span>Explore</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-
-        {/* Center: Authentication Form Container */}
-        <div className="w-full max-w-sm mx-auto my-auto py-8">
-          
-          {/* Header Title & Subtitle */}
-          <div className="mb-6">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider mb-2.5">
-              Welcome Back
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-              Sign in to your account
-            </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mt-1.5">
-              Access your bookings, saved properties, tenancy records, or host workspace.
-            </p>
+      {/* ── MAIN SPLIT LAYOUT ── */}
+      <div className="flex flex-col lg:flex-row flex-1 min-h-screen">
+        {/* ── LEFT: Hero Photo + Text ── */}
+        <div className="relative lg:flex-1 min-h-[280px] lg:min-h-screen overflow-hidden">
+          {/* Background hero photo */}
+          <div className="absolute inset-0">
+            <Image
+              src="/images/auth/login-hero.jpg"
+              alt="Happy resident using AkwaabaHomes app"
+              fill
+              priority
+              className="object-cover object-top"
+            />
+            {/* Light green overlay tint */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10" />
+            {/* Bottom fade to white */}
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/80 to-transparent lg:hidden" />
           </div>
 
-          {isRegistered && (
-            <AlertBanner
-              type="success"
-              message="Your account has been created. Please sign in below to continue."
-              className="mb-5"
-            />
-          )}
+          {/* Left Content */}
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[280px] lg:min-h-screen p-8 sm:p-12 pt-20">
+            {/* Headline */}
+            <div className="space-y-4 mt-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0F5A3E] dark:text-white leading-tight tracking-tight max-w-sm">
+                Your Next Home<br />is Just a Sign-In{' '}
+                <span className="relative">
+                  Away
+                  <svg
+                    className="absolute -bottom-1 left-0 w-full"
+                    height="4"
+                    viewBox="0 0 100 4"
+                    preserveAspectRatio="none"
+                  >
+                    <path d="M0 2 Q50 4 100 2" stroke="#16A34A" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+                  </svg>
+                </span>
+              </h1>
 
-          {isTimeout && (
-            <AlertBanner
-              type="warning"
-              message="Your session timed out due to inactivity. Please sign in to resume."
-              className="mb-5"
-            />
-          )}
+              <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xs">
+                Discover verified homes, book with ease, and enjoy a seamless living experience across Ghana.
+              </p>
 
-          {error === 'ADMIN_PORTAL_REQUIRED' ? (
-            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-500/10 dark:bg-amber-950/30 border border-amber-500/30 dark:border-amber-700/40 space-y-3 animate-in fade-in">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-                  <ShieldAlert className="w-5 h-5" />
+              {/* Trust Pillars */}
+              <div className="flex items-start gap-5 flex-wrap pt-2">
+                {TRUST_PILLARS.map((pillar) => {
+                  const Icon = pillar.icon;
+                  return (
+                    <div key={pillar.label} className="flex flex-col items-center gap-1.5 text-center">
+                      <div className="w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700 shadow-xs flex items-center justify-center text-[#16A34A]">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-zinc-800 dark:text-white">{pillar.label}</p>
+                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{pillar.sub}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Bottom arch card */}
+            <div className="hidden lg:block mt-auto">
+              <div className="relative bg-white/10 dark:bg-zinc-900/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/30 dark:border-zinc-700 shadow-lg max-w-[260px]">
+                <div className="relative h-20 w-full">
+                  <Image
+                    src="/images/auth/login-arch-photo.jpg"
+                    alt="Independence Arch, Accra"
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  {/* Ghana pill */}
+                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-white/90 dark:bg-zinc-800 rounded-full px-2 py-0.5">
+                    <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
+                    <span className="text-[9px] font-bold text-zinc-700 dark:text-zinc-200">Ghana</span>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-xs font-bold text-amber-900 dark:text-amber-200">
-                    Administrator Access Restricted
-                  </h3>
-                  <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-                    Administrator accounts are barred from signing in through the public tenant and landlord portal. For system security and regulatory audit compliance, administrative access requires the dedicated security gateway.
+                <div className="px-3.5 py-3">
+                  <p className="text-xs font-black text-white leading-snug">
+                    More than just a place,<br />it's a better way of living.
                   </p>
                 </div>
               </div>
-              <div className="pt-1">
-                <Link
-                  href="/admin/login"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-                >
-                  <span>Open Admin Login Gateway</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
             </div>
-          ) : error ? (
-            <AlertBanner
-              type="error"
-              message={error}
-              className="mb-5"
-            />
-          ) : null}
+          </div>
+        </div>
 
-          {/* Two-Factor Verification Challenge */}
-          {requireTwoFactor ? (
-            <form onSubmit={handle2FASubmit} className="space-y-5 animate-in fade-in">
-              <div className="space-y-1 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-                <div className="text-xs font-bold uppercase tracking-wider text-zinc-950 dark:text-white">
-                  Two-Factor Authentication
-                </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  {useRecoveryCode
-                    ? 'Enter your 8-character emergency recovery code.'
-                    : 'Enter the 6-digit code from your authenticator app.'}
-                </p>
+        {/* ── RIGHT: Login Form Card ── */}
+        <div className="lg:w-[420px] xl:w-[460px] flex items-center justify-center px-6 py-12 lg:py-0 bg-white dark:bg-[#0D100E] relative">
+          <div className="w-full max-w-sm space-y-6">
+
+            {/* Session timeout / registered banner */}
+            {isTimeout && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs text-amber-800 dark:text-amber-300 font-medium">
+                Your session timed out due to inactivity. Please sign in to resume.
               </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="login-2fa-code" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                  {useRecoveryCode ? 'Emergency recovery key' : '6-digit verification code'}
-                </label>
-                <input
-                  id="login-2fa-code"
-                  name="twoFactorCode"
-                  type="text"
-                  required
-                  maxLength={useRecoveryCode ? 10 : 6}
-                  autoFocus
-                  className="w-full h-12 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-center text-xl font-mono font-bold tracking-widest text-zinc-950 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition"
-                  placeholder={useRecoveryCode ? 'XXXX-XXXX' : '000000'}
-                  value={twoFactorCode}
-                  onChange={(e) => setTwoFactorCode(e.target.value)}
-                />
+            )}
+            {isRegistered && (
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                Account created successfully! Sign in to continue.
               </div>
+            )}
 
-              <div className="text-xs">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseRecoveryCode(!useRecoveryCode);
-                    setTwoFactorCode('');
-                    setError('');
-                  }}
-                  className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline cursor-pointer font-bold"
-                >
-                  {useRecoveryCode ? 'Use 6-digit authenticator code' : 'Lost device? Use emergency recovery key'}
-                </button>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <Button
-                  type="submit"
-                  variant="emerald"
-                  size="sm"
-                  isLoading={isLoading}
-                  disabled={isLoading || !twoFactorCode.trim()}
-                  className="w-full"
-                >
-                  Verify and continue
-                </Button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequireTwoFactor(false);
-                    setTwoFactorCode('');
-                    setError('');
-                  }}
-                  className="w-full text-center text-xs font-bold text-zinc-500 hover:text-zinc-950 dark:hover:text-white cursor-pointer py-1"
-                >
-                  &larr; Back to sign in
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-5">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Email Input */}
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="login-email"
-                    className="block text-xs font-bold text-zinc-700 dark:text-zinc-300"
-                  >
-                    Email address
-                  </label>
-                  <input
-                    id="login-email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className="w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition"
-                    placeholder="e.g. kwame@st.ug.edu.gh or personal@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
+            {/* ── 2FA VIEW ── */}
+            {requireTwoFactor ? (
+              <div className="space-y-5">
+                <div>
+                  <h2 className="text-2xl font-black text-zinc-950 dark:text-white">Two-Factor Auth</h2>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Enter the 6-digit code from your authenticator app.</p>
                 </div>
 
-                {/* Password Input */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="login-password"
-                      className="block text-xs font-bold text-zinc-700 dark:text-zinc-300"
-                    >
-                      Password
-                    </label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline font-bold"
-                    >
-                      Forgot password?
-                    </Link>
+                {error && (
+                  <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-4 py-3 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                    {error}
                   </div>
+                )}
+
+                <form onSubmit={handle2FASubmit} className="space-y-4">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={twoFactorCode}
+                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-center text-xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || twoFactorCode.length < 6}
+                    className="w-full h-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </form>
+
+                <button
+                  type="button"
+                  onClick={() => { setRequireTwoFactor(false); setTwoFactorCode(''); }}
+                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
+                >
+                  ← Go back
+                </button>
+              </div>
+            ) : (
+              /* ── MAIN LOGIN FORM ── */
+              <div className="space-y-5">
+                {/* Header */}
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
+                    Welcome Back!
+                  </h2>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+                    Sign in to continue your AkwaabaHomes journey.
+                  </p>
+                </div>
+
+                {/* Admin error */}
+                {error === 'ADMIN_PORTAL_REQUIRED' && (
+                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs font-medium text-amber-800 dark:text-amber-300">
+                    Administrator accounts must use the{' '}
+                    <a href="/admin/login" className="underline font-bold">Admin Portal</a>.
+                  </div>
+                )}
+                {error && error !== 'ADMIN_PORTAL_REQUIRED' && (
+                  <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-4 py-3 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                    {error}
+                  </div>
+                )}
+
+                {/* Social Sign-In Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
+                    className="flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition shadow-2xs cursor-pointer"
+                  >
+                    <GoogleIcon />
+                    <span>Continue with Google</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
+                    className="flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition shadow-2xs cursor-pointer"
+                  >
+                    <MicrosoftIcon />
+                    <span>Continue with Microsoft</span>
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
+                  <span className="text-xs text-zinc-400 font-medium">or</span>
+                  <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
+                </div>
+
+                {/* Login Form */}
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  {/* Email */}
                   <div className="relative">
+                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      id="login-password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
+                      type="email"
+                      placeholder="Email address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
-                      autoComplete="current-password"
-                      className="w-full h-11 pl-3.5 pr-10 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#16A34A] focus:ring-4 focus:ring-[#16A34A]/10 outline-none transition"
-                      placeholder="Enter your password"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                    />
+                  </div>
+
+                  {/* Password */}
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-                </div>
 
-                {/* Keep me signed in */}
-                <div className="pt-0.5">
-                  <label className="inline-flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      id="remember-me"
-                      name="remember-me"
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer"
-                    />
-                    <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-                      Keep me signed in on this device
-                    </span>
-                  </label>
-                </div>
+                  {/* Remember me + Forgot password */}
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-[#16A34A] accent-[#16A34A] cursor-pointer"
+                      />
+                      <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Remember me</span>
+                    </label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] transition"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
 
-                {/* Primary Submit Button */}
-                <div className="pt-2">
-                  <Button
+                  {/* Sign In Button */}
+                  <button
                     type="submit"
-                    variant="emerald"
-                    size="sm"
-                    isLoading={isLoading}
-                    className="w-full"
+                    disabled={isLoading}
+                    className="w-full h-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-70 text-white font-black text-sm flex items-center justify-center gap-2 transition shadow-xs cursor-pointer mt-1"
                   >
-                    Sign in
-                  </Button>
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Sign In</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Create account */}
+                <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  Don't have an account?{' '}
+                  <Link
+                    href="/register"
+                    className="font-bold text-[#16A34A] hover:text-[#15803D] transition"
+                  >
+                    Create an account
+                  </Link>
+                </p>
+
+                {/* Ghana Skyline Watermark Footer */}
+                <div className="pt-2 -mx-2">
+                  <Image
+                    src="/images/auth/ghana-skyline.svg"
+                    alt="Ghana skyline"
+                    width={420}
+                    height={80}
+                    className="w-full opacity-80"
+                  />
                 </div>
-              </form>
-
-              {/* Secondary Registration Link */}
-              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                Don&apos;t have an account?{' '}
-                <Link
-                  href={redirectParam ? `/register?redirect=${encodeURIComponent(redirectParam)}` : '/register'}
-                  className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
-                >
-                  Create an account
-                </Link>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Footer */}
-        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-400 gap-2">
-          <span>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana</span>
-          <div className="flex items-center gap-3">
-            <Link href="/terms" className="hover:text-zinc-950 dark:hover:text-white transition">Terms</Link>
-            <span>•</span>
-            <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
-            <span>•</span>
-            <Link href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
+            )}
           </div>
         </div>
       </div>
-
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="-mt-16 -mb-16 md:mb-0 min-h-screen bg-white dark:bg-[#0E1210]" />}>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0D100E]">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#16A34A] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   );
