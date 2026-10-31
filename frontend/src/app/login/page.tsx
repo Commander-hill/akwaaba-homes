@@ -8,21 +8,23 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  ShieldCheck,
-  Phone,
-  Users,
   Mail,
   Lock,
+  Sun,
+  Moon,
+  ShieldCheck,
+  Headphones,
+  Users,
   MapPin,
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
 import { useQuery } from '@tanstack/react-query';
 
-// ── GOOGLE & MICROSOFT SVG ICONS ──
+// ── BRAND SVG ICONS ──
 function GoogleIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="shrink-0">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
@@ -33,7 +35,7 @@ function GoogleIcon() {
 
 function MicrosoftIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="shrink-0">
       <rect x="1" y="1" width="10.5" height="10.5" fill="#F25022"/>
       <rect x="12.5" y="1" width="10.5" height="10.5" fill="#7FBA00"/>
       <rect x="1" y="12.5" width="10.5" height="10.5" fill="#00A4EF"/>
@@ -54,7 +56,7 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Check if user is already logged in
   const { data: sessionData } = useQuery({
@@ -123,7 +125,7 @@ function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password) {
-      setError('Please provide both your email address and password.');
+      setError('Please enter both your email address and password.');
       return;
     }
 
@@ -209,364 +211,370 @@ function LoginForm() {
     }
   };
 
-  const TRUST_PILLARS = [
-    { icon: ShieldCheck, label: 'Verified Listings', sub: 'Stay safe & secure' },
-    { icon: Phone, label: '24/7 Support', sub: "We're always here" },
-    { icon: Users, label: 'Trusted Community', sub: 'Live with confidence' },
-  ];
+  const toggleTheme = (dark: boolean) => {
+    setIsDarkMode(dark);
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  // ── FORM INTERIOR COMPONENT ──
+  const renderCardForm = () => (
+    <div className="flex flex-col h-full justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-2">
+      {/* Top section: Title, Subtitle, SSO, Inputs */}
+      <div className="space-y-3.5">
+        {/* Header */}
+        <div>
+          <h2 className="text-xl sm:text-2xl xl:text-[26px] font-black text-[#0D3827] dark:text-white tracking-tight leading-tight">
+            Welcome Back!
+          </h2>
+          <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Sign in to continue your AkwaabaHomes journey.
+          </p>
+        </div>
+
+        {/* Status / Alert Banners */}
+        {isTimeout && (
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-1.5 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+            Session timed out. Please sign in again.
+          </div>
+        )}
+        {isRegistered && (
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-1.5 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+            Account created! Sign in to continue.
+          </div>
+        )}
+        {error === 'ADMIN_PORTAL_REQUIRED' && (
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-1.5 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+            Admin accounts must use the{' '}
+            <a href="/admin/login" className="underline font-bold">Admin Portal</a>.
+          </div>
+        )}
+        {error && error !== 'ADMIN_PORTAL_REQUIRED' && (
+          <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-1.5 text-[11px] text-rose-700 dark:text-rose-300 font-medium">
+            {error}
+          </div>
+        )}
+
+        {/* 2FA Mode */}
+        {requireTwoFactor ? (
+          <form onSubmit={handle2FASubmit} className="space-y-3 pt-1">
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">
+              Enter 6-digit authenticator code:
+            </p>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000000"
+              value={twoFactorCode}
+              onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full h-11 px-3 text-center text-lg font-mono tracking-widest rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+              autoFocus
+            />
+            <button
+              type="submit"
+              disabled={isLoading || twoFactorCode.length < 6}
+              className="w-full h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-3.5 h-3.5" /></>}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setRequireTwoFactor(false); setTwoFactorCode(''); }}
+              className="w-full text-center text-[11px] text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+            >
+              ← Cancel
+            </button>
+          </form>
+        ) : (
+          <>
+            {/* Social Logins */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
+                className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+              >
+                <GoogleIcon />
+                <span className="truncate">Continue with Google</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
+                className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+              >
+                <MicrosoftIcon />
+                <span className="truncate">Continue with Microsoft</span>
+              </button>
+            </div>
+
+            {/* "or" Divider */}
+            <div className="flex items-center gap-2.5 py-0.5">
+              <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
+              <span className="text-[10px] text-zinc-400 font-medium lowercase">or</span>
+              <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
+            </div>
+
+            {/* Email & Password Form */}
+            <form onSubmit={handleSubmit} className="space-y-2.5">
+              {/* Email Address */}
+              <div className="relative">
+                <Mail className="w-3.5 h-3.5 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-10 pl-9 pr-3 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="relative">
+                <Lock className="w-3.5 h-3.5 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full h-10 pl-9 pr-10 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              {/* Remember Me + Forgot Password */}
+              <div className="flex items-center justify-between pt-0.5">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-600 text-[#16A34A] accent-[#16A34A] cursor-pointer"
+                  />
+                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">Remember me</span>
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[11px] font-semibold text-[#16A34A] hover:text-[#15803D] transition"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Sign In Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Create Account Link */}
+            <p className="text-center text-[11px] text-zinc-500 dark:text-zinc-400 pt-0.5">
+              Don't have an account?{' '}
+              <Link
+                href="/register"
+                className="font-bold text-[#16A34A] hover:text-[#15803D] transition"
+              >
+                Create an account
+              </Link>
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Card Bottom: Accra Skyline Illustration */}
+      <div className="pt-2 -mx-6 -mb-2 overflow-hidden pointer-events-none select-none">
+        <Image
+          src="/images/auth/login-skyline-exact.png"
+          alt="Accra Ghana Skyline"
+          width={340}
+          height={65}
+          className="w-full object-cover opacity-90"
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] font-sans">
-      {/* ── TOP BAR ── */}
-      <div className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-6 py-4">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#FAF9F5] dark:bg-[#0D100E] font-sans overflow-x-hidden">
+
+      {/* ────────────────────────────────────────────────────────────────
+          DESKTOP VIEW (16:9 Widescreen Pixel-Perfect Presentation)
+          Visible on lg: (1024px and wider screens)
+         ──────────────────────────────────────────────────────────────── */}
+      <div className="hidden lg:flex w-full min-h-screen items-center justify-center p-2 xl:p-4">
+        <div className="relative w-full max-w-[1536px] aspect-[16/9] shadow-2xl rounded-2xl overflow-hidden bg-white dark:bg-[#0D100E]">
+
+          {/* 1. Base 2K Background Scene (Woman on couch, building, left text, waves) */}
+          <Image
+            src="/images/auth/login-hero-2k.jpg"
+            alt="AkwaabaHomes Sign In"
+            fill
+            priority
+            className="object-cover object-center pointer-events-none select-none"
+          />
+
+          {/* 2. Interactive Logo Link Overlay (top-left) */}
+          <Link
+            href="/"
+            title="AkwaabaHomes Home"
+            className="absolute rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+            style={{
+              left: '4.39%',
+              top: '4.86%',
+              width: '18.55%',
+              height: '7.64%',
+            }}
+          />
+
+          {/* 3. Interactive Light / Dark Toggle Overlay (top-right) */}
+          <div
+            className="absolute flex items-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs rounded-full p-0.5 shadow-xs border border-zinc-200/60 dark:border-zinc-700 z-20 text-[11px] font-semibold"
+            style={{
+              left: '87.5%',
+              top: '4.34%',
+              height: '5.21%',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => toggleTheme(false)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full transition cursor-pointer ${
+                !isDarkMode
+                  ? 'bg-white shadow-2xs text-zinc-900 font-bold'
+                  : 'text-zinc-400 hover:text-zinc-600'
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+              <span>Light</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => toggleTheme(true)}
+              className={`flex items-center gap-1 px-3 py-1 rounded-full transition cursor-pointer ${
+                isDarkMode
+                  ? 'bg-zinc-800 shadow-2xs text-white font-bold'
+                  : 'text-zinc-400 hover:text-zinc-600'
+              }`}
+            >
+              <Moon className="w-3 h-3 text-zinc-400" />
+              <span>Dark</span>
+            </button>
+          </div>
+
+          {/* 4. Interactive Bottom-Left Arch Card Link */}
+          <Link
+            href="/properties"
+            title="Explore Ghana accommodations"
+            className="absolute rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/50"
+            style={{
+              left: '2.73%',
+              top: '77.78%',
+              width: '30.08%',
+              height: '16.84%',
+            }}
+          />
+
+          {/* 5. Real Interactive Floating Login Card (matches exact coordinates) */}
+          <div
+            className="absolute bg-white dark:bg-[#141A17] rounded-[24px] xl:rounded-[30px] shadow-2xl border border-gray-100/90 dark:border-zinc-800 z-20 overflow-hidden"
+            style={{
+              left: '65.23%',
+              top: '13.19%',
+              width: '31.84%',
+              height: '81.94%',
+            }}
+          >
+            {renderCardForm()}
+          </div>
+        </div>
+      </div>
+
+      {/* ────────────────────────────────────────────────────────────────
+          MOBILE / TABLET RESPONSIVE VIEW (< 1024px)
+          Provides beautiful full scrolling experience on phones/tablets
+         ──────────────────────────────────────────────────────────────── */}
+      <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E]">
+        {/* Mobile Top Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
+          <Link href="/" className="flex items-center gap-2">
             <Image
               src="/logo-light.png"
               alt="AkwaabaHomes"
-              width={36}
-              height={36}
-              className="w-full h-full object-contain dark:hidden"
-              priority
+              width={32}
+              height={32}
+              className="dark:hidden"
             />
             <Image
               src="/logo.png"
               alt="AkwaabaHomes"
-              width={36}
-              height={36}
-              className="w-full h-full object-contain hidden dark:block"
-              priority
+              width={32}
+              height={32}
+              className="hidden dark:block"
             />
-          </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-black text-sm text-[#0F5A3E] dark:text-white tracking-tight">AkwaabaHomes</span>
-            <span className="text-[10px] text-[#557A67] dark:text-emerald-600 font-medium">Live Well. Feel at Home.</span>
-          </div>
-        </Link>
+            <div className="flex flex-col">
+              <span className="font-black text-sm text-[#0F5A3E] dark:text-white">AkwaabaHomes</span>
+              <span className="text-[9px] text-[#557A67] dark:text-emerald-500">Live Well. Feel at Home.</span>
+            </div>
+          </Link>
 
-        {/* Light / Dark Toggle Pills */}
-        <div className="hidden sm:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 rounded-full p-1 text-xs font-semibold">
+          {/* Mobile Theme Toggle */}
           <button
             type="button"
-            onClick={() => {
-              setIsDark(false);
-              document.documentElement.classList.remove('dark');
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-transparent shadow-xs text-zinc-900 dark:text-zinc-400 transition cursor-pointer"
+            onClick={() => toggleTheme(!isDarkMode)}
+            className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           >
-            <span className="text-yellow-400">☀</span>
-            <span>Light</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsDark(true);
-              document.documentElement.classList.add('dark');
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full dark:bg-zinc-700 dark:text-white text-zinc-400 transition cursor-pointer"
-          >
-            <span>🌙</span>
-            <span>Dark</span>
+            {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
         </div>
-      </div>
 
-      {/* ── MAIN SPLIT LAYOUT ── */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-screen">
-        {/* ── LEFT: Hero Photo + Text ── */}
-        <div className="relative lg:flex-1 min-h-[280px] lg:min-h-screen overflow-hidden">
-          {/* Background hero photo */}
-          <div className="absolute inset-0">
-            <Image
-              src="/images/auth/login-hero.jpg"
-              alt="Happy resident using AkwaabaHomes app"
-              fill
-              priority
-              className="object-cover object-top"
-            />
-            {/* Light green overlay tint */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/10" />
-            {/* Bottom fade to white */}
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white/80 to-transparent lg:hidden" />
-          </div>
-
-          {/* Left Content */}
-          <div className="relative z-10 flex flex-col justify-between h-full min-h-[280px] lg:min-h-screen p-8 sm:p-12 pt-20">
-            {/* Headline */}
-            <div className="space-y-4 mt-4">
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0F5A3E] dark:text-white leading-tight tracking-tight max-w-sm">
-                Your Next Home<br />is Just a Sign-In{' '}
-                <span className="relative">
-                  Away
-                  <svg
-                    className="absolute -bottom-1 left-0 w-full"
-                    height="4"
-                    viewBox="0 0 100 4"
-                    preserveAspectRatio="none"
-                  >
-                    <path d="M0 2 Q50 4 100 2" stroke="#16A34A" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
-                  </svg>
-                </span>
-              </h1>
-
-              <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xs">
-                Discover verified homes, book with ease, and enjoy a seamless living experience across Ghana.
-              </p>
-
-              {/* Trust Pillars */}
-              <div className="flex items-start gap-5 flex-wrap pt-2">
-                {TRUST_PILLARS.map((pillar) => {
-                  const Icon = pillar.icon;
-                  return (
-                    <div key={pillar.label} className="flex flex-col items-center gap-1.5 text-center">
-                      <div className="w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 border border-zinc-200/60 dark:border-zinc-700 shadow-xs flex items-center justify-center text-[#16A34A]">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-zinc-800 dark:text-white">{pillar.label}</p>
-                        <p className="text-[10px] text-zinc-500 dark:text-zinc-400">{pillar.sub}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bottom arch card */}
-            <div className="hidden lg:block mt-auto">
-              <div className="relative bg-white/10 dark:bg-zinc-900/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/30 dark:border-zinc-700 shadow-lg max-w-[260px]">
-                <div className="relative h-20 w-full">
-                  <Image
-                    src="/images/auth/login-arch-photo.jpg"
-                    alt="Independence Arch, Accra"
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {/* Ghana pill */}
-                  <div className="absolute top-2 left-2 flex items-center gap-1 bg-white/90 dark:bg-zinc-800 rounded-full px-2 py-0.5">
-                    <MapPin className="w-2.5 h-2.5 text-[#16A34A]" />
-                    <span className="text-[9px] font-bold text-zinc-700 dark:text-zinc-200">Ghana</span>
-                  </div>
-                </div>
-                <div className="px-3.5 py-3">
-                  <p className="text-xs font-black text-white leading-snug">
-                    More than just a place,<br />it's a better way of living.
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* Mobile Hero Banner */}
+        <div className="relative h-56 w-full overflow-hidden">
+          <Image
+            src="/images/auth/login-hero-woman.jpg"
+            alt="AkwaabaHomes Resident"
+            fill
+            priority
+            className="object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-white">
+            <h1 className="text-lg font-black leading-tight">
+              Your Next Home is Just a Sign-In Away
+            </h1>
+            <p className="text-[11px] text-white/80 mt-0.5">
+              Discover verified homes across Ghana.
+            </p>
           </div>
         </div>
 
-        {/* ── RIGHT: Login Form Card ── */}
-        <div className="lg:w-[420px] xl:w-[460px] flex items-center justify-center px-6 py-12 lg:py-0 bg-white dark:bg-[#0D100E] relative">
-          <div className="w-full max-w-sm space-y-6">
-
-            {/* Session timeout / registered banner */}
-            {isTimeout && (
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs text-amber-800 dark:text-amber-300 font-medium">
-                Your session timed out due to inactivity. Please sign in to resume.
-              </div>
-            )}
-            {isRegistered && (
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
-                Account created successfully! Sign in to continue.
-              </div>
-            )}
-
-            {/* ── 2FA VIEW ── */}
-            {requireTwoFactor ? (
-              <div className="space-y-5">
-                <div>
-                  <h2 className="text-2xl font-black text-zinc-950 dark:text-white">Two-Factor Auth</h2>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Enter the 6-digit code from your authenticator app.</p>
-                </div>
-
-                {error && (
-                  <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-4 py-3 text-xs text-rose-700 dark:text-rose-300 font-medium">
-                    {error}
-                  </div>
-                )}
-
-                <form onSubmit={handle2FASubmit} className="space-y-4">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="000000"
-                    value={twoFactorCode}
-                    onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white text-center text-xl font-mono tracking-widest focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={isLoading || twoFactorCode.length < 6}
-                    className="w-full h-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer"
-                  >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-4 h-4" /></>}
-                  </button>
-                </form>
-
-                <button
-                  type="button"
-                  onClick={() => { setRequireTwoFactor(false); setTwoFactorCode(''); }}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
-                >
-                  ← Go back
-                </button>
-              </div>
-            ) : (
-              /* ── MAIN LOGIN FORM ── */
-              <div className="space-y-5">
-                {/* Header */}
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-                    Welcome Back!
-                  </h2>
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                    Sign in to continue your AkwaabaHomes journey.
-                  </p>
-                </div>
-
-                {/* Admin error */}
-                {error === 'ADMIN_PORTAL_REQUIRED' && (
-                  <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-xs font-medium text-amber-800 dark:text-amber-300">
-                    Administrator accounts must use the{' '}
-                    <a href="/admin/login" className="underline font-bold">Admin Portal</a>.
-                  </div>
-                )}
-                {error && error !== 'ADMIN_PORTAL_REQUIRED' && (
-                  <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-4 py-3 text-xs text-rose-700 dark:text-rose-300 font-medium">
-                    {error}
-                  </div>
-                )}
-
-                {/* Social Sign-In Buttons */}
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
-                    className="flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition shadow-2xs cursor-pointer"
-                  >
-                    <GoogleIcon />
-                    <span>Continue with Google</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
-                    className="flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition shadow-2xs cursor-pointer"
-                  >
-                    <MicrosoftIcon />
-                    <span>Continue with Microsoft</span>
-                  </button>
-                </div>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
-                  <span className="text-xs text-zinc-400 font-medium">or</span>
-                  <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800" />
-                </div>
-
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} className="space-y-3">
-                  {/* Email */}
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
-                    />
-                  </div>
-
-                  {/* Password */}
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="w-full pl-10 pr-11 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/80 text-zinc-900 dark:text-white placeholder:text-zinc-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-
-                  {/* Remember me + Forgot password */}
-                  <div className="flex items-center justify-between">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-zinc-300 dark:border-zinc-600 text-[#16A34A] accent-[#16A34A] cursor-pointer"
-                      />
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Remember me</span>
-                    </label>
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] transition"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  {/* Sign In Button */}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full h-12 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-70 text-white font-black text-sm flex items-center justify-center gap-2 transition shadow-xs cursor-pointer mt-1"
-                  >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        <span>Sign In</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Create account */}
-                <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-                  Don't have an account?{' '}
-                  <Link
-                    href="/register"
-                    className="font-bold text-[#16A34A] hover:text-[#15803D] transition"
-                  >
-                    Create an account
-                  </Link>
-                </p>
-
-                {/* Ghana Skyline Watermark Footer */}
-                <div className="pt-2 -mx-2">
-                  <Image
-                    src="/images/auth/ghana-skyline.svg"
-                    alt="Ghana skyline"
-                    width={420}
-                    height={80}
-                    className="w-full opacity-80"
-                  />
-                </div>
-              </div>
-            )}
+        {/* Mobile Card Form */}
+        <div className="flex-1 px-4 py-6">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200/80 dark:border-zinc-800 shadow-lg overflow-hidden">
+            {renderCardForm()}
           </div>
         </div>
       </div>
@@ -577,7 +585,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0D100E]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF9F5] dark:bg-[#0D100E]">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-2 border-[#16A34A] border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-xs text-zinc-400">Loading...</p>
