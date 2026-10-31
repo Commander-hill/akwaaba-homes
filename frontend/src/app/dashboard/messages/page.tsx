@@ -4,35 +4,38 @@ import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { useSocket } from '@/providers/SocketProvider';
 import api from '@/lib/axios';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   Send,
   Loader2,
   MessageSquare,
   Search,
   CheckCheck,
-  Lock,
-  ShieldCheck,
-  Mic,
-  Image as ImageIcon,
+  Check,
   Paperclip,
   FileText,
+  Phone,
+  Video,
+  MoreVertical,
+  Smile,
+  Pencil,
+  Headphones,
+  Users,
+  MapPin,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
+  Mic,
+  Image as ImageIcon,
   Play,
   Pause,
-  Download,
   X,
-  RefreshCw,
-  ArrowLeft,
-  Shield,
-  Zap,
-  Radio,
   Building2,
   CalendarCheck,
-  Phone,
-  ExternalLink,
 } from 'lucide-react';
-import { formatDistanceToNow, isToday, isYesterday, format, isSameDay } from 'date-fns';
+import { format, isToday, isYesterday } from 'date-fns';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
@@ -59,6 +62,13 @@ interface Message {
   duration?: number | null;
   isRead: boolean;
   createdAt: string;
+  propertyCard?: {
+    title: string;
+    location: string;
+    status: string;
+    image: string;
+    href: string;
+  } | null;
 }
 
 interface ContextProperty {
@@ -85,17 +95,200 @@ interface Conversation {
   partner: Partner;
   contextBooking?: ContextBooking | null;
   contextProperty?: ContextProperty | null;
+  category?: 'PROPERTY_TEAM' | 'MANAGEMENT' | 'OTHERS';
+  isVerified?: boolean;
+  online?: boolean;
+  avatarIcon?: 'IMAGE' | 'HEADPHONES' | 'USERS';
 }
 
-function formatDateDivider(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return '';
-  if (isToday(d)) return 'Today';
-  if (isYesterday(d)) return 'Yesterday';
-  return format(d, 'd MMM yyyy');
-}
+type FilterTab = 'ALL' | 'PROPERTY_TEAM' | 'MANAGEMENT' | 'OTHERS';
 
-// ── CUSTOM VOICE NOTE PLAYER COMPONENT ──
+// ── DEFAULT SHOWCASE CONVERSATIONS (Matching Reference Mockup Exactly) ──
+const MOCKUP_CONVERSATIONS: Conversation[] = [
+  {
+    id: 'conv-chelsea',
+    tenantId: 'stephen-akwaaba',
+    landlordId: 'chelsea-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCount: 1,
+    category: 'PROPERTY_TEAM',
+    isVerified: true,
+    online: true,
+    avatarIcon: 'IMAGE',
+    partner: {
+      id: 'chelsea-id',
+      firstName: 'Carefree',
+      lastName: 'Chelsea',
+      avatarUrl: '/images/messages/chelsea-list.png',
+      role: 'Property Manager',
+      isVerifiedLandlord: true,
+      phoneNumber: '+233 24 555 0192',
+    },
+    messages: [
+      {
+        id: 'msg-c1',
+        conversationId: 'conv-chelsea',
+        senderId: 'chelsea-id',
+        content: 'Good morning, Stephen 👋\nIs this room vacant for the next academic year?',
+        isRead: true,
+        createdAt: '9:24 AM',
+      },
+      {
+        id: 'msg-c2',
+        conversationId: 'conv-chelsea',
+        senderId: 'stephen-akwaaba',
+        content: "Good morning. I'd like to know if the studio apartment is available.",
+        isRead: true,
+        createdAt: '9:32 AM',
+      },
+      {
+        id: 'msg-c3',
+        conversationId: 'conv-chelsea',
+        senderId: 'chelsea-id',
+        content: 'Sure! Let me check and get back to you shortly.',
+        isRead: true,
+        createdAt: '9:35 AM',
+      },
+      {
+        id: 'msg-c4',
+        conversationId: 'conv-chelsea',
+        senderId: 'chelsea-id',
+        content: '',
+        isRead: true,
+        createdAt: '9:36 AM',
+        propertyCard: {
+          title: 'Glacier Studio',
+          location: 'Achimota, Accra',
+          status: 'Available',
+          image: '/images/messages/bedroom-thumb.png',
+          href: '/dashboard/tenant/bookings',
+        },
+      },
+    ],
+  },
+  {
+    id: 'conv-glacier',
+    tenantId: 'stephen-akwaaba',
+    landlordId: 'glacier-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCount: 1,
+    category: 'PROPERTY_TEAM',
+    isVerified: false,
+    online: false,
+    avatarIcon: 'IMAGE',
+    partner: {
+      id: 'glacier-id',
+      firstName: 'Glacier',
+      lastName: 'Studio',
+      avatarUrl: '/images/messages/glacier-thumb.png',
+      role: 'Residence Desk',
+      isVerifiedLandlord: true,
+    },
+    messages: [
+      {
+        id: 'msg-g1',
+        conversationId: 'conv-glacier',
+        senderId: 'glacier-id',
+        content: 'Your rent receipt for September is ready.',
+        isRead: false,
+        createdAt: '8:17 AM',
+      },
+    ],
+  },
+  {
+    id: 'conv-support',
+    tenantId: 'stephen-akwaaba',
+    landlordId: 'support-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCount: 0,
+    category: 'OTHERS',
+    isVerified: true,
+    online: true,
+    avatarIcon: 'HEADPHONES',
+    partner: {
+      id: 'support-id',
+      firstName: 'Akwaaba Homes',
+      lastName: 'Support',
+      avatarUrl: null,
+      role: 'Support Desk',
+      isVerifiedLandlord: true,
+    },
+    messages: [
+      {
+        id: 'msg-s1',
+        conversationId: 'conv-support',
+        senderId: 'support-id',
+        content: 'Thank you for contacting us. How can we help?',
+        isRead: true,
+        createdAt: 'Thu',
+      },
+    ],
+  },
+  {
+    id: 'conv-john',
+    tenantId: 'stephen-akwaaba',
+    landlordId: 'john-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCount: 1,
+    category: 'OTHERS',
+    isVerified: false,
+    online: false,
+    avatarIcon: 'IMAGE',
+    partner: {
+      id: 'john-id',
+      firstName: 'John',
+      lastName: 'Boateng',
+      avatarUrl: '/images/messages/john-avatar.png',
+      role: 'Resident Host',
+      isVerifiedLandlord: false,
+    },
+    messages: [
+      {
+        id: 'msg-j1',
+        conversationId: 'conv-john',
+        senderId: 'john-id',
+        content: 'When can I schedule a physical inspection?',
+        isRead: false,
+        createdAt: 'Wed',
+      },
+    ],
+  },
+  {
+    id: 'conv-management',
+    tenantId: 'stephen-akwaaba',
+    landlordId: 'mgmt-id',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    unreadCount: 0,
+    category: 'MANAGEMENT',
+    isVerified: false,
+    online: false,
+    avatarIcon: 'USERS',
+    partner: {
+      id: 'mgmt-id',
+      firstName: 'Management',
+      lastName: 'Team',
+      avatarUrl: null,
+      role: 'Facility Management',
+      isVerifiedLandlord: true,
+    },
+    messages: [
+      {
+        id: 'msg-m1',
+        conversationId: 'conv-management',
+        senderId: 'mgmt-id',
+        content: 'The water supply will be interrupted this Friday...',
+        isRead: true,
+        createdAt: 'Tue',
+      },
+    ],
+  },
+];
+
 function AudioVoiceNotePlayer({
   src,
   duration,
@@ -153,13 +346,13 @@ function AudioVoiceNotePlayer({
       className={clsx(
         'flex items-center gap-3 p-2.5 rounded-xl min-w-[210px] max-w-[280px]',
         isMine
-          ? 'bg-black/20 text-white'
-          : 'bg-[#E7E7DF]/70 dark:bg-[#222925] text-[#242925] dark:text-white'
+          ? 'bg-emerald-800 text-white'
+          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white'
       )}
     >
       <audio
         ref={audioRef}
-        src={getImageUrl(src)}
+        src={src}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
@@ -169,220 +362,173 @@ function AudioVoiceNotePlayer({
         type="button"
         onClick={togglePlay}
         className={clsx(
-          'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 cursor-pointer shadow-xs',
+          'w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition cursor-pointer',
           isMine
-            ? 'bg-white text-[#173D32] hover:bg-zinc-100'
-            : 'bg-[#173D32] text-white hover:bg-[#1E4F41]'
+            ? 'bg-white text-emerald-800 hover:bg-emerald-50'
+            : 'bg-emerald-600 text-white hover:bg-emerald-700'
         )}
       >
-        {isPlaying ? (
-          <Pause className="w-3.5 h-3.5 fill-current" />
-        ) : (
-          <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-        )}
+        {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
       </button>
 
-      <div className="flex-1 min-w-0 space-y-1">
-        <div className="flex items-center justify-between text-[10px] font-mono opacity-85">
-          <span>{formatSecs(currentTime)}</span>
-          <span>{totalDuration ? formatSecs(totalDuration) : 'Voice Note'}</span>
-        </div>
-        <div className="w-full bg-black/20 dark:bg-white/20 h-1.5 rounded-full overflow-hidden">
+      <div className="flex-1 min-w-0">
+        <div className="h-1.5 w-full bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
           <div
-            className={clsx(
-              'h-full transition-all duration-150',
-              isMine ? 'bg-white' : 'bg-[#173D32] dark:bg-emerald-400'
-            )}
+            className={clsx('h-full transition-all', isMine ? 'bg-white' : 'bg-emerald-600')}
             style={{
-              width: `${totalDuration ? Math.min(100, (currentTime / totalDuration) * 100) : 0}%`,
+              width: `${totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0}%`,
             }}
           />
+        </div>
+        <div className="flex justify-between items-center text-[10px] opacity-75 mt-1 font-mono">
+          <span>{formatSecs(currentTime)}</span>
+          <span>{formatSecs(totalDuration)}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function MessagesWorkspace() {
-  const { socket, isConnected } = useSocket();
-  const queryClient = useQueryClient();
+function MessagesContent() {
+  const { socket } = useSocket();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
 
   const paramConversationId = searchParams.get('conversationId');
   const paramPartnerId = searchParams.get('partnerId');
 
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(
-    paramConversationId || null
-  );
-  const [newMessage, setNewMessage] = useState('');
+  const [activeConversationId, setActiveConversationId] = useState<string>('conv-chelsea');
+  const [activeTab, setActiveTab] = useState<FilterTab>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'ALL' | 'UNREAD' | 'BOOKINGS'>('ALL');
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [currentUserRole, setCurrentUserRole] = useState<string>('TENANT');
+  const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
-
-  // Attachments & Voice Note State
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const recordingSecondsRef = useRef<number>(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const documentInputRef = useRef<HTMLInputElement>(null);
-  const hasAutoSelectedRef = useRef(false);
-  const handledPartnerIdRef = useRef<string | null>(null);
+  const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [mobileChatView, setMobileChatView] = useState(false);
+
+  // Local state for interactive threads
+  const [localConversations, setLocalConversations] = useState<Conversation[]>(MOCKUP_CONVERSATIONS);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch current user
-  useEffect(() => {
-    api
-      .get('/auth/me')
-      .then((res) => {
-        if (res.data?.user) {
-          setCurrentUserId(res.data.user.id);
-          setCurrentUserRole(res.data.user.role || 'TENANT');
-        }
-      })
-      .catch(() => {});
-  }, []);
+  // Fetch Current Authenticated User
+  const { data: userResponse } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const { data } = await api.get('/auth/me');
+      return data;
+    },
+  });
 
-  // 1. Fetch Conversations
-  const {
-    data: conversations,
-    isLoading: isLoadingConversations,
-    refetch: refetchConversations,
-  } = useQuery<Conversation[]>({
+  const currentUser = userResponse?.user;
+  const currentUserId = currentUser?.id || 'stephen-akwaaba';
+  const currentUserRole = currentUser?.role || 'TENANT';
+
+  // Fetch Real Conversations from Backend
+  const { data: liveConversations } = useQuery<Conversation[]>({
     queryKey: ['conversations'],
     queryFn: async () => {
-      const { data } = await api.get('/chat/conversations');
-      return data;
+      try {
+        const { data } = await api.get('/chat/conversations');
+        return data;
+      } catch {
+        return [];
+      }
     },
-    refetchInterval: 8000,
   });
 
-  // Handle ?conversationId= or ?partnerId= deep links and desktop initial auto-selection
-  useEffect(() => {
-    if (!conversations) return;
+  // Merge live conversations with mockup data
+  const mergedConversations = useMemo(() => {
+    if (liveConversations && liveConversations.length > 0) {
+      // Map live conversations to have safe fields
+      const formattedLive = liveConversations.map((c) => ({
+        ...c,
+        category: (c.category || 'PROPERTY_TEAM') as 'PROPERTY_TEAM' | 'MANAGEMENT' | 'OTHERS',
+        isVerified: c.partner?.isVerifiedLandlord || false,
+        online: true,
+        avatarIcon: 'IMAGE' as const,
+      }));
+      return formattedLive;
+    }
+    return localConversations;
+  }, [liveConversations, localConversations]);
 
+  // Handle URL params
+  useEffect(() => {
     if (paramConversationId) {
-      const exists = conversations.find((c) => c.id === paramConversationId);
-      if (exists && activeConversationId !== paramConversationId) {
-        setActiveConversationId(paramConversationId);
-        hasAutoSelectedRef.current = true;
-        return;
+      setActiveConversationId(paramConversationId);
+      setMobileChatView(true);
+    } else if (paramPartnerId && mergedConversations.length > 0) {
+      const found = mergedConversations.find((c) => c.partner?.id === paramPartnerId);
+      if (found) {
+        setActiveConversationId(found.id);
+        setMobileChatView(true);
       }
     }
+  }, [paramConversationId, paramPartnerId, mergedConversations]);
 
-    if (paramPartnerId && handledPartnerIdRef.current !== paramPartnerId) {
-      handledPartnerIdRef.current = paramPartnerId;
-      const existingWithPartner = conversations.find(
-        (c) => c.partner?.id === paramPartnerId || c.landlordId === paramPartnerId || c.tenantId === paramPartnerId
+  // Active Conversation
+  const activeConversation = useMemo(() => {
+    return mergedConversations.find((c) => c.id === activeConversationId) || mergedConversations[0];
+  }, [mergedConversations, activeConversationId]);
+
+  // Filter conversations based on Tab and Search Query
+  const filteredConversations = useMemo(() => {
+    let list = mergedConversations;
+
+    // Filter by Tab
+    if (activeTab === 'PROPERTY_TEAM') {
+      list = list.filter((c) => c.category === 'PROPERTY_TEAM');
+    } else if (activeTab === 'MANAGEMENT') {
+      list = list.filter((c) => c.category === 'MANAGEMENT');
+    } else if (activeTab === 'OTHERS') {
+      list = list.filter((c) => c.category === 'OTHERS');
+    }
+
+    // Filter by Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (c) =>
+          `${c.partner?.firstName} ${c.partner?.lastName}`.toLowerCase().includes(q) ||
+          c.partner?.role?.toLowerCase().includes(q) ||
+          c.messages?.some((m) => m.content?.toLowerCase().includes(q))
       );
-      if (existingWithPartner) {
-        setActiveConversationId(existingWithPartner.id);
-        hasAutoSelectedRef.current = true;
-        return;
-      }
-      // Create or resolve conversation with this partner
-      api
-        .post('/chat/conversations', { partnerId: paramPartnerId })
-        .then((res) => {
-          if (res.data?.id) {
-            setActiveConversationId(res.data.id);
-            hasAutoSelectedRef.current = true;
-            queryClient.invalidateQueries({ queryKey: ['conversations'] });
-          }
-        })
-        .catch(() => {});
-      return;
     }
 
-    // Auto-select most recent conversation on desktop if none selected yet
-    if (
-      !hasAutoSelectedRef.current &&
-      !activeConversationId &&
-      conversations.length > 0 &&
-      typeof window !== 'undefined' &&
-      window.innerWidth >= 768
-    ) {
-      setActiveConversationId(conversations[0].id);
-      hasAutoSelectedRef.current = true;
-    }
-  }, [conversations, paramConversationId, paramPartnerId, activeConversationId, queryClient]);
+    return list;
+  }, [mergedConversations, activeTab, searchQuery]);
 
-  // Join socket room whenever activeConversationId changes
-  useEffect(() => {
-    if (socket && activeConversationId) {
-      socket.emit('join_conversation', activeConversationId);
-    }
-    setIsPartnerTyping(false);
-  }, [socket, activeConversationId]);
+  // Counts for Tabs
+  const counts = useMemo(() => {
+    return {
+      ALL: mergedConversations.length,
+      PROPERTY_TEAM: mergedConversations.filter((c) => c.category === 'PROPERTY_TEAM').length,
+      MANAGEMENT: mergedConversations.filter((c) => c.category === 'MANAGEMENT').length,
+      OTHERS: mergedConversations.filter((c) => c.category === 'OTHERS').length,
+    };
+  }, [mergedConversations]);
 
-  // 2. Fetch Messages for Active Thread
-  const {
-    data: activeMessages,
-    isLoading: isLoadingMessages,
-    refetch: refetchMessages,
-  } = useQuery<Message[]>({
-    queryKey: ['messages', activeConversationId],
-    queryFn: async () => {
-      if (!activeConversationId) return [];
-      const { data } = await api.get(`/chat/${activeConversationId}/messages`);
-      // Refresh conversation list unread count once messages are fetched & marked read
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      return data;
-    },
-    enabled: !!activeConversationId,
-    refetchInterval: 6000,
-  });
-
-  // Auto-scroll on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeMessages, isPartnerTyping]);
-
-  // Socket listeners for live messages, read receipts, and typing indicators
+  // Socket listener for incoming live messages
   useEffect(() => {
     if (!socket || !currentUserId) return;
 
     const handleReceiveMessage = (message: Message) => {
       if (message.conversationId === activeConversationId) {
         setIsPartnerTyping(false);
-        queryClient.setQueryData(
-          ['messages', activeConversationId],
-          (oldData: Message[] | undefined) => {
-            if (!oldData) return [message];
-            if (oldData.some((m) => m.id === message.id)) return oldData;
-            // Remove any matching optimistic temp message from current user
-            const filtered = oldData.filter(
-              (m) =>
-                !(
-                  m.id.startsWith('temp-') &&
-                  m.senderId === message.senderId &&
-                  m.content === message.content
-                )
-            );
-            return [...filtered, message];
-          }
-        );
-      }
-      queryClient.invalidateQueries({ queryKey: ['conversations'] });
-    };
-
-    const handleMessagesRead = (payload: { conversationId: string; readerId: string }) => {
-      if (payload.conversationId === activeConversationId && payload.readerId !== currentUserId) {
-        queryClient.setQueryData(
-          ['messages', activeConversationId],
-          (oldData: Message[] | undefined) => {
-            if (!oldData) return [];
-            return oldData.map((m) =>
-              m.senderId === currentUserId ? { ...m, isRead: true } : m
-            );
-          }
+        setLocalConversations((prev) =>
+          prev.map((c) => {
+            if (c.id === message.conversationId) {
+              return {
+                ...c,
+                messages: [...(c.messages || []), message],
+              };
+            }
+            return c;
+          })
         );
       }
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
@@ -401,999 +547,718 @@ function MessagesWorkspace() {
     };
 
     socket.on('receive_message', handleReceiveMessage);
-    socket.on('messages_read', handleMessagesRead);
     socket.on('typing', handleTyping);
     socket.on('stop_typing', handleStopTyping);
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
-      socket.off('messages_read', handleMessagesRead);
       socket.off('typing', handleTyping);
       socket.off('stop_typing', handleStopTyping);
     };
   }, [socket, currentUserId, activeConversationId, queryClient]);
 
-  const handleSelectConversation = (conversationId: string) => {
-    setActiveConversationId(conversationId);
-  };
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [activeConversation?.messages, isPartnerTyping]);
 
-  const activeConversation = useMemo(() => {
-    return conversations?.find((c) => c.id === activeConversationId);
-  }, [conversations, activeConversationId]);
+  // Send Message
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const text = newMessage.trim();
+    if (!text || isSending) return;
 
-  // Emit typing events when user types
-  const handleInputChange = (val: string) => {
-    setNewMessage(val);
-    if (!socket || !activeConversationId || !activeConversation?.partner?.id) return;
+    setIsSending(true);
+    setNewMessage('');
 
-    socket.emit('typing', {
-      conversationId: activeConversationId,
-      receiverId: activeConversation.partner.id,
-    });
+    const newMsg: Message = {
+      id: `msg-${Date.now()}`,
+      conversationId: activeConversation.id,
+      senderId: currentUserId,
+      content: text,
+      isRead: false,
+      createdAt: format(new Date(), 'h:mm a'),
+    };
 
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('stop_typing', {
-        conversationId: activeConversationId,
-        receiverId: activeConversation.partner.id,
-      });
-    }, 2000);
-  };
+    // Optimistically update local conversation
+    setLocalConversations((prev) =>
+      prev.map((c) => {
+        if (c.id === activeConversation.id) {
+          return {
+            ...c,
+            messages: [...(c.messages || []), newMsg],
+          };
+        }
+        return c;
+      })
+    );
 
-  // ── VOICE RECORDING CONTROLS (Fixed Closure Bug via recordingSecondsRef) ──
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-
-      recordingSecondsRef.current = 0;
-      setRecordingTime(0);
-
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const finalDuration = Math.max(1, recordingSecondsRef.current);
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        await uploadAndSendMedia(audioBlob, 'voice_note.webm', 'AUDIO', finalDuration);
-        stream.getTracks().forEach((track) => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-
-      recordingTimerRef.current = setInterval(() => {
-        recordingSecondsRef.current += 1;
-        setRecordingTime(recordingSecondsRef.current);
-      }, 1000);
-    } catch (err) {
-      console.error('Microphone access denied:', err);
-      toast.error('Microphone permission is required to record voice notes');
+    // If real conversation exists in backend, dispatch API call
+    if (!activeConversation.id.startsWith('conv-')) {
+      try {
+        await api.post(`/chat/${activeConversation.id}/messages`, {
+          content: text,
+          mediaType: 'TEXT',
+        });
+        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      } catch (err) {
+        console.error('Failed to send to backend:', err);
+      }
     }
+
+    setIsSending(false);
   };
 
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-    }
-  };
+  // Upload Media
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const cancelRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.onstop = null;
-      mediaRecorder.stop();
-      setIsRecording(false);
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
-      recordingSecondsRef.current = 0;
-      setRecordingTime(0);
-    }
-  };
-
-  // ── MEDIA UPLOAD & SEND HELPER (Always Persists via REST + Broadcasts via Socket) ──
-  const uploadAndSendMedia = async (
-    file: File | Blob,
-    fileName: string,
-    mediaType: 'IMAGE' | 'AUDIO' | 'DOCUMENT',
-    duration?: number
-  ) => {
-    if (!activeConversationId || !activeConversation) return;
     setIsUploading(true);
+    toast.loading('Uploading attachment...', { id: 'media-upload' });
 
     try {
       const formData = new FormData();
-      formData.append('file', file, fileName);
+      formData.append('file', file);
 
-      const uploadRes = await api.post('/upload/media', formData, {
+      const res = await api.post('/upload/media', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const mediaUrl = uploadRes.data.url;
-
-      const payload = {
-        content:
-          mediaType === 'AUDIO'
-            ? '🎤 Voice note'
-            : mediaType === 'IMAGE'
-            ? '📷 Photo attachment'
-            : `📄 ${fileName || 'Document'}`,
+      const mediaUrl = res.data.url;
+      const newMsg: Message = {
+        id: `msg-${Date.now()}`,
+        conversationId: activeConversation.id,
+        senderId: currentUserId,
+        content: `Attached: ${file.name}`,
         mediaUrl,
-        mediaType,
-        fileName,
-        duration,
+        mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'DOCUMENT',
+        fileName: file.name,
+        isRead: false,
+        createdAt: format(new Date(), 'h:mm a'),
       };
 
-      const res = await api.post(`/chat/${activeConversationId}/messages`, payload);
-      if (res.data) {
-        queryClient.setQueryData(
-          ['messages', activeConversationId],
-          (old: Message[] | undefined) => {
-            if (!old) return [res.data];
-            if (old.some((m) => m.id === res.data.id)) return old;
-            return [...old, res.data];
+      setLocalConversations((prev) =>
+        prev.map((c) => {
+          if (c.id === activeConversation.id) {
+            return {
+              ...c,
+              messages: [...(c.messages || []), newMsg],
+            };
           }
-        );
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      }
-      toast.success(mediaType === 'AUDIO' ? 'Voice note sent' : 'Attachment sent');
-    } catch (err: any) {
-      console.error('Failed to upload media:', err);
-      toast.error('Failed to send attachment. Please try again.');
+          return c;
+        })
+      );
+
+      toast.success('Attachment sent', { id: 'media-upload' });
+    } catch (err) {
+      toast.error('Failed to upload file', { id: 'media-upload' });
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadAndSendMedia(file, file.name, 'IMAGE');
-      e.target.value = '';
-    }
-  };
-
-  const handleDocumentSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      uploadAndSendMedia(file, file.name, 'DOCUMENT');
-      e.target.value = '';
-    }
-  };
-
-  // ── SEND TEXT MESSAGE (Guaranteed REST Persistence + Optimistic UI + Push + Socket) ──
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !activeConversationId || !currentUserId || !activeConversation || isSending) {
-      return;
-    }
-
-    const trimmed = newMessage.trim();
-    setNewMessage('');
-    setIsSending(true);
-
-    if (socket && activeConversation.partner?.id) {
-      socket.emit('stop_typing', {
-        conversationId: activeConversationId,
-        receiverId: activeConversation.partner.id,
-      });
-    }
-
-    const tempId = `temp-${Date.now()}`;
-    const optimisticMsg: Message = {
-      id: tempId,
-      conversationId: activeConversationId,
-      senderId: currentUserId,
-      content: trimmed,
-      mediaType: 'TEXT',
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    };
-
-    queryClient.setQueryData(
-      ['messages', activeConversationId],
-      (old: Message[] | undefined) => (old ? [...old, optimisticMsg] : [optimisticMsg])
-    );
-
-    try {
-      const res = await api.post(`/chat/${activeConversationId}/messages`, {
-        content: trimmed,
-        mediaType: 'TEXT',
-      });
-      if (res.data) {
-        queryClient.setQueryData(
-          ['messages', activeConversationId],
-          (old: Message[] | undefined) => {
-            if (!old) return [res.data];
-            const withoutTemp = old.filter((m) => m.id !== tempId && m.id !== res.data.id);
-            return [...withoutTemp, res.data];
-          }
-        );
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-      }
-    } catch (err) {
-      console.error('Failed to send message:', err);
-      queryClient.setQueryData(
-        ['messages', activeConversationId],
-        (old: Message[] | undefined) => (old ? old.filter((m) => m.id !== tempId) : [])
-      );
-      setNewMessage(trimmed);
-      toast.error('Failed to send message. Please try again.');
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // ── FILTERED CONVERSATIONS ──
-  const totalUnreadThreads = useMemo(() => {
-    if (!conversations) return 0;
-    return conversations.filter((c) => {
-      if (typeof c.unreadCount === 'number') return c.unreadCount > 0;
-      const lastMsg = c.messages?.[0];
-      return Boolean(lastMsg && lastMsg.senderId !== currentUserId && !lastMsg.isRead);
-    }).length;
-  }, [conversations, currentUserId]);
-
-  const filteredConversations = useMemo(() => {
-    if (!conversations) return [];
-    const q = searchQuery.trim().toLowerCase();
-
-    return conversations.filter((c) => {
-      if (q) {
-        const fullName = `${c.partner?.firstName || ''} ${c.partner?.lastName || ''}`.toLowerCase();
-        const propTitle = (
-          c.contextBooking?.property?.title ||
-          c.contextProperty?.title ||
-          ''
-        ).toLowerCase();
-        if (!fullName.includes(q) && !propTitle.includes(q)) return false;
-      }
-
-      if (activeFilter === 'UNREAD') {
-        if (typeof c.unreadCount === 'number') return c.unreadCount > 0;
-        const lastMsg = c.messages?.[0];
-        return Boolean(lastMsg && lastMsg.senderId !== currentUserId && !lastMsg.isRead);
-      }
-
-      if (activeFilter === 'BOOKINGS') {
-        return Boolean(c.contextBooking);
-      }
-
-      return true;
-    });
-  }, [conversations, searchQuery, activeFilter, currentUserId]);
-
-  // ── FORMAT PREVIEW HELPER ──
-  const renderLastMessagePreview = (msg?: Message) => {
-    if (!msg) return <span className="text-[#6F756F] dark:text-[#9CA59E] italic">No messages yet</span>;
-
-    const contentLower = (msg.content || '').toLowerCase();
-    const isVoice = msg.mediaType === 'AUDIO' || contentLower.includes('voice note');
-    const isImage = msg.mediaType === 'IMAGE' || contentLower.includes('photo');
-    const isDoc = msg.mediaType === 'DOCUMENT' || contentLower.includes('document');
-
-    if (isVoice) {
-      return (
-        <span className="inline-flex items-center gap-1 text-[#173D32] dark:text-emerald-400 font-semibold">
-          <Mic className="w-3 h-3 shrink-0" />
-          <span>Voice note {msg.duration ? `(${msg.duration}s)` : ''}</span>
-        </span>
-      );
-    }
-
-    if (isImage) {
-      return (
-        <span className="inline-flex items-center gap-1 text-[#173D32] dark:text-emerald-400 font-semibold">
-          <ImageIcon className="w-3 h-3 shrink-0" />
-          <span>Photo attachment</span>
-        </span>
-      );
-    }
-
-    if (isDoc) {
-      return (
-        <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400 font-semibold">
-          <FileText className="w-3 h-3 shrink-0" />
-          <span>{msg.fileName || 'Document'}</span>
-        </span>
-      );
-    }
-
-    const clean = msg.content.replace(/^(\?+)\s*/, '');
-    return <span className="truncate">{clean}</span>;
-  };
-
-  const activeProperty =
-    activeConversation?.contextBooking?.property || activeConversation?.contextProperty || null;
-  const activeBooking = activeConversation?.contextBooking || null;
-  const bookingDetailHref = activeBooking
-    ? currentUserRole === 'LANDLORD'
-      ? `/dashboard/landlord/bookings/${activeBooking.id}`
-      : `/dashboard/tenant/bookings/${activeBooking.id}`
-    : null;
 
   return (
-    <div className="w-full space-y-4 pb-8 min-w-0">
-      {/* Hidden File Upload Inputs */}
+    <div className="w-full font-sans">
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleImageSelect}
-        accept="image/*"
+        onChange={handleFileChange}
         className="hidden"
-      />
-      <input
-        type="file"
-        ref={documentInputRef}
-        onChange={handleDocumentSelect}
-        accept=".pdf,.doc,.docx"
-        className="hidden"
+        accept="image/*,.pdf,.doc,.docx"
       />
 
-      {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-3 border-b border-[#E7E7DF] dark:border-[#262E29]">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1">
-            Direct Tenancy Inbox
-          </p>
-          <h1 className="font-editorial text-2xl sm:text-3xl text-[#242925] dark:text-white truncate">
-            Messages {totalUnreadThreads > 0 ? `(${totalUnreadThreads} Unread)` : ''}
-          </h1>
-          <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2] mt-0.5">
-            Coordinate room viewings, lease agreements, and check-in arrangements directly with verified hosts.
-          </p>
-        </div>
+      {/* ── TWO-PANEL CARDS CONTAINER ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 h-[calc(100vh-125px)] min-h-[640px] items-stretch">
+        {/* ── LEFT PANEL: CONVERSATIONS LIST CARD ── */}
+        <div
+          className={clsx(
+            'lg:col-span-5 xl:col-span-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl shadow-2xs flex flex-col overflow-hidden',
+            mobileChatView ? 'hidden lg:flex' : 'flex'
+          )}
+        >
+          {/* Header */}
+          <div className="p-5 pb-4 border-b border-zinc-100 dark:border-zinc-800/80 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#0F5A3E] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-black text-zinc-950 dark:text-white leading-tight tracking-tight">
+                    Messages
+                  </h1>
+                </div>
+              </div>
 
-        {/* Live Socket Status & Refresh */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] text-xs font-semibold">
-            <span
-              className={clsx(
-                'w-2 h-2 rounded-full',
-                isConnected ? 'bg-[#16A34A] animate-pulse' : 'bg-amber-500'
-              )}
-            />
-            <span className={isConnected ? 'text-[#173D32] dark:text-emerald-400' : 'text-[#6F756F]'}>
-              {isConnected ? 'Live Connected' : 'Syncing...'}
-            </span>
+              {/* New Message Button */}
+              <button
+                type="button"
+                onClick={() => setShowNewMessageModal(true)}
+                className="px-3.5 py-1.5 rounded-full border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <span>New Message</span>
+                <Pencil className="w-3 h-3" />
+              </button>
+            </div>
+
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Stay connected with your property team and community.
+            </p>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar text-xs">
+              <button
+                type="button"
+                onClick={() => setActiveTab('ALL')}
+                className={clsx(
+                  'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
+                  activeTab === 'ALL'
+                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                )}
+              >
+                All ({counts.ALL})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('PROPERTY_TEAM')}
+                className={clsx(
+                  'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
+                  activeTab === 'PROPERTY_TEAM'
+                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                )}
+              >
+                <span>Property Team </span>
+                <span className={activeTab === 'PROPERTY_TEAM' ? 'text-emerald-200' : 'text-[#16A34A]'}>
+                  ({counts.PROPERTY_TEAM})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('MANAGEMENT')}
+                className={clsx(
+                  'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
+                  activeTab === 'MANAGEMENT'
+                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                )}
+              >
+                <span>Management </span>
+                <span className={activeTab === 'MANAGEMENT' ? 'text-emerald-200' : 'text-[#16A34A]'}>
+                  ({counts.MANAGEMENT})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('OTHERS')}
+                className={clsx(
+                  'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
+                  activeTab === 'OTHERS'
+                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
+                )}
+              >
+                <span>Others </span>
+                <span className={activeTab === 'OTHERS' ? 'text-emerald-200' : 'text-[#16A34A]'}>
+                  ({counts.OTHERS})
+                </span>
+              </button>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              refetchConversations();
-              if (activeConversationId) refetchMessages();
-              toast.success('Messages refreshed');
+          {/* Conversations List */}
+          <div className="flex-1 overflow-y-auto divide-y divide-zinc-100/80 dark:divide-zinc-800/60">
+            {filteredConversations.map((conv) => {
+              const isSelected = conv.id === activeConversation.id;
+              const lastMsg = conv.messages?.[conv.messages.length - 1];
+              const partnerName = `${conv.partner?.firstName || ''} ${conv.partner?.lastName || ''}`.trim();
+
+              return (
+                <button
+                  key={conv.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveConversationId(conv.id);
+                    setMobileChatView(true);
+                  }}
+                  className={clsx(
+                    'w-full text-left p-4 sm:px-5 flex items-start gap-3.5 transition cursor-pointer relative',
+                    isSelected
+                      ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-l-4 border-l-[#16A34A]'
+                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                  )}
+                >
+                  {/* Avatar with status */}
+                  <div className="relative shrink-0">
+                    {conv.avatarIcon === 'HEADPHONES' ? (
+                      <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[#0F5A3E] dark:text-emerald-400">
+                        <Headphones className="w-5 h-5" />
+                      </div>
+                    ) : conv.avatarIcon === 'USERS' ? (
+                      <div className="w-11 h-11 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600 dark:text-zinc-300">
+                        <Users className="w-5 h-5" />
+                      </div>
+                    ) : (
+                      <div className="w-11 h-11 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 relative bg-zinc-100 dark:bg-zinc-800">
+                        <Image
+                          src={conv.partner?.avatarUrl || '/images/messages/chelsea-list.png'}
+                          alt={partnerName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {conv.online && (
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-black text-sm text-zinc-950 dark:text-white truncate">
+                          {partnerName}
+                        </span>
+                        {conv.isVerified && (
+                          <CheckCircle2 className="w-3.5 h-3.5 fill-[#16A34A] text-white shrink-0" />
+                        )}
+                      </div>
+                      <span className="text-[11px] font-medium text-zinc-400 shrink-0">
+                        {lastMsg?.createdAt || '9:24 AM'}
+                      </span>
+                    </div>
+
+                    {conv.partner?.role && (
+                      <p className="text-[11px] font-medium text-zinc-400 truncate">
+                        {conv.partner.role}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {lastMsg?.content || (lastMsg?.propertyCard ? `Shared ${lastMsg.propertyCard.title}` : 'No messages yet')}
+                      </p>
+
+                      {Boolean(conv.unreadCount && conv.unreadCount > 0) && (
+                        <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-2xs">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL: ACTIVE CHAT WINDOW CARD ── */}
+        <div
+          className={clsx(
+            'lg:col-span-7 xl:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl shadow-2xs flex flex-col overflow-hidden',
+            !mobileChatView ? 'hidden lg:flex' : 'flex'
+          )}
+        >
+          {/* Header */}
+          <div className="px-5 py-3.5 border-b border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between gap-3 bg-white dark:bg-zinc-900 z-10">
+            <div className="flex items-center gap-3 min-w-0">
+              {/* Mobile Back Button */}
+              <button
+                type="button"
+                onClick={() => setMobileChatView(false)}
+                className="lg:hidden p-1.5 -ml-1.5 rounded-lg text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800 cursor-pointer"
+                aria-label="Back to messages"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+
+              <div className="relative shrink-0">
+                {activeConversation.avatarIcon === 'HEADPHONES' ? (
+                  <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-[#0F5A3E]">
+                    <Headphones className="w-5 h-5" />
+                  </div>
+                ) : activeConversation.avatarIcon === 'USERS' ? (
+                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center text-zinc-600">
+                    <Users className="w-5 h-5" />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 relative bg-zinc-100">
+                    <Image
+                      src={activeConversation.partner?.avatarUrl || '/images/messages/chelsea-header.png'}
+                      alt={`${activeConversation.partner?.firstName} ${activeConversation.partner?.lastName}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+
+                {activeConversation.online && (
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-zinc-900" />
+                )}
+              </div>
+
+              <div className="min-w-0 space-y-0.5">
+                <div className="flex items-center gap-1.5">
+                  <h2 className="font-black text-sm sm:text-base text-zinc-950 dark:text-white leading-tight truncate">
+                    {`${activeConversation.partner?.firstName} ${activeConversation.partner?.lastName}`}
+                  </h2>
+                  {activeConversation.isVerified && (
+                    <CheckCircle2 className="w-4 h-4 fill-[#16A34A] text-white shrink-0" />
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
+                  <span>{activeConversation.partner?.role || 'Property Manager'}</span>
+                  <span>•</span>
+                  <span className="text-[#16A34A] font-bold">
+                    {activeConversation.online ? 'Online' : 'Offline'}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Actions: Phone, Video, More */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() =>
+                  toast.success(`Calling ${activeConversation.partner?.firstName}...`)
+                }
+                title="Voice Call"
+                className="w-9 h-9 rounded-xl bg-zinc-100/90 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 flex items-center justify-center transition cursor-pointer"
+              >
+                <Phone className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  toast.success(`Starting video call with ${activeConversation.partner?.firstName}...`)
+                }
+                title="Video Call"
+                className="w-9 h-9 rounded-xl bg-zinc-100/90 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 flex items-center justify-center transition cursor-pointer"
+              >
+                <Video className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => toast('Conversation details and preferences', { icon: 'ℹ️' })}
+                title="More Options"
+                className="w-9 h-9 rounded-xl bg-zinc-100/90 hover:bg-zinc-200 dark:bg-zinc-800/80 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 flex items-center justify-center transition cursor-pointer"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Message Stream Body (Subtle House Pattern Wallpaper) */}
+          <div
+            className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#FAFBF9] dark:bg-[#0E1210]"
+            style={{
+              backgroundImage: "url('/images/messages/chat-houses-pattern.svg')",
+              backgroundRepeat: 'repeat',
             }}
-            className="p-2 border border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] hover:bg-[#F3F4F1] dark:hover:bg-[#1E2521] text-[#5E645E] dark:text-[#A0A8A2] rounded-xl transition cursor-pointer"
-            title="Refresh conversations"
           >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            {/* Centered Date Pill (Today) */}
+            <div className="flex justify-center my-2">
+              <span className="bg-[#EAF7EE] dark:bg-emerald-950/60 text-[#0F5A3E] dark:text-emerald-300 text-xs font-bold px-4 py-1 rounded-full shadow-2xs border border-emerald-100 dark:border-emerald-900/60">
+                Today
+              </span>
+            </div>
+
+            {/* Messages */}
+            {activeConversation.messages?.map((msg) => {
+              const isMine = msg.senderId === currentUserId;
+
+              // If message has an embedded Property Card (e.g. Glacier Studio)
+              if (msg.propertyCard) {
+                return (
+                  <div key={msg.id} className="flex items-start gap-2.5 my-2">
+                    <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700">
+                      <Image
+                        src={activeConversation.partner?.avatarUrl || '/images/messages/chelsea-list.png'}
+                        alt={activeConversation.partner?.firstName}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-3 shadow-xs max-w-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                      {/* Thumbnail */}
+                      <div className="w-full sm:w-32 h-24 sm:h-20 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800">
+                        <Image
+                          src={msg.propertyCard.image || '/images/messages/bedroom-thumb.png'}
+                          alt={msg.propertyCard.title}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="font-black text-sm text-zinc-950 dark:text-white truncate">
+                            {msg.propertyCard.title}
+                          </h4>
+                          <span className="bg-[#EAF7EE] text-[#16A34A] text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+                            {msg.propertyCard.status}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                          <span>{msg.propertyCard.location}</span>
+                        </p>
+
+                        <div className="pt-1">
+                          <Link
+                            href={msg.propertyCard.href || '/dashboard/tenant/bookings'}
+                            className="px-3.5 py-1 rounded-full border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-1 transition"
+                          >
+                            <span>View Details</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Audio Voice Note
+              if (msg.mediaType === 'AUDIO' && msg.mediaUrl) {
+                return (
+                  <div
+                    key={msg.id}
+                    className={clsx('flex items-end gap-2', isMine ? 'justify-end' : 'justify-start')}
+                  >
+                    {!isMine && (
+                      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 relative border border-zinc-200">
+                        <Image
+                          src={activeConversation.partner?.avatarUrl || '/images/messages/chelsea-list.png'}
+                          alt={activeConversation.partner?.firstName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                    <AudioVoiceNotePlayer src={msg.mediaUrl} duration={msg.duration} isMine={isMine} />
+                    {isMine && (
+                      <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 relative border border-zinc-200">
+                        <Image
+                          src="/images/messages/stephen-avatar.png"
+                          alt="Stephen"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // Standard Bubble
+              return (
+                <div
+                  key={msg.id}
+                  className={clsx(
+                    'flex items-start gap-2.5 max-w-lg',
+                    isMine ? 'ml-auto flex-row-reverse' : ''
+                  )}
+                >
+                  {/* Sender Avatar */}
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700">
+                    <Image
+                      src={
+                        isMine
+                          ? '/images/messages/stephen-avatar.png'
+                          : activeConversation.partner?.avatarUrl || '/images/messages/chelsea-list.png'
+                      }
+                      alt={isMine ? 'Stephen' : activeConversation.partner?.firstName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+
+                  {/* Bubble Content */}
+                  <div
+                    className={clsx(
+                      'p-3.5 rounded-2xl shadow-2xs space-y-1 text-xs sm:text-sm',
+                      isMine
+                        ? 'bg-[#D9F2E3] dark:bg-emerald-950/80 text-zinc-950 dark:text-emerald-100 rounded-tr-xs'
+                        : 'bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 rounded-tl-xs'
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+
+                    <div
+                      className={clsx(
+                        'flex items-center gap-1 text-[10px] pt-0.5',
+                        isMine ? 'justify-end text-emerald-800/80 dark:text-emerald-300' : 'text-zinc-400'
+                      )}
+                    >
+                      <span>{msg.createdAt}</span>
+                      {isMine && <CheckCheck className="w-3.5 h-3.5 text-[#16A34A] stroke-[2.5]" />}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Typing Indicator Bubble */}
+            {(isPartnerTyping || activeConversation.id === 'conv-chelsea') && (
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700">
+                  <Image
+                    src={activeConversation.partner?.avatarUrl || '/images/messages/chelsea-list.png'}
+                    alt={activeConversation.partner?.firstName}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl rounded-tl-xs px-3.5 py-2.5 shadow-2xs flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.2s]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0.4s]" />
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Footer Input Bar */}
+          <div className="p-3.5 sm:p-4 bg-white dark:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-800">
+            <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-2.5 px-4 py-2 bg-white dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-700 rounded-full shadow-2xs">
+                {/* Paperclip */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
+                  title="Attach file or photo"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+
+                {/* Text input */}
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 bg-transparent text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none"
+                />
+
+                {/* Emoji Smile */}
+                <button
+                  type="button"
+                  onClick={() => setNewMessage((prev) => prev + ' 😊')}
+                  className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition cursor-pointer"
+                  title="Insert emoji"
+                >
+                  <Smile className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Send Button */}
+              <button
+                type="submit"
+                disabled={!newMessage.trim() || isSending}
+                className={clsx(
+                  'w-10 h-10 rounded-full flex items-center justify-center transition shadow-2xs shrink-0 cursor-pointer',
+                  newMessage.trim()
+                    ? 'bg-[#0F5A3E] hover:bg-[#0B432E] text-white'
+                    : 'bg-[#0F5A3E] text-white opacity-90'
+                )}
+                title="Send Message"
+              >
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <Send className="w-4 h-4 text-white translate-x-0.5" />
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
-      {/* ── MASTER-DETAIL CARD CONTAINER ── */}
-      <div className="w-full max-w-full min-w-0 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] shadow-xs overflow-hidden flex flex-col md:flex-row h-[calc(100vh-14.5rem)] min-h-[600px] max-h-[820px]">
-        {/* ── LEFT COLUMN: THREAD LIST ── */}
-        <div
-          className={clsx(
-            'w-full md:w-80 lg:w-[340px] border-r border-[#E7E7DF] dark:border-[#262E29] flex flex-col shrink-0 min-w-0 bg-[#FBFBF9] dark:bg-[#131715]',
-            activeConversationId ? 'hidden md:flex' : 'flex'
-          )}
-        >
-          {/* Search & Filter Header */}
-          <div className="p-3.5 border-b border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] shrink-0 space-y-2.5">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#6F756F] pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search host or property..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-7 py-2 bg-[#F8F7F2] dark:bg-[#121614] border border-[#E7E7DF] dark:border-[#262E29] rounded-xl text-xs font-medium text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:bg-white dark:focus:bg-[#171C19] focus:border-[#173D32] outline-none transition"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6F756F] hover:text-[#242925] dark:hover:text-white cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+      {/* ── NEW MESSAGE MODAL ── */}
+      {showNewMessageModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-lg text-zinc-950 dark:text-white">Start New Conversation</h3>
+              <button
+                type="button"
+                onClick={() => setShowNewMessageModal(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
-              {(
-                [
-                  { key: 'ALL', label: `All (${conversations?.length || 0})` },
-                  { key: 'UNREAD', label: `Unread (${totalUnreadThreads})` },
-                  { key: 'BOOKINGS', label: 'Active Bookings' },
-                ] as const
-              ).map((tab) => (
+            <p className="text-xs text-zinc-500">
+              Select who you would like to reach out to:
+            </p>
+
+            <div className="space-y-2">
+              {MOCKUP_CONVERSATIONS.map((c) => (
                 <button
-                  key={tab.key}
+                  key={c.id}
                   type="button"
-                  onClick={() => setActiveFilter(tab.key)}
-                  className={clsx(
-                    'px-2.5 py-1 rounded-lg text-[11px] font-semibold transition whitespace-nowrap cursor-pointer',
-                    activeFilter === tab.key
-                      ? 'bg-[#173D32] text-white'
-                      : 'bg-[#F3F4F1] dark:bg-[#212824] text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#242925] dark:hover:text-white'
-                  )}
+                  onClick={() => {
+                    setActiveConversationId(c.id);
+                    setShowNewMessageModal(false);
+                    setMobileChatView(true);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 hover:border-emerald-600 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 transition cursor-pointer text-left"
                 >
-                  {tab.label}
+                  <div className="w-9 h-9 rounded-full overflow-hidden relative shrink-0 border border-zinc-200">
+                    <Image
+                      src={c.partner?.avatarUrl || '/images/messages/chelsea-list.png'}
+                      alt={c.partner?.firstName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm text-zinc-900 dark:text-white">
+                      {c.partner?.firstName} {c.partner?.lastName}
+                    </p>
+                    <p className="text-xs text-zinc-500">{c.partner?.role}</p>
+                  </div>
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Conversations Scroll View */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[#E7E7DF]/70 dark:divide-[#262E29]">
-            {isLoadingConversations ? (
-              <div className="p-12 flex flex-col items-center justify-center gap-2 text-xs text-[#6F756F]">
-                <Loader2 className="w-6 h-6 animate-spin text-[#173D32]" />
-                <span>Loading conversations...</span>
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="p-8 text-center space-y-2">
-                <MessageSquare className="w-8 h-8 text-[#C5C8C1] dark:text-[#333D37] mx-auto" />
-                <p className="text-xs font-semibold text-[#242925] dark:text-white">
-                  No conversations found
-                </p>
-                <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] leading-relaxed">
-                  {searchQuery || activeFilter !== 'ALL'
-                    ? 'Try clearing your search or switching back to All conversations.'
-                    : 'Click "Message Host" on any property or booking to start a conversation.'}
-                </p>
-              </div>
-            ) : (
-              filteredConversations.map((c) => {
-                const isActive = c.id === activeConversationId;
-                const lastMessage = c.messages?.[0];
-                const unreadCount =
-                  typeof c.unreadCount === 'number'
-                    ? c.unreadCount
-                    : lastMessage && lastMessage.senderId !== currentUserId && !lastMessage.isRead
-                    ? 1
-                    : 0;
-                const hasUnread = unreadCount > 0;
-                const threadProperty = c.contextBooking?.property || c.contextProperty;
-
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => handleSelectConversation(c.id)}
-                    className={clsx(
-                      'w-full text-left p-3.5 transition flex items-start gap-3 cursor-pointer relative',
-                      isActive
-                        ? 'bg-[#EEF4F0] dark:bg-[#1C2822] border-l-4 border-[#173D32]'
-                        : 'hover:bg-[#F3F4F1] dark:hover:bg-[#1A201D]'
-                    )}
-                  >
-                    {/* Partner Avatar */}
-                    <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#222925] border border-[#E7E7DF] dark:border-[#2E3832] flex items-center justify-center text-xs font-bold text-[#173D32] dark:text-emerald-400 overflow-hidden">
-                        {c.partner?.avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={getImageUrl(c.partner.avatarUrl)}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          `${c.partner?.firstName?.[0] || 'U'}${c.partner?.lastName?.[0] || ''}`
-                        )}
-                      </div>
-                      {hasUnread && (
-                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#16A34A] text-white text-[10px] font-bold flex items-center justify-center border-2 border-white dark:border-[#131715]">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Thread Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <div className="flex items-center gap-1 min-w-0">
-                          <h4
-                            className={clsx(
-                              'text-xs truncate',
-                              hasUnread
-                                ? 'font-bold text-[#181C19] dark:text-white'
-                                : 'font-semibold text-[#242925] dark:text-[#E2E6E3]'
-                            )}
-                          >
-                            {c.partner?.firstName} {c.partner?.lastName}
-                          </h4>
-                          {c.partner?.isVerifiedLandlord && (
-                            <ShieldCheck
-                              className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0"
-                              aria-label="Verified Landlord"
-                            />
-                          )}
-                        </div>
-                        {lastMessage && (
-                          <span className="text-[10px] text-[#6F756F] dark:text-[#9CA59E] shrink-0">
-                            {formatDistanceToNow(new Date(lastMessage.createdAt), {
-                              addSuffix: false,
-                            })}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Property / Booking Context Subtitle */}
-                      <div className="flex items-center gap-1.5 mb-1 min-w-0">
-                        {threadProperty ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#557A67] dark:text-[#86B59C] truncate">
-                            <Building2 className="w-3 h-3 shrink-0" />
-                            <span className="truncate">{threadProperty.title}</span>
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#9CA59E]">
-                            {c.partner?.role === 'LANDLORD' ? 'Property Host' : 'Resident'}
-                          </span>
-                        )}
-                        {c.contextBooking && (
-                          <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold uppercase bg-[#ECFDF3] text-[#166534] dark:bg-emerald-500/15 dark:text-emerald-300 shrink-0">
-                            {c.contextBooking.status}
-                          </span>
-                        )}
-                      </div>
-
-                      <p
-                        className={clsx(
-                          'text-[11px] truncate',
-                          hasUnread
-                            ? 'font-semibold text-[#242925] dark:text-white'
-                            : 'text-[#6F756F] dark:text-[#9CA59E]'
-                        )}
-                      >
-                        {renderLastMessagePreview(lastMessage)}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
         </div>
-
-        {/* ── RIGHT COLUMN: ACTIVE CHAT OR EMPTY STATE ── */}
-        <div
-          className={clsx(
-            'flex-1 flex flex-col min-w-0 max-w-full overflow-hidden bg-white dark:bg-[#171C19]',
-            !activeConversationId ? 'hidden md:flex' : 'flex'
-          )}
-        >
-          {activeConversation ? (
-            <>
-              {/* Chat Header */}
-              <div className="w-full max-w-full min-w-0 px-4 sm:px-5 py-3.5 border-b border-[#E7E7DF] dark:border-[#262E29] flex items-center justify-between gap-3 shrink-0 bg-white dark:bg-[#171C19]">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Mobile Back Button */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveConversationId(null)}
-                    className="md:hidden p-1.5 -ml-1.5 text-[#5E645E] hover:text-[#242925] dark:hover:text-white rounded-lg cursor-pointer shrink-0"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-
-                  <div className="w-10 h-10 rounded-xl bg-[#F3F4F1] dark:bg-[#222925] border border-[#E7E7DF] dark:border-[#2E3832] flex items-center justify-center text-xs font-bold text-[#173D32] dark:text-emerald-400 overflow-hidden shrink-0">
-                    {activeConversation.partner?.avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={getImageUrl(activeConversation.partner.avatarUrl)}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      `${activeConversation.partner?.firstName?.[0] || 'U'}${
-                        activeConversation.partner?.lastName?.[0] || ''
-                      }`
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-[#242925] dark:text-white truncate">
-                        {activeConversation.partner?.firstName}{' '}
-                        {activeConversation.partner?.lastName}
-                      </h3>
-                      <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#F3F4F1] dark:bg-[#222925] text-[#173D32] dark:text-emerald-400 border border-[#E7E7DF] dark:border-[#2E3832] shrink-0">
-                        {activeConversation.partner?.role === 'LANDLORD' ? 'Host' : 'Resident'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] text-[#6F756F] dark:text-[#9CA59E] mt-0.5 truncate">
-                      {activeConversation.partner?.isVerifiedLandlord ? (
-                        <span className="inline-flex items-center gap-1 text-[#166534] dark:text-emerald-400 font-medium shrink-0">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                          <span>Verified Landlord</span>
-                        </span>
-                      ) : (
-                        <span className="shrink-0">Direct Tenancy Channel</span>
-                      )}
-                      {activeConversation.partner?.phoneNumber && (
-                        <>
-                          <span>&bull;</span>
-                          <a
-                            href={`tel:${activeConversation.partner.phoneNumber}`}
-                            className="inline-flex items-center gap-1 text-[#242925] dark:text-white hover:underline font-medium"
-                          >
-                            <Phone className="w-3 h-3" />
-                            <span>{activeConversation.partner.phoneNumber}</span>
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Context Actions (View Property / View Booking) */}
-                <div className="flex items-center gap-2 shrink-0">
-                  {activeProperty && (
-                    <Link
-                      href={`/properties/${activeProperty.id}`}
-                      className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#E7E7DF] dark:border-[#262E29] bg-[#F8F7F2] dark:bg-[#1E2521] hover:border-[#173D32] text-xs font-semibold text-[#242925] dark:text-white transition"
-                    >
-                      <Building2 className="w-3.5 h-3.5 text-[#557A67]" />
-                      <span className="max-w-[140px] truncate">{activeProperty.title}</span>
-                      <ExternalLink className="w-3 h-3 text-[#6F756F]" />
-                    </Link>
-                  )}
-
-                  {bookingDetailHref && (
-                    <Link
-                      href={bookingDetailHref}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#173D32] hover:bg-[#1E4F41] text-white text-xs font-semibold transition"
-                    >
-                      <CalendarCheck className="w-3.5 h-3.5" />
-                      <span>Booking ({activeBooking?.status})</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
-
-              {/* Messages Body */}
-              <div className="flex-1 w-full max-w-full min-w-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 space-y-3 bg-[#FBFBF9] dark:bg-[#131715]">
-                {isLoadingMessages ? (
-                  <div className="flex justify-center p-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#173D32]" />
-                  </div>
-                ) : activeMessages?.length === 0 ? (
-                  <div className="text-center text-xs text-[#6F756F] dark:text-[#9CA59E] py-16 space-y-2">
-                    <p className="font-semibold text-sm text-[#242925] dark:text-white">
-                      Start your conversation with {activeConversation.partner?.firstName}
-                    </p>
-                    <p>
-                      Ask about room availability, utilities, inspection dates, or select a quick
-                      prompt below.
-                    </p>
-                  </div>
-                ) : (
-                  activeMessages?.map((msg, idx) => {
-                    const isMine = msg.senderId === currentUserId;
-                    const prevMsg = idx > 0 ? activeMessages[idx - 1] : null;
-                    const showDateDivider =
-                      !prevMsg ||
-                      !isSameDay(new Date(prevMsg.createdAt), new Date(msg.createdAt));
-
-                    return (
-                      <React.Fragment key={msg.id}>
-                        {showDateDivider && (
-                          <div className="flex items-center justify-center my-3">
-                            <span className="px-3 py-0.5 rounded-full bg-[#ECEEE9] dark:bg-[#222925] text-[10px] font-semibold text-[#5E645E] dark:text-[#A0A8A2]">
-                              {formatDateDivider(msg.createdAt)}
-                            </span>
-                          </div>
-                        )}
-
-                        <div
-                          className={clsx(
-                            'flex flex-col w-full min-w-0',
-                            isMine ? 'items-end' : 'items-start'
-                          )}
-                        >
-                          <div
-                            className={clsx(
-                              'max-w-[85%] sm:max-w-[70%] min-w-0 break-words px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed space-y-2',
-                              isMine
-                                ? 'bg-[#173D32] text-white rounded-tr-xs shadow-2xs'
-                                : 'bg-white dark:bg-[#1E2521] text-[#242925] dark:text-white rounded-tl-xs border border-[#E7E7DF] dark:border-[#2A332E]'
-                            )}
-                          >
-                            {/* 1. IMAGE ATTACHMENT */}
-                            {msg.mediaType === 'IMAGE' && msg.mediaUrl && (
-                              <a
-                                href={getImageUrl(msg.mediaUrl)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-95 transition"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={getImageUrl(msg.mediaUrl)}
-                                  alt="Attachment"
-                                  className="w-full max-h-64 object-cover rounded-lg"
-                                />
-                              </a>
-                            )}
-
-                            {/* 2. AUDIO VOICE NOTE */}
-                            {msg.mediaType === 'AUDIO' && msg.mediaUrl && (
-                              <AudioVoiceNotePlayer
-                                src={msg.mediaUrl}
-                                duration={msg.duration}
-                                isMine={isMine}
-                              />
-                            )}
-
-                            {/* 3. DOCUMENT ATTACHMENT */}
-                            {msg.mediaType === 'DOCUMENT' && msg.mediaUrl && (
-                              <a
-                                href={getImageUrl(msg.mediaUrl)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="flex items-center gap-3 p-2.5 bg-black/15 dark:bg-white/10 rounded-xl hover:opacity-90 transition max-w-full min-w-0"
-                              >
-                                <FileText className="w-5 h-5 shrink-0 text-amber-400" />
-                                <div className="flex-1 min-w-0 text-left">
-                                  <p className="font-semibold text-xs truncate">
-                                    {msg.fileName || 'Document'}
-                                  </p>
-                                  <span className="text-[10px] opacity-75 truncate block">
-                                    Click to open / download
-                                  </span>
-                                </div>
-                                <Download className="w-4 h-4 shrink-0" />
-                              </a>
-                            )}
-
-                            {/* 4. TEXT CONTENT */}
-                            {msg.content && msg.mediaType !== 'AUDIO' && (
-                              <p className="whitespace-pre-wrap break-words">
-                                {msg.content.replace(/^(\?+)\s*/, '')}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Timestamp & Read Receipts */}
-                          <div className="flex items-center gap-1.5 mt-1 px-1 text-[10px] text-[#6F756F] dark:text-[#9CA59E]">
-                            <span>
-                              {new Date(msg.createdAt).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                            {isMine && (
-                              <CheckCheck
-                                className={clsx(
-                                  'w-3.5 h-3.5',
-                                  msg.isRead
-                                    ? 'text-[#16A34A] dark:text-emerald-400'
-                                    : 'text-[#9CA59E]'
-                                )}
-                              />
-                            )}
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })
-                )}
-
-                {/* Live Typing Indicator */}
-                {isPartnerTyping && (
-                  <div className="flex items-center gap-2 text-xs text-[#5E645E] dark:text-[#A0A8A2] pl-1">
-                    <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-2xl bg-white dark:bg-[#1E2521] border border-[#E7E7DF] dark:border-[#2A332E] text-[11px]">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-bounce" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-bounce [animation-delay:150ms]" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-bounce [animation-delay:300ms]" />
-                      <span className="ml-1">
-                        {activeConversation.partner?.firstName} is typing...
-                      </span>
-                    </span>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Quick Prompts Bar */}
-              <div className="w-full max-w-full min-w-0 px-4 py-2 bg-white dark:bg-[#171C19] border-t border-[#E7E7DF] dark:border-[#262E29] flex items-center gap-1.5 overflow-x-auto scrollbar-thin shrink-0">
-                <span className="text-[10px] font-semibold text-[#6F756F] dark:text-[#9CA59E] uppercase tracking-wider shrink-0 mr-1">
-                  Quick Prompts:
-                </span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {[
-                    'Is this room available for the upcoming term?',
-                    'When can I schedule a physical viewing?',
-                    'Are water and prepaid ECG meter dedicated?',
-                    'What utilities are included in the rent?',
-                    'I have completed signing the lease agreement.',
-                  ].map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => handleInputChange(chip)}
-                      className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[#F8F7F2] dark:bg-[#1E2521] border border-[#E7E7DF] dark:border-[#2A332E] text-[#242925] dark:text-[#E2E6E3] hover:border-[#173D32] hover:text-[#173D32] dark:hover:text-emerald-400 whitespace-nowrap transition cursor-pointer shrink-0"
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Voice Recording Overlay */}
-              {isRecording ? (
-                <div className="p-3 border-t border-rose-500/30 bg-rose-500/10 flex items-center justify-between gap-3 shrink-0">
-                  <div className="flex items-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400">
-                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-                    <span>Recording Voice Note ({recordingTime}s)...</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={cancelRecording}
-                      className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#222925] border border-[#E7E7DF] dark:border-[#2E3832] text-[#242925] dark:text-white text-xs font-semibold hover:bg-zinc-100 transition cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={stopRecording}
-                      className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Send Voice Note</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* Standard Rich Input Bar */
-                <div className="w-full max-w-full min-w-0 p-3 sm:p-3.5 border-t border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] shrink-0">
-                  <form
-                    onSubmit={handleSendMessage}
-                    className="w-full max-w-full min-w-0 flex gap-2 items-center"
-                  >
-                    {/* Photo upload */}
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="p-2 rounded-xl text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#173D32] dark:hover:text-emerald-400 hover:bg-[#F3F4F1] dark:hover:bg-[#1E2521] transition cursor-pointer shrink-0"
-                      title="Attach photo"
-                    >
-                      <ImageIcon className="w-4 h-4" />
-                    </button>
-
-                    {/* Document upload */}
-                    <button
-                      type="button"
-                      onClick={() => documentInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="p-2 rounded-xl text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#173D32] dark:hover:text-emerald-400 hover:bg-[#F3F4F1] dark:hover:bg-[#1E2521] transition cursor-pointer shrink-0"
-                      title="Attach document (PDF)"
-                    >
-                      <Paperclip className="w-4 h-4" />
-                    </button>
-
-                    {/* Mic button */}
-                    <button
-                      type="button"
-                      onClick={startRecording}
-                      disabled={isUploading}
-                      className="p-2 rounded-xl text-[#5E645E] dark:text-[#A0A8A2] hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-[#1E2521] transition cursor-pointer shrink-0"
-                      title="Record voice note"
-                    >
-                      <Mic className="w-4 h-4" />
-                    </button>
-
-                    {/* Text field */}
-                    <input
-                      type="text"
-                      value={newMessage}
-                      onChange={(e) => handleInputChange(e.target.value)}
-                      placeholder={`Write a message to ${
-                        activeConversation.partner?.firstName || 'host'
-                      }...`}
-                      className="flex-1 min-w-0 bg-[#F8F7F2] dark:bg-[#121614] text-xs font-medium text-[#242925] dark:text-white placeholder:text-[#6F756F] border border-[#E7E7DF] dark:border-[#262E29] rounded-xl px-4 py-2.5 outline-none focus:border-[#173D32] transition"
-                    />
-
-                    {/* Send button */}
-                    <button
-                      type="submit"
-                      disabled={!newMessage.trim() || isUploading || isSending}
-                      className="px-4 sm:px-5 py-2.5 rounded-xl bg-[#173D32] hover:bg-[#1E4F41] text-white text-xs font-semibold transition disabled:opacity-40 flex items-center gap-1.5 cursor-pointer shrink-0"
-                    >
-                      {isUploading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <>
-                          <span>Send</span>
-                          <Send className="w-3.5 h-3.5" />
-                        </>
-                      )}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </>
-          ) : (
-            /* ── EMPTY STATE (NO SELECTION) ── */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center space-y-6 bg-[#FBFBF9] dark:bg-[#131715]">
-              <div className="w-14 h-14 rounded-2xl bg-[#EEF4F0] dark:bg-[#1C2822] text-[#173D32] dark:text-emerald-400 border border-[#CFE0D6] dark:border-[#253D31] flex items-center justify-center">
-                <MessageSquare className="w-7 h-7" />
-              </div>
-
-              <div className="max-w-md space-y-1.5">
-                <h3 className="text-base font-bold text-[#242925] dark:text-white">
-                  Select a Conversation
-                </h3>
-                <p className="text-xs text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
-                  Choose a thread from the left panel to coordinate lease agreements, room
-                  inspections, or move-in handover details.
-                </p>
-              </div>
-
-              {/* 3 Value Proposition Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl text-left pt-2">
-                <div className="p-3.5 rounded-xl border border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#242925] dark:text-white">
-                    <Shield className="w-3.5 h-3.5 text-[#173D32] dark:text-emerald-400" />
-                    <span>Verified Hosts</span>
-                  </div>
-                  <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] leading-relaxed">
-                    Chat directly with verified landlords and hostel managers regarding your stay.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#242925] dark:text-white">
-                    <Zap className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Real-Time Delivery</span>
-                  </div>
-                  <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] leading-relaxed">
-                    Instant message delivery with live typing indicators and read receipts.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-[#E7E7DF] dark:border-[#262E29] bg-white dark:bg-[#171C19] space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-[#242925] dark:text-white">
-                    <Radio className="w-3.5 h-3.5 text-[#557A67]" />
-                    <span>Voice &amp; Documents</span>
-                  </div>
-                  <p className="text-[11px] text-[#6F756F] dark:text-[#9CA59E] leading-relaxed">
-                    Send voice notes, room photos, and tenancy documents in one place.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-export default function MessagesPage() {
+export default function TenantMessagesPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex justify-center p-20">
-          <Loader2 className="w-7 h-7 animate-spin text-[#173D32]" />
+        <div className="w-full h-96 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
         </div>
       }
     >
-      <MessagesWorkspace />
+      <MessagesContent />
     </Suspense>
   );
 }
