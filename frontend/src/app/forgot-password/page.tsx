@@ -3,21 +3,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Mail, 
-  ArrowRight, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Mail,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
   ArrowLeft,
-  Lock,
-  RotateCcw,
+  ChevronDown,
+  Moon,
+  Sun,
   ShieldCheck,
-  Building2
+  Zap,
+  Clock,
+  Home,
 } from 'lucide-react';
 import api from '@/lib/axios';
-import ThemeToggle from '@/components/ThemeToggle';
-import AlertBanner from '@/components/AlertBanner';
-import { Button } from '@/components/ui/Button';
+
+const NAV_LINKS = [
+  { name: 'Home', href: '/' },
+  { name: 'Explore', href: '/properties', hasDropdown: true },
+  { name: 'Neighborhoods', href: '/search', hasDropdown: true },
+  { name: 'Services', href: '/about', hasDropdown: true },
+  { name: 'About', href: '/about', hasDropdown: true },
+  { name: 'Support', href: '/support', hasDropdown: true },
+];
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -25,6 +34,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
     let timer: any;
@@ -35,6 +45,15 @@ export default function ForgotPasswordPage() {
     }
     return () => clearInterval(timer);
   }, [resendCooldown]);
+
+  const toggleTheme = (dark: boolean) => {
+    setIsDarkMode(dark);
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,246 +84,324 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
-      
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (60% Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-        <Image
-          src="/images/auth-recovery.jpg"
-          alt="Authentic Ghanaian resident verifying account recovery"
-          fill
-          sizes="70vw"
-          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
-          priority
-        />
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#FAF9F5] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden">
 
-        {/* Cinematic Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+      {/* ── 1. TOP NAVBAR ── */}
+      <header className="w-full bg-white dark:bg-[#141A17] border-b border-zinc-200/70 dark:border-zinc-800 z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-        {/* Top-Left Floating Action */}
-        <div className="absolute top-8 left-8 z-10">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-            <span>Back to sign in</span>
-          </Link>
-        </div>
-
-        {/* Bottom Overlay Content */}
-        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
-            <span>ACCOUNT RECOVERY • PROTECTED ACCESS</span>
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-            Safe and verified home tenancies across Ghana
-          </h2>
-
-          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-            Your account holds your verified agreements, payment ledgers, and resident access passes. We safeguard every account through secure, time-limited verification.
-          </p>
-
-          {/* Trust Markers */}
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Accounts
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-emerald-400" /> Time-Limited Recovery
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> Verified Resident Passes
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* ──── RIGHT COLUMN: RECOVERY FORM (30% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[30%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-8 xl:p-10 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
-        
-        {/* Top Header: Brand + Theme Toggle + Sign In */}
-        <div className="flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
+          {/* Left: Brand Identity */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 flex items-center justify-center shrink-0">
+              <Image
+                src="/logo-light.png"
+                alt="AkwaabaHomes"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain dark:hidden transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
               <Image
                 src="/logo.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
+                alt="AkwaabaHomes"
+                width={36}
+                height={36}
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
                 priority
               />
-              <Image
-                src="/logo-light.png"
-                alt="Akwaaba Homes"
-                width={44}
-                height={44}
-                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-zinc-950 dark:text-white leading-none">
-                Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-sm tracking-tight text-[#0D3827] dark:text-white">
+                AkwaabaHomes
               </span>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">
-                Ghana PropTech
+              <span className="text-[10px] text-[#557A67] dark:text-emerald-500 font-medium mt-0.5">
+                Trusted Ghanaian Housing
               </span>
             </div>
           </Link>
-          
+
+          {/* Center: Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-5">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.name}
+                href={link.href}
+                className="inline-flex items-center gap-0.5 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
+              >
+                <span>{link.name}</span>
+                {link.hasDropdown && <ChevronDown className="w-3 h-3 opacity-60" />}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right: Theme Toggle + Back to Sign In */}
           <div className="flex items-center gap-3">
-            <ThemeToggle />
+            {/* Theme Toggle Icon */}
+            <button
+              type="button"
+              onClick={() => toggleTheme(!isDarkMode)}
+              className="p-1.5 rounded-lg text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+
+            {/* Back to Sign In */}
             <Link
               href="/login"
-              className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] hover:text-[#15803D] transition"
             >
-              Sign in
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to sign in</span>
             </Link>
           </div>
         </div>
+      </header>
 
-        {/* Main Content Area */}
-        <div className="my-auto py-8 sm:py-10 max-w-sm w-full mx-auto space-y-6">
-          {success ? (
-            /* Success / Dispatched State */
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center shadow-xs">
-                <CheckCircle2 className="w-7 h-7" />
-              </div>
+      {/* ── 2. MAIN CONTENT ── */}
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 z-10 flex flex-col justify-center">
 
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
-                  <span>EMAIL DISPATCHED</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-                  Check your email
-                </h1>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed pt-0.5">
-                  If an account exists for <strong className="font-bold text-zinc-950 dark:text-white">{maskEmail(email)}</strong>, we have sent a secure recovery link to reset your password.
-                </p>
-              </div>
+        {/* ── Centered Header ── */}
+        <div className="text-center space-y-3 mb-8 sm:mb-10">
+          {/* Breadcrumb Pill */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 border border-[#CDEED5] dark:border-emerald-800/40 text-[#16A34A] dark:text-emerald-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
+            <Home className="w-3.5 h-3.5" />
+            <span>ACCOUNT / PASSWORD RECOVERY</span>
+          </div>
 
-              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400">
-                <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                <span>Your recovery link is single-use and expires after 15 minutes.</span>
-              </div>
+          {/* Headline with curved swoop underline under 'you' */}
+          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-[#0D3827] dark:text-white tracking-tight leading-tight">
+            Let's get{' '}
+            <span className="relative inline-block">
+              you
+              <svg
+                className="absolute -bottom-1 left-0 w-full"
+                height="5"
+                viewBox="0 0 50 5"
+                fill="none"
+                preserveAspectRatio="none"
+              >
+                <path d="M1 3.5 Q25 0.5 49 3.5" stroke="#16A34A" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </span>
+            {' '}back home.
+          </h1>
 
-              <div className="space-y-2.5 pt-2">
-                <Link
-                  href="/login"
-                  className="w-full h-11 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer active:scale-[0.99]"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Return to Sign In</span>
-                </Link>
+          {/* Subtitle */}
+          <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            Enter the email linked to your AkwaabaHomes account. We'll send a secure link to reset your password.
+          </p>
+        </div>
 
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || isLoading}
-                  onClick={handleSubmit}
-                  className="w-full h-11 inline-flex items-center justify-center gap-2 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-200 rounded-xl transition cursor-pointer disabled:opacity-50"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend recovery link'}</span>
-                </button>
-              </div>
+        {/* ── Two-Card Grid ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch max-w-5xl mx-auto w-full">
+
+          {/* ──── LEFT CARD: ARCHITECTURAL VISUAL + TRUST STRIP ──── */}
+          <div className="lg:col-span-7 bg-white dark:bg-zinc-900 rounded-[28px] border border-zinc-200/80 dark:border-zinc-800 shadow-sm overflow-hidden flex flex-col justify-between">
+            {/* Top House Artwork */}
+            <div className="relative h-64 sm:h-72 w-full overflow-hidden bg-[#EFF7F2] dark:bg-zinc-950">
+              <Image
+                src="/images/auth/recovery-house-art.jpg"
+                alt="AkwaabaHomes Secure Recovery"
+                fill
+                priority
+                className="object-cover object-center"
+              />
             </div>
-          ) : (
-            /* Initial Recovery Request Form */
-            <div className="space-y-6">
-              <div className="space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
-                  <span>ACCOUNT RECOVERY</span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-                  Recover your account
-                </h1>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                  Enter the email associated with your AkwaabaHomes account and we&apos;ll send you a secure recovery link.
-                </p>
-              </div>
 
-              {/* Inline Error Notice */}
-              {error && (
-                <AlertBanner
-                  type="error"
-                  message={error}
-                />
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="recovery-email" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                    Email address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
-                      <Mail className="w-4 h-4" />
-                    </div>
-                    <input
-                      id="recovery-email"
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full h-11 pl-10 pr-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition"
-                    />
+            {/* Bottom 3-Pillar Security Strip */}
+            <div className="bg-[#EBF7EE] dark:bg-emerald-950/30 border-t border-[#D7EFE0] dark:border-emerald-900/40 px-4 sm:px-6 py-3.5">
+              <div className="grid grid-cols-3 divide-x divide-emerald-200/60 dark:divide-emerald-800/40 text-center sm:text-left">
+                {/* Pillar 1 */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2">
+                  <div className="w-7 h-7 rounded-full bg-[#16A34A] flex items-center justify-center shrink-0 text-white shadow-2xs">
+                    <CheckCircle2 className="w-4 h-4 fill-white text-[#16A34A]" />
+                  </div>
+                  <div className="leading-tight text-left">
+                    <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">Private recovery</p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">process</p>
                   </div>
                 </div>
 
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    variant="emerald"
-                    size="sm"
-                    isLoading={isLoading}
-                    disabled={isLoading || !email.trim().includes('@') || !email.trim().includes('.')}
-                    rightIcon={<ArrowRight className="w-4 h-4" />}
-                    className="w-full"
-                  >
-                    Send recovery link
-                  </Button>
+                {/* Pillar 2 */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2 pl-3">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#16A34A]">
+                    <Zap className="w-4 h-4 fill-[#16A34A]" />
+                  </div>
+                  <div className="leading-tight text-left">
+                    <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">Single-use</p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">reset link</p>
+                  </div>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                  Remember your password?{' '}
+                {/* Pillar 3 */}
+                <div className="flex items-center justify-center sm:justify-start gap-2.5 px-2 pl-3">
+                  <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0 text-[#16A34A]">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div className="leading-tight text-left">
+                    <p className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">15-minute</p>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400">link expiry</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ──── RIGHT CARD: RECOVERY FORM ──── */}
+          <div className="lg:col-span-5 bg-white dark:bg-zinc-900 rounded-[28px] border border-zinc-200/80 dark:border-zinc-800 shadow-sm p-6 sm:p-7 flex flex-col justify-between">
+            {success ? (
+              /* Success Confirmation View */
+              <div className="py-6 space-y-5 text-center my-auto">
+                <div className="w-14 h-14 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto shadow-2xs">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <h2 className="text-xl font-black text-zinc-950 dark:text-white">
+                    Check your inbox
+                  </h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mx-auto">
+                    We've dispatched a secure recovery link to <span className="font-semibold text-zinc-800 dark:text-zinc-200">{maskEmail(email)}</span>. It expires in 15 minutes.
+                  </p>
+                </div>
+
+                <div className="pt-2 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => { setSuccess(false); }}
+                    disabled={resendCooldown > 0}
+                    className="w-full h-11 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                  >
+                    {resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend link'}
+                  </button>
+
                   <Link
                     href="/login"
-                    className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+                    className="block text-xs font-semibold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition"
                   >
-                    Sign in
+                    Return to sign in
                   </Link>
                 </div>
-
-                <div className="flex items-center justify-center gap-2 text-[11px] text-zinc-400 dark:text-zinc-500 pt-1">
-                  <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                  <span>Your recovery link is single-use and expires after 15 minutes.</span>
+              </div>
+            ) : (
+              /* Recovery Form View */
+              <div className="space-y-5">
+                {/* Card Header: Icon + Badge + Title */}
+                <div className="flex items-start gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-[#EBF7EE] dark:bg-emerald-950/60 flex items-center justify-center shrink-0 border border-[#CDEED5] dark:border-emerald-800/40 text-[#16A34A]">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-[#EBF7EE] dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider">
+                      ACCOUNT RECOVERY
+                    </span>
+                    <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight mt-0.5">
+                      Reset your password
+                    </h2>
+                  </div>
                 </div>
-              </form>
-            </div>
-          )}
-        </div>
 
-        {/* Bottom Footer */}
-        <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-400 gap-2">
-          <span>&copy; {new Date().getFullYear()} Akwaaba Homes Ghana</span>
-          <div className="flex items-center gap-3">
-            <Link href="/terms" className="hover:text-zinc-950 dark:hover:text-white transition">Terms</Link>
-            <span>•</span>
-            <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition">Privacy</Link>
-            <span>•</span>
-            <Link href="/support" className="hover:text-zinc-950 dark:hover:text-white transition">Support</Link>
+                {/* Error Banner */}
+                {error && (
+                  <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2.5 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                    {error}
+                  </div>
+                )}
+
+                {/* Recovery Form */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Email Input */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-zinc-800 dark:text-zinc-200">
+                      Email address
+                    </label>
+                    <div className="relative">
+                      <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="email"
+                        placeholder="name@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full h-11 pl-10 pr-3.5 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-11 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <span>Send recovery link</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Remembered password? Sign in */}
+                <div className="pt-2 text-center border-t border-zinc-100 dark:border-zinc-800">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Remembered your password?{' '}
+                    <Link
+                      href="/login"
+                      className="font-bold text-[#16A34A] hover:text-[#15803D] transition"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
+                </div>
+
+                {/* Security Footnote */}
+                <div className="pt-3 flex items-center justify-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
+                  <span>We'll only use this address to verify your account.</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+      </main>
+
+      {/* ── 3. ATMOSPHERIC SKYLINE BACKGROUND (At base) ── */}
+      <div className="relative w-full h-24 pointer-events-none select-none opacity-40 dark:opacity-20">
+        <Image
+          src="/images/auth/recovery-skyline-bg.png"
+          alt="Ghana skyline"
+          fill
+          className="object-cover object-bottom"
+        />
       </div>
 
+      {/* ── 4. FOOTER ── */}
+      <footer className="w-full bg-[#FAF9F5] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 z-10">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+          <div>© 2026 AkwaabaHomes Ghana</div>
+          <div className="flex items-center gap-4">
+            <Link href="/help" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+              Help Centre
+            </Link>
+            <span>|</span>
+            <Link href="/privacy" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+              Privacy
+            </Link>
+            <span>|</span>
+            <Link href="/terms" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">
+              Terms
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
