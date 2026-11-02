@@ -121,14 +121,14 @@ export default function TenantShell({
     },
     {
       label: 'My Residence',
-      href: '/dashboard/tenant/bookings',
-      matchPrefixes: ['/dashboard/tenant/bookings', '/bookings'],
+      href: '/dashboard/tenant/residence',
+      matchPrefixes: ['/dashboard/tenant/residence'],
       icon: Building2,
     },
     {
       label: 'Bookings',
       href: '/dashboard/tenant/bookings',
-      matchPrefixes: ['/dashboard/tenant/bookings'],
+      matchPrefixes: ['/dashboard/tenant/bookings', '/bookings'],
       icon: CalendarCheck,
     },
     {
@@ -170,7 +170,7 @@ export default function TenantShell({
       return pathname === '/dashboard/tenant' || pathname === '/dashboard';
     }
     if (item.label === 'My Residence') {
-      return false; // keep Dashboard highlighted on root
+      return pathname.startsWith('/dashboard/tenant/residence');
     }
     return item.matchPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   };
