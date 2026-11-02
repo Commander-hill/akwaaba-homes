@@ -157,28 +157,28 @@ export default function TenantPaymentsPage() {
     <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
 
       {/* ── Background Luxury Building Photo on Top Right ── */}
-      <div className="absolute top-0 right-0 w-[460px] sm:w-[540px] h-[260px] pointer-events-none select-none z-0 overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] lg:w-[620px] h-[320px] pointer-events-none select-none z-0 overflow-hidden">
         <Image
           src="/images/payments/payment-building-header.jpg"
           alt="Luxury apartment complex"
           fill
           priority
-          className="object-cover object-left opacity-85 dark:opacity-40"
+          className="object-cover object-left opacity-90 dark:opacity-40"
         />
         {/* Soft fading gradients */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FBFBFA] via-[#FBFBFA]/50 to-transparent dark:from-[#0D100E] dark:via-[#0D100E]/50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FBFBFA] via-[#FBFBFA]/40 to-transparent dark:from-[#0D100E] dark:via-[#0D100E]/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#FBFBFA] via-transparent to-transparent dark:from-[#0D100E]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6 flex-1">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6 flex-1">
 
         {/* ── Top Title & Actions Bar ── */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
           <div className="space-y-1">
             <span className="text-[11px] font-bold text-[#16A34A] tracking-wider uppercase block">
               FINANCE CENTRE
             </span>
-            <h1 className="text-3xl sm:text-[36px] font-black text-zinc-950 dark:text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-[35px] font-black text-zinc-950 dark:text-white tracking-tight leading-tight">
               Payments & invoices
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400">
@@ -187,11 +187,11 @@ export default function TenantPaymentsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 relative z-10">
             <button
               type="button"
               onClick={() => setPaymentModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <CreditCard className="w-4 h-4" />
               <span>Make a payment</span>
@@ -213,10 +213,10 @@ export default function TenantPaymentsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
           {/* ──── LEFT CARD: TOTAL RENT PAID (Dark Green with Chart) ──── */}
-          <div className="lg:col-span-6 rounded-2xl bg-[#0A3826] text-white p-6 relative overflow-hidden shadow-sm flex items-center justify-between">
+          <div className="lg:col-span-6 rounded-2xl bg-[#0A3826] text-white p-5 sm:p-6 relative overflow-hidden shadow-sm flex items-center justify-between min-h-[114px]">
             {/* Subtle Geometric Background Watermark */}
             <svg
-              className="absolute left-0 top-0 h-full w-48 opacity-10 pointer-events-none"
+              className="absolute left-0 top-0 h-full w-48 opacity-15 pointer-events-none"
               viewBox="0 0 100 100"
               fill="none"
               stroke="white"
@@ -230,11 +230,11 @@ export default function TenantPaymentsPage() {
             </svg>
 
             {/* Left Stat */}
-            <div className="relative z-10 space-y-1">
-              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest block">
+            <div className="relative z-10 space-y-0.5">
+              <span className="text-[10px] font-bold text-[#86EFAC] uppercase tracking-wider block">
                 TOTAL RENT PAID
               </span>
-              <p className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+              <p className="text-3xl sm:text-[34px] font-black text-white tracking-tight leading-tight">
                 GH₵ {totalRentPaid.toLocaleString()}
               </p>
               <p className="text-xs text-white/70">
@@ -243,19 +243,19 @@ export default function TenantPaymentsPage() {
             </div>
 
             {/* Right Divider + 5-Bar Chart */}
-            <div className="relative z-10 flex items-center gap-6 pl-4 border-l border-white/20">
-              <div className="flex items-end gap-2 h-18">
-                <div className="w-3.5 h-6 bg-[#4ADE80]/50 rounded-full" />
-                <div className="w-3.5 h-10 bg-[#4ADE80]/70 rounded-full" />
-                <div className="w-3.5 h-14 bg-[#4ADE80]/85 rounded-full" />
-                <div className="w-3.5 h-18 bg-[#4ADE80] rounded-full shadow-xs" />
-                <div className="w-3.5 h-16 bg-[#4ADE80] rounded-full" />
+            <div className="relative z-10 flex items-center pl-6 border-l border-white/20">
+              <div className="flex items-end gap-2 h-16">
+                <div className="w-3 h-5 bg-[#22C55E]/60 rounded-full" />
+                <div className="w-3 h-9 bg-[#22C55E]/75 rounded-full" />
+                <div className="w-3 h-12 bg-[#22C55E]/90 rounded-full" />
+                <div className="w-3 h-16 bg-[#22C55E] rounded-full shadow-xs" />
+                <div className="w-3 h-14 bg-[#22C55E] rounded-full" />
               </div>
             </div>
           </div>
 
           {/* ──── RIGHT CARD: CAUTION DEPOSIT & ACTIVE TENANCY (Light Card) ──── */}
-          <div className="lg:col-span-6 rounded-2xl bg-[#FFFDF7] dark:bg-zinc-900 border border-amber-100/90 dark:border-zinc-800 shadow-2xs p-5 sm:p-6 flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-6 rounded-2xl bg-[#FFFDF7] dark:bg-zinc-900 border border-[#F4E6D2] dark:border-zinc-800 shadow-2xs p-5 flex flex-col justify-between min-h-[114px]">
             {/* Top 2 Columns */}
             <div className="grid grid-cols-2 divide-x divide-zinc-200/80 dark:divide-zinc-800">
               {/* Col 1: Caution Deposit */}
@@ -395,7 +395,7 @@ export default function TenantPaymentsPage() {
 
                 <button
                   type="button"
-                  onClick={() => toast('Filtered by all active payments', { icon: '🔍' })}
+                  onClick={() => toast('Showing all filtered payment entries', { icon: '🔍' })}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <Filter className="w-3.5 h-3.5 text-zinc-500" />
@@ -423,20 +423,23 @@ export default function TenantPaymentsPage() {
                   {filteredTransactions.map((tx: any) => {
                     const isSuccess =
                       tx.status === 'SUCCESS' || tx.status === 'COMPLETED' || tx.status === 'PAID';
-                    const dateObj = new Date(tx.createdAt || Date.now());
-                    const dateFormatted = dateObj.toLocaleDateString('en-GB', {
+                    const dateObj = new Date(tx.createdAt || '2026-09-06T10:00:00.000Z');
+                    const dayMonthStr = dateObj.toLocaleDateString('en-GB', {
                       day: '2-digit',
                       month: 'short',
-                      year: 'numeric',
                     });
+                    const yearStr = dateObj.getFullYear();
 
                     return (
                       <tr key={tx.id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-800/40 transition">
-                        {/* Date Pill */}
+                        {/* Date Pill: 2-line calendar tile */}
                         <td className="py-3.5 px-3 whitespace-nowrap">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#E8F5E9] dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 text-xs font-bold">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <span>{dateFormatted}</span>
+                          <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#E8F5E9] dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400">
+                            <Calendar className="w-4 h-4 shrink-0" />
+                            <div className="leading-tight text-left">
+                              <div className="text-xs font-bold text-[#16A34A] dark:text-emerald-400">{dayMonthStr}</div>
+                              <div className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">{yearStr}</div>
+                            </div>
                           </div>
                         </td>
 
@@ -486,12 +489,12 @@ export default function TenantPaymentsPage() {
                             >
                               View receipt
                             </Link>
-                            <span className="text-zinc-300">|</span>
+                            <span className="text-zinc-300 dark:text-zinc-700">|</span>
                             <button
                               type="button"
                               onClick={() => handleDownloadPDF(tx.id)}
-                              className="text-zinc-500 hover:text-[#16A34A] transition cursor-pointer p-0.5"
-                              title="Download PDF"
+                              className="text-[#16A34A] hover:opacity-80 transition cursor-pointer p-0.5"
+                              title="Download PDF receipt"
                             >
                               <Download className="w-3.5 h-3.5" />
                             </button>
@@ -531,7 +534,7 @@ export default function TenantPaymentsPage() {
 
               <Link
                 href="/dashboard/agreements"
-                className="w-full py-2.5 px-4 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block"
+                className="w-full py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block text-center"
               >
                 <span>View receipts</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -551,7 +554,7 @@ export default function TenantPaymentsPage() {
 
               <Link
                 href="/support"
-                className="w-full py-2.5 px-4 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block text-center"
+                className="w-full py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block text-center"
               >
                 <span>Contact support</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -562,7 +565,7 @@ export default function TenantPaymentsPage() {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="w-full bg-[#FBFBFA] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 mt-8">
+      <footer className="w-full bg-[#FBFBFA] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 mt-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
           <div className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300">
             <Home className="w-4 h-4 text-[#16A34A]" />
@@ -632,7 +635,7 @@ export default function TenantPaymentsPage() {
                   toast.success('Redirecting to Paystack secure checkout...');
                   setPaymentModalOpen(false);
                 }}
-                className="w-full py-3 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="w-full py-3 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 Proceed with Paystack (GH₵)
               </button>

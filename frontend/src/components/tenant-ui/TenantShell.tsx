@@ -287,10 +287,17 @@ export default function TenantShell({
     </div>
   );
 
+  const isPaymentsPage = pathname === '/dashboard/invoice';
+
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20">
+      <aside
+        className={clsx(
+          'lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20',
+          isPaymentsPage ? 'hidden' : 'hidden lg:flex'
+        )}
+      >
         {renderSidebarContent()}
       </aside>
 
@@ -298,21 +305,24 @@ export default function TenantShell({
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar matching reference */}
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200/80 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
-          {/* Left: Mobile Menu Toggle & Pill Search Input */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 max-w-xl">
+          {/* Left: Mobile Menu Toggle & Breadcrumb / Search */}
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 max-w-2xl">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className={clsx(
+                'p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer',
+                isPaymentsPage ? 'block' : 'lg:hidden'
+              )}
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Breadcrumb matching mockup */}
-            <div className="hidden xl:flex items-center gap-1.5 text-xs text-zinc-500 shrink-0 mr-1">
+            <div className="flex items-center gap-1.5 text-xs text-zinc-500 shrink-0">
               <Home className="w-4 h-4 text-[#16A34A]" />
-              <Link href="/dashboard/tenant" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+              <Link href="/dashboard/tenant" className="hover:text-zinc-800 dark:hover:text-zinc-200 font-medium">
                 Resident Portal
               </Link>
               <span className="text-zinc-300 dark:text-zinc-600">/</span>
@@ -436,7 +446,12 @@ export default function TenantShell({
         </header>
 
         {/* Page Content Container */}
-        <main className="flex-1 w-full max-w-[1440px] mx-auto p-4 sm:p-6 lg:p-7">
+        <main
+          className={clsx(
+            'flex-1 w-full mx-auto',
+            isPaymentsPage ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
+          )}
+        >
           {children}
         </main>
       </div>
