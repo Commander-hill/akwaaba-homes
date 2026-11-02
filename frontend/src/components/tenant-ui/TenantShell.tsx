@@ -22,6 +22,7 @@ import {
   X,
   LogOut,
   User,
+  Home,
 } from 'lucide-react';
 import api from '@/lib/axios';
 
@@ -298,7 +299,7 @@ export default function TenantShell({
         {/* Top Header Bar matching reference */}
         <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200/80 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Menu Toggle & Pill Search Input */}
-          <div className="flex items-center gap-3 min-w-0 flex-1 max-w-lg">
+          <div className="flex items-center gap-3 min-w-0 flex-1 max-w-xl">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
@@ -307,6 +308,20 @@ export default function TenantShell({
             >
               <Menu className="w-5 h-5" />
             </button>
+
+            {/* Breadcrumb matching mockup */}
+            <div className="hidden xl:flex items-center gap-1.5 text-xs text-zinc-500 shrink-0 mr-1">
+              <Home className="w-4 h-4 text-[#16A34A]" />
+              <Link href="/dashboard/tenant" className="hover:text-zinc-800 dark:hover:text-zinc-200">
+                Resident Portal
+              </Link>
+              <span className="text-zinc-300 dark:text-zinc-600">/</span>
+              <span className="font-bold text-zinc-900 dark:text-white capitalize">
+                {pathname.includes('/invoice')
+                  ? 'Payments'
+                  : pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'}
+              </span>
+            </div>
 
             <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm sm:max-w-md">
               <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
