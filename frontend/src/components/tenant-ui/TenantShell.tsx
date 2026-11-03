@@ -155,7 +155,7 @@ export default function TenantShell({
     {
       label: 'Documents',
       href: '/dashboard/agreements',
-      matchPrefixes: ['/dashboard/agreements', '/lease-agreement'],
+      matchPrefixes: ['/dashboard/agreements', '/lease-agreement', '/dashboard/verification'],
       icon: FileText,
     },
     {

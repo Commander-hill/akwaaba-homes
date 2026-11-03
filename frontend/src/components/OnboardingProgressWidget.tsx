@@ -147,7 +147,7 @@ export default function OnboardingProgressWidget({ user: initialUser, hasPropert
           </div>
         ) : (
           <Link
-            href="/dashboard/verification"
+            href={isTenant ? '/dashboard/agreements' : '/dashboard/verification'}
             className="flex items-center justify-between gap-2 text-xs font-bold text-purple-800 dark:text-purple-300 bg-purple-50/90 dark:bg-purple-950/40 p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 hover:bg-purple-100 transition-colors group"
           >
             <div className="flex items-center gap-2">
