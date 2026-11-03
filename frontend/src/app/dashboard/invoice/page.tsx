@@ -156,20 +156,6 @@ export default function TenantPaymentsPage() {
   return (
     <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
 
-      {/* ── Background Luxury Building Photo on Top Right ── */}
-      <div className="absolute top-0 right-0 w-[500px] lg:w-[620px] h-[320px] pointer-events-none select-none z-0 overflow-hidden">
-        <Image
-          src="/images/payments/payment-building-header.jpg"
-          alt="Luxury apartment complex"
-          fill
-          priority
-          className="object-cover object-left opacity-90 dark:opacity-40"
-        />
-        {/* Soft fading gradients */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FBFBFA] via-[#FBFBFA]/40 to-transparent dark:from-[#0D100E] dark:via-[#0D100E]/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#FBFBFA] via-transparent to-transparent dark:from-[#0D100E]" />
-      </div>
-
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6 flex-1">
 
         {/* ── Top Title & Actions Bar ── */}
@@ -519,12 +505,13 @@ export default function TenantPaymentsPage() {
               </div>
 
               {/* 3D Document Illustration */}
-              <div className="relative w-28 h-24 mx-auto">
+              <div className="relative w-36 h-24 mx-auto">
                 <Image
                   src="/images/payments/receipts-doc.png"
                   alt="Receipts and documents"
                   fill
                   className="object-contain"
+                  priority
                 />
               </div>
 
