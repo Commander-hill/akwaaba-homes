@@ -133,7 +133,10 @@ function LoginForm() {
     setError('');
 
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await api.post('/auth/login', {
+        email: email.trim(),
+        password,
+      });
 
       if (response.data.requireTwoFactor) {
         setRequireTwoFactor(true);
@@ -169,8 +172,12 @@ function LoginForm() {
         localStorage.removeItem('akwaaba_access_token');
         localStorage.removeItem('akwaaba_refresh_token');
         setError('ADMIN_PORTAL_REQUIRED');
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else if (err.code === 'ERR_NETWORK' || !err.response) {
+        setError('Unable to reach authentication server. Please ensure the backend server is running.');
       } else {
-        setError(err.response?.data?.message || 'Invalid email or password.');
+        setError('Invalid email or password.');
       }
       setIsLoading(false);
     }
@@ -222,45 +229,45 @@ function LoginForm() {
 
   // ── FORM INTERIOR COMPONENT ──
   const renderCardForm = () => (
-    <div className="flex flex-col h-full justify-between px-5 sm:px-6 pt-5 sm:pt-6 pb-2">
+    <div className="flex flex-col h-full justify-between px-6 sm:px-7 xl:px-8 pt-6 sm:pt-7 xl:pt-8 pb-0">
       {/* Top section: Title, Subtitle, SSO, Inputs */}
-      <div className="space-y-3.5">
+      <div className="flex-1 flex flex-col justify-center space-y-3.5 xl:space-y-4">
         {/* Header */}
         <div>
-          <h2 className="text-xl sm:text-2xl xl:text-[26px] font-black text-[#0D3827] dark:text-white tracking-tight leading-tight">
+          <h2 className="text-2xl sm:text-[26px] xl:text-[30px] font-black text-[#0D3827] dark:text-white tracking-tight leading-tight">
             Welcome Back!
           </h2>
-          <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          <p className="text-xs xl:text-[13px] text-zinc-500 dark:text-zinc-400 mt-1">
             Sign in to continue your AkwaabaHomes journey.
           </p>
         </div>
 
         {/* Status / Alert Banners */}
         {isTimeout && (
-          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-1.5 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-3.5 py-2 text-xs text-amber-800 dark:text-amber-300 font-medium">
             Session timed out. Please sign in again.
           </div>
         )}
         {isRegistered && (
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg px-3 py-1.5 text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl px-3.5 py-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
             Account created! Sign in to continue.
           </div>
         )}
         {error === 'ADMIN_PORTAL_REQUIRED' && (
-          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-1.5 text-[11px] text-amber-800 dark:text-amber-300 font-medium">
+          <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-3.5 py-2 text-xs text-amber-800 dark:text-amber-300 font-medium">
             Admin accounts must use the{' '}
             <a href="/admin/login" className="underline font-bold">Admin Portal</a>.
           </div>
         )}
         {error && error !== 'ADMIN_PORTAL_REQUIRED' && (
-          <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-lg px-3 py-1.5 text-[11px] text-rose-700 dark:text-rose-300 font-medium">
+          <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2 text-xs text-rose-700 dark:text-rose-300 font-medium">
             {error}
           </div>
         )}
 
         {/* 2FA Mode */}
         {requireTwoFactor ? (
-          <form onSubmit={handle2FASubmit} className="space-y-3 pt-1">
+          <form onSubmit={handle2FASubmit} className="space-y-3.5 pt-1">
             <p className="text-xs text-zinc-600 dark:text-zinc-300">
               Enter 6-digit authenticator code:
             </p>
@@ -277,14 +284,14 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading || twoFactorCode.length < 6}
-              className="w-full h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full h-11 rounded-full bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
             <button
               type="button"
               onClick={() => { setRequireTwoFactor(false); setTwoFactorCode(''); }}
-              className="w-full text-center text-[11px] text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+              className="w-full text-center text-xs text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
             >
               ← Cancel
             </button>
@@ -292,11 +299,11 @@ function LoginForm() {
         ) : (
           <>
             {/* Social Logins */}
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
-                className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+                className="flex items-center justify-center gap-2 h-10 xl:h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <GoogleIcon />
                 <span className="truncate">Continue with Google</span>
@@ -305,7 +312,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
-                className="flex items-center justify-center gap-1.5 h-9 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] font-semibold transition cursor-pointer shadow-2xs"
+                className="flex items-center justify-center gap-2 h-10 xl:h-11 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <MicrosoftIcon />
                 <span className="truncate">Continue with Microsoft</span>
@@ -313,62 +320,62 @@ function LoginForm() {
             </div>
 
             {/* "or" Divider */}
-            <div className="flex items-center gap-2.5 py-0.5">
+            <div className="flex items-center gap-3 py-0.5">
               <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
-              <span className="text-[10px] text-zinc-400 font-medium lowercase">or</span>
+              <span className="text-xs text-zinc-400 font-medium lowercase">or</span>
               <div className="flex-1 h-px bg-zinc-200/80 dark:bg-zinc-700" />
             </div>
 
             {/* Email & Password Form */}
-            <form onSubmit={handleSubmit} className="space-y-2.5">
+            <form onSubmit={handleSubmit} className="space-y-3 xl:space-y-3.5">
               {/* Email Address */}
               <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Mail className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="email"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full h-10 pl-9 pr-3 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  className="w-full h-11 xl:h-12 pl-10 pr-3.5 text-xs xl:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
               </div>
 
               {/* Password */}
               <div className="relative">
-                <Lock className="w-3.5 h-3.5 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Lock className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full h-10 pl-9 pr-10 text-xs rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  className="w-full h-11 xl:h-12 pl-10 pr-10 text-xs xl:text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer p-0.5"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
               {/* Remember Me + Forgot Password */}
               <div className="flex items-center justify-between pt-0.5">
-                <label className="flex items-center gap-1.5 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-3.5 h-3.5 rounded border-zinc-300 dark:border-zinc-600 text-[#16A34A] accent-[#16A34A] cursor-pointer"
                   />
-                  <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">Remember me</span>
+                  <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">Remember me</span>
                 </label>
                 <Link
                   href="/forgot-password"
-                  className="text-[11px] font-semibold text-[#16A34A] hover:text-[#15803D] transition"
+                  className="text-xs font-semibold text-[#16A34A] hover:text-[#15803D] transition"
                 >
                   Forgot password?
                 </Link>
@@ -378,21 +385,21 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
+                className="w-full h-11 xl:h-12 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-black text-xs xl:text-sm flex items-center justify-center gap-2 shadow-xs transition cursor-pointer mt-1"
               >
                 {isLoading ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <>
                     <span>Sign In</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </form>
 
             {/* Create Account Link */}
-            <p className="text-center text-[11px] text-zinc-500 dark:text-zinc-400 pt-0.5">
+            <p className="text-center text-xs text-zinc-500 dark:text-zinc-400 pt-1">
               Don't have an account?{' '}
               <Link
                 href="/register"
@@ -406,27 +413,33 @@ function LoginForm() {
       </div>
 
       {/* Card Bottom: Accra Skyline Illustration */}
-      <div className="pt-2 -mx-6 -mb-2 overflow-hidden pointer-events-none select-none">
+      <div className="pt-2 -mx-6 sm:-mx-7 xl:-mx-8 overflow-hidden pointer-events-none select-none shrink-0">
         <Image
           src="/images/auth/login-skyline-exact.png"
           alt="Accra Ghana Skyline"
-          width={340}
-          height={65}
-          className="w-full object-cover opacity-90"
+          width={420}
+          height={90}
+          className="w-full h-20 xl:h-24 object-cover object-top opacity-95"
         />
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#FAF9F5] dark:bg-[#0D100E] font-sans overflow-x-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#FAF9F5] dark:bg-[#0D100E] font-sans overflow-hidden">
 
       {/* ────────────────────────────────────────────────────────────────
-          DESKTOP VIEW (16:9 Widescreen Pixel-Perfect Presentation)
+          DESKTOP VIEW (Full-Bleed Zero-Whitespace Widescreen Presentation)
           Visible on lg: (1024px and wider screens)
          ──────────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:flex w-full min-h-screen items-center justify-center p-2 xl:p-4">
-        <div className="relative w-full max-w-[1536px] aspect-[16/9] shadow-2xl rounded-2xl overflow-hidden bg-white dark:bg-[#0D100E]">
+      <div className="hidden lg:flex w-screen h-screen items-center justify-center overflow-hidden relative bg-[#FAF9F5] dark:bg-[#0D100E]">
+        <div
+          className="relative shrink-0 overflow-hidden bg-white dark:bg-[#0D100E]"
+          style={{
+            width: 'max(100vw, calc(100vh * (16 / 9)))',
+            height: 'max(100vh, calc(100vw * (9 / 16)))',
+          }}
+        >
 
           {/* 1. Base 2K Background Scene (Woman on couch, building, left text, waves) */}
           <Image
