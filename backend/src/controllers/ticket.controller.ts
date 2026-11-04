@@ -414,3 +414,34 @@ export const getAdminEscalatedTickets = async (req: Request, res: Response): Pro
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const getTicketById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+    const { id } = req.params;
+    const ticket = await prisma.maintenanceTicket.findUnique({
+      where: { id },
+      include: {
+        property: {
+          select: { title: true, location: true, address: true, landlord: { select: { firstName: true, lastName: true, phoneNumber: true } } }
+        },
+        tenant: {
+          select: { firstName: true, lastName: true, email: true, phoneNumber: true }
+        }
+      }
+    });
+
+    if (!ticket) {
+      res.status(404).json({ message: 'Ticket not found' });
+      return;
+    }
+
+    res.status(200).json({ ticket });
+  } catch (error) {
+    console.error('Error fetching ticket by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
