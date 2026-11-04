@@ -244,12 +244,13 @@ export default function AgreementPage() {
         }}
       >
         {/* Centered Akwaaba Watermark Logo */}
-        <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06] print:opacity-[0.08]">
-          <div className="w-80 h-80 relative">
+        <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
+          <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
             <Image
               src="/logo-light.png"
               alt="Akwaaba Homes Watermark"
               fill
+              priority
               className="object-contain"
             />
           </div>

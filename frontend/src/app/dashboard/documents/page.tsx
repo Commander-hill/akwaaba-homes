@@ -1363,12 +1363,13 @@ export default function TenantDocumentsAndVerificationPage() {
 
             <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2 text-xs text-zinc-700 leading-relaxed relative overflow-hidden">
               {/* Centered Akwaaba Watermark Logo */}
-              <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06]">
-                <div className="w-52 h-52 relative">
+              <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16]">
+                <div className="w-60 h-60 relative">
                   <Image
                     src="/logo-light.png"
                     alt="Akwaaba Homes Watermark"
                     fill
+                    priority
                     className="object-contain"
                   />
                 </div>

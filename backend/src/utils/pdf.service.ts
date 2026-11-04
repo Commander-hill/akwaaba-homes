@@ -64,8 +64,8 @@ export async function generateTenancyAgreementPDF(data: {
       if (logoLightPath) {
         try {
           doc.save();
-          doc.opacity(0.08);
-          const watermarkSize = 340;
+          doc.opacity(0.16);
+          const watermarkSize = 380;
           const wmX = (595.28 - watermarkSize) / 2;
           const wmY = (841.89 - watermarkSize) / 2;
           doc.image(logoLightPath, wmX, wmY, { width: watermarkSize, height: watermarkSize });

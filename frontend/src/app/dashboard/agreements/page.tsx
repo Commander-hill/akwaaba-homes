@@ -195,7 +195,22 @@ export default function TenancyAgreementsPage() {
     }
   };
 
-  const handlePrintOrDownload = (mode: 'print' | 'download') => {
+  const handlePrintOrDownload = async (mode: 'print' | 'download') => {
+    let logoSrc = `${window.location.origin}/logo-light.png`;
+    try {
+      const res = await fetch('/logo-light.png');
+      if (res.ok) {
+        const blob = await res.blob();
+        logoSrc = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      }
+    } catch {
+      // fallback to origin URL
+    }
+
     const printWin = window.open('', '_blank', 'width=920,height=980');
     if (!printWin) {
       window.print();
@@ -210,6 +225,11 @@ export default function TenancyAgreementsPage() {
           <style>
             @media print {
               body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              .watermark {
+                opacity: 0.16 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
@@ -229,9 +249,9 @@ export default function TenancyAgreementsPage() {
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              width: 360px;
-              max-width: 75%;
-              opacity: 0.08;
+              width: 500px;
+              max-width: 85%;
+              opacity: 0.16;
               pointer-events: none;
               z-index: 0;
               display: flex;
@@ -244,6 +264,7 @@ export default function TenancyAgreementsPage() {
               width: 100%;
               height: auto;
               display: block;
+              image-rendering: -webkit-optimize-contrast;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
@@ -313,7 +334,7 @@ export default function TenancyAgreementsPage() {
         </head>
         <body>
           <div class="watermark">
-            <img src="${window.location.origin}/logo-light.png" alt="Akwaaba Homes Watermark" />
+            <img src="${logoSrc}" alt="Akwaaba Homes Watermark" />
           </div>
           <div class="doc-wrapper">
             <div class="header">
@@ -868,12 +889,13 @@ export default function TenancyAgreementsPage() {
                     }}
                   >
                     {/* Centered Akwaaba Watermark Logo */}
-                    <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06] dark:opacity-[0.09]">
-                      <div className="w-72 h-72 relative">
+                    <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] dark:opacity-[0.20]">
+                      <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
                         <Image
                           src="/logo-light.png"
                           alt="Akwaaba Homes Watermark"
                           fill
+                          priority
                           className="object-contain"
                         />
                       </div>
