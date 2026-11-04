@@ -38,7 +38,12 @@ type BookingTab = 'ALL' | 'UPCOMING' | 'ACTIVE' | 'PENDING' | 'CANCELLED';
 export default function TenantBookingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<BookingTab>('ALL');
-  const [calendarMonth, setCalendarMonth] = useState('September 2026');
+  const [today] = useState(() => new Date());
+  const [calendarCursor, setCalendarCursor] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date>(() => new Date());
   const [selectedBookingModal, setSelectedBookingModal] = useState<'PRIMARY' | 'PAST' | null>(null);
 
   // Query authenticated tenant bookings
@@ -624,88 +629,225 @@ export default function TenantBookingsPage() {
             </div>
           </div>
 
-          {/* Card 3: Your Calendar Widget */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
-                <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
-                  Your Calendar
-                </h3>
-              </div>
-            </div>
+          {/* Card 3: Your Calendar Widget (Real-Time Synced) */}
+          {(() => {
+            const viewYear = calendarCursor.getFullYear();
+            const viewMonth = calendarCursor.getMonth();
+            const monthLabel = calendarCursor.toLocaleDateString('en-GB', {
+              month: 'long',
+              year: 'numeric',
+            });
 
-            {/* Month & Chevrons */}
-            <div className="flex items-center justify-between text-xs font-bold text-zinc-950 dark:text-white pt-1">
-              <span>{calendarMonth}</span>
-              <div className="flex items-center gap-1 text-zinc-400">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCalendarMonth((prev) =>
-                      prev === 'October 2026' ? 'September 2026' : 'August 2026'
-                    )
-                  }
-                  className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
-                  title="Previous Month"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCalendarMonth((prev) =>
-                      prev === 'August 2026' ? 'September 2026' : 'October 2026'
-                    )
-                  }
-                  className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
-                  title="Next Month"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            const firstDayOfWeek = new Date(viewYear, viewMonth, 1).getDay(); // 0 (Sun) .. 6 (Sat)
+            const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(viewYear, viewMonth, 0).getDate();
 
-            {/* Calendar Days Table */}
-            <div className="grid grid-cols-7 gap-1 text-center pt-2">
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-                <span key={d} className="text-[10px] font-semibold text-zinc-400">
-                  {d}
-                </span>
-              ))}
+            const prevTrailingDays = Array.from({ length: firstDayOfWeek }, (_, idx) => ({
+              day: daysInPrevMonth - firstDayOfWeek + idx + 1,
+              date: new Date(viewYear, viewMonth - 1, daysInPrevMonth - firstDayOfWeek + idx + 1),
+              isCurrentMonth: false,
+            }));
 
-              {/* Previous month trailing days */}
-              <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">30</span>
-              <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">31</span>
+            const currentMonthDays = Array.from({ length: daysInMonth }, (_, idx) => ({
+              day: idx + 1,
+              date: new Date(viewYear, viewMonth, idx + 1),
+              isCurrentMonth: true,
+            }));
 
-              {/* Month days */}
-              {[1, 2, 3, 4, 5].map((day) => (
-                <span key={day} className="text-[11px] text-zinc-700 dark:text-zinc-300 py-1">
-                  {day}
-                </span>
-              ))}
+            const totalCellsSoFar = prevTrailingDays.length + currentMonthDays.length;
+            const totalGridCells = totalCellsSoFar <= 35 ? 35 : 42;
+            const nextLeadingCount = totalGridCells - totalCellsSoFar;
 
-              {/* Day 6 Highlighted (Check-in Date) */}
-              <div className="flex items-center justify-center py-0.5">
-                <span className="w-6 h-6 rounded-full bg-[#16A34A] text-white text-[11px] font-bold flex items-center justify-center shadow-xs">
-                  6
-                </span>
-              </div>
+            const nextLeadingDays = Array.from({ length: nextLeadingCount }, (_, idx) => ({
+              day: idx + 1,
+              date: new Date(viewYear, viewMonth + 1, idx + 1),
+              isCurrentMonth: false,
+            }));
 
-              {[7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map(
-                (day) => (
-                  <span key={day} className="text-[11px] text-zinc-700 dark:text-zinc-300 py-1">
-                    {day}
+            const allCells = [...prevTrailingDays, ...currentMonthDays, ...nextLeadingDays];
+
+            const isSameDay = (a: Date, b: Date) =>
+              a.getFullYear() === b.getFullYear() &&
+              a.getMonth() === b.getMonth() &&
+              a.getDate() === b.getDate();
+
+            // Gather synced booking milestone dates (check-in & move-out)
+            const milestoneDates: { date: Date; label: string; type: 'CHECK_IN' | 'MOVE_OUT' }[] = [];
+            allBookings.forEach((b) => {
+              if (b.startDate) {
+                milestoneDates.push({
+                  date: new Date(b.startDate),
+                  label: `Check-in: ${b.property?.title || 'Residence'}`,
+                  type: 'CHECK_IN',
+                });
+              }
+              if (b.endDate) {
+                milestoneDates.push({
+                  date: new Date(b.endDate),
+                  label: `Move-out: ${b.property?.title || 'Residence'}`,
+                  type: 'MOVE_OUT',
+                });
+              }
+            });
+            if (milestoneDates.length === 0) {
+              milestoneDates.push(
+                {
+                  date: new Date(2026, 8, 6),
+                  label: `Check-in: ${primaryTitle}`,
+                  type: 'CHECK_IN',
+                },
+                {
+                  date: new Date(2027, 8, 6),
+                  label: `Move-out: ${primaryTitle}`,
+                  type: 'MOVE_OUT',
+                }
+              );
+            }
+
+            const selectedMilestone = milestoneDates.find((m) =>
+              isSameDay(m.date, selectedCalendarDate)
+            );
+            const isCurrentMonthToday =
+              viewYear === today.getFullYear() && viewMonth === today.getMonth();
+
+            return (
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                    <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
+                      Your Calendar
+                    </h3>
+                  </div>
+
+                  {!isCurrentMonthToday && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const now = new Date();
+                        setCalendarCursor(new Date(now.getFullYear(), now.getMonth(), 1));
+                        setSelectedCalendarDate(now);
+                      }}
+                      className="px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 text-[10px] font-bold hover:bg-emerald-100 transition cursor-pointer"
+                    >
+                      Today
+                    </button>
+                  )}
+                </div>
+
+                {/* Month & Chevrons */}
+                <div className="flex items-center justify-between text-xs font-bold text-zinc-950 dark:text-white pt-1">
+                  <span>{monthLabel}</span>
+                  <div className="flex items-center gap-1 text-zinc-400">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCalendarCursor(new Date(viewYear, viewMonth - 1, 1))
+                      }
+                      className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
+                      title="Previous Month"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setCalendarCursor(new Date(viewYear, viewMonth + 1, 1))
+                      }
+                      className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
+                      title="Next Month"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Calendar Days Table */}
+                <div className="grid grid-cols-7 gap-1 text-center pt-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                    <span key={d} className="text-[10px] font-semibold text-zinc-400">
+                      {d}
+                    </span>
+                  ))}
+
+                  {allCells.map((cell, idx) => {
+                    const isTodayCell = isSameDay(cell.date, today);
+                    const isSelectedCell = isSameDay(cell.date, selectedCalendarDate);
+                    const milestone = milestoneDates.find((m) =>
+                      isSameDay(m.date, cell.date)
+                    );
+
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCalendarDate(cell.date);
+                          if (!cell.isCurrentMonth) {
+                            setCalendarCursor(
+                              new Date(cell.date.getFullYear(), cell.date.getMonth(), 1)
+                            );
+                          }
+                        }}
+                        title={
+                          milestone
+                            ? milestone.label
+                            : isTodayCell
+                            ? 'Today'
+                            : cell.date.toLocaleDateString('en-GB', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                        }
+                        className="relative flex items-center justify-center py-0.5 cursor-pointer group"
+                      >
+                        <span
+                          className={`w-6 h-6 rounded-full text-[11px] flex items-center justify-center transition ${
+                            isTodayCell
+                              ? 'bg-[#16A34A] text-white font-bold shadow-xs'
+                              : isSelectedCell
+                              ? 'bg-emerald-100 dark:bg-emerald-950/70 text-[#0B3B24] dark:text-emerald-300 font-bold ring-1 ring-[#16A34A]'
+                              : milestone
+                              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#15803D] dark:text-emerald-400 font-bold ring-1 ring-emerald-300 dark:ring-emerald-700'
+                              : cell.isCurrentMonth
+                              ? 'text-zinc-700 dark:text-zinc-300 group-hover:bg-zinc-100 dark:group-hover:bg-zinc-800'
+                              : 'text-zinc-300 dark:text-zinc-600'
+                          }`}
+                        >
+                          {cell.day}
+                        </span>
+                        {milestone && !isTodayCell && (
+                          <span className="w-1 h-1 rounded-full bg-[#16A34A] absolute bottom-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Live Synced Footer Status */}
+                <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-[11px]">
+                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">
+                    {isSameDay(selectedCalendarDate, today)
+                      ? `Today • ${today.toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}`
+                      : selectedCalendarDate.toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                   </span>
-                )
-              )}
-
-              {/* Next month leading days */}
-              <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">1</span>
-              <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">2</span>
-              <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">3</span>
-            </div>
-          </div>
+                  <span className="font-bold text-[#16A34A] dark:text-emerald-400 truncate max-w-[155px]">
+                    {selectedMilestone ? selectedMilestone.label : 'Synced • Live'}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Card 4: Need to make changes? Banner Card */}
           <Link
