@@ -68,22 +68,22 @@ export function ProfileWorkspaceContent({
   const academicRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
-    firstName: 'Stephen',
-    lastName: 'Darko',
-    otherNames: 'A.',
-    phoneNumber: '05*******78',
-    email: 'ste*****@gmail.com',
+    firstName: '',
+    lastName: '',
+    otherNames: '',
+    phoneNumber: '',
+    email: '',
     gender: 'MALE',
-    dateOfBirth: '15 Jun 2000',
+    dateOfBirth: '',
     nationality: 'Ghanaian',
-    guardianName: 'Mr. Darko',
-    guardianPhone: '05*******21',
+    guardianName: '',
+    guardianPhone: '',
     avatarUrl: '',
-    campus: 'University of Cape Coast (UCC)',
-    studentId: 'NRIT/CR/17/22/0001',
-    dateOfAdmission: '2022-09-01',
-    programmeOfStudy: 'BSc IT',
-    yearOfStudy: 'Level 400',
+    campus: '',
+    studentId: '',
+    dateOfAdmission: '',
+    programmeOfStudy: '',
+    yearOfStudy: '',
     studentType: 'Undergraduate',
   });
 
@@ -102,7 +102,7 @@ export function ProfileWorkspaceContent({
         const res = await api.get('/auth/2fa/status');
         return res.data;
       } catch {
-        return { twoFactorEnabled: true, remainingRecoveryCodes: 8 };
+        return { twoFactorEnabled: false, remainingRecoveryCodes: 0 };
       }
     },
   });
@@ -126,22 +126,22 @@ export function ProfileWorkspaceContent({
   const populateFromSession = (s: any) => {
     if (!s) return;
     setFormData({
-      firstName: s.firstName || 'Stephen',
-      lastName: s.lastName || 'Darko',
-      otherNames: s.otherNames || 'A.',
-      phoneNumber: s.phoneNumber || '05*******78',
-      email: s.email || 'ste*****@gmail.com',
+      firstName: s.firstName || '',
+      lastName: s.lastName || '',
+      otherNames: s.otherNames || '',
+      phoneNumber: s.phoneNumber || '',
+      email: s.email || '',
       gender: s.gender || 'MALE',
-      dateOfBirth: s.dateOfBirth || '15 Jun 2000',
+      dateOfBirth: s.dateOfBirth || '',
       nationality: s.nationality || 'Ghanaian',
-      guardianName: s.guardianName || 'Mr. Darko',
-      guardianPhone: s.guardianPhone || '05*******21',
+      guardianName: s.guardianName || '',
+      guardianPhone: s.guardianPhone || '',
       avatarUrl: s.avatarUrl || '',
-      campus: s.campus || 'University of Cape Coast (UCC)',
-      studentId: s.studentId || 'NRIT/CR/17/22/0001',
+      campus: s.campus || '',
+      studentId: s.studentId || '',
       dateOfAdmission: s.dateOfAdmission || '',
-      programmeOfStudy: s.programmeOfStudy || 'BSc IT',
-      yearOfStudy: s.yearOfStudy || 'Level 400',
+      programmeOfStudy: s.programmeOfStudy || '',
+      yearOfStudy: s.yearOfStudy || '',
       studentType: s.studentType || 'Undergraduate',
     });
     setIsStudent(
@@ -1195,8 +1195,15 @@ export function ProfileWorkspaceContent({
                   <span className="text-xs font-extrabold text-zinc-900">
                     Two-Factor Authentication (2FA)
                   </span>
-                  <span className="px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10.5px] font-bold">
-                    {twoFactorStatus?.twoFactorEnabled !== false ? 'Enabled' : 'Recommended'}
+                  <span
+                    className={clsx(
+                      'px-2 py-0.5 rounded-full text-[10.5px] font-bold',
+                      twoFactorStatus?.twoFactorEnabled === true
+                        ? 'bg-[#DCFCE7] text-[#15803D]'
+                        : 'bg-amber-100 text-amber-800'
+                    )}
+                  >
+                    {twoFactorStatus?.twoFactorEnabled === true ? 'Enabled' : 'Recommended'}
                   </span>
                 </div>
                 <p className="text-xs text-zinc-600">
@@ -1316,31 +1323,8 @@ export function ProfileWorkspaceContent({
                   })}
                 </div>
               ) : (
-                <div className="space-y-2 text-xs">
-                  <div className="p-3 rounded-xl border border-emerald-200 bg-emerald-50/40 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <Laptop className="w-4 h-4 text-[#0B3B24]" />
-                      <div>
-                        <p className="font-bold text-zinc-900">Windows Desktop • Chrome</p>
-                        <p className="text-[11px] text-zinc-500">Accra, Ghana • Active now</p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10.5px] font-bold">
-                      Current Device
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl border border-zinc-200 bg-zinc-50 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <Smartphone className="w-4 h-4 text-zinc-600" />
-                      <div>
-                        <p className="font-bold text-zinc-900">iPhone 15 • Mobile Safari</p>
-                        <p className="text-[11px] text-zinc-500">Cape Coast, Ghana • 2 hours ago</p>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-zinc-200 text-zinc-700 text-[10.5px] font-bold">
-                      Verified Mobile
-                    </span>
-                  </div>
+                <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/70 text-center text-xs text-zinc-500">
+                  <p>No additional active sessions detected. You are securely signed in on this current browser.</p>
                 </div>
               )}
             </div>

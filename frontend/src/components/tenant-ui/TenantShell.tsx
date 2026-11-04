@@ -99,12 +99,31 @@ export default function TenantShell({
     staleTime: 60_000,
   });
 
+  const { data: conversationsData } = useQuery({
+    queryKey: ['conversations-shell-unread'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/chat/conversations');
+        return Array.isArray(data) ? data : data?.conversations || [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: Boolean(user),
+    staleTime: 30_000,
+  });
+
+  const unreadMessagesCount = (conversationsData || []).reduce(
+    (acc: number, c: any) => acc + (c.unreadCount || (c.unread ? 1 : 0)),
+    0
+  );
+
   const liveUnreadCount =
     unreadNotificationsCount > 0
       ? unreadNotificationsCount
       : Array.isArray(notificationsData?.notifications)
       ? notificationsData.notifications.filter((n: any) => !n.isRead).length
-      : 3;
+      : 0;
 
   const onLogout =
     propOnLogout ||
@@ -171,7 +190,7 @@ export default function TenantShell({
       href: '/dashboard/messages',
       matchPrefixes: ['/dashboard/messages'],
       icon: MessageSquare,
-      badge: 3,
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
     },
     {
       label: 'Documents',
@@ -491,6 +510,28 @@ export default function TenantShell({
                   <button
                     type="button"
                     onClick={() => {
+                      setTheme(resolvedTheme === 'dark' ? 'light' : 'dark');
+                    }}
+                    className="w-full flex items-center justify-between px-3.5 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      {mounted && resolvedTheme === 'dark' ? (
+                        <Sun className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <Moon className="w-4 h-4 text-zinc-500" />
+                      )}
+                      <span>Appearance</span>
+                    </span>
+                    <span className="text-[10px] font-bold text-zinc-400 capitalize">
+                      {mounted ? resolvedTheme : 'Auto'}
+                    </span>
+                  </button>
+
+                  <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       setProfileDropdownOpen(false);
                       onLogout();
                     }}
@@ -508,7 +549,7 @@ export default function TenantShell({
         {/* Page Content Container */}
         <main
           className={clsx(
-            'flex-1 w-full mx-auto pb-16 lg:pb-0',
+            'flex-1 w-full mx-auto pb-24 lg:pb-8',
             isFullBleedPage ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
           )}
         >

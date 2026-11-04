@@ -306,11 +306,11 @@ export default function MyResidencePage() {
 
               <div className="flex items-center gap-2">
                 <a
-                  href={`tel:${landlord?.phoneNumber || '+233240000000'}`}
+                  href={`tel:${landlord?.phoneNumber || '+233540123900'}`}
                   className="flex-1 py-2 px-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition"
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>Call Caretaker</span>
+                  <span>{landlord?.phoneNumber ? 'Call Caretaker' : 'Call Support Desk'}</span>
                 </a>
                 <Link
                   href="/dashboard/messages"
