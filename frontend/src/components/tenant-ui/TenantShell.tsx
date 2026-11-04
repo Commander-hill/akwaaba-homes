@@ -287,17 +287,12 @@ export default function TenantShell({
     </div>
   );
 
-  const isStandaloneFullWidth = pathname === '/dashboard/invoice' || pathname === '/dashboard/agreements';
+  const isFullBleedPage = pathname === '/dashboard/invoice' || pathname === '/dashboard/agreements';
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside
-        className={clsx(
-          'lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20',
-          isStandaloneFullWidth ? 'hidden' : 'hidden lg:flex'
-        )}
-      >
+      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20">
         {renderSidebarContent()}
       </aside>
 
@@ -311,10 +306,7 @@ export default function TenantShell({
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className={clsx(
-                'p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer',
-                isStandaloneFullWidth ? 'block' : 'lg:hidden'
-              )}
+              className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -453,20 +445,17 @@ export default function TenantShell({
         <main
           className={clsx(
             'flex-1 w-full mx-auto',
-            isStandaloneFullWidth ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
+            isFullBleedPage ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
           )}
         >
           {children}
         </main>
       </div>
 
-      {/* ── MOBILE / STANDALONE NAVIGATION DRAWER ── */}
+      {/* ── MOBILE NAVIGATION DRAWER ── */}
       {mobileDrawerOpen && (
         <div
-          className={clsx(
-            'fixed inset-0 z-50 flex',
-            isStandaloneFullWidth ? '' : 'lg:hidden'
-          )}
+          className="lg:hidden fixed inset-0 z-50 flex"
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
