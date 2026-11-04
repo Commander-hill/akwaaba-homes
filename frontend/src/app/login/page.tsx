@@ -284,7 +284,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading || twoFactorCode.length < 6}
-              className="w-full h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full h-10 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
@@ -385,7 +385,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-9 xl:h-10 rounded-full bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
+                className="w-full h-9 xl:h-10 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
               >
                 {isLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
