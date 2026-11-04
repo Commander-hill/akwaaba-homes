@@ -1361,28 +1361,42 @@ export default function TenantDocumentsAndVerificationPage() {
               </button>
             </div>
 
-            <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2 text-xs text-zinc-700 leading-relaxed">
-              <p>
-                <strong>Property:</strong> {activePropertyName} ({activePropertyLocation})
-              </p>
-              <p>
-                <strong>Landlord:</strong> {activeLandlordName}
-              </p>
-              <p>
-                <strong>Tenant:</strong> {session?.firstName || 'Stephen'}{' '}
-                {session?.lastName || 'Darko'}
-              </p>
-              <p>
-                <strong>Term:</strong> {activeStartDate} — {activeEndDate}
-              </p>
-              <p>
-                <strong>Digital Seal (SHA-256):</strong>{' '}
-                <span className="font-mono">{activeHash}</span>
-              </p>
-              <hr className="border-zinc-200 my-2" />
-              <p className="text-[11.5px] text-zinc-600">
-                This residential tenancy agreement has been digitally executed and cryptographically sealed under the Ghana Rent Act, 1963 (Act 220) and Electronic Transactions Act, 2008 (Act 772).
-              </p>
+            <div className="p-4 rounded-xl bg-zinc-50 border border-zinc-200/80 space-y-2 text-xs text-zinc-700 leading-relaxed relative overflow-hidden">
+              {/* Centered Akwaaba Watermark Logo */}
+              <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06]">
+                <div className="w-52 h-52 relative">
+                  <Image
+                    src="/logo-light.png"
+                    alt="Akwaaba Homes Watermark"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+
+              <div className="relative z-10 space-y-2">
+                <p>
+                  <strong>Property:</strong> {activePropertyName} ({activePropertyLocation})
+                </p>
+                <p>
+                  <strong>Landlord:</strong> {activeLandlordName}
+                </p>
+                <p>
+                  <strong>Tenant:</strong> {session?.firstName || 'Stephen'}{' '}
+                  {session?.lastName || 'Darko'}
+                </p>
+                <p>
+                  <strong>Term:</strong> {activeStartDate} — {activeEndDate}
+                </p>
+                <p>
+                  <strong>Digital Seal (SHA-256):</strong>{' '}
+                  <span className="font-mono">{activeHash}</span>
+                </p>
+                <hr className="border-zinc-200 my-2" />
+                <p className="text-[11.5px] text-zinc-600">
+                  This residential tenancy agreement has been digitally executed and cryptographically sealed under the Ghana Rent Act, 1963 (Act 220) and Electronic Transactions Act, 2008 (Act 772).
+                </p>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">

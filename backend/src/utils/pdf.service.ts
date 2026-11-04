@@ -47,9 +47,39 @@ export async function generateTenancyAgreementPDF(data: {
       year: 'numeric',
     });
 
+    // ── Resolve Akwaaba Homes Watermark Logo ──
+    const possibleLogoPaths = [
+      path.resolve(__dirname, '../../assets/logo-light.png'),
+      path.resolve(__dirname, '../assets/logo-light.png'),
+      path.resolve(process.cwd(), 'assets/logo-light.png'),
+      path.resolve(process.cwd(), 'backend/assets/logo-light.png'),
+      path.resolve(process.cwd(), '../frontend/public/logo-light.png'),
+      path.resolve(process.cwd(), 'frontend/public/logo-light.png'),
+      path.resolve(__dirname, '../../../../frontend/public/logo-light.png'),
+      path.resolve(__dirname, '../../../frontend/public/logo-light.png'),
+    ];
+    const logoLightPath = possibleLogoPaths.find((p) => fs.existsSync(p));
+
+    const drawWatermark = () => {
+      if (logoLightPath) {
+        try {
+          doc.save();
+          doc.opacity(0.08);
+          const watermarkSize = 340;
+          const wmX = (595.28 - watermarkSize) / 2;
+          const wmY = (841.89 - watermarkSize) / 2;
+          doc.image(logoLightPath, wmX, wmY, { width: watermarkSize, height: watermarkSize });
+          doc.restore();
+        } catch {
+          // Fallback silently if watermark image encounters unhandled format warning
+        }
+      }
+    };
+
     // ════════════════════════════════════════════════════════════════
     // PAGE 1: FORMAL CONVEYANCING HEADER, RECITALS, SCHEDULE & CLAUSES
     // ════════════════════════════════════════════════════════════════
+    drawWatermark();
 
     // Top Reference Folio Line
     doc
@@ -233,6 +263,7 @@ export async function generateTenancyAgreementPDF(data: {
     // PAGE 2: LANDLORD COVENANTS, DEPOSIT, NOTICE & EXECUTION BLOCK
     // ════════════════════════════════════════════════════════════════
     doc.addPage({ margin: 54, size: 'A4' });
+    drawWatermark();
 
     doc
       .font('Times-Roman')

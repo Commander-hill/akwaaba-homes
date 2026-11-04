@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
@@ -237,16 +238,29 @@ export default function AgreementPage() {
           THE PHYSICAL LEGAL INSTRUMENT (AUTHENTIC GHANAIAN CONVEYANCING PAPER)
          ══════════════════════════════════════════════════════════════════════════ */}
       <article
-        className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-16 sm:py-16 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-0"
+        className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-16 sm:py-16 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-0 overflow-hidden"
         style={{
           fontFamily: 'Georgia, "Times New Roman", Times, serif',
         }}
       >
-        {/* Top Metadata Folio Line */}
-        <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-4 border-b border-[#D6D0C4] tracking-wide">
-          <span>INSTRUMENT REF: {docRef}</span>
-          <span>REPUBLIC OF GHANA</span>
+        {/* Centered Akwaaba Watermark Logo */}
+        <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06] print:opacity-[0.08]">
+          <div className="w-80 h-80 relative">
+            <Image
+              src="/logo-light.png"
+              alt="Akwaaba Homes Watermark"
+              fill
+              className="object-contain"
+            />
+          </div>
         </div>
+
+        <div className="relative z-10">
+          {/* Top Metadata Folio Line */}
+          <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-4 border-b border-[#D6D0C4] tracking-wide">
+            <span>INSTRUMENT REF: {docRef}</span>
+            <span>REPUBLIC OF GHANA</span>
+          </div>
 
         {/* Formal Conveyancing Title Header */}
         <header className="text-center py-8 border-b-2 border-double border-[#1A1A18] space-y-2">
@@ -585,6 +599,7 @@ export default function AgreementPage() {
             </div>
           </div>
         </div>
+      </div>
       </article>
 
       {/* ══════════════════════════════════════════════════════════════════════════

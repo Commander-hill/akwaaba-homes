@@ -208,6 +208,12 @@ export default function TenancyAgreementsPage() {
         <head>
           <title>Residential Tenancy Agreement - ${agreementRef}</title>
           <style>
+            @media print {
+              body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
             body {
               font-family: 'Georgia', 'Times New Roman', serif;
               color: #14221A;
@@ -215,6 +221,35 @@ export default function TenancyAgreementsPage() {
               margin: 36px auto;
               padding: 24px 36px;
               line-height: 1.65;
+              position: relative;
+              background: #ffffff;
+            }
+            .watermark {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 360px;
+              max-width: 75%;
+              opacity: 0.08;
+              pointer-events: none;
+              z-index: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .watermark img {
+              width: 100%;
+              height: auto;
+              display: block;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            .doc-wrapper {
+              position: relative;
+              z-index: 1;
             }
             .header {
               text-align: center;
@@ -271,40 +306,49 @@ export default function TenancyAgreementsPage() {
               border-radius: 8px;
               padding: 14px;
               background: #FAF8F2;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
           </style>
         </head>
         <body>
-          <div class="header">
-            <img src="${window.location.origin}/images/agreements/coat-of-arms.png" class="coa" alt="Republic of Ghana" />
-            <p class="rep">REPUBLIC OF GHANA</p>
-            <h1>RESIDENTIAL TENANCY AGREEMENT</h1>
-            <div class="ref">Agreement Ref: ${agreementRef}</div>
+          <div class="watermark">
+            <img src="${window.location.origin}/logo-light.png" alt="Akwaaba Homes Watermark" />
           </div>
-          <h2>1. PARTIES</h2>
-          <p>This Tenancy Agreement is made on this <strong>6th day of September, 2026</strong> between <strong>${landlordName}</strong> (hereinafter referred to as the "Landlord") of the one part, and <strong>${tenantName}</strong> (hereinafter referred to as the "Tenant") of the other part.</p>
-          <h2>2. PREMISES &amp; TERM</h2>
-          <p>The Landlord hereby demises unto the Tenant all that self-contained residential unit known as <strong>${propertyTitle}</strong> located at <strong>${propertyLocation}</strong> for a fixed term of <strong>12 Months</strong> commencing on <strong>${startDate}</strong> and expiring on <strong>${endDate}</strong>.</p>
-          <h2>3. RENT &amp; STATUTORY COMPLIANCE</h2>
-          <p>The reserved rent for the demised premises shall be <strong>${rentDisplay}</strong> payable via verified Paystack digital settlement in full compliance with Section 25 of the <strong>Ghana Rent Act, 1963 (Act 220)</strong>.</p>
-          <h2>4. COVENANTS &amp; OBLIGATIONS</h2>
-          <p>The Tenant covenants to use the premises strictly for residential purposes only, maintain the interior and fixtures in good tenantable repair, and abide by compound quiet hours and security regulations. The Landlord covenants that the Tenant paying the reserved rent shall peaceably hold and enjoy the demised premises without lawful interruption.</p>
-          <div class="sig-grid">
-            <div class="sig-box">
-              <strong>SIGNED BY LANDLORD:</strong><br/>
-              ${landlordName}<br/>
-              Status: Verified &amp; Executed (${startDate})
+          <div class="doc-wrapper">
+            <div class="header">
+              <img src="${window.location.origin}/images/agreements/coat-of-arms.png" class="coa" alt="Republic of Ghana" />
+              <p class="rep">REPUBLIC OF GHANA</p>
+              <h1>RESIDENTIAL TENANCY AGREEMENT</h1>
+              <div class="ref">Agreement Ref: ${agreementRef}</div>
             </div>
-            <div class="sig-box">
-              <strong>SIGNED BY TENANT:</strong><br/>
-              ${tenantName}<br/>
-              Status: Verified &amp; Executed (${startDate})
+            <h2>1. PARTIES</h2>
+            <p>This Tenancy Agreement is made on this <strong>6th day of September, 2026</strong> between <strong>${landlordName}</strong> (hereinafter referred to as the "Landlord") of the one part, and <strong>${tenantName}</strong> (hereinafter referred to as the "Tenant") of the other part.</p>
+            <h2>2. PREMISES &amp; TERM</h2>
+            <p>The Landlord hereby demises unto the Tenant all that self-contained residential unit known as <strong>${propertyTitle}</strong> located at <strong>${propertyLocation}</strong> for a fixed term of <strong>12 Months</strong> commencing on <strong>${startDate}</strong> and expiring on <strong>${endDate}</strong>.</p>
+            <h2>3. RENT &amp; STATUTORY COMPLIANCE</h2>
+            <p>The reserved rent for the demised premises shall be <strong>${rentDisplay}</strong> payable via verified Paystack digital settlement in full compliance with Section 25 of the <strong>Ghana Rent Act, 1963 (Act 220)</strong>.</p>
+            <h2>4. COVENANTS &amp; OBLIGATIONS</h2>
+            <p>The Tenant covenants to use the premises strictly for residential purposes only, maintain the interior and fixtures in good tenantable repair, and abide by compound quiet hours and security regulations. The Landlord covenants that the Tenant paying the reserved rent shall peaceably hold and enjoy the demised premises without lawful interruption.</p>
+            <div class="sig-grid">
+              <div class="sig-box">
+                <strong>SIGNED BY LANDLORD:</strong><br/>
+                ${landlordName}<br/>
+                Status: Verified &amp; Executed (${startDate})
+              </div>
+              <div class="sig-box">
+                <strong>SIGNED BY TENANT:</strong><br/>
+                ${tenantName}<br/>
+                Status: Verified &amp; Executed (${startDate})
+              </div>
             </div>
           </div>
           <script>
-            window.onload = function() {
-              window.print();
-            };
+            window.addEventListener('load', function() {
+              setTimeout(function() {
+                window.print();
+              }, 250);
+            });
           </script>
         </body>
       </html>
@@ -817,148 +861,162 @@ export default function TenancyAgreementsPage() {
                 {/* Right Legal Paper Sheet (9 cols) */}
                 <div className="sm:col-span-9 bg-[#EAE7DC] dark:bg-zinc-950 p-3 sm:p-5 overflow-y-auto max-h-[480px]">
                   <div
-                    className="bg-white dark:bg-[#181E1B] text-[#14221A] dark:text-zinc-100 rounded-lg shadow-sm border border-[#E0DDD0] dark:border-zinc-800 px-6 sm:px-10 py-7 mx-auto transition-transform origin-top"
+                    className="bg-white dark:bg-[#181E1B] text-[#14221A] dark:text-zinc-100 rounded-lg shadow-sm border border-[#E0DDD0] dark:border-zinc-800 px-6 sm:px-10 py-7 mx-auto transition-transform origin-top relative overflow-hidden"
                     style={{
                       transform: `scale(${zoom / 100})`,
                       maxWidth: '680px',
                     }}
                   >
-                    {/* Top Overview & Republic of Ghana Emblem */}
-                    <div
-                      ref={(el) => {
-                        sectionRefs.current.overview = el;
-                      }}
-                      className="text-center border-b-2 border-[#C8A24A] pb-4 mb-5"
-                    >
-                      <div className="w-16 h-14 relative mx-auto mb-1.5">
+                    {/* Centered Akwaaba Watermark Logo */}
+                    <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.06] dark:opacity-[0.09]">
+                      <div className="w-72 h-72 relative">
                         <Image
-                          src="/images/agreements/coat-of-arms.png"
-                          alt="Republic of Ghana Coat of Arms"
+                          src="/logo-light.png"
+                          alt="Akwaaba Homes Watermark"
                           fill
                           className="object-contain"
                         />
                       </div>
-                      <p className="font-serif text-[12px] font-bold tracking-[0.06em] uppercase text-[#14221A] dark:text-zinc-200">
-                        REPUBLIC OF GHANA
-                      </p>
-                      <h3 className="font-serif text-lg sm:text-[21px] font-bold tracking-tight text-[#14221A] dark:text-white mt-0.5">
-                        RESIDENTIAL TENANCY AGREEMENT
-                      </h3>
-                      <p className="text-[11.5px] font-semibold text-[#3B4B41] dark:text-zinc-400 mt-0.5">
-                        Agreement Ref: {agreementRef}
-                      </p>
                     </div>
 
-                    {/* Legal Clauses */}
-                    <div className="space-y-5 text-xs sm:text-[13px] leading-relaxed font-serif">
-                      {/* 1. PARTIES */}
+                    <div className="relative z-10">
+                      {/* Top Overview & Republic of Ghana Emblem */}
                       <div
                         ref={(el) => {
-                          sectionRefs.current.parties = el;
+                          sectionRefs.current.overview = el;
                         }}
-                        className={
-                          docSearch &&
-                          'parties landlord tenant'.includes(docSearch.toLowerCase())
-                            ? 'bg-amber-50/80 dark:bg-amber-950/30 p-2 rounded'
-                            : ''
-                        }
+                        className="text-center border-b-2 border-[#C8A24A] pb-4 mb-5"
                       >
-                        <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
-                          1. &nbsp;PARTIES
-                        </h4>
-                        <p className="text-[#233128] dark:text-zinc-200">
-                          This Tenancy Agreement is made on this{' '}
-                          <strong>6th day of September, 2026</strong> between{' '}
-                          <strong>{landlordName}</strong> of {propertyLocation} (hereinafter
-                          referred to as the <strong>&ldquo;Landlord&rdquo;</strong>) of the one
-                          part, and <strong>{tenantName}</strong> (hereinafter referred to as the{' '}
-                          <strong>&ldquo;Tenant&rdquo;</strong>) of the other part.
+                        <div className="w-16 h-14 relative mx-auto mb-1.5">
+                          <Image
+                            src="/images/agreements/coat-of-arms.png"
+                            alt="Republic of Ghana Coat of Arms"
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                        <p className="font-serif text-[12px] font-bold tracking-[0.06em] uppercase text-[#14221A] dark:text-zinc-200">
+                          REPUBLIC OF GHANA
+                        </p>
+                        <h3 className="font-serif text-lg sm:text-[21px] font-bold tracking-tight text-[#14221A] dark:text-white mt-0.5">
+                          RESIDENTIAL TENANCY AGREEMENT
+                        </h3>
+                        <p className="text-[11.5px] font-semibold text-[#3B4B41] dark:text-zinc-400 mt-0.5">
+                          Agreement Ref: {agreementRef}
                         </p>
                       </div>
 
-                      {/* 2. PREMISES & TERM */}
-                      <div
-                        ref={(el) => {
-                          sectionRefs.current.terms = el;
-                        }}
-                      >
-                        <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
-                          2. &nbsp;DEMISED PREMISES &amp; TERM
-                        </h4>
-                        <p className="text-[#233128] dark:text-zinc-200">
-                          The Landlord hereby lets and the Tenant hereby takes all that
-                          self-contained residential unit known as{' '}
-                          <strong>{propertyTitle}</strong> situated at{' '}
-                          <strong>{propertyLocation}</strong>, Ghana, for a fixed tenancy term of{' '}
-                          <strong>12 Months</strong> commencing on <strong>{startDate}</strong>{' '}
-                          and expiring on <strong>{endDate}</strong>.
-                        </p>
-                      </div>
+                      {/* Legal Clauses */}
+                      <div className="space-y-5 text-xs sm:text-[13px] leading-relaxed font-serif">
+                        {/* 1. PARTIES */}
+                        <div
+                          ref={(el) => {
+                            sectionRefs.current.parties = el;
+                          }}
+                          className={
+                            docSearch &&
+                            'parties landlord tenant'.includes(docSearch.toLowerCase())
+                              ? 'bg-amber-50/80 dark:bg-amber-950/30 p-2 rounded'
+                              : ''
+                          }
+                        >
+                          <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
+                            1. &nbsp;PARTIES
+                          </h4>
+                          <p className="text-[#233128] dark:text-zinc-200">
+                            This Tenancy Agreement is made on this{' '}
+                            <strong>6th day of September, 2026</strong> between{' '}
+                            <strong>{landlordName}</strong> of {propertyLocation} (hereinafter
+                            referred to as the <strong>&ldquo;Landlord&rdquo;</strong>) of the one
+                            part, and <strong>{tenantName}</strong> (hereinafter referred to as the{' '}
+                            <strong>&ldquo;Tenant&rdquo;</strong>) of the other part.
+                          </p>
+                        </div>
 
-                      {/* 3. RENT */}
-                      <div
-                        ref={(el) => {
-                          sectionRefs.current.rent = el;
-                        }}
-                      >
-                        <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
-                          3. &nbsp;RENT &amp; STATUTORY COMPLIANCE
-                        </h4>
-                        <p className="text-[#233128] dark:text-zinc-200">
-                          The reserved rent for the demised unit shall be{' '}
-                          <strong>{rentDisplay} / month</strong>, settled electronically via
-                          AkwaabaHomes verified Paystack escrow in strict compliance with the{' '}
-                          <strong>Ghana Rent Act, 1963 (Act 220)</strong>. Official digital
-                          receipts are issued automatically upon settlement.
-                        </p>
-                      </div>
+                        {/* 2. PREMISES & TERM */}
+                        <div
+                          ref={(el) => {
+                            sectionRefs.current.terms = el;
+                          }}
+                        >
+                          <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
+                            2. &nbsp;DEMISED PREMISES &amp; TERM
+                          </h4>
+                          <p className="text-[#233128] dark:text-zinc-200">
+                            The Landlord hereby lets and the Tenant hereby takes all that
+                            self-contained residential unit known as{' '}
+                            <strong>{propertyTitle}</strong> situated at{' '}
+                            <strong>{propertyLocation}</strong>, Ghana, for a fixed tenancy term of{' '}
+                            <strong>12 Months</strong> commencing on <strong>{startDate}</strong>{' '}
+                            and expiring on <strong>{endDate}</strong>.
+                          </p>
+                        </div>
 
-                      {/* 4. COVENANTS */}
-                      <div
-                        ref={(el) => {
-                          sectionRefs.current.covenants = el;
-                        }}
-                      >
-                        <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
-                          4. &nbsp;MUTUAL COVENANTS
-                        </h4>
-                        <p className="text-[#233128] dark:text-zinc-200">
-                          The Tenant covenants to utilize the demised premises strictly for{' '}
-                          <strong>Residential Only</strong> purposes, preserve interior fixtures
-                          in good tenantable condition, and provide at least{' '}
-                          <strong>30 days prior notice</strong> (by <strong>31 Aug 2027</strong>)
-                          of intent to renew or vacate.
-                        </p>
-                      </div>
+                        {/* 3. RENT */}
+                        <div
+                          ref={(el) => {
+                            sectionRefs.current.rent = el;
+                          }}
+                        >
+                          <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
+                            3. &nbsp;RENT &amp; STATUTORY COMPLIANCE
+                          </h4>
+                          <p className="text-[#233128] dark:text-zinc-200">
+                            The reserved rent for the demised unit shall be{' '}
+                            <strong>{rentDisplay} / month</strong>, settled electronically via
+                            AkwaabaHomes verified Paystack escrow in strict compliance with the{' '}
+                            <strong>Ghana Rent Act, 1963 (Act 220)</strong>. Official digital
+                            receipts are issued automatically upon settlement.
+                          </p>
+                        </div>
 
-                      {/* 5. SIGNATURES */}
-                      <div
-                        ref={(el) => {
-                          sectionRefs.current.signatures = el;
-                        }}
-                        className="pt-3 border-t border-[#E5E2D7] dark:border-zinc-800 font-sans"
-                      >
-                        <h4 className="text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-2">
-                          5. &nbsp;CRYPTOGRAPHIC EXECUTION (ACT 772)
-                        </h4>
-                        <div className="grid grid-cols-2 gap-3 text-[11px]">
-                          <div className="p-2.5 rounded-lg bg-[#FAF8F2] dark:bg-zinc-900 border border-[#E2DEC9] dark:border-zinc-800">
-                            <span className="text-[#68766D] block">Signed by Landlord</span>
-                            <span className="font-bold text-[#14221A] dark:text-white">
-                              {landlordName}
-                            </span>
-                            <span className="text-[10px] text-[#15803D] block mt-0.5">
-                              ✓ Verified • {startDate}
-                            </span>
-                          </div>
-                          <div className="p-2.5 rounded-lg bg-[#FAF8F2] dark:bg-zinc-900 border border-[#E2DEC9] dark:border-zinc-800">
-                            <span className="text-[#68766D] block">Signed by Tenant</span>
-                            <span className="font-bold text-[#14221A] dark:text-white">
-                              {tenantName}
-                            </span>
-                            <span className="text-[10px] text-[#15803D] block mt-0.5">
-                              ✓ Verified • {startDate}
-                            </span>
+                        {/* 4. COVENANTS */}
+                        <div
+                          ref={(el) => {
+                            sectionRefs.current.covenants = el;
+                          }}
+                        >
+                          <h4 className="font-sans text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-1.5">
+                            4. &nbsp;MUTUAL COVENANTS
+                          </h4>
+                          <p className="text-[#233128] dark:text-zinc-200">
+                            The Tenant covenants to utilize the demised premises strictly for{' '}
+                            <strong>Residential Only</strong> purposes, preserve interior fixtures
+                            in good tenantable condition, and provide at least{' '}
+                            <strong>30 days prior notice</strong> (by <strong>31 Aug 2027</strong>)
+                            of intent to renew or vacate.
+                          </p>
+                        </div>
+
+                        {/* 5. SIGNATURES */}
+                        <div
+                          ref={(el) => {
+                            sectionRefs.current.signatures = el;
+                          }}
+                          className="pt-3 border-t border-[#E5E2D7] dark:border-zinc-800 font-sans"
+                        >
+                          <h4 className="text-xs font-black uppercase tracking-wider text-[#14221A] dark:text-white mb-2">
+                            5. &nbsp;CRYPTOGRAPHIC EXECUTION (ACT 772)
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3 text-[11px]">
+                            <div className="p-2.5 rounded-lg bg-[#FAF8F2] dark:bg-zinc-900 border border-[#E2DEC9] dark:border-zinc-800">
+                              <span className="text-[#68766D] block">Signed by Landlord</span>
+                              <span className="font-bold text-[#14221A] dark:text-white">
+                                {landlordName}
+                              </span>
+                              <span className="text-[10px] text-[#15803D] block mt-0.5">
+                                ✓ Verified • {startDate}
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-lg bg-[#FAF8F2] dark:bg-zinc-900 border border-[#E2DEC9] dark:border-zinc-800">
+                              <span className="text-[#68766D] block">Signed by Tenant</span>
+                              <span className="font-bold text-[#14221A] dark:text-white">
+                                {tenantName}
+                              </span>
+                              <span className="text-[10px] text-[#15803D] block mt-0.5">
+                                ✓ Verified • {startDate}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
