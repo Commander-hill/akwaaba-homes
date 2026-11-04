@@ -166,10 +166,10 @@ export default function Navbar() {
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-black text-base tracking-tight text-[#242925] dark:text-white leading-none">
+                  <span className="font-black text-base tracking-tight text-[#141816] dark:text-white leading-none">
                     AkwaabaHomes
                   </span>
-                  <span className="text-[10px] font-medium text-[#557A67] dark:text-emerald-600 mt-0.5">
+                  <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">
                     Live Well. Feel at Home.
                   </span>
                 </div>

@@ -144,7 +144,7 @@ function ResetPasswordForm() {
             <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.png"
-                alt="Akwaaba Homes"
+                alt="AkwaabaHomes"
                 width={44}
                 height={44}
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
@@ -152,7 +152,7 @@ function ResetPasswordForm() {
               />
               <Image
                 src="/logo-light.png"
-                alt="Akwaaba Homes"
+                alt="AkwaabaHomes"
                 width={44}
                 height={44}
                 className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
@@ -160,11 +160,11 @@ function ResetPasswordForm() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-zinc-950 dark:text-white leading-none">
-                Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+              <span className="text-base font-black tracking-tight text-[#141816] dark:text-white leading-none">
+                AkwaabaHomes
               </span>
-              <span className="text-[10px] font-mono tracking-wider uppercase text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">
-                Ghana PropTech
+              <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">
+                Live Well. Feel at Home.
               </span>
             </div>
           </Link>

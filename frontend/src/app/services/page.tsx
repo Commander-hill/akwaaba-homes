@@ -108,22 +108,30 @@ export default function ServicesPage() {
         <header className="relative z-20 max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
           {/* Left: Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 relative flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 relative flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
                 alt="AkwaabaHomes"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain"
+                width={40}
+                height={40}
+                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+              <Image
+                src="/logo.png"
+                alt="AkwaabaHomes"
+                width={40}
+                height={40}
+                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
                 priority
               />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-serif font-extrabold text-[15.5px] tracking-tight text-[#14221A]">
+              <span className="font-black text-base tracking-tight text-[#141816] dark:text-white">
                 AkwaabaHomes
               </span>
-              <span className="text-[9.5px] text-[#536459] font-medium mt-0.5">
-                Trusted Ghanaian Housing
+              <span className="text-[10px] text-[#3B6E5C] dark:text-emerald-400 font-medium mt-0.5">
+                Live Well. Feel at Home.
               </span>
             </div>
           </Link>
@@ -539,16 +547,23 @@ export default function ServicesPage() {
               <Image
                 src="/logo-light.png"
                 alt="AkwaabaHomes"
-                width={28}
-                height={28}
-                className="w-7 h-7 object-contain"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain block dark:hidden"
+              />
+              <Image
+                src="/logo.png"
+                alt="AkwaabaHomes"
+                width={32}
+                height={32}
+                className="w-8 h-8 object-contain hidden dark:block"
               />
               <div className="leading-none">
-                <p className="font-serif font-extrabold text-xs text-[#14221A]">
+                <p className="font-black text-xs text-[#141816] dark:text-white">
                   AkwaabaHomes
                 </p>
-                <p className="text-[9px] text-[#55665B] mt-0.5">
-                  Trusted Ghanaian Housing
+                <p className="text-[9.5px] text-[#3B6E5C] dark:text-emerald-400 font-medium mt-0.5">
+                  Live Well. Feel at Home.
                 </p>
               </div>
             </Link>

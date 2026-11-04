@@ -580,9 +580,33 @@ export default function TenantPaymentsPage() {
       {/* ── Footer ── */}
       <footer className="w-full bg-[#FBFBFA] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 mt-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-          <div className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300">
-            <Home className="w-4 h-4 text-[#16A34A]" />
-            <span>AkwaabaHomes • Secure payments for trusted stays in Ghana</span>
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2">
+              <Image
+                src="/logo-light.png"
+                alt="AkwaabaHomes"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain block dark:hidden"
+              />
+              <Image
+                src="/logo.png"
+                alt="AkwaabaHomes"
+                width={28}
+                height={28}
+                className="w-7 h-7 object-contain hidden dark:block"
+              />
+              <div className="leading-none">
+                <span className="font-black text-xs text-[#141816] dark:text-white block">
+                  AkwaabaHomes
+                </span>
+                <span className="text-[9.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 block mt-0.5">
+                  Live Well. Feel at Home.
+                </span>
+              </div>
+            </Link>
+            <span className="hidden sm:inline text-zinc-300 dark:text-zinc-700">•</span>
+            <span className="font-medium">Secure payments for trusted stays in Ghana</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/privacy" className="hover:text-zinc-800 dark:hover:text-zinc-200 transition">

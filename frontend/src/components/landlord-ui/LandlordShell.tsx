@@ -199,7 +199,7 @@ export default function LandlordShell({
       <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
         <Image
           src="/logo.png"
-          alt="Akwaaba Homes"
+          alt="AkwaabaHomes"
           width={44}
           height={44}
           className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
@@ -207,19 +207,19 @@ export default function LandlordShell({
         />
         <Image
           src="/logo-light.png"
-          alt="Akwaaba Homes"
+          alt="AkwaabaHomes"
           width={44}
           height={44}
           className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
           priority
         />
       </div>
-      <div>
-        <span className="font-editorial text-base text-[#242925] dark:text-white block leading-none">
-          Akwaaba Homes
+      <div className="flex flex-col">
+        <span className="font-black text-base tracking-tight text-[#141816] dark:text-white block leading-none">
+          AkwaabaHomes
         </span>
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#557A67] block mt-0.5">
-          Landlord workspace
+        <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 block mt-0.5">
+          Live Well. Feel at Home.
         </span>
       </div>
     </Link>

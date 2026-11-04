@@ -448,14 +448,31 @@ function LoginForm() {
           <Link
             href="/"
             title="AkwaabaHomes Home"
-            className="absolute rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+            className="absolute flex items-center gap-2.5 group rounded-lg focus:outline-none focus:ring-2 focus:ring-[#16A34A] z-20"
             style={{
               left: '4.39%',
               top: '4.86%',
-              width: '18.55%',
-              height: '7.64%',
             }}
-          />
+          >
+            <div className="w-11 h-11 flex items-center justify-center shrink-0">
+              <Image
+                src="/logo-light.png"
+                alt="AkwaabaHomes"
+                width={44}
+                height={44}
+                className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+            </div>
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-[18px] tracking-tight text-[#141816]">
+                AkwaabaHomes
+              </span>
+              <span className="text-[11px] font-medium text-[#3B6E5C] mt-0.5">
+                Live Well. Feel at Home.
+              </span>
+            </div>
+          </Link>
 
           {/* 3. Interactive Light / Dark Toggle Overlay (top-right) */}
           <div
@@ -527,24 +544,24 @@ function LoginForm() {
       <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E]">
         {/* Mobile Top Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2.5">
             <Image
               src="/logo-light.png"
               alt="AkwaabaHomes"
-              width={32}
-              height={32}
+              width={36}
+              height={36}
               className="dark:hidden"
             />
             <Image
               src="/logo.png"
               alt="AkwaabaHomes"
-              width={32}
-              height={32}
+              width={36}
+              height={36}
               className="hidden dark:block"
             />
-            <div className="flex flex-col">
-              <span className="font-black text-sm text-[#0F5A3E] dark:text-white">AkwaabaHomes</span>
-              <span className="text-[9px] text-[#557A67] dark:text-emerald-500">Live Well. Feel at Home.</span>
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-base text-[#141816] dark:text-white">AkwaabaHomes</span>
+              <span className="text-[10px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">Live Well. Feel at Home.</span>
             </div>
           </Link>
 

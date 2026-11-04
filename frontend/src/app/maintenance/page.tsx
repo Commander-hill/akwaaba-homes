@@ -109,22 +109,30 @@ export default function PublicMaintenancePage() {
       {/* Top Header: Brand & Operational Controls */}
       <header className="w-full max-w-4xl mx-auto flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 pb-5">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-[#0F5132] flex items-center justify-center border border-emerald-800">
+          <div className="w-10 h-10 flex items-center justify-center shrink-0">
             <Image
-              src="/logo.png"
-              alt="Akwaaba Homes"
+              src="/logo-light.png"
+              alt="AkwaabaHomes"
               width={40}
               height={40}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
+            <Image
+              src="/logo.png"
+              alt="AkwaabaHomes"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
               priority
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight text-zinc-950 dark:text-white leading-none">
-              Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
+            <span className="text-base font-black tracking-tight text-[#141816] dark:text-white leading-none">
+              AkwaabaHomes
             </span>
-            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Ghanaian Rental Marketplace
+            <span className="text-[11px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">
+              Live Well. Feel at Home.
             </span>
           </div>
         </Link>

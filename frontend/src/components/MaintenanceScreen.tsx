@@ -108,13 +108,18 @@ export default function MaintenanceScreen({ estimatedEndTime }: MaintenanceScree
       <div className="relative z-10 w-full max-w-2xl mx-auto text-center space-y-8 my-auto">
         
         {/* Brand Header */}
-        <div className="flex flex-col items-center justify-center space-y-3">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/20">
-            <Image src="/logo.png" alt="Akwaaba Homes" width={64} height={64} className="w-full h-full object-cover" />
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-12 h-12 flex items-center justify-center shrink-0">
+            <Image src="/logo.png" alt="AkwaabaHomes" width={48} height={48} className="w-full h-full object-contain" />
           </div>
-          <span className="font-bold text-2xl tracking-tight text-white">
-            Akwaaba<span className="text-[#198754]">Homes</span>
-          </span>
+          <div className="flex flex-col text-left leading-none">
+            <span className="font-black text-2xl tracking-tight text-white">
+              AkwaabaHomes
+            </span>
+            <span className="text-xs font-medium text-emerald-400 mt-1">
+              Live Well. Feel at Home.
+            </span>
+          </div>
         </div>
 
         {/* Maintenance Main Title */}

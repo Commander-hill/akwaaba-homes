@@ -158,7 +158,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
           <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
             <Image
               src="/logo.png"
-              alt="Akwaaba Homes"
+              alt="AkwaabaHomes"
               width={44}
               height={44}
               className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
@@ -166,12 +166,12 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
             />
           </div>
           {(!collapsed || isMobile) && (
-            <div className="leading-tight">
-              <span className="text-sm font-black text-white tracking-tight block">
-                Akwaaba<span className="text-emerald-400">Admin</span>
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-black text-white tracking-tight block">
+                AkwaabaHomes
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-400 font-mono">
-                {isSuperAdmin ? 'Super Administrator' : 'Executive Console'}
+              <span className="text-[10.5px] font-medium text-emerald-400 mt-0.5">
+                Live Well. Feel at Home.
               </span>
             </div>
           )}

@@ -138,19 +138,32 @@ export default function OnboardingPage() {
       {/* ── Purpose-Built Header ── */}
       <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2.5 group">
-          <div className="w-8 h-8 rounded-lg overflow-hidden bg-[#0F5132] flex items-center justify-center shadow-xs">
+          <div className="w-10 h-10 flex items-center justify-center shrink-0">
+            <Image
+              src="/logo-light.png"
+              alt="AkwaabaHomes"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
+              priority
+            />
             <Image
               src="/logo.png"
               alt="AkwaabaHomes"
-              width={32}
-              height={32}
-              className="w-full h-full object-cover"
+              width={40}
+              height={40}
+              className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
               priority
             />
           </div>
-          <span className="text-base font-bold tracking-tight text-zinc-900 dark:text-white">
-            Akwaaba<span className="text-[#0F5132] dark:text-emerald-400">Homes</span>
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-base font-black tracking-tight text-[#141816] dark:text-white">
+              AkwaabaHomes
+            </span>
+            <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">
+              Live Well. Feel at Home.
+            </span>
+          </div>
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-5">

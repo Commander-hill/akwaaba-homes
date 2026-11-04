@@ -92,30 +92,30 @@ export default function ForgotPasswordPage() {
 
           {/* Left: Brand Identity */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
                 alt="AkwaabaHomes"
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="w-full h-full object-contain dark:hidden transition-transform duration-300 group-hover:scale-105"
                 priority
               />
               <Image
                 src="/logo.png"
                 alt="AkwaabaHomes"
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
                 priority
               />
             </div>
             <div className="flex flex-col leading-none">
-              <span className="font-black text-sm tracking-tight text-[#0D3827] dark:text-white">
+              <span className="font-black text-base tracking-tight text-[#141816] dark:text-white">
                 AkwaabaHomes
               </span>
-              <span className="text-[10px] text-[#557A67] dark:text-emerald-500 font-medium mt-0.5">
-                Trusted Ghanaian Housing
+              <span className="text-[10.5px] text-[#3B6E5C] dark:text-emerald-400 font-medium mt-0.5">
+                Live Well. Feel at Home.
               </span>
             </div>
           </Link>

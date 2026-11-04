@@ -314,7 +314,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
             <div className="w-10 h-10 flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
               <Image
                 src="/logo.png"
-                alt="Akwaaba Homes"
+                alt="AkwaabaHomes"
                 width={40}
                 height={40}
                 className="w-full h-full object-contain"
@@ -323,17 +323,13 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
             </div>
 
             {!isCollapsed && (
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-sm text-white tracking-tight leading-none">
-                    Akwaaba<span className="text-emerald-400">Homes</span>
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 mt-1">
-                  <span className={clsx("px-1.5 py-0.2 rounded-md text-[9px] font-bold uppercase tracking-wider border", portalConfig.color)}>
-                    {portalConfig.name}
-                  </span>
-                </div>
+              <div className="min-w-0 flex flex-col leading-none">
+                <span className="font-black text-sm text-white tracking-tight">
+                  AkwaabaHomes
+                </span>
+                <span className="text-[10px] font-medium text-emerald-400 mt-0.5 truncate">
+                  Live Well. Feel at Home.
+                </span>
               </div>
             )}
           </Link>
@@ -357,21 +353,19 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                 <div className="w-10 h-10 flex items-center justify-center shrink-0">
                   <Image
                     src="/logo.png"
-                    alt="Akwaaba Homes"
+                    alt="AkwaabaHomes"
                     width={40}
                     height={40}
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <div>
-                  <span className="font-extrabold text-sm text-white tracking-tight">
-                    Akwaaba<span className="text-emerald-400">Homes</span>
+                <div className="flex flex-col leading-none">
+                  <span className="font-black text-sm text-white tracking-tight">
+                    AkwaabaHomes
                   </span>
-                  <div className="mt-0.5">
-                    <span className={clsx("px-1.5 py-0.2 rounded-md text-[9px] font-bold uppercase tracking-wider border", portalConfig.color)}>
-                      {portalConfig.name}
-                    </span>
-                  </div>
+                  <span className="text-[10px] font-medium text-emerald-400 mt-0.5">
+                    Live Well. Feel at Home.
+                  </span>
                 </div>
               </div>
 

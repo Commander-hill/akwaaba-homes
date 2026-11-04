@@ -428,15 +428,24 @@ export default function SupportHelpCentrePage() {
         <div className="max-w-[1260px] mx-auto px-4 sm:px-7 h-[64px] flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="w-9 h-9 rounded-xl bg-[#0B3B24] flex items-center justify-center text-[#E8C67A] shadow-sm group-hover:bg-[#124D31] transition-colors">
-              <Home className="w-4 h-4 stroke-[2.2]" />
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <img
+                src="/logo-light.png"
+                alt="AkwaabaHomes"
+                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
+              />
+              <img
+                src="/logo.png"
+                alt="AkwaabaHomes"
+                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
+              />
             </div>
-            <div className="leading-tight">
-              <span className="block font-serif text-[18px] font-bold tracking-tight text-[#112319]">
-                Akwaaba<span className="text-[#0E6B38]">Homes</span>
+            <div className="flex flex-col leading-none">
+              <span className="font-black text-[16px] tracking-tight text-[#141816] dark:text-white">
+                AkwaabaHomes
               </span>
-              <span className="block text-[9.5px] font-medium text-[#6C776F] tracking-wide">
-                Trusted Ghanaian Housing
+              <span className="text-[10px] font-medium text-[#3B6E5C] dark:text-emerald-400 mt-0.5">
+                Live Well. Feel at Home.
               </span>
             </div>
           </Link>
@@ -1174,14 +1183,23 @@ export default function SupportHelpCentrePage() {
         <div className="relative z-10 max-w-[1260px] mx-auto px-4 sm:px-7 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Left Brand & Tagline */}
           <div className="flex flex-wrap items-center gap-3 sm:pl-16 text-center sm:text-left">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-[#144E32] border border-[#2A6B4B] flex items-center justify-center text-[#E8C67A]">
-                <Home className="w-3.5 h-3.5" />
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                <img
+                  src="/logo.png"
+                  alt="AkwaabaHomes"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="font-serif text-[16px] font-bold tracking-tight text-white">
-                Akwaaba<span className="text-[#8CD19D]">Homes</span>
-              </span>
-            </div>
+              <div className="flex flex-col text-left leading-none">
+                <span className="text-[15px] font-black tracking-tight text-white">
+                  AkwaabaHomes
+                </span>
+                <span className="text-[9.5px] font-medium text-[#8CD19D] mt-0.5">
+                  Live Well. Feel at Home.
+                </span>
+              </div>
+            </Link>
             <span className="text-[11.5px] text-[#B9CFC1]">
               Trusted homes. Clear terms. Support that stays with you.
             </span>

@@ -214,30 +214,30 @@ export default function TenantShell({
     <div className="flex flex-col h-full bg-white dark:bg-[#141816]">
       {/* Brand Header matching mockup */}
       <div className="h-20 px-6 flex items-center shrink-0">
-        <Link href="/" onClick={onNavigate} className="flex items-center gap-3 group">
-          <div className="w-9 h-9 flex items-center justify-center shrink-0">
+        <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 flex items-center justify-center shrink-0">
             <Image
               src="/logo-light.png"
               alt="AkwaabaHomes"
-              width={38}
-              height={38}
-              className="w-full h-full object-contain block dark:hidden"
+              width={42}
+              height={42}
+              className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
               priority
             />
             <Image
               src="/logo.png"
               alt="AkwaabaHomes"
-              width={38}
-              height={38}
-              className="w-full h-full object-contain hidden dark:block"
+              width={42}
+              height={42}
+              className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
               priority
             />
           </div>
-          <div>
-            <span className="text-[17px] font-black text-[#173D32] dark:text-white tracking-tight block leading-tight">
+          <div className="flex flex-col">
+            <span className="text-[16.5px] font-black text-[#141816] dark:text-white tracking-tight block leading-none">
               AkwaabaHomes
             </span>
-            <span className="text-[11px] font-medium text-zinc-400 dark:text-zinc-500 block">
+            <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 block mt-0.5">
               Live Well. Feel at Home.
             </span>
           </div>

@@ -15,18 +15,18 @@ export default function PublicFooter() {
               <div className="w-11 h-11 flex items-center justify-center shrink-0">
                 <Image
                   src="/logo.png"
-                  alt="Akwaaba Homes"
+                  alt="AkwaabaHomes"
                   width={44}
                   height={44}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                 />
               </div>
-              <div>
-                <span className="font-editorial text-lg font-semibold tracking-tight text-white block leading-none">
-                  Akwaaba Homes
+              <div className="flex flex-col">
+                <span className="font-black text-lg tracking-tight text-white block leading-none">
+                  AkwaabaHomes
                 </span>
-                <span className="text-[10px] uppercase tracking-[0.14em] text-[#6EE7B7] font-semibold block mt-1">
-                  Trusted Homes for Students &amp; Residents
+                <span className="text-[11px] text-[#6EE7B7] font-medium block mt-0.5">
+                  Live Well. Feel at Home.
                 </span>
               </div>
             </Link>

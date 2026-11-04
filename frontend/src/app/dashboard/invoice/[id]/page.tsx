@@ -242,7 +242,7 @@ export default function InvoicePage() {
             <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center shrink-0">
               <Image
                 src="/logo-light.png"
-                alt="Akwaaba Homes"
+                alt="AkwaabaHomes"
                 width={64}
                 height={64}
                 className="w-full h-full object-contain"
@@ -250,10 +250,13 @@ export default function InvoicePage() {
               />
             </div>
             <div className="space-y-0.5">
-              <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-950 leading-tight">
-                Akwaaba Homes
+              <h2 className="text-base sm:text-lg font-black tracking-tight text-[#141816] leading-tight">
+                AkwaabaHomes
               </h2>
-              <p className="text-xs text-zinc-600 leading-relaxed">
+              <p className="text-[11px] font-medium text-[#3B6E5C]">
+                Live Well. Feel at Home.
+              </p>
+              <p className="text-xs text-zinc-600 leading-relaxed pt-0.5">
                 Akwaaba Technologies Ltd, Plot 14 Independence Avenue,<br />
                 Airport City / West Ridge, Accra, Ghana
               </p>

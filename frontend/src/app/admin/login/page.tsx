@@ -291,19 +291,24 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           <div className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center shrink-0">
             <Image 
               src="/logo.png" 
-              alt="Akwaaba Homes" 
+              alt="AkwaabaHomes" 
               width={44} 
               height={44} 
               className="w-full h-full object-contain" 
               priority 
             />
           </div>
-          <div className="flex items-center gap-2.5">
-            <span className="text-base font-extrabold tracking-tight text-white">
-              Akwaaba<span className="text-emerald-400">Admin</span>
-            </span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Authority Gateway
+          <div className="flex flex-col leading-none">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-black tracking-tight text-white">
+                AkwaabaHomes
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Authority Gateway
+              </span>
+            </div>
+            <span className="text-[10.5px] font-medium text-emerald-400 mt-0.5">
+              Live Well. Feel at Home.
             </span>
           </div>
         </div>
