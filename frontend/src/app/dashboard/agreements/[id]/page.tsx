@@ -264,7 +264,25 @@ export default function AgreementPage() {
           </div>
 
         {/* Formal Conveyancing Title Header */}
-        <header className="text-center py-8 border-b-2 border-double border-[#1A1A18] space-y-2">
+        <header className="text-center py-6 border-b-2 border-double border-[#1A1A18] space-y-2">
+          <div className="flex items-center justify-center gap-5 mb-2">
+            <div className="w-16 h-14 relative">
+              <Image
+                src="/images/agreements/coat-of-arms.png"
+                alt="Republic of Ghana Coat of Arms"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="w-16 h-14 relative">
+              <Image
+                src="/logo-light.png"
+                alt="Akwaaba Homes"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
           <p className="text-xs uppercase tracking-[0.25em] text-[#44403C] font-semibold">
             Republic of Ghana
           </p>
