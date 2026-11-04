@@ -284,7 +284,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading || twoFactorCode.length < 6}
-              className="w-full h-10 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              className="w-full h-10 rounded-lg bg-[#0F6848] hover:bg-[#0B543A] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
             >
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Verify Code <ArrowRight className="w-3.5 h-3.5" /></>}
             </button>
@@ -303,7 +303,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/google`}
-                className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
+                className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <GoogleIcon />
                 <span className="truncate">Continue with Google</span>
@@ -312,7 +312,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_URL || ''}/auth/microsoft`}
-                className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
+                className="flex items-center justify-center gap-1.5 h-9 xl:h-10 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-100 text-[11px] xl:text-xs font-semibold transition cursor-pointer shadow-2xs"
               >
                 <MicrosoftIcon />
                 <span className="truncate">Continue with Microsoft</span>
@@ -337,7 +337,7 @@ function LoginForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full h-9 xl:h-10 pl-9 pr-3 text-xs rounded-xl border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  className="w-full h-9 xl:h-10 pl-9 pr-3 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
               </div>
 
@@ -350,7 +350,7 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full h-9 xl:h-10 pl-9 pr-9 text-xs rounded-xl border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
+                  className="w-full h-9 xl:h-10 pl-9 pr-9 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
                 <button
                   type="button"
@@ -385,7 +385,7 @@ function LoginForm() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-9 xl:h-10 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
+                className="w-full h-9 xl:h-10 rounded-lg bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer mt-1"
               >
                 {isLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -437,7 +437,7 @@ function LoginForm() {
 
           {/* 1. Base 2K Background Scene (Woman on couch, building, left text, waves) */}
           <Image
-            src="/images/auth/login-hero-2k.jpg"
+            src="/images/auth/login-hero-clean-v2.jpg"
             alt="AkwaabaHomes Sign In"
             fill
             priority
@@ -476,7 +476,7 @@ function LoginForm() {
 
           {/* 3. Interactive Light / Dark Toggle Overlay (top-right) */}
           <div
-            className="absolute flex items-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs rounded-full p-0.5 shadow-xs border border-zinc-200/60 dark:border-zinc-700 z-20 text-[11px] font-semibold"
+            className="absolute flex items-center bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xs rounded-lg p-0.5 shadow-xs border border-zinc-200/60 dark:border-zinc-700 z-20 text-[11px] font-semibold"
             style={{
               left: '87.5%',
               top: '4.34%',
@@ -486,7 +486,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => toggleTheme(false)}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full transition cursor-pointer ${
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition cursor-pointer ${
                 !isDarkMode
                   ? 'bg-white shadow-2xs text-zinc-900 font-bold'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -498,7 +498,7 @@ function LoginForm() {
             <button
               type="button"
               onClick={() => toggleTheme(true)}
-              className={`flex items-center gap-1 px-3 py-1 rounded-full transition cursor-pointer ${
+              className={`flex items-center gap-1 px-3 py-1 rounded-lg transition cursor-pointer ${
                 isDarkMode
                   ? 'bg-zinc-800 shadow-2xs text-white font-bold'
                   : 'text-zinc-400 hover:text-zinc-600'
@@ -578,7 +578,7 @@ function LoginForm() {
         {/* Mobile Hero Banner */}
         <div className="relative h-56 w-full overflow-hidden">
           <Image
-            src="/images/auth/login-hero-woman.jpg"
+            src="/images/auth/login-hero-woman-clean-v2.jpg"
             alt="AkwaabaHomes Resident"
             fill
             priority

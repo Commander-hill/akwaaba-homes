@@ -218,6 +218,25 @@
     background-color: #16A34A;
     color: #FFFFFF;
   }
+
+  /* Platform-wide Button Shape Standardization (0.5rem / rounded-lg matching "My Account" button) */
+  button:not([role="switch"]),
+  [type="button"]:not([role="switch"]),
+  [type="submit"],
+  [type="reset"],
+  [role="button"]:not([role="switch"]),
+  a[class*="px-"][class*="rounded-"],
+  a[class*="py-"][class*="rounded-"],
+  a[class*="h-7"][class*="rounded-"],
+  a[class*="h-8"][class*="rounded-"],
+  a[class*="h-9"][class*="rounded-"],
+  a[class*="h-10"][class*="rounded-"],
+  a[class*="h-11"][class*="rounded-"],
+  a[class*="h-12"][class*="rounded-"],
+  a[class*="h-13"][class*="rounded-"],
+  a[class*="h-14"][class*="rounded-"] {
+    border-radius: 0.5rem !important;
+  }
 }
 
 @layer utilities {

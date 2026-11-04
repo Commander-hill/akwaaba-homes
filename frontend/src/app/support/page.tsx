@@ -486,7 +486,7 @@ export default function SupportHelpCentrePage() {
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               aria-label="Toggle dark mode"
               title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="w-9 h-9 rounded-full border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors cursor-pointer"
             >
               {mounted && resolvedTheme === 'dark' ? (
                 <Sun className="w-4 h-4 text-amber-400" />
@@ -497,7 +497,7 @@ export default function SupportHelpCentrePage() {
 
             <Link
               href={user ? '/dashboard/notifications' : '/notifications'}
-              className="relative w-9 h-9 rounded-full border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors"
+              className="relative w-9 h-9 rounded-lg border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -508,17 +508,13 @@ export default function SupportHelpCentrePage() {
 
             <Link
               href={user ? '/dashboard/profile' : '/login'}
-              className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-full hover:bg-[#EFECE2] transition-colors"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
             >
-              <div className="w-8 h-8 rounded-full bg-[#0B3B24] text-white text-[11.5px] font-bold flex items-center justify-center tracking-wide shadow-sm">
+              <div className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center justify-center tracking-wide">
                 {userInitials}
               </div>
-              <div className="hidden sm:block text-left leading-tight">
-                <span className="block text-[12.5px] font-bold text-[#18241D]">{userDisplayName}</span>
-                <span className="flex items-center gap-0.5 text-[10.5px] font-medium text-[#68746C]">
-                  Resident <ChevronDown className="w-3 h-3" />
-                </span>
-              </div>
+              <span className="hidden sm:inline">{user ? 'My Account' : 'My Account'}</span>
+              <ChevronDown className="w-3 h-3 opacity-80" />
             </Link>
           </div>
         </div>
@@ -548,7 +544,7 @@ export default function SupportHelpCentrePage() {
 
           {/* Left Content */}
           <div className="relative z-10 max-w-[630px] sm:pl-4 space-y-3">
-            <span className="inline-block px-3 py-1 rounded-full bg-[#D7E7D7] text-[#15462A] text-[10px] font-bold uppercase tracking-[0.14em]">
+            <span className="inline-block px-3 py-1 rounded-lg bg-[#D7E7D7] text-[#15462A] text-[10px] font-bold uppercase tracking-[0.14em]">
               AKWAABAHOMES HELP CENTRE
             </span>
 
@@ -594,7 +590,7 @@ export default function SupportHelpCentrePage() {
                   setActiveTopic('BOOKING');
                   selectQuickCategory('BOOKING_PAYMENTS', 'Request booking date adjustment');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
                   activeTopic === 'BOOKING'
                     ? 'bg-[#0B3B24] text-white'
                     : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
@@ -611,7 +607,7 @@ export default function SupportHelpCentrePage() {
                   setLeftFaqExpanded(true);
                   selectQuickCategory('BOOKING_PAYMENTS', 'Rent payment & receipt inquiry');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
                   activeTopic === 'PAYMENTS'
                     ? 'bg-[#0B3B24] text-white'
                     : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
@@ -628,7 +624,7 @@ export default function SupportHelpCentrePage() {
                   setOpenRightFaqId('faq-agreement');
                   selectQuickCategory('DIGITAL_AGREEMENTS', 'Digital tenancy agreement question');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
                   activeTopic === 'AGREEMENTS'
                     ? 'bg-[#0B3B24] text-white'
                     : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
@@ -645,7 +641,7 @@ export default function SupportHelpCentrePage() {
                   setOpenRightFaqId('faq-maintenance');
                   selectQuickCategory('HOME_MAINTENANCE', 'Maintenance & repair request');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
                   activeTopic === 'MAINTENANCE'
                     ? 'bg-[#0B3B24] text-white'
                     : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'

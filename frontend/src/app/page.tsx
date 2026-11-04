@@ -268,7 +268,7 @@ export default function HomePage() {
               {/* Search Bar */}
               <form
                 onSubmit={handleSearchSubmit}
-                className="bg-white dark:bg-zinc-900 rounded-2xl sm:rounded-full shadow-lg border border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-0 overflow-hidden"
+                className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg border border-zinc-200/60 dark:border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-0 overflow-hidden"
               >
                 {/* Location */}
                 <div className="flex items-center gap-2.5 px-4 py-3 flex-1 min-w-0 border-b sm:border-b-0 sm:border-r border-zinc-100 dark:border-zinc-800">
@@ -323,7 +323,7 @@ export default function HomePage() {
                 <div className="p-2">
                   <button
                     type="submit"
-                    className="w-full sm:w-auto h-10 px-6 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
+                    className="w-full sm:w-auto h-10 px-6 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs"
                   >
                     <Search className="w-4 h-4" />
                     <span>Search</span>
@@ -570,7 +570,7 @@ export default function HomePage() {
               <div className="lg:col-span-2 flex justify-end">
                 <Link
                   href="/about"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition whitespace-nowrap"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition whitespace-nowrap"
                 >
                   <span>Learn More</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -630,7 +630,7 @@ export default function HomePage() {
             {/* CTA Button */}
             <Link
               href="/properties"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white hover:bg-zinc-50 text-[#0A3826] text-sm font-black shadow-xs transition whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-white hover:bg-zinc-50 text-[#0A3826] text-sm font-black shadow-xs transition whitespace-nowrap shrink-0"
             >
               <span>Browse Properties</span>
               <ArrowRight className="w-4 h-4" />

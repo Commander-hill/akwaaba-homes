@@ -170,16 +170,16 @@ export default function ServicesPage() {
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               aria-label="Toggle dark mode"
               title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-xs text-[#2B3B31] cursor-pointer transition shadow-2xs"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/60 hover:bg-white/85 backdrop-blur-xs text-[#2B3B31] cursor-pointer transition shadow-2xs"
             >
               <Sun className={`w-3.5 h-3.5 ${mounted && resolvedTheme === 'dark' ? 'text-amber-400' : 'text-[#14221A]'}`} />
               <Moon className={`w-3.5 h-3.5 ${mounted && resolvedTheme === 'dark' ? 'text-emerald-400' : 'text-zinc-500'}`} />
             </button>
 
-            {/* Bookings Pill */}
+            {/* Bookings Button */}
             <Link
               href={user ? '/dashboard/tenant/bookings' : '/bookings'}
-              className="px-3.5 py-1.5 rounded-full bg-white/95 hover:bg-white text-[#14221A] text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-xs transition"
+              className="px-3.5 py-1.5 rounded-lg bg-white/95 hover:bg-white text-[#14221A] text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-xs transition"
             >
               <CalendarCheck className="w-3.5 h-3.5 text-[#15803D]" />
               <span>Bookings</span>
@@ -188,7 +188,7 @@ export default function ServicesPage() {
             {/* Bell with Red 1 Badge */}
             <Link
               href={user ? '/dashboard/notifications' : '/login'}
-              className="relative w-8 h-8 rounded-full bg-white/85 hover:bg-white flex items-center justify-center text-[#14221A] shadow-xs transition"
+              className="relative w-8 h-8 rounded-lg bg-white/85 hover:bg-white flex items-center justify-center text-[#14221A] shadow-xs transition"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -197,16 +197,16 @@ export default function ServicesPage() {
               </span>
             </Link>
 
-            {/* My Account Pill */}
+            {/* My Account Button */}
             <Link
               href={user ? dashboardHref : '/login'}
-              className="pl-1.5 pr-3 py-1 rounded-full bg-white/95 hover:bg-white text-[#14221A] text-[11.5px] font-bold inline-flex items-center gap-2 shadow-xs transition"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
             >
-              <span className="w-6 h-6 rounded-full bg-[#0F6938] text-white text-[10px] font-extrabold flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-extrabold flex items-center justify-center">
                 {initials}
               </span>
-              <span className="hidden sm:inline">{user ? 'My Account' : 'Sign In'}</span>
-              <ChevronDown className="w-3 h-3 text-zinc-500" />
+              <span className="hidden sm:inline">{user ? 'My Account' : 'My Account'}</span>
+              <ChevronDown className="w-3 h-3 opacity-80" />
             </Link>
           </div>
         </header>
@@ -215,7 +215,7 @@ export default function ServicesPage() {
         <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 pt-4 pb-8 lg:py-9">
           <div className="max-w-lg space-y-3.5">
             {/* OUR SERVICES Badge */}
-            <span className="inline-block px-3 py-1 rounded-full bg-[#EFECE1] border border-[#DDD7C5] text-[#2B3B31] text-[10px] font-extrabold uppercase tracking-wider">
+            <span className="inline-block px-3 py-1 rounded-lg bg-[#EFECE1] border border-[#DDD7C5] text-[#2B3B31] text-[10px] font-extrabold uppercase tracking-wider">
               OUR SERVICES
             </span>
 
@@ -235,7 +235,7 @@ export default function ServicesPage() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/properties"
-                className="px-5 py-2.5 rounded-full bg-[#0E6B38] hover:bg-[#0B562D] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
+                className="px-5 py-2.5 rounded-lg bg-[#0E6B38] hover:bg-[#0B562D] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
               >
                 <span>Explore accommodation</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -246,7 +246,7 @@ export default function ServicesPage() {
                 onClick={() =>
                   journeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }
-                className="px-4 py-2.5 rounded-full bg-[#FAF8F2] hover:bg-white border border-[#9BA69E] text-[#14221A] text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-[#FAF8F2] hover:bg-white border border-[#9BA69E] text-[#14221A] text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
               >
                 <span className="w-4 h-4 rounded-full border border-[#14221A] inline-flex items-center justify-center">
                   <Play className="w-2 h-2 fill-[#14221A] ml-0.5" />
@@ -531,7 +531,7 @@ export default function ServicesPage() {
 
             <Link
               href="/properties"
-              className="px-5 py-2 rounded-full bg-[#FAF8F2] hover:bg-white text-[#14221A] text-xs font-extrabold inline-flex items-center gap-1.5 shadow-xs transition shrink-0"
+              className="px-5 py-2 rounded-lg bg-[#FAF8F2] hover:bg-white text-[#14221A] text-xs font-extrabold inline-flex items-center gap-1.5 shadow-xs transition shrink-0"
             >
               <span>Browse homes</span>
               <ArrowRight className="w-3.5 h-3.5" />
