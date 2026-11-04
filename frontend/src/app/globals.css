@@ -125,6 +125,95 @@
     font-family: inherit;
   }
 
+  select option {
+    background-color: #FFFFFF;
+    color: #18241D;
+  }
+
+  .dark select option {
+    background-color: #141816;
+    color: #F2F2EE;
+  }
+
+  /* Cohesive Dark Mode adaptation for custom editorial cream/sage surfaces */
+  .dark .bg-\[\#F8F7F2\],
+  .dark .bg-\[\#F7F6F0\],
+  .dark .bg-\[\#F7F5EE\],
+  .dark .bg-\[\#FAF8F2\],
+  .dark .bg-\[\#FBFBFA\] {
+    background-color: #0D100E !important;
+    color: #F2F2EE !important;
+  }
+
+  .dark .bg-\[\#FDFCF8\]\/95,
+  .dark .bg-\[\#FAF8F2\]\/95 {
+    background-color: rgba(20, 24, 22, 0.95) !important;
+  }
+
+  .dark .bg-\[\#FAF9F4\],
+  .dark .bg-\[\#FDFCF9\],
+  .dark .bg-\[\#FCFBF8\],
+  .dark .bg-\[\#FAF6EC\],
+  .dark .bg-\[\#FBFBF7\],
+  .dark .bg-\[\#FBF7EE\],
+  .dark .bg-white {
+    background-color: #141816 !important;
+  }
+
+  .dark .bg-\[\#F3F2EC\],
+  .dark .bg-\[\#F5F4EE\],
+  .dark .bg-\[\#F6F6F2\],
+  .dark .bg-\[\#F4F2E9\],
+  .dark .bg-\[\#F3F1E8\],
+  .dark .bg-\[\#ECEAE1\],
+  .dark .bg-\[\#EBF3EA\],
+  .dark .bg-\[\#E7F2E7\],
+  .dark .bg-\[\#EEF5EE\],
+  .dark .bg-\[\#F2F0E2\],
+  .dark .bg-\[\#F7EFE2\] {
+    background-color: #1B221E !important;
+  }
+
+  .dark .text-\[\#14221A\],
+  .dark .text-\[\#18241D\],
+  .dark .text-\[\#13241B\],
+  .dark .text-\[\#15231B\],
+  .dark .text-\[\#16231B\],
+  .dark .text-\[\#112319\],
+  .dark .text-\[\#242925\],
+  .dark .text-\[\#1E2D24\],
+  .dark .text-\[\#2A3830\] {
+    color: #F2F4F2 !important;
+  }
+
+  .dark .text-\[\#0B3B24\],
+  .dark .text-\[\#0E6B38\],
+  .dark .text-\[\#173D32\] {
+    color: #4ADE80 !important;
+  }
+
+  .dark .text-\[\#3B4F43\],
+  .dark .text-\[\#47544C\],
+  .dark .text-\[\#4E5B52\],
+  .dark .text-\[\#5B6860\],
+  .dark .text-\[\#6C7870\],
+  .dark .text-\[\#68746C\] {
+    color: #A3B1A8 !important;
+  }
+
+  .dark .border-\[\#E6E3D8\],
+  .dark .border-\[\#E5E2D7\],
+  .dark .border-\[\#E4DFD3\],
+  .dark .border-\[\#DFDDD2\],
+  .dark .border-\[\#E7E7DF\],
+  .dark .border-\[\#D8E5D7\],
+  .dark .border-\[\#CFE2D0\],
+  .dark .border-\[\#E2DEC9\],
+  .dark .border-\[\#EFECE2\],
+  .dark .border-\[\#EFECE3\] {
+    border-color: #262E2A !important;
+  }
+
   ::selection {
     background-color: #16A34A;
     color: #FFFFFF;

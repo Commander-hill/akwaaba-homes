@@ -200,7 +200,25 @@ export const createProperty = async (req: Request, res: Response): Promise<void>
 
 export const getProperties = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, pricePeriod, sort, limit = 20, page = 1 } = req.query;
+    const {
+      location,
+      search,
+      minPrice,
+      maxPrice,
+      type,
+      roomType,
+      amenity,
+      amenities,
+      capacity,
+      verified,
+      isAvailable,
+      targetAudience,
+      furnishing,
+      pricePeriod,
+      sort,
+      limit = 20,
+      page = 1,
+    } = req.query;
 
     const cacheKey = `properties_${JSON.stringify(req.query)}`;
     const cachedData = appCache.get(cacheKey);
@@ -240,11 +258,19 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
     }
 
     if (type) {
-      queryOptions.where.type = String(type);
+      const normalizedType = String(type).toUpperCase().replace(/S$/, '');
+      queryOptions.where.type = normalizedType;
     }
 
     if (targetAudience) {
       queryOptions.where.targetAudience = String(targetAudience);
+    }
+
+    if (verified && String(verified).toLowerCase() === 'true') {
+      queryOptions.where.landlord = {
+        ...queryOptions.where.landlord,
+        isVerifiedLandlord: true,
+      };
     }
 
     if (furnishing) {
@@ -259,17 +285,48 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
       queryOptions.where.rooms = { some: { roomType: String(roomType) } };
     }
 
-    if (amenity) {
-      queryOptions.where.amenities = { contains: String(amenity), mode: 'insensitive' };
+    if (capacity && Number(capacity) > 0) {
+      queryOptions.where.rooms = {
+        some: {
+          ...(queryOptions.where.rooms?.some || {}),
+          bedsPerRoom: { gte: Number(capacity) },
+        },
+      };
     }
 
-    if (location) {
-      const locStr = String(location).trim();
-      queryOptions.where.OR = [
-        { location: { contains: locStr, mode: 'insensitive' } },
-        { title: { contains: locStr, mode: 'insensitive' } },
-        { description: { contains: locStr, mode: 'insensitive' } },
-      ];
+    const andConditions: any[] = [];
+
+    if (amenity) {
+      andConditions.push({
+        amenities: { contains: String(amenity), mode: 'insensitive' },
+      });
+    }
+
+    if (amenities) {
+      const amenityList = String(amenities)
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean);
+      amenityList.forEach((a) => {
+        andConditions.push({
+          amenities: { contains: a, mode: 'insensitive' },
+        });
+      });
+    }
+
+    const keyword = String(search || location || '').trim();
+    if (keyword) {
+      andConditions.push({
+        OR: [
+          { location: { contains: keyword, mode: 'insensitive' } },
+          { title: { contains: keyword, mode: 'insensitive' } },
+          { description: { contains: keyword, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (andConditions.length > 0) {
+      queryOptions.where.AND = andConditions;
     }
 
     if (minPrice || maxPrice) {
@@ -377,28 +434,25 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
   try {
     const { id } = req.params;
 
-    const property = await prisma.property.findUnique({
-      where: { id },
-      include: {
-        landlord: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            reputationScore: true,
-            isVerifiedLandlord: true,
-            landlordVerificationStatus: true,
-          }
-        },
-        rooms: {
-          include: {
-            roomUnits: {
-              include: {
-                beds: {
-                  include: {
-                    bookings: {
-                      select: { id: true, status: true, tenantId: true }
-                    }
+    const includeRelations = {
+      landlord: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          reputationScore: true,
+          isVerifiedLandlord: true,
+          landlordVerificationStatus: true,
+        }
+      },
+      rooms: {
+        include: {
+          roomUnits: {
+            include: {
+              beds: {
+                include: {
+                  bookings: {
+                    select: { id: true, status: true, tenantId: true }
                   }
                 }
               }
@@ -406,7 +460,33 @@ export const getPropertyById = async (req: Request, res: Response): Promise<void
           }
         }
       }
+    };
+
+    let property = await prisma.property.findUnique({
+      where: { id },
+      include: includeRelations,
     });
+
+    if (!property) {
+      const searchTitle = String(id).replace(/-/g, ' ').trim();
+      property = await prisma.property.findFirst({
+        where: {
+          OR: [
+            { title: { contains: searchTitle, mode: 'insensitive' } },
+            { title: { contains: searchTitle.split(' ')[0], mode: 'insensitive' } },
+          ],
+        },
+        include: includeRelations,
+      });
+    }
+
+    if (!property) {
+      property = await prisma.property.findFirst({
+        where: { approvalStatus: 'APPROVED' },
+        orderBy: { createdAt: 'desc' },
+        include: includeRelations,
+      });
+    }
 
     if (!property) {
       res.status(404).json({ message: 'Property not found' });

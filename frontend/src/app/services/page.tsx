@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
 import {
   ShieldCheck,
@@ -52,6 +53,12 @@ const SERVICE_CARDS = [
 
 export default function ServicesPage() {
   const journeyRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: userResponse } = useQuery({
     queryKey: ['auth', 'me'],
@@ -150,14 +157,20 @@ export default function ServicesPage() {
           {/* Right: Theme Icons + Bookings + Notification + My Account */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Theme Toggles */}
-            <div className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-full bg-white/45 backdrop-blur-xs text-[#2B3B31]">
-              <Sun className="w-3.5 h-3.5 text-[#14221A]" />
-              <Moon className="w-3.5 h-3.5 text-white/90 drop-shadow-xs" />
-            </div>
+            <button
+              type="button"
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              aria-label="Toggle dark mode"
+              title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white/60 hover:bg-white/85 backdrop-blur-xs text-[#2B3B31] cursor-pointer transition shadow-2xs"
+            >
+              <Sun className={`w-3.5 h-3.5 ${mounted && resolvedTheme === 'dark' ? 'text-amber-400' : 'text-[#14221A]'}`} />
+              <Moon className={`w-3.5 h-3.5 ${mounted && resolvedTheme === 'dark' ? 'text-emerald-400' : 'text-zinc-500'}`} />
+            </button>
 
             {/* Bookings Pill */}
             <Link
-              href="/dashboard/tenant/bookings"
+              href={user ? '/dashboard/tenant/bookings' : '/bookings'}
               className="px-3.5 py-1.5 rounded-full bg-white/95 hover:bg-white text-[#14221A] text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-xs transition"
             >
               <CalendarCheck className="w-3.5 h-3.5 text-[#15803D]" />
@@ -166,7 +179,7 @@ export default function ServicesPage() {
 
             {/* Bell with Red 1 Badge */}
             <Link
-              href="/dashboard/notifications"
+              href={user ? '/dashboard/notifications' : '/login'}
               className="relative w-8 h-8 rounded-full bg-white/85 hover:bg-white flex items-center justify-center text-[#14221A] shadow-xs transition"
               title="Notifications"
             >
@@ -178,13 +191,13 @@ export default function ServicesPage() {
 
             {/* My Account Pill */}
             <Link
-              href={dashboardHref}
+              href={user ? dashboardHref : '/login'}
               className="pl-1.5 pr-3 py-1 rounded-full bg-white/95 hover:bg-white text-[#14221A] text-[11.5px] font-bold inline-flex items-center gap-2 shadow-xs transition"
             >
               <span className="w-6 h-6 rounded-full bg-[#0F6938] text-white text-[10px] font-extrabold flex items-center justify-center">
                 {initials}
               </span>
-              <span className="hidden sm:inline">My Account</span>
+              <span className="hidden sm:inline">{user ? 'My Account' : 'Sign In'}</span>
               <ChevronDown className="w-3 h-3 text-zinc-500" />
             </Link>
           </div>

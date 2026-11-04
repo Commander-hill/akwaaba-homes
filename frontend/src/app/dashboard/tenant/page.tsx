@@ -291,7 +291,7 @@ export default function TenantDashboardPage() {
 
           {/* Card 3: Report an Issue */}
           <Link
-            href="/dashboard/tenant/tickets/new"
+            href="/dashboard/tenant/tickets"
             className="group relative bg-[#FAF5FF] dark:bg-purple-950/20 border border-purple-100/90 dark:border-purple-900/40 rounded-2xl p-4 transition-all duration-200 hover:shadow-sm hover:border-purple-200 flex flex-col justify-between h-32"
           >
             <div className="flex items-center justify-between">
@@ -366,10 +366,13 @@ export default function TenantDashboardPage() {
                   </Link>
                 </div>
 
-                {/* 4 List Items matching reference */}
+                {/* 4 Clickable List Items matching reference */}
                 <div className="divide-y divide-zinc-100 dark:divide-zinc-800 text-xs">
                   {/* Item 1: Study Room Booking */}
-                  <div className="py-3 flex items-center justify-between gap-3">
+                  <Link
+                    href="/dashboard/tenant/bookings"
+                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-12 h-10 rounded-lg overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
                         <Image
@@ -381,7 +384,7 @@ export default function TenantDashboardPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                             Approved
                           </span>
                         </div>
@@ -394,17 +397,20 @@ export default function TenantDashboardPage() {
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
-                  </div>
+                  </Link>
 
                   {/* Item 2: Rent Payment */}
-                  <div className="py-3 flex items-center justify-between gap-3">
+                  <Link
+                    href="/dashboard/invoice"
+                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-300 flex items-center justify-center shrink-0">
                         <FileText className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                             Paid
                           </span>
                         </div>
@@ -417,17 +423,20 @@ export default function TenantDashboardPage() {
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
-                  </div>
+                  </Link>
 
                   {/* Item 3: Maintenance Request */}
-                  <div className="py-3 flex items-center justify-between gap-3">
+                  <Link
+                    href="/dashboard/tenant/tickets"
+                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300 flex items-center justify-center shrink-0">
                         <Wrench className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                             &bull; In Progress
                           </span>
                         </div>
@@ -440,17 +449,21 @@ export default function TenantDashboardPage() {
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
-                  </div>
+                  </Link>
 
                   {/* Item 4: Resident Forum */}
-                  <div className="py-3 flex items-center justify-between gap-3">
+                  <Link
+                    href="/dashboard/messages"
+                    onClick={() => toast.success('Opening Resident Community Forum channel')}
+                    className="py-3 px-2 -mx-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 flex items-center justify-between gap-3 transition"
+                  >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 flex items-center justify-center shrink-0">
                         <Calendar className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="bg-indigo-50 text-indigo-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                          <span className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                             Event
                           </span>
                         </div>
@@ -463,7 +476,7 @@ export default function TenantDashboardPage() {
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
-                  </div>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -534,7 +547,7 @@ export default function TenantDashboardPage() {
                       GH₵ 2,300
                     </p>
                     <p className="text-[10px] text-zinc-400">Due 6 Sep 2026</p>
-                    <span className="inline-block bg-emerald-50 text-emerald-700 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
+                    <span className="inline-block bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
                       &bull; Paid
                     </span>
                   </div>
@@ -546,14 +559,14 @@ export default function TenantDashboardPage() {
                       GH₵ 200
                     </p>
                     <p className="text-[10px] text-zinc-400">Due 15 Sep 2026</p>
-                    <span className="inline-block bg-amber-50 text-amber-700 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
+                    <span className="inline-block bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
                       Pending
                     </span>
                   </div>
                 </div>
 
                 <Link
-                  href="/dashboard/tenant/bookings"
+                  href="/dashboard/invoice"
                   className="w-full py-2.5 rounded-xl border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition text-center"
                 >
                   <span>View Payment History</span>
@@ -584,10 +597,13 @@ export default function TenantDashboardPage() {
               </Link>
             </div>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-2 pt-1">
               {/* Notification 1 */}
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Link
+                href="/dashboard/invoice"
+                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -601,11 +617,14 @@ export default function TenantDashboardPage() {
                     Your rent for September has been received.
                   </p>
                 </div>
-              </div>
+              </Link>
 
               {/* Notification 2 */}
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Link
+                href="/dashboard/tenant/tickets"
+                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 flex items-center justify-center shrink-0 mt-0.5">
                   <Wrench className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -619,11 +638,14 @@ export default function TenantDashboardPage() {
                     Your maintenance request has been assigned.
                   </p>
                 </div>
-              </div>
+              </Link>
 
               {/* Notification 3 */}
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Link
+                href="/dashboard/notifications"
+                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
                   <Info className="w-4 h-4" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -637,11 +659,14 @@ export default function TenantDashboardPage() {
                     Weekend gate access will be restricted.
                   </p>
                 </div>
-              </div>
+              </Link>
 
               {/* Notification 4 */}
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 mt-0.5">
+              <Link
+                href="/dashboard/messages"
+                className="flex items-start gap-3 p-1.5 -mx-1.5 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition"
+              >
+                <div className="w-7 h-7 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 flex items-center justify-center shrink-0 mt-0.5">
                   <Calendar className="w-3.5 h-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -655,7 +680,7 @@ export default function TenantDashboardPage() {
                     Resident forum &bull; 12 Sept 2026
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
 
@@ -674,7 +699,7 @@ export default function TenantDashboardPage() {
                 </div>
               </div>
               <Link
-                href="/search"
+                href="/properties"
                 className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
               >
                 <span>View All</span>
@@ -685,7 +710,7 @@ export default function TenantDashboardPage() {
             <div className="space-y-3 pt-1">
               {/* Property 1: Premium Studio */}
               <Link
-                href="/search"
+                href={propertiesData?.[0]?.id ? `/properties/${propertiesData[0].id}` : '/properties/premium-studio'}
                 className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition border border-transparent hover:border-zinc-200/60"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -698,7 +723,7 @@ export default function TenantDashboardPage() {
                     />
                   </div>
                   <div className="min-w-0 space-y-0.5">
-                    <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
+                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
                       Available
                     </span>
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
@@ -731,7 +756,7 @@ export default function TenantDashboardPage() {
 
               {/* Property 2: KIMO APARTMENT */}
               <Link
-                href="/search"
+                href={propertiesData?.[1]?.id ? `/properties/${propertiesData[1].id}` : '/properties/kimo-apartment'}
                 className="group flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition border border-transparent hover:border-zinc-200/60"
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -744,7 +769,7 @@ export default function TenantDashboardPage() {
                     />
                   </div>
                   <div className="min-w-0 space-y-0.5">
-                    <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
+                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
                       Available
                     </span>
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
@@ -808,7 +833,7 @@ export default function TenantDashboardPage() {
 
         {/* Button */}
         <Link
-          href="/search"
+          href="/properties"
           className="relative z-10 py-2 px-5 rounded-full border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold transition whitespace-nowrap"
         >
           <span>Explore More Properties</span>

@@ -23,7 +23,10 @@ import {
   LogOut,
   User,
   Home,
+  Moon,
+  Sun,
 } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
 
 export interface TenantShellProps {
@@ -63,7 +66,13 @@ export default function TenantShell({
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: meData } = useQuery({
     queryKey: ['auth', 'me'],
@@ -77,6 +86,24 @@ export default function TenantShell({
   });
 
   const user = propUser || meData?.user || null;
+
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications-shell'],
+    queryFn: async () => {
+      const { data } = await api.get('/notifications');
+      return data;
+    },
+    enabled: Boolean(user),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  const liveUnreadCount =
+    unreadNotificationsCount > 0
+      ? unreadNotificationsCount
+      : Array.isArray(notificationsData?.notifications)
+      ? notificationsData.notifications.filter((n: any) => !n.isRead).length
+      : 3;
 
   const onLogout =
     propOnLogout ||
@@ -355,8 +382,23 @@ export default function TenantShell({
             </form>
           </div>
 
-          {/* Right: Notifications & Profile Trigger */}
-          <div className="flex items-center gap-2 sm:gap-4 ml-4">
+          {/* Right: Theme Toggle, Notifications & Profile Trigger */}
+          <div className="flex items-center gap-2 sm:gap-3.5 ml-4">
+            {/* Dark/Light Mode Toggle */}
+            <button
+              type="button"
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+              aria-label="Toggle dark mode"
+              title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {mounted && resolvedTheme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
+
             {/* Notification Bell with Red Badge */}
             <Link
               href="/dashboard/notifications"
@@ -364,9 +406,11 @@ export default function TenantShell({
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center">
-                {unreadNotificationsCount > 0 ? unreadNotificationsCount : 3}
-              </span>
+              {liveUnreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center">
+                  {liveUnreadCount}
+                </span>
+              )}
             </Link>
 
             <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
@@ -454,7 +498,7 @@ export default function TenantShell({
         {/* Page Content Container */}
         <main
           className={clsx(
-            'flex-1 w-full mx-auto',
+            'flex-1 w-full mx-auto pb-16 lg:pb-0',
             isFullBleedPage ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
           )}
         >

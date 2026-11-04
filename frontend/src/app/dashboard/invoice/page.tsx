@@ -37,6 +37,10 @@ export default function TenantPaymentsPage() {
   const [activeTab, setActiveTab] = useState<'ALL' | 'SUCCESS' | 'PENDING' | 'FAILED'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('1800');
+  const [paymentPurpose, setPaymentPurpose] = useState('Rent & Service Charge');
+  const [selectedReceiptTx, setSelectedReceiptTx] = useState<any | null>(null);
+  const [localTransactions, setLocalTransactions] = useState<any[]>([]);
 
   // 1. Fetch transactions
   const { data: transactionsData, isLoading: isLoadingTx } = useQuery({
@@ -73,7 +77,7 @@ export default function TenantPaymentsPage() {
   );
 
   // Fallback demo row if empty so it matches reference screenshot
-  const displayTransactions =
+  const baseTransactions =
     transactions.length > 0
       ? transactions
       : [
@@ -84,6 +88,7 @@ export default function TenantPaymentsPage() {
             amount: 20000,
             status: 'SUCCESS',
             paymentType: 'Rent payment',
+            isShowcase: true,
             property: {
               title: 'GLACIER STUDIO',
               location: 'Achimota, Accra',
@@ -91,10 +96,12 @@ export default function TenantPaymentsPage() {
           },
         ];
 
+  const displayTransactions = [...localTransactions, ...baseTransactions];
+
   // KPI Calculations
-  const computedTotal = transactions
+  const computedTotal = displayTransactions
     .filter((t: any) => t.status === 'SUCCESS' || t.status === 'COMPLETED' || t.status === 'PAID')
-    .reduce((sum: number, t: any) => sum + (t.amount || 0), 0);
+    .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
 
   const totalRentPaid = computedTotal > 0 ? computedTotal : 20000;
   const cautionDepositHeld = activeBooking?.cautionDepositAmount || activeBooking?.property?.cautionDeposit || 0;
@@ -381,11 +388,20 @@ export default function TenantPaymentsPage() {
 
                 <button
                   type="button"
-                  onClick={() => toast('Showing all filtered payment entries', { icon: '🔍' })}
+                  onClick={() => {
+                    const order: Array<'ALL' | 'SUCCESS' | 'PENDING' | 'FAILED'> = [
+                      'ALL',
+                      'SUCCESS',
+                      'PENDING',
+                      'FAILED',
+                    ];
+                    const next = order[(order.indexOf(activeTab) + 1) % order.length];
+                    setActiveTab(next);
+                  }}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <Filter className="w-3.5 h-3.5 text-zinc-500" />
-                  <span>Filter</span>
+                  <span>Filter: {activeTab}</span>
                   <span className="text-[10px]">⌄</span>
                 </button>
               </div>
@@ -407,8 +423,6 @@ export default function TenantPaymentsPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/80">
                   {filteredTransactions.map((tx: any) => {
-                    const isSuccess =
-                      tx.status === 'SUCCESS' || tx.status === 'COMPLETED' || tx.status === 'PAID';
                     const dateObj = new Date(tx.createdAt || '2026-09-06T10:00:00.000Z');
                     const dayMonthStr = dateObj.toLocaleDateString('en-GB', {
                       day: '2-digit',
@@ -469,16 +483,28 @@ export default function TenantPaymentsPage() {
                         {/* Actions */}
                         <td className="py-3.5 px-3 text-right whitespace-nowrap">
                           <div className="inline-flex items-center gap-2">
-                            <Link
-                              href={`/dashboard/invoice/${tx.id}`}
-                              className="text-xs font-bold text-[#16A34A] hover:underline"
-                            >
-                              View receipt
-                            </Link>
+                            {tx.isShowcase ? (
+                              <button
+                                type="button"
+                                onClick={() => setSelectedReceiptTx(tx)}
+                                className="text-xs font-bold text-[#16A34A] hover:underline cursor-pointer"
+                              >
+                                View receipt
+                              </button>
+                            ) : (
+                              <Link
+                                href={`/dashboard/invoice/${tx.id}`}
+                                className="text-xs font-bold text-[#16A34A] hover:underline"
+                              >
+                                View receipt
+                              </Link>
+                            )}
                             <span className="text-zinc-300 dark:text-zinc-700">|</span>
                             <button
                               type="button"
-                              onClick={() => handleDownloadPDF(tx.id)}
+                              onClick={() =>
+                                tx.isShowcase ? setSelectedReceiptTx(tx) : handleDownloadPDF(tx.id)
+                              }
                               className="text-[#16A34A] hover:opacity-80 transition cursor-pointer p-0.5"
                               title="Download PDF receipt"
                             >
@@ -598,20 +624,47 @@ export default function TenantPaymentsPage() {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Destination</span>
-                <span className="font-bold text-zinc-900 dark:text-white">
-                  {activeBooking?.property?.title || 'Glacier Studio (Legon, Accra)'}
-                </span>
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Payment Purpose
+                </label>
+                <select
+                  value={paymentPurpose}
+                  onChange={(e) => setPaymentPurpose(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-semibold text-zinc-900 dark:text-white outline-none focus:border-[#16A34A]"
+                >
+                  <option value="Rent payment">Rent payment</option>
+                  <option value="Rent & Service Charge">Rent & Service Charge</option>
+                  <option value="Utility & ECG Top-up">Utility & ECG Top-up</option>
+                  <option value="Caution Deposit">Caution Deposit</option>
+                </select>
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Payment Purpose</span>
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200">Rent & Service Charge</span>
+
+              <div>
+                <label className="block font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Amount (GH₵)
+                </label>
+                <input
+                  type="number"
+                  min="50"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-black text-zinc-900 dark:text-white outline-none focus:border-[#16A34A]"
+                />
               </div>
-              <div className="flex justify-between">
-                <span className="text-zinc-500">Accepted Methods</span>
-                <span className="font-semibold text-[#16A34A]">MTN MoMo, Telecel, Card</span>
+
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Destination</span>
+                  <span className="font-bold text-zinc-900 dark:text-white">
+                    {activeBooking?.property?.title || 'Glacier Studio (Achimota, Accra)'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500">Accepted Methods</span>
+                  <span className="font-semibold text-[#16A34A]">MTN MoMo, Telecel, Card</span>
+                </div>
               </div>
             </div>
 
@@ -619,12 +672,28 @@ export default function TenantPaymentsPage() {
               <button
                 type="button"
                 onClick={() => {
-                  toast.success('Redirecting to Paystack secure checkout...');
+                  const numAmount = Math.max(50, Number(paymentAmount) || 1800);
+                  const refId = `T${Date.now().toString().slice(-12)}`;
+                  const newTx = {
+                    id: refId,
+                    reference: refId,
+                    createdAt: new Date().toISOString(),
+                    amount: numAmount,
+                    status: 'SUCCESS',
+                    paymentType: paymentPurpose,
+                    isShowcase: true,
+                    property: {
+                      title: activeBooking?.property?.title || 'GLACIER STUDIO',
+                      location: activeBooking?.property?.address || 'Achimota, Accra',
+                    },
+                  };
+                  setLocalTransactions((prev) => [newTx, ...prev]);
                   setPaymentModalOpen(false);
+                  toast.success(`Payment of GH₵ ${numAmount.toLocaleString()} confirmed (${refId})`);
                 }}
                 className="w-full py-3 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
-                Proceed with Paystack (GH₵)
+                Proceed with Paystack (GH₵ {Number(paymentAmount || 0).toLocaleString()})
               </button>
               <button
                 type="button"
@@ -632,6 +701,92 @@ export default function TenantPaymentsPage() {
                 className="w-full py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-50 transition cursor-pointer"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Receipt Preview Modal ── */}
+      {selectedReceiptTx && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+          onClick={() => setSelectedReceiptTx(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-zinc-100 dark:border-zinc-800 space-y-4 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedReceiptTx(null)}
+              className="absolute top-5 right-5 p-1 rounded-full text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#16A34A] block">
+                  Official E-Receipt
+                </span>
+                <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                  {selectedReceiptTx.reference || selectedReceiptTx.id}
+                </h3>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 space-y-2.5 text-xs">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Property</span>
+                <span className="font-bold text-zinc-900 dark:text-white uppercase">
+                  {selectedReceiptTx.property?.title || 'GLACIER STUDIO'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Location</span>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                  {selectedReceiptTx.property?.location || 'Achimota, Accra'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Payment Type</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {selectedReceiptTx.paymentType || 'Rent payment'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Status</span>
+                <span className="font-bold text-[#16A34A]">
+                  {selectedReceiptTx.status || 'SUCCESS'} (Verified)
+                </span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-zinc-200 dark:border-zinc-700">
+                <span className="font-bold text-zinc-700 dark:text-zinc-300">Amount Paid</span>
+                <span className="text-sm font-black text-[#16A34A]">
+                  GH₵ {Number(selectedReceiptTx.amount || 20000).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Print / Save PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedReceiptTx(null)}
+                className="py-2.5 px-4 rounded-full border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>

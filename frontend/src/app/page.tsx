@@ -24,6 +24,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import api from '@/lib/axios';
+import toast from 'react-hot-toast';
 import PublicFooter from '@/components/tenant-ui/PublicFooter';
 
 // ── SHOWCASE PROPERTY CARDS ──
@@ -38,7 +39,7 @@ const SHOWCASE_PROPERTIES = [
     badge: 'Verified',
     badgeColor: 'green',
     image: '/images/home/glacier-living.jpg',
-    href: '/properties',
+    href: '/properties/glacier-studio',
   },
   {
     id: 'aduana-apartment',
@@ -50,7 +51,7 @@ const SHOWCASE_PROPERTIES = [
     badge: 'Verified',
     badgeColor: 'green',
     image: '/images/home/aduana-bedroom.jpg',
-    href: '/properties',
+    href: '/properties/aduana-apartment',
   },
   {
     id: 'executive-studio',
@@ -62,7 +63,7 @@ const SHOWCASE_PROPERTIES = [
     badge: 'Popular',
     badgeColor: 'orange',
     image: '/images/home/executive-living.jpg',
-    href: '/properties',
+    href: '/properties/executive-studio',
   },
   {
     id: 'seaside-apartments',
@@ -74,16 +75,16 @@ const SHOWCASE_PROPERTIES = [
     badge: 'Verified',
     badgeColor: 'green',
     image: '/images/home/seaside-exterior.jpg',
-    href: '/properties',
+    href: '/properties/seaside-apartments',
   },
 ];
 
 const CATEGORY_PILLS = [
-  { label: 'Hostels', subtitle: 'Comfortable & Affordable', icon: BedDouble },
-  { label: 'Student Housing', subtitle: 'Close to Campus', icon: GraduationCap },
-  { label: 'Apartments', subtitle: 'Modern Living', icon: Building2 },
-  { label: 'Houses', subtitle: 'Spacious & Secure', icon: Home },
-  { label: 'Verified Listings', subtitle: 'Trusted & Secure', icon: ShieldCheck },
+  { label: 'Hostels', subtitle: 'Comfortable & Affordable', icon: BedDouble, href: '/search?type=HOSTEL' },
+  { label: 'Student Housing', subtitle: 'Close to Campus', icon: GraduationCap, href: '/search?targetAudience=STUDENT' },
+  { label: 'Apartments', subtitle: 'Modern Living', icon: Building2, href: '/search?type=APARTMENT' },
+  { label: 'Houses', subtitle: 'Spacious & Secure', icon: Home, href: '/search?type=HOUSE' },
+  { label: 'Verified Listings', subtitle: 'Trusted & Secure', icon: ShieldCheck, href: '/search?verified=true' },
 ];
 
 const TRUST_PILLARS = [
@@ -132,13 +133,23 @@ export default function HomePage() {
   const [searchLocation, setSearchLocation] = useState('');
   const [searchType, setSearchType] = useState('');
   const [searchMaxPrice, setSearchMaxPrice] = useState('');
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('akwaaba_wishlist');
+        return saved ? JSON.parse(saved) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   const { data: propertiesResponse } = useQuery({
     queryKey: ['homepage-properties'],
     queryFn: async () => {
       try {
-        const { data } = await api.get('/properties', { params: { limit: 4, sort: 'newest' } });
+        const { data } = await api.get('/properties', { params: { limit: 8, sort: 'newest' } });
         return data;
       } catch {
         return null;
@@ -146,7 +157,18 @@ export default function HomePage() {
     },
   });
 
-  const liveListings = propertiesResponse?.data || propertiesResponse?.properties || [];
+  const liveListings: any[] = propertiesResponse?.data || propertiesResponse?.properties || [];
+
+  const featuredCards = SHOWCASE_PROPERTIES.map((prop, index) => {
+    const matchedLive =
+      liveListings.find((l) => l.title?.toLowerCase().includes(prop.title.split(' ')[0].toLowerCase())) ||
+      liveListings[index];
+    return {
+      ...prop,
+      href: matchedLive?.id ? `/properties/${matchedLive.id}` : prop.href,
+      liveId: matchedLive?.id || prop.id,
+    };
+  });
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -157,10 +179,27 @@ export default function HomePage() {
     router.push(`/search${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
-  const toggleWishlist = (id: string) => {
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  const toggleWishlist = async (id: string, title?: string) => {
+    const isRemoving = wishlist.includes(id);
+    const updated = isRemoving ? wishlist.filter((x) => x !== id) : [...wishlist, id];
+    setWishlist(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('akwaaba_wishlist', JSON.stringify(updated));
+    }
+    toast.success(
+      isRemoving
+        ? `Removed ${title || 'property'} from saved homes`
+        : `Saved ${title || 'property'} to your wishlist`
     );
+    try {
+      if (isRemoving) {
+        await api.delete(`/wishlist/${id}`);
+      } else {
+        await api.post(`/wishlist/${id}`);
+      }
+    } catch {
+      // Guest user wishlist is persisted in localStorage
+    }
   };
 
   return (
@@ -348,7 +387,7 @@ export default function HomePage() {
               return (
                 <Link
                   key={cat.label}
-                  href={`/search?type=${cat.label.toUpperCase().replace(/ /g, '_')}`}
+                  href={cat.href}
                   className="flex flex-col items-center gap-1.5 min-w-fit px-3 py-2 group cursor-pointer hover:text-[#16A34A] transition"
                 >
                   <Icon className="w-5 h-5 text-zinc-400 group-hover:text-[#16A34A] transition" />
@@ -388,7 +427,7 @@ export default function HomePage() {
 
           {/* 4 Property Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {SHOWCASE_PROPERTIES.map((prop) => (
+            {featuredCards.map((prop) => (
               <Link
                 key={prop.id}
                 href={prop.href}
@@ -425,13 +464,13 @@ export default function HomePage() {
                     type="button"
                     onClick={(e) => {
                       e.preventDefault();
-                      toggleWishlist(prop.id);
+                      toggleWishlist(prop.liveId, prop.title);
                     }}
                     className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xs flex items-center justify-center shadow-xs hover:scale-110 transition cursor-pointer"
                   >
                     <Heart
                       className={`w-3.5 h-3.5 transition ${
-                        wishlist.includes(prop.id)
+                        wishlist.includes(prop.liveId)
                           ? 'fill-rose-500 text-rose-500'
                           : 'text-zinc-500'
                       }`}

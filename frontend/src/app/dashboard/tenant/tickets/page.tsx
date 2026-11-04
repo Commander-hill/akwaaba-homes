@@ -431,24 +431,14 @@ export default function TenantTicketsPage() {
                                 <span>{req.teamLabel}</span>
                               </span>
 
-                              {req.isLiveTicket ? (
-                                <Link
-                                  href={`/dashboard/tenant/tickets/${req.id}`}
-                                  className="px-3.5 py-1.5 rounded-xl bg-[#FAF9F5] hover:bg-white border border-[#D8D6CA] text-[#14221A] text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition"
-                                >
-                                  <span>View details</span>
-                                  <ArrowRight className="w-3.5 h-3.5" />
-                                </Link>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedRequest(req)}
-                                  className="px-3.5 py-1.5 rounded-xl bg-[#FAF9F5] hover:bg-white border border-[#D8D6CA] text-[#14221A] text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
-                                >
-                                  <span>View details</span>
-                                  <ArrowRight className="w-3.5 h-3.5" />
-                                </button>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => setSelectedRequest(req)}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#FAF9F5] hover:bg-white border border-[#D8D6CA] text-[#14221A] text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                              >
+                                <span>View details</span>
+                                <ArrowRight className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         </div>

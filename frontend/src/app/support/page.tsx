@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTheme } from 'next-themes';
 import {
   AlertTriangle,
   ArrowRight,
@@ -19,12 +20,14 @@ import {
   Loader2,
   MessageSquare,
   Minus,
+  Moon,
   Paperclip,
   PhoneCall,
   Plus,
   Search,
   ShieldCheck,
   Sparkles,
+  Sun,
   Wrench,
   X,
 } from 'lucide-react';
@@ -39,8 +42,11 @@ const notify = {
 
 interface UserType {
   id: string;
+  firstName?: string;
+  lastName?: string;
   fullName?: string;
   email?: string;
+  phoneNumber?: string;
   phone?: string;
   role?: string;
 }
@@ -230,7 +236,13 @@ export default function SupportHelpCentrePage() {
     return merged.slice(0, 3);
   }, [sessionRequests, ticketsData]);
 
-  const userDisplayName = user?.fullName || 'Stephen Darko';
+  const userDisplayName = useMemo(() => {
+    if (user?.firstName || user?.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return user?.fullName || 'Stephen Darko';
+  }, [user]);
+
   const userInitials = useMemo(() => {
     const parts = userDisplayName.trim().split(/\s+/);
     if (parts.length >= 2) {
@@ -238,6 +250,25 @@ export default function SupportHelpCentrePage() {
     }
     return userDisplayName.slice(0, 2).toUpperCase();
   }, [userDisplayName]);
+
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qSubject = params.get('subject');
+      const qProp = params.get('propertyId');
+      if (qSubject) {
+        setSubject(qSubject);
+        setCategory('HOME_MAINTENANCE');
+      }
+      if (qProp) {
+        setSelectedBookingId(qProp);
+      }
+    }
+  }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -286,9 +317,10 @@ export default function SupportHelpCentrePage() {
       }
 
       const { data } = await api.post('/contact', {
-        fullName: user?.fullName || 'Stephen Darko',
+        name: userDisplayName,
+        fullName: userDisplayName,
         email: user?.email || 'stephen.darko@ug.edu.gh',
-        phone: user?.phone || '+233 24 581 9042',
+        phone: user?.phoneNumber || user?.phone || '+233 24 581 9042',
         inquiryType: category === 'HOME_MAINTENANCE' ? 'PROPERTY_MANAGEMENT' : 'GENERAL',
         subject: `[${category || 'SUPPORT'} • ${priority}] ${subject.trim()}`,
         message: `${description.trim()}${attachmentName ? `\n\nAttachment: ${attachmentName}` : ''}`,
@@ -326,7 +358,6 @@ export default function SupportHelpCentrePage() {
       notify.success('Your support request has been submitted to the AkwaabaHomes Concierge team.');
     },
     onError: () => {
-      // Even if offline or guest, add to session list and confirm
       const fallbackReq: SupportRequestDisplay = {
         id: `local-${Date.now()}`,
         referenceCode: `#AH-2026-0849`,
@@ -439,10 +470,24 @@ export default function SupportHelpCentrePage() {
             </Link>
           </nav>
 
-          {/* Right Notification & Profile */}
-          <div className="flex items-center gap-3.5 shrink-0">
+          {/* Right Theme Toggle, Notification & Profile */}
+          <div className="flex items-center gap-2.5 sm:gap-3.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              aria-label="Toggle dark mode"
+              title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-9 h-9 rounded-full border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors cursor-pointer"
+            >
+              {mounted && resolvedTheme === 'dark' ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
+            </button>
+
             <Link
-              href="/notifications"
+              href={user ? '/dashboard/notifications' : '/notifications'}
               className="relative w-9 h-9 rounded-full border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors"
               aria-label="Notifications"
             >
@@ -453,7 +498,7 @@ export default function SupportHelpCentrePage() {
             </Link>
 
             <Link
-              href="/dashboard/profile"
+              href={user ? '/dashboard/profile' : '/login'}
               className="flex items-center gap-2.5 pl-1.5 pr-2.5 py-1 rounded-full hover:bg-[#EFECE2] transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-[#0B3B24] text-white text-[11.5px] font-bold flex items-center justify-center tracking-wide shadow-sm">

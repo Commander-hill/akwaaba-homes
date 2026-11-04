@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import api from '@/lib/axios';
+import PublicFooter from '@/components/tenant-ui/PublicFooter';
 
 const SUBJECT_LABELS: Record<string, string> = {
   TENANCY_INQUIRY: 'Student Hostel / Accommodation Inquiry',
@@ -259,6 +260,9 @@ export default function ContactPage() {
           </form>
         </div>
 
+      </div>
+      <div className="mt-16 -mx-4 sm:-mx-6 lg:-mx-8 -mb-12">
+        <PublicFooter />
       </div>
     </div>
   );

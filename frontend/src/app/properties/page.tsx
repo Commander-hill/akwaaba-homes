@@ -35,6 +35,7 @@ const PROPERTY_TYPES = [
   { value: 'SINGLE_ROOM', label: 'Private Room' },
   { value: 'APARTMENT', label: 'Apartment' },
   { value: 'STUDIO', label: 'Studio' },
+  { value: 'HOUSE', label: 'House' },
   { value: 'HOMESTAY', label: 'Homestay' },
 ];
 
@@ -75,6 +76,9 @@ function SearchDiscoveryContent() {
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [page, setPage] = useState(Number(searchParams.get('page') || 1));
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const targetAudienceParam = searchParams.get('targetAudience') || '';
+  const verifiedParam = searchParams.get('verified') || '';
 
   // Sync local state when browser back/forward changes searchParams
   useEffect(() => {
@@ -132,6 +136,8 @@ function SearchDiscoveryContent() {
       maxPrice,
       capacityFilter,
       selectedAmenities.join(','),
+      targetAudienceParam,
+      verifiedParam,
       sortBy,
       page,
     ],
@@ -148,6 +154,8 @@ function SearchDiscoveryContent() {
       if (maxPrice) params.maxPrice = maxPrice;
       if (capacityFilter) params.capacity = capacityFilter;
       if (selectedAmenities.length > 0) params.amenities = selectedAmenities.join(',');
+      if (targetAudienceParam) params.targetAudience = targetAudienceParam;
+      if (verifiedParam) params.verified = verifiedParam;
 
       const res = await api.get('/properties', { params });
       return res.data;

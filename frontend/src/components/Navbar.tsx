@@ -5,27 +5,34 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   UserCircle, Menu, X, AlertTriangle, CalendarCheck,
-  ChevronDown, Moon, Bell
+  ChevronDown, Moon, Sun, Bell
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
 import NotificationBell from './NotificationBell';
 
 const PUBLIC_NAV_LINKS = [
   { name: 'Home', href: '/' },
-  { name: 'Explore', href: '/properties', hasDropdown: true },
-  { name: 'Neighborhoods', href: '/search', hasDropdown: true },
-  { name: 'Services', href: '/services', hasDropdown: true },
-  { name: 'About', href: '/about', hasDropdown: true },
-  { name: 'Support', href: '/support', hasDropdown: true },
+  { name: 'Explore', href: '/properties', hasDropdown: false },
+  { name: 'Neighborhoods', href: '/search', hasDropdown: false },
+  { name: 'Services', href: '/services', hasDropdown: false },
+  { name: 'About', href: '/about', hasDropdown: false },
+  { name: 'Support', href: '/support', hasDropdown: false },
 ];
 
 export default function Navbar() {
   const pathname = usePathname() || '';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -173,7 +180,6 @@ export default function Navbar() {
                 {navLinks.map((link) => {
                   const isActive =
                     pathname === link.href ||
-                    (link.href === '/search' && (pathname === '/search' || pathname === '/properties')) ||
                     (link.href === '/saved' && (pathname === '/saved' || pathname === '/dashboard/wishlist'));
                   return (
                     <Link
@@ -199,13 +205,19 @@ export default function Navbar() {
 
             {/* Right: Account Actions */}
             <div className="hidden md:flex items-center gap-2">
-              {/* Theme Moon Toggle */}
+              {/* Theme Moon/Sun Toggle */}
               <button
                 type="button"
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
                 className="p-2 rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
                 aria-label="Toggle dark mode"
+                title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
               >
-                <Moon className="w-4 h-4" />
+                {mounted && resolvedTheme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
               </button>
 
               {isAuthenticated ? (
@@ -256,7 +268,7 @@ export default function Navbar() {
                     <span>Bookings</span>
                   </Link>
 
-                  {/* Notification Bell (guest shows badge 3 like mockup) */}
+                  {/* Notification Bell */}
                   <Link
                     href="/login"
                     className="relative p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition"
@@ -283,6 +295,18 @@ export default function Navbar() {
 
             {/* Mobile Controls */}
             <div className="md:hidden flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+                className="p-2 rounded-lg text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                aria-label="Toggle dark mode"
+              >
+                {mounted && resolvedTheme === 'dark' ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4" />
+                )}
+              </button>
               {isAuthenticated && <NotificationBell />}
               <button
                 type="button"

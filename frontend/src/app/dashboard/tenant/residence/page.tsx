@@ -174,7 +174,7 @@ export default function MyResidencePage() {
                 {/* Quick CTA Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-2">
                   <Link
-                    href={`/dashboard/agreements/${booking.id}`}
+                    href="/dashboard/agreements"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-xs font-bold hover:opacity-90 transition cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export default function MyResidencePage() {
                   </Link>
 
                   <Link
-                    href={`/dashboard/invoice/${booking.id}`}
+                    href="/dashboard/invoice"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
                   >
                     <Receipt className="w-3.5 h-3.5" />

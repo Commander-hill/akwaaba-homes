@@ -39,6 +39,7 @@ export default function TenantBookingsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<BookingTab>('ALL');
   const [calendarMonth, setCalendarMonth] = useState('September 2026');
+  const [selectedBookingModal, setSelectedBookingModal] = useState<'PRIMARY' | 'PAST' | null>(null);
 
   // Query authenticated tenant bookings
   const { data: bookingsResponse, isLoading } = useQuery({
@@ -277,13 +278,24 @@ export default function TenantBookingsPage() {
                   </span>
                 </div>
 
-                <Link
-                  href={primaryBooking?.id ? `/dashboard/tenant/bookings/${primaryBooking.id}` : '/dashboard/tenant/bookings'}
-                  className="mt-4 sm:mt-0 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
-                >
-                  <span>View Details</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                {primaryBooking?.id ? (
+                  <Link
+                    href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+                    className="mt-4 sm:mt-0 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                  >
+                    <span>View Details</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBookingModal('PRIMARY')}
+                    className="mt-4 sm:mt-0 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <span>View Details</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -363,13 +375,14 @@ export default function TenantBookingsPage() {
                   </p>
                 </div>
               </div>
-              <Link
-                href="/dashboard/tenant/bookings"
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5"
+              <button
+                type="button"
+                onClick={() => setActiveTab('ALL')}
+                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3 h-3" />
-              </Link>
+              </button>
             </div>
 
             {/* Past Booking Card (KUMASI APARTMENT) */}
@@ -429,12 +442,13 @@ export default function TenantBookingsPage() {
                     GH₵ 18,500
                   </span>
                 </div>
-                <Link
-                  href="/dashboard/tenant/bookings"
-                  className="px-3.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition"
+                <button
+                  type="button"
+                  onClick={() => setSelectedBookingModal('PAST')}
+                  className="px-3.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition cursor-pointer"
                 >
                   View Details
-                </Link>
+                </button>
               </div>
             </div>
           </section>
@@ -627,7 +641,11 @@ export default function TenantBookingsPage() {
               <div className="flex items-center gap-1 text-zinc-400">
                 <button
                   type="button"
-                  onClick={() => setCalendarMonth('August 2026')}
+                  onClick={() =>
+                    setCalendarMonth((prev) =>
+                      prev === 'October 2026' ? 'September 2026' : 'August 2026'
+                    )
+                  }
                   className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
                   title="Previous Month"
                 >
@@ -635,7 +653,11 @@ export default function TenantBookingsPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCalendarMonth('October 2026')}
+                  onClick={() =>
+                    setCalendarMonth((prev) =>
+                      prev === 'August 2026' ? 'September 2026' : 'October 2026'
+                    )
+                  }
                   className="p-1 hover:text-zinc-950 dark:hover:text-white transition cursor-pointer"
                   title="Next Month"
                 >
@@ -656,7 +678,7 @@ export default function TenantBookingsPage() {
               <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">30</span>
               <span className="text-[11px] text-zinc-300 dark:text-zinc-600 py-1">31</span>
 
-              {/* September days */}
+              {/* Month days */}
               {[1, 2, 3, 4, 5].map((day) => (
                 <span key={day} className="text-[11px] text-zinc-700 dark:text-zinc-300 py-1">
                   {day}
@@ -709,6 +731,89 @@ export default function TenantBookingsPage() {
           </Link>
         </div>
       </div>
+
+      {/* Booking Details Modal */}
+      {selectedBookingModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setSelectedBookingModal(null)}
+        >
+          <div
+            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold uppercase mb-1.5">
+                  {selectedBookingModal === 'PRIMARY' ? 'Confirmed Stay' : 'Completed Stay'}
+                </span>
+                <h3 className="text-base font-black text-zinc-950 dark:text-white uppercase">
+                  {selectedBookingModal === 'PRIMARY' ? primaryTitle : 'KUMASI APARTMENT'}
+                </h3>
+                <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
+                  <MapPin className="w-3 h-3" />
+                  <span>
+                    {selectedBookingModal === 'PRIMARY' ? primaryLocation : 'Kumasi, Ashanti Region'}
+                  </span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBookingModal(null)}
+                className="text-zinc-400 hover:text-zinc-700 dark:hover:text-white text-sm font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Booking Reference</span>
+                <span className="font-bold text-zinc-900 dark:text-white">
+                  {selectedBookingModal === 'PRIMARY' ? primaryRef : 'Ref #KMA9041B'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Stay Period</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {selectedBookingModal === 'PRIMARY' ? stayDateRange : '12 Jan 2026 – 12 Jul 2026'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-zinc-500">Unit Type</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  {selectedBookingModal === 'PRIMARY' ? 'Studio Suite (1 Room)' : 'Executive 1-Bed'}
+                </span>
+              </div>
+              <div className="flex justify-between pt-1.5 border-t border-zinc-200/70 dark:border-zinc-700">
+                <span className="font-bold text-zinc-700 dark:text-zinc-300">Total Paid</span>
+                <span className="font-black text-[#16A34A]">
+                  {selectedBookingModal === 'PRIMARY'
+                    ? `GH₵ ${primaryTotal.toLocaleString('en-GH')}`
+                    : 'GH₵ 18,500'}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              <Link
+                href="/dashboard/agreements"
+                onClick={() => setSelectedBookingModal(null)}
+                className="py-2.5 px-3 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold text-center transition"
+              >
+                Lease Agreement
+              </Link>
+              <Link
+                href="/dashboard/invoice"
+                onClick={() => setSelectedBookingModal(null)}
+                className="py-2.5 px-3 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold text-center transition"
+              >
+                Payment Receipt
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

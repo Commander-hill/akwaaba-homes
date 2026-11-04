@@ -223,7 +223,12 @@ export function ProfileWorkspaceContent({
   const handleSaveChanges = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsSaving(true);
-    const payload = { ...formData };
+    const payload: Record<string, any> = { ...formData };
+    Object.keys(payload).forEach((key) => {
+      if (typeof payload[key] === 'string' && payload[key].includes('*')) {
+        delete payload[key];
+      }
+    });
     if (!isStudent) {
       payload.campus = '';
       payload.studentId = '';
@@ -849,8 +854,15 @@ export function ProfileWorkspaceContent({
                     <KeyRound className="w-4 h-4 text-[#4A5A50]" />
                     <span>Two-Factor Authentication</span>
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[11px] font-bold">
-                    {twoFactorStatus?.twoFactorEnabled !== false ? 'Enabled' : 'Active'}
+                  <span
+                    className={clsx(
+                      'px-2.5 py-0.5 rounded-full text-[11px] font-bold',
+                      twoFactorStatus?.twoFactorEnabled
+                        ? 'bg-[#DCFCE7] text-[#15803D]'
+                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300'
+                    )}
+                  >
+                    {twoFactorStatus?.twoFactorEnabled ? 'Enabled' : 'Disabled'}
                   </span>
                 </div>
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import PublicFooter from '@/components/tenant-ui/PublicFooter';
 import {
   Building,
   CheckCircle2,
@@ -144,6 +145,9 @@ export default function AboutPage() {
           </Link>
         </div>
 
+      </div>
+      <div className="mt-16 -mx-4 sm:-mx-6 lg:-mx-8 -mb-12">
+        <PublicFooter />
       </div>
     </div>
   );

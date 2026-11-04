@@ -162,7 +162,7 @@ const MOCKUP_CONVERSATIONS: Conversation[] = [
           location: 'Achimota, Accra',
           status: 'Available',
           image: '/images/messages/bedroom-thumb.png',
-          href: '/dashboard/tenant/bookings',
+          href: '/properties/glacier-studio',
         },
       },
     ],
@@ -707,6 +707,18 @@ function MessagesContent() {
               Stay connected with your property team and community.
             </p>
 
+            {/* Search Conversations Input */}
+            <div className="relative pt-0.5">
+              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search messages or contacts..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-8 pl-8 pr-3 text-xs rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-50/70 dark:bg-zinc-800 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:border-[#16A34A]"
+              />
+            </div>
+
             {/* Filter Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar text-xs">
               <button
@@ -1020,7 +1032,7 @@ function MessagesContent() {
 
                         <div className="pt-1">
                           <Link
-                            href={msg.propertyCard.href || '/dashboard/tenant/bookings'}
+                            href={msg.propertyCard.href || '/properties/glacier-studio'}
                             className="px-3.5 py-1 rounded-full border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 text-xs font-bold inline-flex items-center gap-1 transition"
                           >
                             <span>View Details</span>
@@ -1114,7 +1126,7 @@ function MessagesContent() {
             })}
 
             {/* Typing Indicator Bubble */}
-            {(isPartnerTyping || activeConversation.id === 'conv-chelsea') && (
+            {isPartnerTyping && (
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700">
                   <Image
