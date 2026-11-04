@@ -53,6 +53,37 @@ export default function MyResidencePage() {
   const room = booking?.room;
   const landlord = property?.landlord;
 
+  const resolvePropertyImage = (rawImages: any): string => {
+    const fallback = '/images/resident/booking-glacier.jpg';
+    if (!rawImages) return fallback;
+    let list: any[] = [];
+    if (Array.isArray(rawImages)) {
+      list = rawImages;
+    } else if (typeof rawImages === 'string') {
+      const trimmed = rawImages.trim();
+      if (trimmed.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) list = parsed;
+        } catch {
+          return fallback;
+        }
+      } else {
+        list = [trimmed];
+      }
+    }
+    const first = typeof list[0] === 'string' ? list[0].trim() : '';
+    if (
+      first &&
+      (first.startsWith('/') || first.startsWith('http://') || first.startsWith('https://'))
+    ) {
+      return first;
+    }
+    return fallback;
+  };
+
+  const residenceImageSrc = resolvePropertyImage(property?.images);
+
   const startDateStr = booking?.startDate
     ? new Date(booking.startDate).toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -102,14 +133,14 @@ export default function MyResidencePage() {
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <Link
               href="/properties"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
             >
               <span>Browse Accommodations</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/dashboard/tenant/bookings"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
             >
               <span>View Booking Requests</span>
             </Link>
@@ -124,15 +155,12 @@ export default function MyResidencePage() {
               {/* Photo Left */}
               <div className="lg:col-span-5 relative min-h-[220px] lg:min-h-[280px]">
                 <Image
-                  src={
-                    property?.images?.[0] ||
-                    '/images/resident/booking-glacier.jpg'
-                  }
+                  src={residenceImageSrc}
                   alt={property?.title || 'Residence'}
                   fill
                   className="object-cover"
                 />
-                <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16A34A] text-white text-xs font-bold shadow-xs">
+                <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#16A34A] text-white text-xs font-bold shadow-xs">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>Active Tenancy</span>
                 </div>

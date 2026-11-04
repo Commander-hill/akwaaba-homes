@@ -25,6 +25,7 @@ import {
   Home,
   Moon,
   Sun,
+  Scale,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
@@ -166,13 +167,6 @@ export default function TenantShell({
       icon: CreditCard,
     },
     {
-      label: 'Maintenance',
-      href: '/dashboard/tenant/tickets',
-      matchPrefixes: ['/dashboard/tenant/tickets'],
-      icon: Wrench,
-      badge: 2,
-    },
-    {
       label: 'Messages',
       href: '/dashboard/messages',
       matchPrefixes: ['/dashboard/messages'],
@@ -181,9 +175,22 @@ export default function TenantShell({
     },
     {
       label: 'Documents',
-      href: '/dashboard/agreements',
-      matchPrefixes: ['/dashboard/agreements', '/lease-agreement', '/dashboard/verification'],
+      href: '/dashboard/documents',
+      matchPrefixes: ['/dashboard/documents', '/dashboard/verification'],
       icon: FileText,
+    },
+    {
+      label: 'Agreements',
+      href: '/dashboard/agreements',
+      matchPrefixes: ['/dashboard/agreements', '/lease-agreement'],
+      icon: Scale,
+    },
+    {
+      label: 'Maintenance',
+      href: '/dashboard/tenant/tickets',
+      matchPrefixes: ['/dashboard/tenant/tickets'],
+      icon: Wrench,
+      badge: 2,
     },
     {
       label: 'Settings',
@@ -317,6 +324,7 @@ export default function TenantShell({
   const isFullBleedPage =
     pathname === '/dashboard/invoice' ||
     pathname === '/dashboard/agreements' ||
+    pathname === '/dashboard/documents' ||
     pathname === '/dashboard/profile' ||
     pathname === '/profile' ||
     pathname === '/settings' ||
@@ -355,6 +363,8 @@ export default function TenantShell({
                 {pathname.includes('/invoice')
                   ? 'Payments'
                   : pathname.includes('/agreements')
+                  ? 'Agreements'
+                  : pathname.includes('/documents') || pathname.includes('/verification')
                   ? 'Documents'
                   : pathname.includes('/profile') || pathname.includes('/settings')
                   ? 'Settings'

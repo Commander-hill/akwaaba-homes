@@ -1304,7 +1304,7 @@ export const getMyActiveBooking = async (req: Request, res: Response): Promise<v
     const activeBooking = await prisma.booking.findFirst({
       where: {
         tenantId,
-        status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+        status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
       },
       include: {
         property: {
@@ -1312,7 +1312,18 @@ export const getMyActiveBooking = async (req: Request, res: Response): Promise<v
             id: true,
             title: true,
             location: true,
-            images: true
+            price: true,
+            pricePeriod: true,
+            images: true,
+            landlord: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                phoneNumber: true,
+                email: true,
+              }
+            }
           }
         },
         room: {
@@ -1341,7 +1352,19 @@ export const getMyActiveBooking = async (req: Request, res: Response): Promise<v
       orderBy: { createdAt: 'desc' }
     });
 
-    res.status(200).json({ booking: activeBooking || null });
+    const parsedBooking = activeBooking
+      ? {
+          ...activeBooking,
+          property: activeBooking.property
+            ? {
+                ...activeBooking.property,
+                images: safeJsonParse(activeBooking.property.images, []),
+              }
+            : null,
+        }
+      : null;
+
+    res.status(200).json({ booking: parsedBooking });
   } catch (error) {
     console.error('Error fetching active booking:', error);
     res.status(500).json({ message: 'Failed to fetch active booking status' });
