@@ -235,392 +235,600 @@ export default function AgreementPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════════
-          THE PHYSICAL LEGAL INSTRUMENT (AUTHENTIC GHANAIAN CONVEYANCING PAPER)
+          THE 4-PAGE PHYSICAL LEGAL INSTRUMENT (GHANAIAN CONVEYANCING DEED)
          ══════════════════════════════════════════════════════════════════════════ */}
-      <article
-        className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-16 sm:py-16 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-0 overflow-hidden"
-        style={{
-          fontFamily: 'Georgia, "Times New Roman", Times, serif',
-        }}
-      >
-        {/* Centered Akwaaba Watermark Logo */}
-        <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
-          <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
-            <Image
-              src="/logo-light.png"
-              alt="Akwaaba Homes Watermark"
-              fill
-              priority
-              className="object-contain"
-            />
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          {/* Top Metadata Folio Line */}
-          <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-4 border-b border-[#D6D0C4] tracking-wide">
-            <span>INSTRUMENT REF: {docRef}</span>
-            <span>REPUBLIC OF GHANA</span>
-          </div>
-
-        {/* Formal Conveyancing Title Header */}
-        <header className="text-center py-6 border-b-2 border-double border-[#1A1A18] space-y-2">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <div className="w-16 h-14 relative">
-              <Image
-                src="/images/agreements/coat-of-arms.png"
-                alt="Republic of Ghana Coat of Arms"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="w-[1px] h-9 bg-[#A8A29E]" />
-            <div className="w-16 h-14 relative">
+      <div className="space-y-8 print:space-y-0">
+        {/* ── SHEET 1 OF 4: RECITALS, PARTIES, SCHEDULE 1 & GRANT OF TENANCY ── */}
+        <article
+          className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-14 sm:py-14 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-8 print:break-after-page overflow-hidden min-h-[960px] flex flex-col justify-between"
+          style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
+        >
+          {/* Centered Akwaaba Watermark Logo */}
+          <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
+            <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
               <Image
                 src="/logo-light.png"
-                alt="Akwaaba Homes"
+                alt="Akwaaba Homes Watermark"
+                fill
+                priority
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <div className="relative z-10 space-y-6">
+            {/* Top Metadata Folio Line */}
+            <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-3 border-b border-[#D6D0C4] tracking-wide">
+              <span>INSTRUMENT REF: {docRef}</span>
+              <span>REPUBLIC OF GHANA</span>
+            </div>
+
+            {/* Formal Conveyancing Title Header */}
+            <header className="text-center py-4 border-b-2 border-double border-[#1A1A18] space-y-2">
+              <div className="flex items-center justify-center gap-4 mb-2">
+                <div className="w-16 h-14 relative">
+                  <Image
+                    src="/images/agreements/coat-of-arms.png"
+                    alt="Republic of Ghana Coat of Arms"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <div className="w-[1.5px] h-10 bg-[#C8A24A]" />
+                <div className="w-16 h-14 relative">
+                  <Image
+                    src="/logo-light.png"
+                    alt="Akwaaba Homes"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+              <p className="text-xs uppercase tracking-[0.25em] text-[#44403C] font-semibold">
+                Republic of Ghana
+              </p>
+              <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-[0.12em] text-[#111110]">
+                Residential Tenancy Agreement
+              </h2>
+              <p className="text-[11px] italic text-[#57534E] pt-0.5">
+                Made pursuant to the Rent Act, 1963 (Act 220), Conveyancing Act, 1973 (NRCD 175) and Electronic Transactions Act, 2008 (Act 772)
+              </p>
+            </header>
+
+            {/* Opening Recital & Parties */}
+            <div className="space-y-4 text-[13px] sm:text-[13.5px] leading-[1.8] text-[#1C1917] text-justify">
+              <p>
+                <strong>THIS RESIDENTIAL TENANCY AGREEMENT</strong> is made the{' '}
+                <strong>{formatLegalOrdinalDate(agreement.createdAt)}</strong>{' '}
+                <strong>BETWEEN</strong>{' '}
+                <strong className="uppercase">{landlordFullName}</strong> (Telephone:{' '}
+                {landlord.phoneNumber || 'on file'}) of the Republic of Ghana, hereinafter referred to as{' '}
+                <strong>&ldquo;the Landlord&rdquo;</strong> (which expression shall, where the context so admits, include
+                the Landlord&rsquo;s heirs, personal representatives, successors-in-title, and assigns) of the one part;
+              </p>
+
+              <p>
+                <strong>AND</strong>{' '}
+                <strong className="uppercase">{tenantFullName}</strong> (Telephone:{' '}
+                {tenant.phoneNumber || 'on file'}; Electronic Mail: {tenant.email}), hereinafter referred to as{' '}
+                <strong>&ldquo;the Tenant&rdquo;</strong> (which expression shall, where the context so admits, include
+                the Tenant&rsquo;s personal representatives and permitted assigns) of the other part.
+              </p>
+
+              {/* Recitals (WHEREAS) */}
+              <div className="space-y-2 pt-1">
+                <p><strong>WHEREAS:</strong></p>
+                <ol className="list-[upper-roman] pl-6 space-y-1.5 text-[12.5px] sm:text-[13px]">
+                  <li>
+                    The Landlord is the lawful owner or registered lessor of the residential property known as{' '}
+                    <strong>{property.title}</strong>, situated at <strong>{property.location}</strong> in the Republic of
+                    Ghana (hereinafter referred to as <strong>&ldquo;the Premises&rdquo;</strong>).
+                  </li>
+                  <li>
+                    The Landlord has agreed to let and the Tenant has agreed to take the Premises for private residential
+                    purposes at the agreed rent and upon the covenants and conditions hereinafter contained.
+                  </li>
+                  <li>
+                    The parties intend that this Agreement shall take effect as a binding legal tenancy under the laws of the Republic of Ghana, incorporating statutory tenant protections under the Rent Act, 1963 (Act 220).
+                  </li>
+                </ol>
+              </div>
+
+              <p className="pt-1 font-bold uppercase tracking-wide text-[12.5px] text-[#111110]">
+                NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
+              </p>
+
+              {/* Schedule 1 of Tenancy Particulars */}
+              <div className="my-3">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-[#1C1917] mb-1.5">
+                  Schedule 1: Schedule of Tenancy Particulars
+                </div>
+                <table className="w-full border-collapse border border-[#A8A29E] text-[12px] sm:text-[12.5px] text-left">
+                  <tbody>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-2 px-3 bg-[#F5F2EB] font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
+                        1. Description &amp; Location of Premises
+                      </th>
+                      <td className="py-2 px-3 text-[#1C1917]">
+                        <strong>{property.title}</strong>, situated at {property.location}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-2 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        2. Unit / Accommodation Category
+                      </th>
+                      <td className="py-2 px-3 text-[#1C1917]">{unitDescription}</td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-2 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        3. Term of Tenancy
+                      </th>
+                      <td className="py-2 px-3 text-[#1C1917]">
+                        From <strong>{formatStandardLegalDate(booking.startDate)}</strong> to{' '}
+                        <strong>{formatStandardLegalDate(booking.endDate)}</strong>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-2 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        4. Agreed Rent for the Term
+                      </th>
+                      <td className="py-2 px-3 text-[#1C1917]">
+                        <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>{' '}
+                        (Ghana Cedis)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="py-2 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        5. Permitted Use
+                      </th>
+                      <td className="py-2 px-3 text-[#1C1917]">Private Residential Occupation Only</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Clause 1: Grant of Tenancy */}
+              <div className="space-y-1.5 pt-1">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  1. Grant of Tenancy and Term
+                </h4>
+                <p className="text-[12.5px] sm:text-[13px]">
+                  <strong>1.1.</strong> In consideration of the rent hereby reserved and the covenants on the part of the Tenant hereinafter
+                  contained, the Landlord hereby lets unto the Tenant the Premises described in Schedule 1 hereto, TO HOLD
+                  the same unto the Tenant from <strong>{formatStandardLegalDate(booking.startDate)}</strong> until{' '}
+                  <strong>{formatStandardLegalDate(booking.endDate)}</strong>, unless earlier determined in accordance with
+                  the provisions of this Agreement or the Rent Act, 1963 (Act 220).
+                </p>
+                <p className="text-[12.5px] sm:text-[13px]">
+                  <strong>1.2.</strong> The Tenant shall have exclusive possession and peaceful enjoyment of the designated residential unit during the subsistence of this tenancy, subject strictly to the terms and covenants herein agreed.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 1 Footer */}
+          <div className="relative z-10 pt-6 mt-6 border-t border-[#D6D0C4] flex items-center justify-between text-[11px] text-[#57534E]">
+            <span>Tenancy Agreement ({docRef})</span>
+            <span className="font-semibold text-[#292524]">Page 1 of 4</span>
+          </div>
+        </article>
+
+        {/* ── SHEET 2 OF 4: RENT ADVANCE, TENANT & LANDLORD COVENANTS ── */}
+        <article
+          className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-14 sm:py-14 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-8 print:break-after-page overflow-hidden min-h-[960px] flex flex-col justify-between"
+          style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
+        >
+          {/* Centered Akwaaba Watermark Logo */}
+          <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
+            <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
+              <Image
+                src="/logo-light.png"
+                alt="Akwaaba Homes Watermark"
                 fill
                 className="object-contain"
               />
             </div>
           </div>
-          <p className="text-xs uppercase tracking-[0.25em] text-[#44403C] font-semibold">
-            Republic of Ghana
-          </p>
-          <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-[0.12em] text-[#111110]">
-            Tenancy Agreement
-          </h2>
-          <p className="text-xs italic text-[#57534E] pt-0.5">
-            Made pursuant to the Rent Act, 1963 (Act 220) and the Conveyancing Act, 1973 (N.R.C.D. 175)
-          </p>
-        </header>
 
-        {/* Legal Body */}
-        <div className="pt-8 space-y-6 text-[13.5px] sm:text-[14.5px] leading-[1.85] text-[#1C1917] text-justify">
-          {/* Opening Recital & Parties */}
-          <p>
-            <strong>THIS TENANCY AGREEMENT</strong> is made the{' '}
-            <strong>{formatLegalOrdinalDate(agreement.createdAt)}</strong>{' '}
-            <strong>BETWEEN</strong>{' '}
-            <strong className="uppercase">{landlordFullName}</strong> (Telephone:{' '}
-            {landlord.phoneNumber || 'on file'}) of the Republic of Ghana, hereinafter referred to as{' '}
-            <strong>&ldquo;the Landlord&rdquo;</strong> (which expression shall, where the context so admits, include
-            the Landlord&rsquo;s heirs, personal representatives, successors-in-title, and assigns) of the one part;
-          </p>
-
-          <p>
-            <strong>AND</strong>{' '}
-            <strong className="uppercase">{tenantFullName}</strong> (Telephone:{' '}
-            {tenant.phoneNumber || 'on file'}; Electronic Mail: {tenant.email}), hereinafter referred to as{' '}
-            <strong>&ldquo;the Tenant&rdquo;</strong> (which expression shall, where the context so admits, include
-            the Tenant&rsquo;s personal representatives and permitted assigns) of the other part.
-          </p>
-
-          {/* Recitals (WHEREAS) */}
-          <div className="space-y-3 pt-1">
-            <p>
-              <strong>WHEREAS:</strong>
-            </p>
-            <ol className="list-[upper-roman] pl-7 space-y-2">
-              <li>
-                The Landlord is the lawful owner or authorized lessor of the residential property known as{' '}
-                <strong>{property.title}</strong>, situated at <strong>{property.location}</strong> in the Republic of
-                Ghana (hereinafter referred to as <strong>&ldquo;the Premises&rdquo;</strong>).
-              </li>
-              <li>
-                The Landlord has agreed to let and the Tenant has agreed to take the Premises for the term and at the
-                rent hereinafter set forth, subject to the covenants, conditions, and stipulations contained in this
-                Agreement.
-              </li>
-            </ol>
-          </div>
-
-          <p className="pt-1 font-bold uppercase tracking-wide text-[13px] text-[#111110]">
-            NOW THIS AGREEMENT WITNESSETH AS FOLLOWS:
-          </p>
-
-          {/* Schedule of Tenancy Particulars (Classic Legal Table) */}
-          <div className="my-5">
-            <div className="text-xs font-bold uppercase tracking-widest text-[#1C1917] mb-2">
-              Schedule of Tenancy Particulars
+          <div className="relative z-10 space-y-6">
+            {/* Continuation Header */}
+            <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-3 border-b border-[#D6D0C4] tracking-wide">
+              <span>INSTRUMENT REF: {docRef}</span>
+              <span className="uppercase font-semibold tracking-wider">Part II — Rent, Statutory Advance &amp; Covenants</span>
             </div>
-            <table className="w-full border-collapse border border-[#A8A29E] text-[13px] text-left">
-              <tbody>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
-                    1. Description &amp; Location of Premises
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    <strong>{property.title}</strong>, situated at {property.location}
-                  </td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
-                    2. Unit / Accommodation Category
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">{unitDescription}</td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
-                    3. Term of Tenancy
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    From <strong>{formatStandardLegalDate(booking.startDate)}</strong> to{' '}
-                    <strong>{formatStandardLegalDate(booking.endDate)}</strong>
-                  </td>
-                </tr>
-                <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
-                    4. Agreed Rent for the Term
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">
-                    <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>{' '}
-                    (Ghana Cedis)
-                  </td>
-                </tr>
-                <tr>
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
-                    5. Permitted Use
-                  </th>
-                  <td className="py-2.5 px-3.5 text-[#1C1917]">Private Residential Occupation Only</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
 
-          {/* Clause 1: Grant of Tenancy */}
-          <div className="space-y-2">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              1. Grant of Tenancy and Term
-            </h4>
-            <p>
-              In consideration of the rent hereby reserved and the covenants on the part of the Tenant hereinafter
-              contained, the Landlord hereby lets unto the Tenant the Premises described in the Schedule hereto, TO HOLD
-              the same unto the Tenant from <strong>{formatStandardLegalDate(booking.startDate)}</strong> until{' '}
-              <strong>{formatStandardLegalDate(booking.endDate)}</strong>, unless earlier determined in accordance with
-              the provisions of this Agreement or the Rent Act, 1963 (Act 220).
-            </p>
-          </div>
-
-          {/* Clause 2: Rent & Payment */}
-          <div className="space-y-2">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              2. Rent and Receipts
-            </h4>
-            <p>
-              <strong>2.1.</strong> The rent reserved for the tenancy is{' '}
-              <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>, paid
-              by the Tenant through the designated settlement channel on behalf of the Landlord.
-            </p>
-            <p>
-              <strong>2.2.</strong> In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent
-              made under this Agreement shall be acknowledged by an official written or electronic rent receipt issued
-              to the Tenant stating the period covered and the sum received.
-            </p>
-          </div>
-
-          {/* Clause 3: Tenant's Covenants */}
-          <div className="space-y-2.5">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              3. Tenant&rsquo;s Covenants
-            </h4>
-            <p>The Tenant hereby covenants with the Landlord as follows:</p>
-            <div className="pl-4 sm:pl-6 space-y-2">
-              <p>
-                <strong>3.1. Payment of Rent and Utilities:</strong> To pay the reserved rent punctually as stipulated,
-                and to pay all charges for electricity, water, sanitation, and other utilities consumed on or
-                attributable to the Premises during the tenancy.
-              </p>
-              <p>
-                <strong>3.2. Care of Interior and Fixtures:</strong> To keep the interior of the Premises, including all
-                doors, windows, locks, sanitary fittings, electrical appliances, and fixtures provided by the Landlord,
-                in a clean and tenantable state of repair (fair wear and tear and damage by accidental fire or natural
-                causes excepted).
-              </p>
-              <p>
-                <strong>3.3. Alterations:</strong> Not to make any structural alterations, additions, or permanent
-                modifications to the Premises without obtaining the prior written consent of the Landlord.
-              </p>
-              <p>
-                <strong>3.4. Prohibition on Assignment and Subletting:</strong> Not to assign, sublet, or part with the
-                possession of the Premises or any part thereof to any third party without the prior written consent of
-                the Landlord, in compliance with Section 22 of the Rent Act, 1963 (Act 220).
-              </p>
-              <p>
-                <strong>3.5. Good Neighbourliness and Conduct:</strong> Not to do or permit to be done upon the Premises
-                anything which may constitute a nuisance, annoyance, or disturbance to the Landlord, co-tenants, or
-                occupiers of adjoining properties, nor to use the Premises for any unlawful or immoral purpose.
-              </p>
-              <p>
-                <strong>3.6. Condition Inspection and Yielding Up:</strong> To participate in a joint condition
-                inspection upon taking possession and at the expiration of the tenancy, and to peaceably yield up the
-                Premises with all keys and Landlord&rsquo;s fixtures in good tenantable order at the determination of the
-                tenancy.
-              </p>
-            </div>
-          </div>
-
-          {/* Clause 4: Landlord's Covenants */}
-          <div className="space-y-2.5">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              4. Landlord&rsquo;s Covenants
-            </h4>
-            <p>The Landlord hereby covenants with the Tenant as follows:</p>
-            <div className="pl-4 sm:pl-6 space-y-2">
-              <p>
-                <strong>4.1. Quiet Enjoyment:</strong> That the Tenant, paying the rent hereby reserved and observing
-                and performing the covenants and obligations on the Tenant&rsquo;s part herein contained, shall peaceably
-                and quietly hold and enjoy the Premises during the term without any unlawful interruption, harassment,
-                or disturbance by the Landlord or any person rightfully claiming under or in trust for the Landlord.
-              </p>
-              <p>
-                <strong>4.2. Structural and External Repairs:</strong> To keep the roof, foundation, exterior walls,
-                main drains, main plumbing pipes, and primary electrical conduit of the Premises in good and tenantable
-                structural repair throughout the term of the tenancy.
-              </p>
-              <p>
-                <strong>4.3. Notice of Entry for Inspection:</strong> To give the Tenant not less than twenty-four (24)
-                hours&rsquo; prior notice (except in the case of an emergency) before entering the Premises at reasonable
-                daytime hours to inspect its condition or carry out necessary repairs.
-              </p>
-              <p>
-                <strong>4.4. Due Process of Law:</strong> Not to unlawfully lock out the Tenant, remove roofing or
-                doors, or disconnect essential water or electricity supplies as a means of compelling vacation of the
-                Premises, in strict observance of the Rent Act, 1963 (Act 220).
-              </p>
-            </div>
-          </div>
-
-          {/* Clause 5: Caution / Security Deposit */}
-          <div className="space-y-2">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              5. Caution Deposit and Refund
-            </h4>
-            <p>
-              Any caution or security deposit paid by the Tenant shall be held strictly as security for the due
-              performance of the Tenant&rsquo;s obligations and shall not be treated by either party as payment of rent.
-              Upon the expiration or lawful determination of the tenancy and following a joint move-out inspection, the
-              caution deposit shall be refunded to the Tenant within fourteen (14) days, less only verified and itemized
-              costs of repairing physical damage caused by the Tenant beyond fair wear and tear, or settling unpaid
-              utility bills incurred during the Tenant&rsquo;s occupation.
-            </p>
-          </div>
-
-          {/* Clause 6: Notice & Determination */}
-          <div className="space-y-2">
-            <h4 className="font-bold text-[14px] uppercase tracking-wider text-[#111110]">
-              6. Determination of Tenancy and Notice
-            </h4>
-            <p>
-              <strong>6.1.</strong> Either party wishing to terminate or not renew this tenancy shall give prior written
-              notice to the other party of not less than one (1) calendar month in the case of a monthly tenancy, or not
-              less than three (3) calendar months in the case of an annual tenancy.
-            </p>
-            <p>
-              <strong>6.2.</strong> Any dispute or difference arising out of or in connection with this Agreement which
-              cannot be amicably resolved between the parties within fourteen (14) days shall be referred for mediation
-              or determination by the appropriate Rent Magistrate or Rent Control Officer in accordance with the Rent
-              Act, 1963 (Act 220) of the Republic of Ghana.
-            </p>
-          </div>
-
-          {/* Testimonium Clause */}
-          <div className="pt-6">
-            <p className="text-[#1C1917]">
-              <strong>IN WITNESS WHEREOF</strong> the parties hereto have executed this Agreement the day, month, and
-              year first above written.
-            </p>
-          </div>
-
-          {/* ── TRADITIONAL SOLICITOR EXECUTION BLOCK ── */}
-          <div className="grid sm:grid-cols-2 gap-12 pt-8 mt-6 border-t border-[#A8A29E] text-left">
-            {/* Landlord Execution Column */}
-            <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#292524]">
-                SIGNED by the within-named LANDLORD:
-              </p>
-
-              <div className="h-24 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
-                {agreement.landlordSignature ? (
-                  <img
-                    src={agreement.landlordSignature}
-                    alt="Landlord Signature"
-                    className="max-h-20 object-contain mix-blend-multiply contrast-125 brightness-105"
-                  />
-                ) : (
-                  <span className="text-xs italic text-[#78716C] pb-2">
-                    [ Awaiting Landlord&rsquo;s Signature ]
-                  </span>
-                )}
+            <div className="space-y-5 text-[12.5px] sm:text-[13px] leading-[1.8] text-[#1C1917] text-justify">
+              {/* Clause 2: Rent & Payment */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  2. Rent, Statutory Advance &amp; Official Receipts
+                </h4>
+                <p>
+                  <strong>2.1. Reserved Rent:</strong> The rent reserved for the tenancy is{' '}
+                  <strong>GHS {Number(property.price).toLocaleString('en-GH', { minimumFractionDigits: 2 })}</strong>, paid
+                  by the Tenant through the designated electronic settlement platform on behalf of the Landlord.
+                </p>
+                <p>
+                  <strong>2.2. Statutory Advance Compliance:</strong> In strict accordance with Section 25(5) of the Rent Act, 1963 (Act 220), the Landlord shall not demand, receive, or require payment of rent advance exceeding statutory limits.
+                </p>
+                <p>
+                  <strong>2.3. Official Receipts:</strong> In accordance with Section 20 of the Rent Act, 1963 (Act 220), every payment of rent
+                  made under this Agreement shall be acknowledged by an official written or electronic rent receipt issued
+                  to the Tenant stating the payment date, period covered, and exact sum received.
+                </p>
+                <p>
+                  <strong>2.4. Rent Stability:</strong> Pursuant to Section 19 of the Rent Act, 1963 (Act 220), the Landlord shall not unilaterally increase the rent during the subsistence of this tenancy term without prior assessment by the Rent Control Division or mutual written addendum.
+                </p>
               </div>
 
-              <div className="space-y-1 text-[13px] pt-1">
-                <p>
-                  <span className="text-[#57534E]">Name:</span>{' '}
-                  <strong className="uppercase">{landlordFullName}</strong>
-                </p>
-                <p>
-                  <span className="text-[#57534E]">Capacity:</span> Landlord / Lessor
-                </p>
-                <p>
-                  <span className="text-[#57534E]">Date Signed:</span>{' '}
-                  {agreement.landlordSignedAt
-                    ? formatStandardLegalDate(agreement.landlordSignedAt)
-                    : 'Pending execution'}
-                </p>
+              {/* Clause 3: Tenant's Covenants */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  3. Tenant&rsquo;s Covenants
+                </h4>
+                <p>The Tenant hereby covenants with the Landlord as follows:</p>
+                <div className="pl-4 sm:pl-5 space-y-1.5 text-[12px] sm:text-[12.5px]">
+                  <p>
+                    <strong>3.1. Punctual Payment of Rent:</strong> To pay the reserved rent punctually as stipulated in Schedule 1 without any unlawful set-off, deduction, or delay.
+                  </p>
+                  <p>
+                    <strong>3.2. Care of Interior &amp; Fixtures:</strong> To keep the interior of the Premises, including doors, locks, glazing, sanitary installations, and electrical fittings in clean and tenantable repair (fair wear and tear excepted).
+                  </p>
+                  <p>
+                    <strong>3.3. Alterations:</strong> Not to make structural alterations, additions, or changes to external locks without the prior written consent of the Landlord.
+                  </p>
+                  <p>
+                    <strong>3.4. Absolute Prohibition on Subletting:</strong> Not to assign, underlet, or part with possession of the Premises or any room therein to any third party without express written permission of the Landlord (Section 22 of Act 220).
+                  </p>
+                  <p>
+                    <strong>3.5. Good Neighbourliness &amp; Lawful Use:</strong> Not to cause nuisance, annoyance, or offensive disturbance to neighbours, nor use the Premises for any illegal, commercial, or immoral activity.
+                  </p>
+                  <p>
+                    <strong>3.6. Right of Inspection on Prior Notice:</strong> To permit the Landlord or authorized agents, upon at least twenty-four (24) hours&rsquo; prior notice, to enter at reasonable daytime hours to examine the state of repair.
+                  </p>
+                  <p>
+                    <strong>3.7. Surrender of Possession:</strong> Peaceably to yield up the Premises with all keys and Landlord&rsquo;s fixtures in good tenantable order at the determination of the tenancy.
+                  </p>
+                </div>
+              </div>
+
+              {/* Clause 4: Landlord's Covenants */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  4. Landlord&rsquo;s Covenants
+                </h4>
+                <p>The Landlord hereby covenants with the Tenant as follows:</p>
+                <div className="pl-4 sm:pl-5 space-y-1.5 text-[12px] sm:text-[12.5px]">
+                  <p>
+                    <strong>4.1. Quiet Enjoyment:</strong> That the Tenant, paying rent and observing covenants, shall peaceably and quietly hold and enjoy the Premises without unlawful interruption or harassment by the Landlord.
+                  </p>
+                  <p>
+                    <strong>4.2. Structural Repairs:</strong> To keep the roof, foundation, main walls, external drainage, and primary plumbing and electrical distribution infrastructure in good structural order.
+                  </p>
+                  <p>
+                    <strong>4.3. Rates &amp; Ground Taxes:</strong> To punctually pay all property rates, municipal tenement assessments, and statutory ground rents assessed against the Premises.
+                  </p>
+                  <p>
+                    <strong>4.4. Prohibition of Self-Help Evictions:</strong> Not to lock out the Tenant, disconnect essential electricity or water supplies, or remove doors or roofing, adhering strictly to the Rent Act, 1963 (Act 220).
+                  </p>
+                  <p>
+                    <strong>4.5. Prompt Remediation of Safety Hazards:</strong> To remediate within reasonable notice any structural defect or hazard jeopardizing safety, sanitary fitness, or structural integrity.
+                  </p>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Tenant Execution Column */}
-            <div className="space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-[#292524]">
-                SIGNED by the within-named TENANT:
-              </p>
+          {/* Page 2 Footer */}
+          <div className="relative z-10 pt-6 mt-6 border-t border-[#D6D0C4] flex items-center justify-between text-[11px] text-[#57534E]">
+            <span>Tenancy Agreement ({docRef})</span>
+            <span className="font-semibold text-[#292524]">Page 2 of 4</span>
+          </div>
+        </article>
 
-              <div className="h-24 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
-                {agreement.tenantSignature ? (
-                  <img
-                    src={agreement.tenantSignature}
-                    alt="Tenant Signature"
-                    className="max-h-20 object-contain mix-blend-multiply contrast-125 brightness-105"
-                  />
-                ) : (
-                  <span className="text-xs italic text-[#78716C] pb-2">
-                    [ Awaiting Tenant&rsquo;s Signature ]
-                  </span>
-                )}
+        {/* ── SHEET 3 OF 4: CAUTION DEPOSIT, UTILITIES, HOUSE RULES & NOTICE ── */}
+        <article
+          className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-14 sm:py-14 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-8 print:break-after-page overflow-hidden min-h-[960px] flex flex-col justify-between"
+          style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
+        >
+          {/* Centered Akwaaba Watermark Logo */}
+          <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
+            <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
+              <Image
+                src="/logo-light.png"
+                alt="Akwaaba Homes Watermark"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          <div className="relative z-10 space-y-6">
+            {/* Continuation Header */}
+            <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-3 border-b border-[#D6D0C4] tracking-wide">
+              <span>INSTRUMENT REF: {docRef}</span>
+              <span className="uppercase font-semibold tracking-wider">Part III — Deposit, Utilities &amp; Property Governance</span>
+            </div>
+
+            <div className="space-y-5 text-[12.5px] sm:text-[13px] leading-[1.8] text-[#1C1917] text-justify">
+              {/* Clause 5: Caution Deposit Escrow */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  5. Caution Deposit Escrow and Refund Protocol
+                </h4>
+                <p>
+                  <strong>5.1. Security Escrow:</strong> Any caution or security deposit deposited by the Tenant shall be held in secure escrow solely as security for the faithful performance of the Tenant&rsquo;s covenants and shall under no circumstance be treated as rent.
+                </p>
+                <p>
+                  <strong>5.2. Mandatory 14-Day Refund:</strong> Upon the determination of the tenancy and completion of the joint exit inspection, the caution deposit shall be refunded to the Tenant within fourteen (14) calendar days.
+                </p>
+                <p>
+                  <strong>5.3. Legitimate Deductions:</strong> Deductions from the caution deposit are strictly restricted to verified, itemized expenses incurred to rectify physical damage caused by the Tenant beyond fair wear and tear, or to settle certified outstanding utility bills attributable to the Tenant&rsquo;s occupancy.
+                </p>
               </div>
 
-              <div className="space-y-1 text-[13px] pt-1">
+              {/* Clause 6: Utilities, Sub-Meters & Services */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  6. Utilities, Sub-Meters and Essential Services
+                </h4>
                 <p>
-                  <span className="text-[#57534E]">Name:</span>{' '}
-                  <strong className="uppercase">{tenantFullName}</strong>
+                  <strong>6.1. Electricity Sub-Metering:</strong> The Tenant shall be responsible for purchasing ECG electricity recharge tokens for the dedicated prepaid sub-meter allocated to the Premises and shall operate all appliances safely without overloading circuits.
                 </p>
                 <p>
-                  <span className="text-[#57534E]">Capacity:</span> Tenant / Lessee
+                  <strong>6.2. Water Supply &amp; Sanitation:</strong> The Landlord shall maintain functional connectivity to the Ghana Water Company Limited (GWCL) mains or auxiliary borehole water storage tanks. The Tenant shall practice water conservation and promptly notify the Landlord of any plumbing leaks or pressure anomalies.
                 </p>
                 <p>
-                  <span className="text-[#57534E]">Date Signed:</span>{' '}
-                  {agreement.tenantSignedAt
-                    ? formatStandardLegalDate(agreement.tenantSignedAt)
-                    : 'Pending execution'}
+                  <strong>6.3. Waste Management:</strong> The Tenant shall bag and deposit domestic refuse into designated municipal collection bins and maintain clean sanitary conditions within the unit and adjoining corridors.
+                </p>
+              </div>
+
+              {/* Clause 7: Residence & Compound Regulations */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  7. Residence and Compound Regulations
+                </h4>
+                <p>
+                  <strong>7.1. Security and Access:</strong> Main compound gates shall be secured at designated hours. Tenants and their visitors shall observe security protocols. Overnight guests exceeding three (3) consecutive nights require advance notification to the property manager.
+                </p>
+                <p>
+                  <strong>7.2. Fire and Environmental Safety:</strong> No open coal pot cooking, kerosene heaters, or storage of volatile petroleum fuel shall be permitted within residential quarters. Smoke alarms and fire extinguishers on site must remain unobstructed.
+                </p>
+                <p>
+                  <strong>7.3. Student Accommodation Provisions:</strong> Where the Premises is designated as student housing, tenancy is granted subject to active matriculation at an accredited tertiary institution. Quiet hours shall be observed from 10:00 PM to 6:00 AM daily.
+                </p>
+              </div>
+
+              {/* Clause 8: Determination & Notice to Quit */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  8. Determination of Tenancy and Notice to Quit
+                </h4>
+                <p>
+                  <strong>8.1. Statutory Notice:</strong> Either party intending not to renew or wishing to determine this tenancy shall serve written notice of not less than one (1) calendar month in the case of a monthly tenancy, or not less than three (3) calendar months in the case of an annual tenancy.
+                </p>
+                <p>
+                  <strong>8.2. Default and Forfeiture:</strong> If the reserved rent remains unpaid for thirty (30) days after becoming due, or if the Tenant persistently breaches any covenant herein, the Landlord may initiate statutory recovery of possession proceedings pursuant to the Rent Act, 1963 (Act 220).
+                </p>
+                <p>
+                  <strong>8.3. Move-Out Clearance:</strong> Upon vacating the Premises, the Tenant shall hand over all sets of keys, settle final utility readings, and participate in a final joint exit condition assessment.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Paper Footer Attestation */}
-          <div className="pt-10 mt-8 border-t border-[#D6D0C4] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[11px] text-[#57534E]">
-            <div>
-              Executed electronically in accordance with Section 10 of the Electronic Transactions Act, 2008 (Act 772).
-            </div>
-            <div className="shrink-0 font-semibold text-[#292524]">
-              Page 1 of 1
+          {/* Page 3 Footer */}
+          <div className="relative z-10 pt-6 mt-6 border-t border-[#D6D0C4] flex items-center justify-between text-[11px] text-[#57534E]">
+            <span>Tenancy Agreement ({docRef})</span>
+            <span className="font-semibold text-[#292524]">Page 3 of 4</span>
+          </div>
+        </article>
+
+        {/* ── SHEET 4 OF 4: DISPUTE RESOLUTION, INVENTORY & EXECUTION BLOCK ── */}
+        <article
+          className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-14 sm:py-14 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-8 overflow-hidden min-h-[960px] flex flex-col justify-between"
+          style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
+        >
+          {/* Centered Akwaaba Watermark Logo */}
+          <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-center z-0 opacity-[0.16] print:opacity-[0.18]">
+            <div className="w-80 sm:w-96 h-80 sm:h-96 relative">
+              <Image
+                src="/logo-light.png"
+                alt="Akwaaba Homes Watermark"
+                fill
+                className="object-contain"
+              />
             </div>
           </div>
-        </div>
+
+          <div className="relative z-10 space-y-6">
+            {/* Continuation Header */}
+            <div className="flex items-center justify-between text-[11px] text-[#57534E] pb-3 border-b border-[#D6D0C4] tracking-wide">
+              <span>INSTRUMENT REF: {docRef}</span>
+              <span className="uppercase font-semibold tracking-wider">Part IV — Dispute Resolution, Inventory &amp; Execution</span>
+            </div>
+
+            <div className="space-y-5 text-[12.5px] sm:text-[13px] leading-[1.8] text-[#1C1917] text-justify">
+              {/* Clause 9: Dispute Resolution */}
+              <div className="space-y-2">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  9. Dispute Resolution and Rent Control Conciliation
+                </h4>
+                <p>
+                  <strong>9.1. Amicable Conciliation:</strong> Any dispute, claim, or difference arising out of this Agreement shall in the first instance be submitted to good-faith mediation between the parties or through the Akwaaba Homes dispute conciliation system within fourteen (14) days.
+                </p>
+                <p>
+                  <strong>9.2. Statutory Referral:</strong> In default of amicable settlement, the dispute shall be referred to the Rent Control Officer or District Rent Magistrate having jurisdiction over the Premises under the Rent Act, 1963 (Act 220).
+                </p>
+                <p>
+                  <strong>9.3. Governing Law:</strong> This Agreement shall be governed by, construed, and enforced in accordance with the substantive laws of the Republic of Ghana.
+                </p>
+              </div>
+
+              {/* Clause 10: Electronic Execution */}
+              <div className="space-y-1.5">
+                <h4 className="font-bold text-[13px] uppercase tracking-wider text-[#111110]">
+                  10. Electronic Execution and Statutory Validity
+                </h4>
+                <p className="text-[12px] sm:text-[12.5px]">
+                  This Agreement is executed electronically pursuant to Section 10 of the Electronic Transactions Act, 2008 (Act 772). The parties expressly agree that digital signatures, electronic consent timestamps, and cryptographic SHA-256 hashes constitute conclusive proof of authentic execution and legal enforceability.
+                </p>
+              </div>
+
+              {/* Schedule 2: Fixtures & Inventory */}
+              <div className="my-2">
+                <div className="text-[11px] font-bold uppercase tracking-widest text-[#1C1917] mb-1.5">
+                  Schedule 2: Schedule of Fixtures &amp; Move-In Inventory Record
+                </div>
+                <table className="w-full border-collapse border border-[#A8A29E] text-[11.5px] sm:text-[12px] text-left">
+                  <tbody>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-1.5 px-3 bg-[#F5F2EB] font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
+                        1. Keys &amp; Access Control
+                      </th>
+                      <td className="py-1.5 px-3 text-[#1C1917]">
+                        Main entrance key, room key, deadbolt, security gate remote/key (Complete &amp; functional)
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-1.5 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        2. Electrical Fittings
+                      </th>
+                      <td className="py-1.5 px-3 text-[#1C1917]">
+                        Ceiling lighting points, wall sockets, light switches, dedicated ECG sub-meter (Inspected &amp; working)
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-1.5 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        3. Sanitary Installations
+                      </th>
+                      <td className="py-1.5 px-3 text-[#1C1917]">
+                        Water closet, wash basin, taps, shower rose, drain traps, mirrors (Clean &amp; leak-free)
+                      </td>
+                    </tr>
+                    <tr className="border-b border-[#A8A29E]">
+                      <th className="py-1.5 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        4. Structural &amp; Joinery
+                      </th>
+                      <td className="py-1.5 px-3 text-[#1C1917]">
+                        Doors, glazed windows, secure latches, interior paint surfaces, wardrobes (Good condition)
+                      </td>
+                    </tr>
+                    <tr>
+                      <th className="py-1.5 px-3 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                        5. Compound Amenities
+                      </th>
+                      <td className="py-1.5 px-3 text-[#1C1917]">
+                        Compound perimeter lighting, refuse bin allocation, water storage overhead tank connection
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Testimonium Clause */}
+              <div className="pt-2">
+                <p className="text-[#1C1917] font-semibold text-[12.5px]">
+                  IN WITNESS WHEREOF the Landlord and the Tenant have hereunto executed this Indenture under their respective hands or electronic signatures the day, month, and year first above written.
+                </p>
+              </div>
+
+              {/* Two-Column Solicitor Execution Block */}
+              <div className="grid sm:grid-cols-2 gap-10 pt-4 mt-2 border-t border-[#A8A29E] text-left">
+                {/* Landlord Execution Column */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#292524]">
+                    SIGNED by the within-named LANDLORD:
+                  </p>
+
+                  <div className="h-20 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
+                    {agreement.landlordSignature ? (
+                      <img
+                        src={agreement.landlordSignature}
+                        alt="Landlord Signature"
+                        className="max-h-16 object-contain mix-blend-multiply contrast-125 brightness-105"
+                      />
+                    ) : (
+                      <span className="text-xs italic text-[#78716C] pb-2">
+                        [ Awaiting Landlord&rsquo;s Signature ]
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-0.5 text-[12px] pt-1">
+                    <p>
+                      <span className="text-[#57534E]">Name:</span>{' '}
+                      <strong className="uppercase">{landlordFullName}</strong>
+                    </p>
+                    <p>
+                      <span className="text-[#57534E]">Capacity:</span> Landlord / Lessor
+                    </p>
+                    <p>
+                      <span className="text-[#57534E]">Date Signed:</span>{' '}
+                      {agreement.landlordSignedAt
+                        ? formatStandardLegalDate(agreement.landlordSignedAt)
+                        : 'Pending execution'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tenant Execution Column */}
+                <div className="space-y-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#292524]">
+                    SIGNED by the within-named TENANT:
+                  </p>
+
+                  <div className="h-20 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
+                    {agreement.tenantSignature ? (
+                      <img
+                        src={agreement.tenantSignature}
+                        alt="Tenant Signature"
+                        className="max-h-16 object-contain mix-blend-multiply contrast-125 brightness-105"
+                      />
+                    ) : (
+                      <span className="text-xs italic text-[#78716C] pb-2">
+                        [ Awaiting Tenant&rsquo;s Signature ]
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-0.5 text-[12px] pt-1">
+                    <p>
+                      <span className="text-[#57534E]">Name:</span>{' '}
+                      <strong className="uppercase">{tenantFullName}</strong>
+                    </p>
+                    <p>
+                      <span className="text-[#57534E]">Capacity:</span> Tenant / Lessee
+                    </p>
+                    <p>
+                      <span className="text-[#57534E]">Date Signed:</span>{' '}
+                      {agreement.tenantSignedAt
+                        ? formatStandardLegalDate(agreement.tenantSignedAt)
+                        : 'Pending execution'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cryptographic SHA-256 Box */}
+              <div className="p-3 bg-[#FAF8F3] border border-[#D6D0C4] rounded-sm text-[11px] text-[#57534E] space-y-1">
+                <div className="font-bold text-[#0F5132] uppercase tracking-wide text-[10.5px]">
+                  Digitally Authenticated Legal Record • Electronic Transactions Act, 2008 (Act 772)
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono break-all">
+                  Instrument Ref: {docRef} • Checksum (SHA-256): {cryptographicDigest}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Page 4 Footer */}
+          <div className="relative z-10 pt-6 mt-6 border-t border-[#D6D0C4] flex items-center justify-between text-[11px] text-[#57534E]">
+            <span>Tenancy Agreement ({docRef})</span>
+            <span className="font-semibold text-[#292524]">Page 4 of 4</span>
+          </div>
+        </article>
       </div>
-      </article>
 
       {/* ══════════════════════════════════════════════════════════════════════════
           SEPARATE ELECTRONIC EXECUTION CERTIFICATE (OUTSIDE THE PAPER SHEET)
