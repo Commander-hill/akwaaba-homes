@@ -291,16 +291,16 @@ export default function TenantDocumentsAndVerificationPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] text-[#14221A] flex flex-col justify-between relative overflow-x-hidden font-sans">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] dark:bg-[#0D100E] text-[#14221A] dark:text-zinc-100 flex flex-col justify-between relative overflow-x-hidden font-sans">
       {/* Main Content Container */}
       <div className="w-full max-w-[1380px] mx-auto px-4 sm:px-7 lg:px-10 pt-5 pb-6 flex-1 flex flex-col justify-between gap-4">
         {/* ── 1. HERO TITLE BANNER WITH APARTMENT BUILDING & PALM TREES ── */}
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between min-h-[96px] pb-1">
           <div className="relative z-10 max-w-2xl pr-4">
-            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] tracking-tight leading-[1.12]">
+            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] dark:text-emerald-400 tracking-tight leading-[1.12]">
               Documents &amp; Verification
             </h1>
-            <p className="text-xs sm:text-[13.5px] text-[#3E4C43] mt-1.5 font-medium">
+            <p className="text-xs sm:text-[13.5px] text-[#3E4C43] dark:text-zinc-400 mt-1.5 font-medium">
               Your identity, academic clearance, tenancy agreements and resident resources — securely organised in one place.
             </p>
           </div>
@@ -316,8 +316,8 @@ export default function TenantDocumentsAndVerificationPage() {
               className="object-cover object-right"
             />
             {/* Soft left gradient fade into #F7F6F0 page background */}
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#F7F6F0] via-[#F7F6F0]/80 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-[#F7F6F0] to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#F7F6F0] dark:from-[#0D100E] via-[#F7F6F0]/80 dark:via-[#0D100E]/80 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-[#F7F6F0] dark:from-[#0D100E] to-transparent" />
           </div>
         </div>
 

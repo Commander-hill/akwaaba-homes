@@ -171,15 +171,15 @@ export default function TenantTicketsPage() {
   });
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] text-[#14221A] flex flex-col justify-between relative overflow-x-hidden font-sans">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] dark:bg-[#0D100E] text-[#14221A] dark:text-zinc-100 flex flex-col justify-between relative overflow-x-hidden font-sans">
       <div className="w-full max-w-[1380px] mx-auto px-4 sm:px-7 lg:px-10 pt-5 pb-6 flex-1 flex flex-col justify-between gap-4">
         {/* ── 1. HERO TITLE BANNER & REPORT AN ISSUE BUTTON ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] tracking-tight leading-[1.1]">
+            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] dark:text-emerald-400 tracking-tight leading-[1.1]">
               Maintenance &amp; Repairs
             </h1>
-            <p className="text-xs sm:text-[13.5px] text-[#3B4B41] mt-1.5 font-medium">
+            <p className="text-xs sm:text-[13.5px] text-[#3B4B41] dark:text-zinc-400 mt-1.5 font-medium">
               Report a problem, follow progress, and keep your home in good condition.
             </p>
           </div>
@@ -195,7 +195,7 @@ export default function TenantTicketsPage() {
         </div>
 
         {/* ── 2. ACTIVE TENANCY BANNER CARD (GLACIER STUDIO) ── */}
-        <div className="relative bg-[#FAF9F4] border border-[#E6E4DA] rounded-2xl overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between min-h-[96px] shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+        <div className="relative bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between min-h-[96px] shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 relative z-10">
             {/* Left Building Photo */}
             <div className="w-full sm:w-[215px] h-[96px] relative shrink-0 overflow-hidden">
@@ -212,11 +212,11 @@ export default function TenantTicketsPage() {
             {/* Middle Property Info */}
             <div className="px-4 pb-3 sm:p-0 space-y-1">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 text-[18px] sm:text-[19px] font-extrabold text-[#14221A] tracking-tight">
+                <span className="inline-flex items-center gap-1.5 text-[18px] sm:text-[19px] font-extrabold text-[#14221A] dark:text-white tracking-tight">
                   <MapPin className="w-4 h-4 text-[#16A34A] stroke-[2.4]" />
                   <span>{propertyTitle}</span>
                 </span>
-                <span className="px-3 py-0.5 rounded-full bg-[#DCEFE0] text-[#116932] text-xs font-bold">
+                <span className="px-3 py-0.5 rounded-full bg-[#DCEFE0] dark:bg-emerald-950/60 text-[#116932] dark:text-emerald-300 text-xs font-bold">
                   Active Tenancy
                 </span>
               </div>
@@ -250,11 +250,11 @@ export default function TenantTicketsPage() {
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-8 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Your repair requests ── */}
-            <div className="bg-[#FAF9F4] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
+            <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
               {/* Header */}
               <div className="flex items-center gap-2">
-                <Wrench className="w-5 h-5 text-[#0B3B24] stroke-[2.1]" />
-                <h2 className="text-[16.5px] font-extrabold text-[#14221A]">
+                <Wrench className="w-5 h-5 text-[#0B3B24] dark:text-[#16A34A] stroke-[2.1]" />
+                <h2 className="text-[16.5px] font-extrabold text-[#14221A] dark:text-white">
                   Your repair requests
                 </h2>
               </div>
@@ -557,11 +557,11 @@ export default function TenantTicketsPage() {
             </div>
 
             {/* ── Card 2: Recent service activity ── */}
-            <div className="bg-[#FAF9F4] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
+            <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                  <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
+                  <Clock className="w-5 h-5 text-[#0B3B24] dark:text-[#16A34A] stroke-[2.2]" />
+                  <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white">
                     Recent service activity
                   </h2>
                 </div>
