@@ -186,7 +186,7 @@ export default function TenantBookingsPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold transition whitespace-nowrap cursor-pointer ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-[#16A34A] text-white shadow-xs'
                   : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:border-zinc-300'
@@ -203,260 +203,455 @@ export default function TenantBookingsPage() {
 
       {/* ── 3. Main Two-Column Layout ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: Primary Booking Card + Past Bookings */}
+        {/* LEFT COLUMN: Dynamically Filtered by activeTab */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Primary / Upcoming Booking Card */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-6">
-            {/* Top Section */}
-            <div className="flex flex-col sm:flex-row items-start justify-between gap-5">
-              {/* Left Image & Core Details */}
-              <div className="flex flex-col sm:flex-row items-start gap-4 min-w-0 flex-1">
-                {/* Thumbnail with Green Badge */}
-                <div className="w-full sm:w-36 h-36 sm:h-32 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800">
-                  <Image
-                    src="/images/resident/booking-glacier-clean.jpg"
-                    alt={primaryTitle}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 z-10">
-                    <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                      <Sparkles className="w-3 h-3" />
-                      <span>Upcoming</span>
-                    </span>
+          {/* ── TAB: ALL BOOKINGS or UPCOMING or ACTIVE (when count > 0) ── */}
+          {(activeTab === 'ALL' ||
+            activeTab === 'UPCOMING' ||
+            (activeTab === 'ACTIVE' && counts.ACTIVE > 0)) && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-6">
+              {/* Top Section */}
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-5">
+                {/* Left Image & Core Details */}
+                <div className="flex flex-col sm:flex-row items-start gap-4 min-w-0 flex-1">
+                  {/* Thumbnail with Status Badge */}
+                  <div className="w-full sm:w-36 h-36 sm:h-32 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800">
+                    <Image
+                      src="/images/resident/booking-glacier-clean.jpg"
+                      alt={primaryTitle}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 z-10">
+                      {activeTab === 'ACTIVE' ? (
+                        <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs">
+                          <ShieldCheck className="w-3 h-3" />
+                          <span>Active Stay</span>
+                        </span>
+                      ) : (
+                        <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs">
+                          <Sparkles className="w-3 h-3" />
+                          <span>Upcoming</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="space-y-1.5 min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded-md inline-block">
+                        {primaryRef}
+                      </span>
+                      {activeTab !== 'ALL' && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#16A34A] dark:text-emerald-400">
+                          • {activeTab === 'ACTIVE' ? 'Verified Active Tenancy' : 'Confirmed Reservation'}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-black text-base sm:text-lg text-zinc-950 dark:text-white leading-tight">
+                      {primaryTitle}
+                    </h3>
+
+                    <p className="text-xs text-zinc-500 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <span>{primaryLocation}</span>
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs text-zinc-500 pt-0.5">
+                      <span className="flex items-center gap-1">
+                        <Bed className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span>1 room</span>
+                      </span>
+                      <span>|</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span>{stayDateRange}</span>
+                      </span>
+                    </div>
+
+                    {/* Amenity Badges */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                      <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
+                        Wi-Fi
+                      </span>
+                      <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
+                        Air Conditioning
+                      </span>
+                      <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
+                        1 Queen Bed
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Details */}
-                <div className="space-y-1.5 min-w-0 flex-1">
-                  <span className="bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-[10px] font-mono px-2 py-0.5 rounded-md inline-block">
-                    {primaryRef}
-                  </span>
-
-                  <h3 className="font-black text-base sm:text-lg text-zinc-950 dark:text-white leading-tight">
-                    {primaryTitle}
-                  </h3>
-
-                  <p className="text-xs text-zinc-500 flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                    <span>{primaryLocation}</span>
-                  </p>
-
-                  <div className="flex items-center gap-2 text-xs text-zinc-500 pt-0.5">
-                    <span className="flex items-center gap-1">
-                      <Bed className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>1 room</span>
+                {/* Right: Value & Action Button */}
+                <div className="flex flex-col items-start sm:items-end justify-between self-stretch shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800 w-full sm:w-auto">
+                  <div className="space-y-0.5 sm:text-right">
+                    <span className="text-[11px] text-zinc-400 font-medium block">
+                      Total Contract Value
                     </span>
-                    <span>|</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                      <span>{stayDateRange}</span>
+                    <span className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white block">
+                      GH₵ {primaryTotal.toLocaleString('en-GH')}
+                    </span>
+                    <span className="text-[10px] text-zinc-500 block">
+                      Rent GH₵ {primaryRent.toLocaleString('en-GH')} &bull; Caution GH₵ {primaryCaution.toLocaleString('en-GH')}
                     </span>
                   </div>
 
-                  {/* Amenity Badges */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-2">
-                    <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
-                      Wi-Fi
-                    </span>
-                    <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
-                      Air Conditioning
-                    </span>
-                    <span className="bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200/70 dark:border-zinc-700/60 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium px-2.5 py-0.5 rounded-lg">
-                      1 Queen Bed
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2 mt-4 sm:mt-0">
+                    {activeTab === 'ACTIVE' && (
+                      <Link
+                        href="/dashboard/tenant/residence"
+                        className="px-3.5 py-2 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-lg text-xs font-bold transition"
+                      >
+                        My Residence
+                      </Link>
+                    )}
+
+                    {primaryBooking?.id ? (
+                      <Link
+                        href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+                        className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <span>View Details</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBookingModal('PRIMARY')}
+                        className="px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                      >
+                        <span>View Details</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Right: Value & Action Button */}
-              <div className="flex flex-col items-start sm:items-end justify-between self-stretch shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800 w-full sm:w-auto">
-                <div className="space-y-0.5 sm:text-right">
-                  <span className="text-[11px] text-zinc-400 font-medium block">
-                    Total Contract Value
-                  </span>
-                  <span className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white block">
-                    GH₵ {primaryTotal.toLocaleString('en-GH')}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 block">
-                    Rent GH₵ {primaryRent.toLocaleString('en-GH')} &bull; Caution GH₵ {primaryCaution.toLocaleString('en-GH')}
-                  </span>
-                </div>
+              {/* Bottom Section: Horizontal Timeline Tracker */}
+              <div className="pt-5 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="grid grid-cols-4 gap-2 relative">
+                  {/* Milestone 1 */}
+                  <div className="flex flex-col items-center text-center relative z-10">
+                    <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 mb-1.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-bold text-zinc-950 dark:text-white block leading-tight">
+                      Booking Confirmed
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">
+                      6 Sep 2026
+                    </span>
+                  </div>
 
-                {primaryBooking?.id ? (
-                  <Link
-                    href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-                    className="mt-4 sm:mt-0 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                  {/* Milestone 2 */}
+                  <div className="flex flex-col items-center text-center relative z-10">
+                    <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 mb-1.5 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+                    <span className="text-xs font-bold text-zinc-950 dark:text-white block leading-tight">
+                      Contract Signed
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">
+                      6 Sep 2026
+                    </span>
+                  </div>
+
+                  {/* Milestone 3 */}
+                  <div className="flex flex-col items-center text-center relative z-10">
+                    {activeTab === 'ACTIVE' ? (
+                      <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 mb-1.5 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center shrink-0 mb-1.5" />
+                    )}
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block leading-tight">
+                      Move-in
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">
+                      {activeTab === 'ACTIVE' ? 'Checked In' : 'Upcoming'}
+                    </span>
+                  </div>
+
+                  {/* Milestone 4 */}
+                  <div className="flex flex-col items-center text-center relative z-10">
+                    <div className="w-6 h-6 rounded-full border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center shrink-0 mb-1.5" />
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block leading-tight">
+                      Move-out
+                    </span>
+                    <span className="text-[10px] text-zinc-400 block mt-0.5">
+                      6 Sep 2027
+                    </span>
+                  </div>
+
+                  {/* Connecting Line between milestones */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute top-3 left-[12%] right-[12%] h-0.5 bg-zinc-200 dark:bg-zinc-700 -z-0"
                   >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedBookingModal('PRIMARY')}
-                    className="mt-4 sm:mt-0 px-4 py-2 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <span>View Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                    <div
+                      className={`h-full bg-[#16A34A] transition-all duration-300 ${
+                        activeTab === 'ACTIVE' ? 'w-2/3' : 'w-1/3'
+                      }`}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* Bottom Section: Horizontal Timeline Tracker */}
-            <div className="pt-5 border-t border-zinc-100 dark:border-zinc-800">
-              <div className="grid grid-cols-4 gap-2 relative">
-                {/* Milestone 1 */}
-                <div className="flex flex-col items-center text-center relative z-10">
-                  <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 mb-1.5 shadow-2xs">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                  <span className="text-xs font-bold text-zinc-950 dark:text-white block leading-tight">
-                    Booking Confirmed
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">
-                    6 Sep 2026
-                  </span>
-                </div>
-
-                {/* Milestone 2 */}
-                <div className="flex flex-col items-center text-center relative z-10">
-                  <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0 mb-1.5 shadow-2xs">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                  <span className="text-xs font-bold text-zinc-950 dark:text-white block leading-tight">
-                    Contract Signed
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">
-                    6 Sep 2026
-                  </span>
-                </div>
-
-                {/* Milestone 3 */}
-                <div className="flex flex-col items-center text-center relative z-10">
-                  <div className="w-6 h-6 rounded-full border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center shrink-0 mb-1.5" />
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block leading-tight">
-                    Move-in
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">
-                    Upcoming
-                  </span>
-                </div>
-
-                {/* Milestone 4 */}
-                <div className="flex flex-col items-center text-center relative z-10">
-                  <div className="w-6 h-6 rounded-full border-2 border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center shrink-0 mb-1.5" />
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 block leading-tight">
-                    Move-out
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block mt-0.5">
-                    6 Sep 2027
-                  </span>
-                </div>
-
-                {/* Connecting Line between milestones */}
-                <div
-                  aria-hidden="true"
-                  className="absolute top-3 left-[12%] right-[12%] h-0.5 bg-zinc-200 dark:bg-zinc-700 -z-0"
+          {/* ── TAB: ACTIVE (when 0 active stays) ── */}
+          {activeTab === 'ACTIVE' && counts.ACTIVE === 0 && (
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-10 text-center space-y-3 shadow-2xs">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-[#16A34A] flex items-center justify-center mx-auto">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                  No Active Stay Right Now
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                  Your confirmed reservations will move to Active once your check-in date arrives.
+                </p>
+              </div>
+              <div className="pt-2 flex justify-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('UPCOMING')}
+                  className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
                 >
-                  <div className="h-full bg-[#16A34A] w-1/3" />
-                </div>
+                  View Upcoming ({counts.UPCOMING})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ALL')}
+                  className="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
+                >
+                  Show All Bookings
+                </button>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Past Bookings Section */}
-          <section className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
-                <div>
-                  <h2 className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white leading-tight">
-                    Past Bookings
-                  </h2>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    View your previous stays and booking history.
-                  </p>
+          {/* ── TAB: PENDING ── */}
+          {activeTab === 'PENDING' && (
+            <>
+              {pendingBookings.length > 0 ? (
+                <div className="space-y-4">
+                  {pendingBookings.map((b: any) => (
+                    <div
+                      key={b.id}
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-[10px] font-bold">
+                          <Clock className="w-3 h-3" /> Pending Host Approval / Payment
+                        </span>
+                        <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                          {b.property?.title || 'Pending Residence Booking'}
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          {b.property?.location || 'Ghana'} • GH₵{' '}
+                          {Number(b.room?.price || b.property?.price || 0).toLocaleString()}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/dashboard/tenant/bookings/${b.id}`}
+                        className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition"
+                      >
+                        Complete Booking
+                      </Link>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab('ALL')}
-                className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
-              >
-                <span>View All</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* Past Booking Card (KUMASI APARTMENT) */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-4 min-w-0">
-                <div className="w-24 sm:w-28 h-20 sm:h-20 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800">
-                  <Image
-                    src="/images/resident/booking-kumasi-clean.jpg"
-                    alt="Kumasi Apartment"
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute bottom-1.5 left-1.5 z-10">
-                    <span className="bg-slate-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                      <Check className="w-2.5 h-2.5" />
-                      <span>Completed</span>
-                    </span>
+              ) : (
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-10 text-center space-y-3 shadow-2xs">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center mx-auto">
+                    <Clock className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                      No Pending Booking Requests (0)
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                      You have no unpaid or awaiting-approval booking requests right now. All your current reservations are confirmed!
+                    </p>
+                  </div>
+                  <div className="pt-2 flex justify-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('ALL')}
+                      className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
+                    >
+                      Back to All Bookings
+                    </button>
+                    <Link
+                      href="/properties"
+                      className="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
+                    >
+                      Explore Properties
+                    </Link>
                   </div>
                 </div>
+              )}
+            </>
+          )}
 
-                <div className="space-y-1 min-w-0">
-                  <h3 className="font-bold text-sm text-zinc-950 dark:text-white uppercase truncate">
-                    KUMASI APARTMENT
-                  </h3>
-                  <p className="text-xs text-zinc-500 flex items-center gap-1 truncate">
-                    <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
-                    <span>Kumasi, Ashanti Region</span>
-                  </p>
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-                    <span className="flex items-center gap-1">
-                      <Bed className="w-3 h-3" /> 1 room
-                    </span>
-                    <span>|</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" /> 12 Jan 2026 – 12 Jul 2026
-                    </span>
+          {/* ── TAB: CANCELLED ── */}
+          {activeTab === 'CANCELLED' && (
+            <>
+              {cancelledBookings.length > 0 ? (
+                <div className="space-y-4">
+                  {cancelledBookings.map((b: any) => (
+                    <div
+                      key={b.id}
+                      className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-[10px] font-bold">
+                          <XCircle className="w-3 h-3" /> {b.status}
+                        </span>
+                        <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                          {b.property?.title || 'Cancelled Booking'}
+                        </h3>
+                        <p className="text-xs text-zinc-500">
+                          {b.property?.location || 'Ghana'}
+                        </p>
+                      </div>
+                      <Link
+                        href={`/dashboard/tenant/bookings/${b.id}`}
+                        className="px-3.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs font-bold"
+                      >
+                        View Record
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-10 text-center space-y-3 shadow-2xs">
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center mx-auto">
+                    <XCircle className="w-6 h-6" />
                   </div>
-                  <div className="flex items-center gap-1.5 pt-0.5">
-                    <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
-                      Wi-Fi
-                    </span>
-                    <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
-                      TV
-                    </span>
-                    <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
-                      Kitchen
-                    </span>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-black text-zinc-950 dark:text-white">
+                      No Cancelled Bookings (0)
+                    </h3>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+                      You have not cancelled or had any booking requests rejected.
+                    </p>
+                  </div>
+                  <div className="pt-2 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('ALL')}
+                      className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
+                    >
+                      Back to All Bookings
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
+            </>
+          )}
 
-              {/* Right: Total & View Details Button */}
-              <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800 gap-2 shrink-0">
-                <div className="sm:text-right">
-                  <span className="text-[10px] text-zinc-400 block font-medium">Total Paid</span>
-                  <span className="text-sm font-black text-zinc-950 dark:text-white block">
-                    GH₵ 18,500
-                  </span>
+          {/* Past Bookings Section (Shown under ALL BOOKINGS tab) */}
+          {activeTab === 'ALL' && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white leading-tight">
+                      Past Bookings
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      View your previous stays and booking history.
+                    </p>
+                  </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedBookingModal('PAST')}
-                  className="px-3.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition cursor-pointer"
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 cursor-pointer"
                 >
-                  View Details
+                  <span>View Summary</span>
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
-            </div>
-          </section>
+
+              {/* Past Booking Card (KUMASI APARTMENT) */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-4 min-w-0">
+                  <div className="w-24 sm:w-28 h-20 sm:h-20 rounded-xl relative overflow-hidden shrink-0 border border-zinc-100 dark:border-zinc-800">
+                    <Image
+                      src="/images/resident/booking-kumasi-clean.jpg"
+                      alt="Kumasi Apartment"
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute bottom-1.5 left-1.5 z-10">
+                      <span className="bg-slate-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+                        <Check className="w-2.5 h-2.5" />
+                        <span>Completed</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 min-w-0">
+                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white uppercase truncate">
+                      KUMASI APARTMENT
+                    </h3>
+                    <p className="text-xs text-zinc-500 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                      <span>Kumasi, Ashanti Region</span>
+                    </p>
+                    <div className="flex items-center gap-2 text-[11px] text-zinc-500">
+                      <span className="flex items-center gap-1">
+                        <Bed className="w-3 h-3" /> 1 room
+                      </span>
+                      <span>|</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> 12 Jan 2026 – 12 Jul 2026
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
+                        Wi-Fi
+                      </span>
+                      <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
+                        TV
+                      </span>
+                      <span className="bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[10px] px-2 py-0.5 rounded border border-zinc-200/60 dark:border-zinc-700">
+                        Kitchen
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right: Total & View Details Button */}
+                <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100 dark:border-zinc-800 gap-2 shrink-0">
+                  <div className="sm:text-right">
+                    <span className="text-[10px] text-zinc-400 block font-medium">Total Paid</span>
+                    <span className="text-sm font-black text-zinc-950 dark:text-white block">
+                      GH₵ 18,500
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBookingModal('PAST')}
+                    className="px-3.5 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 hover:border-emerald-600 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition cursor-pointer"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
         </div>
 
         {/* RIGHT COLUMN: Booking Overview + Quick Actions + Calendar + Changes Banner */}
@@ -484,16 +679,33 @@ export default function TenantBookingsPage() {
               />
             </svg>
 
-            <div className="flex items-center gap-2 text-emerald-200 text-xs font-bold">
-              <CalendarCheck className="w-4 h-4" />
-              <span>Booking Overview</span>
+            <div className="flex items-center justify-between text-emerald-200 text-xs font-bold">
+              <div className="flex items-center gap-2">
+                <CalendarCheck className="w-4 h-4" />
+                <span>Booking Overview</span>
+              </div>
+              {activeTab !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ALL')}
+                  className="text-[10px] text-emerald-300 underline cursor-pointer"
+                >
+                  Reset filter
+                </button>
+              )}
             </div>
 
-            {/* 2x2 Metric Grid */}
+            {/* 2x2 Interactive Metric Grid */}
             <div className="grid grid-cols-2 gap-3 relative z-10">
               {/* Upcoming */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-emerald-800/80 border border-emerald-600/50 flex items-center justify-center text-emerald-300">
+              <button
+                type="button"
+                onClick={() => setActiveTab('UPCOMING')}
+                className={`flex items-center gap-2.5 p-1.5 rounded-lg text-left transition cursor-pointer ${
+                  activeTab === 'UPCOMING' ? 'bg-white/10 ring-1 ring-emerald-400/50' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-800/80 border border-emerald-600/50 flex items-center justify-center text-emerald-300 shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
@@ -504,11 +716,17 @@ export default function TenantBookingsPage() {
                     Upcoming
                   </span>
                 </div>
-              </div>
+              </button>
 
               {/* Active Stay */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400">
+              <button
+                type="button"
+                onClick={() => setActiveTab('ACTIVE')}
+                className={`flex items-center gap-2.5 p-1.5 rounded-lg text-left transition cursor-pointer ${
+                  activeTab === 'ACTIVE' ? 'bg-white/10 ring-1 ring-emerald-400/50' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400 shrink-0">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
@@ -519,11 +737,17 @@ export default function TenantBookingsPage() {
                     Active Stay
                   </span>
                 </div>
-              </div>
+              </button>
 
               {/* Pending */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400">
+              <button
+                type="button"
+                onClick={() => setActiveTab('PENDING')}
+                className={`flex items-center gap-2.5 p-1.5 rounded-lg text-left transition cursor-pointer ${
+                  activeTab === 'PENDING' ? 'bg-white/10 ring-1 ring-emerald-400/50' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400 shrink-0">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
@@ -534,11 +758,17 @@ export default function TenantBookingsPage() {
                     Pending
                   </span>
                 </div>
-              </div>
+              </button>
 
               {/* Cancelled */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400">
+              <button
+                type="button"
+                onClick={() => setActiveTab('CANCELLED')}
+                className={`flex items-center gap-2.5 p-1.5 rounded-lg text-left transition cursor-pointer ${
+                  activeTab === 'CANCELLED' ? 'bg-white/10 ring-1 ring-emerald-400/50' : 'hover:bg-white/5'
+                }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700/40 flex items-center justify-center text-emerald-400 shrink-0">
                   <XCircle className="w-4 h-4" />
                 </div>
                 <div>
@@ -549,7 +779,7 @@ export default function TenantBookingsPage() {
                     Cancelled
                   </span>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
 
