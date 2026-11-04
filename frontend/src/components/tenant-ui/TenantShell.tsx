@@ -287,7 +287,12 @@ export default function TenantShell({
     </div>
   );
 
-  const isFullBleedPage = pathname === '/dashboard/invoice' || pathname === '/dashboard/agreements';
+  const isFullBleedPage =
+    pathname === '/dashboard/invoice' ||
+    pathname === '/dashboard/agreements' ||
+    pathname === '/dashboard/profile' ||
+    pathname === '/profile' ||
+    pathname === '/settings';
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
@@ -323,6 +328,8 @@ export default function TenantShell({
                   ? 'Payments'
                   : pathname.includes('/agreements')
                   ? 'Documents'
+                  : pathname.includes('/profile') || pathname.includes('/settings')
+                  ? 'Settings'
                   : pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'}
               </span>
             </div>
