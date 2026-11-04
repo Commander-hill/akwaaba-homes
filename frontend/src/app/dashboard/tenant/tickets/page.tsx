@@ -76,7 +76,7 @@ export default function TenantTicketsPage() {
   const [selectedRequest, setSelectedRequest] = useState<RepairItem | null>(null);
   const [activityModalOpen, setActivityModalOpen] = useState(false);
 
-  const { data: ticketsData } = useQuery({
+  const { data: ticketsData, isLoading: isLoadingTickets } = useQuery({
     queryKey: ['tenant-tickets'],
     queryFn: async () => {
       try {
@@ -88,13 +88,42 @@ export default function TenantTicketsPage() {
     },
   });
 
-  // Merge any newly submitted database tickets with the showcase requests
+  // Query real active residence booking
+  const { data: activeBookingData } = useQuery({
+    queryKey: ['tenant-active-residence'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/bookings/my-active');
+        return data.booking || null;
+      } catch {
+        try {
+          const { data: allBookings } = await api.get('/bookings/me');
+          const found = (allBookings.bookings || []).find((b: any) =>
+            ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+          );
+          return found || null;
+        } catch {
+          return null;
+        }
+      }
+    },
+  });
+
+  const propertyTitle = activeBookingData?.property?.title || 'GLACIER STUDIO';
+  const propertyLocation = activeBookingData?.property?.location || activeBookingData?.property?.address || 'Achimota, Accra';
+  const propertyRoom = activeBookingData?.room?.roomNumber
+    ? `Room ${activeBookingData.room.roomNumber}`
+    : activeBookingData?.roomUnit?.unitNumber
+    ? `Unit ${activeBookingData.roomUnit.unitNumber}`
+    : 'Room 1A';
+
+  // Map real database tickets
   const liveMappedTickets: RepairItem[] = (ticketsData || []).map((t: any, idx: number) => {
     const isResolved = t.status === 'RESOLVED' || t.status === 'CLOSED';
     const isHigh = t.priority === 'HIGH' || t.priority === 'EMERGENCY';
     return {
       id: t.id,
-      ticketCode: `#MA-2026-${String(idx + 15).padStart(4, '0')}`,
+      ticketCode: `#MA-2026-${String(idx + 1).padStart(4, '0')}`,
       title: t.title || 'Maintenance request',
       description: t.description || 'Submitted via Resident Portal.',
       dateLabel: t.createdAt
@@ -113,7 +142,10 @@ export default function TenantTicketsPage() {
     };
   });
 
-  const allRequests: RepairItem[] = [...DEFAULT_REPAIR_REQUESTS, ...liveMappedTickets];
+  // Only display real tickets (or showcase fallback if demo/unauthenticated)
+  const allRequests: RepairItem[] = liveMappedTickets.length > 0
+    ? liveMappedTickets
+    : (ticketsData === undefined ? DEFAULT_REPAIR_REQUESTS : []);
 
   const inProgressCount = allRequests.filter((r) => r.statusType === 'IN_PROGRESS').length;
   const resolvedCount = allRequests.filter((r) => r.statusType === 'RESOLVED').length;
@@ -182,7 +214,7 @@ export default function TenantTicketsPage() {
               <div className="flex flex-wrap items-center gap-2.5">
                 <span className="inline-flex items-center gap-1.5 text-[18px] sm:text-[19px] font-extrabold text-[#14221A] tracking-tight">
                   <MapPin className="w-4 h-4 text-[#16A34A] stroke-[2.4]" />
-                  <span>GLACIER STUDIO</span>
+                  <span>{propertyTitle}</span>
                 </span>
                 <span className="px-3 py-0.5 rounded-full bg-[#DCEFE0] text-[#116932] text-xs font-bold">
                   Active Tenancy
@@ -191,9 +223,9 @@ export default function TenantTicketsPage() {
 
               <p className="text-xs text-[#4A5A50] font-medium flex items-center gap-1.5">
                 <Compass className="w-3.5 h-3.5 text-[#5D6D63]" />
-                <span>Achimota, Accra</span>
+                <span>{propertyLocation}</span>
                 <span className="text-zinc-400">•</span>
-                <span>Room 1A</span>
+                <span>{propertyRoom}</span>
               </p>
             </div>
           </div>
@@ -336,7 +368,31 @@ export default function TenantTicketsPage() {
 
               {/* Request Cards Stack */}
               <div className="space-y-3.5">
-                {filteredRequests.map((req) => {
+                {filteredRequests.length === 0 ? (
+                  <div className="bg-[#FDFCF9] border border-[#E7E5DC] rounded-2xl p-8 text-center space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#EAF5EC] text-[#16A34A] mx-auto flex items-center justify-center">
+                      <Wrench className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-extrabold text-sm text-[#14221A]">
+                      {searchQuery || activeTab !== 'ALL' || priorityFilter !== 'ALL'
+                        ? 'No matching maintenance tickets found'
+                        : 'No maintenance requests logged yet'}
+                    </h3>
+                    <p className="text-xs text-[#55665B] max-w-sm mx-auto">
+                      {searchQuery || activeTab !== 'ALL' || priorityFilter !== 'ALL'
+                        ? 'Try adjusting your filter selection or search terms.'
+                        : 'Have an issue with your plumbing, AC, fixtures, or electrical fittings? Log a quick repair request and the compound team will be dispatched.'}
+                    </p>
+                    <Link
+                      href="/dashboard/tenant/tickets/new"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-2xs"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>Report a Repair</span>
+                    </Link>
+                  </div>
+                ) : (
+                  filteredRequests.map((req) => {
                   const isResolved = req.statusType === 'RESOLVED';
 
                   return (
@@ -495,7 +551,8 @@ export default function TenantTicketsPage() {
                       </div>
                     </div>
                   );
-                })}
+                })
+              )}
               </div>
             </div>
 

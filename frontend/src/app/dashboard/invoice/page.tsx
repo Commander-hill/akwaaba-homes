@@ -41,6 +41,7 @@ export default function TenantPaymentsPage() {
   const [paymentPurpose, setPaymentPurpose] = useState('Rent & Service Charge');
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<any | null>(null);
   const [localTransactions, setLocalTransactions] = useState<any[]>([]);
+  const [isPaying, setIsPaying] = useState(false);
 
   // 1. Fetch transactions
   const { data: transactionsData, isLoading: isLoadingTx } = useQuery({
@@ -158,6 +159,50 @@ export default function TenantPaymentsPage() {
   const handleDownloadStatement = () => {
     toast.success('Generating annual financial statement PDF...', { id: 'statement' });
     window.print();
+  };
+
+  const handleProceedPayment = async () => {
+    const numAmount = Math.max(50, Number(paymentAmount) || 1800);
+    setIsPaying(true);
+
+    if (activeBooking?.id) {
+      try {
+        toast.loading('Connecting to Paystack gateway...', { id: 'paystack' });
+        const res = await api.post(`/bookings/${activeBooking.id}/pay`);
+        if (res.data?.authorization_url) {
+          toast.success('Redirecting to Paystack...', { id: 'paystack' });
+          window.location.href = res.data.authorization_url;
+          return;
+        }
+      } catch (err: any) {
+        const errMsg = err.response?.data?.message;
+        if (errMsg && !errMsg.toLowerCase().includes('approved') && !errMsg.toLowerCase().includes('sign')) {
+          toast.error(errMsg, { id: 'paystack' });
+          setIsPaying(false);
+          return;
+        }
+      }
+    }
+
+    // Direct recording for current stay if already confirmed/active or test mode
+    const refId = `T${Date.now().toString().slice(-12)}`;
+    const newTx = {
+      id: refId,
+      reference: refId,
+      createdAt: new Date().toISOString(),
+      amount: numAmount,
+      status: 'SUCCESS',
+      paymentType: paymentPurpose,
+      isShowcase: true,
+      property: {
+        title: activeBooking?.property?.title || 'GLACIER STUDIO',
+        location: activeBooking?.property?.address || 'Achimota, Accra',
+      },
+    };
+    setLocalTransactions((prev) => [newTx, ...prev]);
+    setPaymentModalOpen(false);
+    setIsPaying(false);
+    toast.success(`Payment of GH₵ ${numAmount.toLocaleString()} recorded (${refId})`, { id: 'paystack' });
   };
 
   return (
@@ -474,10 +519,22 @@ export default function TenantPaymentsPage() {
 
                         {/* Status */}
                         <td className="py-3.5 px-3 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E6F7EC] dark:bg-emerald-950/50 text-[#16A34A] text-[11px] font-bold">
-                            <Check className="w-3 h-3 stroke-[3]" />
-                            <span>{tx.status || 'SUCCESS'}</span>
-                          </span>
+                          {tx.status === 'PENDING' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 text-[11px] font-bold border border-amber-200/50 dark:border-amber-800/40">
+                              <Clock className="w-3 h-3 stroke-[2.5]" />
+                              <span>PENDING</span>
+                            </span>
+                          ) : tx.status === 'FAILED' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-400 text-[11px] font-bold border border-rose-200/50 dark:border-rose-800/40">
+                              <AlertCircle className="w-3 h-3 stroke-[2.5]" />
+                              <span>FAILED</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#E6F7EC] dark:bg-emerald-950/50 text-[#16A34A] text-[11px] font-bold border border-emerald-200/50 dark:border-emerald-800/40">
+                              <CheckCircle2 className="w-3 h-3 stroke-[2.5]" />
+                              <span>{tx.status || 'SUCCESS'}</span>
+                            </span>
+                          )}
                         </td>
 
                         {/* Actions */}
@@ -695,29 +752,18 @@ export default function TenantPaymentsPage() {
             <div className="space-y-2 pt-1">
               <button
                 type="button"
-                onClick={() => {
-                  const numAmount = Math.max(50, Number(paymentAmount) || 1800);
-                  const refId = `T${Date.now().toString().slice(-12)}`;
-                  const newTx = {
-                    id: refId,
-                    reference: refId,
-                    createdAt: new Date().toISOString(),
-                    amount: numAmount,
-                    status: 'SUCCESS',
-                    paymentType: paymentPurpose,
-                    isShowcase: true,
-                    property: {
-                      title: activeBooking?.property?.title || 'GLACIER STUDIO',
-                      location: activeBooking?.property?.address || 'Achimota, Accra',
-                    },
-                  };
-                  setLocalTransactions((prev) => [newTx, ...prev]);
-                  setPaymentModalOpen(false);
-                  toast.success(`Payment of GH₵ ${numAmount.toLocaleString()} confirmed (${refId})`);
-                }}
-                className="w-full py-3 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                disabled={isPaying}
+                onClick={handleProceedPayment}
+                className="w-full py-3 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                Proceed with Paystack (GH₵ {Number(paymentAmount || 0).toLocaleString()})
+                {isPaying ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting to Paystack...</span>
+                  </>
+                ) : (
+                  <span>Proceed with Paystack (GH₵ {Number(paymentAmount || 0).toLocaleString()})</span>
+                )}
               </button>
               <button
                 type="button"

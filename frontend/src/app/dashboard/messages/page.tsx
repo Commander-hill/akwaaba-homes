@@ -650,6 +650,21 @@ function MessagesContent() {
         })
       );
 
+      // Persist attachment in backend database if this is a live conversation
+      if (!activeConversation.id.startsWith('conv-')) {
+        try {
+          await api.post(`/chat/${activeConversation.id}/messages`, {
+            content: `Attached: ${file.name}`,
+            mediaUrl,
+            mediaType: file.type.startsWith('image/') ? 'IMAGE' : 'DOCUMENT',
+            fileName: file.name,
+          });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+        } catch (postErr) {
+          console.error('Failed to persist media message in backend:', postErr);
+        }
+      }
+
       toast.success('Attachment sent', { id: 'media-upload' });
     } catch (err) {
       toast.error('Failed to upload file', { id: 'media-upload' });
