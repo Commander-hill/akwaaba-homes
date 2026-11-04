@@ -87,6 +87,8 @@ export default function Navbar() {
     pathname.startsWith('/verify-email') ||
     pathname === '/onboarding' ||
     pathname === '/services' ||
+    pathname.startsWith('/support') ||
+    pathname.startsWith('/help') ||
     isTenantShellRoute
   ) {
     return null;
