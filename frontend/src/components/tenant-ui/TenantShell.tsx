@@ -292,7 +292,8 @@ export default function TenantShell({
     pathname === '/dashboard/agreements' ||
     pathname === '/dashboard/profile' ||
     pathname === '/profile' ||
-    pathname === '/settings';
+    pathname === '/settings' ||
+    pathname === '/dashboard/tenant/tickets';
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
@@ -330,6 +331,8 @@ export default function TenantShell({
                   ? 'Documents'
                   : pathname.includes('/profile') || pathname.includes('/settings')
                   ? 'Settings'
+                  : pathname.includes('/tickets')
+                  ? 'Maintenance'
                   : pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'}
               </span>
             </div>
