@@ -17,7 +17,7 @@ const PUBLIC_NAV_LINKS = [
   { name: 'Home', href: '/' },
   { name: 'Explore', href: '/properties', hasDropdown: true },
   { name: 'Neighborhoods', href: '/search', hasDropdown: true },
-  { name: 'Services', href: '/about', hasDropdown: true },
+  { name: 'Services', href: '/services', hasDropdown: true },
   { name: 'About', href: '/about', hasDropdown: true },
   { name: 'Support', href: '/support', hasDropdown: true },
 ];
@@ -86,6 +86,7 @@ export default function Navbar() {
     pathname === '/reset-password' ||
     pathname.startsWith('/verify-email') ||
     pathname === '/onboarding' ||
+    pathname === '/services' ||
     isTenantShellRoute
   ) {
     return null;

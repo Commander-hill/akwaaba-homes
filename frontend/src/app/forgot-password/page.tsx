@@ -23,7 +23,7 @@ const NAV_LINKS = [
   { name: 'Home', href: '/' },
   { name: 'Explore', href: '/properties', hasDropdown: true },
   { name: 'Neighborhoods', href: '/search', hasDropdown: true },
-  { name: 'Services', href: '/about', hasDropdown: true },
+  { name: 'Services', href: '/services', hasDropdown: true },
   { name: 'About', href: '/about', hasDropdown: true },
   { name: 'Support', href: '/support', hasDropdown: true },
 ];
