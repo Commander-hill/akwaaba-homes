@@ -287,7 +287,7 @@ export default function TenantShell({
     </div>
   );
 
-  const isPaymentsPage = pathname === '/dashboard/invoice';
+  const isStandaloneFullWidth = pathname === '/dashboard/invoice' || pathname === '/dashboard/agreements';
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
@@ -295,7 +295,7 @@ export default function TenantShell({
       <aside
         className={clsx(
           'lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20',
-          isPaymentsPage ? 'hidden' : 'hidden lg:flex'
+          isStandaloneFullWidth ? 'hidden' : 'hidden lg:flex'
         )}
       >
         {renderSidebarContent()}
@@ -313,7 +313,7 @@ export default function TenantShell({
               aria-label="Open navigation menu"
               className={clsx(
                 'p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer',
-                isPaymentsPage ? 'block' : 'lg:hidden'
+                isStandaloneFullWidth ? 'block' : 'lg:hidden'
               )}
             >
               <Menu className="w-5 h-5" />
@@ -329,6 +329,8 @@ export default function TenantShell({
               <span className="font-bold text-zinc-900 dark:text-white capitalize">
                 {pathname.includes('/invoice')
                   ? 'Payments'
+                  : pathname.includes('/agreements')
+                  ? 'Documents'
                   : pathname.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard'}
               </span>
             </div>
@@ -340,6 +342,8 @@ export default function TenantShell({
                 placeholder={
                   pathname.startsWith('/dashboard/messages')
                     ? 'Search messages, users, or topics...'
+                    : pathname.startsWith('/dashboard/agreements')
+                    ? 'Search documents, agreements, or records...'
                     : 'Search properties, bookings, or help...'
                 }
                 value={searchQuery}
@@ -449,16 +453,24 @@ export default function TenantShell({
         <main
           className={clsx(
             'flex-1 w-full mx-auto',
-            isPaymentsPage ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
+            isStandaloneFullWidth ? 'p-0 max-w-full' : 'max-w-[1440px] p-4 sm:p-6 lg:p-7'
           )}
         >
           {children}
         </main>
       </div>
 
-      {/* ── MOBILE NAVIGATION DRAWER ── */}
+      {/* ── MOBILE / STANDALONE NAVIGATION DRAWER ── */}
       {mobileDrawerOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Navigation menu">
+        <div
+          className={clsx(
+            'fixed inset-0 z-50 flex',
+            isStandaloneFullWidth ? '' : 'lg:hidden'
+          )}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-xs"
             onClick={() => setMobileDrawerOpen(false)}
