@@ -265,7 +265,7 @@ export default function AgreementPage() {
 
         {/* Formal Conveyancing Title Header */}
         <header className="text-center py-6 border-b-2 border-double border-[#1A1A18] space-y-2">
-          <div className="flex items-center justify-center gap-5 mb-2">
+          <div className="flex items-center justify-center gap-4 mb-2">
             <div className="w-16 h-14 relative">
               <Image
                 src="/images/agreements/coat-of-arms.png"
@@ -274,6 +274,7 @@ export default function AgreementPage() {
                 className="object-contain"
               />
             </div>
+            <div className="w-[1px] h-9 bg-[#A8A29E]" />
             <div className="w-16 h-14 relative">
               <Image
                 src="/logo-light.png"

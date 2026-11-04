@@ -282,8 +282,16 @@ export default function TenancyAgreementsPage() {
               display: flex;
               align-items: center;
               justify-content: center;
-              gap: 20px;
+              gap: 18px;
               margin: 0 auto 10px;
+            }
+            .header-divider {
+              width: 1px;
+              height: 42px;
+              background-color: #C8A24A;
+              display: inline-block;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             .coa {
               width: 68px;
@@ -353,6 +361,7 @@ export default function TenancyAgreementsPage() {
             <div class="header">
               <div class="header-logos">
                 <img src="${window.location.origin}/images/agreements/coat-of-arms.png" class="coa" alt="Republic of Ghana" />
+                <div class="header-divider"></div>
                 <img src="${logoSrc}" class="akwaaba-header-logo" alt="Akwaaba Homes" />
               </div>
               <p class="rep">REPUBLIC OF GHANA</p>
@@ -925,7 +934,7 @@ export default function TenancyAgreementsPage() {
                         }}
                         className="text-center border-b-2 border-[#C8A24A] pb-4 mb-5"
                       >
-                        <div className="flex items-center justify-center gap-5 mb-2">
+                        <div className="flex items-center justify-center gap-4 mb-2">
                           <div className="w-16 h-14 relative">
                             <Image
                               src="/images/agreements/coat-of-arms.png"
@@ -934,6 +943,7 @@ export default function TenancyAgreementsPage() {
                               className="object-contain"
                             />
                           </div>
+                          <div className="w-[1px] h-9 bg-[#C8A24A] dark:bg-[#C8A24A]/70" />
                           <div className="w-16 h-14 relative">
                             <Image
                               src="/logo-light.png"
