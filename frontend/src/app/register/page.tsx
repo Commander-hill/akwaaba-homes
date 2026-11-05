@@ -23,6 +23,8 @@ import { useQuery } from '@tanstack/react-query';
 import AlertBanner from '@/components/AlertBanner';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/Button';
+import PassportUpload from '@/components/PassportUpload';
+import { getImageUrl } from '@/lib/utils';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -592,6 +594,28 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Profile Photo Uploader */}
+              <div className="space-y-1.5">
+                <label className={labelClass}>Profile Photo</label>
+                <PassportUpload
+                  currentUrl={formData.avatarUrl}
+                  onUploadSuccess={(url) => {
+                    setFormData((prev) => ({ ...prev, avatarUrl: url }));
+                    if (url) {
+                      toast.success('Profile photo uploaded successfully!');
+                    }
+                  }}
+                  onUploadError={(err) => {
+                    if (err) {
+                      triggerError(err);
+                    }
+                  }}
+                  label="Profile Picture"
+                  description="Upload a clear portrait or passport-style photo (up to 10MB). Automatically cropped and optimized."
+                  optional={true}
+                />
+              </div>
+
               {/* Personal Details Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
@@ -919,6 +943,39 @@ export default function RegisterPage() {
                   >
                     Edit
                   </button>
+                </div>
+
+                {/* Profile Photo & Name Summary */}
+                <div className="flex items-center gap-3.5 pb-2 border-b border-zinc-200/60 dark:border-zinc-800/60">
+                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0 shadow-2xs">
+                    {formData.avatarUrl ? (
+                      <Image
+                        src={getImageUrl(formData.avatarUrl)}
+                        alt={fullNameDisplay || 'User'}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-bold text-zinc-950 dark:text-white truncate">
+                      {fullNameDisplay || 'Not specified'}
+                    </div>
+                    <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-0.5">
+                      {formData.avatarUrl ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
+                          <CheckCircle2 className="w-3 h-3" /> Profile photo attached
+                        </span>
+                      ) : (
+                        <span className="text-zinc-400 dark:text-zinc-500">
+                          No photo uploaded (optional)
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2.5 text-xs">

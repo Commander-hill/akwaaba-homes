@@ -32,10 +32,10 @@ const uploadMediaConfig = multer({
   }
 });
 
-// Avatar upload (images up to 2MB)
+// Avatar upload (images up to 10MB)
 const uploadAvatarConfig = multer({
   storage,
-  limits: { fileSize: 2 * 1024 * 1024 },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);

@@ -1,6 +1,9 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import axios from 'axios';
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
 import sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
@@ -72,7 +75,7 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
     }
 
     if (!isValidFileType(req.file.buffer, 'image')) {
-      res.status(400).json({ error: 'Invalid or corrupted image format. Magic bytes header check failed.' });
+      res.status(400).json({ error: 'Invalid or corrupted image format. Only JPG, PNG, and WebP are allowed.' });
       return;
     }
 
@@ -84,27 +87,32 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    if (metadata.width < 200 || metadata.height < 200) {
-      res.status(400).json({ error: 'Image too small. Minimum size is 200x200 pixels.' });
+    if (metadata.width < 100 || metadata.height < 100) {
+      res.status(400).json({ error: 'Image too small. Minimum size is 100x100 pixels.' });
       return;
     }
 
-    const ratio = metadata.width / metadata.height;
-    const isSquare = ratio >= 0.95 && ratio <= 1.05;
-    const isPassport = ratio >= 0.72 && ratio <= 0.78;
-
-    if (!isSquare && !isPassport) {
-      res.status(400).json({ error: 'Picture must be a square (1:1) or standard passport size (3:4 aspect ratio).' });
-      return;
-    }
-
+    // Gracefully center-crop & resize any portrait or landscape photo to clean 800x800 square webp
     const processedBuffer = await image
-      .resize(800, 800, { fit: 'inside' })
+      .resize(800, 800, { fit: 'cover', position: 'center' })
       .webp({ quality: 80 })
       .toBuffer();
 
-    const fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
-    res.status(200).json({ url: fileUrl });
+    let fileUrl: string;
+    try {
+      fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
+    } catch (cloudErr) {
+      console.warn('Cloudinary upload failed or unconfigured, saving locally to public/uploads/avatars:', cloudErr);
+      const uploadDir = path.join(__dirname, '../../public/uploads/avatars');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      const filename = `avatar-${Date.now()}-${crypto.randomBytes(6).toString('hex')}.webp`;
+      fs.writeFileSync(path.join(uploadDir, filename), processedBuffer);
+      fileUrl = `/uploads/avatars/${filename}`;
+    }
+
+    res.status(200).json({ url: fileUrl, avatarUrl: fileUrl });
   } catch (error) {
     console.error('Error uploading avatar:', error);
     res.status(500).json({ error: 'Internal server error during upload' });
