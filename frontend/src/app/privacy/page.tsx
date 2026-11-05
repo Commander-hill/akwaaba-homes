@@ -133,7 +133,7 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF8F3] dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden transition-colors">
+    <div className="w-full min-h-screen bg-white dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden transition-colors">
       
       {/* ══════════════════════════════════════════════════════════════════════
           1. HERO SECTION: Your data. Your choice. Our responsibility.
@@ -228,7 +228,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => setIsContactModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-zinc-900 border border-[#CBD7CE] dark:border-zinc-700 hover:bg-[#FAF8F3] dark:hover:bg-zinc-800 text-[#14221A] dark:text-zinc-100 text-xs sm:text-[13px] font-bold transition shadow-2xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 hover:bg-white dark:hover:bg-zinc-800 text-[#14221A] dark:text-zinc-100 text-xs sm:text-[13px] font-bold transition shadow-2xs cursor-pointer"
               >
                 <span>Contact privacy team</span>
                 <Mail className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
@@ -239,7 +239,7 @@ export default function PrivacyPage() {
 
           {/* Right Column: High-Res Community Photo with Flag & Shield Agreement (5-6 Cols) */}
           <div className="lg:col-span-6 xl:col-span-6 relative">
-            <div className="relative w-full h-[240px] sm:h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-[0_10px_35px_rgba(11,59,36,0.06)] border border-[#E8E6DD] dark:border-zinc-800">
+            <div className="relative w-full h-[240px] sm:h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-[0_10px_35px_rgba(11,59,36,0.06)] border border-zinc-200 dark:border-zinc-800">
               <Image
                 src="/images/about/privacy-hero-community-2x.jpg"
                 alt="Ghanaian residential community with flying national flag and data protection lock shield"
@@ -250,7 +250,7 @@ export default function PrivacyPage() {
               />
 
               {/* Soft gradient edge fade into the warm cream background */}
-              <div className="absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-[#FAF8F3]/70 dark:from-[#0C100D]/70 to-transparent pointer-events-none" />
+              <div className="absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-white/80 dark:from-[#0C100D]/70 to-transparent pointer-events-none" />
             </div>
           </div>
 
@@ -261,8 +261,8 @@ export default function PrivacyPage() {
           2. FOUR CORE PRIVACY PILLARS STRIP
          ══════════════════════════════════════════════════════════════════════ */}
       <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-2">
-        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-x divide-[#E8DEC4] dark:divide-zinc-800">
+        <div className="bg-white dark:bg-[#151B17] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800">
             
             {/* Pillar 1: No data selling */}
             <div className="flex items-start gap-3 sm:px-3 pt-2 sm:pt-0">
@@ -346,7 +346,7 @@ export default function PrivacyPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
           
           {/* Step 1: Collect */}
-          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2">
             <div className="flex items-center justify-between">
               <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
                 <Database className="w-5 h-5 text-emerald-300" />
@@ -362,7 +362,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Step 2: Use */}
-          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2">
             <div className="flex items-center justify-between">
               <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
                 <Settings className="w-5 h-5 text-emerald-300" />
@@ -378,7 +378,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Step 3: Protect */}
-          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2">
             <div className="flex items-center justify-between">
               <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
                 <ShieldCheck className="w-5 h-5 text-emerald-300" />
@@ -394,7 +394,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Step 4: Retain / Delete */}
-          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2">
             <div className="flex items-center justify-between">
               <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
                 <Trash2 className="w-5 h-5 text-emerald-300" />
@@ -425,7 +425,7 @@ export default function PrivacyPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           
           {/* Card 1: Identity & Contact */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
               <UserCheck className="w-4 h-4 text-[#16A34A]" />
             </div>
@@ -440,7 +440,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Card 2: Student & Tenancy */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
               <GraduationCap className="w-4 h-4 text-[#16A34A]" />
             </div>
@@ -455,7 +455,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Card 3: Payments */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
               <Receipt className="w-4 h-4 text-[#16A34A]" />
             </div>
@@ -470,7 +470,7 @@ export default function PrivacyPage() {
           </div>
 
           {/* Card 4: Property & Host */}
-          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-zinc-200 dark:border-zinc-800 shadow-2xs space-y-2.5">
             <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
               <Home className="w-4 h-4 text-[#16A34A]" />
             </div>
@@ -491,7 +491,7 @@ export default function PrivacyPage() {
           5. YOUR PRIVACY RIGHTS INTERACTIVE STRIP
          ══════════════════════════════════════════════════════════════════════ */}
       <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4">
-        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-[#151B17] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             
             {/* Title & Description */}
@@ -510,7 +510,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => openDsarWithType('COPY')}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
               >
                 <FileText className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Request a copy</span>
@@ -519,7 +519,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => openDsarWithType('CORRECTION')}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
               >
                 <FileEdit className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Correct your details</span>
@@ -528,7 +528,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => openDsarWithType('OBJECTION')}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
               >
                 <Ban className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Object to processing</span>
@@ -537,7 +537,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => openDsarWithType('DELETION')}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
               >
                 <Trash2 className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Request deletion</span>
@@ -568,7 +568,7 @@ export default function PrivacyPage() {
           6. FAQS SECTION (Quick Answers to Common Questions)
          ══════════════════════════════════════════════════════════════════════ */}
       <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4">
-        <div className="bg-white/90 dark:bg-zinc-900/80 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-3 sm:p-4 shadow-xs">
+        <div className="bg-white/90 dark:bg-zinc-900/80 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-3 sm:p-4 shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
             
             {/* Left Tag: FAQs */}
@@ -589,7 +589,7 @@ export default function PrivacyPage() {
                   key={index}
                   type="button"
                   onClick={() => setActiveFaq(faq)}
-                  className="p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 hover:border-[#0B3B24] dark:hover:border-emerald-500 hover:bg-[#FAF8F3] dark:hover:bg-zinc-800/60 transition flex items-center justify-between text-left group cursor-pointer"
+                  className="p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 hover:border-[#0B3B24] dark:hover:border-emerald-500 hover:bg-white dark:hover:bg-zinc-800/60 transition flex items-center justify-between text-left group cursor-pointer"
                 >
                   <span className="text-xs font-semibold text-[#14221A] dark:text-zinc-200 line-clamp-1 pr-1 group-hover:text-[#0B3B24] dark:group-hover:text-emerald-400">
                     {faq.question}
@@ -607,7 +607,7 @@ export default function PrivacyPage() {
           7. PRIVACY OFFICER CONTACT BANNER
          ══════════════════════════════════════════════════════════════════════ */}
       <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4 mb-4">
-        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-[#151B17] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
           {/* Officer Contact info */}
           <div className="flex items-center gap-3.5">
@@ -737,7 +737,7 @@ export default function PrivacyPage() {
          ══════════════════════════════════════════════════════════════════════ */}
       {activeFaq && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -760,7 +760,7 @@ export default function PrivacyPage() {
               {activeFaq.answer}
             </div>
 
-            <div className="p-3 rounded-xl bg-[#FAF4E6] dark:bg-zinc-800/60 border border-[#E8DEC4] dark:border-zinc-700/60 text-[11px] text-[#55665B] dark:text-zinc-400 space-y-0.5">
+            <div className="p-3 rounded-xl bg-white dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-[11px] text-[#55665B] dark:text-zinc-400 space-y-0.5">
               <span className="font-bold text-[#0B3B24] dark:text-emerald-400">Statutory Reference:</span>
               <p>{activeFaq.reference}</p>
             </div>
@@ -783,7 +783,7 @@ export default function PrivacyPage() {
          ══════════════════════════════════════════════════════════════════════ */}
       {isDsarModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800/40">
@@ -891,7 +891,7 @@ export default function PrivacyPage() {
          ══════════════════════════════════════════════════════════════════════ */}
       {isContactModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800/40">
