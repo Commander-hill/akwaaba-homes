@@ -377,7 +377,7 @@ export default function TenantShell({
     pathname === '/dashboard/tenant/tickets';
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FAF8F3] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
       <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-[#0B3B24] border-r border-emerald-950/60 sticky top-0 h-screen z-20 shadow-md">
         {renderSidebarContent()}
@@ -386,7 +386,7 @@ export default function TenantShell({
       {/* ── MAIN WORKSPACE COLUMN ── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar matching reference */}
-        <header className="h-16 bg-[#FAF8F3] dark:bg-[#141816] border-b border-[#E8E4D5] dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Menu Toggle & Breadcrumb / Search */}
           <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 max-w-2xl">
             <button
@@ -433,7 +433,7 @@ export default function TenantShell({
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 rounded-full bg-white dark:bg-zinc-800/80 border border-[#DDD9C9] dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] shadow-2xs transition"
+                className="w-full pl-9 pr-4 py-1.5 rounded-full bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] shadow-2xs transition"
               />
             </form>
           </div>
@@ -467,7 +467,7 @@ export default function TenantShell({
               </span>
             </Link>
 
-            <div className="h-6 w-px bg-[#E2DEC9] dark:bg-zinc-700" />
+            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
 
             {/* User Profile Block with Dropdown */}
             <div className="relative" ref={dropdownRef}>

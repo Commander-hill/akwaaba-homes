@@ -292,15 +292,15 @@ export function ProfileWorkspaceContent({
     : 'Level 100';
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] text-[#14221A] flex flex-col justify-between relative overflow-x-hidden font-sans">
+    <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-[#0E1210] text-[#14221A] dark:text-zinc-100 flex flex-col justify-between relative overflow-x-hidden font-sans">
       <div className="w-full max-w-[1380px] mx-auto px-4 sm:px-7 lg:px-10 pt-5 pb-6 flex-1 flex flex-col justify-between gap-4">
         {/* ── 1. HERO TITLE BANNER WITH BUILDING & TREES GRAPHIC ── */}
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between min-h-[88px]">
           <div className="relative z-10 max-w-2xl pr-4">
-            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] tracking-tight leading-[1.1]">
+            <h1 className="text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold text-[#0B3B24] dark:text-emerald-400 tracking-tight leading-[1.1]">
               Account settings
             </h1>
-            <p className="text-xs sm:text-[13.5px] text-[#3B4B41] mt-1.5 font-medium">
+            <p className="text-xs sm:text-[13.5px] text-zinc-600 dark:text-zinc-400 mt-1.5 font-medium">
               Manage your profile, academic information, trusted contacts and account security.
             </p>
           </div>
@@ -315,13 +315,13 @@ export function ProfileWorkspaceContent({
               sizes="520px"
               className="object-cover object-right"
             />
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#F7F6F0] via-[#F7F6F0]/85 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-[#F7F6F0] to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white via-white/85 to-transparent dark:from-[#0E1210] dark:via-[#0E1210]/85" />
+            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-white to-transparent dark:from-[#0E1210]" />
           </div>
         </div>
 
         {/* ── 2. RESIDENT ACCOUNT SUMMARY BANNER ── */}
-        <div className="relative z-10 bg-[#E7F2E7] border border-[#CFE2D0] rounded-2xl px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+        <div className="relative z-10 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3.5 shadow-xs">
           <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
             {/* Dark Green Circular User Avatar */}
             <div className="w-13 h-13 rounded-full bg-[#114A2E] text-white flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
@@ -339,14 +339,14 @@ export function ProfileWorkspaceContent({
             {/* Resident Account Title & Contact info */}
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-[16px] sm:text-[17px] font-extrabold text-[#14221A]">
+                <h2 className="text-[16px] sm:text-[17px] font-extrabold text-[#14221A] dark:text-white">
                   Resident account
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#BCE3C5] text-[#0E5A2A] text-[10.5px] font-extrabold uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100/90 dark:bg-emerald-950/60 text-[#0E5A2A] dark:text-emerald-300 text-[10.5px] font-extrabold uppercase tracking-wider border border-emerald-200 dark:border-emerald-800/60">
                   {session?.role || 'TENANT'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#4A5D50] font-semibold">
+              <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 font-semibold">
                 {session?.ghanaCardNumber ? (
                   <span>{session.ghanaCardNumber}</span>
                 ) : formData.phoneNumber ? (
@@ -360,8 +360,8 @@ export function ProfileWorkspaceContent({
             {/* Identity Verified & Student Status Pills */}
             <div className="flex flex-wrap items-center gap-2.5 sm:ml-3 pt-1 sm:pt-0">
               {session?.ghanaCardStatus === 'APPROVED' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold shadow-2xs">
-                  <ShieldCheck className="w-4 h-4 text-[#15803D]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[#116932] dark:text-emerald-400 text-xs font-bold shadow-2xs">
+                  <ShieldCheck className="w-4 h-4 text-[#15803D] dark:text-emerald-400" />
                   <span>Identity verified</span>
                 </span>
               ) : session?.ghanaCardStatus === 'PENDING' ? (
@@ -372,21 +372,21 @@ export function ProfileWorkspaceContent({
               ) : (
                 <Link
                   href="/dashboard/verification"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] hover:bg-[#E5E7EB] text-[#4B5563] text-xs font-bold transition shadow-2xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-200 text-zinc-600 dark:text-zinc-300 text-xs font-bold transition shadow-2xs cursor-pointer"
                 >
-                  <ShieldAlert className="w-4 h-4 text-[#6B7280]" />
+                  <ShieldAlert className="w-4 h-4 text-zinc-500" />
                   <span>Identity unverified</span>
                 </Link>
               )}
 
               {isStudent ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold shadow-2xs">
-                  <GraduationCap className="w-4 h-4 text-[#15803D]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[#116932] dark:text-emerald-400 text-xs font-bold shadow-2xs">
+                  <GraduationCap className="w-4 h-4 text-[#15803D] dark:text-emerald-400" />
                   <span>Student status cleared</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EDECE6] border border-[#D8D6CC] text-[#506054] text-xs font-bold shadow-2xs">
-                  <User className="w-4 h-4 text-[#506054]" />
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-bold shadow-2xs">
+                  <User className="w-4 h-4 text-zinc-500" />
                   <span>Resident tenant</span>
                 </span>
               )}
@@ -404,15 +404,15 @@ export function ProfileWorkspaceContent({
               <button
                 type="button"
                 onClick={() => setRequestModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-[#F9FBF9] hover:bg-white border border-[#5B7062] text-[#14221A] text-xs font-bold inline-flex items-center justify-center gap-2 shrink-0 shadow-2xs transition cursor-pointer self-start md:self-center"
+                className="px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-bold inline-flex items-center justify-center gap-2 shrink-0 shadow-2xs transition cursor-pointer self-start md:self-center"
               >
-                <Lock className="w-3.5 h-3.5 text-[#0B3B24]" />
+                <Lock className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Request profile changes</span>
               </button>
             )
           ) : (
-            <div className="px-3.5 py-2 rounded-xl bg-[#E8F5E9] border border-[#A5D6A7] text-[#1B5E20] text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
-              <Unlock className="w-3.5 h-3.5 text-[#2E7D32]" />
+            <div className="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[#0F5132] dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
+              <Unlock className="w-3.5 h-3.5 text-[#2E7D32] dark:text-emerald-400" />
               <span>Profile editable</span>
             </div>
           )}
@@ -424,9 +424,9 @@ export function ProfileWorkspaceContent({
               LEFT COLUMN (3 COLS): Sub-Navigation + Independence Arch Illustration
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-3 flex">
-            <div className="w-full bg-[#FAF9F4] border border-[#E6E4DA] rounded-2xl overflow-hidden flex flex-col justify-between shadow-[0_2px_12px_rgba(11,59,36,0.03)]">
+            <div className="w-full bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xs">
               {/* Top 4 Navigation Items */}
-              <div className="divide-y divide-[#EAE8DF]">
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {/* Item 1: Personal profile */}
                 <button
                   type="button"
@@ -437,17 +437,17 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'personal'
-                      ? 'bg-[#DFEFE0] before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24]'
-                      : 'hover:bg-[#F2F5F0]'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <User className="w-5 h-5 text-[#0B3B24] shrink-0 stroke-[2]" />
+                    <User className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 shrink-0 stroke-[2]" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] truncate">
+                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
                         Personal profile
                       </p>
-                      <p className="text-[11px] text-[#55665B] truncate">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         Your basic information
                       </p>
                     </div>
@@ -464,17 +464,17 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'contact'
-                      ? 'bg-[#DFEFE0] before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24]'
-                      : 'hover:bg-[#F2F5F0]'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <ShieldCheck className="w-5 h-5 text-[#14221A] shrink-0 stroke-[1.9]" />
+                    <ShieldCheck className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] truncate">
+                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
                         Contact &amp; guardian
                       </p>
-                      <p className="text-[11px] text-[#55665B] truncate">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         {formData.guardianName ? '1 contact added' : 'No guardian added'}
                       </p>
                     </div>
@@ -496,17 +496,17 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'academic'
-                      ? 'bg-[#DFEFE0] before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24]'
-                      : 'hover:bg-[#F2F5F0]'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <GraduationCap className="w-5 h-5 text-[#14221A] shrink-0 stroke-[1.9]" />
+                    <GraduationCap className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] truncate">
+                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
                         Academic details
                       </p>
-                      <p className="text-[11px] text-[#55665B] truncate">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         {isStudent
                           ? `${formData.campus ? formData.campus.split(' ')[0] : 'Student'} • ${displayLevelShort}`
                           : 'General resident'}
@@ -530,17 +530,17 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'security'
-                      ? 'bg-[#DFEFE0] before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24]'
-                      : 'hover:bg-[#F2F5F0]'
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Lock className="w-5 h-5 text-[#14221A] shrink-0 stroke-[1.9]" />
+                    <Lock className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] truncate">
+                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
                         Security &amp; sessions
                       </p>
-                      <p className="text-[11px] text-[#55665B] truncate">
+                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
                         {twoFactorStatus?.twoFactorEnabled ? '2FA enabled' : '2FA disabled'}
                       </p>
                     </div>
@@ -575,25 +575,25 @@ export function ProfileWorkspaceContent({
             {/* ── Card 1: Personal information ── */}
             <div
               ref={personalRef}
-              className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5"
+              className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5"
             >
-              <div className="pb-2.5 border-b border-[#BCE0C3] flex items-center justify-between">
+              <div className="pb-2.5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                    <h2 className="text-[16px] font-extrabold text-[#14221A]">
+                    <User className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 stroke-[2.2]" />
+                    <h2 className="text-[16px] font-extrabold text-[#14221A] dark:text-white">
                       Personal information
                     </h2>
                   </div>
-                  <p className="text-xs text-[#516056] mt-0.5">
+                  <p className="text-xs text-[#516056] dark:text-zinc-400 mt-0.5">
                     {isLocked
                       ? 'Verified tenant identity credentials (Read-only).'
                       : 'Update your personal details when necessary.'}
                   </p>
                 </div>
                 {isLocked && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4B6052] bg-[#E5ECE5] border border-[#C5D8C7] px-2.5 py-1 rounded-full shadow-2xs">
-                    <Lock className="w-3 h-3 text-[#3B5042]" /> Read-only
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-1 rounded-full shadow-2xs">
+                    <Lock className="w-3 h-3 text-zinc-500 dark:text-zinc-400" /> Read-only
                   </span>
                 )}
               </div>
@@ -601,7 +601,7 @@ export function ProfileWorkspaceContent({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-0.5">
                 {/* First name */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     First name <span className="text-rose-600">*</span>
                   </label>
                   <input
@@ -609,13 +609,13 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                    className="w-full h-10 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* Other names */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     Other names <span className="text-rose-600">*</span>
                   </label>
                   <input
@@ -623,13 +623,13 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.otherNames}
                     onChange={(e) => setFormData({ ...formData, otherNames: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                    className="w-full h-10 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* Last name */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     Last name <span className="text-rose-600">*</span>
                   </label>
                   <input
@@ -637,61 +637,61 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                    className="w-full h-10 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* Gender */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     Gender <span className="text-rose-600">*</span>
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#4C5C52] pointer-events-none font-bold">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#4C5C52] dark:text-zinc-400 pointer-events-none font-bold">
                       ♂
                     </span>
                     <select
                       disabled={isLocked}
                       value={formData.gender || 'MALE'}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full h-10 pl-7 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                      className="w-full h-10 pl-7 pr-8 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white appearance-none focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                     >
                       <option value="MALE">Male</option>
                       <option value="FEMALE">Female</option>
                     </select>
-                    <ChevronDown className="w-4 h-4 text-[#5A6A60] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="w-4 h-4 text-[#5A6A60] dark:text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
                 {/* Date of birth */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     Date of birth <span className="text-rose-600">*</span>
                   </label>
                   <div className="relative">
-                    <Calendar className="w-3.5 h-3.5 text-[#5A6A60] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Calendar className="w-3.5 h-3.5 text-[#5A6A60] dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="text"
                       disabled={isLocked}
                       value={formData.dateOfBirth}
                       onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                      className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                      className="w-full h-10 pl-8 pr-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
 
                 {/* Nationality */}
                 <div>
-                  <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                  <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                     Nationality <span className="text-rose-600">*</span>
                   </label>
                   <div className="relative">
-                    <Globe className="w-3.5 h-3.5 text-[#5A6A60] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Globe className="w-3.5 h-3.5 text-[#5A6A60] dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <select
                       disabled={isLocked}
                       value={formData.nationality || 'Ghanaian'}
                       onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                      className="w-full h-10 pl-8 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                      className="w-full h-10 pl-8 pr-8 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white appearance-none focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                     >
                       <option value="Ghanaian">Ghanaian</option>
                       <option value="Nigerian">Nigerian</option>
@@ -699,7 +699,7 @@ export function ProfileWorkspaceContent({
                       <option value="Togolese">Togolese</option>
                       <option value="International">International</option>
                     </select>
-                    <ChevronDown className="w-4 h-4 text-[#5A6A60] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="w-4 h-4 text-[#5A6A60] dark:text-zinc-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -708,19 +708,19 @@ export function ProfileWorkspaceContent({
             {/* ── Card 2: Contact & emergency contact ── */}
             <div
               ref={contactRef}
-              className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)]"
+              className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs"
             >
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                 {/* Left 8 cols: Contact inputs */}
                 <div className="md:col-span-8 space-y-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <PhoneCall className="w-4 h-4 text-[#0B3B24] stroke-[2.2]" />
-                      <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
+                      <PhoneCall className="w-4 h-4 text-[#0B3B24] dark:text-emerald-400 stroke-[2.2]" />
+                      <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white">
                         Contact &amp; emergency contact
                       </h2>
                     </div>
-                    <p className="text-xs text-[#516056] mt-0.5">
+                    <p className="text-xs text-[#516056] dark:text-zinc-400 mt-0.5">
                       Keep your contact details up to date.
                     </p>
                   </div>
@@ -728,11 +728,11 @@ export function ProfileWorkspaceContent({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Phone number */}
                     <div>
-                      <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                      <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                         Phone number <span className="text-rose-600">*</span>
                       </label>
                       <div className="relative">
-                        <Phone className="w-3.5 h-3.5 text-[#5A6A60] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <Phone className="w-3.5 h-3.5 text-[#5A6A60] dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="tel"
                           disabled={isLocked}
@@ -740,23 +740,23 @@ export function ProfileWorkspaceContent({
                           onChange={(e) =>
                             setFormData({ ...formData, phoneNumber: e.target.value })
                           }
-                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white focus:bg-white dark:focus:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
 
                     {/* Email address */}
                     <div>
-                      <label className="block text-xs font-bold text-[#1E2E24] mb-1">
+                      <label className="block text-xs font-bold text-[#1E2E24] dark:text-zinc-200 mb-1">
                         Email address
                       </label>
                       <div className="relative">
-                        <Mail className="w-3.5 h-3.5 text-[#5A6A60] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <Mail className="w-3.5 h-3.5 text-[#5A6A60] dark:text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <input
                           type="email"
                           disabled
                           value={formData.email}
-                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
+                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-[13px] font-semibold text-zinc-900 dark:text-white disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-700 disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -769,32 +769,32 @@ export function ProfileWorkspaceContent({
                     type="button"
                     onClick={() => setGuardianModalOpen(true)}
                     title={isLocked ? "View guardian details (Read-only)" : "Click to update guardian details"}
-                    className="w-full text-left p-3.5 rounded-xl bg-[#EBF6EC] hover:bg-[#E2F2E4] border border-[#CFE5D2] flex items-center gap-3 transition cursor-pointer"
+                    className="w-full text-left p-3.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-50 border border-emerald-200/80 dark:bg-emerald-950/20 dark:border-emerald-800/40 flex items-center gap-3 transition cursor-pointer"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-[#D5ECD7] text-[#15803D] flex items-center justify-center shrink-0">
-                      <Users className="w-5 h-5 fill-[#15803D]" />
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-[#15803D] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                      <Users className="w-5 h-5 fill-[#15803D] dark:fill-emerald-400" />
                     </div>
                     <div className="min-w-0 space-y-0.5 flex-1">
                       <div className="flex items-center justify-between">
-                        <p className="text-[13px] font-extrabold text-[#14221A]">Guardian</p>
+                        <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white">Guardian</p>
                         {isLocked && (
-                          <span className="text-[10px] font-bold text-[#4B6252] bg-[#D4E8D7] px-1.5 py-0.5 rounded flex items-center gap-1 shadow-2xs">
+                          <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/50 px-1.5 py-0.5 rounded flex items-center gap-1 shadow-2xs">
                             <Lock className="w-2.5 h-2.5" /> Read-only
                           </span>
                         )}
                       </div>
-                      <p className="text-[11.5px] text-[#2E3F34] truncate">
+                      <p className="text-[11.5px] text-zinc-700 dark:text-zinc-300 truncate">
                         Name: {formData.guardianName ? (
-                          <span className="font-semibold">{formData.guardianName}</span>
+                          <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formData.guardianName}</span>
                         ) : (
-                          <span className="text-[#64786A] italic">Not provided</span>
+                          <span className="text-zinc-400 italic">Not provided</span>
                         )}
                       </p>
-                      <p className="text-[11.5px] text-[#2E3F34] truncate">
+                      <p className="text-[11.5px] text-zinc-700 dark:text-zinc-300 truncate">
                         Phone: {formData.guardianPhone ? (
-                          <span className="font-semibold">{formData.guardianPhone}</span>
+                          <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formData.guardianPhone}</span>
                         ) : (
-                          <span className="text-[#64786A] italic">Not provided</span>
+                          <span className="text-zinc-400 italic">Not provided</span>
                         )}
                       </p>
                     </div>
@@ -806,17 +806,17 @@ export function ProfileWorkspaceContent({
             {/* ── Card 3: Academic profile ── */}
             <div
               ref={academicRef}
-              className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3"
+              className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                    <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
+                    <GraduationCap className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 stroke-[2.2]" />
+                    <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white">
                       Academic profile
                     </h2>
                   </div>
-                  <p className="text-xs text-[#516056] mt-0.5">
+                  <p className="text-xs text-[#516056] dark:text-zinc-400 mt-0.5">
                     {isStudent
                       ? isLocked
                         ? 'Institutional tenancy verification (Read-only).'
@@ -825,8 +825,8 @@ export function ProfileWorkspaceContent({
                   </p>
                 </div>
                 {isLocked && isStudent && (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4B6052] bg-[#E5ECE5] border border-[#C5D8C7] px-2.5 py-1 rounded-full shadow-2xs">
-                    <Lock className="w-3 h-3 text-[#3B5042]" /> Read-only
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-2.5 py-1 rounded-full shadow-2xs">
+                    <Lock className="w-3 h-3 text-zinc-500 dark:text-zinc-400" /> Read-only
                   </span>
                 )}
               </div>
@@ -834,7 +834,7 @@ export function ProfileWorkspaceContent({
               <div className="pt-1 flex flex-wrap items-center justify-between gap-3">
                 {/* Left: Crest / Icon + Campus & Programme */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-[#E5E3D8] relative overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 relative overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
                     {isStudent ? (
                       <Image
                         src="/images/settings/ucc-crest.png"
@@ -844,16 +844,16 @@ export function ProfileWorkspaceContent({
                         className="object-contain p-0.5"
                       />
                     ) : (
-                      <User className="w-5 h-5 text-[#0B3B24]" />
+                      <User className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-extrabold text-[#14221A] truncate">
+                    <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
                       {isStudent
                         ? formData.campus || 'Institution not specified'
                         : 'General Resident Profile'}
                     </p>
-                    <p className="text-xs text-[#4A5A50] font-medium truncate">
+                    <p className="text-xs text-[#4A5A50] dark:text-zinc-400 font-medium truncate">
                       {isStudent
                         ? `${formData.programmeOfStudy || 'Programme not specified'} • ${displayLevelShort}`
                         : 'Residential tenancy without institutional affiliation'}
@@ -861,12 +861,12 @@ export function ProfileWorkspaceContent({
                   </div>
                 </div>
 
-                <div className="hidden sm:block h-8 w-px bg-[#E5E3D8]" />
+                <div className="hidden sm:block h-8 w-px bg-zinc-200 dark:bg-zinc-800" />
 
                 {/* Middle: Student ID */}
                 <div>
-                  <p className="text-xs font-extrabold text-[#14221A]">Student ID</p>
-                  <p className="text-xs font-semibold text-[#3B4C41] font-mono mt-0.5">
+                  <p className="text-xs font-extrabold text-[#14221A] dark:text-white">Student ID</p>
+                  <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 font-mono mt-0.5">
                     {isStudent ? formData.studentId || 'Not provided' : 'N/A'}
                   </p>
                 </div>
@@ -876,10 +876,10 @@ export function ProfileWorkspaceContent({
                   type="button"
                   onClick={() => setAcademicModalOpen(true)}
                   className={clsx(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer',
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer border',
                     isStudent
-                      ? 'bg-[#E1F3E4] hover:bg-[#D4ECD8] text-[#116932]'
-                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                      ? 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-[#116932] dark:bg-emerald-950/30 dark:border-emerald-800/50 dark:text-emerald-400'
+                      : 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300'
                   )}
                 >
                   <span
@@ -907,7 +907,7 @@ export function ProfileWorkspaceContent({
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-3 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Identity protection + Student status ── */}
-            <div className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(11,59,36,0.03)] flex flex-col justify-between">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs flex flex-col justify-between">
               {/* Header Bar */}
               <div
                 className={clsx(
@@ -926,8 +926,8 @@ export function ProfileWorkspaceContent({
               </div>
 
               {/* Body */}
-              <div className="p-4 flex flex-col items-center text-center space-y-3 border-b border-[#EAE8DF]">
-                <p className="text-xs text-[#2B3B31] font-medium leading-relaxed text-left w-full">
+              <div className="p-4 flex flex-col items-center text-center space-y-3 border-b border-zinc-200 dark:border-zinc-800">
+                <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed text-left w-full">
                   {isLocked
                     ? 'Your verified identity details are locked for your security and tenancy integrity.'
                     : 'Your profile is currently unlocked. You can update your details and save your changes below.'}
@@ -945,7 +945,7 @@ export function ProfileWorkspaceContent({
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 rounded-2xl bg-[#E8F5E9] border border-[#A5D6A7] flex items-center justify-center my-0.5 text-[#1B5E20] shadow-2xs">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center my-0.5 text-[#1B5E20] dark:text-emerald-400 shadow-2xs">
                     <Unlock className="w-8 h-8 stroke-[2.2]" />
                   </div>
                 )}
@@ -961,29 +961,29 @@ export function ProfileWorkspaceContent({
                     <button
                       type="button"
                       onClick={() => setRequestModalOpen(true)}
-                      className="w-full py-2 px-3.5 rounded-full bg-[#F7FAF7] hover:bg-[#EDF5EE] border border-[#B9D5BE] text-[#116932] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+                      className="w-full py-2 px-3.5 rounded-full bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[#116932] dark:text-emerald-400 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       <span>Request edit access</span>
                     </button>
                   )
                 ) : (
-                  <div className="w-full py-2 px-3.5 rounded-full bg-[#E8F5E9] border border-[#A5D6A7] text-[#1B5E20] text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
+                  <div className="w-full py-2 px-3.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[#1B5E20] dark:text-emerald-400 text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32] dark:text-emerald-400" />
                     <span>Edit access active</span>
                   </div>
                 )}
               </div>
 
               {/* Bottom Student Status Toggle Row */}
-              <div className="p-4 flex items-start justify-between gap-3 bg-[#FAF9F4]">
+              <div className="p-4 flex items-start justify-between gap-3 bg-zinc-50/70 dark:bg-zinc-900/40 border-t border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-start gap-2.5 min-w-0">
-                  <GraduationCap className="w-5 h-5 text-[#0B3B24] shrink-0 mt-0.5" />
+                  <GraduationCap className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 shrink-0 mt-0.5" />
                   <div className="min-w-0">
-                    <p className="text-[13px] font-extrabold text-[#14221A]">
+                    <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white">
                       Student status
                     </p>
-                    <p className="text-[11px] text-[#55665B] leading-snug mt-0.5">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug mt-0.5">
                       {isLocked
                         ? 'Student status verified and locked by UCC.'
                         : 'Your student status is active and verified by UCC.'}
@@ -1020,19 +1020,19 @@ export function ProfileWorkspaceContent({
             {/* ── Card 2: Account security ── */}
             <div
               ref={securityRef}
-              className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5"
+              className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5"
             >
-              <div className="flex items-center gap-2 pb-2 border-b border-[#EAE8DF]">
-                <ShieldCheck className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
+              <div className="flex items-center gap-2 pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                <ShieldCheck className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 stroke-[2.2]" />
+                <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white">
                   Account security
                 </h2>
               </div>
 
               <div className="space-y-2.5 text-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2 text-[#2B3B31] font-semibold">
-                    <KeyRound className="w-4 h-4 text-[#4A5A50]" />
+                  <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-semibold">
+                    <KeyRound className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                     <span>Two-Factor Authentication</span>
                   </span>
                   <span
@@ -1048,11 +1048,11 @@ export function ProfileWorkspaceContent({
                 </div>
 
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2 text-[#2B3B31] font-semibold">
-                    <Monitor className="w-4 h-4 text-[#4A5A50]" />
+                  <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-semibold">
+                    <Monitor className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                     <span>Active Sessions</span>
                   </span>
-                  <span className="font-extrabold text-[#14221A]">
+                  <span className="font-extrabold text-zinc-900 dark:text-white">
                     {sessionLabel}
                   </span>
                 </div>
@@ -1062,7 +1062,7 @@ export function ProfileWorkspaceContent({
                 <button
                   type="button"
                   onClick={() => setSecurityModalOpen(true)}
-                  className="text-xs font-extrabold text-[#116932] hover:text-[#0B3B24] inline-flex items-center gap-1.5 transition cursor-pointer"
+                  className="text-xs font-extrabold text-[#116932] dark:text-emerald-400 hover:text-[#0B3B24] dark:hover:text-emerald-300 inline-flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <span>Manage security</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1073,12 +1073,12 @@ export function ProfileWorkspaceContent({
         </div>
 
         {/* ── 4. BOTTOM ACTION BAR: DISCARD CHANGES & SAVE CHANGES ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#E8E6DC] mt-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-zinc-200 dark:border-zinc-800 mt-2">
           {/* Status Note */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-[#55665B]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
             {isLocked ? (
               <>
-                <Lock className="w-4 h-4 text-[#8A968E] shrink-0" />
+                <Lock className="w-4 h-4 text-zinc-400 shrink-0" />
                 <span>Your profile is locked and read-only. Request edit access to make changes.</span>
               </>
             ) : (
@@ -1094,9 +1094,9 @@ export function ProfileWorkspaceContent({
               <button
                 type="button"
                 onClick={handleDiscardChanges}
-                className="px-5 py-2.5 rounded-xl bg-[#FDFCF9] hover:bg-white border border-[#D4D2C6] text-[#2B3B31] text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs transition cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs transition cursor-pointer"
               >
-                <RotateCcw className="w-4 h-4 text-[#4A5A50]" />
+                <RotateCcw className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
                 <span>Discard changes</span>
               </button>
             )}
@@ -1440,7 +1440,7 @@ export function ProfileWorkspaceContent({
             </div>
 
             {/* Two-Factor Authentication Card */}
-            <div className="p-4 rounded-xl bg-[#F7FAF7] border border-[#CFE5D2] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-[#15803D]" />
