@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Clock,
   Lock,
+  Unlock,
   User,
   Check,
   GraduationCap,
@@ -220,8 +221,15 @@ export function ProfileWorkspaceContent({
     },
   });
 
+  const isLocked = !!session?.isProfileLocked && session?.role !== 'ADMIN';
+  const isUnlockRequested = !!session?.profileUnlockRequested;
+
   const handleSaveChanges = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (isLocked) {
+      toast.error('Your profile is locked and read-only. Submit an unlock request if changes are needed.');
+      return;
+    }
     setIsSaving(true);
     const payload: Record<string, any> = { ...formData };
     Object.keys(payload).forEach((key) => {
@@ -255,7 +263,6 @@ export function ProfileWorkspaceContent({
     );
   }
 
-  const isLocked = !!session?.isProfileLocked && session?.role !== 'ADMIN';
   const activeSessionsCount = sessions?.length && sessions.length > 0 ? sessions.length : 2;
   const displayLevelShort = formData.yearOfStudy?.toLowerCase().includes('level')
     ? formData.yearOfStudy
@@ -336,15 +343,29 @@ export function ProfileWorkspaceContent({
             </div>
           </div>
 
-          {/* Right Action Button: Request profile changes */}
-          <button
-            type="button"
-            onClick={() => setRequestModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#F9FBF9] hover:bg-white border border-[#5B7062] text-[#14221A] text-xs font-bold inline-flex items-center justify-center gap-2 shrink-0 shadow-2xs transition cursor-pointer self-start md:self-center"
-          >
-            <Pencil className="w-3.5 h-3.5 text-[#14221A]" />
-            <span>Request profile changes</span>
-          </button>
+          {/* Right Action Button: Request profile changes or Editable Status */}
+          {isLocked ? (
+            isUnlockRequested ? (
+              <div className="px-3.5 py-2 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/40 text-[#92400E] text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
+                <Clock className="w-3.5 h-3.5 text-[#D97706] animate-pulse" />
+                <span>Unlock request pending</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setRequestModalOpen(true)}
+                className="px-4 py-2.5 rounded-xl bg-[#F9FBF9] hover:bg-white border border-[#5B7062] text-[#14221A] text-xs font-bold inline-flex items-center justify-center gap-2 shrink-0 shadow-2xs transition cursor-pointer self-start md:self-center"
+              >
+                <Lock className="w-3.5 h-3.5 text-[#0B3B24]" />
+                <span>Request profile changes</span>
+              </button>
+            )
+          ) : (
+            <div className="px-3.5 py-2 rounded-xl bg-[#E8F5E9] border border-[#A5D6A7] text-[#1B5E20] text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
+              <Unlock className="w-3.5 h-3.5 text-[#2E7D32]" />
+              <span>Profile editable</span>
+            </div>
+          )}
         </div>
 
         {/* ── 3. MAIN 3-COLUMN SETTINGS GRID ── */}
@@ -496,16 +517,25 @@ export function ProfileWorkspaceContent({
               ref={personalRef}
               className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5"
             >
-              <div className="pb-2.5 border-b border-[#BCE0C3]">
-                <div className="flex items-center gap-2">
-                  <User className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                  <h2 className="text-[16px] font-extrabold text-[#14221A]">
-                    Personal information
-                  </h2>
+              <div className="pb-2.5 border-b border-[#BCE0C3] flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <User className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
+                    <h2 className="text-[16px] font-extrabold text-[#14221A]">
+                      Personal information
+                    </h2>
+                  </div>
+                  <p className="text-xs text-[#516056] mt-0.5">
+                    {isLocked
+                      ? 'Verified tenant identity credentials (Read-only).'
+                      : 'Update your personal details when necessary.'}
+                  </p>
                 </div>
-                <p className="text-xs text-[#516056] mt-0.5">
-                  Update your personal details when necessary.
-                </p>
+                {isLocked && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4B6052] bg-[#E5ECE5] border border-[#C5D8C7] px-2.5 py-1 rounded-full shadow-2xs">
+                    <Lock className="w-3 h-3 text-[#3B5042]" /> Read-only
+                  </span>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-0.5">
@@ -519,7 +549,7 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -533,7 +563,7 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.otherNames}
                     onChange={(e) => setFormData({ ...formData, otherNames: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -547,7 +577,7 @@ export function ProfileWorkspaceContent({
                     disabled={isLocked}
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                    className="w-full h-10 px-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -564,7 +594,7 @@ export function ProfileWorkspaceContent({
                       disabled={isLocked}
                       value={formData.gender || 'MALE'}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full h-10 pl-7 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                      className="w-full h-10 pl-7 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                     >
                       <option value="MALE">Male</option>
                       <option value="FEMALE">Female</option>
@@ -585,7 +615,7 @@ export function ProfileWorkspaceContent({
                       disabled={isLocked}
                       value={formData.dateOfBirth}
                       onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                      className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                      className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -601,7 +631,7 @@ export function ProfileWorkspaceContent({
                       disabled={isLocked}
                       value={formData.nationality || 'Ghanaian'}
                       onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
-                      className="w-full h-10 pl-8 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                      className="w-full h-10 pl-8 pr-8 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] appearance-none focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                     >
                       <option value="Ghanaian">Ghanaian</option>
                       <option value="Nigerian">Nigerian</option>
@@ -650,7 +680,7 @@ export function ProfileWorkspaceContent({
                           onChange={(e) =>
                             setFormData({ ...formData, phoneNumber: e.target.value })
                           }
-                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:opacity-80"
+                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -666,7 +696,7 @@ export function ProfileWorkspaceContent({
                           type="email"
                           disabled
                           value={formData.email}
-                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] disabled:opacity-90"
+                          className="w-full h-10 pl-8 pr-3 rounded-xl bg-[#F6F6F2] border border-[#DFDDD2] text-[13px] font-semibold text-[#14221A] disabled:bg-[#ECEAE2] disabled:text-[#526056] disabled:border-[#D5D3C8] disabled:cursor-not-allowed"
                         />
                       </div>
                     </div>
@@ -678,14 +708,21 @@ export function ProfileWorkspaceContent({
                   <button
                     type="button"
                     onClick={() => setGuardianModalOpen(true)}
-                    title="Click to update guardian details"
+                    title={isLocked ? "View guardian details (Read-only)" : "Click to update guardian details"}
                     className="w-full text-left p-3.5 rounded-xl bg-[#EBF6EC] hover:bg-[#E2F2E4] border border-[#CFE5D2] flex items-center gap-3 transition cursor-pointer"
                   >
                     <div className="w-9 h-9 rounded-xl bg-[#D5ECD7] text-[#15803D] flex items-center justify-center shrink-0">
                       <Users className="w-5 h-5 fill-[#15803D]" />
                     </div>
-                    <div className="min-w-0 space-y-0.5">
-                      <p className="text-[13px] font-extrabold text-[#14221A]">Guardian</p>
+                    <div className="min-w-0 space-y-0.5 flex-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[13px] font-extrabold text-[#14221A]">Guardian</p>
+                        {isLocked && (
+                          <span className="text-[10px] font-bold text-[#4B6252] bg-[#D4E8D7] px-1.5 py-0.5 rounded flex items-center gap-1 shadow-2xs">
+                            <Lock className="w-2.5 h-2.5" /> Read-only
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11.5px] text-[#2E3F34] truncate">
                         Name: <span className="font-semibold">{formData.guardianName || 'Mr. Darko'}</span>
                       </p>
@@ -703,16 +740,23 @@ export function ProfileWorkspaceContent({
               ref={academicRef}
               className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3"
             >
-              <div>
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
-                  <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
-                    Academic profile
-                  </h2>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
+                    <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
+                      Academic profile
+                    </h2>
+                  </div>
+                  <p className="text-xs text-[#516056] mt-0.5">
+                    {isLocked ? 'Institutional tenancy verification (Read-only).' : 'Your university and academic information.'}
+                  </p>
                 </div>
-                <p className="text-xs text-[#516056] mt-0.5">
-                  Your university and academic information.
-                </p>
+                {isLocked && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4B6052] bg-[#E5ECE5] border border-[#C5D8C7] px-2.5 py-1 rounded-full shadow-2xs">
+                    <Lock className="w-3 h-3 text-[#3B5042]" /> Read-only
+                  </span>
+                )}
               </div>
 
               <div className="pt-1 flex flex-wrap items-center justify-between gap-3">
@@ -756,7 +800,7 @@ export function ProfileWorkspaceContent({
                   <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </span>
-                  <span>Student status verified</span>
+                  <span>{isLocked ? 'Student verified (Read-only)' : 'Student status verified'}</span>
                 </button>
               </div>
             </div>
@@ -768,40 +812,71 @@ export function ProfileWorkspaceContent({
           <div className="lg:col-span-3 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Identity protection + Student status ── */}
             <div className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl overflow-hidden shadow-[0_2px_12px_rgba(11,59,36,0.03)] flex flex-col justify-between">
-              {/* Dark Green Header Bar */}
-              <div className="bg-[#0B3B24] text-white px-4 py-3 flex items-center gap-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" />
+              {/* Header Bar */}
+              <div
+                className={clsx(
+                  'text-white px-4 py-3 flex items-center gap-2.5 transition-colors',
+                  isLocked ? 'bg-[#0B3B24]' : 'bg-[#155E38]'
+                )}
+              >
+                {isLocked ? (
+                  <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" />
+                ) : (
+                  <Unlock className="w-5 h-5 text-emerald-300 shrink-0" />
+                )}
                 <h2 className="text-[15px] font-extrabold tracking-tight">
-                  Identity protection
+                  {isLocked ? 'Identity protection' : 'Profile editing active'}
                 </h2>
               </div>
 
               {/* Body */}
               <div className="p-4 flex flex-col items-center text-center space-y-3 border-b border-[#EAE8DF]">
                 <p className="text-xs text-[#2B3B31] font-medium leading-relaxed text-left w-full">
-                  Your verified identity details are locked for your security.
+                  {isLocked
+                    ? 'Your verified identity details are locked for your security and tenancy integrity.'
+                    : 'Your profile is currently unlocked. You can update your details and save your changes below.'}
                 </p>
 
-                {/* Glowing Green Padlock Graphic */}
-                <div className="relative w-[150px] h-[64px] my-0.5 select-none pointer-events-none">
-                  <Image
-                    src="/images/settings/settings-lock-illust.png"
-                    alt="Locked Identity Protection"
-                    fill
-                    sizes="150px"
-                    className="object-contain"
-                  />
-                </div>
+                {/* Graphic: Lock illustration or Unlock badge */}
+                {isLocked ? (
+                  <div className="relative w-[150px] h-[64px] my-0.5 select-none pointer-events-none">
+                    <Image
+                      src="/images/settings/settings-lock-illust.png"
+                      alt="Locked Identity Protection"
+                      fill
+                      sizes="150px"
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-[#E8F5E9] border border-[#A5D6A7] flex items-center justify-center my-0.5 text-[#1B5E20] shadow-2xs">
+                    <Unlock className="w-8 h-8 stroke-[2.2]" />
+                  </div>
+                )}
 
-                {/* Request edit access button */}
-                <button
-                  type="button"
-                  onClick={() => setRequestModalOpen(true)}
-                  className="w-full py-2 px-3.5 rounded-full bg-[#F7FAF7] hover:bg-[#EDF5EE] border border-[#B9D5BE] text-[#116932] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
-                >
-                  <Pencil className="w-3.5 h-3.5" />
-                  <span>Request edit access</span>
-                </button>
+                {/* Request edit access button or Unlocked Status Pill */}
+                {isLocked ? (
+                  isUnlockRequested ? (
+                    <div className="w-full py-2 px-3.5 rounded-full bg-[#FEF3C7] border border-[#F59E0B]/40 text-[#92400E] text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs">
+                      <Clock className="w-3.5 h-3.5 text-[#D97706] animate-pulse" />
+                      <span>Unlock request pending</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setRequestModalOpen(true)}
+                      className="w-full py-2 px-3.5 rounded-full bg-[#F7FAF7] hover:bg-[#EDF5EE] border border-[#B9D5BE] text-[#116932] text-xs font-bold inline-flex items-center justify-center gap-1.5 transition cursor-pointer shadow-2xs"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Request edit access</span>
+                    </button>
+                  )
+                ) : (
+                  <div className="w-full py-2 px-3.5 rounded-full bg-[#E8F5E9] border border-[#A5D6A7] text-[#1B5E20] text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#2E7D32]" />
+                    <span>Edit access active</span>
+                  </div>
+                )}
               </div>
 
               {/* Bottom Student Status Toggle Row */}
@@ -813,7 +888,9 @@ export function ProfileWorkspaceContent({
                       Student status
                     </p>
                     <p className="text-[11px] text-[#55665B] leading-snug mt-0.5">
-                      Your student status is active and verified by UCC.
+                      {isLocked
+                        ? 'Student status verified and locked by UCC.'
+                        : 'Your student status is active and verified by UCC.'}
                     </p>
                   </div>
                 </div>
@@ -823,11 +900,16 @@ export function ProfileWorkspaceContent({
                   type="button"
                   role="switch"
                   aria-checked={isStudent}
-                  onClick={() => setIsStudent(!isStudent)}
+                  disabled={isLocked}
+                  onClick={() => {
+                    if (!isLocked) setIsStudent(!isStudent);
+                  }}
                   className={clsx(
-                    'w-11 h-6 rounded-full transition-colors relative shrink-0 cursor-pointer mt-0.5',
+                    'w-11 h-6 rounded-full transition-colors relative shrink-0 mt-0.5',
+                    isLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
                     isStudent ? 'bg-[#16A34A]' : 'bg-zinc-300'
                   )}
+                  title={isLocked ? 'Student status is locked (Read-only)' : 'Toggle student status'}
                 >
                   <span
                     className={clsx(
@@ -892,30 +974,67 @@ export function ProfileWorkspaceContent({
         </div>
 
         {/* ── 4. BOTTOM ACTION BAR: DISCARD CHANGES & SAVE CHANGES ── */}
-        <div className="flex items-center justify-end gap-3 pt-1">
-          <button
-            type="button"
-            onClick={handleDiscardChanges}
-            className="px-5 py-2.5 rounded-xl bg-[#FDFCF9] hover:bg-white border border-[#D4D2C6] text-[#2B3B31] text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs transition cursor-pointer"
-          >
-            <RotateCcw className="w-4 h-4 text-[#4A5A50]" />
-            <span>Discard changes</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSaveChanges()}
-            disabled={isSaving}
-            className="px-6 py-2.5 rounded-xl bg-[#11823B] hover:bg-[#0E6E31] disabled:opacity-60 text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-sm transition cursor-pointer"
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-[#E8E6DC] mt-2">
+          {/* Status Note */}
+          <div className="flex items-center gap-2 text-xs font-semibold text-[#55665B]">
+            {isLocked ? (
+              <>
+                <Lock className="w-4 h-4 text-[#8A968E] shrink-0" />
+                <span>Your profile is locked and read-only. Request edit access to make changes.</span>
+              </>
             ) : (
-              <Save className="w-4 h-4" />
+              <>
+                <Unlock className="w-4 h-4 text-[#16A34A] shrink-0" />
+                <span>You have edit permissions. Click Save changes after updating your details.</span>
+              </>
             )}
-            <span>Save changes</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 shrink-0">
+            {!isLocked && (
+              <button
+                type="button"
+                onClick={handleDiscardChanges}
+                className="px-5 py-2.5 rounded-xl bg-[#FDFCF9] hover:bg-white border border-[#D4D2C6] text-[#2B3B31] text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs transition cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4 text-[#4A5A50]" />
+                <span>Discard changes</span>
+              </button>
+            )}
+
+            {isLocked ? (
+              isUnlockRequested ? (
+                <div className="px-5 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/40 text-[#92400E] text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs">
+                  <Clock className="w-4 h-4 text-[#D97706] animate-pulse" />
+                  <span>Unlock request pending</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRequestModalOpen(true)}
+                  className="px-5 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#082C1B] text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
+                >
+                  <Lock className="w-4 h-4" />
+                  <span>Request profile changes</span>
+                </button>
+              )
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleSaveChanges()}
+                disabled={isSaving}
+                className="px-6 py-2.5 rounded-xl bg-[#11823B] hover:bg-[#0E6E31] disabled:opacity-60 text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-sm transition cursor-pointer"
+              >
+                {isSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>Save changes</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1012,6 +1131,18 @@ export function ProfileWorkspaceContent({
               </button>
             </div>
 
+            {isLocked && (
+              <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl p-3 flex items-start gap-2.5 text-xs text-[#92400E]">
+                <Lock className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Profile is locked and read-only</p>
+                  <p className="mt-0.5 text-[11px] text-[#A15C07]">
+                    Emergency contacts are linked to your tenancy agreement. Click &apos;Request profile changes&apos; to modify.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-zinc-700 mb-1">
@@ -1019,10 +1150,11 @@ export function ProfileWorkspaceContent({
                 </label>
                 <input
                   type="text"
+                  disabled={isLocked}
                   value={formData.guardianName}
                   onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })}
                   placeholder="Mr. Darko"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-300 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-300 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1032,10 +1164,11 @@ export function ProfileWorkspaceContent({
                 </label>
                 <input
                   type="tel"
+                  disabled={isLocked}
                   value={formData.guardianPhone}
                   onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
                   placeholder="05*******21"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-300 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 border border-zinc-300 text-xs font-semibold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#16A34A] disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -1046,18 +1179,20 @@ export function ProfileWorkspaceContent({
                 onClick={() => setGuardianModalOpen(false)}
                 className="px-4 py-2 text-xs font-bold text-zinc-700 border border-zinc-200 hover:bg-zinc-50 rounded-lg cursor-pointer"
               >
-                Done
+                {isLocked ? 'Close' : 'Cancel'}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setGuardianModalOpen(false);
-                  handleSaveChanges();
-                }}
-                className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
-              >
-                Save Guardian Details
-              </button>
+              {!isLocked && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGuardianModalOpen(false);
+                    handleSaveChanges();
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
+                >
+                  Save Guardian Details
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1089,14 +1224,27 @@ export function ProfileWorkspaceContent({
               </button>
             </div>
 
+            {isLocked && (
+              <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl p-3 flex items-start gap-2.5 text-xs text-[#92400E]">
+                <Lock className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Student records verified &amp; locked</p>
+                  <p className="mt-0.5 text-[11px] text-[#A15C07]">
+                    Institution details are locked for student accommodation clearance. Contact an administrator to update.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <label className="block font-bold text-zinc-700 mb-1">Campus / University *</label>
                 <input
                   type="text"
+                  disabled={isLocked}
                   value={formData.campus}
                   onChange={(e) => setFormData({ ...formData, campus: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1104,9 +1252,10 @@ export function ProfileWorkspaceContent({
                 <label className="block font-bold text-zinc-700 mb-1">Student ID Number *</label>
                 <input
                   type="text"
+                  disabled={isLocked}
                   value={formData.studentId}
                   onChange={(e) => setFormData({ ...formData, studentId: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-mono font-semibold text-zinc-900"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-mono font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1114,9 +1263,10 @@ export function ProfileWorkspaceContent({
                 <label className="block font-bold text-zinc-700 mb-1">Programme of Study</label>
                 <input
                   type="text"
+                  disabled={isLocked}
                   value={formData.programmeOfStudy}
                   onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -1124,9 +1274,10 @@ export function ProfileWorkspaceContent({
                 <label className="block font-bold text-zinc-700 mb-1">Academic Level</label>
                 <input
                   type="text"
+                  disabled={isLocked}
                   value={formData.yearOfStudy}
                   onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900"
+                  className="w-full px-3 py-2 rounded-xl bg-zinc-50 border border-zinc-300 font-semibold text-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -1137,18 +1288,20 @@ export function ProfileWorkspaceContent({
                 onClick={() => setAcademicModalOpen(false)}
                 className="px-4 py-2 text-xs font-bold text-zinc-700 border border-zinc-200 hover:bg-zinc-50 rounded-lg cursor-pointer"
               >
-                Close
+                {isLocked ? 'Close' : 'Cancel'}
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setAcademicModalOpen(false);
-                  handleSaveChanges();
-                }}
-                className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
-              >
-                Save Academic Profile
-              </button>
+              {!isLocked && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAcademicModalOpen(false);
+                    handleSaveChanges();
+                  }}
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
+                >
+                  Save Academic Profile
+                </button>
+              )}
             </div>
           </div>
         </div>
