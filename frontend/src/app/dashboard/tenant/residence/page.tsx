@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
 import {
   MapPin,
   Calendar,
@@ -173,19 +174,32 @@ function ResidencePageContent() {
   const hasLiveBooking = Boolean(liveBooking);
 
   // Demo fallback matching the screenshot
-  const isDemo = demoActive || !hasLiveBooking;
+  const isDemo = !hasLiveBooking && demoActive;
 
-  const property = liveBooking?.property || {
+  const property = liveBooking?.property || (isDemo ? {
     id: 'demo-glacier',
     title: 'GLACIER STUDIO',
     location: 'Achimota, Accra',
     price: 20000,
-  };
+    landlord: {
+      firstName: 'Stephen',
+      lastName: 'Darko',
+      phoneNumber: '+233540123900',
+    },
+  } : null);
 
-  const room = liveBooking?.room || {
-    roomType: 'Self-contained',
-    name: 'Room 1A',
-  };
+  // Dynamic Room/Unit designation according to schema
+  const unitLabel = liveBooking?.roomUnit?.unitNumber
+    ? `Unit ${liveBooking.roomUnit.unitNumber}`
+    : null;
+  const blockLabel = liveBooking?.room?.blockName
+    ? `Block ${liveBooking.room.blockName}`
+    : null;
+  const roomTypeLabel = liveBooking?.room?.roomType || (isDemo ? 'Self-contained' : 'Standard Residence');
+
+  const displayUnitDesignation = unitLabel
+    ? [unitLabel, blockLabel, roomTypeLabel].filter(Boolean).join(' · ')
+    : (isDemo ? 'Room 1A · Self-contained' : roomTypeLabel);
 
   const landlord = property?.landlord || {
     firstName: 'Stephen',
@@ -200,7 +214,7 @@ function ResidencePageContent() {
         month: 'short',
         year: 'numeric',
       })
-    : '06 Sep 2026';
+    : (isDemo ? '06 Sep 2026' : '—');
 
   const leaseEndsDateStr = liveBooking?.endDate
     ? new Date(liveBooking.endDate).toLocaleDateString('en-GB', {
@@ -208,21 +222,73 @@ function ResidencePageContent() {
         month: 'short',
         year: 'numeric',
       })
-    : '06 Sep 2027';
+    : (isDemo ? '06 Sep 2027' : '—');
 
   const monthlyRentFormatted = Number(
     liveBooking?.room?.price || property?.price || 20000
   ).toLocaleString('en-GH');
 
-  // Photo Gallery: main photo + 3 thumbnails matching the design reference
-  const galleryImages = [
-    '/images/resident/residence-glacier-main.jpg',
-    '/images/resident/residence-thumb-1.jpg',
-    '/images/resident/residence-thumb-2.jpg',
-    '/images/resident/residence-thumb-3.jpg',
-  ];
+  // Dynamic Stay Progress Calculation
+  const stayProgress = React.useMemo(() => {
+    if (!liveBooking?.startDate || !liveBooking?.endDate) {
+      return { percent: 35, label: isDemo ? '35% elapsed' : '0% elapsed' };
+    }
+    const start = new Date(liveBooking.startDate).getTime();
+    const end = new Date(liveBooking.endDate).getTime();
+    const now = Date.now();
+    if (isNaN(start) || isNaN(end) || end <= start) {
+      return { percent: 0, label: '0% elapsed' };
+    }
+    if (now < start) {
+      const daysToStart = Math.ceil((start - now) / (1000 * 60 * 60 * 24));
+      return { percent: 0, label: `Starts in ${daysToStart} day${daysToStart === 1 ? '' : 's'}` };
+    }
+    if (now >= end) {
+      return { percent: 100, label: 'Lease completed' };
+    }
+    const pct = Math.min(100, Math.max(0, Math.round(((now - start) / (end - start)) * 100)));
+    return { percent: pct, label: `${pct}% completed` };
+  }, [liveBooking?.startDate, liveBooking?.endDate, isDemo]);
 
-  const currentMainImage = galleryImages[selectedImageIndex] || galleryImages[0];
+  // Next Rent label
+  const nextRentText = React.useMemo(() => {
+    if (!liveBooking) return isDemo ? 'Prepaid annual term' : '—';
+    if (liveBooking.endDate) {
+      const end = new Date(liveBooking.endDate);
+      if (end.getTime() < Date.now()) return 'Lease expired';
+      return 'Prepaid annual term';
+    }
+    return 'Active contract';
+  }, [liveBooking, isDemo]);
+
+  // Photo Gallery: Real property photos with fallback
+  const galleryImages = React.useMemo(() => {
+    if (liveBooking?.property?.images) {
+      let raw = liveBooking.property.images;
+      if (typeof raw === 'string') {
+        try {
+          raw = JSON.parse(raw);
+        } catch {
+          raw = [raw];
+        }
+      }
+      if (Array.isArray(raw) && raw.length > 0) {
+        const mapped = raw
+          .filter((img: any) => typeof img === 'string' && img.trim().length > 0)
+          .map((img: string) => getImageUrl(img));
+        if (mapped.length > 0) return mapped;
+      }
+    }
+    return [
+      '/images/resident/residence-glacier-main.jpg',
+      '/images/resident/residence-thumb-1.jpg',
+      '/images/resident/residence-thumb-2.jpg',
+      '/images/resident/residence-thumb-3.jpg',
+    ];
+  }, [liveBooking?.property?.images]);
+
+  const activeImageIndex = selectedImageIndex < galleryImages.length ? selectedImageIndex : 0;
+  const currentMainImage = galleryImages[activeImageIndex] || galleryImages[0];
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -235,24 +301,42 @@ function ResidencePageContent() {
       {/* ── Page Header & Tenancy Badge ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[#0C3827] dark:text-emerald-100 tracking-tight">
-            Your home, under control.
+          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-zinc-950 dark:text-emerald-100 tracking-tight">
+            {hasLiveBooking || isDemo ? 'Your home, under control.' : 'My Residence'}
           </h1>
           <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-1 font-medium">
-            Everything you need to manage your stay at{' '}
-            <span className="font-semibold text-zinc-900 dark:text-zinc-200">
-              {property.title || 'Glacier Studio'}
-            </span>
-            .
+            {hasLiveBooking || isDemo ? (
+              <>
+                Everything you need to manage your stay at{' '}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-200">
+                  {property?.title || 'Glacier Studio'}
+                </span>
+                {isDemo && ' (Showcase Preview)'}.
+              </>
+            ) : (
+              'Manage your accommodation details, utilities, and access passes.'
+            )}
           </p>
         </div>
 
-        {/* Right Active Tenancy Pill Badge */}
+        {/* Right Active Tenancy / Demo / No Stay Pill Badge */}
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF6EE] dark:bg-emerald-950/60 border border-[#B7E8C3] dark:border-emerald-800 text-[#0E5C36] dark:text-emerald-300 text-xs font-bold shadow-2xs">
-            <CheckCircle2 className="w-4 h-4 text-[#16A34A] fill-[#16A34A] text-white" />
-            <span>Active Tenancy</span>
-          </div>
+          {hasLiveBooking ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF6EE] dark:bg-emerald-950/60 border border-[#B7E8C3] dark:border-emerald-800 text-[#0E5C36] dark:text-emerald-300 text-xs font-bold shadow-2xs">
+              <CheckCircle2 className="w-4 h-4 text-[#16A34A] fill-[#16A34A] text-white" />
+              <span>Active Tenancy</span>
+            </div>
+          ) : isDemo ? (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-xs font-bold shadow-2xs">
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
+              <span>Showcase Preview</span>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 text-xs font-bold shadow-2xs">
+              <Building2 className="w-4 h-4 text-zinc-400" />
+              <span>No Active Stay</span>
+            </div>
+          )}
 
           {!hasLiveBooking && (
             <button
@@ -289,14 +373,14 @@ function ResidencePageContent() {
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <Link
               href="/properties"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
             >
               <span>Browse Accommodations</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             <button
               onClick={() => setDemoActive(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-800 text-[#0C3827] dark:text-emerald-300 text-xs font-bold hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
             >
               <span>Preview Demo Residence</span>
             </button>
@@ -316,8 +400,9 @@ function ResidencePageContent() {
                   <div className="relative w-full h-48 sm:h-52 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-inner">
                     <Image
                       src={currentMainImage}
-                      alt={property.title || 'Residence Exterior'}
+                      alt={property?.title || 'Residence Exterior'}
                       fill
+                      unoptimized
                       className="object-cover transition duration-300"
                       priority
                     />
@@ -327,7 +412,7 @@ function ResidencePageContent() {
                   <div className="grid grid-cols-3 gap-2">
                     {galleryImages.slice(1, 4).map((imgSrc, idx) => {
                       const imageIndex = idx + 1;
-                      const isSelected = selectedImageIndex === imageIndex;
+                      const isSelected = activeImageIndex === imageIndex;
                       return (
                         <button
                           key={imgSrc}
@@ -335,7 +420,7 @@ function ResidencePageContent() {
                           onClick={() => setSelectedImageIndex(imageIndex)}
                           className={`relative h-14 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 border-2 transition ${
                             isSelected
-                              ? 'border-[#0C3827] dark:border-emerald-500 ring-2 ring-emerald-500/20'
+                              ? 'border-[#16A34A] dark:border-emerald-500 ring-2 ring-emerald-500/20'
                               : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'
                           }`}
                         >
@@ -343,6 +428,7 @@ function ResidencePageContent() {
                             src={imgSrc}
                             alt={`Preview ${idx + 1}`}
                             fill
+                            unoptimized
                             className="object-cover"
                           />
                         </button>
@@ -355,16 +441,16 @@ function ResidencePageContent() {
                 <div className="md:col-span-5 flex flex-col justify-between h-full py-1 space-y-4">
                   <div className="space-y-2">
                     <h2 className="text-xl sm:text-2xl font-bold font-sans tracking-tight text-zinc-950 dark:text-white uppercase">
-                      {property.title || 'GLACIER STUDIO'}
+                      {property?.title || 'GLACIER STUDIO'}
                     </h2>
 
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                       <MapPin className="w-3.5 h-3.5 text-[#16A34A] shrink-0" />
-                      <span>{property.location || 'Achimota, Accra'}</span>
+                      <span>{property?.location || 'Achimota, Accra'}</span>
                     </div>
 
                     <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                      {room.name || 'Room 1A'} · {room.roomType || 'Self-contained'}
+                      {displayUnitDesignation}
                     </p>
                   </div>
 
@@ -372,7 +458,7 @@ function ResidencePageContent() {
                   <div className="flex flex-col sm:flex-row md:flex-col gap-2 pt-2">
                     <Link
                       href="/dashboard/agreements"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
                     >
                       <FileText className="w-3.5 h-3.5" />
                       <span>View Lease</span>
@@ -390,14 +476,14 @@ function ResidencePageContent() {
               </div>
             </div>
 
-            {/* Right Card: Stay Overview (5 cols) */}
-            <div className="lg:col-span-5 bg-[#EAF3EA] dark:bg-emerald-950/20 border border-[#D5E8D8] dark:border-emerald-900/40 rounded-3xl p-5 sm:p-6 shadow-2xs flex flex-col justify-between space-y-5">
+            {/* Right Card: Stay Overview (5 cols) - Pure white container */}
+            <div className="lg:col-span-5 bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-5">
               {/* Header */}
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-[#0C3827] dark:text-emerald-300 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] flex items-center justify-center">
                   <Calendar className="w-4 h-4 stroke-[2.5]" />
                 </div>
-                <h3 className="text-base sm:text-lg font-serif font-bold text-[#0C3827] dark:text-emerald-100">
+                <h3 className="text-base sm:text-lg font-serif font-bold text-zinc-950 dark:text-white">
                   Stay Overview
                 </h3>
               </div>
@@ -405,7 +491,7 @@ function ResidencePageContent() {
               {/* 2 Dates: Move-in & Lease Ends */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                  <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 block mb-1">
                     Move-in Date
                   </span>
                   <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-zinc-950 dark:text-white">
@@ -415,7 +501,7 @@ function ResidencePageContent() {
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                  <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 block mb-1">
                     Lease Ends
                   </span>
                   <div className="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-zinc-950 dark:text-white">
@@ -427,7 +513,7 @@ function ResidencePageContent() {
 
               {/* Monthly Rent */}
               <div>
-                <span className="text-[11px] font-medium text-zinc-600 dark:text-zinc-400 block mb-1">
+                <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 block mb-1">
                   Monthly Rent
                 </span>
                 <div className="flex items-center gap-1.5 text-base sm:text-lg font-black text-zinc-950 dark:text-white">
@@ -438,28 +524,31 @@ function ResidencePageContent() {
                 </div>
               </div>
 
-              {/* Progress Bar: Your Stay Progress */}
+              {/* Progress Bar: Dynamic Stay Progress */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-bold text-zinc-800 dark:text-zinc-200">
                     Your Stay Progress
                   </span>
                   <span className="text-zinc-500 dark:text-zinc-400 font-medium text-[11px]">
-                    Stay active
+                    {stayProgress.label}
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-zinc-200/80 dark:bg-zinc-800 overflow-hidden">
-                  <div className="h-full bg-[#0C3827] dark:bg-emerald-500 rounded-full w-[35%]" />
+                <div className="w-full h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full bg-[#16A34A] rounded-full transition-all duration-500"
+                    style={{ width: `${stayProgress.percent}%` }}
+                  />
                 </div>
               </div>
 
               {/* Next Rent Bottom Bar */}
-              <div className="pt-2 border-t border-[#D5E8D8] dark:border-emerald-900/30 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 font-medium text-zinc-700 dark:text-zinc-300">
+              <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 font-medium text-zinc-600 dark:text-zinc-400">
                   <Calendar className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Next Rent</span>
                 </div>
-                <span className="font-bold text-zinc-900 dark:text-white">—</span>
+                <span className="font-bold text-zinc-900 dark:text-white">{nextRentText}</span>
               </div>
             </div>
           </div>
@@ -467,7 +556,7 @@ function ResidencePageContent() {
           {/* ── Section: Your Home Services (3 Columns) ── */}
           <div className="space-y-3.5 pt-2">
             <div className="flex items-center gap-2.5">
-              <span className="w-7 h-1 rounded-full bg-[#0C3827] dark:bg-emerald-500 inline-block" />
+              <span className="w-7 h-1 rounded-full bg-[#16A34A] dark:bg-emerald-500 inline-block" />
               <h2 className="text-lg font-serif font-bold text-zinc-950 dark:text-white">
                 Your home services
               </h2>
@@ -511,7 +600,7 @@ function ResidencePageContent() {
                   <button
                     type="button"
                     onClick={() => setWifiModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0C3827] dark:text-emerald-300 text-[11px] font-bold transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0E5C36] dark:text-emerald-300 text-[11px] font-bold transition"
                   >
                     <span>Reveal details</span>
                     <ArrowRight className="w-3 h-3" />
@@ -544,7 +633,7 @@ function ResidencePageContent() {
                   <button
                     type="button"
                     onClick={() => setEcgModalOpen(true)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0C3827] dark:text-emerald-300 text-[11px] font-bold transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0E5C36] dark:text-emerald-300 text-[11px] font-bold transition"
                   >
                     <span>Top-up guide</span>
                     <ArrowRight className="w-3 h-3" />
@@ -579,7 +668,7 @@ function ResidencePageContent() {
                 <div className="relative z-10 pt-3">
                   <Link
                     href="/dashboard/tenant/tickets/new?category=PLUMBING"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0C3827] dark:text-emerald-300 text-[11px] font-bold transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#0E5C36] dark:text-emerald-300 text-[11px] font-bold transition"
                   >
                     <span>Report an issue</span>
                     <ArrowRight className="w-3 h-3" />
@@ -764,17 +853,32 @@ function ResidencePageContent() {
 
       {/* 1. Wi-Fi Modal */}
       {wifiModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setWifiModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#16A34A] flex items-center justify-center">
                   <Wifi className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
-                    Compound Wi-Fi Access
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
+                      Compound Wi-Fi Access
+                    </h3>
+                    {!hasLiveBooking && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        Demo Preview
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-zinc-500">Fiber high-speed connectivity</p>
                 </div>
               </div>
@@ -842,7 +946,7 @@ function ResidencePageContent() {
               </div>
 
               <p className="text-[11px] text-zinc-500 leading-relaxed">
-                Connect both 2.4GHz and 5GHz bands throughout Glacier Studio. For connection resets,
+                Connect both 2.4GHz and 5GHz bands throughout {property?.title || 'the premises'}. For connection resets,
                 contact the caretaker desk.
               </p>
             </div>
@@ -850,7 +954,7 @@ function ResidencePageContent() {
             <button
               type="button"
               onClick={() => setWifiModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition"
+              className="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
             >
               Close
             </button>
@@ -860,17 +964,32 @@ function ResidencePageContent() {
 
       {/* 2. ECG Electricity Top-up Modal */}
       {ecgModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEcgModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center">
                   <Zap className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
-                    ECG Prepaid Electricity Guide
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
+                      ECG Prepaid Electricity Guide
+                    </h3>
+                    {!hasLiveBooking && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        Demo Preview
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-zinc-500">Unit Sub-Meter Top-Up</p>
                 </div>
               </div>
@@ -910,7 +1029,7 @@ function ResidencePageContent() {
             <button
               type="button"
               onClick={() => setEcgModalOpen(false)}
-              className="w-full py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition"
+              className="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
             >
               Understood
             </button>
@@ -920,18 +1039,33 @@ function ResidencePageContent() {
 
       {/* 3. Compound Gate Access Modal */}
       {gateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setGateModalOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs cursor-pointer"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-2xl space-y-4 cursor-default"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-[#16A34A] flex items-center justify-center">
                   <Building2 className="w-5 h-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
-                    Compound Gate & Security
-                  </h3>
-                  <p className="text-[11px] text-zinc-500">Glacier Studio Access Rules</p>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-zinc-950 dark:text-white">
+                      Compound Gate & Security
+                    </h3>
+                    {!hasLiveBooking && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        Demo Preview
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-zinc-500">{property?.title || 'Glacier Studio'} Access Rules</p>
                 </div>
               </div>
               <button
@@ -969,7 +1103,7 @@ function ResidencePageContent() {
             <div className="flex items-center gap-2">
               <Link
                 href="/dashboard/tenant/visitors/new"
-                className="flex-1 py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold text-center transition"
+                className="flex-1 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold text-center transition shadow-xs"
               >
                 Invite a Guest
               </Link>
