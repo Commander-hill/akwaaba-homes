@@ -422,9 +422,9 @@ export default function SupportHelpCentrePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F5EE] text-[#18241D] flex flex-col font-sans selection:bg-[#0B3B24] selection:text-white">
+    <div className="min-h-screen bg-white text-[#18241D] flex flex-col font-sans selection:bg-[#0B3B24] selection:text-white">
       {/* Standalone Top Header Bar matching reference */}
-      <header className="sticky top-0 z-40 bg-[#FDFCF8]/95 backdrop-blur-md border-b border-[#E6E3D8]">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200">
         <div className="max-w-[1260px] mx-auto px-4 sm:px-7 h-[64px] flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
@@ -486,7 +486,7 @@ export default function SupportHelpCentrePage() {
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               aria-label="Toggle dark mode"
               title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="w-9 h-9 rounded-lg border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-center text-[#334238] transition-colors cursor-pointer"
             >
               {mounted && resolvedTheme === 'dark' ? (
                 <Sun className="w-4 h-4 text-amber-400" />
@@ -497,7 +497,7 @@ export default function SupportHelpCentrePage() {
 
             <Link
               href={user ? '/dashboard/notifications' : '/notifications'}
-              className="relative w-9 h-9 rounded-lg border border-[#E5E2D7] bg-white hover:bg-[#F4F2E9] flex items-center justify-center text-[#334238] transition-colors"
+              className="relative w-9 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-center text-[#334238] transition-colors"
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -523,7 +523,7 @@ export default function SupportHelpCentrePage() {
       {/* Main Container */}
       <main className="flex-1 max-w-[1260px] w-full mx-auto px-4 sm:px-7 pt-5 pb-10 space-y-5">
         {/* Hero Banner */}
-        <section className="relative rounded-[20px] bg-[#EBF3EA] border border-[#D8E5D7] overflow-hidden px-5 sm:px-8 py-6 sm:py-7 shadow-[0_2px_12px_rgba(11,59,36,0.03)]">
+        <section className="relative rounded-[20px] bg-[#EBF3EA] border border-emerald-200 overflow-hidden px-5 sm:px-8 py-6 sm:py-7 shadow-[0_2px_12px_rgba(11,59,36,0.03)]">
           {/* Left botanical leaves accent */}
           <img
             src="/images/support/support-hero-leaves.png"
@@ -560,7 +560,7 @@ export default function SupportHelpCentrePage() {
             {/* Search Bar */}
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-white rounded-xl border border-[#CFDFCE] p-1.5 shadow-[0_3px_10px_rgba(11,59,36,0.04)] max-w-[590px]"
+              className="flex items-center bg-white rounded-xl border border-emerald-200 p-1.5 shadow-[0_3px_10px_rgba(11,59,36,0.04)] max-w-[590px]"
             >
               <div className="pl-3 pr-2 text-[#6B7B71]">
                 <Search className="w-4 h-4" />
@@ -660,10 +660,10 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('BOOKING_PAYMENTS')}
-            className={`group text-left bg-white hover:bg-[#FDFCF9] rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
               category === 'BOOKING_PAYMENTS'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
-                : 'border-[#E6E3D8] hover:border-[#C7D3C6]'
+                : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
@@ -679,7 +679,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-[#F3F1E8] group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -688,10 +688,10 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('HOME_MAINTENANCE')}
-            className={`group text-left bg-white hover:bg-[#FDFCF9] rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
               category === 'HOME_MAINTENANCE'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
-                : 'border-[#E6E3D8] hover:border-[#C7D3C6]'
+                : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
@@ -707,7 +707,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-[#F3F1E8] group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -716,10 +716,10 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('ACCOUNT_VERIFICATION')}
-            className={`group text-left bg-white hover:bg-[#FDFCF9] rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
               category === 'ACCOUNT_VERIFICATION'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
-                : 'border-[#E6E3D8] hover:border-[#C7D3C6]'
+                : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
@@ -735,7 +735,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-[#F3F1E8] group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -746,7 +746,7 @@ export default function SupportHelpCentrePage() {
           {/* Left Column (7 cols): Get help with a specific issue */}
           <div
             ref={formSectionRef}
-            className="lg:col-span-7 bg-white rounded-2xl border border-[#E6E3D8] p-5 sm:p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+            className="lg:col-span-7 bg-white rounded-2xl border border-zinc-200 p-5 sm:p-6 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
           >
             {/* Header */}
             <div className="flex items-center gap-2.5 mb-4">
@@ -757,7 +757,7 @@ export default function SupportHelpCentrePage() {
             </div>
 
             {/* 3-Step Horizontal Stepper */}
-            <div className="flex items-center gap-2 sm:gap-3 pb-4 mb-4 border-b border-[#EFECE3]">
+            <div className="flex items-center gap-2 sm:gap-3 pb-4 mb-4 border-b border-zinc-100">
               <button
                 type="button"
                 onClick={() => setActiveStep(1)}
@@ -784,7 +784,7 @@ export default function SupportHelpCentrePage() {
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep >= 2
                       ? 'bg-[#0E6B38] text-white'
-                      : 'bg-[#ECEAE1] text-[#6E7770]'
+                      : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
                   2
@@ -800,7 +800,7 @@ export default function SupportHelpCentrePage() {
 
               <div
                 className={`flex-1 h-[2px] rounded-full ${
-                  activeStep === 3 ? 'bg-[#0E6B38]' : 'bg-[#E5E2D8]'
+                  activeStep === 3 ? 'bg-[#0E6B38]' : 'bg-zinc-200'
                 }`}
               />
 
@@ -809,7 +809,7 @@ export default function SupportHelpCentrePage() {
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep === 3
                       ? 'bg-[#0E6B38] text-white'
-                      : 'bg-[#ECEAE1] text-[#6E7770]'
+                      : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
                   3
@@ -836,7 +836,7 @@ export default function SupportHelpCentrePage() {
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as SupportCategory)}
-                      className="w-full appearance-none rounded-xl border border-[#DFDDD2] bg-[#FCFBF8] px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
+                      className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
                     >
                       <option value="">Select an option</option>
                       <option value="BOOKING_PAYMENTS">Booking &amp; payments</option>
@@ -856,7 +856,7 @@ export default function SupportHelpCentrePage() {
                     <select
                       value={selectedBookingId}
                       onChange={(e) => setSelectedBookingId(e.target.value)}
-                      className="w-full appearance-none rounded-xl border border-[#DFDDD2] bg-[#FCFBF8] px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
+                      className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
                     >
                       <option value="">Select booking (optional)</option>
                       <option value="glacier-studio">Glacier Studio • Achimota, Accra</option>
@@ -884,7 +884,7 @@ export default function SupportHelpCentrePage() {
                       className={`py-2.5 px-3 rounded-xl text-[12.5px] font-semibold flex items-center justify-center gap-1.5 border transition-all ${
                         priority === 'NORMAL'
                           ? 'bg-[#0E6B38] text-white border-[#0E6B38] shadow-sm'
-                          : 'bg-[#FAF8F2] text-[#334239] border-[#DFDDD2] hover:bg-[#F2EFE6]'
+                          : 'bg-white text-[#334239] border-zinc-200 hover:bg-zinc-50'
                       }`}
                     >
                       <Check className="w-3.5 h-3.5 stroke-[2.5]" />
@@ -897,7 +897,7 @@ export default function SupportHelpCentrePage() {
                       className={`py-2.5 px-3 rounded-xl text-[12.5px] font-semibold flex items-center justify-center gap-1.5 border transition-all ${
                         priority === 'URGENT'
                           ? 'bg-[#B85D19] text-white border-[#B85D19] shadow-sm'
-                          : 'bg-[#FAF8F2] text-[#6E5623] border-[#DFDDD2] hover:bg-[#F3EFE2]'
+                          : 'bg-white text-[#6E5623] border-zinc-200 hover:bg-amber-50/60'
                       }`}
                     >
                       <AlertTriangle className="w-3.5 h-3.5 text-[#C88224] shrink-0" />
@@ -915,7 +915,7 @@ export default function SupportHelpCentrePage() {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Brief summary of your issue"
-                    className="w-full rounded-xl border border-[#DFDDD2] bg-[#FCFBF8] px-3.5 py-2.5 text-[13px] text-[#18241D] placeholder:text-[#89948C] focus:outline-none focus:border-[#0E6B38]"
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-[13px] text-[#18241D] placeholder:text-[#89948C] focus:outline-none focus:border-[#0E6B38]"
                   />
                 </div>
               </div>
@@ -930,7 +930,7 @@ export default function SupportHelpCentrePage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Please provide as much detail as possible..."
-                  className="w-full rounded-xl border border-[#DFDDD2] bg-[#FCFBF8] px-3.5 py-2.5 text-[13px] text-[#18241D] placeholder:text-[#89948C] focus:outline-none focus:border-[#0E6B38] resize-none"
+                  className="w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-[13px] text-[#18241D] placeholder:text-[#89948C] focus:outline-none focus:border-[#0E6B38] resize-none"
                 />
               </div>
 
@@ -946,7 +946,7 @@ export default function SupportHelpCentrePage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full rounded-xl border border-dashed border-[#D2CFC2] bg-[#FAF8F2] hover:bg-[#F3F0E6] px-4 py-3 flex items-center justify-center gap-3 transition-colors text-left"
+                  className="w-full rounded-xl border border-dashed border-zinc-300 bg-white hover:bg-zinc-100 px-4 py-3 flex items-center justify-center gap-3 transition-colors text-left"
                 >
                   <div className="w-8 h-8 rounded-full bg-[#E6EFE6] text-[#165E35] flex items-center justify-center shrink-0">
                     {isUploadingFile ? (
@@ -989,7 +989,7 @@ export default function SupportHelpCentrePage() {
           {/* Right Column (5 cols): Your support requests + Need urgent help? */}
           <div className="lg:col-span-5 space-y-4">
             {/* Card 1: Your support requests */}
-            <div className="bg-white rounded-2xl border border-[#E6E3D8] p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="bg-white rounded-2xl border border-zinc-200 p-5 shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
               <div className="flex items-center justify-between gap-2 mb-3.5">
                 <h3 className="font-serif text-[17px] font-bold text-[#16231B]">
                   Your support requests
@@ -1003,13 +1003,13 @@ export default function SupportHelpCentrePage() {
                 </Link>
               </div>
 
-              <div className="divide-y divide-[#EFECE2]">
+              <div className="divide-y divide-zinc-100">
                 {combinedRequests.map((req) => (
                   <button
                     key={req.id}
                     type="button"
                     onClick={() => setSelectedRequestModal(req)}
-                    className="w-full py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3 text-left hover:bg-[#FAF9F4] rounded-xl px-1.5 -mx-1.5 transition-colors"
+                    className="w-full py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3 text-left hover:bg-zinc-50 rounded-xl px-1.5 -mx-1.5 transition-colors"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-9 h-9 rounded-full bg-[#E6EFE6] text-[#155E34] flex items-center justify-center shrink-0 mt-0.5">
@@ -1046,11 +1046,11 @@ export default function SupportHelpCentrePage() {
             </div>
 
             {/* Card 2: Need urgent help? */}
-            <div className="relative rounded-2xl bg-[#F2F0E2] border border-[#E2DEC9] p-5 overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
+            <div className="relative rounded-2xl bg-white border border-zinc-200 p-5 overflow-hidden shadow-[0_2px_10px_rgba(0,0,0,0.02)]">
               {/* Subtle shield-check watermark on the right */}
               <ShieldCheck
                 aria-hidden="true"
-                className="w-28 h-28 text-[#DFDCC8] absolute -right-3 top-2 pointer-events-none select-none stroke-[1.2]"
+                className="w-28 h-28 text-zinc-200 dark:text-zinc-800 absolute -right-3 top-2 pointer-events-none select-none stroke-[1.2]"
               />
 
               <div className="relative z-10 space-y-4">
@@ -1104,7 +1104,7 @@ export default function SupportHelpCentrePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             {/* Left Featured Expanded Question (5 cols) */}
-            <div className="lg:col-span-5 bg-white rounded-2xl border border-[#E6E3D8] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <div className="lg:col-span-5 bg-white rounded-2xl border border-zinc-200 p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
               <button
                 type="button"
                 onClick={() => setLeftFaqExpanded((prev) => !prev)}
@@ -1138,7 +1138,7 @@ export default function SupportHelpCentrePage() {
                 return (
                   <div
                     key={faq.id}
-                    className="bg-white rounded-xl border border-[#E6E3D8] px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.015)]"
+                    className="bg-white rounded-xl border border-zinc-200 px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.015)]"
                   >
                     <button
                       type="button"
@@ -1155,7 +1155,7 @@ export default function SupportHelpCentrePage() {
                       />
                     </button>
                     {isOpen && (
-                      <p className="text-[12.5px] text-[#4E5B52] leading-relaxed mt-2.5 pt-2.5 border-t border-[#F0EDE4]">
+                      <p className="text-[12.5px] text-[#4E5B52] leading-relaxed mt-2.5 pt-2.5 border-t border-zinc-100">
                         {faq.answer}
                       </p>
                     )}
@@ -1245,7 +1245,7 @@ export default function SupportHelpCentrePage() {
       {/* Modal 1: Review & Submit Issue Confirmation */}
       {reviewModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E6E3D8] max-w-md w-full p-6 space-y-4 shadow-xl">
+          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-[#0E6B38]" />
@@ -1256,13 +1256,13 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#F4F2E9] flex items-center justify-center text-[#55625A]"
+                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[#55625A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-xl bg-[#FAF8F2] border border-[#E6E3D8] p-4 space-y-2.5 text-[13px]">
+            <div className="rounded-xl bg-white border border-zinc-200 p-4 space-y-2.5 text-[13px]">
               <div className="flex justify-between gap-2">
                 <span className="text-[#68746C] font-medium">Category:</span>
                 <span className="font-bold text-[#18241D]">
@@ -1289,7 +1289,7 @@ export default function SupportHelpCentrePage() {
                   <span className="font-semibold text-[#0E6B38]">{attachmentName}</span>
                 </div>
               )}
-              <div className="pt-2 border-t border-[#E6E3D8]">
+              <div className="pt-2 border-t border-zinc-200">
                 <span className="block text-[#68746C] font-medium mb-1">Details:</span>
                 <p className="text-[#2B3830] leading-relaxed">{description}</p>
               </div>
@@ -1299,7 +1299,7 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl border border-[#DFDDD2] text-[13px] font-semibold text-[#3B4840] hover:bg-[#F4F2E9]"
+                className="px-4 py-2.5 rounded-xl border border-zinc-200 text-[13px] font-semibold text-[#3B4840] hover:bg-zinc-50"
               >
                 Edit details
               </button>
@@ -1329,7 +1329,7 @@ export default function SupportHelpCentrePage() {
       {/* Modal 2: Support Request Detail */}
       {selectedRequestModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E6E3D8] max-w-md w-full p-6 space-y-4 shadow-xl">
+          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#0E6B38]">
@@ -1345,13 +1345,13 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setSelectedRequestModal(null)}
-                className="w-8 h-8 rounded-full bg-[#F4F2E9] flex items-center justify-center text-[#55625A]"
+                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[#55625A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="rounded-xl bg-[#FAF8F2] border border-[#E6E3D8] p-4 text-[13px] text-[#2F3D34] leading-relaxed">
+            <div className="rounded-xl bg-white border border-zinc-200 p-4 text-[13px] text-[#2F3D34] leading-relaxed">
               {selectedRequestModal.description}
             </div>
 
@@ -1372,7 +1372,7 @@ export default function SupportHelpCentrePage() {
       {/* Modal 3: Urgent Help / Direct Support */}
       {urgentModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E6E3D8] max-w-md w-full p-6 space-y-4 shadow-xl">
+          <div className="bg-white rounded-2xl border border-zinc-200 max-w-md w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-[#DCE9DB] text-[#0B3B24] flex items-center justify-center">
@@ -1385,22 +1385,22 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setUrgentModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#F4F2E9] flex items-center justify-center text-[#55625A]"
+                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[#55625A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2.5 text-[13px]">
-              <div className="p-3.5 rounded-xl bg-[#F4F8F3] border border-[#D6E5D5]">
+              <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200">
                 <p className="font-bold text-[#0B3B24]">Compound Security &amp; Duty Desk</p>
                 <p className="text-[#3D4D43] mt-0.5">+233 (0) 30 294 8810 • Immediate Dispatch</p>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#FAF8F2] border border-[#E6E3D8]">
+              <div className="p-3.5 rounded-xl bg-white border border-zinc-200">
                 <p className="font-bold text-[#18241D]">AkwaabaHomes Resident Concierge</p>
                 <p className="text-[#4B5850] mt-0.5">support@akwaabahomes.com • +233 (0) 54 012 3900</p>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#FDF4F2] border border-[#F2D5CF]">
+              <div className="p-3.5 rounded-xl bg-[#FDF4F2] border border-red-200">
                 <p className="font-bold text-[#9E2A1C]">Ghana National Emergency Line</p>
                 <p className="text-[#6E342C] mt-0.5">112 / 191 (Police) • 192 (Fire) • 193 (Ambulance)</p>
               </div>
@@ -1424,7 +1424,7 @@ export default function SupportHelpCentrePage() {
       {/* Modal 4: Browse All Help Articles */}
       {allArticlesModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#E6E3D8] max-w-lg w-full p-6 space-y-4 shadow-xl">
+          <div className="bg-white rounded-2xl border border-zinc-200 max-w-lg w-full p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#0E6B38]" />
@@ -1435,14 +1435,14 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setAllArticlesModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-[#F4F2E9] flex items-center justify-center text-[#55625A]"
+                className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-[#55625A]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="p-3.5 rounded-xl bg-[#FAF8F2] border border-[#E6E3D8]">
+              <div className="p-3.5 rounded-xl bg-white border border-zinc-200">
                 <p className="text-[13.5px] font-bold text-[#16231B]">
                   How do rent payments work?
                 </p>
@@ -1455,7 +1455,7 @@ export default function SupportHelpCentrePage() {
               {RIGHT_FAQS.map((item) => (
                 <div
                   key={item.id}
-                  className="p-3.5 rounded-xl bg-[#FAF8F2] border border-[#E6E3D8]"
+                  className="p-3.5 rounded-xl bg-white border border-zinc-200"
                 >
                   <p className="text-[13.5px] font-bold text-[#16231B]">{item.question}</p>
                   <p className="text-[12.5px] text-[#4E5B52] mt-1">{item.answer}</p>
