@@ -6,12 +6,7 @@ import Image from 'next/image';
 import { 
   ShieldCheck, 
   Scale, 
-  Lock, 
   FileText, 
-  CheckCircle2, 
-  Clock, 
-  Building2, 
-  GraduationCap, 
   Printer, 
   Copy, 
   Check, 
@@ -25,22 +20,27 @@ import {
   Bookmark, 
   MapPin, 
   Calendar, 
-  AlertCircle,
-  Eye,
-  Bell,
   Home,
-  CheckCircle
+  GraduationCap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import ThemeToggle from '@/components/ThemeToggle';
 
-interface Section {
+interface SectionItem {
   id: string;
   num: string;
   title: string;
-  subtitle?: string;
-  content: React.ReactNode;
 }
+
+const SECTIONS_LIST: SectionItem[] = [
+  { id: 'section-01', num: '01', title: 'Acceptance of platform terms' },
+  { id: 'section-02', num: '02', title: 'User roles & identity verification' },
+  { id: 'section-03', num: '03', title: 'Reservations & payment processing' },
+  { id: 'section-04', num: '04', title: 'Shared rooms & student allocation' },
+  { id: 'section-05', num: '05', title: 'Digital tenancy agreements' },
+  { id: 'section-06', num: '06', title: 'Listing standards & anti-fraud' },
+  { id: 'section-07', num: '07', title: 'Move-in, disputes & refunds' },
+  { id: 'section-08', num: '08', title: 'Liability & governing law' },
+];
 
 export default function TermsPage() {
   const [activeSection, setActiveSection] = useState('section-01');
@@ -59,15 +59,14 @@ export default function TermsPage() {
   // Track scroll position to update active section in sidebar
   useEffect(() => {
     const handleScroll = () => {
-      const sectionElements = document.querySelectorAll('div[data-section-id]');
-      const scrollPosition = window.scrollY + 260;
-
-      for (let i = sectionElements.length - 1; i >= 0; i--) {
-        const el = sectionElements[i] as HTMLElement;
-        if (el.offsetTop <= scrollPosition) {
-          const id = el.getAttribute('data-section-id');
-          if (id) {
-            setActiveSection(id);
+      const scrollPosition = window.scrollY + 200;
+      for (const section of SECTIONS_LIST) {
+        const el = document.getElementById(section.id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section.id);
             break;
           }
         }
@@ -80,263 +79,168 @@ export default function TermsPage() {
 
   const scrollToSection = (id: string) => {
     setActiveSection(id);
-    setExpandedSections((prev) => ({ ...prev, [id]: true }));
-    const el = document.querySelector(`[data-section-id="${id}"]`);
-    if (el) {
+    const element = document.getElementById(id);
+    if (element) {
       const yOffset = -90;
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
   };
 
   const toggleSection = (id: string) => {
-    setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedSections((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
-  const handleCopy = (text: string, key: string) => {
+  const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedSection(key);
-    toast.success('Section terms copied to clipboard');
-    setTimeout(() => setCopiedSection(null), 2000);
+    setCopiedSection(id);
+    toast.success('Clause copied to clipboard');
+    setTimeout(() => setCopiedSection(null), 2500);
   };
 
   const handlePrint = () => {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    window.print();
   };
 
-  const currentSectionNumber = activeSection.replace('section-', '');
-
-  const SECTIONS_LIST = [
-    { id: 'section-01', num: '01', title: 'Acceptance of platform terms' },
-    { id: 'section-02', num: '02', title: 'User roles & identity verification' },
-    { id: 'section-03', num: '03', title: 'Reservations & payment processing' },
-    { id: 'section-04', num: '04', title: 'Shared rooms & student allocation' },
-    { id: 'section-05', num: '05', title: 'Digital tenancy agreements' },
-    { id: 'section-06', num: '06', title: 'Listing standards & anti-fraud' },
-    { id: 'section-07', num: '07', title: 'Move-in, disputes & refunds' },
-    { id: 'section-08', num: '08', title: 'Liability & governing law' },
-  ];
+  const currentSectionNumber =
+    SECTIONS_LIST.find((s) => s.id === activeSection)?.num || '01';
 
   return (
-    <div className="min-h-screen w-full bg-[#FAF7F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors font-sans">
+    <div className="w-full bg-[#FAF7F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors font-sans">
       
-      {/* ──── TOP GLOBAL NAVIGATION ──── */}
-      <header className="w-full bg-[#FAF7F0] dark:bg-[#0D100E] border-b border-zinc-200/80 dark:border-zinc-800/80 sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          {/* Brand Logo */}
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
-              <Image
-                src="/logo.png"
-                alt="AkwaabaHomes"
-                width={38}
-                height={38}
-                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-              <Image
-                src="/logo-light.png"
-                alt="AkwaabaHomes"
-                width={38}
-                height={38}
-                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-                priority
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-black tracking-tight text-[#0C3827] dark:text-white leading-none">
-                AkwaabaHomes
-              </span>
-              <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400 mt-0.5">
-                Live Well. Feel at Home.
-              </span>
-            </div>
-          </Link>
-
-          {/* Navigation Links (Desktop) */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-            <Link href="/" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              Home
-            </Link>
-            <Link href="/properties" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              Explore
-            </Link>
-            <Link href="/properties?tab=neighbourhoods" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              Neighbourhoods
-            </Link>
-            <Link href="/services" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              Services
-            </Link>
-            <Link href="/about" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              About
-            </Link>
-            <Link href="/help" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
-              Support
-            </Link>
-          </nav>
-
-          {/* Right Action Icons & Controls */}
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
-
-            {/* Bookings shortcut */}
-            <Link
-              href="/dashboard/tenant/bookings"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold transition"
-            >
-              <Calendar className="w-3.5 h-3.5 text-[#16A34A]" />
-              <span>Bookings</span>
-            </Link>
-
-            {/* Notification Bell with Badge */}
-            <Link
-              href="/dashboard/notifications"
-              className="relative p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-              aria-label="Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center">
-                7
-              </span>
-            </Link>
-
-            {/* My Account Button */}
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>My Account</span>
-              <ChevronRight className="w-3 h-3 rotate-90" />
-            </Link>
-          </div>
-        </div>
-      </header>
-
       {/* ──── HERO SECTION: LEGAL CENTRE · GHANA ──── */}
-      <section className="relative w-full bg-[#0C3827] text-white overflow-hidden py-10 sm:py-14">
-        {/* Subtle Kente Geometric Watermark on Left */}
-        <div className="absolute left-0 top-0 bottom-0 w-64 opacity-10 pointer-events-none select-none">
+      <section className="relative w-full bg-[#0C3827] text-white overflow-hidden py-8 sm:py-10">
+        {/* Authentic Kente Geometric Line Watermark on Far Left */}
+        <div className="absolute left-0 top-0 bottom-0 w-32 sm:w-44 opacity-20 pointer-events-none select-none">
           <Image
-            src="/images/auth/security-protect-bg.png"
+            src="/images/about/terms-hero-kente.png"
             alt="Kente Motif"
             fill
             className="object-cover object-left"
+            priority
           />
         </div>
 
         {/* Building Exterior on Right with Smooth Fade */}
-        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[50%] lg:w-[42%] pointer-events-none select-none overflow-hidden hidden md:block">
+        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[45%] lg:w-[35%] pointer-events-none select-none overflow-hidden hidden md:block">
           <Image
-            src="/images/home/hero-building.jpg"
+            src="/images/about/terms-hero-building.jpg"
             alt="Ghanaian Modern Residential Community"
             fill
-            className="object-cover object-center opacity-40 mix-blend-luminosity"
+            className="object-cover object-right opacity-60"
             priority
           />
           {/* Gradient Mask to fade building into forest green */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/70 to-transparent" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-6">
-          <div className="max-w-3xl space-y-3">
-            {/* Legal Centre Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-400/40 bg-emerald-950/40 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider shadow-xs">
-              <Scale className="w-3.5 h-3.5 text-amber-300" />
-              <span>LEGAL CENTRE · GHANA</span>
-            </div>
-
-            {/* Display Title */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white leading-tight">
-              Terms of Service &amp; <span className="text-[#E0CA7C]">Platform Rules</span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-normal max-w-2xl">
-              The agreement governing access, listings, reservations, payments and digital tenancy on AkwaabaHomes.
-            </p>
-
-            {/* Metadata Row */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-emerald-200/90 font-medium">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-amber-300" />
-                <span>Effective October 2026</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            {/* Left 8 cols: Badge, Headline, Subtitle, Metadata */}
+            <div className="lg:col-span-8 space-y-3">
+              {/* Legal Centre Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-400/40 bg-emerald-950/60 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider">
+                <Scale className="w-3.5 h-3.5 text-amber-300" />
+                <span>LEGAL CENTRE · GHANA</span>
               </div>
-              <span className="opacity-50">|</span>
-              <div className="flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-emerald-300" />
-                <span>8 sections</span>
-              </div>
-              <span className="opacity-50">|</span>
-              <div className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-amber-300" />
-                <span>Governing jurisdiction: Republic of Ghana</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Action Buttons Row + Golden Scales Emblem */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Print Button */}
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <Printer className="w-3.5 h-3.5 text-[#0C3827]" />
-                <span>Print</span>
-              </button>
+              {/* Display Title */}
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-serif font-bold tracking-tight text-white leading-tight">
+                Terms of Service &amp; <span className="text-[#E0CA7C]">Platform Rules</span>
+              </h1>
 
-              {/* Download PDF Button */}
-              <button
-                type="button"
-                onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/40 hover:bg-white/10 text-white text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <FileText className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Download PDF</span>
-              </button>
+              {/* Subtitle */}
+              <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-normal max-w-2xl">
+                The agreement governing access, listings, reservations, payments and digital tenancy on AkwaabaHomes.
+              </p>
 
-              {/* Contact Legal Team */}
-              <Link
-                href="/contact?topic=legal"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
-              >
-                <Mail className="w-3.5 h-3.5" />
-                <span>Contact Legal Team</span>
-              </Link>
-            </div>
-
-            {/* Golden Scales of Justice Emblem */}
-            <div className="hidden lg:flex items-center justify-center shrink-0 pr-12">
-              <div className="relative w-16 h-16 opacity-90 drop-shadow-md">
-                <Image
-                  src="/images/about/terms-scales.png"
-                  alt="Scales of Justice"
-                  fill
-                  className="object-contain"
-                />
+              {/* Metadata Row */}
+              <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-emerald-200/90 font-medium">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Effective October 2026</span>
+                </div>
+                <span className="opacity-40">|</span>
+                <div className="flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>8 sections</span>
+                </div>
+                <span className="opacity-40">|</span>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Governing jurisdiction: Republic of Ghana</span>
+                </div>
               </div>
             </div>
+
+            {/* Right 4 cols: Golden Scales + Action Buttons */}
+            <div className="lg:col-span-4 flex flex-col items-end justify-between h-full space-y-4">
+              {/* Golden Scales of Justice */}
+              <div className="hidden lg:flex items-center justify-center w-full pr-6">
+                <div className="relative w-24 h-24 drop-shadow-lg">
+                  <Image
+                    src="/images/about/terms-scales.png"
+                    alt="Scales of Justice"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="flex items-center gap-2.5 flex-wrap justify-end w-full">
+                {/* Print Button */}
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-zinc-900" />
+                  <span>Print</span>
+                </button>
+
+                {/* Download PDF Button */}
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full border border-white/40 bg-[#0C3827]/70 hover:bg-white/10 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Download PDF</span>
+                </button>
+
+                {/* Contact Legal Team */}
+                <Link
+                  href="/contact?topic=legal"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
+                >
+                  <Mail className="w-3.5 h-3.5" />
+                  <span>Contact Legal Team</span>
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* ──── "BEFORE YOU CONTINUE" KEY POINTS STRIP ──── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 sm:-mt-8 relative z-20 w-full">
-        <div className="bg-[#F7F5EE] dark:bg-zinc-900 border border-[#E8E4D7] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-5 relative z-20 w-full">
+        <div className="bg-[#FAF4E6] dark:bg-[#15191E] border border-[#E8DEC4] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-center divide-y sm:divide-y-0 lg:divide-x divide-[#E8DEC4] dark:divide-zinc-800">
             
-            {/* Header Title (Left ~3 Cols) */}
-            <div className="lg:col-span-3 flex items-center gap-3.5 lg:border-r border-[#E8E4D7] dark:border-zinc-800 lg:pr-5">
-              <div className="w-11 h-11 rounded-2xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0C3827] dark:text-emerald-300 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800">
-                <ShieldCheck className="w-6 h-6 text-[#16A34A]" />
+            {/* Col 1: Before you continue */}
+            <div className="flex items-center gap-3 pr-2">
+              <div className="w-10 h-10 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800">
+                <ShieldCheck className="w-5 h-5 text-[#16A34A]" />
               </div>
               <div>
-                <h3 className="font-serif font-bold text-sm sm:text-base text-zinc-950 dark:text-white leading-tight">
+                <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white leading-tight">
                   Before you continue
                 </h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
@@ -345,72 +249,70 @@ export default function TermsPage() {
               </div>
             </div>
 
-            {/* 4 Feature Columns (Right ~9 Cols) */}
-            <div className="lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E8E4D7] dark:divide-zinc-800">
-              
-              {/* Point 1: Verified Identities */}
-              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
-                <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Verified Identities</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    Ghana Card checks for relevant roles.
-                  </p>
-                </div>
+            {/* Col 2: Verified Identities */}
+            <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
+              <div className="w-4 h-4 rounded-full bg-[#0C3827] text-white flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-2.5 h-2.5 text-white" />
               </div>
-
-              {/* Point 2: Protected Payments */}
-              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
-                <CreditCard className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Protected Payments</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    Paystack / MoMo and card checkout.
-                  </p>
-                </div>
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Verified Identities</h4>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                  Ghana Card checks for relevant roles.
+                </p>
               </div>
-
-              {/* Point 3: Digital Tenancy */}
-              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
-                <FileText className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Digital Tenancy</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    Electronically signed agreements.
-                  </p>
-                </div>
-              </div>
-
-              {/* Point 4: Student Accommodation */}
-              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
-                <GraduationCap className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
-                <div className="space-y-0.5">
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Student Accommodation</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
-                    Campus-specific eligibility and room allocation rules.
-                  </p>
-                </div>
-              </div>
-
             </div>
+
+            {/* Col 3: Protected Payments */}
+            <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
+              <CreditCard className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Protected Payments</h4>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                  Paystack / MoMo and card checkout.
+                </p>
+              </div>
+            </div>
+
+            {/* Col 4: Digital Tenancy */}
+            <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
+              <FileText className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Digital Tenancy</h4>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                  Electronically signed agreements.
+                </p>
+              </div>
+            </div>
+
+            {/* Col 5: Student Accommodation */}
+            <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
+              <GraduationCap className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Student Accommodation</h4>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                  Campus-specific eligibility and room allocation rules.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* ──── MAIN 3-COLUMN WORKSPACE ──── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 w-full py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 w-full py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* ════ LEFT COLUMN: STICKY SIDEBAR NAVIGATION (3 Cols) ════ */}
           <aside className="lg:col-span-3 lg:sticky lg:top-24 space-y-4">
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xs">
+            <div className="bg-[#FAF7F0] dark:bg-[#12161A] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
               {/* Header */}
-              <div className="bg-[#0C3827] px-4 py-3.5 text-white font-mono font-bold text-xs tracking-wider uppercase">
+              <div className="bg-[#0C3827] px-4 py-3 text-white font-mono font-bold text-xs tracking-wider uppercase">
                 IN THIS DOCUMENT
               </div>
 
               {/* Section Links */}
-              <nav className="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-xs">
+              <nav className="divide-y divide-[#E8E1D3]/60 dark:divide-zinc-800 text-xs">
                 {SECTIONS_LIST.map((sec) => {
                   const isActive = activeSection === sec.id;
                   return (
@@ -420,11 +322,13 @@ export default function TermsPage() {
                       onClick={() => scrollToSection(sec.id)}
                       className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
                         isActive
-                          ? 'bg-[#EAF3EA] dark:bg-emerald-950/40 text-[#0C3827] dark:text-emerald-300 font-bold border-l-4 border-[#0C3827] dark:border-emerald-500'
-                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                          ? 'bg-white dark:bg-[#1E252B] text-[#0C3827] dark:text-emerald-300 font-bold border-l-4 border-[#16A34A]'
+                          : 'hover:bg-white/60 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 font-medium'
                       }`}
                     >
-                      <span className="font-mono text-zinc-400 font-bold">{sec.num}</span>
+                      <span className={`font-mono font-bold ${isActive ? 'text-[#16A34A]' : 'text-zinc-400'}`}>
+                        {sec.num}
+                      </span>
                       <span className="leading-snug">{sec.title}</span>
                     </button>
                   );
@@ -432,13 +336,13 @@ export default function TermsPage() {
               </nav>
 
               {/* Reading Progress Indicator */}
-              <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 space-y-2">
+              <div className="p-3.5 border-t border-[#E8E1D3] dark:border-zinc-800 bg-[#FAF7F0] dark:bg-[#12161A] space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
                   <span>Section {currentSectionNumber} of 08</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-[#E5DFD1] dark:bg-zinc-800 overflow-hidden">
                   <div
-                    className="h-full bg-[#0C3827] dark:bg-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-[#16A34A] rounded-full transition-all duration-300"
                     style={{ width: `${(Number(currentSectionNumber) / 8) * 100}%` }}
                   />
                 </div>
@@ -447,20 +351,20 @@ export default function TermsPage() {
           </aside>
 
           {/* ════ CENTER COLUMN: INTERACTIVE DOCUMENT READER (6 Cols) ════ */}
-          <div className="lg:col-span-6 space-y-6">
+          <div className="lg:col-span-6 space-y-4">
             
             {/* ── Section 01: Acceptance of platform terms ── */}
             <div
-              data-section-id="section-01"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-01"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     01
                   </span>
-                  <span className="h-6 w-px bg-zinc-300 dark:bg-zinc-700" />
-                  <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                  <span className="h-5 w-px bg-zinc-300 dark:bg-zinc-700" />
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white">
                     Acceptance of platform terms
                   </h2>
                 </div>
@@ -473,7 +377,7 @@ export default function TermsPage() {
                       'section-01'
                     )
                   }
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 font-medium transition cursor-pointer"
                 >
                   {copiedSection === 'section-01' ? (
                     <>
@@ -489,18 +393,18 @@ export default function TermsPage() {
                 </button>
               </div>
 
-              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-normal">
                 By accessing or using the AkwaabaHomes platform, you agree to be bound by these Terms of Service and all applicable laws and regulations of the Republic of Ghana. If you do not agree with these terms, you must not access, browse, or use the platform.
               </p>
 
               {/* Legal Reference Callout Box */}
-              <div className="p-4 rounded-2xl bg-[#EAF6EE] dark:bg-emerald-950/30 border border-[#B7E8C3] dark:border-emerald-800/60 flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5">
-                  <AlertCircle className="w-3.5 h-3.5" />
+              <div className="p-3.5 rounded-lg bg-[#EAF6EE] dark:bg-emerald-950/30 border border-[#B7E8C3] dark:border-emerald-800/40 flex items-start gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#0E5C36] flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold">
+                  i
                 </div>
                 <div className="space-y-0.5 text-xs">
-                  <h4 className="font-bold text-[#0C3827] dark:text-emerald-300">Legal Reference</h4>
-                  <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                  <h4 className="font-bold text-[#0E5C36] dark:text-emerald-300">Legal Reference</h4>
+                  <p className="text-[#0E5C36]/90 dark:text-emerald-200/90 leading-relaxed">
                     These terms are made in accordance with the <strong>Electronic Transactions Act, 2008 (Act 772)</strong> and the <strong>Rent Act, 1963 (Act 220)</strong>.
                   </p>
                 </div>
@@ -509,19 +413,19 @@ export default function TermsPage() {
 
             {/* ── Section 02: User roles & identity verification ── */}
             <div
-              data-section-id="section-02"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-02"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     02
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       User roles &amp; identity verification
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Different roles, different permissions and verification requirements.
                     </p>
                   </div>
@@ -530,37 +434,37 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-02')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-02'] ? 'Collapse' : 'Read Next'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
               {/* 3 Role Columns matching mockup */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
-                    <Users className="w-4 h-4" />
+                <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <Users className="w-3.5 h-3.5" />
                   </div>
                   <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Book and rent properties</p>
+                  <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">Book and rent properties</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
-                    <Home className="w-4 h-4" />
+                <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <Home className="w-3.5 h-3.5" />
                   </div>
                   <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Landlords &amp; Hosts</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">List and manage properties</p>
+                  <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">List and manage properties</p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
-                    <ShieldCheck className="w-4 h-4" />
+                <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <ShieldCheck className="w-3.5 h-3.5" />
                   </div>
                   <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Caretakers &amp; Staff</h4>
-                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Manage facilities</p>
+                  <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">Manage facilities</p>
                 </div>
               </div>
 
@@ -575,19 +479,19 @@ export default function TermsPage() {
 
             {/* ── Section 03: Reservations & payment processing ── */}
             <div
-              data-section-id="section-03"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-03"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     03
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Reservations &amp; payment processing
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Secure booking and multiple payment options.
                     </p>
                   </div>
@@ -596,25 +500,31 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-03')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-03'] ? 'Collapse' : 'Read Next'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
               {/* 3 Checkmark Safeguards */}
               <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 pt-1">
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <div className="w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
                   <span>Verified checkout</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <div className="w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
                   <span>Instant receipts</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <div className="w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
                   <span>Secure payouts</span>
                 </div>
               </div>
@@ -630,19 +540,19 @@ export default function TermsPage() {
 
             {/* ── Section 04: Shared rooms & student allocation ── */}
             <div
-              data-section-id="section-04"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-04"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     04
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Shared rooms &amp; student allocation
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Single, 2-in-1, 3-in-1, and 4-in-1 academic room rules.
                     </p>
                   </div>
@@ -651,10 +561,10 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-04')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-04'] ? 'Collapse' : 'Read Details'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -673,19 +583,19 @@ export default function TermsPage() {
 
             {/* ── Section 05: Digital tenancy agreements ── */}
             <div
-              data-section-id="section-05"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-05"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     05
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Digital tenancy agreements
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Standardized tenancy agreements with electronic execution.
                     </p>
                   </div>
@@ -694,10 +604,10 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-05')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-05'] ? 'Collapse' : 'Read Details'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -716,19 +626,19 @@ export default function TermsPage() {
 
             {/* ── Section 06: Listing standards & anti-fraud ── */}
             <div
-              data-section-id="section-06"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-06"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     06
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Listing standards &amp; anti-fraud
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Strict verification of titles, photographs, and pricing.
                     </p>
                   </div>
@@ -737,10 +647,10 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-06')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-06'] ? 'Collapse' : 'Read Details'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -759,19 +669,19 @@ export default function TermsPage() {
 
             {/* ── Section 07: Move-in, disputes & refunds ── */}
             <div
-              data-section-id="section-07"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-07"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     07
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Move-in, disputes &amp; refunds
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       48-hour inspection grace period and escrow release terms.
                     </p>
                   </div>
@@ -780,10 +690,10 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-07')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-07'] ? 'Collapse' : 'Read Details'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -802,19 +712,19 @@ export default function TermsPage() {
 
             {/* ── Section 08: Liability & governing law ── */}
             <div
-              data-section-id="section-08"
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+              id="section-08"
+              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-6 rounded bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
                     08
                   </span>
                   <div>
-                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    <h2 className="text-base sm:text-lg font-bold text-zinc-950 dark:text-white leading-tight">
                       Liability &amp; governing law
                     </h2>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                       Jurisdiction in Accra, Ghana and statutory limitation of damages.
                     </p>
                   </div>
@@ -823,10 +733,10 @@ export default function TermsPage() {
                 <button
                   type="button"
                   onClick={() => toggleSection('section-08')}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 transition cursor-pointer shrink-0"
                 >
                   <span>{expandedSections['section-08'] ? 'Collapse' : 'Read Details'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
 
@@ -846,19 +756,19 @@ export default function TermsPage() {
           </div>
 
           {/* ════ RIGHT COLUMN: QUICK REFERENCE & LEGAL ASSISTANCE (3 Cols) ════ */}
-          <aside className="lg:col-span-3 space-y-5">
+          <aside className="lg:col-span-3 space-y-4">
             
             {/* Card 1: Quick Reference */}
-            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xs">
-              <div className="bg-[#0C3827] px-4 py-3 text-white font-serif font-bold text-sm flex items-center gap-2">
-                <Bookmark className="w-4 h-4 text-emerald-300" />
+            <div className="bg-[#FAF7F0] dark:bg-[#12161A] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
+              <div className="bg-[#0C3827] px-4 py-2.5 text-white font-bold text-xs tracking-wider uppercase flex items-center gap-2">
+                <Bookmark className="w-3.5 h-3.5 text-emerald-300" />
                 <span>Quick Reference</span>
               </div>
 
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-xs font-semibold">
+              <div className="divide-y divide-[#E8E1D3]/70 dark:divide-zinc-800 text-xs font-semibold">
                 <Link
                   href="/privacy"
-                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
                     <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
@@ -869,7 +779,7 @@ export default function TermsPage() {
 
                 <Link
                   href="/help?topic=disputes"
-                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
                     <Scale className="w-4 h-4 text-[#16A34A]" />
@@ -880,7 +790,7 @@ export default function TermsPage() {
 
                 <Link
                   href="/help"
-                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
                     <HelpCircle className="w-4 h-4 text-[#16A34A]" />
@@ -892,32 +802,34 @@ export default function TermsPage() {
             </div>
 
             {/* Card 2: Need Legal Assistance? */}
-            <div className="bg-[#EAF3EA] dark:bg-emerald-950/20 border border-[#D5E8D8] dark:border-emerald-900/40 rounded-3xl p-5 space-y-3.5 text-center shadow-2xs">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center mx-auto">
-                <Headphones className="w-5 h-5" />
-              </div>
+            <div className="bg-[#EAF6EE] dark:bg-emerald-950/20 border border-[#B7E8C3] dark:border-emerald-900/40 rounded-xl p-4 space-y-3 shadow-2xs">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center shrink-0">
+                  <Headphones className="w-4 h-4" />
+                </div>
 
-              <div className="space-y-1">
-                <h3 className="font-serif font-bold text-sm text-zinc-950 dark:text-white">
-                  Need Legal Assistance?
-                </h3>
-                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
-                  Our legal team is here to help with any concerns about these terms.
-                </p>
+                <div className="space-y-0.5">
+                  <h3 className="font-bold text-xs text-zinc-950 dark:text-white">
+                    Need Legal Assistance?
+                  </h3>
+                  <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                    Our legal team is here to help with any concerns about these terms.
+                  </p>
+                </div>
               </div>
 
               <Link
                 href="/contact?topic=legal"
-                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
               >
                 <Mail className="w-3.5 h-3.5" />
                 <span>Contact Support</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
 
-            {/* Card 3: Accra Skyline & Black Star Gate Illustration */}
-            <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-transparent pointer-events-none select-none">
+            {/* Card 3: Accra Independence Arch Landmark Illustration */}
+            <div className="relative w-full h-24 rounded-xl overflow-hidden bg-transparent pointer-events-none select-none pt-2">
               <Image
                 src="/images/about/terms-accra-skyline.png"
                 alt="Accra Black Star Gate Illustration"
@@ -931,8 +843,18 @@ export default function TermsPage() {
       </main>
 
       {/* ──── DARK FOREST GREEN FOOTER ──── */}
-      <footer className="w-full bg-[#0C3827] text-white pt-8 pb-6 border-t border-emerald-900/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+      <footer className="w-full bg-[#0C3827] text-white py-6 border-t border-emerald-900/40 relative overflow-hidden">
+        {/* Left Kente Corner Watermark */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 opacity-20 pointer-events-none select-none">
+          <Image
+            src="/images/about/terms-footer-kente.png"
+            alt="Kente Motif"
+            fill
+            className="object-cover object-left"
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             
             {/* Logo */}
