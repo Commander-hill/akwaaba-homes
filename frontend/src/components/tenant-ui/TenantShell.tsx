@@ -256,9 +256,9 @@ export default function TenantShell({
   };
 
   const renderSidebarContent = (onNavigate?: () => void) => (
-    <div className="flex flex-col h-full bg-[#0B3B24] text-white relative overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-[#12151D] text-zinc-900 dark:text-zinc-100 relative overflow-hidden">
       {/* Brand Header matching mockup */}
-      <div className="h-20 px-6 flex items-center shrink-0 border-b border-emerald-900/40">
+      <div className="h-20 px-6 flex items-center shrink-0 border-b border-zinc-100 dark:border-zinc-800/80">
         <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 flex items-center justify-center shrink-0">
             <Image
@@ -271,10 +271,10 @@ export default function TenantShell({
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-[17px] font-black text-white tracking-tight block leading-none">
+            <span className="text-[17px] font-black text-zinc-950 dark:text-white tracking-tight block leading-none">
               AkwaabaHomes
             </span>
-            <span className="text-[10px] font-medium text-[#C8A24A] block mt-1 tracking-wide">
+            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 block mt-1 tracking-wide">
               Trusted Ghanaian Housing
             </span>
           </div>
@@ -296,15 +296,15 @@ export default function TenantShell({
                 'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] transition-all',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                 active
-                  ? 'bg-white/15 text-white font-bold border border-emerald-400/40 shadow-sm'
-                  : 'text-emerald-100/80 hover:text-white hover:bg-white/10 font-medium'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#0B3B24] dark:text-emerald-400 font-bold border border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-medium'
               )}
             >
               <span className="flex items-center gap-3 min-w-0">
                 <Icon
                   className={clsx(
                     'w-4 h-4 shrink-0',
-                    active ? 'text-white' : 'text-emerald-200/70'
+                    active ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'
                   )}
                   aria-hidden="true"
                 />
@@ -323,8 +323,8 @@ export default function TenantShell({
 
       {/* Bottom "Need Help?" Card matching reference screenshot */}
       <div className="p-4 mt-auto">
-        <div className="p-4 rounded-2xl bg-[#072818]/90 border border-emerald-700/50 text-center flex flex-col items-center space-y-2">
-          <div className="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-600/40 text-emerald-300 flex items-center justify-center shrink-0">
+        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-center flex flex-col items-center space-y-2">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <svg
               className="w-5 h-5"
               viewBox="0 0 24 24"
@@ -338,16 +338,16 @@ export default function TenantShell({
               <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
             </svg>
           </div>
-          <h4 className="text-xs font-bold text-white">
+          <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
             Need Help?
           </h4>
-          <p className="text-[11px] text-emerald-100/70 leading-relaxed px-1">
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
             Our support team is here to help.
           </p>
           <Link
             href="/support"
             onClick={onNavigate}
-            className="w-full py-2 px-3 mt-1 rounded-full bg-white hover:bg-zinc-100 text-[#0B3B24] text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
+            className="w-full py-2 px-3 mt-1 rounded-full bg-[#0B3B24] hover:bg-[#082C1B] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
           >
             <span>Contact Support</span>
             <span aria-hidden="true">&rarr;</span>
@@ -379,7 +379,7 @@ export default function TenantShell({
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-[#0B3B24] border-r border-emerald-950/60 sticky top-0 h-screen z-20 shadow-md">
+      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-white dark:bg-[#12151D] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen z-20 shadow-xs">
         {renderSidebarContent()}
       </aside>
 

@@ -523,7 +523,7 @@ export default function SupportHelpCentrePage() {
       {/* Main Container */}
       <main className="flex-1 max-w-[1260px] w-full mx-auto px-4 sm:px-7 pt-5 pb-10 space-y-5">
         {/* Hero Banner */}
-        <section className="relative rounded-[20px] bg-[#EBF3EA] border border-emerald-200 overflow-hidden px-5 sm:px-8 py-6 sm:py-7 shadow-[0_2px_12px_rgba(11,59,36,0.03)]">
+        <section className="relative rounded-[20px] bg-white border border-zinc-200 overflow-hidden px-5 sm:px-8 py-6 sm:py-7 shadow-xs">
           {/* Left botanical leaves accent */}
           <img
             src="/images/support/support-hero-leaves.png"
@@ -539,12 +539,12 @@ export default function SupportHelpCentrePage() {
               alt="Accra Independence Arch illustration"
               className="w-full h-full object-cover object-right"
             />
-            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#EBF3EA] via-[#EBF3EA]/60 to-transparent" />
+            <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white via-white/60 to-transparent" />
           </div>
 
           {/* Left Content */}
           <div className="relative z-10 max-w-[630px] sm:pl-4 space-y-3">
-            <span className="inline-block px-3 py-1 rounded-lg bg-[#D7E7D7] text-[#15462A] text-[10px] font-bold uppercase tracking-[0.14em]">
+            <span className="inline-block px-3 py-1 rounded-lg bg-zinc-100 border border-zinc-200 text-zinc-700 text-[10px] font-bold uppercase tracking-[0.14em]">
               AKWAABAHOMES HELP CENTRE
             </span>
 
@@ -560,7 +560,7 @@ export default function SupportHelpCentrePage() {
             {/* Search Bar */}
             <form
               onSubmit={handleSearchSubmit}
-              className="flex items-center bg-white rounded-xl border border-emerald-200 p-1.5 shadow-[0_3px_10px_rgba(11,59,36,0.04)] max-w-[590px]"
+              className="flex items-center bg-white rounded-xl border border-zinc-200 p-1.5 shadow-xs max-w-[590px]"
             >
               <div className="pl-3 pr-2 text-[#6B7B71]">
                 <Search className="w-4 h-4" />
@@ -574,7 +574,7 @@ export default function SupportHelpCentrePage() {
               />
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#134F32] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm"
+                className="px-5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#134F32] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm cursor-pointer"
               >
                 Search
               </button>
@@ -590,10 +590,10 @@ export default function SupportHelpCentrePage() {
                   setActiveTopic('BOOKING');
                   selectQuickCategory('BOOKING_PAYMENTS', 'Request booking date adjustment');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'BOOKING'
-                    ? 'bg-[#0B3B24] text-white'
-                    : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
+                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
                 <Calendar className="w-3.5 h-3.5 text-[#1E6B3E]" />
@@ -607,10 +607,10 @@ export default function SupportHelpCentrePage() {
                   setLeftFaqExpanded(true);
                   selectQuickCategory('BOOKING_PAYMENTS', 'Rent payment & receipt inquiry');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'PAYMENTS'
-                    ? 'bg-[#0B3B24] text-white'
-                    : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
+                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
                 <CreditCard className="w-3.5 h-3.5 text-[#1E6B3E]" />
@@ -624,10 +624,10 @@ export default function SupportHelpCentrePage() {
                   setOpenRightFaqId('faq-agreement');
                   selectQuickCategory('DIGITAL_AGREEMENTS', 'Digital tenancy agreement question');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'AGREEMENTS'
-                    ? 'bg-[#0B3B24] text-white'
-                    : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
+                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5 text-[#1E6B3E]" />
@@ -641,10 +641,10 @@ export default function SupportHelpCentrePage() {
                   setOpenRightFaqId('faq-maintenance');
                   selectQuickCategory('HOME_MAINTENANCE', 'Maintenance & repair request');
                 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'MAINTENANCE'
-                    ? 'bg-[#0B3B24] text-white'
-                    : 'bg-[#DCE9DB] hover:bg-[#CFE1CE] text-[#1A3F29]'
+                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
                 <Wrench className="w-3.5 h-3.5 text-[#1E6B3E]" />
@@ -660,14 +660,14 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('BOOKING_PAYMENTS')}
-            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-xs cursor-pointer ${
               category === 'BOOKING_PAYMENTS'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
                 : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-full bg-[#E5EFE5] text-[#145C33] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -679,7 +679,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-emerald-50 text-zinc-500 group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -688,14 +688,14 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('HOME_MAINTENANCE')}
-            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-xs cursor-pointer ${
               category === 'HOME_MAINTENANCE'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
                 : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-full bg-[#E5EFE5] text-[#145C33] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center shrink-0">
                 <Wrench className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -707,7 +707,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-emerald-50 text-zinc-500 group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>
@@ -716,14 +716,14 @@ export default function SupportHelpCentrePage() {
           <button
             type="button"
             onClick={() => selectQuickCategory('ACCOUNT_VERIFICATION')}
-            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.02)] ${
+            className={`group text-left bg-white hover:bg-zinc-50 rounded-2xl border p-4 flex items-center justify-between gap-3.5 transition-all shadow-xs cursor-pointer ${
               category === 'ACCOUNT_VERIFICATION'
                 ? 'border-[#0E6B38] ring-1 ring-[#0E6B38]/20'
                 : 'border-zinc-200 hover:border-zinc-300'
             }`}
           >
             <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-11 h-11 rounded-full bg-[#E5EFE5] text-[#145C33] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-emerald-50 text-[#15803D] flex items-center justify-center shrink-0">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div className="min-w-0">
@@ -735,7 +735,7 @@ export default function SupportHelpCentrePage() {
                 </p>
               </div>
             </div>
-            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-[#E5EFE5] text-[#526057] group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
+            <div className="w-7 h-7 rounded-full bg-zinc-100 group-hover:bg-emerald-50 text-zinc-500 group-hover:text-[#0B3B24] flex items-center justify-center shrink-0 transition-colors">
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </button>

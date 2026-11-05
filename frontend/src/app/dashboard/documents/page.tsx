@@ -370,7 +370,7 @@ export default function TenantDocumentsAndVerificationPage() {
   })();
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] dark:bg-[#0D100E] text-[#14221A] dark:text-zinc-100 flex flex-col justify-between relative overflow-x-hidden font-sans">
+    <div className="min-h-[calc(100vh-4rem)] bg-white dark:bg-[#0E1210] text-[#14221A] dark:text-zinc-100 flex flex-col justify-between relative overflow-x-hidden font-sans">
       {/* Main Content Container */}
       <div className="w-full max-w-[1380px] mx-auto px-4 sm:px-7 lg:px-10 pt-5 pb-6 flex-1 flex flex-col justify-between gap-4">
         {/* ── 1. HERO TITLE BANNER WITH APARTMENT BUILDING & PALM TREES ── */}
@@ -394,16 +394,16 @@ export default function TenantDocumentsAndVerificationPage() {
               sizes="540px"
               className="object-cover object-right"
             />
-            {/* Soft left gradient fade into #F7F6F0 page background */}
-            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#F7F6F0] dark:from-[#0D100E] via-[#F7F6F0]/80 dark:via-[#0D100E]/80 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-[#F7F6F0] dark:from-[#0D100E] to-transparent" />
+            {/* Soft left gradient fade into white page background */}
+            <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-white dark:from-[#0E1210] via-white/80 dark:via-[#0E1210]/80 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-5 bg-gradient-to-t from-white dark:from-[#0E1210] to-transparent" />
           </div>
         </div>
 
         {/* ── 2. 4 KPI SUMMARY CARDS ROW ── */}
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* KPI 1: Ghana Card */}
-          <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] flex items-center gap-3.5">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-xs flex items-center gap-3.5">
             <div
               className={clsx(
                 'w-11 h-11 rounded-xl border flex items-center justify-center shrink-0',
@@ -456,7 +456,7 @@ export default function TenantDocumentsAndVerificationPage() {
           </div>
 
           {/* KPI 2: Student Status */}
-          <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] flex items-center gap-3.5">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-xs flex items-center gap-3.5">
             <div
               className={clsx(
                 'w-11 h-11 rounded-xl border flex items-center justify-center shrink-0',
@@ -496,7 +496,7 @@ export default function TenantDocumentsAndVerificationPage() {
           </div>
 
           {/* KPI 3: Executed Leases */}
-          <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] flex items-center gap-3.5">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-xs flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-[#EAF5EC] dark:bg-emerald-950/50 border border-[#D4EBDA] dark:border-emerald-900/50 flex items-center justify-center shrink-0 text-[#15803D] dark:text-emerald-400">
               <FileText className="w-5 h-5 stroke-[2.1]" />
             </div>
@@ -511,7 +511,7 @@ export default function TenantDocumentsAndVerificationPage() {
           </div>
 
           {/* KPI 4: Needs Your Signature */}
-          <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] flex items-center gap-3.5">
+          <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl px-4 py-3.5 shadow-xs flex items-center gap-3.5">
             <div className="w-11 h-11 rounded-xl bg-[#EAF5EC] dark:bg-emerald-950/50 border border-[#D4EBDA] dark:border-emerald-900/50 flex items-center justify-center shrink-0 text-[#15803D] dark:text-emerald-400">
               <PenLine className="w-5 h-5 stroke-[2.1]" />
             </div>
@@ -533,7 +533,7 @@ export default function TenantDocumentsAndVerificationPage() {
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-7 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Identity & eligibility ── */}
-            <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3.5">
               {/* Card Header */}
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#117A37] text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
@@ -550,10 +550,10 @@ export default function TenantDocumentsAndVerificationPage() {
               </div>
 
               {/* Sub-card 1: Ghana Card • National ID */}
-              <div className="bg-[#F7F5EE] dark:bg-zinc-900 border border-[#EAE7DD] dark:border-zinc-800 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3.5 min-w-0">
                   {/* Cropped Ghana Card Illustration */}
-                  <div className="w-[116px] h-[72px] relative rounded-lg overflow-hidden shrink-0 shadow-2xs border border-black/5 bg-[#EBE8DF] dark:bg-zinc-800">
+                  <div className="w-[116px] h-[72px] relative rounded-lg overflow-hidden shrink-0 shadow-2xs border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
                     <Image
                       src="/images/documents/ghana-card-illust.png"
                       alt="Ghana Card National ID"
@@ -620,7 +620,7 @@ export default function TenantDocumentsAndVerificationPage() {
                         setGhanaCardMessage(null);
                         setGhanaCardModalMode('view');
                       }}
-                      className="px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 border border-[#D5D3C8] dark:border-zinc-700 text-[#1E2E24] dark:text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                      className="px-3 py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-[#1E2E24] dark:text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5 text-[#3B4C41] dark:text-zinc-300" />
                       <span>View verification</span>
@@ -647,10 +647,10 @@ export default function TenantDocumentsAndVerificationPage() {
               </div>
 
               {/* Sub-card 2: Tertiary student clearance */}
-              <div className="bg-[#F7F5EE] dark:bg-zinc-900 border border-[#EAE7DD] dark:border-zinc-800 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+              <div className="bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                 <div className="flex items-center gap-3.5 min-w-0">
                   {/* Cropped 3D Graduation Cap Illustration */}
-                  <div className="w-[116px] h-[66px] relative rounded-lg overflow-hidden shrink-0 bg-[#EFECE3] dark:bg-zinc-800 border border-black/5">
+                  <div className="w-[116px] h-[66px] relative rounded-lg overflow-hidden shrink-0 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                     <Image
                       src="/images/documents/grad-cap-illust.png"
                       alt="Tertiary Student Clearance"
@@ -710,7 +710,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   <button
                     type="button"
                     onClick={() => openStudentModal(hasStudentCredentials ? 'view' : 'edit')}
-                    className="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 border border-[#D5D3C8] dark:border-zinc-700 text-[#1E2E24] dark:text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                    className="px-3.5 py-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-[#1E2E24] dark:text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5 text-[#15803D] dark:text-emerald-400" />
                     <span>
@@ -844,7 +844,7 @@ export default function TenantDocumentsAndVerificationPage() {
                 </div>
               </div>
             ) : (
-              <div className="relative rounded-2xl bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 p-5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] space-y-4">
+              <div className="relative rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 p-5 shadow-xs space-y-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-[#EAF5EC] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center shrink-0">
@@ -859,12 +859,12 @@ export default function TenantDocumentsAndVerificationPage() {
                       </p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-[#EAE8DF] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-bold">
+                  <span className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-bold">
                     0 Executed
                   </span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-zinc-900 border border-[#E7E5DC] dark:border-zinc-800 space-y-2">
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 space-y-2">
                   <p className="text-xs font-bold text-[#14221A] dark:text-white">
                     No executed tenancy agreements on record
                   </p>
@@ -891,7 +891,7 @@ export default function TenantDocumentsAndVerificationPage() {
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-5 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Document activity ── */}
-            <div className="bg-[#FDFCF9] dark:bg-[#141A16] border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)]">
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs">
               <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#0B3B24] dark:text-emerald-400 stroke-[2.2]" />
@@ -920,7 +920,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   </p>
                 </div>
               ) : (
-                <div className="relative pl-3 space-y-3.5 before:content-[''] before:absolute before:left-[15px] before:top-3 before:bottom-3 before:w-[1.5px] before:bg-[#D5E6D9] dark:before:bg-zinc-800">
+                <div className="relative pl-3 space-y-3.5 before:content-[''] before:absolute before:left-[15px] before:top-3 before:bottom-3 before:w-[1.5px] before:bg-zinc-200 dark:before:bg-zinc-800">
                   {dynamicDocumentActivities.slice(0, 3).map((act, idx) => {
                     const IconComp = act.icon || FileText;
                     return (
@@ -949,19 +949,19 @@ export default function TenantDocumentsAndVerificationPage() {
               )}
             </div>
 
-            {/* ── Card 2: Resident handbook (Warm Cream/Peach Card) ── */}
-            <div className="bg-gradient-to-br from-[#FBF3E4] to-[#F7E8D0] dark:from-[#201A12] dark:to-[#17140F] border border-[#DFCBB3] dark:border-amber-900/40 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(180,120,50,0.05)] relative overflow-hidden">
+            {/* ── Card 2: Resident handbook ── */}
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs relative overflow-hidden">
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-2.5 flex-1 min-w-0">
                   <div className="flex items-start gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#FFF8EE] dark:bg-amber-950/60 border border-[#E6CFAF] dark:border-amber-800/40 text-[#D97706] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/40 text-[#D97706] flex items-center justify-center shrink-0 mt-0.5">
                       <BookOpen className="w-4 h-4 stroke-[2.2]" />
                     </div>
                     <div>
                       <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white leading-tight">
                         Resident handbook
                       </h2>
-                      <p className="text-[11.5px] text-[#5A5246] dark:text-amber-200/80">
+                      <p className="text-[11.5px] text-zinc-500 dark:text-zinc-400">
                         Know the rules. Enjoy your stay.
                       </p>
                     </div>
@@ -977,7 +977,7 @@ export default function TenantDocumentsAndVerificationPage() {
                     ].map((rule) => (
                       <li
                         key={rule}
-                        className="flex items-center gap-2 text-xs font-semibold text-[#2A2621] dark:text-zinc-200"
+                        className="flex items-center gap-2 text-xs font-semibold text-zinc-800 dark:text-zinc-200"
                       >
                         <span className="w-4 h-4 rounded-full bg-[#EA580C]/15 text-[#EA580C] inline-flex items-center justify-center shrink-0">
                           <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -989,7 +989,7 @@ export default function TenantDocumentsAndVerificationPage() {
                 </div>
 
                 {/* Right Building Thumbnail */}
-                <div className="w-[108px] h-[112px] relative rounded-xl overflow-hidden shrink-0 border border-[#E5D3B8] dark:border-amber-900/50 shadow-xs hidden sm:block">
+                <div className="w-[108px] h-[112px] relative rounded-xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-xs hidden sm:block">
                   <Image
                     src="/images/documents/handbook-building.png"
                     alt="Resident Handbook Building"
@@ -1004,7 +1004,7 @@ export default function TenantDocumentsAndVerificationPage() {
                 <button
                   type="button"
                   onClick={() => setHandbookModalOpen(true)}
-                  className="px-4 py-1.5 rounded-lg bg-[#FBF6EE] dark:bg-zinc-800 hover:bg-white dark:hover:bg-zinc-700 border border-[#9E9585] dark:border-zinc-700 text-[#14221A] dark:text-white text-xs font-bold inline-flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
+                  className="px-4 py-1.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white text-xs font-bold inline-flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
                 >
                   <span>Read house guidelines</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1012,17 +1012,17 @@ export default function TenantDocumentsAndVerificationPage() {
               </div>
             </div>
 
-            {/* ── Card 3: Need help with a document? (Soft Mint Green Card) ── */}
-            <div className="bg-[#EBF6EC] dark:bg-emerald-950/20 border border-[#CDE5D1] dark:border-emerald-900/40 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+            {/* ── Card 3: Need help with a document? ── */}
+            <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#D8EEDD] dark:bg-emerald-900/50 text-[#0B3B24] dark:text-emerald-300 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-[#0B3B24] dark:text-emerald-300 flex items-center justify-center shrink-0">
                   <Headphones className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-[13.5px] font-extrabold text-[#14221A] dark:text-white">
                     Need help with a document?
                   </h3>
-                  <p className="text-[11px] text-[#45584C] dark:text-zinc-300 leading-snug">
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                     Our support team is ready to assist you with any document-related issue.
                   </p>
                 </div>
@@ -1041,7 +1041,7 @@ export default function TenantDocumentsAndVerificationPage() {
       </div>
 
       {/* ── 4. BOTTOM FOOTER BAR ── */}
-      <footer className="w-full border-t border-[#E5E3D8] dark:border-zinc-800 bg-[#F3F1E8]/80 dark:bg-[#0D100E] py-3 px-4 sm:px-8 lg:px-12 mt-auto">
+      <footer className="w-full border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12151D] py-3 px-4 sm:px-8 lg:px-12 mt-auto">
         <div className="max-w-[1380px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11.5px] text-[#4E5D53] dark:text-zinc-400">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#0B3B24] dark:text-emerald-400" />
@@ -1102,8 +1102,8 @@ export default function TenantDocumentsAndVerificationPage() {
 
             {ghanaCardModalMode === 'view' ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-[#F7F5EE] dark:bg-zinc-800/60 border border-[#E7E5DC] dark:border-zinc-700 flex items-center gap-4">
-                  <div className="w-28 h-18 relative rounded-lg overflow-hidden shrink-0 border border-black/10">
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 flex items-center gap-4">
+                  <div className="w-28 h-18 relative rounded-lg overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
                     <Image
                       src="/images/documents/ghana-card-illust.png"
                       alt="Ghana Card"
@@ -1338,8 +1338,8 @@ export default function TenantDocumentsAndVerificationPage() {
 
             {studentModalMode === 'view' ? (
               <div className="space-y-4">
-                <div className="p-4 rounded-xl bg-[#F7F5EE] dark:bg-zinc-800/60 border border-[#E7E5DC] dark:border-zinc-700 flex items-center gap-4">
-                  <div className="w-24 h-16 relative rounded-lg overflow-hidden shrink-0 border border-black/10">
+                <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-850 border border-zinc-200 dark:border-zinc-750 flex items-center gap-4">
+                  <div className="w-24 h-16 relative rounded-lg overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
                     <Image
                       src="/images/documents/grad-cap-illust.png"
                       alt="Graduation Cap"
@@ -1685,25 +1685,25 @@ export default function TenantDocumentsAndVerificationPage() {
             </div>
 
             <div className="space-y-3 text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed">
-              <div className="p-3 rounded-xl bg-[#FBF3E4]/60 dark:bg-zinc-800 border border-[#DFCBB3] dark:border-zinc-700">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                 <p className="font-bold text-zinc-900 dark:text-white">1. Quiet hours: 10:00 PM – 6:00 AM</p>
                 <p className="mt-0.5">
                   Maintain low audio levels in corridors, balconies, and shared study spaces during designated quiet hours.
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FBF3E4]/60 dark:bg-zinc-800 border border-[#DFCBB3] dark:border-zinc-700">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                 <p className="font-bold text-zinc-900 dark:text-white">2. Visitor registration</p>
                 <p className="mt-0.5">
                   All non-resident visitors must sign in at the security desk with a valid Ghana Card or Student ID and depart by 10:00 PM.
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FBF3E4]/60 dark:bg-zinc-800 border border-[#DFCBB3] dark:border-zinc-700">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                 <p className="font-bold text-zinc-900 dark:text-white">3. Waste management</p>
                 <p className="mt-0.5">
                   Dispose of bagged domestic waste in the designated compound bins daily before 8:00 AM.
                 </p>
               </div>
-              <div className="p-3 rounded-xl bg-[#FBF3E4]/60 dark:bg-zinc-800 border border-[#DFCBB3] dark:border-zinc-700">
+              <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700">
                 <p className="font-bold text-zinc-900 dark:text-white">
                   4. Prepaid electricity sub-meter protocols
                 </p>
