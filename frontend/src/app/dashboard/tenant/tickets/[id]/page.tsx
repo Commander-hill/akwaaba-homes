@@ -40,7 +40,6 @@ export default function TicketDetailsPage() {
         const res = await api.get(`/tickets/${ticketId}`);
         return res.data?.ticket || null;
       } catch (err: any) {
-        // Fallback or demo lookup if ticket ID is formatted locally
         return null;
       }
     },
@@ -59,37 +58,26 @@ export default function TicketDetailsPage() {
     }
   });
 
-  const ticket = ticketData || {
-    id: ticketId || 'TKT-2026-001',
-    title: 'AC Remote Battery / Sensor Malfunction',
-    description:
-      'The AC remote sensor has stopped responding to temperature adjustments in the master bedroom. Requires battery replacement or remote sync.',
-    priority: 'MEDIUM',
-    status: 'IN_PROGRESS',
-    category: 'HVAC / Air Conditioning',
-    createdAt: new Date().toISOString(),
-    property: {
-      title: activeBookingData?.property?.title || 'GLACIER STUDIO',
-      location: activeBookingData?.property?.address || 'Achimota, Accra'
+  const addNoteMutation = useMutation({
+    mutationFn: async (note: string) => {
+      const res = await api.post(`/tickets/${ticketId}/notes`, { note });
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success('Follow-up note logged successfully.');
+      setCommentText('');
+      queryClient.invalidateQueries({ queryKey: ['maintenanceTicket', ticketId] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-tickets'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Could not post note. Please try again.');
     }
-  };
-
-  const statusType = ticket.status || 'OPEN';
-  const isResolved = statusType === 'RESOLVED' || statusType === 'CLOSED';
-  const isInProgress = statusType === 'IN_PROGRESS';
-
-  const priorityColors: Record<string, string> = {
-    LOW: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-    MEDIUM: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-    HIGH: 'bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 border-orange-200 dark:border-orange-800',
-    URGENT: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800'
-  };
+  });
 
   const handleSendComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    toast.success('Note logged to ticket log.');
-    setCommentText('');
+    addNoteMutation.mutate(commentText);
   };
 
   if (isLoading) {
@@ -100,6 +88,48 @@ export default function TicketDetailsPage() {
       </div>
     );
   }
+
+  if (!ticketData) {
+    return (
+      <div className="max-w-xl mx-auto py-20 px-4 text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center">
+          <AlertCircle className="w-7 h-7" />
+        </div>
+        <h1 className="text-xl font-extrabold text-zinc-900 dark:text-white">Ticket Not Found</h1>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+          The requested maintenance request could not be located, or you may not have permission to view it.
+        </p>
+        <Link
+          href="/dashboard/tenant/tickets"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3B24] text-white text-xs font-bold hover:bg-[#072B1D] transition"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Repair Requests</span>
+        </Link>
+      </div>
+    );
+  }
+
+  const ticket = ticketData;
+  const statusType = ticket.status || 'OPEN';
+  const isResolved = statusType === 'RESOLVED' || statusType === 'CLOSED';
+  const isInProgress = statusType === 'IN_PROGRESS' || statusType === 'SCHEDULED';
+  const propertyTitle = ticket.property?.title || activeBookingData?.property?.title || 'Residential Residence';
+  const propertyLocation = ticket.property?.location || ticket.property?.address || activeBookingData?.property?.location || 'Accra, Ghana';
+  const landlordName = ticket.property?.landlord
+    ? `${ticket.property.landlord.firstName} ${ticket.property.landlord.lastName}`
+    : 'Facility Helpdesk';
+  const contactPhone =
+    ticket.property?.landlord?.phoneNumber ||
+    activeBookingData?.property?.landlord?.phoneNumber ||
+    '+233 30 200 0000';
+
+  const priorityColors: Record<string, string> = {
+    LOW: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    MEDIUM: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    HIGH: 'bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    URGENT: 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+  };
 
   return (
     <div className="max-w-5xl mx-auto py-6 px-4 sm:px-6 space-y-6 pb-24">
@@ -136,7 +166,7 @@ export default function TicketDetailsPage() {
             </h1>
             <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
               <MapPin className="w-3.5 h-3.5 text-[#16A34A]" />
-              <span>{ticket.property?.title || 'Residential Compound'} • {ticket.property?.location || 'Accra, Ghana'}</span>
+              <span>{propertyTitle} • {propertyLocation}</span>
             </p>
           </div>
 
@@ -256,14 +286,20 @@ export default function TicketDetailsPage() {
                 placeholder="Add instructions or additional details for the technician..."
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs text-zinc-900 dark:text-white outline-none focus:border-[#16A34A]"
+                disabled={addNoteMutation.isPending}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-xs text-zinc-900 dark:text-white outline-none focus:border-[#16A34A] disabled:opacity-60"
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold transition flex items-center gap-1.5"
+                disabled={addNoteMutation.isPending || !commentText.trim()}
+                className="px-4 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               >
-                <Send className="w-3.5 h-3.5" />
-                <span>Send</span>
+                {addNoteMutation.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{addNoteMutation.isPending ? 'Logging...' : 'Send'}</span>
               </button>
             </form>
           </div>
@@ -280,16 +316,16 @@ export default function TicketDetailsPage() {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <p className="font-bold text-xs text-zinc-900 dark:text-white">Facility Helpdesk</p>
+                <p className="font-bold text-xs text-zinc-900 dark:text-white">{landlordName}</p>
                 <p className="text-[11px] text-zinc-500">Akwaaba Resident Services</p>
               </div>
             </div>
             <a
-              href="tel:+233240000000"
+              href={`tel:${contactPhone.replace(/\s+/g, '')}`}
               className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition"
             >
               <Phone className="w-3.5 h-3.5 text-[#16A34A]" />
-              <span>Call Estate Desk</span>
+              <span>Call Estate Desk ({contactPhone})</span>
             </a>
           </div>
 

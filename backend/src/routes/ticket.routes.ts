@@ -6,7 +6,8 @@ import {
   updateTicketStatus,
   checkAndEscalateTickets,
   getAdminEscalatedTickets,
-  getTicketById
+  getTicketById,
+  addTicketNote
 } from '../controllers/ticket.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
@@ -19,8 +20,10 @@ router.use(authenticate);
 router.post('/', createTicket);
 router.get('/me', getTenantTickets);
 
-// Specific ticket details
+// Specific ticket details & notes
 router.get('/:id', getTicketById);
+router.post('/:id/notes', addTicketNote);
+
 
 // Landlord & Multi-stage routes
 router.get('/landlord', getLandlordTickets);

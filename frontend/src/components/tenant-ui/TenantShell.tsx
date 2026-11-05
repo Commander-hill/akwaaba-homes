@@ -118,6 +118,24 @@ export default function TenantShell({
     0
   );
 
+  const { data: ticketsData } = useQuery({
+    queryKey: ['tenant-tickets'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/tickets/me');
+        return data.tickets || [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+
+  const activeTicketsCount = (ticketsData || []).filter(
+    (t: any) => t.status !== 'RESOLVED' && t.status !== 'CLOSED' && t.status !== 'REJECTED'
+  ).length;
+
   const liveUnreadCount =
     unreadNotificationsCount > 0
       ? unreadNotificationsCount
@@ -209,7 +227,7 @@ export default function TenantShell({
       href: '/dashboard/tenant/tickets',
       matchPrefixes: ['/dashboard/tenant/tickets'],
       icon: Wrench,
-      badge: 2,
+      badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
     },
     {
       label: 'Settings',

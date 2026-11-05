@@ -445,3 +445,115 @@ export const getTicketById = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+export const addTicketNote = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Authentication required' });
+      return;
+    }
+    const { id } = req.params;
+    const { note } = req.body;
+    if (!note || !note.trim()) {
+      res.status(400).json({ message: 'Note content is required' });
+      return;
+    }
+
+    const ticket = await prisma.maintenanceTicket.findUnique({
+      where: { id },
+      include: {
+        property: true,
+        tenant: true
+      }
+    });
+
+    if (!ticket) {
+      res.status(404).json({ message: 'Ticket not found' });
+      return;
+    }
+
+    const isStaff = await prisma.propertyStaff.findFirst({
+      where: {
+        propertyId: ticket.propertyId,
+        userId: req.user.id,
+        canManageTickets: true
+      }
+    });
+
+    const isAuthorized =
+      req.user.role === 'ADMIN' ||
+      ticket.tenantId === req.user.id ||
+      ticket.property.landlordId === req.user.id ||
+      Boolean(isStaff);
+
+    if (!isAuthorized) {
+      res.status(403).json({ message: 'Forbidden: You do not have access to this ticket' });
+      return;
+    }
+
+    const senderRole =
+      req.user.id === ticket.tenantId
+        ? 'Resident'
+        : req.user.id === ticket.property.landlordId
+        ? 'Landlord'
+        : 'Support / Staff';
+    const timestamp = new Date().toLocaleString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    const formattedNote = `\n\n--- Note (${senderRole} • ${timestamp}) ---\n${note.trim()}`;
+
+    const updatedTicket = await prisma.maintenanceTicket.update({
+      where: { id },
+      data: {
+        description: (ticket.description || '') + formattedNote
+      },
+      include: {
+        property: {
+          select: {
+            title: true,
+            location: true,
+            address: true,
+            landlord: { select: { firstName: true, lastName: true, phoneNumber: true } }
+          }
+        },
+        tenant: {
+          select: { firstName: true, lastName: true, email: true, phoneNumber: true }
+        }
+      }
+    });
+
+    try {
+      const io = getIO();
+      const notifyUserId =
+        req.user.id === ticket.tenantId ? ticket.property.landlordId : ticket.tenantId;
+      await prisma.notification.create({
+        data: {
+          userId: notifyUserId,
+          type: 'ANNOUNCEMENT',
+          title: '💬 Maintenance Note Added',
+          message: `${senderRole} added a follow-up note to "${ticket.title}".`,
+          link: `/dashboard/tenant/tickets/${ticket.id}`
+        }
+      }).catch(() => null);
+
+      io.to(notifyUserId).emit('notification', {
+        title: 'Maintenance Note Added',
+        message: `${senderRole} added a follow-up note to "${ticket.title}".`,
+        type: 'ticket'
+      });
+      io.to(ticket.id).emit('ticket_updated', { ticket: updatedTicket });
+    } catch (e) {
+      // ignore socket failure
+    }
+
+    res.status(200).json({ message: 'Note added successfully', ticket: updatedTicket });
+  } catch (error) {
+    console.error('Error adding ticket note:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
