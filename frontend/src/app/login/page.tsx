@@ -436,9 +436,9 @@ function LoginForm() {
       <div className="hidden lg:block w-screen h-screen overflow-hidden relative bg-white dark:bg-[#0D100E]">
         <div className="relative w-full h-full overflow-hidden">
 
-          {/* 1. Base 2K Background Scene (Woman on couch, building, left text, waves) */}
+          {/* 1. Base 2K Background Scene (Clean Bokeh Foliage, Resident Woman & Building - Zero Baked Text) */}
           <Image
-            src="/images/auth/login-hero-clean-v2.jpg"
+            src="/images/auth/login-hero-scene-v5.jpg"
             alt="AkwaabaHomes Sign In"
             fill
             priority
@@ -510,30 +510,31 @@ function LoginForm() {
             </button>
           </div>
 
-          {/* 3. Hero Typography & Standout Feature Badges (Crisp DOM elements that stand out) */}
+          {/* 3. Hero Typography & Standout Feature Badges (Crisp DOM elements matching reference exactly) */}
           <div
             className="absolute z-20 flex flex-col justify-start pointer-events-auto"
             style={{
               left: '4.39%',
-              top: '20.5%',
-              width: '42%',
-              maxWidth: '620px',
+              top: '16%',
+              width: '38%',
+              maxWidth: '540px',
             }}
           >
             {/* Main Headline */}
-            <h1 className="text-3xl xl:text-[38px] 2xl:text-[42px] font-black tracking-tight leading-[1.12] text-[#073B24] dark:text-[#E8F5E9] select-none">
+            <h1 className="text-3xl xl:text-[36px] 2xl:text-[40px] font-black tracking-tight leading-[1.15] text-[#0B3B24] dark:text-[#E8F5E9] select-none">
               Your Next Home <br />
-              <span className="relative inline-block mt-1">
-                is Just a Sign-In Away
+              is Just a Sign-In{' '}
+              <span className="relative inline-block">
+                Away
                 <svg
-                  className="absolute -bottom-2.5 left-0 w-full h-3 text-[#16A34A] overflow-visible"
-                  viewBox="0 0 200 12"
+                  className="absolute -bottom-1.5 left-0 w-full h-2 text-[#16A34A] overflow-visible pointer-events-none"
+                  viewBox="0 0 60 8"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
                 >
                   <path
-                    d="M3 8.5C50 2.5 150 2.5 197 8.5"
+                    d="M2 6C18 2 42 2 58 6"
                     stroke="currentColor"
                     strokeWidth="3.5"
                     strokeLinecap="round"
@@ -543,55 +544,49 @@ function LoginForm() {
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-5 text-xs xl:text-sm 2xl:text-[15px] font-medium leading-relaxed text-zinc-700 dark:text-zinc-300 max-w-md">
+            <p className="mt-3.5 text-xs xl:text-sm font-medium leading-relaxed text-zinc-700 dark:text-zinc-300 max-w-sm">
               Discover verified homes, book with ease, and enjoy a seamless living experience across Ghana.
             </p>
 
-            {/* Three Standout Feature Pills */}
-            <div className="mt-7 flex items-center gap-2.5 xl:gap-3 flex-wrap">
+            {/* Three Standout Feature Badges (Vertical format matching reference) */}
+            <div className="mt-6 flex items-start gap-6 xl:gap-8">
               {/* Pill 1: Verified Listings */}
-              <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/80 dark:border-zinc-800 shadow-xs hover:shadow-sm hover:scale-[1.02] transition">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-                  <ShieldCheck className="w-4 h-4" />
+              <div className="flex flex-col items-center text-center max-w-[110px]">
+                <div className="w-11 h-11 rounded-2xl bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs border border-[#BBF7D0] dark:border-emerald-800/40">
+                  <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
                 </div>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[12px] xl:text-[13px] font-bold text-zinc-900 dark:text-white">
-                    Verified Listings
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
-                    Stay safe & secure
-                  </span>
-                </div>
+                <span className="mt-2 text-xs font-bold text-zinc-900 dark:text-white leading-tight">
+                  Verified Listings
+                </span>
+                <span className="mt-0.5 text-[10.5px] font-medium text-zinc-500 dark:text-zinc-400 leading-tight">
+                  Stay safe & secure
+                </span>
               </div>
 
               {/* Pill 2: 24/7 Support */}
-              <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/80 dark:border-zinc-800 shadow-xs hover:shadow-sm hover:scale-[1.02] transition">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-                  <Headphones className="w-4 h-4" />
+              <div className="flex flex-col items-center text-center max-w-[110px]">
+                <div className="w-11 h-11 rounded-2xl bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs border border-[#BBF7D0] dark:border-emerald-800/40">
+                  <Headphones className="w-5 h-5 stroke-[2.2]" />
                 </div>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[12px] xl:text-[13px] font-bold text-zinc-900 dark:text-white">
-                    24/7 Support
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
-                    We're always here
-                  </span>
-                </div>
+                <span className="mt-2 text-xs font-bold text-zinc-900 dark:text-white leading-tight">
+                  24/7 Support
+                </span>
+                <span className="mt-0.5 text-[10.5px] font-medium text-zinc-500 dark:text-zinc-400 leading-tight">
+                  We're always here
+                </span>
               </div>
 
               {/* Pill 3: Trusted Community */}
-              <div className="flex items-center gap-2.5 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md rounded-2xl px-3 py-2 border border-white/80 dark:border-zinc-800 shadow-xs hover:shadow-sm hover:scale-[1.02] transition">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100 dark:border-emerald-800/40">
-                  <Handshake className="w-4 h-4" />
+              <div className="flex flex-col items-center text-center max-w-[110px]">
+                <div className="w-11 h-11 rounded-2xl bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs border border-[#BBF7D0] dark:border-emerald-800/40">
+                  <Handshake className="w-5 h-5 stroke-[2.2]" />
                 </div>
-                <div className="flex flex-col leading-tight">
-                  <span className="text-[12px] xl:text-[13px] font-bold text-zinc-900 dark:text-white">
-                    Trusted Community
-                  </span>
-                  <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
-                    Live with confidence
-                  </span>
-                </div>
+                <span className="mt-2 text-xs font-bold text-zinc-900 dark:text-white leading-tight">
+                  Trusted Community
+                </span>
+                <span className="mt-0.5 text-[10.5px] font-medium text-zinc-500 dark:text-zinc-400 leading-tight">
+                  Live with confidence
+                </span>
               </div>
             </div>
           </div>
@@ -600,12 +595,12 @@ function LoginForm() {
           <Link
             href="/properties"
             title="Explore Ghana accommodations"
-            className="absolute z-20 flex items-center gap-3.5 bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md rounded-2xl p-2.5 xl:p-3 border border-white/90 dark:border-zinc-700/60 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all group focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
+            className="absolute z-20 flex items-center gap-3.5 bg-white/40 dark:bg-black/30 backdrop-blur-md rounded-2xl p-2.5 xl:p-3 border border-white/60 dark:border-zinc-700/60 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all group focus:outline-none focus:ring-2 focus:ring-[#16A34A]"
             style={{
-              left: '3.2%',
-              top: '78.5%',
-              width: '32%',
-              maxWidth: '470px',
+              left: '2.73%',
+              top: '77.78%',
+              width: '30.08%',
+              height: '16.84%',
             }}
           >
             <div className="w-20 xl:w-24 h-14 xl:h-16 rounded-xl overflow-hidden shrink-0 relative shadow-xs">
@@ -621,7 +616,7 @@ function LoginForm() {
                 <MapPin className="w-3.5 h-3.5" />
                 <span>Ghana</span>
               </div>
-              <p className="text-[11px] xl:text-[12.5px] font-semibold text-zinc-800 dark:text-zinc-100 leading-snug mt-0.5">
+              <p className="text-[11px] xl:text-[12.5px] font-semibold text-zinc-900 dark:text-zinc-100 leading-snug mt-0.5">
                 More than just a place, it's a better way of living.
               </p>
             </div>
@@ -683,7 +678,7 @@ function LoginForm() {
         {/* Mobile Hero Banner */}
         <div className="relative h-56 w-full overflow-hidden">
           <Image
-            src="/images/auth/login-hero-woman-clean-v2.jpg"
+            src="/images/auth/login-hero-woman-scene-v5.jpg"
             alt="AkwaabaHomes Resident"
             fill
             priority

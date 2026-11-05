@@ -181,10 +181,10 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FDF9F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors">
+    <div className="-mt-16 min-h-screen w-full bg-white dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors pt-20">
       
-      {/* ──── TOP NAVIGATION BAR ──── */}
-      <header className="w-full bg-[#FDF9F0] dark:bg-[#0D100E]">
+      {/* ──── TOP FIXED NAVIGATION BAR ──── */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0D100E]/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Brand + Breadcrumb */}
           <div className="flex items-center gap-4">
@@ -208,7 +208,7 @@ function ResetPasswordForm() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-black tracking-tight text-[#086333] dark:text-white leading-none">
+                <span className="text-base font-black tracking-tight text-[#16A34A] dark:text-white leading-none">
                   AkwaabaHomes
                 </span>
                 <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400 mt-0.5">
@@ -217,7 +217,7 @@ function ResetPasswordForm() {
               </div>
             </Link>
 
-            <span className="hidden sm:inline-block h-6 w-px bg-zinc-300/80 dark:bg-zinc-700" />
+            <span className="hidden sm:inline-block h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
 
             {/* Breadcrumb */}
             <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
@@ -233,11 +233,11 @@ function ResetPasswordForm() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
-            <span className="h-5 w-px bg-zinc-300/80 dark:bg-zinc-700" />
+            <span className="h-5 w-px bg-zinc-200 dark:bg-zinc-700" />
 
             <button
               onClick={handleCancel}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-[#086333] dark:hover:text-emerald-400 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-[#16A34A] dark:hover:text-emerald-400 transition cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to account</span>
@@ -293,7 +293,7 @@ function ResetPasswordForm() {
             <div className="pt-2">
               <Link
                 href={isAuthenticated ? '/dashboard/profile/security' : '/login'}
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0A3D26] hover:bg-[#072B1B] text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
               >
                 <span>Continue</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -305,10 +305,10 @@ function ResetPasswordForm() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             {/* ── LEFT COLUMN: MAIN FORM CARD (8 Cols) ── */}
-            <div className="lg:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xs space-y-6">
+            <div className="lg:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 shadow-2xs space-y-6">
               
               {/* Internal Top Banner with Independence Arch Line Art & Shield */}
-              <div className="relative rounded-2xl overflow-hidden bg-[#EBF3EC] dark:bg-emerald-950/30 border border-[#D5E8D8] dark:border-emerald-900/40 p-4 sm:p-5 flex items-center gap-4 shadow-inner">
+              <div className="relative rounded-2xl overflow-hidden bg-white dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/80 p-4 sm:p-5 flex items-center gap-4 shadow-xs">
                 {/* Shield Key Icon */}
                 <div className="relative z-10 shrink-0">
                   <div className="w-12 h-14 rounded-xl flex items-center justify-center text-[#086333] dark:text-emerald-400">
@@ -549,7 +549,7 @@ function ResetPasswordForm() {
                       type="checkbox"
                       checked={signOutOthers}
                       onChange={(e) => setSignOutOthers(e.target.checked)}
-                      className="w-4 h-4 rounded text-[#0A3D26] focus:ring-[#0A3D26] border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 cursor-pointer accent-[#0A3D26]"
+                      className="w-4 h-4 rounded text-[#16A34A] focus:ring-[#16A34A] border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 cursor-pointer accent-[#16A34A]"
                     />
                     <label
                       htmlFor="signOutOthers"
@@ -567,7 +567,7 @@ function ResetPasswordForm() {
                     <button
                       type="button"
                       onClick={handleCancel}
-                      className="px-8 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition cursor-pointer"
+                      className="px-8 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -575,7 +575,7 @@ function ResetPasswordForm() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-[#0A3D26] hover:bg-[#072B1B] text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                       {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                       <span>Update password</span>
@@ -631,10 +631,10 @@ function ResetPasswordForm() {
                 </div>
               </div>
 
-              {/* Card 2: Recent security activity (Sage Green #E1EAD9) */}
-              <div className="bg-[#E1EAD9] dark:bg-emerald-950/20 border border-[#CBD8C2] dark:border-emerald-900/40 rounded-3xl p-6 space-y-4 shadow-xs">
+              {/* Card 2: Recent security activity */}
+              <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 space-y-4 shadow-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-[#086333] dark:text-emerald-300 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-300 flex items-center justify-center">
                     <Clock className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <h3 className="font-serif text-base font-bold text-zinc-950 dark:text-white">
@@ -675,10 +675,10 @@ function ResetPasswordForm() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#CBD8C2] dark:border-emerald-900/30">
+                <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
                   <Link
                     href="/dashboard/profile/security"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#086333] dark:text-emerald-300 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#16A34A] dark:text-emerald-300 hover:underline"
                   >
                     <span>Manage security settings</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -693,18 +693,18 @@ function ResetPasswordForm() {
         {/* ──── BOTTOM ENCRYPTION DISCLAIMER ──── */}
         <div className="pt-4 pb-2">
           <div className="flex items-center justify-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="hidden sm:inline-block w-28 h-px bg-zinc-300/80 dark:bg-zinc-800" />
+            <span className="hidden sm:inline-block w-28 h-px bg-zinc-200 dark:bg-zinc-800" />
             <div className="flex items-center gap-1.5 font-medium">
               <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
               <span>Your password is encrypted and never displayed to support staff.</span>
             </div>
-            <span className="hidden sm:inline-block w-28 h-px bg-zinc-300/80 dark:bg-zinc-800" />
+            <span className="hidden sm:inline-block w-28 h-px bg-zinc-200 dark:bg-zinc-800" />
           </div>
         </div>
       </main>
 
       {/* ──── FOOTER ──── */}
-      <footer className="w-full bg-[#FDF9F0] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800/60">
+      <footer className="w-full bg-white dark:bg-[#0D100E] border-t border-zinc-200 dark:border-zinc-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 gap-2">
           <span>© 2026 AkwaabaHomes Ghana</span>
           <div className="flex items-center gap-4">
@@ -734,8 +734,8 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#FDF9F0] dark:bg-[#0D100E]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#086333] dark:text-emerald-400" />
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#0D100E]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#16A34A] dark:text-emerald-400" />
         </div>
       }
     >
