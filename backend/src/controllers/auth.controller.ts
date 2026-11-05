@@ -53,6 +53,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (!avatarUrl || !String(avatarUrl).trim()) {
+      res.status(400).json({ message: 'Profile picture is mandatory. Please upload a clear portrait photo.' });
+      return;
+    }
+
     if (role === 'TENANT') {
       if (!dateOfBirth) {
         res.status(400).json({ message: 'Missing mandatory tenant details (Date of Birth is required)' });

@@ -14,6 +14,7 @@ interface PassportUploadProps {
   label?: string;
   description?: string;
   optional?: boolean;
+  required?: boolean;
 }
 
 export default function PassportUpload({
@@ -22,7 +23,8 @@ export default function PassportUpload({
   currentUrl,
   label = 'Profile Photo',
   description = 'Clear portrait or passport-style photo. Centered and cropped automatically.',
-  optional = true,
+  optional = false,
+  required = true,
 }: PassportUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentUrl ? getImageUrl(currentUrl) : null);
@@ -209,9 +211,13 @@ export default function PassportUpload({
               <span className="text-xs font-bold text-zinc-950 dark:text-white">
                 {label}
               </span>
-              {optional && (
+              {optional && !required ? (
                 <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
                   Optional
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/90 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60 shadow-2xs">
+                  Required *
                 </span>
               )}
               {preview && !isUploading && (

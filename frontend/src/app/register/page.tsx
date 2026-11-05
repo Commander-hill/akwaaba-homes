@@ -171,6 +171,10 @@ export default function RegisterPage() {
       triggerError('Date of birth is required for tenant verification.');
       return;
     }
+    if (!formData.avatarUrl || !formData.avatarUrl.trim()) {
+      triggerError('Please upload your profile photo to continue.');
+      return;
+    }
 
     setCurrentStep(2);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -221,6 +225,13 @@ export default function RegisterPage() {
     setError('');
 
     // Final Validations
+    if (!formData.avatarUrl || !formData.avatarUrl.trim()) {
+      triggerError('Please upload your profile photo to complete registration.');
+      setIsLoading(false);
+      setCurrentStep(1);
+      return;
+    }
+
     if (!formData.email.trim()) {
       triggerError('Please enter a valid email address.');
       setIsLoading(false);
@@ -285,6 +296,7 @@ export default function RegisterPage() {
     formData.phoneNumber.trim() &&
     formData.gender &&
     formData.nationality.trim() &&
+    formData.avatarUrl && formData.avatarUrl.trim() &&
     (formData.role !== 'TENANT' || Boolean(formData.dateOfBirth))
   );
 
@@ -642,7 +654,7 @@ export default function RegisterPage() {
 
               {/* Profile Photo Uploader */}
               <div className="space-y-1.5">
-                <label className={labelClass}>Profile Photo</label>
+                <label className={labelClass}>Profile Photo *</label>
                 <PassportUpload
                   currentUrl={formData.avatarUrl}
                   onUploadSuccess={(url) => {
@@ -658,7 +670,8 @@ export default function RegisterPage() {
                   }}
                   label="Profile Picture"
                   description="Upload a clear portrait or passport-style photo (up to 10MB). Automatically cropped and optimized."
-                  optional={true}
+                  optional={false}
+                  required={true}
                 />
               </div>
 
@@ -1011,11 +1024,11 @@ export default function RegisterPage() {
                     <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-0.5">
                       {formData.avatarUrl ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold">
-                          <CheckCircle2 className="w-3 h-3" /> Profile photo attached
+                          <CheckCircle2 className="w-3 h-3" /> Profile photo verified
                         </span>
                       ) : (
-                        <span className="text-zinc-400 dark:text-zinc-500">
-                          No photo uploaded (optional)
+                        <span className="text-red-500 font-semibold">
+                          Profile photo required *
                         </span>
                       )}
                     </div>
