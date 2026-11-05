@@ -1,87 +1,92 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   ShieldCheck, 
-  Lock, 
   FileText, 
+  Download, 
+  Mail, 
   CheckCircle2, 
-  AlertTriangle, 
-  Clock, 
-  Building2, 
-  GraduationCap, 
-  Search, 
-  Printer, 
-  Copy, 
-  Check,
+  Calendar, 
+  Leaf, 
+  Fingerprint, 
+  Scale, 
+  Database, 
+  Settings, 
+  Trash2, 
   ArrowRight, 
+  UserCheck, 
+  GraduationCap, 
+  Receipt, 
+  Home, 
+  FileEdit, 
+  Ban, 
+  HelpCircle, 
+  Headphones, 
   ChevronRight, 
-  HelpCircle,
-  ExternalLink,
-  LifeBuoy,
-  KeyRound,
-  EyeOff,
-  UserCheck
+  X, 
+  Send, 
+  ShieldAlert, 
+  Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import clsx from 'clsx';
 
-interface PrivacySection {
-  id: string;
-  number: string;
-  title: string;
-  badge?: string;
-  summary: string;
-  content: React.ReactNode;
+function HeaderSwoosh({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 240 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={clsx('w-44 h-2.5 mx-auto text-[#0B3B24] dark:text-emerald-500 opacity-40 dark:opacity-60', className)}
+      aria-hidden="true"
+    >
+      <path
+        d="M2 9C55 2.5 125 10.5 238 3"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
 }
 
+interface FaqItem {
+  question: string;
+  answer: string;
+  reference: string;
+}
+
+const FAQS_DATA: FaqItem[] = [
+  {
+    question: 'How is my Ghana Card information used?',
+    answer: 'Ghana Card numbers and biometric identity verification records are processed exclusively via accredited National Identification Authority (NIA) identity verification pipelines. AkwaabaHomes uses these details strictly to authenticate tenant, student, and landlord accounts, prevent impersonation fraud, and satisfy Know-Your-Customer (KYC) requirements under Act 843 and the Electronic Transactions Act, 2008 (Act 772). We never store raw biometric data.',
+    reference: 'Data Protection Act, 2012 (Act 843), Sections 20 & 28 — Principles of Lawful Processing'
+  },
+  {
+    question: 'How long do you keep tenancy records?',
+    answer: 'Tenancy agreements, transaction receipts, move-in verification logs, and dispute records are securely archived for seven (7) years following the conclusion of a lease in compliance with statutory Ghanaian tax and accounting laws. Non-essential identity uploads and temporary communication drafts are purged 180 days after account deactivation or upon verified erasure requests.',
+    reference: 'Rent Act, 1963 (Act 220) & Ghana Revenue Authority (GRA) Statutory Recordkeeping Requirements'
+  },
+  {
+    question: 'Who can access my information?',
+    answer: 'Access to personal information is restricted strictly to verified transaction participants (e.g. a matched property owner reviewing an approved tenant profile, or a student verifying hostel management credentials) and licensed payment switches (Paystack, MTN MoMo, Telecel Cash). AkwaabaHomes maintains strict role-based access control (RBAC), end-to-end encryption in transit (TLS 1.3), and zero third-party marketing brokers.',
+    reference: 'Data Protection Act, 2012 (Act 843), Section 30 — Security Measures and Unauthorized Access'
+  }
+];
+
 export default function PrivacyPage() {
-  const [activeSection, setActiveSection] = useState('data-collection');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [copiedLink, setCopiedLink] = useState(false);
-
-  // Track scroll position & calculate reading progress
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const currentProgress = (window.scrollY / totalHeight) * 100;
-        setScrollProgress(Math.min(100, Math.max(0, currentProgress)));
-      }
-
-      const scrollPosition = window.scrollY + 220;
-      const sectionElements = document.querySelectorAll('section[id]');
-      for (let i = sectionElements.length - 1; i >= 0; i--) {
-        const el = sectionElements[i] as HTMLElement;
-        if (el.offsetTop <= scrollPosition) {
-          setActiveSection(el.id);
-          break;
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const yOffset = -90;
-      const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }
-  };
-
-  const copyPageLink = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      toast.success('Privacy policy link copied to clipboard');
-      setTimeout(() => setCopiedLink(false), 2000);
-    }
-  };
+  const [activeFaq, setActiveFaq] = useState<FaqItem | null>(null);
+  const [isDsarModalOpen, setIsDsarModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [requestType, setRequestType] = useState('COPY');
+  const [userEmail, setUserEmail] = useState('');
+  const [ghanaCardNumber, setGhanaCardNumber] = useState('');
+  const [requestNotes, setRequestNotes] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -89,625 +94,877 @@ export default function PrivacyPage() {
     }
   };
 
-  // Section Definitions
-  const SECTIONS: PrivacySection[] = [
-    {
-      id: 'data-collection',
-      number: '01',
-      title: 'Data Collection & Ghana Card Verification',
-      badge: 'NIA Verified',
-      summary: 'Data collected strictly for tenancy administration, student housing quotas, and identity authentication.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes operates as a registered Ghanaian PropTech marketplace connecting students, residential tenants, verified property hosts, and gatehouse caretakers. To maintain community safety and eliminate rental scams, we collect personal identity data strictly necessary for tenancy execution and identity verification.
-          </p>
-          <p>
-            When you register, verify your identity, or initiate an accommodation reservation, we collect:
-          </p>
-          <div className="space-y-2.5 text-xs sm:text-sm">
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">&bull; Personal Credentials &amp; Contact Records:</strong>
-              <span className="text-zinc-600 dark:text-zinc-400">Full legal name, gender, date of birth, primary phone number (e.g. Ghanaian mobile money phone number), and verified email address.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">&bull; Ghana Card Identification Data:</strong>
-              <span className="text-zinc-600 dark:text-zinc-400">National Identification Number (GHA-XXXXXXXXX-X) and cryptographic identity verification tokens solely for cross-validation against National Identification Authority (NIA) verification gateways.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">&bull; Tertiary Student Enrollment Information:</strong>
-              <span className="text-zinc-600 dark:text-zinc-400">For university tenants: campus affiliation (KNUST, UG Legon, UCC, ATU, etc.), student ID / index number, year of study, degree programme, and emergency guardian contact details.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">&bull; Property Ownership &amp; Business Authorizations:</strong>
-              <span className="text-zinc-600 dark:text-zinc-400">For property owners: site plans, land title certificates, indentures, and municipal assembly business operating permits.</span>
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            We never collect sensitive biometric files or unverified copies of national ID cards without explicit cryptographic encryption and user authorization.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'data-use',
-      number: '02',
-      title: 'Lawful Purposes of Data Processing',
-      badge: 'Legitimate Interest',
-      summary: 'Legitimate processing purposes including electronic lease generation, payment verification, and gatehouse access.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            Pursuant to Section 18 of the Data Protection Act, 2012 (Act 843), personal data must be processed for specific, explicitly defined, and lawful purposes. AkwaabaHomes processes your information exclusively for the following operational objectives:
-          </p>
-          <ul className="space-y-2 text-xs sm:text-sm">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Execution of Digital Tenancy Agreements:</strong> Generating legally binding lease contracts containing authenticated tenant and landlord names, advance rent figures, and utility schedules pursuant to the Rent Act of Ghana.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Gatehouse &amp; Check-In Authentication:</strong> Generating the secure QR Move-In Pass validated by on-site caretakers during room key transfers.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Settlement &amp; Payout Auditing:</strong> Recording transactional timestamps to authorize release of advance rent to landlords once move-in protocols are confirmed.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Dynamic Gender-Lock Enforcement:</strong> Automating gender locking for shared multi-bed student accommodation units to protect student safety and institutional compliance.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Dispute Mediation &amp; Investigation:</strong> Reviewing move-in defect claims, rent refunds, and emergency maintenance requests.</span>
-            </li>
-          </ul>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
-            AkwaabaHomes does not engage in behavioral profiling, automated credit scoring, or secondary selling of user profiles to commercial third parties.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'security-storage',
-      number: '03',
-      title: 'Storage & Encryption Standards',
-      badge: 'AES-256 & TLS 1.3',
-      summary: 'High-grade cryptographic protection for all identity scans, lease files, and database records.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes utilizes modern defense-in-depth security standards to protect personal data against accidental loss, unauthorized access, destruction, or disclosure:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-1.5">
-              <div className="flex items-center gap-2 font-bold text-xs text-[#0F5132] dark:text-emerald-400">
-                <Lock className="w-4 h-4 shrink-0" />
-                <span>Encryption in Transit</span>
-              </div>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-                All communications between your device and our servers are encrypted using modern Transport Layer Security (TLS 1.3) with perfect forward secrecy.
-              </p>
-            </div>
+  const openDsarWithType = (type: string) => {
+    setRequestType(type);
+    setIsDsarModalOpen(true);
+  };
 
-            <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-1.5">
-              <div className="flex items-center gap-2 font-bold text-xs text-[#0F5132] dark:text-emerald-400">
-                <KeyRound className="w-4 h-4 shrink-0" />
-                <span>Encryption at Rest</span>
-              </div>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-                All identity documents, land ownership deeds, and payment ledgers are stored with AES-256 cryptographic keys managed via isolated key vaults.
-              </p>
-            </div>
-          </div>
-          <p>
-            <strong>Role-Based Access Controls (RBAC):</strong> Employee access to user verification files is strictly compartmentalized based on least-privilege principles. All access sessions are logged in tamper-evident security audit trails monitored 24/7.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'payment-processing',
-      number: '04',
-      title: 'Payment Processing & Financial Privacy',
-      badge: 'PCI-DSS Compliant',
-      summary: 'Card and Mobile Money credentials are handled entirely by Bank of Ghana-regulated payment gateways.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes processes advance rent and security deposits through certified, Bank of Ghana-regulated payment gateway partners (including Paystack and national Mobile Money switches):
-          </p>
-          <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-950 dark:text-emerald-200 space-y-2">
-            <div className="flex items-center gap-2 font-bold text-sm text-[#0F5132] dark:text-emerald-400">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>Zero Financial Credential Retention</span>
-            </div>
-            <p className="leading-relaxed">
-              AkwaabaHomes <strong>never stores, views, or processes</strong> your full debit/credit card number, CVV code, or personal Mobile Money PIN. All payment inputs are tokenized directly within the licensed gateway&apos;s PCI-DSS Level 1 certified environment.
-            </p>
-          </div>
-          <p>
-            Our internal database retains only the anonymized transaction reference token, transaction status (Pending, Settled, Refunded), currency amount, and payment timestamp for statutory bookkeeping and dispute resolution.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'data-sharing',
-      number: '05',
-      title: 'Third-Party Disclosure & Zero-Sale Guarantee',
-      badge: 'No Data Brokers',
-      summary: 'We never sell or rent your personal records. Data is shared exclusively with verified tenancy counterparties.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes maintains an unwavering policy: <strong>We do not sell, rent, monetize, or lease your personal data</strong> to real estate lead brokers, marketing agencies, or advertising networks.
-          </p>
-          <p>
-            We disclose limited personal data strictly under the following narrow circumstances:
-          </p>
-          <ul className="space-y-2 text-xs sm:text-sm">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Your Confirmed Tenancy Counterparty:</strong> Once a reservation payment is confirmed, your full name, verified phone number, and emergency contact details are shared with the property host (and vice versa) to facilitate move-in logistics.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>National Law Enforcement &amp; Court Orders:</strong> Where strictly required under formal court subpoena, Ghanaian criminal investigation, or statutory mandate by the Ghana Police Service.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Licensed Banking Gateways:</strong> Transmitting necessary transaction identifiers to Paystack and banking partners to execute authorized rent disbursements and refund reversals.</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-    {
-      id: 'user-rights',
-      number: '06',
-      title: 'Your Statutory Rights Under Act 843',
-      badge: 'Data Protection Act 2012',
-      summary: 'Full statutory protections under Ghanaian privacy law including access, rectification, and erasure.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            Under Sections 35 through 43 of the Data Protection Act, 2012 (Act 843), you hold legally protected data subject rights regarding your personal records:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">1. Right of Access (Section 35)</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Request a complete copy of all personal records, booking histories, and agreements held in your account.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">2. Right to Rectification (Section 39)</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Correct inaccurate, incomplete, or outdated personal information via your profile workspace.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">3. Right to Prevent Processing (Section 36)</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Object to non-statutory data processing or opt out of non-essential SMS and email platform announcements.</span>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-950 dark:text-white block mb-0.5">4. Right to Erasure / Account Deletion</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Request permanent deletion of your profile and cryptographic identification records upon tenancy completion.</span>
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            To exercise any of these rights, contact our Data Protection Officer directly or submit a request via our <Link href="/support" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Support Portal</Link>. Requests are processed within 14 calendar days.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'retention-deletion',
-      number: '07',
-      title: 'Data Retention & Account Deletion Schedules',
-      badge: 'Statutory Retention',
-      summary: 'Data is expunged upon account termination, retaining only statutory financial records required by Ghana Revenue Authority.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes retains personal data only for as long as is necessary to fulfill the purposes for which it was collected or to satisfy statutory obligations under Ghanaian law:
-          </p>
-          <ul className="space-y-2 text-xs sm:text-sm">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Active Account Lifecycle:</strong> Your profile, academic affiliation, and listings remain active and accessible until you request account termination.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Identity Scan Erasure:</strong> Upon account closure, all stored national ID scans and verification proofs are permanently wiped from active servers within 30 days.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Financial &amp; Tenancy Records:</strong> Executed tenancy agreements and financial transaction ledgers are retained for a statutory period of six (6) years to comply with Ghana Revenue Authority (GRA) tax audit rules and the Rent Control Act.</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-    {
-      id: 'contact-dpo',
-      number: '08',
-      title: 'Data Protection Officer & Regulatory Inquiries',
-      badge: 'DPC Ghana Registered',
-      summary: 'Direct contact coordinates for our certified Data Protection Officer and regulatory escalation channels.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes Ghana PropTech Limited has appointed a certified <strong>Data Protection Officer (DPO)</strong> responsible for overseeing compliance with the Data Protection Commission (DPC) of Ghana:
-          </p>
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-2 text-xs">
-            <div className="font-bold text-sm text-zinc-950 dark:text-white">
-              Office of the Data Protection Officer &bull; AkwaabaHomes Ghana
-            </div>
-            <div className="text-zinc-600 dark:text-zinc-400">
-              <strong>Official Inquiries:</strong> <a href="mailto:privacy@akwaabahomes.com" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">privacy@akwaabahomes.com</a>
-            </div>
-            <div className="text-zinc-600 dark:text-zinc-400">
-              <strong>Legal Desk:</strong> <a href="mailto:legal@akwaabahomes.com" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">legal@akwaabahomes.com</a>
-            </div>
-            <div className="text-zinc-600 dark:text-zinc-400">
-              <strong>Physical Headquarters:</strong> Accra Digital Centre, Ring Road West, Accra, Republic of Ghana
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            If you are not satisfied with our resolution of any privacy concern, you retain the statutory right under Act 843 to lodge a formal complaint with the <strong>Data Protection Commission of Ghana</strong> (East Legon, Accra).
-          </p>
-        </div>
-      )
+  const handleDsarSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userEmail) {
+      toast.error('Please provide a valid email address');
+      return;
     }
-  ];
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsDsarModalOpen(false);
+      setUserEmail('');
+      setGhanaCardNumber('');
+      setRequestNotes('');
+      toast.success('Your Data Subject Request has been filed. Our Data Protection Officer will reply within 14 business days.');
+    }, 1000);
+  };
 
-  // Filter sections based on search query
-  const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return SECTIONS;
-    const q = searchQuery.toLowerCase();
-    return SECTIONS.filter(s => 
-      s.title.toLowerCase().includes(q) || 
-      s.summary.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userEmail || !contactMessage) {
+      toast.error('Please enter your email and message');
+      return;
+    }
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsContactModalOpen(false);
+      setUserEmail('');
+      setContactMessage('');
+      toast.success('Message sent to the Data Protection Officer (privacy@akwaabahomes.com).');
+    }, 800);
+  };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="w-full min-h-screen bg-[#FAF8F3] dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden transition-colors">
       
-      {/* ── Scroll Progress Bar ── */}
-      <div className="fixed top-16 inset-x-0 h-1 bg-zinc-200/50 dark:bg-zinc-800/50 z-30">
-        <div 
-          className="h-full bg-[#0F5132] dark:bg-emerald-500 transition-all duration-150"
-          style={{ width: `${scrollProgress}%` }}
-        />
-      </div>
+      {/* ══════════════════════════════════════════════════════════════════════
+          1. HERO SECTION: Your data. Your choice. Our responsibility.
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative pt-6 sm:pt-8 pb-8 sm:pb-10 px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto">
+        {/* Subtle Adinkra geometric watermark on the left edge */}
+        <div
+          aria-hidden="true"
+          className="absolute left-0 top-4 w-44 sm:w-56 h-80 opacity-20 dark:opacity-10 pointer-events-none select-none -z-0"
+        >
+          <Image
+            src="/images/about/adinkra-left-motif.jpg"
+            alt=""
+            fill
+            className="object-cover object-left"
+            priority
+          />
+        </div>
 
-      {/* ── Hero Document Banner ── */}
-      <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-[#111419]/70 backdrop-blur-md relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 py-10 sm:py-14 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
           
-          {/* Breadcrumb Navigation */}
-          <div className="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-            <Link href="/" className="hover:text-zinc-950 dark:hover:text-white transition">Home</Link>
-            <span>/</span>
-            <span className="text-zinc-600 dark:text-zinc-300">Legal</span>
-            <span>/</span>
-            <span className="text-[#0F5132] dark:text-emerald-400 font-semibold">Privacy Policy</span>
-          </div>
+          {/* Left Column: Breadcrumbs, Badge, Headline, Metadata, Actions (6-7 Cols) */}
+          <div className="lg:col-span-6 xl:col-span-6 space-y-4 pr-2">
+            
+            {/* Breadcrumbs */}
+            <nav className="flex items-center gap-1.5 text-xs text-[#55665B] dark:text-zinc-400 font-medium">
+              <Link href="/" className="hover:text-[#0B3B24] dark:hover:text-emerald-400 transition">
+                Home
+              </Link>
+              <span>/</span>
+              <span className="hover:text-[#0B3B24] dark:hover:text-emerald-400 transition">Legal</span>
+              <span>/</span>
+              <span className="text-[#0B3B24] dark:text-emerald-400 font-bold">Privacy</span>
+            </nav>
 
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>GOVERNED UNDER GHANA DATA PROTECTION ACT, 2012 (ACT 843)</span>
+            {/* Privacy Centre Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B3B24] text-white text-xs font-bold shadow-xs">
+              <span>Privacy Centre</span>
+            </div>
+
+            {/* Display Headline */}
+            <h1 className="text-3xl sm:text-4xl lg:text-[46px] font-serif font-black text-[#14221A] dark:text-white tracking-tight leading-[1.12]">
+              Your data. Your choice. <br />
+              <span className="relative inline-block text-[#0B3B24] dark:text-emerald-400">
+                Our responsibility.
+                <svg
+                  viewBox="0 0 200 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-2.5 mt-1 text-[#D49339]"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 8C55 2.5 140 4 197 8.5"
+                    stroke="currentColor"
+                    strokeWidth="2.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-[13.5px] text-[#4A5A50] dark:text-zinc-300 leading-relaxed font-medium max-w-xl">
+              AkwaabaHomes collects, uses, protects and retains resident, student and landlord information in accordance with the Ghana Data Protection Act, 2012 (Act 843).
+            </p>
+
+            {/* Metadata Row */}
+            <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#395244] dark:text-emerald-300 font-semibold pt-1">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                <span>Ghana Data Protection Act, 2012 (Act 843)</span>
               </div>
-
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-zinc-950 dark:text-white leading-tight">
-                Data Privacy &amp; Protection Policy
-              </h1>
-
-              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl font-normal">
-                How AkwaabaHomes Ghana collects, processes, and cryptographically safeguards your national identity records, student enrollment data, and tenancy files across our marketplace.
-              </p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Last revised: October 2026</span>
-                </span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>8 Statutory Compliance Articles</span>
-                </span>
-                <span>•</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                  Valid across Accra, Kumasi, Cape Coast &amp; all Campus Portals
-                </span>
+              <span className="opacity-40">•</span>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                <span>Last reviewed: October 2026</span>
               </div>
             </div>
 
-            {/* Quick Actions Bar */}
-            <div className="flex items-center gap-2.5 self-start lg:self-end shrink-0">
+            {/* Action Buttons Row */}
+            <div className="flex flex-wrap items-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={handlePrint}
-                className="h-10 px-3.5 inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition shadow-2xs cursor-pointer"
-                title="Print privacy policy"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0B3B24] hover:bg-[#072818] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5 text-zinc-500" />
-                <span className="hidden sm:inline">Print</span>
+                <span>Download privacy notice</span>
+                <Download className="w-3.5 h-3.5" />
               </button>
 
               <button
                 type="button"
-                onClick={copyPageLink}
-                className="h-10 px-3.5 inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition shadow-2xs cursor-pointer"
-                title="Copy link"
+                onClick={() => setIsContactModalOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white dark:bg-zinc-900 border border-[#CBD7CE] dark:border-zinc-700 hover:bg-[#FAF8F3] dark:hover:bg-zinc-800 text-[#14221A] dark:text-zinc-100 text-xs sm:text-[13px] font-bold transition shadow-2xs cursor-pointer"
               >
-                {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
-                <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
+                <span>Contact privacy team</span>
+                <Mail className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
               </button>
-
-              <Link
-                href="/support"
-                className="h-10 px-4 inline-flex items-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
-              >
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Privacy Inquiries</span>
-              </Link>
             </div>
 
           </div>
 
-        </div>
-      </div>
+          {/* Right Column: High-Res Community Photo with Flag & Shield Agreement (5-6 Cols) */}
+          <div className="lg:col-span-6 xl:col-span-6 relative">
+            <div className="relative w-full h-[240px] sm:h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-[0_10px_35px_rgba(11,59,36,0.06)] border border-[#E8E6DD] dark:border-zinc-800">
+              <Image
+                src="/images/about/privacy-hero-community-2x.jpg"
+                alt="Ghanaian residential community with flying national flag and data protection lock shield"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-center"
+              />
 
-      {/* ── Executive Highlights (Plain English Summary) ── */}
-      <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 pt-10 sm:pt-12">
-        <div className="space-y-3 mb-6">
-          <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#0F5132] dark:text-emerald-400">
-            PRIVACY GUARANTEES AT A GLANCE
+              {/* Soft gradient edge fade into the warm cream background */}
+              <div className="absolute inset-y-0 left-0 w-12 sm:w-16 bg-gradient-to-r from-[#FAF8F3]/70 dark:from-[#0C100D]/70 to-transparent pointer-events-none" />
+            </div>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
-            Our Commitment to Your Privacy
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          2. FOUR CORE PRIVACY PILLARS STRIP
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-2">
+        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-4 sm:p-5 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 divide-y sm:divide-y-0 lg:divide-x divide-[#E8DEC4] dark:divide-zinc-800">
+            
+            {/* Pillar 1: No data selling */}
+            <div className="flex items-start gap-3 sm:px-3 pt-2 sm:pt-0">
+              <div className="w-10 h-10 rounded-full bg-[#E5EFE4] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#D5E3D4] dark:border-emerald-800/40">
+                <Leaf className="w-5 h-5 text-[#16A34A]" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                  No data selling
+                </h3>
+                <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
+                  Personal records are not sold or rented.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar 2: Identity checks */}
+            <div className="flex items-start gap-3 sm:px-3 pt-3 sm:pt-0">
+              <div className="w-10 h-10 rounded-full bg-[#E5EFE4] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#D5E3D4] dark:border-emerald-800/40">
+                <Fingerprint className="w-5 h-5 text-[#16A34A]" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                  Identity checks
+                </h3>
+                <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
+                  Ghana Card details used for verification where required.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar 3: Secure payments */}
+            <div className="flex items-start gap-3 sm:px-3 pt-3 sm:pt-0">
+              <div className="w-10 h-10 rounded-full bg-[#E5EFE4] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#D5E3D4] dark:border-emerald-800/40">
+                <ShieldCheck className="w-5 h-5 text-[#16A34A]" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                  Secure payments
+                </h3>
+                <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
+                  Payment details handled by licensed payment providers.
+                </p>
+              </div>
+            </div>
+
+            {/* Pillar 4: Your rights */}
+            <div className="flex items-start gap-3 sm:px-3 pt-3 sm:pt-0">
+              <div className="w-10 h-10 rounded-full bg-[#E5EFE4] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#D5E3D4] dark:border-emerald-800/40">
+                <Scale className="w-5 h-5 text-[#16A34A]" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                  Your rights
+                </h3>
+                <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
+                  Access, correction, objection and erasure requests.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          3. THE DATA LIFECYCLE: HOW WE HANDLE YOUR INFORMATION
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-8 sm:py-10 space-y-6">
+        <div className="text-center space-y-1">
+          <span className="inline-block text-[11px] font-mono font-black uppercase tracking-widest text-[#0B3B24] dark:text-emerald-400">
+            THE DATA LIFECYCLE
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-serif font-black text-[#14221A] dark:text-white tracking-tight">
+            How We Handle Your Information
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            Essential highlights of how we protect your personal and financial data.
-          </p>
+          <HeaderSwoosh />
+        </div>
+
+        {/* 4 Process Steps connected by right arrows */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+          
+          {/* Step 1: Collect */}
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
+                <Database className="w-5 h-5 text-emerald-300" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Collect</h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
+                We gather information you provide or that we obtain lawfully.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 2: Use */}
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
+                <Settings className="w-5 h-5 text-emerald-300" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Use</h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
+                To deliver our services, improve your experience and ensure safety.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3: Protect */}
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
+                <ShieldCheck className="w-5 h-5 text-emerald-300" />
+              </div>
+              <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Protect</h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
+                With industry-standard security and strict access controls.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 4: Retain / Delete */}
+          <div className="relative p-4 rounded-2xl bg-white/80 dark:bg-zinc-900/60 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="w-11 h-11 rounded-full bg-[#0B3B24] text-white flex items-center justify-center shadow-xs">
+                <Trash2 className="w-5 h-5 text-emerald-300" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Retain / Delete</h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
+                Only for as long as necessary, then securely delete it.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          4. WHAT INFORMATION WE HANDLE (4 Clean Cards)
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-6 space-y-5">
+        <div className="text-center space-y-1">
+          <h2 className="text-xl sm:text-2xl font-serif font-black text-[#14221A] dark:text-white tracking-tight">
+            What Information We Handle
+          </h2>
+          <HeaderSwoosh className="w-36" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/40 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shadow-2xs">
-              <EyeOff className="w-4 h-4" />
+          
+          {/* Card 1: Identity & Contact */}
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
+              <UserCheck className="w-4 h-4 text-[#16A34A]" />
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Zero Third-Party Selling</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              We never sell or rent your personal records, phone numbers, or student status to advertising networks or real estate lead brokers.
-            </p>
+            <div className="space-y-0.5">
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+                Identity &amp; Contact
+              </h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
+                Name, contact details, Ghana Card verification outcome.
+              </p>
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <UserCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+          {/* Card 2: Student & Tenancy */}
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
+              <GraduationCap className="w-4 h-4 text-[#16A34A]" />
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Ghana Card Verified</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              National identity data is cross-verified directly with NIA protocols and encrypted at rest using AES-256 standards.
-            </p>
+            <div className="space-y-0.5">
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+                Student &amp; Tenancy
+              </h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
+                Institution, student status, booking, lease and occupancy records.
+              </p>
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <Lock className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+          {/* Card 3: Payments */}
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
+              <Receipt className="w-4 h-4 text-[#16A34A]" />
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Bank-Grade Payments</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              All transactions run via licensed Bank of Ghana gateways. We never view or store debit card CVVs or Mobile Money PINs.
-            </p>
+            <div className="space-y-0.5">
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+                Payments
+              </h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
+                Transaction references and payment status via Paystack / Mobile Money.
+              </p>
+            </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+          {/* Card 4: Property & Host */}
+          <div className="p-4 rounded-2xl bg-white/90 dark:bg-zinc-900/70 border border-[#E9E7DE] dark:border-zinc-800 shadow-2xs space-y-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center border border-[#B7E8C3] dark:border-emerald-800/40">
+              <Home className="w-4 h-4 text-[#16A34A]" />
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Act 843 Subject Rights</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              Full legal entitlement to access, rectify, or request erasure of your personal data under the Data Protection Act of Ghana.
-            </p>
+            <div className="space-y-0.5">
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+                Property &amp; Host
+              </h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
+                Listing, ownership and maintenance records.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          5. YOUR PRIVACY RIGHTS INTERACTIVE STRIP
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4">
+        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            {/* Title & Description */}
+            <div className="space-y-1">
+              <h2 className="text-lg sm:text-xl font-serif font-black text-[#14221A] dark:text-white leading-tight">
+                Your Privacy Rights
+              </h2>
+              <p className="text-xs text-[#55665B] dark:text-zinc-400 font-medium">
+                You have control over your personal data.
+              </p>
+            </div>
+
+            {/* 4 Quick Action Pills + CTA Button */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              
+              <button
+                type="button"
+                onClick={() => openDsarWithType('COPY')}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+              >
+                <FileText className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
+                <span>Request a copy</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openDsarWithType('CORRECTION')}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+              >
+                <FileEdit className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
+                <span>Correct your details</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openDsarWithType('OBJECTION')}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+              >
+                <Ban className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
+                <span>Object to processing</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openDsarWithType('DELETION')}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-[#D5DFD3] dark:border-zinc-700 text-xs font-semibold text-[#14221A] dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer shadow-2xs"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
+                <span>Request deletion</span>
+              </button>
+
+              {/* Start a data request CTA */}
+              <div className="flex flex-col items-start sm:items-end">
+                <button
+                  type="button"
+                  onClick={() => openDsarWithType('COPY')}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <span>Start a data request</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] text-[#55665B] dark:text-zinc-400 mt-1 max-w-xs text-left sm:text-right">
+                  Requests are reviewed under applicable Ghanaian data protection requirements.
+                </span>
+              </div>
+
+            </div>
+
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Main Two-Column Reading Area ── */}
-      <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 py-12 sm:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+      {/* ══════════════════════════════════════════════════════════════════════
+          6. FAQS SECTION (Quick Answers to Common Questions)
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4">
+        <div className="bg-white/90 dark:bg-zinc-900/80 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-3 sm:p-4 shadow-xs">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-center">
+            
+            {/* Left Tag: FAQs */}
+            <div className="lg:col-span-3 flex items-center gap-2.5 p-2 rounded-2xl bg-[#0B3B24] text-white">
+              <div className="w-8 h-8 rounded-xl bg-emerald-900/60 flex items-center justify-center shrink-0">
+                <HelpCircle className="w-4 h-4 text-emerald-300" />
+              </div>
+              <div className="leading-tight">
+                <h3 className="font-bold text-xs text-white">FAQs</h3>
+                <p className="text-[10.5px] text-emerald-200/90">Quick answers to common questions.</p>
+              </div>
+            </div>
+
+            {/* 3 Clickable FAQ items (3 Cols each) */}
+            <div className="lg:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {FAQS_DATA.map((faq, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => setActiveFaq(faq)}
+                  className="p-2.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 hover:border-[#0B3B24] dark:hover:border-emerald-500 hover:bg-[#FAF8F3] dark:hover:bg-zinc-800/60 transition flex items-center justify-between text-left group cursor-pointer"
+                >
+                  <span className="text-xs font-semibold text-[#14221A] dark:text-zinc-200 line-clamp-1 pr-1 group-hover:text-[#0B3B24] dark:group-hover:text-emerald-400">
+                    {faq.question}
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0B3B24] dark:group-hover:text-emerald-400 shrink-0 transition" />
+                </button>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          7. PRIVACY OFFICER CONTACT BANNER
+         ══════════════════════════════════════════════════════════════════════ */}
+      <section className="px-4 sm:px-6 lg:px-12 max-w-7xl mx-auto py-4 mb-4">
+        <div className="bg-[#FAF4E6] dark:bg-[#151B17] border border-[#E8DEC4] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           
-          {/* ──── Left Sticky Navigation (35% Desktop) ──── */}
-          <aside className="hidden lg:block lg:col-span-4 sticky top-24 self-start space-y-6">
+          {/* Officer Contact info */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-[#E5EFE4] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#D5E3D4] dark:border-emerald-800/40">
+              <Headphones className="w-5 h-5 text-[#16A34A]" />
+            </div>
+            <div>
+              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white leading-tight">
+                Contact Our Privacy Officer
+              </h3>
+              <p className="text-[11px] text-[#55665B] dark:text-zinc-400 mt-0.5">
+                For any privacy-related enquiries.
+              </p>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsContactModalOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <span>Contact the privacy team</span>
+              <Mail className="w-3.5 h-3.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openDsarWithType('COPY')}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              <span>Data subject request desk</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          8. DARK FOREST GREEN FOOTER
+         ══════════════════════════════════════════════════════════════════════ */}
+      <footer className="w-full bg-[#0C3827] text-white py-6 border-t border-emerald-900/40 relative overflow-hidden">
+        {/* Left Kente Corner Watermark */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 opacity-25 pointer-events-none select-none">
+          <Image
+            src="/images/about/terms-footer-kente.png"
+            alt="Kente Motif"
+            fill
+            className="object-cover object-left"
+          />
+        </div>
+
+        {/* Right Kente Corner Watermark */}
+        <div className="absolute right-0 top-0 bottom-0 w-20 opacity-20 pointer-events-none select-none hidden sm:block">
+          <Image
+            src="/images/about/privacy-footer-kente-right.png"
+            alt="Kente Motif"
+            fill
+            className="object-cover object-right"
+          />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             
-            {/* Search Filter Box */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
-                <Search className="w-3.5 h-3.5" />
+            {/* Logo */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-900/80 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="AkwaabaHomes"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search privacy topics (e.g. Ghana Card, Paystack, deletion)..."
-                className="w-full h-10 pl-9 pr-3 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl placeholder:text-zinc-400 text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] transition"
-              />
-            </div>
-
-            {/* Table of Contents List */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-bold px-3">
-                TABLE OF CONTENTS
-              </div>
-
-              <nav className="space-y-1">
-                {filteredSections.map((section) => {
-                  const isActive = activeSection === section.id;
-                  return (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollTo(section.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
-                        isActive
-                          ? 'text-[#0F5132] dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 border border-transparent'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2.5 truncate">
-                        <span className={`text-[10px] font-mono font-bold ${isActive ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400'}`}>
-                          {section.number}
-                        </span>
-                        <span className="truncate">{section.title}</span>
-                      </span>
-                      {isActive && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
-                    </button>
-                  );
-                })}
-
-                {filteredSections.length === 0 && (
-                  <div className="p-4 text-xs text-zinc-400 text-center">
-                    No matching clauses found.
-                  </div>
-                )}
-              </nav>
-            </div>
-
-            {/* Quick Related Legal Instruments */}
-            <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-3">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 block">
-                COMPANION POLICIES
-              </span>
-
-              <div className="space-y-2 text-xs">
-                <Link 
-                  href="/terms" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Terms &amp; Conditions (Act 220)</span>
-                  </span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-
-                <Link 
-                  href="/support" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <LifeBuoy className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Data Subject Request Desk</span>
-                  </span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tight text-white leading-none">
+                  AkwaabaHomes
+                </span>
+                <span className="text-[9.5px] font-medium text-emerald-300 mt-0.5">
+                  Live Well. Feel at Home.
+                </span>
               </div>
             </div>
 
-            {/* Institutional Sign-off badge */}
-            <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20 text-[11px] text-zinc-400 space-y-1">
-              <span className="font-bold text-zinc-600 dark:text-zinc-300 block">Data Protection Office</span>
-              <p>Registration No. CS128942024 &bull; Accra &amp; Kumasi, Republic of Ghana</p>
+            {/* Center Copyright & Links */}
+            <div className="text-xs text-emerald-200/80 flex flex-wrap items-center gap-2">
+              <span>© 2026 AkwaabaHomes Ghana. All rights reserved.</span>
+              <span className="opacity-40">·</span>
+              <Link href="/privacy" className="hover:text-white transition underline font-bold">Privacy</Link>
+              <span className="opacity-40">·</span>
+              <Link href="/terms" className="hover:text-white transition">Terms</Link>
+              <span className="opacity-40">·</span>
+              <Link href="/help" className="hover:text-white transition">Help</Link>
+              <span className="opacity-40">·</span>
+              <Link href="/contact" className="hover:text-white transition">Contact</Link>
             </div>
 
-          </aside>
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 text-emerald-300 text-xs">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Facebook">
+                f
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="X">
+                𝕏
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Instagram">
+                ig
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="YouTube">
+                yt
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="LinkedIn">
+                in
+              </a>
+            </div>
 
-          {/* ──── Right Reading Column (65% Desktop) ──── */}
-          <main className="lg:col-span-8 space-y-14 text-sm sm:text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-            
-            {SECTIONS.map((section) => (
-              <section 
-                key={section.id} 
-                id={section.id} 
-                className="scroll-mt-28 space-y-4 pt-2"
+          </div>
+        </div>
+      </footer>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          INTERACTIVE MODAL: FAQ DETAIL VIEW
+         ══════════════════════════════════════════════════════════════════════ */}
+      {activeFaq && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <h3 className="font-serif font-bold text-base text-[#14221A] dark:text-white leading-tight">
+                  {activeFaq.question}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveFaq(null)}
+                className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
               >
-                {/* Section Header */}
-                <div className="pb-3 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40">
-                        ARTICLE {section.number}
-                      </span>
-                      {section.badge && (
-                        <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 dark:text-zinc-500">
-                          &bull; {section.badge}
-                        </span>
-                      )}
-                    </div>
+                <X className="w-4 h-4" />
+              </button>
+            </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/privacy#${section.id}`);
-                          toast.success(`Copied anchor link for Article ${section.number}`);
-                        }
-                      }}
-                      className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition cursor-pointer"
-                      title="Copy section link"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+            <div className="text-xs sm:text-[13px] text-[#4A5A50] dark:text-zinc-300 leading-relaxed font-normal">
+              {activeFaq.answer}
+            </div>
 
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
-                    {section.title}
-                  </h2>
-                </div>
+            <div className="p-3 rounded-xl bg-[#FAF4E6] dark:bg-zinc-800/60 border border-[#E8DEC4] dark:border-zinc-700/60 text-[11px] text-[#55665B] dark:text-zinc-400 space-y-0.5">
+              <span className="font-bold text-[#0B3B24] dark:text-emerald-400">Statutory Reference:</span>
+              <p>{activeFaq.reference}</p>
+            </div>
 
-                {/* Section Content */}
-                <div className="pt-1">
-                  {section.content}
-                </div>
-              </section>
-            ))}
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveFaq(null)}
+                className="px-4 py-2 rounded-xl bg-[#0B3B24] text-white text-xs font-bold hover:bg-[#072818] transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-            {/* ── Document Governance Closure ── */}
-            <div className="mt-14 p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111419] space-y-4">
+      {/* ══════════════════════════════════════════════════════════════════════
+          INTERACTIVE MODAL: DATA SUBJECT ACCESS REQUEST (DSAR) DESK
+         ══════════════════════════════════════════════════════════════════════ */}
+      {isDsarModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
+                <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800/40">
+                  <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                    Need Data Protection Assistance?
+                  <h3 className="font-serif font-bold text-base text-[#14221A] dark:text-white leading-tight">
+                    Data Subject Request Desk
                   </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Our Data Protection Officer and compliance team are available to help.
+                  <p className="text-[11px] text-[#55665B] dark:text-zinc-400">
+                    Ghana Data Protection Act, 2012 (Act 843)
                   </p>
                 </div>
               </div>
-
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                To submit a Subject Access Request (SAR), request account erasure, or report an identity security concern, email our Data Protection Office at <a href="mailto:privacy@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">privacy@akwaabahomes.com</a>.
-              </p>
-
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
-                <span className="text-zinc-400">
-                  Data Protection Act, 2012 (Act 843) &bull; Republic of Ghana
-                </span>
-
-                <Link
-                  href="/terms"
-                  className="inline-flex items-center gap-1.5 font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
-                >
-                  <span>Review Terms &amp; Conditions</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
+              <button
+                type="button"
+                onClick={() => setIsDsarModalOpen(false)}
+                className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-          </main>
+            <form onSubmit={handleDsarSubmit} className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Request Type
+                </label>
+                <select
+                  value={requestType}
+                  onChange={(e) => setRequestType(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                >
+                  <option value="COPY">Right to Access (Request full copy of my records)</option>
+                  <option value="CORRECTION">Right to Rectification (Correct inaccurate details)</option>
+                  <option value="OBJECTION">Right to Object (Cease processing my data)</option>
+                  <option value="DELETION">Right to Erasure (Permanently delete my account &amp; data)</option>
+                </select>
+              </div>
 
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Your Account Email Address *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="name@example.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Ghana Card Number (Optional for identity verification)
+                </label>
+                <input
+                  type="text"
+                  placeholder="GHA-000000000-0"
+                  value={ghanaCardNumber}
+                  onChange={(e) => setGhanaCardNumber(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Specific Details or Requirements
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Please specify any specific property leases, dates or records applicable to your request..."
+                  value={requestNotes}
+                  onChange={(e) => setRequestNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDsarModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                >
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit Request'}</span>
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          INTERACTIVE MODAL: CONTACT PRIVACY OFFICER
+         ══════════════════════════════════════════════════════════════════════ */}
+      {isContactModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-zinc-900 border border-[#E9E7DE] dark:border-zinc-800 rounded-3xl p-6 max-w-lg w-full space-y-4 shadow-xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800/40">
+                  <Mail className="w-4 h-4 text-[#16A34A]" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-base text-[#14221A] dark:text-white leading-tight">
+                    Contact Data Protection Team
+                  </h3>
+                  <p className="text-[11px] text-[#55665B] dark:text-zinc-400">
+                    Direct enquiry to privacy@akwaabahomes.com
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsContactModalOpen(false)}
+                className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleContactSubmit} className="space-y-3 pt-1">
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Your Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="you@domain.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                  Message / Privacy Enquiry *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  placeholder="How can our data protection team assist you? Ask about data handling, third-party processors, or Ghana Card policies..."
+                  value={contactMessage}
+                  onChange={(e) => setContactMessage(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0B3B24]"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsContactModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-semibold hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                >
+                  <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
