@@ -27,6 +27,7 @@ import {
   KeyRound,
   ArrowRight,
   ShieldCheck,
+  ShieldAlert,
   PhoneCall,
   Phone,
   Mail,
@@ -45,13 +46,22 @@ export function ProfileWorkspaceContent({
   defaultTab?: 'basic' | 'school' | 'security';
 }) {
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get('tab');
+  const rawTabParam = searchParams.get('tab');
+  const effectiveTab =
+    rawTabParam ||
+    (defaultTab === 'security' ? 'security' : defaultTab === 'school' ? 'school' : 'basic');
   const queryClient = useQueryClient();
   const { confirm } = useDialog();
 
   const [activeSection, setActiveSection] = useState<
     'personal' | 'contact' | 'academic' | 'security'
-  >(tabParam === 'security' ? 'security' : tabParam === 'school' ? 'academic' : 'personal');
+  >(
+    effectiveTab === 'security'
+      ? 'security'
+      : effectiveTab === 'school'
+      ? 'academic'
+      : 'personal'
+  );
 
   const [isStudent, setIsStudent] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,12 +71,13 @@ export function ProfileWorkspaceContent({
   const [requestReason, setRequestReason] = useState('');
   const [guardianModalOpen, setGuardianModalOpen] = useState(false);
   const [academicModalOpen, setAcademicModalOpen] = useState(false);
-  const [securityModalOpen, setSecurityModalOpen] = useState(tabParam === 'security');
+  const [securityModalOpen, setSecurityModalOpen] = useState(false);
 
   // Section refs for smooth scrolling when clicking left sub-nav items
   const personalRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
   const academicRef = useRef<HTMLDivElement>(null);
+  const securityRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -146,9 +157,7 @@ export function ProfileWorkspaceContent({
       studentType: s.studentType || 'Undergraduate',
     });
     setIsStudent(
-      s.campus !== undefined || s.studentId !== undefined
-        ? Boolean(s.campus || s.studentId || s.studentType || true)
-        : true
+      Boolean(s.campus || s.studentId || s.programmeOfStudy)
     );
   };
 
@@ -157,6 +166,14 @@ export function ProfileWorkspaceContent({
       populateFromSession(session);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (effectiveTab === 'security') {
+      securityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else if (effectiveTab === 'school') {
+      academicRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [effectiveTab]);
 
   const requestUnlockMutation = useMutation({
     mutationFn: async (reason: string) => {
@@ -263,10 +280,15 @@ export function ProfileWorkspaceContent({
     );
   }
 
-  const activeSessionsCount = sessions?.length && sessions.length > 0 ? sessions.length : 2;
+  const activeSessionsCount =
+    sessions && sessions.length > 0 ? sessions.length : isLoadingSessions ? 1 : 1;
+  const sessionLabel =
+    activeSessionsCount === 1 ? '1 session' : `${activeSessionsCount} sessions`;
   const displayLevelShort = formData.yearOfStudy?.toLowerCase().includes('level')
     ? formData.yearOfStudy
-    : `Level ${formData.yearOfStudy || '400'}`;
+    : formData.yearOfStudy
+    ? `Level ${formData.yearOfStudy}`
+    : 'Level 100';
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#F7F6F0] text-[#14221A] flex flex-col justify-between relative overflow-x-hidden font-sans">
@@ -313,7 +335,7 @@ export function ProfileWorkspaceContent({
               )}
             </div>
 
-            {/* Resident Account Title & Dots */}
+            {/* Resident Account Title & Contact info */}
             <div className="space-y-1">
               <div className="flex items-center gap-2.5">
                 <h2 className="text-[16px] sm:text-[17px] font-extrabold text-[#14221A]">
@@ -323,23 +345,50 @@ export function ProfileWorkspaceContent({
                   {session?.role || 'TENANT'}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-[#4A5D50] font-bold tracking-widest">
-                <span>•••••••••</span>
-                <span className="text-[#B8CEBA] font-normal">|</span>
+              <div className="flex items-center gap-2 text-xs text-[#4A5D50] font-semibold">
+                {session?.ghanaCardNumber ? (
+                  <span>{session.ghanaCardNumber}</span>
+                ) : formData.phoneNumber ? (
+                  <span>{formData.phoneNumber}</span>
+                ) : (
+                  <span>{formData.email}</span>
+                )}
               </div>
             </div>
 
-            {/* Identity Verified & Student Status Cleared Pills */}
+            {/* Identity Verified & Student Status Pills */}
             <div className="flex flex-wrap items-center gap-2.5 sm:ml-3 pt-1 sm:pt-0">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold">
-                <ShieldCheck className="w-4 h-4 text-[#15803D]" />
-                <span>Identity verified</span>
-              </span>
+              {session?.ghanaCardStatus === 'APPROVED' ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold shadow-2xs">
+                  <ShieldCheck className="w-4 h-4 text-[#15803D]" />
+                  <span>Identity verified</span>
+                </span>
+              ) : session?.ghanaCardStatus === 'PENDING' ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] text-xs font-bold shadow-2xs">
+                  <Clock className="w-4 h-4 text-[#D97706]" />
+                  <span>Verification pending</span>
+                </span>
+              ) : (
+                <Link
+                  href="/dashboard/verification"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F3F4F6] border border-[#E5E7EB] hover:bg-[#E5E7EB] text-[#4B5563] text-xs font-bold transition shadow-2xs cursor-pointer"
+                >
+                  <ShieldAlert className="w-4 h-4 text-[#6B7280]" />
+                  <span>Identity unverified</span>
+                </Link>
+              )}
 
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold">
-                <GraduationCap className="w-4 h-4 text-[#15803D]" />
-                <span>Student status cleared</span>
-              </span>
+              {isStudent ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#D7ECD9] border border-[#BEDBC1] text-[#116932] text-xs font-bold shadow-2xs">
+                  <GraduationCap className="w-4 h-4 text-[#15803D]" />
+                  <span>Student status cleared</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EDECE6] border border-[#D8D6CC] text-[#506054] text-xs font-bold shadow-2xs">
+                  <User className="w-4 h-4 text-[#506054]" />
+                  <span>Resident tenant</span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -425,13 +474,15 @@ export function ProfileWorkspaceContent({
                         Contact &amp; guardian
                       </p>
                       <p className="text-[11px] text-[#55665B] truncate">
-                        1 contact added
+                        {formData.guardianName ? '1 contact added' : 'No guardian added'}
                       </p>
                     </div>
                   </div>
-                  <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
+                  {formData.guardianName && (
+                    <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  )}
                 </button>
 
                 {/* Item 3: Academic details */}
@@ -455,13 +506,17 @@ export function ProfileWorkspaceContent({
                         Academic details
                       </p>
                       <p className="text-[11px] text-[#55665B] truncate">
-                        UCC • {displayLevelShort}
+                        {isStudent
+                          ? `${formData.campus ? formData.campus.split(' ')[0] : 'Student'} • ${displayLevelShort}`
+                          : 'General resident'}
                       </p>
                     </div>
                   </div>
-                  <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
+                  {isStudent && (
+                    <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  )}
                 </button>
 
                 {/* Item 4: Security & sessions */}
@@ -469,7 +524,7 @@ export function ProfileWorkspaceContent({
                   type="button"
                   onClick={() => {
                     setActiveSection('security');
-                    setSecurityModalOpen(true);
+                    securityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                   }}
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
@@ -485,13 +540,17 @@ export function ProfileWorkspaceContent({
                         Security &amp; sessions
                       </p>
                       <p className="text-[11px] text-[#55665B] truncate">
-                        2FA enabled
+                        {twoFactorStatus?.twoFactorEnabled ? '2FA enabled' : '2FA disabled'}
                       </p>
                     </div>
                   </div>
-                  <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
-                  </span>
+                  {twoFactorStatus?.twoFactorEnabled ? (
+                    <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </span>
+                  ) : (
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="2FA recommended" />
+                  )}
                 </button>
               </div>
 
@@ -724,10 +783,18 @@ export function ProfileWorkspaceContent({
                         )}
                       </div>
                       <p className="text-[11.5px] text-[#2E3F34] truncate">
-                        Name: <span className="font-semibold">{formData.guardianName || 'Mr. Darko'}</span>
+                        Name: {formData.guardianName ? (
+                          <span className="font-semibold">{formData.guardianName}</span>
+                        ) : (
+                          <span className="text-[#64786A] italic">Not provided</span>
+                        )}
                       </p>
                       <p className="text-[11.5px] text-[#2E3F34] truncate">
-                        Phone: <span className="font-semibold">{formData.guardianPhone || '05*******21'}</span>
+                        Phone: {formData.guardianPhone ? (
+                          <span className="font-semibold">{formData.guardianPhone}</span>
+                        ) : (
+                          <span className="text-[#64786A] italic">Not provided</span>
+                        )}
                       </p>
                     </div>
                   </button>
@@ -749,10 +816,14 @@ export function ProfileWorkspaceContent({
                     </h2>
                   </div>
                   <p className="text-xs text-[#516056] mt-0.5">
-                    {isLocked ? 'Institutional tenancy verification (Read-only).' : 'Your university and academic information.'}
+                    {isStudent
+                      ? isLocked
+                        ? 'Institutional tenancy verification (Read-only).'
+                        : 'Your university and academic information.'
+                      : 'General resident profile (no student affiliation).'}
                   </p>
                 </div>
-                {isLocked && (
+                {isLocked && isStudent && (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#4B6052] bg-[#E5ECE5] border border-[#C5D8C7] px-2.5 py-1 rounded-full shadow-2xs">
                     <Lock className="w-3 h-3 text-[#3B5042]" /> Read-only
                   </span>
@@ -760,23 +831,31 @@ export function ProfileWorkspaceContent({
               </div>
 
               <div className="pt-1 flex flex-wrap items-center justify-between gap-3">
-                {/* Left: UCC Crest + Campus & Programme */}
+                {/* Left: Crest / Icon + Campus & Programme */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-[#E5E3D8] relative overflow-hidden shrink-0 shadow-2xs">
-                    <Image
-                      src="/images/settings/ucc-crest.png"
-                      alt="University Crest"
-                      fill
-                      sizes="40px"
-                      className="object-contain p-0.5"
-                    />
+                  <div className="w-10 h-10 rounded-xl bg-white border border-[#E5E3D8] relative overflow-hidden shrink-0 shadow-2xs flex items-center justify-center">
+                    {isStudent ? (
+                      <Image
+                        src="/images/settings/ucc-crest.png"
+                        alt="University Crest"
+                        fill
+                        sizes="40px"
+                        className="object-contain p-0.5"
+                      />
+                    ) : (
+                      <User className="w-5 h-5 text-[#0B3B24]" />
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-[13px] font-extrabold text-[#14221A] truncate">
-                      {formData.campus || 'University of Cape Coast (UCC)'}
+                      {isStudent
+                        ? formData.campus || 'Institution not specified'
+                        : 'General Resident Profile'}
                     </p>
                     <p className="text-xs text-[#4A5A50] font-medium truncate">
-                      {formData.programmeOfStudy || 'BSc IT'} • {displayLevelShort}
+                      {isStudent
+                        ? `${formData.programmeOfStudy || 'Programme not specified'} • ${displayLevelShort}`
+                        : 'Residential tenancy without institutional affiliation'}
                     </p>
                   </div>
                 </div>
@@ -787,20 +866,36 @@ export function ProfileWorkspaceContent({
                 <div>
                   <p className="text-xs font-extrabold text-[#14221A]">Student ID</p>
                   <p className="text-xs font-semibold text-[#3B4C41] font-mono mt-0.5">
-                    {formData.studentId || 'NRIT/CR/17/22/0001'}
+                    {isStudent ? formData.studentId || 'Not provided' : 'N/A'}
                   </p>
                 </div>
 
-                {/* Right: Student status verified pill button */}
+                {/* Right: Student status verified or general resident pill button */}
                 <button
                   type="button"
                   onClick={() => setAcademicModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E1F3E4] hover:bg-[#D4ECD8] text-[#116932] text-xs font-bold transition cursor-pointer"
+                  className={clsx(
+                    'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer',
+                    isStudent
+                      ? 'bg-[#E1F3E4] hover:bg-[#D4ECD8] text-[#116932]'
+                      : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                  )}
                 >
-                  <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center">
-                    <Check className="w-2.5 h-2.5 stroke-[3]" />
+                  <span
+                    className={clsx(
+                      'w-4 h-4 rounded-full text-white inline-flex items-center justify-center',
+                      isStudent ? 'bg-[#16A34A]' : 'bg-zinc-400'
+                    )}
+                  >
+                    {isStudent ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : <User className="w-2.5 h-2.5" />}
                   </span>
-                  <span>{isLocked ? 'Student verified (Read-only)' : 'Student status verified'}</span>
+                  <span>
+                    {isStudent
+                      ? isLocked
+                        ? 'Student verified (Read-only)'
+                        : 'Student status verified'
+                      : 'Non-student profile'}
+                  </span>
                 </button>
               </div>
             </div>
@@ -922,7 +1017,10 @@ export function ProfileWorkspaceContent({
             </div>
 
             {/* ── Card 2: Account security ── */}
-            <div className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5">
+            <div
+              ref={securityRef}
+              className="bg-[#FDFCF9] border border-[#E6E4DA] rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-3.5"
+            >
               <div className="flex items-center gap-2 pb-2 border-b border-[#EAE8DF]">
                 <ShieldCheck className="w-5 h-5 text-[#0B3B24] stroke-[2.2]" />
                 <h2 className="text-[15.5px] font-extrabold text-[#14221A]">
@@ -954,7 +1052,7 @@ export function ProfileWorkspaceContent({
                     <span>Active Sessions</span>
                   </span>
                   <span className="font-extrabold text-[#14221A]">
-                    {activeSessionsCount} sessions
+                    {sessionLabel}
                   </span>
                 </div>
               </div>
