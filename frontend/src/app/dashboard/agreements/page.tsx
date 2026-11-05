@@ -360,9 +360,9 @@ export default function TenancyAgreementsPage() {
           <div class="doc-wrapper">
             <div class="header">
               <div class="header-logos">
-                <img src="${window.location.origin}/images/agreements/coat-of-arms.png" class="coa" alt="Republic of Ghana" />
+                <img src="${window.location.origin}/images/agreements/coat-of-arms-pristine.png" class="coa" alt="Republic of Ghana" />
                 <div class="header-divider"></div>
-                <img src="${logoSrc}" class="akwaaba-header-logo" alt="Akwaaba Homes" />
+                <img src="${window.location.origin}/images/agreements/akwaaba-header-logo-crop.png" class="akwaaba-header-logo" alt="Akwaaba Homes" />
               </div>
               <p class="rep">REPUBLIC OF GHANA</p>
               <h1>RESIDENTIAL TENANCY AGREEMENT</h1>
@@ -935,30 +935,41 @@ export default function TenancyAgreementsPage() {
                     </div>
 
                     <div className="relative z-10">
-                      {/* Top Overview & Republic of Ghana Emblem */}
+                      {/* Top Overview: Coat of Arms + Vertical Divider + Akwaaba Homes Logo */}
                       <div
                         ref={(el) => {
                           sectionRefs.current.overview = el;
                         }}
                         className="text-center border-b border-[#C8A24A] pb-4 mb-5"
                       >
-                        <div className="flex items-center justify-center mb-2">
-                          <div className="w-16 h-14 relative">
+                        <div className="flex items-center justify-center gap-5 sm:gap-6 mb-3">
+                          <div className="w-16 h-14 relative shrink-0">
                             <Image
-                              src="/images/agreements/coat-of-arms-hd.png"
+                              src="/images/agreements/coat-of-arms-pristine.png"
                               alt="Republic of Ghana Coat of Arms"
                               fill
                               className="object-contain"
+                              priority
+                            />
+                          </div>
+                          <div className="w-[1.5px] h-11 bg-[#C8A24A] shrink-0" />
+                          <div className="w-16 h-14 relative shrink-0">
+                            <Image
+                              src="/images/agreements/akwaaba-header-logo-crop.png"
+                              alt="Akwaaba Homes"
+                              fill
+                              className="object-contain"
+                              priority
                             />
                           </div>
                         </div>
                         <p className="font-serif text-[12.5px] font-bold tracking-[0.08em] uppercase text-[#14221A] dark:text-zinc-200">
                           REPUBLIC OF GHANA
                         </p>
-                        <h3 className="font-serif text-lg sm:text-[21px] font-bold tracking-tight text-[#14221A] dark:text-white mt-0.5">
+                        <h3 className="font-serif text-lg sm:text-[21px] font-bold tracking-tight text-[#14221A] dark:text-white mt-1">
                           RESIDENTIAL TENANCY AGREEMENT
                         </h3>
-                        <p className="text-[11.5px] font-semibold text-[#3B4B41] dark:text-zinc-400 mt-0.5">
+                        <p className="text-[11.5px] font-semibold text-[#3B4B41] dark:text-zinc-400 mt-1">
                           Agreement Ref: {agreementRef}
                         </p>
                       </div>
