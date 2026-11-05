@@ -242,10 +242,10 @@ export default function Navbar() {
                     href={dashboardHref}
                     className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
                   >
-                    {user?.avatarUrl ? (
+                    {user?.avatarUrl || role === 'TENANT' ? (
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
                         <img
-                          src={getImageUrl(user.avatarUrl)}
+                          src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
                           alt={userFullName}
                           className="w-full h-full object-cover"
                         />

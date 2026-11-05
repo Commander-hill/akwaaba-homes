@@ -325,15 +325,11 @@ export function ProfileWorkspaceContent({
           <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
             {/* Dark Green Circular User Avatar */}
             <div className="w-13 h-13 rounded-full bg-[#114A2E] text-white flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-              {formData.avatarUrl ? (
-                <img
-                  src={getImageUrl(formData.avatarUrl)}
-                  alt={`${formData.firstName} ${formData.lastName}`}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-7 h-7 fill-white text-white" />
-              )}
+              <img
+                src={formData.avatarUrl ? getImageUrl(formData.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                alt={`${formData.firstName} ${formData.lastName}`}
+                className="w-full h-full object-cover"
+              />
             </div>
 
             {/* Resident Account Title & Contact info */}

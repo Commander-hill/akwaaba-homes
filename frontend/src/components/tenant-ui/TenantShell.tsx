@@ -178,8 +178,8 @@ export default function TenantShell({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fullName = `${user?.firstName || 'Stephen'} ${user?.lastName || 'Akwaaba'}`.trim();
-  const initials = `${user?.firstName?.[0] || 'S'}${user?.lastName?.[0] || 'A'}`.toUpperCase();
+  const fullName = `${user?.firstName || 'Stephen'} ${user?.lastName || 'Darko'}`.trim();
+  const initials = `${user?.firstName?.[0] || 'S'}${user?.lastName?.[0] || 'D'}`.toUpperCase();
 
   // Navigation Items matching media_1793394736521.jpg exactly
   const navItems: NavItem[] = [
@@ -486,11 +486,11 @@ export default function TenantShell({
                 className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-zinc-800/60 transition cursor-pointer text-left"
               >
                 <div className="w-9 h-9 rounded-full bg-[#0B7A46] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
-                  {user?.avatarUrl ? (
-                    <img src={getImageUrl(user.avatarUrl)} alt={fullName} className="w-full h-full object-cover" />
-                  ) : (
-                    initials
-                  )}
+                  <img
+                    src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="hidden sm:block">

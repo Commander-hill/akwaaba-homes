@@ -1376,18 +1376,12 @@ function MessagesContent() {
                               />
                               {isMine && (
                                 <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700 bg-zinc-100">
-                                  {currentUser?.avatarUrl ? (
-                                    <Image
-                                      src={getImageUrl(currentUser.avatarUrl)}
-                                      alt={currentUserName}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-[#0F5A3E] text-white text-[10px] font-bold flex items-center justify-center">
-                                      {currentUserInitials}
-                                    </div>
-                                  )}
+                                  <Image
+                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                                    alt={currentUserName}
+                                    fill
+                                    className="object-cover"
+                                  />
                                 </div>
                               )}
                             </div>
@@ -1402,18 +1396,12 @@ function MessagesContent() {
                               {/* Sender Avatar */}
                               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
                                 {isMine ? (
-                                  currentUser?.avatarUrl ? (
-                                    <Image
-                                      src={getImageUrl(currentUser.avatarUrl)}
-                                      alt={currentUserName}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-[#0F5A3E] text-white text-[11px] font-bold flex items-center justify-center">
-                                      {currentUserInitials}
-                                    </div>
-                                  )
+                                  <Image
+                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                                    alt={currentUserName}
+                                    fill
+                                    className="object-cover"
+                                  />
                                 ) : activeConversation.partner?.avatarUrl ? (
                                   <Image
                                     src={getImageUrl(activeConversation.partner.avatarUrl)}
