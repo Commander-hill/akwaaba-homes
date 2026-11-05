@@ -395,12 +395,7 @@ export function ProfileWorkspaceContent({
 
           {/* Right Action Button: Request profile changes or Editable Status */}
           {isLocked ? (
-            isUnlockRequested ? (
-              <div className="px-3.5 py-2 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/40 text-[#92400E] text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
-                <Clock className="w-3.5 h-3.5 text-[#D97706] animate-pulse" />
-                <span>Unlock request pending</span>
-              </div>
-            ) : (
+            !isUnlockRequested ? (
               <button
                 type="button"
                 onClick={() => setRequestModalOpen(true)}
@@ -409,7 +404,7 @@ export function ProfileWorkspaceContent({
                 <Lock className="w-3.5 h-3.5 text-[#0B3B24] dark:text-emerald-400" />
                 <span>Request profile changes</span>
               </button>
-            )
+            ) : null
           ) : (
             <div className="px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[#0F5132] dark:text-emerald-400 text-xs font-bold inline-flex items-center gap-2 shrink-0 shadow-2xs self-start md:self-center">
               <Unlock className="w-3.5 h-3.5 text-[#2E7D32] dark:text-emerald-400" />
@@ -1077,10 +1072,17 @@ export function ProfileWorkspaceContent({
           {/* Status Note */}
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
             {isLocked ? (
-              <>
-                <Lock className="w-4 h-4 text-zinc-400 shrink-0" />
-                <span>Your profile is locked and read-only. Request edit access to make changes.</span>
-              </>
+              isUnlockRequested ? (
+                <>
+                  <Clock className="w-4 h-4 text-[#D97706] shrink-0 animate-pulse" />
+                  <span>Unlock request submitted and awaiting admin approval.</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <span>Your profile is locked and read-only. Request edit access to make changes.</span>
+                </>
+              )
             ) : (
               <>
                 <Unlock className="w-4 h-4 text-[#16A34A] shrink-0" />
@@ -1101,23 +1103,7 @@ export function ProfileWorkspaceContent({
               </button>
             )}
 
-            {isLocked ? (
-              isUnlockRequested ? (
-                <div className="px-5 py-2.5 rounded-xl bg-[#FEF3C7] border border-[#F59E0B]/40 text-[#92400E] text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-2xs">
-                  <Clock className="w-4 h-4 text-[#D97706] animate-pulse" />
-                  <span>Unlock request pending</span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setRequestModalOpen(true)}
-                  className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>Request profile changes</span>
-                </button>
-              )
-            ) : (
+            {!isLocked ? (
               <button
                 type="button"
                 onClick={() => handleSaveChanges()}
@@ -1132,7 +1118,16 @@ export function ProfileWorkspaceContent({
                 <span>Save changes</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-            )}
+            ) : !isUnlockRequested ? (
+              <button
+                type="button"
+                onClick={() => setRequestModalOpen(true)}
+                className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Request profile changes</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </div>

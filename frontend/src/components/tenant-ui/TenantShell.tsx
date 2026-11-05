@@ -286,7 +286,7 @@ export default function TenantShell({
       </div>
 
       {/* Navigation Links */}
-      <nav aria-label="Resident Navigation" className="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
+      <nav aria-label="Resident Navigation" className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isNavItemActive(item);
@@ -300,20 +300,20 @@ export default function TenantShell({
               }}
               aria-current={active ? 'page' : undefined}
               className={clsx(
-                'group flex items-center justify-between px-4 py-3.5 rounded-2xl text-[14.5px] transition-all duration-150 select-none',
+                'group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all duration-150 select-none',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                 active
-                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#016A0B] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#016A0B] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/50 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/50 font-semibold border border-transparent active:bg-[#DCFCE7] active:text-[#016A0B] active:border-[#BBF7D0]'
+                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 font-semibold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#15803D] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/40 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/40 font-medium border border-transparent active:bg-[#DCFCE7] active:text-[#15803D] active:border-[#BBF7D0]'
               )}
             >
-              <span className="flex items-center gap-4 min-w-0">
+              <span className="flex items-center gap-3.5 min-w-0">
                 <Icon
                   className={clsx(
-                    'w-5 h-5 shrink-0 stroke-[2.2] transition-colors',
+                    'w-4.5 h-4.5 shrink-0 stroke-[2] transition-colors',
                     active
-                      ? 'text-[#016A0B] dark:text-emerald-300'
-                      : 'text-zinc-500 dark:text-zinc-400 group-hover:text-[#016A0B] dark:group-hover:text-emerald-300 group-active:text-[#016A0B]'
+                      ? 'text-[#15803D] dark:text-emerald-300'
+                      : 'text-zinc-400 dark:text-zinc-500 stroke-[1.8] group-hover:text-[#15803D] dark:group-hover:text-emerald-300 group-active:text-[#15803D]'
                   )}
                   aria-hidden="true"
                 />

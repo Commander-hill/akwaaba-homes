@@ -204,17 +204,17 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
                       if (isMobile && onMobileClose) onMobileClose();
                     }}
                     className={clsx(
-                      "w-full flex items-center rounded-2xl text-[13.5px] transition-all duration-150 relative group select-none",
-                      collapsed ? "justify-center p-2.5 my-1" : "gap-3.5 px-3.5 py-2.5 my-0.5",
+                      "w-full flex items-center rounded-xl text-[13.5px] transition-all duration-150 relative group select-none",
+                      collapsed ? "justify-center p-2.5 my-1" : "gap-3.5 px-3.5 py-2 my-0.5",
                       isActive
-                        ? "bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#016A0B] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs"
-                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 border border-transparent active:bg-[#DCFCE7] active:text-[#016A0B]"
+                        ? "bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 font-semibold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs"
+                        : "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60 border border-transparent active:bg-[#DCFCE7] active:text-[#15803D]"
                     )}
                     title={collapsed ? link.name : undefined}
                   >
                     <Icon className={clsx(
-                      "w-4.5 h-4.5 shrink-0 stroke-[2.2] transition-colors", 
-                      isActive ? "text-[#016A0B] dark:text-emerald-300" : "text-zinc-400 group-hover:text-zinc-100"
+                      "w-4.5 h-4.5 shrink-0 stroke-[2] transition-colors", 
+                      isActive ? "text-[#15803D] dark:text-emerald-300" : "text-zinc-400 group-hover:text-zinc-100"
                     )} />
 
                     {!collapsed && (

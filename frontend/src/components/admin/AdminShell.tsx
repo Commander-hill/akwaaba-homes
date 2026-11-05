@@ -217,17 +217,17 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
                       href={link.href}
                       title={collapsed && !isMobile ? link.name : undefined}
                       className={clsx(
-                        'flex items-center gap-3.5 px-3.5 py-2.5 rounded-2xl text-[13px] font-bold transition-all duration-150 group relative select-none',
+                        'flex items-center gap-3.5 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-150 group relative select-none',
                         isActive
-                          ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#016A0B] dark:text-emerald-300 border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
-                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60 border border-transparent active:bg-[#DCFCE7] active:text-[#016A0B]',
+                          ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60 border border-transparent active:bg-[#DCFCE7] active:text-[#15803D]',
                         collapsed && !isMobile && 'justify-center px-2'
                       )}
                     >
                       <Icon
                         className={clsx(
-                          'w-4.5 h-4.5 shrink-0 stroke-[2.2] transition-colors',
-                          isActive ? 'text-[#016A0B] dark:text-emerald-300' : 'text-zinc-400 group-hover:text-zinc-200'
+                          'w-4.5 h-4.5 shrink-0 stroke-[2] transition-colors',
+                          isActive ? 'text-[#15803D] dark:text-emerald-300' : 'text-zinc-400 group-hover:text-zinc-200'
                         )}
                       />
                       {(!collapsed || isMobile) && (
