@@ -408,7 +408,9 @@ function MessagesContent() {
     queryFn: async () => {
       try {
         const { data } = await api.get('/chat/conversations');
-        return data || [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray((data as any)?.conversations)) return (data as any).conversations;
+        return [];
       } catch {
         return [];
       }
@@ -416,12 +418,14 @@ function MessagesContent() {
   });
 
   // 3. Fetch Tenant's Real Bookings for Contact Picker in New Message Modal
-  const { data: tenantBookings = [], isLoading: isLoadingBookings } = useQuery<any[]>({
+  const { data: tenantBookings = [], isLoading: isLoadingBookings } = useQuery<any>({
     queryKey: ['myBookings', 'contacts'],
     queryFn: async () => {
       try {
         const { data } = await api.get('/bookings/me');
-        return data || [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.bookings)) return data.bookings;
+        return [];
       } catch {
         return [];
       }
@@ -430,8 +434,14 @@ function MessagesContent() {
 
   // Merge live conversations or handle demo mode
   const mergedConversations: Conversation[] = useMemo(() => {
-    if (liveConversations && liveConversations.length > 0) {
-      return liveConversations.map((c) => ({
+    const list = Array.isArray(liveConversations)
+      ? liveConversations
+      : Array.isArray((liveConversations as any)?.conversations)
+      ? (liveConversations as any).conversations
+      : [];
+
+    if (list.length > 0) {
+      return (list as Conversation[]).map((c: Conversation) => ({
         ...c,
         category: (c.category || 'PROPERTY_TEAM') as 'PROPERTY_TEAM' | 'MANAGEMENT' | 'OTHERS',
         isVerified: c.partner?.isVerifiedLandlord || false,
@@ -488,7 +498,9 @@ function MessagesContent() {
       }
       try {
         const { data } = await api.get(`/chat/${activeConversation.id}/messages`);
-        return data || [];
+        if (Array.isArray(data)) return data;
+        if (Array.isArray((data as any)?.messages)) return (data as any).messages;
+        return [];
       } catch (err) {
         console.error('Failed to fetch conversation history:', err);
         return [];
@@ -500,10 +512,11 @@ function MessagesContent() {
   // Combine server messages with local optimistic messages
   const activeMessages = useMemo(() => {
     if (!activeConversation) return [];
+    const serverList = Array.isArray(serverMessages) ? serverMessages : [];
     const local = optimisticMessages[activeConversation.id] || [];
-    const existingIds = new Set(serverMessages.map((m) => m.id));
+    const existingIds = new Set(serverList.map((m) => m.id));
     const uniqueLocal = local.filter((m) => !existingIds.has(m.id));
-    const combined = [...serverMessages, ...uniqueLocal];
+    const combined = [...serverList, ...uniqueLocal];
     return combined.sort((a, b) => {
       const timeA = new Date(a.createdAt).getTime();
       const timeB = new Date(b.createdAt).getTime();
@@ -513,7 +526,13 @@ function MessagesContent() {
 
   // Extract unique contacts from bookings for "New Message" modal (Resolves Anomaly 3)
   const bookingContacts = useMemo(() => {
-    if (!tenantBookings || tenantBookings.length === 0) return [];
+    const list = Array.isArray(tenantBookings)
+      ? tenantBookings
+      : Array.isArray((tenantBookings as any)?.bookings)
+      ? (tenantBookings as any).bookings
+      : [];
+
+    if (list.length === 0) return [];
     const map = new Map<
       string,
       {
@@ -527,15 +546,15 @@ function MessagesContent() {
       }
     >();
 
-    for (const b of tenantBookings) {
-      const landlord = b.property?.landlord;
+    for (const b of list) {
+      const landlord = b?.property?.landlord;
       if (landlord && landlord.id && !map.has(landlord.id)) {
         map.set(landlord.id, {
           id: landlord.id,
           name: `${landlord.firstName || ''} ${landlord.lastName || ''}`.trim() || 'Property Host',
-          role: `Landlord • ${b.property?.title || 'Accommodation'}`,
+          role: `Landlord • ${b?.property?.title || 'Accommodation'}`,
           avatarUrl: landlord.avatarUrl || null,
-          propertyName: b.property?.title || 'Property',
+          propertyName: b?.property?.title || 'Property',
           phoneNumber: landlord.phoneNumber || null,
           isVerified: Boolean(landlord.isVerifiedLandlord),
         });
