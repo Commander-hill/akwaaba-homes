@@ -17,6 +17,7 @@ import {
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { getImageUrl } from '@/lib/utils';
 
 export interface SidebarLink {
   name: string;
@@ -102,7 +103,7 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
           <div className="relative shrink-0">
             {user?.avatarUrl ? (
               <img 
-                src={user.avatarUrl} 
+                src={getImageUrl(user.avatarUrl)} 
                 alt={userDisplayName} 
                 className="w-9 h-9 rounded-xl object-cover ring-2 ring-emerald-500/40" 
               />

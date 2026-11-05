@@ -515,6 +515,7 @@ const establishUserSessionAndRespond = async (
       twoFactorEnabled: !!user.twoFactorEnabled,
       isVerifiedLandlord: !!user.isVerifiedLandlord,
       landlordVerificationStatus: user.landlordVerificationStatus || 'NOT_SUBMITTED',
+      avatarUrl: user.avatarUrl || null,
     },
   });
 };

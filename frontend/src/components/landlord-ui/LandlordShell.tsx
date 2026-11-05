@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
+import { getImageUrl } from '@/lib/utils';
 
 export interface LandlordShellProps {
   user?: {
@@ -231,7 +232,7 @@ export default function LandlordShell({
         <span className="w-9 h-9 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0">
           {user?.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+            <img src={getImageUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
           ) : (
             initials
           )}
@@ -286,7 +287,7 @@ export default function LandlordShell({
             >
               {user?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+                <img src={getImageUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
               ) : (
                 initials
               )}

@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
 import { useDialog } from '@/providers/DialogProvider';
 import {
   Loader2,
@@ -326,7 +327,7 @@ export function ProfileWorkspaceContent({
             <div className="w-13 h-13 rounded-full bg-[#114A2E] text-white flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
               {formData.avatarUrl ? (
                 <img
-                  src={formData.avatarUrl}
+                  src={getImageUrl(formData.avatarUrl)}
                   alt={`${formData.firstName} ${formData.lastName}`}
                   className="w-full h-full object-cover"
                 />

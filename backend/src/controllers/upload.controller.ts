@@ -103,7 +103,7 @@ export const uploadAvatar = async (req: Request, res: Response): Promise<void> =
       fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
     } catch (cloudErr) {
       console.warn('Cloudinary upload failed or unconfigured, saving locally to public/uploads/avatars:', cloudErr);
-      const uploadDir = path.join(__dirname, '../../public/uploads/avatars');
+      const uploadDir = path.resolve(process.cwd(), 'public/uploads/avatars');
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }

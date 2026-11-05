@@ -160,12 +160,14 @@ export default function PassportUpload({
             >
               {preview ? (
                 <>
-                  <Image
+                  <img
                     src={preview}
                     alt="Profile Preview"
-                    fill
-                    sizes="96px"
-                    className="object-cover"
+                    className="w-full h-full object-cover"
+                    onError={() => {
+                      // If currentUrl was invalid or failed to load, clear preview
+                      setPreview(null);
+                    }}
                   />
                   {/* Hover Overlay */}
                   {!isUploading && (

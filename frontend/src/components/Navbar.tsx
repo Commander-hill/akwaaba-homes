@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
+import { getImageUrl } from '@/lib/utils';
 import NotificationBell from './NotificationBell';
 
 const PUBLIC_NAV_LINKS = [
@@ -243,11 +244,10 @@ export default function Navbar() {
                   >
                     {user?.avatarUrl ? (
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
-                        <Image
-                          src={user.avatarUrl}
+                        <img
+                          src={getImageUrl(user.avatarUrl)}
                           alt={userFullName}
-                          fill
-                          className="object-cover"
+                          className="w-full h-full object-cover"
                         />
                       </div>
                     ) : (

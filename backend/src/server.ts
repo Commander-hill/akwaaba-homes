@@ -218,6 +218,7 @@ app.use(xssSanitizer);
 
 // ─── Static Files ────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.resolve(process.cwd(), 'public/uploads')));
 
 // ─── Health Check (unthrottled) ──────────────────────────────────────────────
 app.get('/api/health', (req: Request, res: Response) => {

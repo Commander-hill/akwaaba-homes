@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { getImageUrl } from '@/lib/utils';
 import {
   LayoutDashboard,
   Building2,
@@ -477,7 +478,7 @@ export default function TenantShell({
               >
                 <div className="w-9 h-9 rounded-full bg-[#0B7A46] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                   {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(user.avatarUrl)} alt={fullName} className="w-full h-full object-cover" />
                   ) : (
                     initials
                   )}

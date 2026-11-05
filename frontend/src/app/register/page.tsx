@@ -72,6 +72,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
+  const REGISTRATION_DRAFT_KEY = 'akwaaba_registration_draft_v1';
+
   const [formData, setFormData] = useState({
     role: 'TENANT',
     isStudent: true,
@@ -102,6 +104,42 @@ export default function RegisterPage() {
     confirmPassword: '',
     acceptTerms: false
   });
+
+  // Restore saved registration draft upon page refresh / reload
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(REGISTRATION_DRAFT_KEY) || localStorage.getItem(REGISTRATION_DRAFT_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          setFormData((prev) => ({
+            ...prev,
+            ...parsed,
+            // Keep passwords empty for security
+            password: '',
+            confirmPassword: '',
+          }));
+          if (parsed.currentStep && typeof parsed.currentStep === 'number') {
+            setCurrentStep(parsed.currentStep);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore registration draft:', e);
+    }
+  }, []);
+
+  // Save registration draft on every change so page refreshes never wipe user input or uploaded avatar
+  useEffect(() => {
+    try {
+      const { password, confirmPassword, ...safeDraft } = formData;
+      const payload = JSON.stringify({ ...safeDraft, currentStep });
+      sessionStorage.setItem(REGISTRATION_DRAFT_KEY, payload);
+      localStorage.setItem(REGISTRATION_DRAFT_KEY, payload);
+    } catch (e) {
+      // ignore quota errors
+    }
+  }, [formData, currentStep]);
 
   const errorRef = useRef<HTMLDivElement>(null);
 
@@ -229,6 +267,10 @@ export default function RegisterPage() {
 
     try {
       await api.post('/auth/register', formData);
+      try {
+        sessionStorage.removeItem(REGISTRATION_DRAFT_KEY);
+        localStorage.removeItem(REGISTRATION_DRAFT_KEY);
+      } catch (e) {}
       toast.success('Registration successful! Please sign in.');
       router.push('/login?registered=true');
     } catch (err: any) {
@@ -332,6 +374,10 @@ export default function RegisterPage() {
                 } catch (e) {}
                 localStorage.removeItem('akwaaba_access_token');
                 localStorage.removeItem('akwaaba_refresh_token');
+                try {
+                  sessionStorage.removeItem(REGISTRATION_DRAFT_KEY);
+                  localStorage.removeItem(REGISTRATION_DRAFT_KEY);
+                } catch (e) {}
                 window.location.reload();
               }}
               className="w-full h-11 inline-flex items-center justify-center border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-xs font-bold text-zinc-700 dark:text-zinc-200 rounded-xl transition cursor-pointer"
@@ -949,12 +995,10 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-3.5 pb-2 border-b border-zinc-200/60 dark:border-zinc-800/60">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0 shadow-2xs">
                     {formData.avatarUrl ? (
-                      <Image
+                      <img
                         src={getImageUrl(formData.avatarUrl)}
                         alt={fullNameDisplay || 'User'}
-                        fill
-                        sizes="48px"
-                        className="object-cover"
+                        className="w-full h-full object-cover"
                       />
                     ) : (
                       <User className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
