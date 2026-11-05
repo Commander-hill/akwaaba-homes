@@ -446,7 +446,7 @@ export default function TenancyAgreementsPage() {
             <button
               type="button"
               onClick={() => handlePrintOrDownload('download')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0B3B24] hover:bg-[#125233] text-white text-xs sm:text-[13px] font-bold shadow-sm transition cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold shadow-sm transition cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>Download all</span>
@@ -736,7 +736,7 @@ export default function TenancyAgreementsPage() {
                 <button
                   type="button"
                   onClick={() => handlePrintOrDownload('download')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#125233] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download PDF</span>
@@ -897,7 +897,7 @@ export default function TenancyAgreementsPage() {
                         onClick={() => handleSelectSection(sec)}
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold transition text-left whitespace-nowrap cursor-pointer ${
                           isActive
-                            ? 'bg-[#0B3B24] text-white shadow-2xs'
+                            ? 'bg-[#16A34A] text-white shadow-2xs'
                             : 'text-[#2C3A31] dark:text-zinc-300 hover:bg-[#E6E2D4] dark:hover:bg-zinc-800'
                         }`}
                       >
@@ -1219,7 +1219,7 @@ export default function TenancyAgreementsPage() {
 
                 <Link
                   href="/support"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#125233] text-white text-xs font-bold transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
                 >
                   <span>Contact Support</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -1265,7 +1265,7 @@ export default function TenancyAgreementsPage() {
                 type="button"
                 disabled={!signatureData || signMutation.isPending}
                 onClick={() => signatureData && signMutation.mutate(signatureData)}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] text-white text-xs font-bold disabled:opacity-50 inline-flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold disabled:opacity-50 inline-flex items-center gap-1.5 transition shadow-2xs cursor-pointer"
               >
                 {signMutation.isPending ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

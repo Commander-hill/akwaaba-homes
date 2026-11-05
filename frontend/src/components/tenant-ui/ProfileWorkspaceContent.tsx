@@ -437,17 +437,17 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'personal'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <User className="w-5 h-5 text-[#0B3B24] dark:text-emerald-400 shrink-0 stroke-[2]" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
+                      <p className="text-[13px] font-extrabold text-[#0B3B24] dark:text-emerald-300 truncate">
                         Personal profile
                       </p>
-                      <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                      <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                         Your basic information
                       </p>
                     </div>
@@ -464,14 +464,14 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'contact'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <ShieldCheck className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
+                    <ShieldCheck className={clsx("w-5 h-5 shrink-0 stroke-[1.9]", activeSection === 'contact' ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300')} />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
+                      <p className={clsx("text-[13px] font-extrabold truncate", activeSection === 'contact' ? 'text-[#0B3B24] dark:text-emerald-300' : 'text-[#14221A] dark:text-white')}>
                         Contact &amp; guardian
                       </p>
                       <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
@@ -496,14 +496,14 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'academic'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <GraduationCap className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
+                    <GraduationCap className={clsx("w-5 h-5 shrink-0 stroke-[1.9]", activeSection === 'academic' ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300')} />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
+                      <p className={clsx("text-[13px] font-extrabold truncate", activeSection === 'academic' ? 'text-[#0B3B24] dark:text-emerald-300' : 'text-[#14221A] dark:text-white')}>
                         Academic details
                       </p>
                       <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
@@ -530,14 +530,14 @@ export function ProfileWorkspaceContent({
                   className={clsx(
                     'w-full px-4 py-3.5 flex items-center justify-between gap-3 text-left transition cursor-pointer relative',
                     activeSection === 'security'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
+                      ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 before:content-[""] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-full before:bg-[#0B3B24] dark:before:bg-emerald-400'
                       : 'hover:bg-zinc-50 dark:hover:bg-zinc-900/40'
                   )}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <Lock className="w-5 h-5 text-zinc-700 dark:text-zinc-300 shrink-0 stroke-[1.9]" />
+                    <Lock className={clsx("w-5 h-5 shrink-0 stroke-[1.9]", activeSection === 'security' ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-700 dark:text-zinc-300')} />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-extrabold text-[#14221A] dark:text-white truncate">
+                      <p className={clsx("text-[13px] font-extrabold truncate", activeSection === 'security' ? 'text-[#0B3B24] dark:text-emerald-300' : 'text-[#14221A] dark:text-white')}>
                         Security &amp; sessions
                       </p>
                       <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
@@ -1111,7 +1111,7 @@ export function ProfileWorkspaceContent({
                 <button
                   type="button"
                   onClick={() => setRequestModalOpen(true)}
-                  className="px-5 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#082C1B] text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-xs transition cursor-pointer"
                 >
                   <Lock className="w-4 h-4" />
                   <span>Request profile changes</span>
@@ -1122,7 +1122,7 @@ export function ProfileWorkspaceContent({
                 type="button"
                 onClick={() => handleSaveChanges()}
                 disabled={isSaving}
-                className="px-6 py-2.5 rounded-xl bg-[#11823B] hover:bg-[#0E6E31] disabled:opacity-60 text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-sm transition cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white text-xs sm:text-[13px] font-bold inline-flex items-center gap-2 shadow-sm transition cursor-pointer"
               >
                 {isSaving ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1192,7 +1192,7 @@ export function ProfileWorkspaceContent({
                 type="button"
                 disabled={!requestReason.trim() || requestUnlockMutation.isPending}
                 onClick={() => requestUnlockMutation.mutate(requestReason)}
-                className="px-4 py-2 text-xs font-bold text-white bg-[#0B3B24] hover:bg-[#0E4B2E] rounded-lg disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 text-xs font-bold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg disabled:opacity-50 inline-flex items-center gap-1.5 cursor-pointer"
               >
                 {requestUnlockMutation.isPending && (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1464,7 +1464,7 @@ export function ProfileWorkspaceContent({
               </div>
               <Link
                 href="/dashboard/profile/security/2fa"
-                className="px-3.5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] text-white text-xs font-bold inline-flex items-center gap-1.5 shrink-0"
+                className="px-3.5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 shrink-0"
               >
                 <span>Configure 2FA</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1585,7 +1585,7 @@ export function ProfileWorkspaceContent({
               <button
                 type="button"
                 onClick={() => setSecurityModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] text-white text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold cursor-pointer transition shadow-2xs"
               >
                 Close
               </button>

@@ -434,7 +434,7 @@ export default function TenantTicketsPage() {
                     className={clsx(
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'ALL'
-                        ? 'bg-[#0B3B24] text-white shadow-2xs'
+                        ? 'bg-[#16A34A] text-white shadow-2xs'
                         : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
                     )}
                   >
@@ -443,7 +443,7 @@ export default function TenantTicketsPage() {
                       className={clsx(
                         'w-4 h-4 rounded-full text-[10.5px] font-extrabold inline-flex items-center justify-center',
                         activeTab === 'ALL'
-                          ? 'bg-[#16A34A] text-white'
+                          ? 'bg-[#15803D] text-white'
                           : 'bg-[#DFDDD2] dark:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300'
                       )}
                     >
@@ -457,7 +457,7 @@ export default function TenantTicketsPage() {
                     className={clsx(
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'IN_PROGRESS'
-                        ? 'bg-[#0B3B24] text-white shadow-2xs'
+                        ? 'bg-[#16A34A] text-white shadow-2xs'
                         : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
                     )}
                   >
@@ -466,7 +466,7 @@ export default function TenantTicketsPage() {
                       className={clsx(
                         'w-4 h-4 rounded-full text-[10.5px] font-extrabold inline-flex items-center justify-center',
                         activeTab === 'IN_PROGRESS'
-                          ? 'bg-[#16A34A] text-white'
+                          ? 'bg-[#15803D] text-white'
                           : 'bg-[#E2E0D5] dark:bg-zinc-700 text-[#4A5A50] dark:text-zinc-300'
                       )}
                     >
@@ -480,7 +480,7 @@ export default function TenantTicketsPage() {
                     className={clsx(
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'RESOLVED'
-                        ? 'bg-[#0B3B24] text-white shadow-2xs'
+                        ? 'bg-[#16A34A] text-white shadow-2xs'
                         : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
                     )}
                   >
@@ -1022,7 +1022,7 @@ export default function TenantTicketsPage() {
               </button>
               <Link
                 href={`/dashboard/tenant/tickets/${selectedRequest.id}`}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold inline-flex items-center gap-1.5"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition"
               >
                 <FileText className="w-3.5 h-3.5" />
                 <span>View Full Ticket &amp; Notes</span>
@@ -1085,7 +1085,7 @@ export default function TenantTicketsPage() {
               <button
                 type="button"
                 onClick={() => setActivityModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] text-white text-xs font-bold cursor-pointer hover:bg-[#072B1D] transition"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] text-white text-xs font-bold cursor-pointer hover:bg-[#15803D] transition shadow-2xs"
               >
                 Close
               </button>

@@ -138,7 +138,7 @@ export default function TenantVisitorsPage() {
 
         <Link
           href="/dashboard/tenant/visitors/new"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs w-fit"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs w-fit"
         >
           <Plus className="w-4 h-4" />
           <span>Generate New Pass</span>
@@ -154,7 +154,7 @@ export default function TenantVisitorsPage() {
             className={clsx(
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
               activeTab === 'ACTIVE'
-                ? 'bg-[#0B3B24] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
@@ -166,7 +166,7 @@ export default function TenantVisitorsPage() {
             className={clsx(
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
               activeTab === 'EXPIRED'
-                ? 'bg-[#0B3B24] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >
@@ -178,7 +178,7 @@ export default function TenantVisitorsPage() {
             className={clsx(
               'px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer',
               activeTab === 'ALL'
-                ? 'bg-[#0B3B24] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             )}
           >

@@ -231,10 +231,10 @@ export default function TenantShell({
       badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
     },
     {
-      label: 'Settings',
+      label: 'Account Settings',
       href: '/dashboard/profile',
       matchPrefixes: ['/dashboard/profile', '/profile', '/settings'],
-      icon: Settings,
+      icon: User,
     },
   ];
 
@@ -293,18 +293,18 @@ export default function TenantShell({
               onClick={onNavigate}
               aria-current={active ? 'page' : undefined}
               className={clsx(
-                'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] transition-all',
+                'flex items-center justify-between px-4 py-3 rounded-2xl text-sm transition-all',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                 active
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-[#0B3B24] dark:text-emerald-400 font-bold border border-emerald-200 dark:border-emerald-800/60 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-medium'
+                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-semibold border border-transparent'
               )}
             >
-              <span className="flex items-center gap-3 min-w-0">
+              <span className="flex items-center gap-3.5 min-w-0">
                 <Icon
                   className={clsx(
-                    'w-4 h-4 shrink-0',
-                    active ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-400 dark:text-zinc-500'
+                    'w-5 h-5 shrink-0 stroke-[2]',
+                    active ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'
                   )}
                   aria-hidden="true"
                 />
@@ -347,7 +347,7 @@ export default function TenantShell({
           <Link
             href="/support"
             onClick={onNavigate}
-            className="w-full py-2 px-3 mt-1 rounded-full bg-[#0B3B24] hover:bg-[#082C1B] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
+            className="w-full py-2.5 px-3 mt-1 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
           >
             <span>Contact Support</span>
             <span aria-hidden="true">&rarr;</span>

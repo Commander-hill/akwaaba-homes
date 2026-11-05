@@ -574,7 +574,7 @@ export default function SupportHelpCentrePage() {
               />
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#134F32] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm cursor-pointer"
               >
                 Search
               </button>
@@ -592,7 +592,7 @@ export default function SupportHelpCentrePage() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'BOOKING'
-                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -609,7 +609,7 @@ export default function SupportHelpCentrePage() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'PAYMENTS'
-                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -626,7 +626,7 @@ export default function SupportHelpCentrePage() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'AGREEMENTS'
-                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -643,7 +643,7 @@ export default function SupportHelpCentrePage() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'MAINTENANCE'
-                    ? 'bg-[#0B3B24] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -978,7 +978,7 @@ export default function SupportHelpCentrePage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-5 rounded-xl bg-[#0B3B24] hover:bg-[#134E31] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                className="w-full py-3 px-5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
                 Continue to review
                 <ArrowRight className="w-4 h-4" />
@@ -1072,7 +1072,7 @@ export default function SupportHelpCentrePage() {
                 <button
                   type="button"
                   onClick={() => setUrgentModalOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#0B3B24] hover:bg-[#134E31] text-white text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
                 >
                   Contact support
                   <ArrowRight className="w-4 h-4" />
@@ -1307,7 +1307,7 @@ export default function SupportHelpCentrePage() {
                 type="button"
                 disabled={submitIssueMutation.isPending}
                 onClick={() => submitIssueMutation.mutate()}
-                className="px-5 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#134E31] text-white text-[13px] font-semibold flex items-center gap-2 disabled:opacity-60"
+                className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold flex items-center gap-2 disabled:opacity-60 transition shadow-xs cursor-pointer"
               >
                 {submitIssueMutation.isPending ? (
                   <>
@@ -1360,7 +1360,7 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setSelectedRequestModal(null)}
-                className="px-4 py-2 rounded-xl bg-[#0B3B24] text-white text-[12.5px] font-semibold"
+                className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12.5px] font-semibold transition cursor-pointer"
               >
                 Close
               </button>
@@ -1413,7 +1413,7 @@ export default function SupportHelpCentrePage() {
                 setPriority('URGENT');
                 selectQuickCategory('HOME_MAINTENANCE', 'Urgent compound assistance needed');
               }}
-              className="w-full py-2.5 rounded-xl bg-[#0B3B24] text-white text-[13px] font-semibold"
+              className="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition cursor-pointer"
             >
               Log an Urgent Ticket Now
             </button>
@@ -1467,7 +1467,7 @@ export default function SupportHelpCentrePage() {
               <button
                 type="button"
                 onClick={() => setAllArticlesModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#0B3B24] text-white text-[13px] font-semibold"
+                className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition cursor-pointer"
               >
                 Done
               </button>

@@ -638,7 +638,7 @@ export default function TenantDocumentsAndVerificationPage() {
                       setGhanaCardMessage(null);
                       setGhanaCardModalMode('edit');
                     }}
-                    className="px-3.5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+                    className="px-3.5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>{session?.ghanaCardNumber ? 'Update details' : 'Upload card'}</span>
@@ -876,7 +876,7 @@ export default function TenantDocumentsAndVerificationPage() {
                 <div className="flex justify-end gap-2 pt-1">
                   <Link
                     href="/dashboard/agreements"
-                    className="px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold inline-flex items-center gap-1.5 transition"
+                    className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 transition"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Agreements Portal</span>
@@ -1030,7 +1030,7 @@ export default function TenantDocumentsAndVerificationPage() {
 
               <Link
                 href="/support"
-                className="px-3.5 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] text-white text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition shadow-2xs"
+                className="px-3.5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition shadow-2xs"
               >
                 <span>Contact support</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -1185,7 +1185,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   <button
                     type="button"
                     onClick={() => setGhanaCardModalMode('edit')}
-                    className="px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Update details</span>
@@ -1280,7 +1280,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   <button
                     type="submit"
                     disabled={isSubmittingGhanaCard}
-                    className="px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     {isSubmittingGhanaCard ? (
                       <>
@@ -1400,7 +1400,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   <button
                     type="button"
                     onClick={() => setStudentModalMode('edit')}
-                    className="px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     <span>Update academic record</span>
@@ -1539,7 +1539,7 @@ export default function TenantDocumentsAndVerificationPage() {
                   <button
                     type="submit"
                     disabled={isSubmittingStudent}
-                    className="px-4 py-2 rounded-lg bg-[#0B3B24] hover:bg-[#0E4B2E] disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     {isSubmittingStudent ? (
                       <>
@@ -1717,7 +1717,7 @@ export default function TenantDocumentsAndVerificationPage() {
               <button
                 type="button"
                 onClick={() => setHandbookModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] text-white text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold cursor-pointer transition shadow-2xs"
               >
                 Got it, thanks
               </button>
@@ -1779,7 +1779,7 @@ export default function TenantDocumentsAndVerificationPage() {
               <button
                 type="button"
                 onClick={() => setActivityModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#0B3B24] text-white text-xs font-bold cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold cursor-pointer transition shadow-2xs"
               >
                 Close
               </button>

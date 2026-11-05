@@ -219,7 +219,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0B3B24] hover:bg-[#072818] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
               >
                 <span>Download privacy notice</span>
                 <Download className="w-3.5 h-3.5" />
@@ -548,7 +548,7 @@ export default function PrivacyPage() {
                 <button
                   type="button"
                   onClick={() => openDsarWithType('COPY')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
                 >
                   <span>Start a data request</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -629,7 +629,7 @@ export default function PrivacyPage() {
             <button
               type="button"
               onClick={() => setIsContactModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <span>Contact the privacy team</span>
               <Mail className="w-3.5 h-3.5" />
@@ -638,7 +638,7 @@ export default function PrivacyPage() {
             <button
               type="button"
               onClick={() => openDsarWithType('COPY')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <span>Data subject request desk</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -769,7 +769,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => setActiveFaq(null)}
-                className="px-4 py-2 rounded-xl bg-[#0B3B24] text-white text-xs font-bold hover:bg-[#072818] transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] transition shadow-2xs cursor-pointer"
               >
                 Close
               </button>
@@ -875,7 +875,7 @@ export default function PrivacyPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                 >
                   <span>{isSubmitting ? 'Submitting...' : 'Submit Request'}</span>
                   <Send className="w-3.5 h-3.5" />
@@ -955,7 +955,7 @@ export default function PrivacyPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                 >
                   <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
                   <Send className="w-3.5 h-3.5" />

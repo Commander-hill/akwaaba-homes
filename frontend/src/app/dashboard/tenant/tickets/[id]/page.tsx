@@ -101,7 +101,7 @@ export default function TicketDetailsPage() {
         </p>
         <Link
           href="/dashboard/tenant/tickets"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B3B24] text-white text-xs font-bold hover:bg-[#072B1D] transition"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] transition shadow-2xs"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Repair Requests</span>
@@ -292,7 +292,7 @@ export default function TicketDetailsPage() {
               <button
                 type="submit"
                 disabled={addNoteMutation.isPending || !commentText.trim()}
-                className="px-4 py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#072B1D] text-white text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer shadow-2xs"
               >
                 {addNoteMutation.isPending ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />

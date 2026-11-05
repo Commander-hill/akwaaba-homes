@@ -102,7 +102,7 @@ export default function AboutPage() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#0B3B24] hover:bg-[#072818] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
               >
                 <span>Explore homes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
