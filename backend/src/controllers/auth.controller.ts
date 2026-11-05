@@ -1347,6 +1347,72 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const { currentPassword, newPassword, signOutOthers } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: 'Current password and new password are required' });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ message: 'New password must be at least 8 characters long' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    const isCurrentValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isCurrentValid) {
+      res.status(400).json({ message: 'The current password you entered is incorrect.' });
+      return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(newPassword, salt);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+        ...(signOutOthers ? { tokenVersion: { increment: 1 } } : {})
+      }
+    });
+
+    if (signOutOthers) {
+      await prisma.session.updateMany({
+        where: { userId: user.id, isValid: true },
+        data: { isValid: false }
+      }).catch(() => {});
+    }
+
+    appCache.del(`user:me:${user.id}`);
+
+    try {
+      await logAudit(user.id, 'PASSWORD_CHANGE_SUCCESS', 'User', user.id, null, { signOutOthers }, req.ip);
+    } catch (e) { /* non-blocking */ }
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error in change password:', error);
+    res.status(500).json({ message: 'Failed to update password' });
+  }
+};
+
+
 // ─── TWO-FACTOR AUTHENTICATION (TOTP / RFC 6238) MANAGEMENT ───────────────────
 
 export const get2FAStatus = async (req: Request, res: Response): Promise<void> => {

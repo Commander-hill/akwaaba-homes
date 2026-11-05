@@ -21,7 +21,8 @@ import {
   updateProfile,
   requestProfileUnlock,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  changePassword
 } from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -42,6 +43,8 @@ router.post('/landlord-verification', authenticate, kycRateLimiter, submitLandlo
 router.post('/student-verification', authenticate, submitStudentVerification);
 router.post('/forgot-password', passwordResetRateLimiter, forgotPassword);
 router.post('/reset-password', passwordResetRateLimiter, resetPassword);
+router.post('/change-password', authenticate, changePassword);
+
 
 // Two-Factor Authentication Management (Authenticated)
 router.get('/2fa/status', authenticate, get2FAStatus);
