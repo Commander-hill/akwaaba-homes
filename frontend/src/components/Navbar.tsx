@@ -120,7 +120,7 @@ export default function Navbar() {
   const userFullName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'My Account';
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all">
+    <header className="fixed top-0 left-0 right-0 z-50">
       {publicConfig?.maintenanceMode && (
         <div className="bg-[#8C4F0F] text-white px-4 py-1.5 text-center text-xs font-semibold flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4" />
@@ -131,7 +131,7 @@ export default function Navbar() {
       <nav
         aria-label="Primary Navigation"
         className={clsx(
-          'border-b transition-all duration-200',
+          'border-b transition-colors duration-150',
           scrolled
             ? 'bg-white/95 dark:bg-[#0C0F0E]/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 shadow-xs'
             : 'bg-white dark:bg-[#141816] border-zinc-200 dark:border-zinc-800'

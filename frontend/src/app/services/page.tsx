@@ -85,7 +85,7 @@ export default function ServicesPage() {
       : '/dashboard/tenant';
 
   return (
-    <div className="-mt-16 min-h-screen bg-white text-[#14221A] flex flex-col justify-between font-sans overflow-x-hidden">
+    <div className="-mt-16 min-h-screen bg-white text-[#14221A] flex flex-col justify-between font-sans overflow-x-hidden pt-16">
       {/* ══════════════════════════════════════════════════════════════════════
           1. INTEGRATED HERO SECTION WITH TOP OVERLAY NAVBAR
          ══════════════════════════════════════════════════════════════════════ */}
@@ -104,8 +104,9 @@ export default function ServicesPage() {
           <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FAF6EC] to-transparent" />
         </div>
 
-        {/* ── Top Overlay Navigation Bar ── */}
-        <header className="relative z-20 max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
+        {/* ── Top Fixed Navigation Bar ── */}
+        <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0D100E]/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
+          <div className="max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 h-16 flex items-center justify-between">
           {/* Left: Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 relative flex items-center justify-center shrink-0">
@@ -209,7 +210,8 @@ export default function ServicesPage() {
               <ChevronDown className="w-3 h-3 opacity-80" />
             </Link>
           </div>
-        </header>
+        </div>
+      </header>
 
         {/* ── Hero Content Container ── */}
         <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 pt-4 pb-8 lg:py-9">

@@ -133,10 +133,10 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="-mt-16 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950 pt-20">
       
       {/* ── Purpose-Built Header ── */}
-      <header className="w-full px-6 sm:px-10 lg:px-16 py-5 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 h-16 sm:h-20 bg-white/95 dark:bg-[#0D0F12]/95 backdrop-blur-md z-30 px-6 sm:px-10 lg:px-16 border-b border-zinc-200/60 dark:border-zinc-800/60 flex items-center justify-between">
         <Link href="/" className="inline-flex items-center gap-2.5 group">
           <div className="w-10 h-10 flex items-center justify-center shrink-0">
             <Image

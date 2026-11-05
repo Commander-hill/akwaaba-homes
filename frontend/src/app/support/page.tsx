@@ -422,9 +422,9 @@ export default function SupportHelpCentrePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#18241D] flex flex-col font-sans selection:bg-[#0B3B24] selection:text-white">
+    <div className="-mt-16 min-h-screen bg-white text-[#18241D] flex flex-col font-sans selection:bg-[#0B3B24] selection:text-white pt-16">
       {/* Standalone Top Header Bar matching reference */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-zinc-200">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0D100E]/95 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-[1260px] mx-auto px-4 sm:px-7 h-[64px] flex items-center justify-between gap-4">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">

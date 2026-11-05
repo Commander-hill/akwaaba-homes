@@ -268,7 +268,7 @@ export default function LandlordShell({
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 left-0 right-0 lg:left-64 z-30">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
@@ -308,7 +308,7 @@ export default function LandlordShell({
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">{children}</main>
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6 sm:pt-22 sm:pb-8">{children}</main>
       </div>
 
       {drawerOpen && (

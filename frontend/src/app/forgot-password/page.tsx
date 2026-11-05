@@ -84,10 +84,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#FAF9F5] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden">
+    <div className="-mt-16 min-h-screen w-full flex flex-col justify-between bg-[#FAF9F5] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden pt-16">
 
       {/* ── 1. TOP NAVBAR ── */}
-      <header className="w-full bg-white dark:bg-[#141A17] border-b border-zinc-200/70 dark:border-zinc-800 z-20">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-white/95 dark:bg-[#141A17]/95 backdrop-blur-md border-b border-zinc-200/70 dark:border-zinc-800 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
           {/* Left: Brand Identity */}
