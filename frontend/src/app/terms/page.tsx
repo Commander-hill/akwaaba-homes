@@ -1,60 +1,75 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   ShieldCheck, 
   Scale, 
   Lock, 
   FileText, 
   CheckCircle2, 
-  AlertTriangle, 
   Clock, 
   Building2, 
   GraduationCap, 
-  Search, 
   Printer, 
   Copy, 
-  Check,
+  Check, 
   ArrowRight, 
   ChevronRight, 
-  HelpCircle,
-  ExternalLink,
-  LifeBuoy
+  HelpCircle, 
+  Users, 
+  CreditCard, 
+  Mail, 
+  Headphones, 
+  Bookmark, 
+  MapPin, 
+  Calendar, 
+  AlertCircle,
+  Eye,
+  Bell,
+  Home,
+  CheckCircle
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ThemeToggle from '@/components/ThemeToggle';
 
-interface TermSection {
+interface Section {
   id: string;
-  number: string;
+  num: string;
   title: string;
-  badge?: string;
-  summary: string;
+  subtitle?: string;
   content: React.ReactNode;
 }
 
 export default function TermsPage() {
-  const [activeSection, setActiveSection] = useState('acceptance');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [activeSection, setActiveSection] = useState('section-01');
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    'section-01': true,
+    'section-02': false,
+    'section-03': false,
+    'section-04': false,
+    'section-05': false,
+    'section-06': false,
+    'section-07': false,
+    'section-08': false,
+  });
+  const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
-  // Track scroll position & calculate reading progress
+  // Track scroll position to update active section in sidebar
   useEffect(() => {
     const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const currentProgress = (window.scrollY / totalHeight) * 100;
-        setScrollProgress(Math.min(100, Math.max(0, currentProgress)));
-      }
+      const sectionElements = document.querySelectorAll('div[data-section-id]');
+      const scrollPosition = window.scrollY + 260;
 
-      const scrollPosition = window.scrollY + 220;
-      const sectionElements = document.querySelectorAll('section[id]');
       for (let i = sectionElements.length - 1; i >= 0; i--) {
         const el = sectionElements[i] as HTMLElement;
         if (el.offsetTop <= scrollPosition) {
-          setActiveSection(el.id);
-          break;
+          const id = el.getAttribute('data-section-id');
+          if (id) {
+            setActiveSection(id);
+            break;
+          }
         }
       }
     };
@@ -63,8 +78,10 @@ export default function TermsPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollTo = (id: string) => {
-    const el = document.getElementById(id);
+  const scrollToSection = (id: string) => {
+    setActiveSection(id);
+    setExpandedSections((prev) => ({ ...prev, [id]: true }));
+    const el = document.querySelector(`[data-section-id="${id}"]`);
     if (el) {
       const yOffset = -90;
       const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
@@ -72,13 +89,15 @@ export default function TermsPage() {
     }
   };
 
-  const copyPageLink = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      toast.success('Terms link copied to clipboard');
-      setTimeout(() => setCopiedLink(false), 2000);
-    }
+  const toggleSection = (id: string) => {
+    setExpandedSections((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleCopy = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSection(key);
+    toast.success('Section terms copied to clipboard');
+    setTimeout(() => setCopiedSection(null), 2000);
   };
 
   const handlePrint = () => {
@@ -87,633 +106,889 @@ export default function TermsPage() {
     }
   };
 
-  // Section Definitions
-  const SECTIONS: TermSection[] = [
-    {
-      id: 'acceptance',
-      number: '01',
-      title: 'Acceptance of Platform Terms',
-      badge: 'Act 772 Compliant',
-      summary: 'Legally binding digital agreement executed upon platform access, listing, or reservation.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            By accessing or utilizing the AkwaabaHomes platform (website, progressive web application, or authorized service portals), registering an account, publishing a property listing, or executing an accommodation reservation, you enter into a legally enforceable agreement with <strong>AkwaabaHomes Ghana PropTech Limited</strong>.
-          </p>
-          <p>
-            These Platform Terms and Conditions, together with our <Link href="/privacy" className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 font-bold hover:underline">Privacy Policy</Link>, govern your access to our marketplace, payment infrastructure, and digital tenancy instruments.
-          </p>
-          <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-950 dark:text-emerald-200 space-y-1.5">
-            <div className="flex items-center gap-2 font-bold text-sm text-[#0F5132] dark:text-emerald-400">
-              <Scale className="w-4 h-4 shrink-0" />
-              <span>Statutory Legal Basis (Republic of Ghana)</span>
-            </div>
-            <p className="leading-relaxed">
-              These terms are executed pursuant to the <strong>Electronic Transactions Act, 2008 (Act 772)</strong> and the <strong>Rent Act, 1963 (Act 220)</strong>. Digital agreements and click-through affirmations on AkwaabaHomes hold full legal admissibility in Ghanaian courts.
-            </p>
-          </div>
-          <p>
-            If you do not accept these terms in their entirety, you must immediately terminate usage of our platform and refrain from initiating bookings or listing accommodations.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'verification-roles',
-      number: '02',
-      title: 'User Roles & Ghana Card Verification',
-      badge: 'Identity Protocol',
-      summary: 'Three platform tiers with mandatory national identity authentication to eradicate rental fraud.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes operates three distinct verified user tiers, each with dedicated permissions and statutory compliance obligations:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mb-2 font-bold text-xs">
-                01
-              </div>
-              <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h4>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
-                Authorized to reserve rooms, execute digital lease agreements, and inspect verified properties.
-              </p>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mb-2 font-bold text-xs">
-                02
-              </div>
-              <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Landlords &amp; Hosts</h4>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
-                Vetted property owners and accredited hostel administrators authorized to list units and receive verified rent payouts.
-              </p>
-            </div>
-            <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mb-2 font-bold text-xs">
-                03
-              </div>
-              <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Caretakers &amp; Staff</h4>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
-                On-site gatehouse managers and operations personnel facilitating key transfers, check-ins, and emergency maintenance.
-              </p>
-            </div>
-          </div>
-          <p>
-            <strong>Mandatory Ghana Card Identification:</strong> To eliminate impersonation scams and unlicensed middlemen, all landlords and resident tenants must complete Ghana Card verification via the National Identification Authority (NIA) verification gateway before listing properties or releasing rent funds.
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 italic">
-            Submitting counterfeit credentials or misrepresenting title or tenancy authority constitutes a criminal offense under the Criminal Offences Act, 1960 (Act 29) and triggers immediate account termination with referral to the Ghana Police Service.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'booking-payments',
-      number: '03',
-      title: 'Hostel Bookings & Paystack Payment Architecture',
-      badge: 'Verified Settlement',
-      summary: 'Advance rent is processed through licensed payment rails with automated move-in verification.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            To protect tenants and hosts from roadside commission extortion and ghost property listings, AkwaabaHomes enforces an automated, bank-grade settlement mechanism powered by Paystack:
-          </p>
-          <ul className="space-y-2.5 text-xs sm:text-sm">
-            <li className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Verified Rent Checkout:</strong> When a tenant reserves a hostel or private apartment, the booking payment (including security deposits and utilities) is processed directly through audited Paystack payment rails.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Inspection Verification Window:</strong> Settlements are tracked until the tenant arrives on-site, inspects the designated room, and signs the physical check-in protocol.</span>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-              <span><strong>Automated Disbursement:</strong> Once both the tenant and the on-site caretaker validate the Digital Move-In Pass, the settlement engine triggers automated payout directly into the landlord&apos;s registered Mobile Money (MTN MoMo, Telecel Cash, AirtelTigo) or Ghanaian bank account within 24 banking hours.</span>
-            </li>
-          </ul>
-          <div className="p-3.5 rounded-xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/60 dark:bg-amber-950/20 text-xs text-amber-950 dark:text-amber-200 flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold block mb-0.5">Strict Prohibition of Offline Cash Transactions</span>
-              <span>AkwaabaHomes will never ask you to pay cash directly to roadside agents, street brokers, or landlords prior to confirmed platform checkout. Payments made outside platform rails are strictly at user risk and void all dispute guarantees.</span>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
-      id: 'gender-locking',
-      number: '04',
-      title: 'Shared Rooms & Dynamic Gender Locking',
-      badge: 'Student Housing Policy',
-      summary: 'Automatic gender designation for multi-bed student rooms (2-in-1, 4-in-1) upon the first confirmed booking.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            In shared student hostel accommodation (including 2-in-a-room, 3-in-a-room, and 4-in-a-room unit configurations), AkwaabaHomes employs an automated, tamper-proof <strong>Dynamic Gender Locking</strong> policy to strictly uphold institutional university guidelines (such as KNUST, UG Legon, UCC, and ATU housing codes).
-          </p>
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-2">
-            <h4 className="font-bold text-xs text-zinc-900 dark:text-white flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-              <span>How Gender Locking Operates:</span>
-            </h4>
-            <ol className="list-decimal pl-5 space-y-1 text-xs text-zinc-600 dark:text-zinc-400">
-              <li>When an empty room receives its first confirmed booking, the room is permanently assigned the biological gender of the first occupant (as verified on their Ghana Card).</li>
-              <li>All subsequent available bed spaces within that room are locked exclusively to students of the matching gender for the entirety of that academic year or semester tenancy.</li>
-              <li>Landlords, hostel administrators, and agents are technologically prevented from placing tenants of differing genders within the same shared room unit.</li>
-            </ol>
-          </div>
-          <p>
-            Any attempt by a hostel host or agent to arbitrarily override a room&apos;s gender lock without the written, notarized consent of existing occupants will result in listing suspension and immediate tenant compensation from the host&apos;s security reserve.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'tenancy-agreements',
-      number: '05',
-      title: 'Binding Digital Tenancy Agreements',
-      badge: 'Ghana Rent Act (Act 220)',
-      summary: 'Legally counter-signed digital lease contracts enforceable under Ghanaian tenancy law.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            Every confirmed residential rental executed through AkwaabaHomes automatically generates an individualized, tamper-evident <strong>Standard Digital Tenancy Agreement</strong>.
-          </p>
-          <p>
-            This agreement delineates all essential covenants, including:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-            <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-900 dark:text-white block mb-0.5">&bull; Advance Rent Schedule:</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Duration, monthly rental rate, and lawful payment frequencies pursuant to Ghana Rent Act provisions.</span>
-            </div>
-            <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-900 dark:text-white block mb-0.5">&bull; Utility Meter Responsibilities:</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Clear division of ECG prepaid electricity, Ghana Water Company (GWCL), and backup generator fuel contributions.</span>
-            </div>
-            <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-900 dark:text-white block mb-0.5">&bull; Quiet Enjoyment &amp; Conduct:</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Permissible guest hours, noise thresholds, and property cleanliness standards.</span>
-            </div>
-            <div className="p-3 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-              <strong className="text-zinc-900 dark:text-white block mb-0.5">&bull; Security Deposit Return:</strong>
-              <span className="text-zinc-500 dark:text-zinc-400">Timelines for move-out damage inspections and refund disbursement within 14 banking days.</span>
-            </div>
-          </div>
-          <p>
-            Once electronically executed by both landlord and tenant, the digital agreement is timestamped and cryptographically archived. Either party may download and present this document to the <strong>Rent Control Department of Ghana</strong> or formal arbitral courts as admissible evidentiary proof.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'property-listings',
-      number: '06',
-      title: 'Listing Standards & Anti-Fraud Policy',
-      badge: 'Zero Tolerance',
-      summary: 'Property listing standards, verified GPS mapping, and mandatory physical inspection standards.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes holds property hosts and landlords to exacting physical standards to maintain tenant safety and marketplace transparency:
-          </p>
-          <ul className="space-y-2 text-xs sm:text-sm">
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Authentic Photography:</strong> All interior and exterior photos must represent current physical conditions. Digital renderings or photos of uncompleted structures must be explicitly demarcated as &ldquo;Under Construction&rdquo; with verifiable completion schedules.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>Accurate GPS Mapping:</strong> Property markers and campus proximity indicators must reflect precise GhanaPost GPS / Google Maps coordinates. Misleading location tags (e.g. advertising a remote site as &ldquo;Campus Gate adjacent&rdquo;) constitute platform fraud.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#0F5132] dark:bg-emerald-400 mt-2 shrink-0" />
-              <span><strong>No Roadside Viewing Fees:</strong> Charging arbitrary inspection fees or transport levies to prospective tenants before viewing a listing is strictly prohibited.</span>
-            </li>
-          </ul>
-          <p>
-            Properties reported for misrepresentation are immediately placed into quarantine pending an on-site physical audit by AkwaabaHomes field verification officers.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'disputes-refunds',
-      number: '07',
-      title: 'Move-In Disputes & 24-Hour Refund Guarantee',
-      badge: '100% Protection',
-      summary: '24-hour post-arrival dispute window to halt landlord payout and secure full rent reimbursement.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            We recognize that move-in day is the most critical juncture of any tenancy. To safeguard tenants against bait-and-switch listings or uninhabitable conditions, AkwaabaHomes provides a <strong>24-Hour Move-In Inspection Window</strong>:
-          </p>
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-3">
-            <div className="flex items-center gap-2 font-bold text-xs text-[#0F5132] dark:text-emerald-400 uppercase tracking-wider font-mono">
-              <Clock className="w-4 h-4" />
-              <span>How the Dispute Protocol Operates</span>
-            </div>
-            <div className="space-y-2 text-xs text-zinc-600 dark:text-zinc-400">
-              <p>
-                <strong>1. Dispute Lodging:</strong> If a room is unhabitable, occupied by unauthorized third parties, lacking promised core amenities (running water, electricity), or materially deviates from the listing, the tenant can click &ldquo;Raise Inspection Dispute&rdquo; directly from their booking ledger within 24 hours of scheduled arrival.
-              </p>
-              <p>
-                <strong>2. Immediate Payout Freeze:</strong> Lodging a dispute instantly halts all automated settlement transfers to the landlord while our compliance team investigates.
-              </p>
-              <p>
-                <strong>3. 48-Hour Resolution Window:</strong> Our mediation team reviews photographic and video evidence. The landlord is given 24 hours to offer an equivalent room or rectify the grievance.
-              </p>
-              <p>
-                <strong>4. Full Refund Execution:</strong> If the grievance cannot be resolved, <strong>100% of the advance rent and security deposit</strong> is immediately reversed to the tenant&apos;s source account (MoMo or Card).
-              </p>
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Disputes raised after 24 hours or after keys have been freely accepted without notation of defects are governed by ordinary landlord-tenant mediation under standard Rent Act procedures.
-          </p>
-        </div>
-      )
-    },
-    {
-      id: 'liability-governance',
-      number: '08',
-      title: 'Limitation of Liability & Ghanaian Judicial Governance',
-      badge: 'Jurisdiction',
-      summary: 'Governed by the statutory laws of the Republic of Ghana with exclusive judicial venue in Ghanaian courts.',
-      content: (
-        <div className="space-y-4">
-          <p>
-            AkwaabaHomes operates as a secure PropTech marketplace and verified settlement intermediary. While we deploy rigorous identity checks, fraud detection algorithms, and physical audits, we are not the physical owner, insurer, or direct occupant of third-party rental properties.
-          </p>
-          <p>
-            To the maximum extent permissible by Ghanaian law, AkwaabaHomes shall not be liable for indirect, incidental, punitive, or consequential damages resulting from personal conduct, unauthorized property entry, electrical utility surges, or municipal water outages beyond reasonable platform control.
-          </p>
-          <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-1.5">
-            <h4 className="font-bold text-xs text-zinc-950 dark:text-white flex items-center gap-2">
-              <Scale className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-              <span>Governing Law &amp; Dispute Resolution Forum</span>
-            </h4>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              These Terms and Conditions are governed exclusively by the laws of the <strong>Republic of Ghana</strong>. Any legal action or formal proceeding arising under these terms that cannot be resolved through mutual platform mediation shall be submitted to the exclusive jurisdiction of the competent courts of Ghana situated in Accra or Kumasi.
-            </p>
-          </div>
-        </div>
-      )
-    }
+  const currentSectionNumber = activeSection.replace('section-', '');
+
+  const SECTIONS_LIST = [
+    { id: 'section-01', num: '01', title: 'Acceptance of platform terms' },
+    { id: 'section-02', num: '02', title: 'User roles & identity verification' },
+    { id: 'section-03', num: '03', title: 'Reservations & payment processing' },
+    { id: 'section-04', num: '04', title: 'Shared rooms & student allocation' },
+    { id: 'section-05', num: '05', title: 'Digital tenancy agreements' },
+    { id: 'section-06', num: '06', title: 'Listing standards & anti-fraud' },
+    { id: 'section-07', num: '07', title: 'Move-in, disputes & refunds' },
+    { id: 'section-08', num: '08', title: 'Liability & governing law' },
   ];
 
-  // Filter sections based on search query
-  const filteredSections = useMemo(() => {
-    if (!searchQuery.trim()) return SECTIONS;
-    const q = searchQuery.toLowerCase();
-    return SECTIONS.filter(s => 
-      s.title.toLowerCase().includes(q) || 
-      s.summary.toLowerCase().includes(q)
-    );
-  }, [searchQuery]);
-
   return (
-    <div className="min-h-screen bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
+    <div className="min-h-screen w-full bg-[#FAF7F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors font-sans">
       
-      {/* ── Scroll Progress Bar ── */}
-      <div className="fixed top-16 inset-x-0 h-1 bg-zinc-200/50 dark:bg-zinc-800/50 z-30">
-        <div 
-          className="h-full bg-[#0F5132] dark:bg-emerald-500 transition-all duration-150"
-          style={{ width: `${scrollProgress}%` }}
-        />
-      </div>
+      {/* ──── TOP GLOBAL NAVIGATION ──── */}
+      <header className="w-full bg-[#FAF7F0] dark:bg-[#0D100E] border-b border-zinc-200/80 dark:border-zinc-800/80 sticky top-0 z-40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          {/* Brand Logo */}
+          <Link href="/" className="inline-flex items-center gap-2.5 group">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
+              <Image
+                src="/logo.png"
+                alt="AkwaabaHomes"
+                width={38}
+                height={38}
+                className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+              <Image
+                src="/logo-light.png"
+                alt="AkwaabaHomes"
+                width={38}
+                height={38}
+                className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
+                priority
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-black tracking-tight text-[#0C3827] dark:text-white leading-none">
+                AkwaabaHomes
+              </span>
+              <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400 mt-0.5">
+                Live Well. Feel at Home.
+              </span>
+            </div>
+          </Link>
 
-      {/* ── Hero Document Banner ── */}
-      <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 bg-white/70 dark:bg-[#111419]/70 backdrop-blur-md relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Navigation Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            <Link href="/" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              Home
+            </Link>
+            <Link href="/properties" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              Explore
+            </Link>
+            <Link href="/properties?tab=neighbourhoods" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              Neighbourhoods
+            </Link>
+            <Link href="/services" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              Services
+            </Link>
+            <Link href="/about" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              About
+            </Link>
+            <Link href="/help" className="hover:text-[#0C3827] dark:hover:text-emerald-400 transition">
+              Support
+            </Link>
+          </nav>
 
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 py-10 sm:py-14 relative z-10">
-          
-          {/* Breadcrumb Navigation */}
-          <div className="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500 mb-4">
-            <Link href="/" className="hover:text-zinc-950 dark:hover:text-white transition">Home</Link>
-            <span>/</span>
-            <span className="text-zinc-600 dark:text-zinc-300">Legal</span>
-            <span>/</span>
-            <span className="text-[#0F5132] dark:text-emerald-400 font-semibold">Terms &amp; Conditions</span>
+          {/* Right Action Icons & Controls */}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
+            {/* Bookings shortcut */}
+            <Link
+              href="/dashboard/tenant/bookings"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-semibold transition"
+            >
+              <Calendar className="w-3.5 h-3.5 text-[#16A34A]" />
+              <span>Bookings</span>
+            </Link>
+
+            {/* Notification Bell with Badge */}
+            <Link
+              href="/dashboard/notifications"
+              className="relative p-2 rounded-xl text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+              aria-label="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-black flex items-center justify-center">
+                7
+              </span>
+            </Link>
+
+            {/* My Account Button */}
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>My Account</span>
+              <ChevronRight className="w-3 h-3 rotate-90" />
+            </Link>
           </div>
+        </div>
+      </header>
 
-          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/60 text-[#0F5132] dark:text-emerald-400 text-[10px] font-mono uppercase font-bold tracking-wider">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>GOVERNED UNDER GHANA RENT ACT (ACT 220) &bull; ELECTRONIC TRANSACTIONS ACT (ACT 772)</span>
-              </div>
+      {/* ──── HERO SECTION: LEGAL CENTRE · GHANA ──── */}
+      <section className="relative w-full bg-[#0C3827] text-white overflow-hidden py-10 sm:py-14">
+        {/* Subtle Kente Geometric Watermark on Left */}
+        <div className="absolute left-0 top-0 bottom-0 w-64 opacity-10 pointer-events-none select-none">
+          <Image
+            src="/images/auth/security-protect-bg.png"
+            alt="Kente Motif"
+            fill
+            className="object-cover object-left"
+          />
+        </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-zinc-950 dark:text-white leading-tight">
-                Platform Terms &amp; Conditions
-              </h1>
+        {/* Building Exterior on Right with Smooth Fade */}
+        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[50%] lg:w-[42%] pointer-events-none select-none overflow-hidden hidden md:block">
+          <Image
+            src="/images/home/hero-building.jpg"
+            alt="Ghanaian Modern Residential Community"
+            fill
+            className="object-cover object-center opacity-40 mix-blend-luminosity"
+            priority
+          />
+          {/* Gradient Mask to fade building into forest green */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/80 to-transparent" />
+        </div>
 
-              <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-2xl font-normal">
-                The legally binding agreement governing rental reservations, landlord listings, payment protections, dynamic gender locking, and tenant move-in guarantees on AkwaabaHomes Ghana.
-              </p>
-
-              <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>Last revised: October 2026</span>
-                </span>
-                <span>•</span>
-                <span className="inline-flex items-center gap-1.5 font-medium">
-                  <FileText className="w-3.5 h-3.5 text-zinc-400" />
-                  <span>8 Core Statutory Clauses</span>
-                </span>
-                <span>•</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
-                  Valid across Accra, Kumasi, Cape Coast &amp; all Campus Portals
-                </span>
-              </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-6">
+          <div className="max-w-3xl space-y-3">
+            {/* Legal Centre Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-400/40 bg-emerald-950/40 text-emerald-300 text-xs font-mono font-bold uppercase tracking-wider shadow-xs">
+              <Scale className="w-3.5 h-3.5 text-amber-300" />
+              <span>LEGAL CENTRE · GHANA</span>
             </div>
 
-            {/* Quick Actions Bar */}
-            <div className="flex items-center gap-2.5 self-start lg:self-end shrink-0">
+            {/* Display Title */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold tracking-tight text-white leading-tight">
+              Terms of Service &amp; <span className="text-[#E0CA7C]">Platform Rules</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-normal max-w-2xl">
+              The agreement governing access, listings, reservations, payments and digital tenancy on AkwaabaHomes.
+            </p>
+
+            {/* Metadata Row */}
+            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-emerald-200/90 font-medium">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                <span>Effective October 2026</span>
+              </div>
+              <span className="opacity-50">|</span>
+              <div className="flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                <span>8 sections</span>
+              </div>
+              <span className="opacity-50">|</span>
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-amber-300" />
+                <span>Governing jurisdiction: Republic of Ghana</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons Row + Golden Scales Emblem */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Print Button */}
               <button
                 type="button"
                 onClick={handlePrint}
-                className="h-10 px-3.5 inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition shadow-2xs cursor-pointer"
-                title="Print legal instrument"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition shadow-xs cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5 text-zinc-500" />
-                <span className="hidden sm:inline">Print</span>
+                <Printer className="w-3.5 h-3.5 text-[#0C3827]" />
+                <span>Print</span>
               </button>
 
+              {/* Download PDF Button */}
               <button
                 type="button"
-                onClick={copyPageLink}
-                className="h-10 px-3.5 inline-flex items-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 text-xs font-bold text-zinc-700 dark:text-zinc-200 transition shadow-2xs cursor-pointer"
-                title="Copy link"
+                onClick={handlePrint}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/40 hover:bg-white/10 text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
-                {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5 text-zinc-500" />}
-                <span className="hidden sm:inline">{copiedLink ? 'Copied' : 'Share'}</span>
+                <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Download PDF</span>
               </button>
 
+              {/* Contact Legal Team */}
               <Link
-                href="/support"
-                className="h-10 px-4 inline-flex items-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                href="/contact?topic=legal"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
               >
-                <HelpCircle className="w-3.5 h-3.5" />
-                <span>Legal Inquiries</span>
+                <Mail className="w-3.5 h-3.5" />
+                <span>Contact Legal Team</span>
               </Link>
             </div>
 
-          </div>
-
-        </div>
-      </div>
-
-      {/* ── Executive Highlights (Plain English Summary) ── */}
-      <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 pt-10 sm:pt-12">
-        <div className="space-y-3 mb-6">
-          <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-[#0F5132] dark:text-emerald-400">
-            EXECUTIVE HIGHLIGHTS
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
-            Key Tenancy Protections at a Glance
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
-            Important practical highlights before reviewing the complete statutory legal clauses below.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/40 bg-emerald-50/40 dark:bg-emerald-950/20 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shadow-2xs">
-              <ShieldCheck className="w-4 h-4" />
+            {/* Golden Scales of Justice Emblem */}
+            <div className="hidden lg:flex items-center justify-center shrink-0 pr-12">
+              <div className="relative w-16 h-16 opacity-90 drop-shadow-md">
+                <Image
+                  src="/images/about/terms-scales.png"
+                  alt="Scales of Justice"
+                  fill
+                  className="object-contain"
+                />
+              </div>
             </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Verified Rent Payments</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              Your advance rent is never paid in cash to roadside agents. It is processed through Paystack with instant receipts and move-in verification.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-            </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Dynamic Gender Locking</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              Shared university rooms auto-lock to the first occupant&apos;s verified gender. Landlords cannot force mixed-gender room allocations.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <Clock className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-            </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">24-Hour Move-In Guarantee</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              If the physical unit materially deviates from the listing or fails health and safety standards, you receive a full 100% refund.
-            </p>
-          </div>
-
-          <div className="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white flex items-center justify-center shadow-2xs">
-              <Scale className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
-            </div>
-            <h3 className="text-xs font-bold text-zinc-950 dark:text-white">Ghana Rent Act Admissibility</h3>
-            <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-relaxed font-normal">
-              All digital lease agreements countersigned on AkwaabaHomes are admissible before the Rent Control Department and formal courts.
-            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── Main Two-Column Reading Area ── */}
-      <div className="max-w-6xl mx-auto px-6 sm:px-10 lg:px-12 py-12 sm:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          
-          {/* ──── Left Sticky Navigation (35% Desktop) ──── */}
-          <aside className="hidden lg:block lg:col-span-4 sticky top-24 self-start space-y-6">
+      {/* ──── "BEFORE YOU CONTINUE" KEY POINTS STRIP ──── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 sm:-mt-8 relative z-20 w-full">
+        <div className="bg-[#F7F5EE] dark:bg-zinc-900 border border-[#E8E4D7] dark:border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
             
-            {/* Search Filter Box */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
-                <Search className="w-3.5 h-3.5" />
+            {/* Header Title (Left ~3 Cols) */}
+            <div className="lg:col-span-3 flex items-center gap-3.5 lg:border-r border-[#E8E4D7] dark:border-zinc-800 lg:pr-5">
+              <div className="w-11 h-11 rounded-2xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#0C3827] dark:text-emerald-300 flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800">
+                <ShieldCheck className="w-6 h-6 text-[#16A34A]" />
               </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search clauses (e.g. payments, gender, refund)..."
-                className="w-full h-10 pl-9 pr-3 text-xs bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl placeholder:text-zinc-400 text-zinc-900 dark:text-white focus:outline-none focus:border-[#0F5132] focus:ring-1 focus:ring-[#0F5132] transition"
-              />
-            </div>
-
-            {/* Table of Contents List */}
-            <div className="space-y-1">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-bold px-3">
-                TABLE OF CONTENTS
-              </div>
-
-              <nav className="space-y-1">
-                {filteredSections.map((section) => {
-                  const isActive = activeSection === section.id;
-                  return (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollTo(section.id)}
-                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group cursor-pointer ${
-                        isActive
-                          ? 'text-[#0F5132] dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 shadow-2xs'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 border border-transparent'
-                      }`}
-                    >
-                      <span className="flex items-center gap-2.5 truncate">
-                        <span className={`text-[10px] font-mono font-bold ${isActive ? 'text-[#0F5132] dark:text-emerald-400' : 'text-zinc-400'}`}>
-                          {section.number}
-                        </span>
-                        <span className="truncate">{section.title}</span>
-                      </span>
-                      {isActive && <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
-                    </button>
-                  );
-                })}
-
-                {filteredSections.length === 0 && (
-                  <div className="p-4 text-xs text-zinc-400 text-center">
-                    No matching clauses found.
-                  </div>
-                )}
-              </nav>
-            </div>
-
-            {/* Quick Related Legal Instruments */}
-            <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 space-y-3">
-              <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500 block">
-                COMPANION POLICIES
-              </span>
-
-              <div className="space-y-2 text-xs">
-                <Link 
-                  href="/privacy" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Privacy Policy (Act 843)</span>
-                  </span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-
-                <Link 
-                  href="/support" 
-                  className="flex items-center justify-between font-bold text-zinc-700 dark:text-zinc-300 hover:text-[#16A34A] dark:hover:text-emerald-400 transition"
-                >
-                  <span className="flex items-center gap-2">
-                    <LifeBuoy className="w-3.5 h-3.5 text-zinc-400" />
-                    <span>Dispute Mediation Desk</span>
-                  </span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
+              <div>
+                <h3 className="font-serif font-bold text-sm sm:text-base text-zinc-950 dark:text-white leading-tight">
+                  Before you continue
+                </h3>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  Here are some key points to note:
+                </p>
               </div>
             </div>
 
-            {/* Institutional Sign-off badge */}
-            <div className="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/20 text-[11px] text-zinc-400 space-y-1">
-              <span className="font-bold text-zinc-600 dark:text-zinc-300 block">AkwaabaHomes Legal Desk</span>
-              <p>Registration No. CS128942024 &bull; Accra &amp; Kumasi, Republic of Ghana</p>
-            </div>
-
-          </aside>
-
-          {/* ──── Right Reading Column (65% Desktop) ──── */}
-          <main className="lg:col-span-8 space-y-14 text-sm sm:text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
-            
-            {SECTIONS.map((section) => (
-              <section 
-                key={section.id} 
-                id={section.id} 
-                className="scroll-mt-28 space-y-4 pt-2"
-              >
-                {/* Section Header */}
-                <div className="pb-3 border-b border-zinc-200 dark:border-zinc-800 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-[#0F5132] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200/60 dark:border-emerald-800/40">
-                        SECTION {section.number}
-                      </span>
-                      {section.badge && (
-                        <span className="text-[10px] font-mono uppercase font-bold text-zinc-400 dark:text-zinc-500">
-                          &bull; {section.badge}
-                        </span>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          navigator.clipboard.writeText(`${window.location.origin}/terms#${section.id}`);
-                          toast.success(`Copied anchor link for Section ${section.number}`);
-                        }
-                      }}
-                      className="text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition cursor-pointer"
-                      title="Copy section link"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white">
-                    {section.title}
-                  </h2>
-                </div>
-
-                {/* Section Content */}
-                <div className="pt-1">
-                  {section.content}
-                </div>
-              </section>
-            ))}
-
-            {/* ── Document Governance Closure ── */}
-            <div className="mt-14 p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111419] space-y-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center font-bold">
-                  <Scale className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                    Questions or Statutory Clarifications?
-                  </h3>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Our compliance team and certified Ghanaian legal counsel are available to assist.
+            {/* 4 Feature Columns (Right ~9 Cols) */}
+            <div className="lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#E8E4D7] dark:divide-zinc-800">
+              
+              {/* Point 1: Verified Identities */}
+              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
+                <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Verified Identities</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                    Ghana Card checks for relevant roles.
                   </p>
                 </div>
               </div>
 
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                If you have questions regarding our payment settlement rules, university hostel quotas, or move-in dispute timelines, please contact our Legal &amp; Regulatory Compliance Desk at <a href="mailto:legal@akwaabahomes.com" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">legal@akwaabahomes.com</a> or open a ticket through our <Link href="/support" className="font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">Dispute Desk</Link>.
+              {/* Point 2: Protected Payments */}
+              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
+                <CreditCard className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Protected Payments</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                    Paystack / MoMo and card checkout.
+                  </p>
+                </div>
+              </div>
+
+              {/* Point 3: Digital Tenancy */}
+              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
+                <FileText className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Digital Tenancy</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                    Electronically signed agreements.
+                  </p>
+                </div>
+              </div>
+
+              {/* Point 4: Student Accommodation */}
+              <div className="flex items-start gap-2.5 sm:px-3 pt-3 sm:pt-0">
+                <GraduationCap className="w-4 h-4 text-[#16A34A] shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Student Accommodation</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
+                    Campus-specific eligibility and room allocation rules.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ──── MAIN 3-COLUMN WORKSPACE ──── */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 w-full py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* ════ LEFT COLUMN: STICKY SIDEBAR NAVIGATION (3 Cols) ════ */}
+          <aside className="lg:col-span-3 lg:sticky lg:top-24 space-y-4">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xs">
+              {/* Header */}
+              <div className="bg-[#0C3827] px-4 py-3.5 text-white font-mono font-bold text-xs tracking-wider uppercase">
+                IN THIS DOCUMENT
+              </div>
+
+              {/* Section Links */}
+              <nav className="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-xs">
+                {SECTIONS_LIST.map((sec) => {
+                  const isActive = activeSection === sec.id;
+                  return (
+                    <button
+                      key={sec.id}
+                      type="button"
+                      onClick={() => scrollToSection(sec.id)}
+                      className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors cursor-pointer ${
+                        isActive
+                          ? 'bg-[#EAF3EA] dark:bg-emerald-950/40 text-[#0C3827] dark:text-emerald-300 font-bold border-l-4 border-[#0C3827] dark:border-emerald-500'
+                          : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <span className="font-mono text-zinc-400 font-bold">{sec.num}</span>
+                      <span className="leading-snug">{sec.title}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Reading Progress Indicator */}
+              <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/40 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
+                  <span>Section {currentSectionNumber} of 08</span>
+                </div>
+                <div className="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full bg-[#0C3827] dark:bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{ width: `${(Number(currentSectionNumber) / 8) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* ════ CENTER COLUMN: INTERACTIVE DOCUMENT READER (6 Cols) ════ */}
+          <div className="lg:col-span-6 space-y-6">
+            
+            {/* ── Section 01: Acceptance of platform terms ── */}
+            <div
+              data-section-id="section-01"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    01
+                  </span>
+                  <span className="h-6 w-px bg-zinc-300 dark:bg-zinc-700" />
+                  <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                    Acceptance of platform terms
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleCopy(
+                      'By accessing or using the AkwaabaHomes platform, you agree to be bound by these Terms of Service and all applicable laws and regulations of the Republic of Ghana. If you do not agree with these terms, you must not access, browse, or use the platform.',
+                      'section-01'
+                    )
+                  }
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  {copiedSection === 'section-01' ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <p className="text-xs sm:text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                By accessing or using the AkwaabaHomes platform, you agree to be bound by these Terms of Service and all applicable laws and regulations of the Republic of Ghana. If you do not agree with these terms, you must not access, browse, or use the platform.
               </p>
 
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs border-t border-zinc-100 dark:border-zinc-800/80 pt-4">
-                <span className="text-zinc-400">
-                  Document Version 2.4 &bull; Effective Republic of Ghana
-                </span>
+              {/* Legal Reference Callout Box */}
+              <div className="p-4 rounded-2xl bg-[#EAF6EE] dark:bg-emerald-950/30 border border-[#B7E8C3] dark:border-emerald-800/60 flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center shrink-0 mt-0.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                </div>
+                <div className="space-y-0.5 text-xs">
+                  <h4 className="font-bold text-[#0C3827] dark:text-emerald-300">Legal Reference</h4>
+                  <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                    These terms are made in accordance with the <strong>Electronic Transactions Act, 2008 (Act 772)</strong> and the <strong>Rent Act, 1963 (Act 220)</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
 
+            {/* ── Section 02: User roles & identity verification ── */}
+            <div
+              data-section-id="section-02"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    02
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      User roles &amp; identity verification
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Different roles, different permissions and verification requirements.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-02')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-02'] ? 'Collapse' : 'Read Next'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* 3 Role Columns matching mockup */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Book and rent properties</p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <Home className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Landlords &amp; Hosts</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">List and manage properties</p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-[#FAF7F0] dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
+                  <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Caretakers &amp; Staff</h4>
+                  <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Manage facilities</p>
+                </div>
+              </div>
+
+              {expandedSections['section-02'] && (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <p>
+                    All landlords must submit verified land deeds or indenture documents and complete biometric Ghana Card verification before units are published. Tenants booking academic hostel rooms must provide valid university admission letters or campus identity cards.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ── Section 03: Reservations & payment processing ── */}
+            <div
+              data-section-id="section-03"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    03
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Reservations &amp; payment processing
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Secure booking and multiple payment options.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-03')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-03'] ? 'Collapse' : 'Read Next'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* 3 Checkmark Safeguards */}
+              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-zinc-800 dark:text-zinc-200 pt-1">
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <span>Verified checkout</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <span>Instant receipts</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                  <span>Secure payouts</span>
+                </div>
+              </div>
+
+              {expandedSections['section-03'] && (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800">
+                  <p>
+                    Rent and reservation transactions are processed exclusively through accredited Bank of Ghana licensed payment switches (Paystack Ghana, MTN Mobile Money, Vodafone Cash, AirtelTigo Money, and Visa/Mastercard). AkwaabaHomes holds initial security deposits in escrow until resident move-in verification is satisfied.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ── Section 04: Shared rooms & student allocation ── */}
+            <div
+              data-section-id="section-04"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    04
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Shared rooms &amp; student allocation
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Single, 2-in-1, 3-in-1, and 4-in-1 academic room rules.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-04')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-04'] ? 'Collapse' : 'Read Details'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {expandedSections['section-04'] ? (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800 leading-relaxed">
+                  <p>
+                    Hostel spaces designated for accredited tertiary institutions (e.g. University of Ghana, KNUST, UPSA, UCC) operate under strict academic calendar leases. Roommate pairings conform with student gender specifications and disciplinary codes of conduct established by hostel management.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Defines bedspace assignment, quiet study hours, visitor curfews, and common area maintenance responsibilities.
+                </p>
+              )}
+            </div>
+
+            {/* ── Section 05: Digital tenancy agreements ── */}
+            <div
+              data-section-id="section-05"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    05
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Digital tenancy agreements
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Standardized tenancy agreements with electronic execution.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-05')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-05'] ? 'Collapse' : 'Read Details'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {expandedSections['section-05'] ? (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800 leading-relaxed">
+                  <p>
+                    Tenancy contracts generated on the platform are structured in accordance with Act 220 and electronically executed pursuant to Act 772. Both parties receive tamper-evident cryptographic PDF copies with audit timestamps upon lease completion.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Specifies rent advance limits, maintenance protocols, quiet enjoyment covenants, and automated lease renewals.
+                </p>
+              )}
+            </div>
+
+            {/* ── Section 06: Listing standards & anti-fraud ── */}
+            <div
+              data-section-id="section-06"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    06
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Listing standards &amp; anti-fraud
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Strict verification of titles, photographs, and pricing.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-06')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-06'] ? 'Collapse' : 'Read Details'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {expandedSections['section-06'] ? (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800 leading-relaxed">
+                  <p>
+                    Publishing misleading photos, duplicate phantom listings, or soliciting off-platform cash advances constitutes a material breach resulting in immediate account termination, forfeiture of platform deposits, and referral to the Ghana Police Service Cybercrime Directorate.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Mandatory on-site verification inspections, accurate utility disclosures, and zero tolerance for bait-and-switch listings.
+                </p>
+              )}
+            </div>
+
+            {/* ── Section 07: Move-in, disputes & refunds ── */}
+            <div
+              data-section-id="section-07"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    07
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Move-in, disputes &amp; refunds
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      48-hour inspection grace period and escrow release terms.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-07')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-07'] ? 'Collapse' : 'Read Details'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {expandedSections['section-07'] ? (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800 leading-relaxed">
+                  <p>
+                    Tenants are entitled to a 48-hour move-in inspection window. If a property diverges materially from its verified listing (unusable plumbing, structural hazards, lack of electricity), funds remain locked in escrow while our mediation team investigates.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Standardized dispute resolution protocol, refund eligibility rules, and Rent Control Department arbitration.
+                </p>
+              )}
+            </div>
+
+            {/* ── Section 08: Liability & governing law ── */}
+            <div
+              data-section-id="section-08"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl p-6 sm:p-7 shadow-2xs space-y-4"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-9 h-7 rounded-lg bg-[#0C3827] text-white font-mono font-bold text-xs flex items-center justify-center">
+                    08
+                  </span>
+                  <div>
+                    <h2 className="font-serif text-lg sm:text-xl font-bold text-zinc-950 dark:text-white">
+                      Liability &amp; governing law
+                    </h2>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Jurisdiction in Accra, Ghana and statutory limitation of damages.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => toggleSection('section-08')}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition cursor-pointer"
+                >
+                  <span>{expandedSections['section-08'] ? 'Collapse' : 'Read Details'}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {expandedSections['section-08'] ? (
+                <div className="pt-2 text-xs text-zinc-600 dark:text-zinc-300 space-y-2 border-t border-zinc-100 dark:border-zinc-800 leading-relaxed">
+                  <p>
+                    These terms are governed exclusively by the laws of the Republic of Ghana. Any formal dispute not resolved through platform mediation shall be submitted to the exclusive jurisdiction of the Courts of Ghana seated in Accra.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Force majeure exceptions, limitation of consequential damages, and severability clauses.
+                </p>
+              )}
+            </div>
+
+          </div>
+
+          {/* ════ RIGHT COLUMN: QUICK REFERENCE & LEGAL ASSISTANCE (3 Cols) ════ */}
+          <aside className="lg:col-span-3 space-y-5">
+            
+            {/* Card 1: Quick Reference */}
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xs">
+              <div className="bg-[#0C3827] px-4 py-3 text-white font-serif font-bold text-sm flex items-center gap-2">
+                <Bookmark className="w-4 h-4 text-emerald-300" />
+                <span>Quick Reference</span>
+              </div>
+
+              <div className="divide-y divide-zinc-100 dark:divide-zinc-800/80 text-xs font-semibold">
                 <Link
                   href="/privacy"
-                  className="inline-flex items-center gap-1.5 font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
                 >
-                  <span>Review Privacy Policy</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                    <span>Privacy Policy</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
+                </Link>
+
+                <Link
+                  href="/help?topic=disputes"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Scale className="w-4 h-4 text-[#16A34A]" />
+                    <span>Dispute Resolution</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
+                </Link>
+
+                <Link
+                  href="/help"
+                  className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <HelpCircle className="w-4 h-4 text-[#16A34A]" />
+                    <span>Help Centre</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
                 </Link>
               </div>
             </div>
 
-          </main>
+            {/* Card 2: Need Legal Assistance? */}
+            <div className="bg-[#EAF3EA] dark:bg-emerald-950/20 border border-[#D5E8D8] dark:border-emerald-900/40 rounded-3xl p-5 space-y-3.5 text-center shadow-2xs">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                <Headphones className="w-5 h-5" />
+              </div>
 
+              <div className="space-y-1">
+                <h3 className="font-serif font-bold text-sm text-zinc-950 dark:text-white">
+                  Need Legal Assistance?
+                </h3>
+                <p className="text-[11px] text-zinc-600 dark:text-zinc-400 leading-snug">
+                  Our legal team is here to help with any concerns about these terms.
+                </p>
+              </div>
+
+              <Link
+                href="/contact?topic=legal"
+                className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Contact Support</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Card 3: Accra Skyline & Black Star Gate Illustration */}
+            <div className="relative w-full h-24 rounded-2xl overflow-hidden bg-transparent pointer-events-none select-none">
+              <Image
+                src="/images/about/terms-accra-skyline.png"
+                alt="Accra Black Star Gate Illustration"
+                fill
+                className="object-contain object-bottom"
+              />
+            </div>
+
+          </aside>
         </div>
-      </div>
+      </main>
 
+      {/* ──── DARK FOREST GREEN FOOTER ──── */}
+      <footer className="w-full bg-[#0C3827] text-white pt-8 pb-6 border-t border-emerald-900/40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            
+            {/* Logo */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-900/80 border border-emerald-500/40 flex items-center justify-center shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="AkwaabaHomes"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-black tracking-tight text-white leading-none">
+                  AkwaabaHomes
+                </span>
+                <span className="text-[9.5px] font-medium text-emerald-300 mt-0.5">
+                  Live Well. Feel at Home.
+                </span>
+              </div>
+            </div>
+
+            {/* Center Copyright & Links */}
+            <div className="text-xs text-emerald-200/80 flex flex-wrap items-center gap-2">
+              <span>© 2026 AkwaabaHomes Ghana. All rights reserved.</span>
+              <span className="opacity-40">·</span>
+              <Link href="/privacy" className="hover:text-white transition">Privacy</Link>
+              <span className="opacity-40">·</span>
+              <Link href="/terms" className="hover:text-white transition underline">Legal Notice</Link>
+              <span className="opacity-40">·</span>
+              <Link href="/help" className="hover:text-white transition">Help</Link>
+            </div>
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-3 text-emerald-300 text-xs">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Facebook">
+                f
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="X">
+                𝕏
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Instagram">
+                ig
+              </a>
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="YouTube">
+                yt
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="LinkedIn">
+                in
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
