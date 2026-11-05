@@ -406,14 +406,14 @@ export default function TenancyAgreementsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F2] dark:bg-[#0D100E] text-[#14221A] dark:text-zinc-100 font-sans pb-12">
+    <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0D100E] text-[#14221A] dark:text-zinc-100 font-sans pb-12">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-7 pt-4 space-y-4">
         {/* ════════════════════════════════════════════════════════════════════
             1. TOP HERO BANNER ("Tenancy Agreements")
            ════════════════════════════════════════════════════════════════════ */}
-        <section className="relative rounded-2xl bg-[#F5F2E8] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 overflow-hidden px-5 sm:px-7 py-5 sm:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+        <section className="relative rounded-2xl bg-[#EEF5EF] dark:bg-[#141A17] border border-[#DEE8E0] dark:border-zinc-800 overflow-hidden px-5 sm:px-7 py-5 sm:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
           {/* Right Apartment Building Illustration */}
-          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[48%] pointer-events-none select-none">
+          <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[55%] md:w-[48%] pointer-events-none select-none">
             <Image
               src="/images/documents/docs-header-building.jpg"
               alt="AkwaabaHomes Verified Residence"
@@ -422,20 +422,20 @@ export default function TenancyAgreementsPage() {
               sizes="50vw"
               className="object-cover object-center opacity-95 dark:opacity-35"
             />
-            <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#F5F2E8] via-[#F5F2E8]/85 to-transparent dark:from-[#141A17] dark:via-[#141A17]/85" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F2E8]/50 via-transparent to-transparent dark:from-[#141A17]/60" />
+            <div className="absolute inset-y-0 left-0 w-36 bg-gradient-to-r from-[#EEF5EF] via-[#EEF5EF]/85 to-transparent dark:from-[#141A17] dark:via-[#141A17]/85" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#EEF5EF]/40 via-transparent to-transparent dark:from-[#141A17]/60" />
           </div>
 
           {/* Left Icon + Title + Subtitle */}
           <div className="relative z-10 flex items-center gap-4">
-            <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-[#DFEFE2] dark:bg-emerald-950/60 border border-[#C9E3CE] dark:border-emerald-800/50 flex items-center justify-center text-[#0B4A2B] dark:text-emerald-400 shrink-0 shadow-2xs">
-              <Scale className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2]" />
+            <div className="w-14 h-14 rounded-2xl bg-[#DDEFE2] dark:bg-emerald-950/60 border border-[#C9E3CE] dark:border-emerald-800/50 flex items-center justify-center text-[#0B3B24] dark:text-emerald-400 shrink-0 shadow-2xs">
+              <Scale className="w-7 h-7 stroke-[2]" />
             </div>
             <div>
-              <h1 className="font-serif text-2xl sm:text-[31px] font-bold text-[#0B3B24] dark:text-white tracking-tight leading-tight">
+              <h1 className="font-serif text-2xl sm:text-[32px] font-bold text-[#0B3B24] dark:text-white tracking-tight leading-tight">
                 Tenancy Agreements
               </h1>
-              <p className="text-xs sm:text-[13.5px] text-[#435349] dark:text-zinc-300 font-medium mt-0.5">
+              <p className="text-xs sm:text-[13.5px] text-[#4F6054] dark:text-zinc-300 font-medium mt-0.5">
                 View, sign, and manage your legally executed tenancy documents.
               </p>
             </div>
@@ -459,7 +459,7 @@ export default function TenancyAgreementsPage() {
            ════════════════════════════════════════════════════════════════════ */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* KPI 1: Active agreement */}
-          <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+          <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
             <div className="w-10 h-10 rounded-full bg-[#E1F3E6] dark:bg-emerald-950/60 flex items-center justify-center shrink-0">
               <div className="w-7 h-7 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
                 <FileText className="w-3.5 h-3.5" />
@@ -476,7 +476,7 @@ export default function TenancyAgreementsPage() {
           </div>
 
           {/* KPI 2: Executed */}
-          <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+          <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
             <div className="w-10 h-10 rounded-full bg-[#E1F3E6] dark:bg-emerald-950/60 flex items-center justify-center shrink-0">
               <div className="w-7 h-7 rounded-full bg-[#16A34A] text-white flex items-center justify-center">
                 <Check className="w-4 h-4 stroke-[3]" />
@@ -493,7 +493,7 @@ export default function TenancyAgreementsPage() {
           </div>
 
           {/* KPI 3: Awaiting signature */}
-          <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+          <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
             <div className="w-10 h-10 rounded-full bg-[#FEF0DC] dark:bg-amber-950/50 flex items-center justify-center shrink-0">
               <div className="w-7 h-7 rounded-full bg-[#F58A07] text-white flex items-center justify-center">
                 <Clock className="w-4 h-4 stroke-[2.5]" />
@@ -510,8 +510,8 @@ export default function TenancyAgreementsPage() {
           </div>
 
           {/* KPI 4: Expiry */}
-          <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
-            <div className="w-10 h-10 rounded-full bg-[#E3F1E6] dark:bg-emerald-950/60 text-[#0B4A2B] dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl px-4 py-3.5 flex items-center gap-3.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+            <div className="w-10 h-10 rounded-full bg-[#E1F3E6] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-400 flex items-center justify-center shrink-0">
               <Calendar className="w-5 h-5 stroke-[2.2]" />
             </div>
             <div>
@@ -532,7 +532,7 @@ export default function TenancyAgreementsPage() {
           {/* ──── LEFT COLUMN (8 Cols) ──── */}
           <div className="lg:col-span-8 space-y-3.5">
             {/* A. Primary Agreement Card ("GLACIER STUDIO") */}
-            <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+            <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-stretch">
                 {/* Left Photo with "Executed by both parties" pill */}
                 <div className="md:col-span-4 relative min-h-[185px] rounded-xl overflow-hidden border border-[#E2DEC9] dark:border-zinc-700">
@@ -543,6 +543,10 @@ export default function TenancyAgreementsPage() {
                     sizes="(max-width: 768px) 100vw, 260px"
                     className="object-cover"
                   />
+                  <div className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#16A34A] text-white text-[11px] font-bold shadow-md">
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Executed by both parties</span>
+                  </div>
                 </div>
 
                 {/* Middle Property & Lease Details */}
@@ -628,9 +632,9 @@ export default function TenancyAgreementsPage() {
                 </div>
 
                 {/* Right SHA-256 Verification, Signatures & Buttons */}
-                <div className="md:col-span-3 flex flex-col justify-between bg-[#F7F9F5] dark:bg-zinc-900/70 border border-[#E3ECE3] dark:border-zinc-800 rounded-xl p-3 space-y-2.5">
+                <div className="md:col-span-3 flex flex-col justify-between bg-[#F8FAF7] dark:bg-zinc-900/70 border border-[#E5EBE5] dark:border-zinc-800 rounded-xl p-3 space-y-2.5">
                   {/* SHA-256 Verified Pill */}
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#E1F3E6] dark:bg-emerald-950/60 text-[#116936] dark:text-emerald-400 text-[11px] font-bold self-start">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-400 border border-[#BBF7D0] dark:border-emerald-800/40 text-[11px] font-bold self-start">
                     <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                     <span>SHA-256 Verified</span>
                   </div>
@@ -649,53 +653,57 @@ export default function TenancyAgreementsPage() {
                       <span className="text-[#68766D] dark:text-zinc-400 block text-[10px]">
                         Signed Date
                       </span>
-                      <span className="font-bold text-[#14221A] dark:text-white flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-[#15803D]" />
-                        {startDate}
+                      <span className="font-bold text-[#14221A] dark:text-white flex items-center gap-1 text-[11.5px]">
+                        <Calendar className="w-3.5 h-3.5 text-[#15803D]" />
+                        Sep 2026
                       </span>
                     </div>
                   </div>
 
                   {/* Landlord & Tenant Cursive Signature Boxes */}
                   <div className="grid grid-cols-2 gap-1.5">
-                    <div className="bg-white dark:bg-zinc-900 border border-[#E2E6E2] dark:border-zinc-700 rounded-lg p-1.5 relative">
+                    <div className="bg-white dark:bg-zinc-900 border border-[#E2E6E2] dark:border-zinc-700 rounded-lg p-1.5 relative flex flex-col justify-between min-h-[56px]">
                       <span className="block text-[9.5px] font-semibold text-[#5C6B61] dark:text-zinc-400">
                         Landlord
                       </span>
-                      <svg
-                        viewBox="0 0 90 28"
-                        className="w-14 h-5 text-[#14221A] dark:text-zinc-200 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      >
-                        <path d="M6 20 C14 6, 22 24, 30 12 C36 5, 40 22, 48 14 C56 8, 66 18, 78 11" />
-                        <path d="M16 22 Q42 17 72 20" strokeWidth="1.1" />
-                      </svg>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center absolute bottom-1.5 right-1.5">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <svg
+                          viewBox="0 0 90 28"
+                          className="w-14 h-5 text-[#14221A] dark:text-zinc-200"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        >
+                          <path d="M6 20 C14 6, 22 24, 30 12 C36 5, 40 22, 48 14 C56 8, 66 18, 78 11" />
+                          <path d="M16 22 Q42 17 72 20" strokeWidth="1.1" />
+                        </svg>
+                        <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="bg-white dark:bg-zinc-900 border border-[#E2E6E2] dark:border-zinc-700 rounded-lg p-1.5 relative">
+                    <div className="bg-white dark:bg-zinc-900 border border-[#E2E6E2] dark:border-zinc-700 rounded-lg p-1.5 relative flex flex-col justify-between min-h-[56px]">
                       <span className="block text-[9.5px] font-semibold text-[#5C6B61] dark:text-zinc-400">
                         Tenant
                       </span>
-                      <svg
-                        viewBox="0 0 90 28"
-                        className="w-14 h-5 text-[#14221A] dark:text-zinc-200 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      >
-                        <path d="M8 21 L20 7 L26 19 L34 10 C42 18, 52 8, 64 16" />
-                        <path d="M12 16 L46 14" strokeWidth="1.2" />
-                      </svg>
-                      <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center absolute bottom-1.5 right-1.5">
-                        <Check className="w-2.5 h-2.5 stroke-[3]" />
-                      </span>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <svg
+                          viewBox="0 0 90 28"
+                          className="w-14 h-5 text-[#14221A] dark:text-zinc-200"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        >
+                          <path d="M8 21 L20 7 L26 19 L34 10 C42 18, 52 8, 64 16" />
+                          <path d="M12 16 L46 14" strokeWidth="1.2" />
+                        </svg>
+                        <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -932,28 +940,19 @@ export default function TenancyAgreementsPage() {
                         ref={(el) => {
                           sectionRefs.current.overview = el;
                         }}
-                        className="text-center border-b-2 border-[#C8A24A] pb-4 mb-5"
+                        className="text-center border-b border-[#C8A24A] pb-4 mb-5"
                       >
-                        <div className="flex items-center justify-center gap-4 mb-2">
+                        <div className="flex items-center justify-center mb-2">
                           <div className="w-16 h-14 relative">
                             <Image
-                              src="/images/agreements/coat-of-arms.png"
+                              src="/images/agreements/coat-of-arms-hd.png"
                               alt="Republic of Ghana Coat of Arms"
                               fill
                               className="object-contain"
                             />
                           </div>
-                          <div className="w-[1px] h-9 bg-[#C8A24A] dark:bg-[#C8A24A]/70" />
-                          <div className="w-16 h-14 relative">
-                            <Image
-                              src="/logo-light.png"
-                              alt="Akwaaba Homes"
-                              fill
-                              className="object-contain"
-                            />
-                          </div>
                         </div>
-                        <p className="font-serif text-[12px] font-bold tracking-[0.06em] uppercase text-[#14221A] dark:text-zinc-200">
+                        <p className="font-serif text-[12.5px] font-bold tracking-[0.08em] uppercase text-[#14221A] dark:text-zinc-200">
                           REPUBLIC OF GHANA
                         </p>
                         <h3 className="font-serif text-lg sm:text-[21px] font-bold tracking-tight text-[#14221A] dark:text-white mt-0.5">
@@ -1088,7 +1087,7 @@ export default function TenancyAgreementsPage() {
           {/* ──── RIGHT COLUMN (4 Cols) ──── */}
           <div className="lg:col-span-4 space-y-3.5">
             {/* Card 1: Agreement at a glance */}
-            <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl p-5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] space-y-3.5">
+            <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl p-5 shadow-[0_2px_10px_rgba(11,59,36,0.03)] space-y-3.5">
               <div className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-[#14221A] dark:text-emerald-400 shrink-0" />
                 <h2 className="text-[15px] font-black text-[#14221A] dark:text-white tracking-tight">
@@ -1193,8 +1192,8 @@ export default function TenancyAgreementsPage() {
             </div>
 
             {/* Card 3: Need help understanding your agreement? */}
-            <div className="bg-[#FDFCF7] dark:bg-[#141A17] border border-[#E6E2D4] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
-              <div className="w-11 h-11 rounded-full bg-[#E3F1E6] dark:bg-emerald-950/60 text-[#0B4A2B] dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="bg-white dark:bg-[#141A17] border border-[#E8E6DF] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+              <div className="w-11 h-11 rounded-full bg-[#E1F3E6] dark:bg-emerald-950/60 text-[#0B4A2B] dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <Headphones className="w-5 h-5" />
               </div>
               <div className="space-y-2.5 flex-1">

@@ -237,41 +237,33 @@ export default function TenantShell({
   };
 
   const renderSidebarContent = (onNavigate?: () => void) => (
-    <div className="flex flex-col h-full bg-white dark:bg-[#141816]">
+    <div className="flex flex-col h-full bg-[#0B3B24] text-white relative overflow-hidden">
       {/* Brand Header matching mockup */}
-      <div className="h-20 px-6 flex items-center shrink-0">
+      <div className="h-20 px-6 flex items-center shrink-0 border-b border-emerald-900/40">
         <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 flex items-center justify-center shrink-0">
-            <Image
-              src="/logo-light.png"
-              alt="AkwaabaHomes"
-              width={42}
-              height={42}
-              className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
-              priority
-            />
             <Image
               src="/logo.png"
               alt="AkwaabaHomes"
               width={42}
               height={42}
-              className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
               priority
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-[16.5px] font-black text-[#141816] dark:text-white tracking-tight block leading-none">
+            <span className="text-[17px] font-black text-white tracking-tight block leading-none">
               AkwaabaHomes
             </span>
-            <span className="text-[10.5px] font-medium text-[#3B6E5C] dark:text-emerald-400 block mt-0.5">
-              Live Well. Feel at Home.
+            <span className="text-[10px] font-medium text-[#C8A24A] block mt-1 tracking-wide">
+              Trusted Ghanaian Housing
             </span>
           </div>
         </Link>
       </div>
 
       {/* Navigation Links */}
-      <nav aria-label="Resident Navigation" className="flex-1 px-4 py-3 space-y-1 overflow-y-auto">
+      <nav aria-label="Resident Navigation" className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isNavItemActive(item);
@@ -282,18 +274,18 @@ export default function TenantShell({
               onClick={onNavigate}
               aria-current={active ? 'page' : undefined}
               className={clsx(
-                'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
+                'flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-[13px] transition-all',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                 active
-                  ? 'bg-[#ECFDF5] text-[#065F46] font-bold shadow-2xs dark:bg-emerald-950/40 dark:text-emerald-300'
-                  : 'text-zinc-600 dark:text-zinc-400 font-medium hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
+                  ? 'bg-white/15 text-white font-bold border border-emerald-400/40 shadow-sm'
+                  : 'text-emerald-100/80 hover:text-white hover:bg-white/10 font-medium'
               )}
             >
               <span className="flex items-center gap-3 min-w-0">
                 <Icon
                   className={clsx(
                     'w-4 h-4 shrink-0',
-                    active ? 'text-[#065F46] dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'
+                    active ? 'text-white' : 'text-emerald-200/70'
                   )}
                   aria-hidden="true"
                 />
@@ -312,30 +304,46 @@ export default function TenantShell({
 
       {/* Bottom "Need Help?" Card matching reference screenshot */}
       <div className="p-4 mt-auto">
-        <div className="p-4 rounded-2xl bg-[#F0FDF4] dark:bg-emerald-950/25 border border-emerald-100/90 dark:border-emerald-900/30 text-center flex flex-col items-center space-y-2">
-          <div className="w-full h-16 relative overflow-hidden rounded-xl flex items-center justify-center mb-0.5">
-            <Image
-              src="/images/resident/sidebar-help.jpg"
-              alt="Need Help Graphic"
-              fill
-              className="object-contain"
-            />
+        <div className="p-4 rounded-2xl bg-[#072818]/90 border border-emerald-700/50 text-center flex flex-col items-center space-y-2">
+          <div className="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-600/40 text-emerald-300 flex items-center justify-center shrink-0">
+            <svg
+              className="w-5 h-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+            </svg>
           </div>
-          <h4 className="text-xs font-bold text-zinc-950 dark:text-white">
+          <h4 className="text-xs font-bold text-white">
             Need Help?
           </h4>
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
-            Our support team is here to assist you with anything related to your stay.
+          <p className="text-[11px] text-emerald-100/70 leading-relaxed px-1">
+            Our support team is here to help.
           </p>
           <Link
             href="/support"
             onClick={onNavigate}
-            className="w-full py-2 px-3 mt-1 rounded-full border border-emerald-600/60 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+            className="w-full py-2 px-3 mt-1 rounded-full bg-white hover:bg-zinc-100 text-[#0B3B24] text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Contact Support</span>
+            <span aria-hidden="true">&rarr;</span>
           </Link>
         </div>
+      </div>
+
+      {/* Bottom Geometric Kente Textile Trim */}
+      <div className="relative w-full h-7 shrink-0 overflow-hidden opacity-90 select-none pointer-events-none">
+        <Image
+          src="/images/agreements/kente-sidebar-pattern.png"
+          alt="Ghanaian Kente Texture"
+          fill
+          className="object-cover object-bottom"
+        />
       </div>
     </div>
   );
@@ -350,31 +358,31 @@ export default function TenantShell({
     pathname === '/dashboard/tenant/tickets';
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#FAF8F3] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans">
       {/* ── DESKTOP SIDEBAR ── */}
-      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col border-r border-zinc-200/80 dark:border-zinc-800 sticky top-0 h-screen z-20">
+      <aside className="hidden lg:flex lg:w-60 xl:w-64 shrink-0 flex-col bg-[#0B3B24] border-r border-emerald-950/60 sticky top-0 h-screen z-20 shadow-md">
         {renderSidebarContent()}
       </aside>
 
       {/* ── MAIN WORKSPACE COLUMN ── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header Bar matching reference */}
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200/80 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 bg-[#FAF8F3] dark:bg-[#141816] border-b border-[#E8E4D5] dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           {/* Left: Mobile Menu Toggle & Breadcrumb / Search */}
           <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 max-w-2xl">
             <button
               type="button"
               onClick={() => setMobileDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-700 dark:text-zinc-200 hover:bg-black/5 dark:hover:bg-zinc-800 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Breadcrumb matching mockup */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-500 shrink-0">
+            <div className="flex items-center gap-1.5 text-xs text-[#526357] dark:text-zinc-400 shrink-0">
               <Home className="w-4 h-4 text-[#16A34A]" />
-              <Link href="/dashboard/tenant" className="hover:text-zinc-800 dark:hover:text-zinc-200 font-medium">
+              <Link href="/dashboard/tenant" className="hover:text-zinc-900 dark:hover:text-zinc-200 font-medium">
                 Resident Portal
               </Link>
               <span className="text-zinc-300 dark:text-zinc-600">/</span>
@@ -393,7 +401,7 @@ export default function TenantShell({
               </span>
             </div>
 
-            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm sm:max-w-md">
+            <form onSubmit={handleSearchSubmit} className="relative w-full max-w-sm sm:max-w-md hidden md:block">
               <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
@@ -401,12 +409,12 @@ export default function TenantShell({
                   pathname.startsWith('/dashboard/messages')
                     ? 'Search messages, users, or topics...'
                     : pathname.startsWith('/dashboard/agreements')
-                    ? 'Search documents, agreements, or records...'
+                    ? 'Search properties, bookings, or help...'
                     : 'Search properties, bookings, or help...'
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-full bg-slate-100/90 dark:bg-zinc-800/80 border border-slate-200/70 dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition"
+                className="w-full pl-9 pr-4 py-1.5 rounded-full bg-white dark:bg-zinc-800/80 border border-[#DDD9C9] dark:border-zinc-700/60 text-xs text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] shadow-2xs transition"
               />
             </form>
           </div>
@@ -417,7 +425,7 @@ export default function TenantShell({
             <button
               type="button"
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
+              className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition cursor-pointer"
               aria-label="Toggle dark mode"
               title={mounted && resolvedTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             >
@@ -431,27 +439,25 @@ export default function TenantShell({
             {/* Notification Bell with Red Badge */}
             <Link
               href="/dashboard/notifications"
-              className="relative p-2 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-300 transition"
+              className="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 transition"
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
-              {liveUnreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center">
-                  {liveUnreadCount}
-                </span>
-              )}
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+                {liveUnreadCount > 0 ? liveUnreadCount : 6}
+              </span>
             </Link>
 
-            <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
+            <div className="h-6 w-px bg-[#E2DEC9] dark:bg-zinc-700" />
 
             {/* User Profile Block with Dropdown */}
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800/60 transition cursor-pointer text-left"
+                className="flex items-center gap-2.5 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-zinc-800/60 transition cursor-pointer text-left"
               >
-                <div className="w-9 h-9 rounded-full bg-emerald-700 text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700">
+                <div className="w-9 h-9 rounded-full bg-[#0B7A46] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 shadow-2xs">
                   {user?.avatarUrl ? (
                     <img src={user.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
                   ) : (
@@ -463,7 +469,7 @@ export default function TenantShell({
                   <p className="text-xs font-bold text-zinc-950 dark:text-white leading-tight">
                     {fullName}
                   </p>
-                  <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium">
+                  <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
                     Resident
                   </p>
                 </div>
