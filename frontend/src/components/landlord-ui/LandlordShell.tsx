@@ -138,9 +138,16 @@ export default function LandlordShell({
     },
   ];
 
+  const [optimisticPath, setOptimisticPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    setOptimisticPath(null);
+  }, [pathname]);
+
   const isActive = (item: NavItem) => {
-    if (item.href === '/dashboard/landlord') return pathname === '/dashboard/landlord';
-    return item.prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    const current = optimisticPath || pathname;
+    if (item.href === '/dashboard/landlord') return current === '/dashboard/landlord';
+    return item.prefixes.some((p) => current === p || current.startsWith(`${p}/`));
   };
 
   const allItems = groups.flatMap((g) => g.items);
@@ -150,13 +157,13 @@ export default function LandlordShell({
   const initials = `${user?.firstName?.[0] || 'L'}${user?.lastName?.[0] || ''}`.toUpperCase();
 
   const nav = (onNavigate?: () => void) => (
-    <nav aria-label="Landlord navigation" className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+    <nav aria-label="Landlord navigation" className="flex-1 overflow-y-auto px-3.5 py-4 space-y-4">
       {groups.map((group) => (
         <div key={group.title}>
-          <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#6F756F]">
+          <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
             {group.title}
           </p>
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {group.items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item);
@@ -164,25 +171,31 @@ export default function LandlordShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={onNavigate}
+                  onClick={() => {
+                    setOptimisticPath(item.href);
+                    if (onNavigate) onNavigate();
+                  }}
                   aria-current={active ? 'page' : undefined}
                   className={clsx(
-                    'flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
+                    'group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-[13.5px] transition-all duration-150 select-none',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                     active
-                      ? 'bg-[#16A34A] text-white shadow-xs'
-                      : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E] hover:text-[#242925] dark:hover:text-white'
+                      ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#016A0B] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                      : 'text-zinc-600 dark:text-zinc-400 hover:text-[#016A0B] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/50 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/50 font-semibold border border-transparent active:bg-[#DCFCE7] active:text-[#016A0B] active:border-[#BBF7D0]'
                   )}
                 >
-                  <span className="flex items-center gap-2.5 min-w-0">
+                  <span className="flex items-center gap-3 min-w-0">
                     <Icon
-                      className={clsx('w-4 h-4 shrink-0', active ? 'text-white' : 'text-[#557A67]')}
+                      className={clsx(
+                        'w-4.5 h-4.5 shrink-0 stroke-[2.2] transition-colors',
+                        active ? 'text-[#016A0B] dark:text-emerald-300' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-[#016A0B]'
+                      )}
                       aria-hidden="true"
                     />
                     <span className="truncate">{item.label}</span>
                   </span>
                   {!!item.badge && item.badge > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#C77B59] text-white">
+                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-[#E0533C] text-white">
                       {item.badge}
                     </span>
                   )}

@@ -160,7 +160,10 @@ export default function TenantShell({
       router.push('/login');
     });
 
+  const [optimisticPath, setOptimisticPath] = useState<string | null>(null);
+
   useEffect(() => {
+    setOptimisticPath(null);
     setMobileDrawerOpen(false);
     setProfileDropdownOpen(false);
   }, [pathname]);
@@ -201,7 +204,7 @@ export default function TenantShell({
     {
       label: 'Payments',
       href: '/dashboard/invoice',
-      matchPrefixes: ['/dashboard/invoice'],
+      matchPrefixes: ['/dashboard/invoice', '/dashboard/tenant/bills'],
       icon: CreditCard,
     },
     {
@@ -226,26 +229,27 @@ export default function TenantShell({
     {
       label: 'Maintenance',
       href: '/dashboard/tenant/tickets',
-      matchPrefixes: ['/dashboard/tenant/tickets'],
+      matchPrefixes: ['/dashboard/tenant/tickets', '/maintenance'],
       icon: Wrench,
       badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
     },
     {
       label: 'Account Settings',
       href: '/dashboard/profile',
-      matchPrefixes: ['/dashboard/profile', '/profile', '/settings'],
+      matchPrefixes: ['/dashboard/profile', '/profile', '/settings', '/account'],
       icon: User,
     },
   ];
 
   const isNavItemActive = (item: NavItem) => {
+    const currentPath = optimisticPath || pathname;
     if (item.label === 'Dashboard') {
-      return pathname === '/dashboard/tenant' || pathname === '/dashboard';
+      return currentPath === '/dashboard/tenant' || currentPath === '/dashboard';
     }
     if (item.label === 'My Residence') {
-      return pathname.startsWith('/dashboard/tenant/residence');
+      return currentPath.startsWith('/dashboard/tenant/residence');
     }
-    return item.matchPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+    return item.matchPrefixes.some((prefix) => currentPath === prefix || currentPath.startsWith(`${prefix}/`));
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -282,7 +286,7 @@ export default function TenantShell({
       </div>
 
       {/* Navigation Links */}
-      <nav aria-label="Resident Navigation" className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+      <nav aria-label="Resident Navigation" className="flex-1 px-3.5 py-4 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isNavItemActive(item);
@@ -290,21 +294,26 @@ export default function TenantShell({
             <Link
               key={item.label}
               href={item.href}
-              onClick={onNavigate}
+              onClick={() => {
+                setOptimisticPath(item.href);
+                if (onNavigate) onNavigate();
+              }}
               aria-current={active ? 'page' : undefined}
               className={clsx(
-                'flex items-center justify-between px-4 py-3 rounded-2xl text-sm transition-all',
+                'group flex items-center justify-between px-4 py-3.5 rounded-2xl text-[14.5px] transition-all duration-150 select-none',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                 active
-                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#0B3B24] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/60 font-semibold border border-transparent'
+                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#016A0B] dark:text-emerald-300 font-bold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#016A0B] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/50 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/50 font-semibold border border-transparent active:bg-[#DCFCE7] active:text-[#016A0B] active:border-[#BBF7D0]'
               )}
             >
-              <span className="flex items-center gap-3.5 min-w-0">
+              <span className="flex items-center gap-4 min-w-0">
                 <Icon
                   className={clsx(
-                    'w-5 h-5 shrink-0 stroke-[2]',
-                    active ? 'text-[#0B3B24] dark:text-emerald-400' : 'text-zinc-500 dark:text-zinc-400'
+                    'w-5 h-5 shrink-0 stroke-[2.2] transition-colors',
+                    active
+                      ? 'text-[#016A0B] dark:text-emerald-300'
+                      : 'text-zinc-500 dark:text-zinc-400 group-hover:text-[#016A0B] dark:group-hover:text-emerald-300 group-active:text-[#016A0B]'
                   )}
                   aria-hidden="true"
                 />
