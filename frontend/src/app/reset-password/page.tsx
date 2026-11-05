@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,7 +19,6 @@ import {
   Clock,
   Home,
   Check,
-  AlertTriangle
 } from 'lucide-react';
 import api from '@/lib/axios';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -182,10 +181,10 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FBF9F4] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors">
+    <div className="min-h-screen w-full bg-[#FDF9F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors">
       
       {/* ──── TOP NAVIGATION BAR ──── */}
-      <header className="w-full bg-[#FBF9F4] dark:bg-[#0D100E] border-b border-zinc-200/70 dark:border-zinc-800/80">
+      <header className="w-full bg-[#FDF9F0] dark:bg-[#0D100E]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           {/* Left Brand + Breadcrumb */}
           <div className="flex items-center gap-4">
@@ -209,7 +208,7 @@ function ResetPasswordForm() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-base font-black tracking-tight text-[#0C3827] dark:text-white leading-none">
+                <span className="text-base font-black tracking-tight text-[#086333] dark:text-white leading-none">
                   AkwaabaHomes
                 </span>
                 <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400 mt-0.5">
@@ -218,7 +217,7 @@ function ResetPasswordForm() {
               </div>
             </Link>
 
-            <span className="hidden sm:inline-block h-6 w-px bg-zinc-300 dark:bg-zinc-700" />
+            <span className="hidden sm:inline-block h-6 w-px bg-zinc-300/80 dark:bg-zinc-700" />
 
             {/* Breadcrumb */}
             <div className="hidden sm:flex items-center gap-1.5 text-xs font-semibold text-zinc-600 dark:text-zinc-400">
@@ -234,11 +233,11 @@ function ResetPasswordForm() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
-            <span className="h-5 w-px bg-zinc-300 dark:bg-zinc-700" />
+            <span className="h-5 w-px bg-zinc-300/80 dark:bg-zinc-700" />
 
             <button
               onClick={handleCancel}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-emerald-700 dark:hover:text-emerald-400 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-800 dark:text-zinc-200 hover:text-[#086333] dark:hover:text-emerald-400 transition cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to account</span>
@@ -263,13 +262,13 @@ function ResetPasswordForm() {
         {/* Section Heading */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-bold tracking-widest text-[#0C3827] dark:text-emerald-400 uppercase">
+            <span className="text-[11px] font-mono font-bold tracking-widest text-[#086333] dark:text-emerald-400 uppercase">
               ACCOUNT SECURITY
             </span>
-            <span className="w-8 h-px bg-[#0C3827]/40 dark:bg-emerald-400/40 inline-block" />
+            <span className="w-8 h-px bg-[#086333]/40 dark:bg-emerald-400/40 inline-block" />
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[#0C3827] dark:text-emerald-100 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-serif font-bold text-[#086333] dark:text-emerald-100 tracking-tight">
             Update your password
           </h1>
           <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
@@ -284,7 +283,7 @@ function ResetPasswordForm() {
               <CheckCircle2 className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h2 className="text-2xl font-serif font-bold text-[#0C3827] dark:text-emerald-100">
+              <h2 className="text-2xl font-serif font-bold text-[#086333] dark:text-emerald-100">
                 Password updated successfully
               </h2>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -294,7 +293,7 @@ function ResetPasswordForm() {
             <div className="pt-2">
               <Link
                 href={isAuthenticated ? '/dashboard/profile/security' : '/login'}
-                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0A3D26] hover:bg-[#072B1B] text-white text-xs font-bold transition shadow-xs"
               >
                 <span>Continue</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -312,7 +311,7 @@ function ResetPasswordForm() {
               <div className="relative rounded-2xl overflow-hidden bg-[#EBF3EC] dark:bg-emerald-950/30 border border-[#D5E8D8] dark:border-emerald-900/40 p-4 sm:p-5 flex items-center gap-4 shadow-inner">
                 {/* Shield Key Icon */}
                 <div className="relative z-10 shrink-0">
-                  <div className="w-12 h-14 rounded-xl flex items-center justify-center text-[#0C3827] dark:text-emerald-400">
+                  <div className="w-12 h-14 rounded-xl flex items-center justify-center text-[#086333] dark:text-emerald-400">
                     <svg
                       viewBox="0 0 24 28"
                       className="w-10 h-12 fill-none stroke-current stroke-[2] drop-shadow-xs"
@@ -338,7 +337,7 @@ function ResetPasswordForm() {
                 <span className="relative z-10 hidden sm:block h-10 w-[1.5px] bg-amber-400/70 dark:bg-amber-500/50 shrink-0" />
 
                 {/* Banner Text */}
-                <p className="relative z-10 text-xs sm:text-sm font-serif font-bold text-[#0C3827] dark:text-emerald-100 leading-snug max-w-md">
+                <p className="relative z-10 text-xs sm:text-sm font-serif font-bold text-[#086333] dark:text-emerald-100 leading-snug max-w-md">
                   A secure account means a safer and smoother experience on AkwaabaHomes.
                 </p>
               </div>
@@ -350,7 +349,7 @@ function ResetPasswordForm() {
                 </AlertBanner>
               )}
 
-              {/* Form */}
+              {/* Form with Indented Alignment Matching Design Reference */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 
                 {/* 1. Current Password */}
@@ -369,7 +368,7 @@ function ResetPasswordForm() {
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       placeholder={token ? 'Not required with reset token' : 'Enter your current password'}
                       disabled={Boolean(token)}
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0C3827] dark:focus:ring-emerald-500 disabled:opacity-60 transition"
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-300/80 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#086333] dark:focus:ring-emerald-500 disabled:opacity-60 transition"
                     />
                     <button
                       type="button"
@@ -400,7 +399,7 @@ function ResetPasswordForm() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter your new password"
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0C3827] dark:focus:ring-emerald-500 transition"
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-300/80 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#086333] dark:focus:ring-emerald-500 transition"
                     />
                     <button
                       type="button"
@@ -431,7 +430,7 @@ function ResetPasswordForm() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm your new password"
-                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#0C3827] dark:focus:ring-emerald-500 transition"
+                      className="w-full px-4 py-2.5 pr-10 rounded-xl bg-white dark:bg-zinc-800/80 border border-zinc-300/80 dark:border-zinc-700 text-xs sm:text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#086333] dark:focus:ring-emerald-500 transition"
                     />
                     <button
                       type="button"
@@ -447,130 +446,142 @@ function ResetPasswordForm() {
                   </div>
                 </div>
 
-                {/* ── Password Strength Bar ── */}
-                <div className="pt-2">
-                  <div className="flex items-center gap-3">
-                    <div className="grid grid-cols-4 gap-2 flex-1">
-                      {[1, 2, 3, 4].map((seg) => (
-                        <div
-                          key={seg}
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            seg <= passedCriteriaCount
-                              ? 'bg-[#16A34A]'
-                              : 'bg-zinc-200 dark:bg-zinc-700'
-                          }`}
-                        />
-                      ))}
+                {/* ── Password Strength Bar (Indented to match Inputs) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center pt-1">
+                  <div className="hidden sm:block sm:col-span-4" />
+                  <div className="sm:col-span-8">
+                    <div className="flex items-center gap-3">
+                      <div className="grid grid-cols-4 gap-2 flex-1">
+                        {[1, 2, 3, 4].map((seg) => (
+                          <div
+                            key={seg}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              seg <= passedCriteriaCount
+                                ? 'bg-[#16A34A]'
+                                : 'bg-zinc-200 dark:bg-zinc-700'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-[#16A34A] dark:text-emerald-400 w-14 text-right">
+                        {strengthLabel}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-[#16A34A] dark:text-emerald-400 w-14 text-right">
-                      {strengthLabel}
-                    </span>
                   </div>
                 </div>
 
-                {/* ── 4 Criteria Checklist (2 Columns) ── */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-xs">
-                  {/* Item 1: At least 12 characters */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        hasAtLeast12Chars
-                          ? 'bg-[#16A34A] text-white'
-                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                {/* ── 4 Criteria Checklist (2 Columns, Indented to match Inputs) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-start pt-1">
+                  <div className="hidden sm:block sm:col-span-4" />
+                  <div className="sm:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    {/* Item 1: At least 12 characters */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          hasAtLeast12Chars
+                            ? 'bg-[#16A34A] text-white'
+                            : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
+                        }`}
+                      >
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+                        At least 12 characters
+                      </span>
                     </div>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-                      At least 12 characters
-                    </span>
-                  </div>
 
-                  {/* Item 2: A number and a symbol */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        hasNumberAndSymbol
-                          ? 'bg-[#16A34A] text-white'
-                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    {/* Item 2: A number and a symbol */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          hasNumberAndSymbol
+                            ? 'bg-[#16A34A] text-white'
+                            : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
+                        }`}
+                      >
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+                        A number and a symbol
+                      </span>
                     </div>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-                      A number and a symbol
-                    </span>
-                  </div>
 
-                  {/* Item 3: Uppercase and lowercase letters */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        hasUpperAndLowerCase
-                          ? 'bg-[#16A34A] text-white'
-                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    {/* Item 3: Uppercase and lowercase letters */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          hasUpperAndLowerCase
+                            ? 'bg-[#16A34A] text-white'
+                            : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
+                        }`}
+                      >
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+                        Uppercase and lowercase letters
+                      </span>
                     </div>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-                      Uppercase and lowercase letters
-                    </span>
-                  </div>
 
-                  {/* Item 4: New password matches */}
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        isMatchValid
-                          ? 'bg-[#16A34A] text-white'
-                          : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
-                      }`}
-                    >
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    {/* Item 4: New password matches */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          isMatchValid
+                            ? 'bg-[#16A34A] text-white'
+                            : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400'
+                        }`}
+                      >
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                      <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+                        New password matches
+                      </span>
                     </div>
-                    <span className="text-zinc-700 dark:text-zinc-300 font-medium">
-                      New password matches
-                    </span>
                   </div>
                 </div>
 
-                {/* ── Sign Out of Other Devices Checkbox ── */}
-                <div className="pt-2 flex items-center gap-2.5">
-                  <input
-                    id="signOutOthers"
-                    type="checkbox"
-                    checked={signOutOthers}
-                    onChange={(e) => setSignOutOthers(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#0C3827] focus:ring-[#0C3827] border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 cursor-pointer"
-                  />
-                  <label
-                    htmlFor="signOutOthers"
-                    className="text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
-                  >
-                    Sign out of other devices after changing my password
-                  </label>
+                {/* ── Sign Out of Other Devices Checkbox (Indented) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center pt-2">
+                  <div className="hidden sm:block sm:col-span-4" />
+                  <div className="sm:col-span-8 flex items-center gap-2.5">
+                    <input
+                      id="signOutOthers"
+                      type="checkbox"
+                      checked={signOutOthers}
+                      onChange={(e) => setSignOutOthers(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#0A3D26] focus:ring-[#0A3D26] border-zinc-300 dark:border-zinc-600 dark:bg-zinc-800 cursor-pointer accent-[#0A3D26]"
+                    />
+                    <label
+                      htmlFor="signOutOthers"
+                      className="text-xs font-medium text-zinc-700 dark:text-zinc-300 cursor-pointer select-none"
+                    >
+                      Sign out of other devices after changing my password
+                    </label>
+                  </div>
                 </div>
 
-                {/* ── Buttons Row ── */}
-                <div className="pt-4 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleCancel}
-                    className="px-6 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
+                {/* ── Buttons Row (Indented to match inputs) ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-center pt-4">
+                  <div className="hidden sm:block sm:col-span-4" />
+                  <div className="sm:col-span-8 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-8 py-2.5 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold text-zinc-800 dark:text-zinc-200 transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
 
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
-                  >
-                    {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>Update password</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="inline-flex items-center justify-center gap-2 px-8 py-2.5 rounded-xl bg-[#0A3D26] hover:bg-[#072B1B] text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                    >
+                      {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      <span>Update password</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -578,8 +589,8 @@ function ResetPasswordForm() {
             {/* ── RIGHT COLUMN: SECURITY CARDS (4 Cols) ── */}
             <div className="lg:col-span-4 space-y-5">
               
-              {/* Card 1: Protect your account (Dark Forest Green) */}
-              <div className="bg-[#0C3827] dark:bg-[#072419] rounded-3xl p-6 text-white space-y-4 shadow-sm relative overflow-hidden">
+              {/* Card 1: Protect your account (Dark Forest Green #0A3D26) */}
+              <div className="bg-[#0A3D26] dark:bg-[#072419] rounded-3xl p-6 text-white space-y-3.5 shadow-xs relative overflow-hidden">
                 {/* Subtle Geometric Background Watermark */}
                 <div className="absolute inset-0 pointer-events-none select-none opacity-10">
                   <Image
@@ -620,10 +631,10 @@ function ResetPasswordForm() {
                 </div>
               </div>
 
-              {/* Card 2: Recent security activity (Sage Green) */}
-              <div className="bg-[#EAF3EA] dark:bg-emerald-950/20 border border-[#D5E8D8] dark:border-emerald-900/40 rounded-3xl p-6 space-y-4 shadow-2xs">
+              {/* Card 2: Recent security activity (Sage Green #E1EAD9) */}
+              <div className="bg-[#E1EAD9] dark:bg-emerald-950/20 border border-[#CBD8C2] dark:border-emerald-900/40 rounded-3xl p-6 space-y-4 shadow-xs">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-[#0C3827] dark:text-emerald-300 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100/80 dark:bg-emerald-900/40 text-[#086333] dark:text-emerald-300 flex items-center justify-center">
                     <Clock className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <h3 className="font-serif text-base font-bold text-zinc-950 dark:text-white">
@@ -664,10 +675,10 @@ function ResetPasswordForm() {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#D5E8D8] dark:border-emerald-900/30">
+                <div className="pt-2 border-t border-[#CBD8C2] dark:border-emerald-900/30">
                   <Link
                     href="/dashboard/profile/security"
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0C3827] dark:text-emerald-300 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#086333] dark:text-emerald-300 hover:underline"
                   >
                     <span>Manage security settings</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -682,18 +693,18 @@ function ResetPasswordForm() {
         {/* ──── BOTTOM ENCRYPTION DISCLAIMER ──── */}
         <div className="pt-4 pb-2">
           <div className="flex items-center justify-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-            <span className="hidden sm:inline-block w-24 h-px bg-zinc-200 dark:bg-zinc-800" />
+            <span className="hidden sm:inline-block w-28 h-px bg-zinc-300/80 dark:bg-zinc-800" />
             <div className="flex items-center gap-1.5 font-medium">
               <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
               <span>Your password is encrypted and never displayed to support staff.</span>
             </div>
-            <span className="hidden sm:inline-block w-24 h-px bg-zinc-200 dark:bg-zinc-800" />
+            <span className="hidden sm:inline-block w-28 h-px bg-zinc-300/80 dark:bg-zinc-800" />
           </div>
         </div>
       </main>
 
       {/* ──── FOOTER ──── */}
-      <footer className="w-full bg-[#FBF9F4] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800/60">
+      <footer className="w-full bg-[#FDF9F0] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 gap-2">
           <span>© 2026 AkwaabaHomes Ghana</span>
           <div className="flex items-center gap-4">
@@ -723,8 +734,8 @@ export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#FBF9F4] dark:bg-[#0D100E]">
-          <Loader2 className="w-8 h-8 animate-spin text-[#0C3827] dark:text-emerald-400" />
+        <div className="min-h-screen flex items-center justify-center bg-[#FDF9F0] dark:bg-[#0D100E]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#086333] dark:text-emerald-400" />
         </div>
       }
     >
