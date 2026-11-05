@@ -193,7 +193,7 @@ export default function TenantBillsPage() {
           <p className="text-xs font-semibold text-zinc-500">Loading utility splits...</p>
         </div>
       ) : filteredSplits.length === 0 ? (
-        <div className="bg-[#FAF9F4] dark:bg-zinc-900 border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] mx-auto flex items-center justify-center">
             <Receipt className="w-6 h-6" />
           </div>

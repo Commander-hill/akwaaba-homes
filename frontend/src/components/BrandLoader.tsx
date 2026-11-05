@@ -38,7 +38,7 @@ export default function BrandLoader({
   const cleanMessage = message.replace(/\.+$/, '').trim();
 
   const containerClasses = fullScreen
-    ? 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F8F7F2] dark:bg-[#0B0D12] select-none transition-colors duration-200'
+    ? 'fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white dark:bg-[#0B0D12] select-none transition-colors duration-200'
     : 'min-h-[50vh] w-full flex flex-col items-center justify-center bg-transparent select-none';
 
   return (

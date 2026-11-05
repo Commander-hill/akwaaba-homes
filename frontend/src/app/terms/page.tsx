@@ -109,7 +109,7 @@ export default function TermsPage() {
     SECTIONS_LIST.find((s) => s.id === activeSection)?.num || '01';
 
   return (
-    <div className="w-full bg-[#FAF7F0] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors font-sans">
+    <div className="w-full bg-white dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 flex flex-col justify-between antialiased transition-colors font-sans">
       
       {/* ──── HERO SECTION: LEGAL CENTRE · GHANA ──── */}
       <section className="relative w-full bg-[#0C3827] text-white overflow-hidden py-8 sm:py-10">
@@ -231,8 +231,8 @@ export default function TermsPage() {
 
       {/* ──── "BEFORE YOU CONTINUE" KEY POINTS STRIP ──── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-5 relative z-20 w-full">
-        <div className="bg-[#FAF4E6] dark:bg-[#15191E] border border-[#E8DEC4] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-center divide-y sm:divide-y-0 lg:divide-x divide-[#E8DEC4] dark:divide-zinc-800">
+        <div className="bg-white dark:bg-[#15191E] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-center divide-y sm:divide-y-0 lg:divide-x divide-zinc-200 dark:divide-zinc-800">
             
             {/* Col 1: Before you continue */}
             <div className="flex items-center gap-3 pr-2">
@@ -305,14 +305,14 @@ export default function TermsPage() {
           
           {/* ════ LEFT COLUMN: STICKY SIDEBAR NAVIGATION (3 Cols) ════ */}
           <aside className="lg:col-span-3 lg:sticky lg:top-24 space-y-4">
-            <div className="bg-[#FAF7F0] dark:bg-[#12161A] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
+            <div className="bg-white dark:bg-[#12161A] border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
               {/* Header */}
               <div className="bg-[#0C3827] px-4 py-3 text-white font-mono font-bold text-xs tracking-wider uppercase">
                 IN THIS DOCUMENT
               </div>
 
               {/* Section Links */}
-              <nav className="divide-y divide-[#E8E1D3]/60 dark:divide-zinc-800 text-xs">
+              <nav className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs">
                 {SECTIONS_LIST.map((sec) => {
                   const isActive = activeSection === sec.id;
                   return (
@@ -336,11 +336,11 @@ export default function TermsPage() {
               </nav>
 
               {/* Reading Progress Indicator */}
-              <div className="p-3.5 border-t border-[#E8E1D3] dark:border-zinc-800 bg-[#FAF7F0] dark:bg-[#12161A] space-y-1.5">
+              <div className="p-3.5 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#12161A] space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-600 dark:text-zinc-400">
                   <span>Section {currentSectionNumber} of 08</span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-[#E5DFD1] dark:bg-zinc-800 overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                   <div
                     className="h-full bg-[#16A34A] rounded-full transition-all duration-300"
                     style={{ width: `${(Number(currentSectionNumber) / 8) * 100}%` }}
@@ -356,7 +356,7 @@ export default function TermsPage() {
             {/* ── Section 01: Acceptance of platform terms ── */}
             <div
               id="section-01"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -414,7 +414,7 @@ export default function TermsPage() {
             {/* ── Section 02: User roles & identity verification ── */}
             <div
               id="section-02"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -480,7 +480,7 @@ export default function TermsPage() {
             {/* ── Section 03: Reservations & payment processing ── */}
             <div
               id="section-03"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -541,7 +541,7 @@ export default function TermsPage() {
             {/* ── Section 04: Shared rooms & student allocation ── */}
             <div
               id="section-04"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -584,7 +584,7 @@ export default function TermsPage() {
             {/* ── Section 05: Digital tenancy agreements ── */}
             <div
               id="section-05"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -627,7 +627,7 @@ export default function TermsPage() {
             {/* ── Section 06: Listing standards & anti-fraud ── */}
             <div
               id="section-06"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -670,7 +670,7 @@ export default function TermsPage() {
             {/* ── Section 07: Move-in, disputes & refunds ── */}
             <div
               id="section-07"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -713,7 +713,7 @@ export default function TermsPage() {
             {/* ── Section 08: Liability & governing law ── */}
             <div
               id="section-08"
-              className="bg-[#FDFBF7] dark:bg-[#161B22] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
+              className="bg-white dark:bg-[#161B22] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 space-y-3.5 shadow-2xs"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -759,13 +759,13 @@ export default function TermsPage() {
           <aside className="lg:col-span-3 space-y-4">
             
             {/* Card 1: Quick Reference */}
-            <div className="bg-[#FAF7F0] dark:bg-[#12161A] border border-[#E8E1D3] dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
+            <div className="bg-white dark:bg-[#12161A] border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-2xs">
               <div className="bg-[#0C3827] px-4 py-2.5 text-white font-bold text-xs tracking-wider uppercase flex items-center gap-2">
                 <Bookmark className="w-3.5 h-3.5 text-emerald-300" />
                 <span>Quick Reference</span>
               </div>
 
-              <div className="divide-y divide-[#E8E1D3]/70 dark:divide-zinc-800 text-xs font-semibold">
+              <div className="divide-y divide-zinc-200 dark:divide-zinc-800 text-xs font-semibold">
                 <Link
                   href="/privacy"
                   className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"

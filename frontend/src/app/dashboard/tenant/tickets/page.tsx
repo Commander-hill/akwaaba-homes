@@ -331,7 +331,7 @@ export default function TenantTicketsPage() {
 
         {/* ── 2. ACTIVE TENANCY BANNER CARD ── */}
         {hasActiveTenancy ? (
-          <div className="relative bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between min-h-[96px] shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+          <div className="relative bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between min-h-[96px] shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 relative z-10">
               {/* Left Building Photo */}
               <div className="w-full sm:w-[215px] h-[96px] relative shrink-0 overflow-hidden bg-zinc-200 dark:bg-zinc-800">
@@ -375,11 +375,11 @@ export default function TenantTicketsPage() {
                 sizes="460px"
                 className="object-cover object-right"
               />
-              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FAF9F4] dark:from-[#141A16] to-transparent" />
+              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-white dark:from-[#141A16] to-transparent" />
             </div>
           </div>
         ) : (
-          <div className="relative bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
+          <div className="relative bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_2px_10px_rgba(11,59,36,0.03)]">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-[#EAF5EC] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center shrink-0">
                 <Building className="w-6 h-6" />
@@ -389,7 +389,7 @@ export default function TenantTicketsPage() {
                   <h3 className="text-base font-extrabold text-[#14221A] dark:text-white">
                     No Active Tenancy on Record
                   </h3>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#EAE8DF] dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[11px] font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[11px] font-bold">
                     Unassigned
                   </span>
                 </div>
@@ -415,7 +415,7 @@ export default function TenantTicketsPage() {
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-8 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Your repair requests ── */}
-            <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
+            <div className="bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
               {/* Header */}
               <div className="flex items-center gap-2">
                 <Wrench className="w-5 h-5 text-[#0B3B24] dark:text-[#16A34A] stroke-[2.1]" />
@@ -435,7 +435,7 @@ export default function TenantTicketsPage() {
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'ALL'
                         ? 'bg-[#16A34A] text-white shadow-2xs'
-                        : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
+                        : 'bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
                     )}
                   >
                     <span>All requests</span>
@@ -458,7 +458,7 @@ export default function TenantTicketsPage() {
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'IN_PROGRESS'
                         ? 'bg-[#16A34A] text-white shadow-2xs'
-                        : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
+                        : 'bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
                     )}
                   >
                     <span>In progress</span>
@@ -467,7 +467,7 @@ export default function TenantTicketsPage() {
                         'w-4 h-4 rounded-full text-[10.5px] font-extrabold inline-flex items-center justify-center',
                         activeTab === 'IN_PROGRESS'
                           ? 'bg-[#15803D] text-white'
-                          : 'bg-[#E2E0D5] dark:bg-zinc-700 text-[#4A5A50] dark:text-zinc-300'
+                          : 'bg-zinc-200 dark:bg-zinc-700 text-[#4A5A50] dark:text-zinc-300'
                       )}
                     >
                       {inProgressCount}
@@ -481,7 +481,7 @@ export default function TenantTicketsPage() {
                       'px-3.5 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer',
                       activeTab === 'RESOLVED'
                         ? 'bg-[#16A34A] text-white shadow-2xs'
-                        : 'bg-[#F3F2EC] hover:bg-[#EAE8DF] dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-[#E2E0D5] dark:border-zinc-700'
+                        : 'bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[#2B3B31] dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700'
                     )}
                   >
                     <span>Resolved</span>
@@ -490,7 +490,7 @@ export default function TenantTicketsPage() {
                         'w-4 h-4 rounded-full text-[10.5px] font-extrabold inline-flex items-center justify-center',
                         activeTab === 'RESOLVED'
                           ? 'bg-[#16A34A] text-white'
-                          : 'bg-[#E2E0D5] dark:bg-zinc-700 text-[#4A5A50] dark:text-zinc-300'
+                          : 'bg-zinc-200 dark:bg-zinc-700 text-[#4A5A50] dark:text-zinc-300'
                       )}
                     >
                       {resolvedCount}
@@ -534,14 +534,14 @@ export default function TenantTicketsPage() {
               {/* Request Cards Stack */}
               <div className="space-y-3.5">
                 {isLoadingTickets ? (
-                  <div className="bg-[#FDFCF9] dark:bg-zinc-900 border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
                     <Loader2 className="w-7 h-7 text-[#16A34A] animate-spin mx-auto" />
                     <p className="text-xs text-[#55665B] dark:text-zinc-400 font-medium">
                       Loading your maintenance requests...
                     </p>
                   </div>
                 ) : filteredRequests.length === 0 ? (
-                  <div className="bg-[#FDFCF9] dark:bg-zinc-900 border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
+                  <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-[#EAF5EC] dark:bg-emerald-950/60 text-[#16A34A] mx-auto flex items-center justify-center">
                       <Wrench className="w-6 h-6" />
                     </div>
@@ -570,7 +570,7 @@ export default function TenantTicketsPage() {
                     return (
                       <div
                         key={req.id}
-                        className="relative bg-[#FDFCF9] dark:bg-zinc-900 border border-[#E7E5DC] dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xs"
+                        className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-2xs"
                       >
                         {/* Left Colored Accent Bar */}
                         <div
@@ -694,7 +694,7 @@ export default function TenantTicketsPage() {
                                     'w-5 h-5 rounded-full flex items-center justify-center shadow-2xs',
                                     req.progressStep >= 2
                                       ? 'bg-[#16A34A] text-white'
-                                      : 'bg-[#FAF9F4] dark:bg-zinc-800 border-2 border-[#D4D2C6] dark:border-zinc-700'
+                                      : 'bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-700'
                                   )}
                                 >
                                   {req.progressStep >= 2 ? (
@@ -722,7 +722,7 @@ export default function TenantTicketsPage() {
                                     'w-5 h-5 rounded-full flex items-center justify-center shadow-2xs',
                                     req.progressStep >= 3
                                       ? 'bg-[#16A34A] text-white'
-                                      : 'bg-[#FAF9F4] dark:bg-zinc-800 border-2 border-[#D4D2C6] dark:border-zinc-700'
+                                      : 'bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-700'
                                   )}
                                 >
                                   {req.progressStep > 3 ? (
@@ -752,7 +752,7 @@ export default function TenantTicketsPage() {
                                     'w-5 h-5 rounded-full flex items-center justify-center shadow-2xs',
                                     req.progressStep >= 4
                                       ? 'bg-[#16A34A] text-white'
-                                      : 'bg-[#FAF9F4] dark:bg-zinc-800 border-2 border-[#D4D2C6] dark:border-zinc-700'
+                                      : 'bg-white dark:bg-zinc-800 border-2 border-zinc-300 dark:border-zinc-700'
                                   )}
                                 >
                                   {req.progressStep >= 4 ? (
@@ -783,7 +783,7 @@ export default function TenantTicketsPage() {
             </div>
 
             {/* ── Card 2: Recent service activity ── */}
-            <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
+            <div className="bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Clock className="w-5 h-5 text-[#0B3B24] dark:text-[#16A34A] stroke-[2.2]" />
@@ -842,7 +842,7 @@ export default function TenantTicketsPage() {
              ══════════════════════════════════════════════════════════════════ */}
           <div className="lg:col-span-4 flex flex-col gap-4 justify-between">
             {/* ── Card 1: Service at a glance ── */}
-            <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
+            <div className="bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_rgba(11,59,36,0.03)] space-y-4">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#0B3B24] dark:text-[#16A34A] stroke-[2.2]" />
                 <h2 className="text-[15.5px] font-extrabold text-[#14221A] dark:text-white">
@@ -850,7 +850,7 @@ export default function TenantTicketsPage() {
                 </h2>
               </div>
 
-              <div className="grid grid-cols-2 divide-x divide-[#E5E3D8] dark:divide-zinc-800 py-1">
+              <div className="grid grid-cols-2 divide-x divide-zinc-200 dark:divide-zinc-800 py-1">
                 {/* Awaiting response */}
                 <div className="pr-3 flex items-start gap-2.5">
                   <span className="w-6 h-6 rounded-full bg-[#F59E0B] text-white flex items-center justify-center shrink-0 mt-1 shadow-2xs">
@@ -882,7 +882,7 @@ export default function TenantTicketsPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#EAE8DF] dark:border-zinc-800 flex items-center gap-2.5 text-xs">
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2.5 text-xs">
                 <Calendar className="w-4 h-4 text-[#3B4B41] dark:text-zinc-400 shrink-0" />
                 <div>
                   <p className="text-[#4A5A50] dark:text-zinc-400">Support hours:</p>
@@ -946,7 +946,7 @@ export default function TenantTicketsPage() {
       </div>
 
       {/* ── 4. BOTTOM FOOTER BAR ── */}
-      <footer className="w-full border-t border-[#E5E3D8] dark:border-zinc-800 bg-[#F3F1E8]/80 dark:bg-[#0D100E] py-3 px-4 sm:px-8 lg:px-12 mt-auto">
+      <footer className="w-full border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0D100E] py-3 px-4 sm:px-8 lg:px-12 mt-auto">
         <div className="max-w-[1380px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-[11.5px] text-[#4E5D53] dark:text-zinc-400 font-medium">
           <span>
             © 2026 <strong className="text-[#14221A] dark:text-white">Akwaaba Homes Ghana</strong>

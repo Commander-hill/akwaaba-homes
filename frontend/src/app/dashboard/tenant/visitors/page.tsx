@@ -205,7 +205,7 @@ export default function TenantVisitorsPage() {
           <p className="text-xs font-semibold text-zinc-500">Loading gate passes...</p>
         </div>
       ) : filteredPasses.length === 0 ? (
-        <div className="bg-[#FAF9F4] dark:bg-zinc-900 border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-3">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] mx-auto flex items-center justify-center">
             <KeyRound className="w-6 h-6" />
           </div>
@@ -262,7 +262,7 @@ export default function TenantVisitorsPage() {
                 </div>
 
                 {/* Gate Code Tile */}
-                <div className="bg-[#FAF9F4] dark:bg-zinc-800/60 border border-[#E6E4DA] dark:border-zinc-700/60 rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-white dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl p-3 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
                       SECURITY GATE CODE

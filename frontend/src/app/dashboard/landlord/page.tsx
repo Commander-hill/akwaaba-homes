@@ -149,7 +149,7 @@ export default function LandlordDashboardPage() {
         </div>
       ) : (
         <>
-          <dl className="grid grid-cols-2 lg:grid-cols-4 border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg bg-white dark:bg-[#141816] divide-x divide-y lg:divide-y-0 divide-[#E7E7DF] dark:divide-[#262E2A] overflow-hidden">
+          <dl className="grid grid-cols-2 lg:grid-cols-4 border border-zinc-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-[#141816] divide-x divide-y lg:divide-y-0 divide-zinc-200 dark:divide-zinc-800 overflow-hidden">
             {metrics.map((m) => (
               <div key={m.label} className="p-4">
                 <dt className="text-xs text-[#6F756F]">{m.label}</dt>
@@ -163,14 +163,14 @@ export default function LandlordDashboardPage() {
               Needs your attention
             </h2>
             {actions.length === 0 ? (
-              <div className="flex items-center gap-2.5 p-4 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm text-[#557A67]">
+              <div className="flex items-center gap-2.5 p-4 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm text-[#557A67]">
                 <CheckCircle2 className="w-4 h-4" aria-hidden="true" />
                 {properties.length === 0
                   ? 'Nothing pending. Add your first property to get started.'
                   : 'Nothing needs action right now.'}
               </div>
             ) : (
-              <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+              <ul className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816] divide-y divide-zinc-200 dark:divide-zinc-800">
                 {actions.map((a) => (
                   <li key={a.key} className="p-4 flex items-center justify-between gap-4">
                     <div className="flex items-start gap-3 min-w-0">
@@ -215,7 +215,7 @@ export default function LandlordDashboardPage() {
                   </div>
                 </div>
               ) : (
-                <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+                <ul className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816] divide-y divide-zinc-200 dark:divide-zinc-800">
                   {properties.slice(0, 5).map((p) => {
                     const subOk = isSubActive(p.subscription);
                     return (
@@ -281,12 +281,12 @@ export default function LandlordDashboardPage() {
                   No booking requests yet.
                 </div>
               ) : (
-                <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+                <ul className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816] divide-y divide-zinc-200 dark:divide-zinc-800">
                   {recent.map((b) => (
                     <li key={b.id}>
                       <Link
                         href={`/dashboard/landlord/bookings/${b.id}`}
-                        className="p-3.5 flex items-center justify-between gap-3 hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]"
+                        className="p-3.5 flex items-center justify-between gap-3 hover:bg-zinc-50 dark:hover:bg-[#1B211E]"
                       >
                         <span className="min-w-0">
                           <span className="block text-sm font-medium truncate">

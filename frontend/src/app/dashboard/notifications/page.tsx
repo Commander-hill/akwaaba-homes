@@ -125,7 +125,7 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#E7E7DF] dark:border-[#262E29]">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1">
             Activity &amp; Updates
@@ -148,7 +148,7 @@ export default function NotificationsPage() {
             type="button"
             onClick={() => markAllAsReadMutation.mutate()}
             disabled={markAllAsReadMutation.isPending}
-            className="px-4 py-2.5 bg-white dark:bg-[#171C19] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-[#242925] dark:text-white text-xs sm:text-sm font-medium rounded-[10px] transition-colors flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+            className="px-4 py-2.5 bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-[#222925] text-[#242925] dark:text-white text-xs sm:text-sm font-medium rounded-[10px] transition-colors flex items-center gap-2 self-start sm:self-auto cursor-pointer"
           >
             {markAllAsReadMutation.isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
               'px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap transition-all cursor-pointer',
               filter === tab
                 ? 'bg-[#16A34A] text-white shadow-xs'
-                : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#242925] dark:hover:text-white border border-[#E7E7DF] dark:border-[#262E29]'
+                : 'bg-white dark:bg-[#171C19] text-[#5E645E] dark:text-[#A0A8A2] hover:text-[#242925] dark:hover:text-white border border-zinc-200 dark:border-zinc-800'
             )}
           >
             {tab === 'ALL'
@@ -193,12 +193,12 @@ export default function NotificationsPage() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="p-4 bg-white dark:bg-[#171C19] rounded-[16px] border border-[#E7E7DF] dark:border-[#262E29] animate-pulse flex gap-4 items-center"
+              className="p-4 bg-white dark:bg-[#171C19] rounded-[16px] border border-zinc-200 dark:border-zinc-800 animate-pulse flex gap-4 items-center"
             >
-              <div className="w-10 h-10 rounded-[10px] bg-[#F1EFE7] dark:bg-[#222925]" />
+              <div className="w-10 h-10 rounded-[10px] bg-zinc-100 dark:bg-[#222925]" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-[#F1EFE7] dark:bg-[#222925] rounded w-1/3" />
-                <div className="h-3 bg-[#F8F7F2] dark:bg-[#111513] rounded w-2/3" />
+                <div className="h-4 bg-zinc-100 dark:bg-[#222925] rounded w-1/3" />
+                <div className="h-3 bg-zinc-50 dark:bg-[#111513] rounded w-2/3" />
               </div>
             </div>
           ))}
@@ -217,7 +217,7 @@ export default function NotificationsPage() {
               <button
                 type="button"
                 onClick={() => setFilter('ALL')}
-                className="px-4 py-2 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] text-xs font-medium text-[#242925] dark:text-white cursor-pointer"
+                className="px-4 py-2 rounded-[10px] border border-zinc-200 dark:border-zinc-700 text-xs font-medium text-[#242925] dark:text-white cursor-pointer"
               >
                 Show All Notifications
               </button>
@@ -232,12 +232,12 @@ export default function NotificationsPage() {
               className={clsx(
                 'p-4 sm:p-5 rounded-[16px] border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4',
                 notification.isRead
-                  ? 'bg-white dark:bg-[#171C19] border-[#E7E7DF] dark:border-[#262E29]'
+                  ? 'bg-white dark:bg-[#171C19] border-zinc-200 dark:border-zinc-800'
                   : 'bg-[#ECFDF3]/40 dark:bg-[#064E3B]/15 border-[#A7F3D0] dark:border-[#065F46] shadow-2xs'
               )}
             >
               <div className="flex items-start gap-3.5">
-                <div className="p-2.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] shrink-0 mt-0.5">
+                <div className="p-2.5 rounded-[12px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 shrink-0 mt-0.5">
                   {getIcon(notification.type)}
                 </div>
                 <div className="space-y-1">
@@ -277,7 +277,7 @@ export default function NotificationsPage() {
                   <button
                     type="button"
                     onClick={() => markAsReadMutation.mutate(notification.id)}
-                    className="p-2 text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white hover:bg-[#F1EFE7] dark:hover:bg-[#222925] rounded-[8px] transition-colors cursor-pointer"
+                    className="p-2 text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#222925] rounded-[8px] transition-colors cursor-pointer"
                     title="Mark as read"
                     aria-label="Mark notification as read"
                   >

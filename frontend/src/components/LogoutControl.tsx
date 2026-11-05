@@ -40,7 +40,7 @@ export default function LogoutControl({
         <div
           role="group"
           aria-label="Confirm sign out"
-          className="flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-[#F1EFE8] dark:bg-[#1B211E] animate-in fade-in"
+          className="flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-zinc-100 dark:bg-[#1B211E] animate-in fade-in"
         >
           <span className="text-xs font-medium text-[#5E645E] dark:text-[#9EA69F] mr-1">Sign out?</span>
           <button
@@ -56,7 +56,7 @@ export default function LogoutControl({
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Cancel, stay signed in"
-            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#16A34A] dark:text-emerald-400 hover:bg-[#E7E7DF] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]"
+            className="w-8 h-8 rounded-full bg-white dark:bg-[#141816] flex items-center justify-center text-[#16A34A] dark:text-emerald-400 hover:bg-zinc-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]"
           >
             <X className="w-4 h-4" />
           </button>

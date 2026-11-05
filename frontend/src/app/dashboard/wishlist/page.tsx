@@ -275,7 +275,7 @@ export default function WishlistPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-[#E7E7DF] dark:border-[#262E29]">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-zinc-200 dark:border-zinc-800">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.06em] text-[#557A67] dark:text-[#86B59C] mb-1">
             Resident Shortlist
@@ -365,7 +365,7 @@ export default function WishlistPage() {
       {/* KPI Summary Strip (Shown when user has saved properties) */}
       {!isLoading && savedProperties.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]">
+          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
               Shortlisted Homes
             </span>
@@ -377,7 +377,7 @@ export default function WishlistPage() {
             </span>
           </div>
 
-          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]">
+          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
               Starting Rent Range
             </span>
@@ -391,7 +391,7 @@ export default function WishlistPage() {
             </span>
           </div>
 
-          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29]">
+          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
               Verified Landlords
             </span>
@@ -403,7 +403,7 @@ export default function WishlistPage() {
             </span>
           </div>
 
-          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] flex flex-col justify-between">
+          <div className="p-4 rounded-[14px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 flex flex-col justify-between">
             <div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
                 Comparison Queue
@@ -454,7 +454,7 @@ export default function WishlistPage() {
                   setCompareIds([]);
                   setShowComparePanel(false);
                 }}
-                className="text-xs font-medium text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white px-3 py-1.5 rounded-lg border border-[#D4D6CE] dark:border-[#2E3832] cursor-pointer"
+                className="text-xs font-medium text-[#5E645E] hover:text-[#242925] dark:text-[#A0A8A2] dark:hover:text-white px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 cursor-pointer"
               >
                 Clear Selection
               </button>
@@ -472,8 +472,8 @@ export default function WishlistPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse min-w-[640px]">
               <thead>
-                <tr className="border-b border-[#E7E7DF] dark:border-[#262E29]">
-                  <th className="p-4 w-44 bg-[#F8F7F2] dark:bg-[#131815] font-semibold uppercase tracking-wider text-[11px] text-[#6F756F] dark:text-[#A0A8A2] align-top">
+                <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                  <th className="p-4 w-44 bg-white dark:bg-[#131815] font-semibold uppercase tracking-wider text-[11px] text-[#6F756F] dark:text-[#A0A8A2] align-top">
                     Criteria
                   </th>
                   {comparedProperties.map((prop: any) => {
@@ -481,7 +481,7 @@ export default function WishlistPage() {
                     return (
                       <th
                         key={prop.id}
-                        className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29] align-top min-w-[210px]"
+                        className="p-4 border-l border-zinc-200 dark:border-zinc-800 align-top min-w-[210px]"
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <span className="px-2 py-0.5 rounded bg-[#F1F5F2] dark:bg-[#1E2822] text-[#173D32] dark:text-emerald-400 text-[10px] font-semibold">
@@ -497,7 +497,7 @@ export default function WishlistPage() {
                           </button>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-14 h-12 rounded-lg overflow-hidden bg-[#F1EFE8] dark:bg-[#1B211E] shrink-0 border border-[#E7E7DF] dark:border-[#262E2A]">
+                          <div className="w-14 h-12 rounded-lg overflow-hidden bg-zinc-100 dark:bg-[#1B211E] shrink-0 border border-zinc-200 dark:border-zinc-800">
                             <PropertyImage
                               src={imgs[0] || ''}
                               alt={prop.title}
@@ -522,10 +522,10 @@ export default function WishlistPage() {
                   })}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E7E7DF] dark:divide-[#262E29]">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {/* Row 1: Starting Rent */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Starting Rent
                   </td>
                   {comparedProperties.map((prop: any) => {
@@ -534,7 +534,7 @@ export default function WishlistPage() {
                     return (
                       <td
                         key={prop.id}
-                        className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29]"
+                        className="p-4 border-l border-zinc-200 dark:border-zinc-800"
                       >
                         <div className="flex items-baseline gap-2">
                           <span className="text-sm font-bold font-mono tabular-nums text-[#242925] dark:text-white">
@@ -556,7 +556,7 @@ export default function WishlistPage() {
 
                 {/* Row 2: Security / Caution Deposit */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Caution Deposit
                   </td>
                   {comparedProperties.map((prop: any) => {
@@ -564,7 +564,7 @@ export default function WishlistPage() {
                     return (
                       <td
                         key={prop.id}
-                        className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29] font-mono tabular-nums text-[#242925] dark:text-white"
+                        className="p-4 border-l border-zinc-200 dark:border-zinc-800 font-mono tabular-nums text-[#242925] dark:text-white"
                       >
                         {caution > 0 ? (
                           <span>{formatCedis(caution)} (Refundable)</span>
@@ -580,7 +580,7 @@ export default function WishlistPage() {
 
                 {/* Row 3: Room Configurations */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Room Options
                   </td>
                   {comparedProperties.map((prop: any) => {
@@ -588,14 +588,14 @@ export default function WishlistPage() {
                     return (
                       <td
                         key={prop.id}
-                        className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29]"
+                        className="p-4 border-l border-zinc-200 dark:border-zinc-800"
                       >
                         {rooms.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {rooms.slice(0, 4).map((r: any, idx: number) => (
                               <span
                                 key={r.id || idx}
-                                className="px-2 py-0.5 rounded bg-[#F8F7F2] dark:bg-[#1E2521] border border-[#E7E7DF] dark:border-[#2A332D] text-[11px] text-[#242925] dark:text-white"
+                                className="px-2 py-0.5 rounded bg-zinc-50 dark:bg-[#1E2521] border border-zinc-200 dark:border-zinc-800 text-[11px] text-[#242925] dark:text-white"
                               >
                                 {r.roomType || 'Standard'} ({formatCedis(r.price)})
                               </span>
@@ -613,7 +613,7 @@ export default function WishlistPage() {
 
                 {/* Row 4: Included Utilities & Key Amenities */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Utilities &amp; Amenities
                   </td>
                   {comparedProperties.map((prop: any) => {
@@ -623,7 +623,7 @@ export default function WishlistPage() {
                     return (
                       <td
                         key={prop.id}
-                        className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29]"
+                        className="p-4 border-l border-zinc-200 dark:border-zinc-800"
                       >
                         {combined.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
@@ -649,13 +649,13 @@ export default function WishlistPage() {
 
                 {/* Row 5: Compound Rules & Gate Curfew */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Gate &amp; Visitor Policy
                   </td>
                   {comparedProperties.map((prop: any) => (
                     <td
                       key={prop.id}
-                      className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29] space-y-1 text-[#5E645E] dark:text-[#A0A8A2]"
+                      className="p-4 border-l border-zinc-200 dark:border-zinc-800 space-y-1 text-[#5E645E] dark:text-[#A0A8A2]"
                     >
                       <p className="flex items-center gap-1.5 text-[#242925] dark:text-white font-medium">
                         <Clock className="w-3.5 h-3.5 text-[#557A67] shrink-0" />
@@ -670,13 +670,13 @@ export default function WishlistPage() {
 
                 {/* Row 6: Landlord Verification & Rating */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Host Verification
                   </td>
                   {comparedProperties.map((prop: any) => (
                     <td
                       key={prop.id}
-                      className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29]"
+                      className="p-4 border-l border-zinc-200 dark:border-zinc-800"
                     >
                       <div className="flex items-center gap-2">
                         {prop.landlord?.isVerifiedLandlord ? (
@@ -701,13 +701,13 @@ export default function WishlistPage() {
 
                 {/* Row 7: Action CTA */}
                 <tr>
-                  <td className="p-4 bg-[#F8F7F2] dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
+                  <td className="p-4 bg-white dark:bg-[#131815] font-semibold text-[#242925] dark:text-white">
                     Action
                   </td>
                   {comparedProperties.map((prop: any) => (
                     <td
                       key={prop.id}
-                      className="p-4 border-l border-[#E7E7DF] dark:border-[#262E29]"
+                      className="p-4 border-l border-zinc-200 dark:border-zinc-800"
                     >
                       <Link
                         href={`/properties/${prop.id}`}
@@ -727,7 +727,7 @@ export default function WishlistPage() {
 
       {/* Filter Pills, Search & Sort Bar */}
       {!isLoading && savedProperties.length > 0 && (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#171C19] p-3.5 rounded-[14px] border border-[#E7E7DF] dark:border-[#262E29]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#171C19] p-3.5 rounded-[14px] border border-zinc-200 dark:border-zinc-800">
           {/* Category Filter Pills */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {(
@@ -774,7 +774,7 @@ export default function WishlistPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search saved homes..."
-                className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-[#E7E7DF] dark:border-[#262E29] bg-[#F8F7F2] dark:bg-[#121614] text-xs text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:outline-none focus:border-[#173D32]"
+                className="w-full pl-8 pr-7 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121614] text-xs text-[#242925] dark:text-white placeholder:text-[#6F756F] focus:outline-none focus:border-[#173D32]"
               />
               {searchQuery && (
                 <button
@@ -787,7 +787,7 @@ export default function WishlistPage() {
               )}
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#E7E7DF] dark:border-[#262E29] bg-[#F8F7F2] dark:bg-[#121614]">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#121614]">
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#557A67] shrink-0" />
               <select
                 value={sortBy}
@@ -867,7 +867,7 @@ export default function WishlistPage() {
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         isSelectedForCompare
                           ? 'bg-[#173D32] text-white border-[#173D32]'
-                          : 'bg-white dark:bg-[#141816] text-[#242925] dark:text-[#F2F2EE] border-[#D4D6CE] dark:border-[#2E3832] hover:border-[#173D32]'
+                          : 'bg-white dark:bg-[#141816] text-[#242925] dark:text-[#F2F2EE] border-zinc-200 dark:border-zinc-700 hover:border-[#173D32]'
                       }`}
                     >
                       {isSelectedForCompare ? (

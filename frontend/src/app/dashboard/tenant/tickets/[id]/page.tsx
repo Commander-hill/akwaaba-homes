@@ -145,7 +145,7 @@ export default function TicketDetailsPage() {
       </div>
 
       {/* Header Banner */}
-      <div className="bg-[#FAF9F4] dark:bg-[#141A16] border border-[#E6E4DA] dark:border-zinc-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xs">
+      <div className="bg-white dark:bg-[#141A16] border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export default function TicketDetailsPage() {
             </a>
           </div>
 
-          <div className="bg-[#FAF9F4] dark:bg-zinc-900/50 border border-[#E6E4DA] dark:border-zinc-800 rounded-2xl p-5 space-y-3 text-xs text-zinc-600 dark:text-zinc-400">
+          <div className="bg-white dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 space-y-3 text-xs text-zinc-600 dark:text-zinc-400">
             <h4 className="font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
               <span>Resident Repair Guarantee</span>

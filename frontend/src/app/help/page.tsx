@@ -222,8 +222,8 @@ export default function HelpFaqPage() {
         </div>
 
         {/* Reassurance Support Box */}
-        <div className="pt-8 border-t border-[#E7E7DF] dark:border-[#262E29]">
-          <div className="p-6 sm:p-8 rounded-[16px] bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xs">
+        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="p-6 sm:p-8 rounded-[16px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xs">
             <div className="space-y-1 max-w-md">
               <h3 className="font-editorial text-xl text-[#242925] dark:text-white">
                 Need to report a property or booking issue?

@@ -375,11 +375,11 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F8F7F2] dark:bg-[#0D100E] py-10">
+      <div className="min-h-screen bg-white dark:bg-[#0D100E] py-10">
         <div className="container-akwaaba space-y-6 animate-pulse">
-          <div className="h-5 w-48 bg-[#E7E7DF] dark:bg-[#262E2A] rounded" />
-          <div className="h-10 w-2/3 bg-[#E7E7DF] dark:bg-[#262E2A] rounded" />
-          <div className="h-[380px] w-full bg-[#E7E7DF] dark:bg-[#262E2A] rounded-xl" />
+          <div className="h-5 w-48 bg-zinc-200 dark:bg-zinc-800 rounded" />
+          <div className="h-10 w-2/3 bg-zinc-200 dark:bg-zinc-800 rounded" />
+          <div className="h-[380px] w-full bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
         </div>
       </div>
     );
@@ -387,7 +387,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
   if (isError || !property) {
     return (
-      <div className="min-h-screen flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#0D100E]">
+      <div className="min-h-screen flex flex-col justify-between bg-white dark:bg-[#0D100E]">
         <div className="container-akwaaba py-16">
           <EmptyState
             icon={Building2}
@@ -427,7 +427,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
   const selectedBedObj = selectedUnitObj?.beds?.find((b: any) => b.id === selectedBedId);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
       <div className="container-akwaaba py-6 sm:py-8 space-y-8 flex-1 pb-24 lg:pb-16">
         {/* ── 1. BREADCRUMB & ACTIONS HEADER ── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -444,7 +444,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <button
               type="button"
               onClick={handleShareWhatsApp}
-              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5 text-[#557A67]" />
               <span>Share</span>
@@ -453,7 +453,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <button
               type="button"
               onClick={handleCopyLink}
-              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-9 px-3 rounded-lg bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A] text-xs font-semibold text-[#242925] dark:text-white inline-flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copiedLink ? (
                 <Check className="w-3.5 h-3.5 text-[#165B36]" />
@@ -470,14 +470,14 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         {/* ── 2. TITLE, LOCATION & VERIFIED RATING SUMMARY ── */}
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="px-2.5 py-1 rounded-md bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white">
+            <span className="px-2.5 py-1 rounded-md bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-[#242925] dark:text-white">
               {formatPropertyTypeLabel(property.type)}
             </span>
             <VerificationIndicator
               isVerifiedLandlord={property.landlord?.isVerifiedLandlord}
               showUnverified={true}
             />
-            <span className="text-[#E7E7DF] dark:text-[#262E2A]">•</span>
+            <span className="text-zinc-300 dark:text-[#262E2A]">•</span>
             <RatingSummary
               avgRating={reviewsData?.avgRating ?? property.avgRating}
               reviewCount={reviewsData?.reviews?.length ?? property.reviewCount}
@@ -495,9 +495,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         </div>
 
         {/* ── 3. ADAPTIVE PHOTO GALLERY (Desktop Grid + Mobile Carousel + Lightbox) ── */}
-        <div className="relative rounded-xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816]">
+        <div className="relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816]">
           {/* Mobile Carousel */}
-          <div className="md:hidden relative aspect-[4/3] w-full bg-[#F1EFE8]">
+          <div className="md:hidden relative aspect-[4/3] w-full bg-zinc-100">
             <img
               src={galleryImages[mobileGalleryIdx] || galleryImages[0]}
               alt={`${property.title} — photo ${mobileGalleryIdx + 1}`}
@@ -648,7 +648,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           {/* LEFT COLUMN: Property Information (7 cols) */}
           <div className="lg:col-span-7 xl:col-span-8 space-y-10">
             {/* Essential Facts Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800">
               <div>
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block">
                   Accommodation Type
@@ -703,7 +703,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* 9.3 Available Rooms and Units Section */}
             {property.rooms && property.rooms.length > 0 && (
-              <section className="space-y-4 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+              <section className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <div>
                   <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
                     Available rooms &amp; unit options
@@ -733,8 +733,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           isSelected
                             ? 'bg-[#EDF6F0]/70 dark:bg-emerald-950/30 border-[#173D32] ring-1 ring-[#173D32]'
                             : isSoldOut
-                            ? 'bg-white/60 dark:bg-[#141816]/50 border-[#E7E7DF] dark:border-[#262E2A] opacity-65'
-                            : 'bg-white dark:bg-[#141816] border-[#E7E7DF] dark:border-[#262E2A] hover:border-[#557A67]'
+                            ? 'bg-white/60 dark:bg-[#141816]/50 border-zinc-200 dark:border-zinc-800 opacity-65'
+                            : 'bg-white dark:bg-[#141816] border-zinc-200 dark:border-zinc-800 hover:border-[#557A67]'
                         )}
                       >
                         <div className="space-y-1.5 w-full">
@@ -772,7 +772,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           </div>
                         </div>
 
-                        <div className="pt-2.5 border-t border-[#E7E7DF] dark:border-[#262E2A] w-full flex items-center justify-between">
+                        <div className="pt-2.5 border-t border-zinc-200 dark:border-zinc-800 w-full flex items-center justify-between">
                           <PriceDisplay
                             amount={room.price}
                             propertyType={property.type}
@@ -792,12 +792,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* Video Tour (if present) */}
             {property.videoUrl && (
-              <section className="space-y-3 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+              <section className="space-y-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white flex items-center gap-2">
                   <Video className="w-5 h-5 text-[#173D32]" />
                   <span>Property video walkthrough</span>
                 </h2>
-                <div className="rounded-xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] bg-black aspect-video">
+                <div className="rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-black aspect-video">
                   <video
                     src={property.videoUrl}
                     controls
@@ -810,7 +810,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* Amenities & Facilities */}
             {parsedAmenities.length > 0 && (
-              <section className="space-y-4 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+              <section className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
                   Amenities &amp; facilities
                 </h2>
@@ -818,7 +818,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   {parsedAmenities.map((amenity: string, idx: number) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-xs sm:text-sm"
+                      className="flex items-center gap-2.5 p-3 rounded-lg bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm"
                     >
                       <CheckCircle2 className="w-4 h-4 text-[#173D32] dark:text-emerald-400 shrink-0" />
                       <span className="font-medium text-[#242925] dark:text-white truncate">
@@ -831,12 +831,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             )}
 
             {/* House Rules & Terms */}
-            <section className="space-y-4 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+            <section className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
               <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
                 House rules &amp; rental terms
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A]">
+                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block mb-1">
                     Gate Access
                   </span>
@@ -844,7 +844,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     {cleanText(property.gateLockTime) || '24/7 Access'}
                   </span>
                 </div>
-                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A]">
+                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block mb-1">
                     Visitor Policy
                   </span>
@@ -852,7 +852,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     {cleanText(property.visitorPolicy) || 'Standard daytime visitors permitted'}
                   </span>
                 </div>
-                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A]">
+                <div className="p-4 bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block mb-1">
                     Quiet Hours
                   </span>
@@ -864,8 +864,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             </section>
 
             {/* 9.4 Host Information & Verification */}
-            <section className="pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
-              <div className="p-5 sm:p-6 rounded-xl bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <section className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="p-5 sm:p-6 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-[#173D32] text-white flex items-center justify-center font-bold text-sm shrink-0">
                     {property.landlord?.firstName?.[0] || 'H'}
@@ -902,21 +902,21 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
             {/* Location Map (Only when reliable coordinates exist) */}
             {property.latitude && property.longitude && (
-              <section className="space-y-3 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+              <section className="space-y-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
                 <div className="flex items-center justify-between">
                   <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
                     Location &amp; neighborhood
                   </h2>
                   <span className="text-xs text-[#6F756F] font-medium">{property.location}</span>
                 </div>
-                <div className="h-72 rounded-xl overflow-hidden border border-[#E7E7DF] dark:border-[#262E2A] relative z-0">
+                <div className="h-72 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 relative z-0">
                   <Map mode="view" property={property} />
                 </div>
               </section>
             )}
 
             {/* Verified Resident Reviews */}
-            <section className="space-y-5 pt-6 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+            <section className="space-y-5 pt-6 border-t border-zinc-200 dark:border-zinc-800">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h2 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white">
@@ -933,7 +933,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               </div>
 
               {reviewsData?.reviews?.length > 0 && reviewsData?.ratingDistribution && (
-                <div className="p-4 rounded-xl bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] space-y-1.5">
+                <div className="p-4 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 space-y-1.5">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count = reviewsData.ratingDistribution[star] || 0;
                     const total = reviewsData.reviews.length || 1;
@@ -941,7 +941,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     return (
                       <div key={star} className="flex items-center gap-3 text-xs">
                         <span className="w-10 font-medium text-[#6F756F]">{star} star</span>
-                        <div className="flex-1 h-2 rounded-full bg-[#F1EFE8] dark:bg-[#1B211E] overflow-hidden">
+                        <div className="flex-1 h-2 rounded-full bg-zinc-100 dark:bg-[#1B211E] overflow-hidden">
                           <div
                             className="h-full bg-[#C77B59] rounded-full"
                             style={{ width: `${pct}%` }}
@@ -955,7 +955,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
               )}
 
               {!reviewsData?.reviews || reviewsData.reviews.length === 0 ? (
-                <div className="p-6 rounded-xl bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] text-center text-xs sm:text-sm text-[#6F756F]">
+                <div className="p-6 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 text-center text-xs sm:text-sm text-[#6F756F]">
                   No resident reviews have been submitted for this property yet.
                 </div>
               ) : (
@@ -963,7 +963,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   {reviewsData.reviews.map((r: any) => (
                     <article
                       key={r.id}
-                      className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] space-y-2 text-xs sm:text-sm"
+                      className="p-4 sm:p-5 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs sm:text-sm"
                     >
                       <div className="flex items-center justify-between">
                         <div>
@@ -1021,9 +1021,9 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
           {/* ── RIGHT COLUMN: 9.5 BOOKING PANEL (5 cols) ── */}
           <div id="booking-widget" className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-22">
-            <div className="bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A] p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(23,61,50,0.06)] space-y-5">
+            <div className="bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800 p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(23,61,50,0.06)] space-y-5">
               {/* Price Header */}
-              <div className="flex items-baseline justify-between pb-4 border-b border-[#E7E7DF] dark:border-[#262E2A]">
+              <div className="flex items-baseline justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
                 <div>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] block mb-0.5">
                     {selectedRoom ? selectedRoom.roomType || 'Selected Unit' : 'Rental Rate'}
@@ -1078,7 +1078,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </Link>
                     <Link
                       href="/support"
-                      className="w-full h-9 bg-white dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-[#242925] dark:text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5"
+                      className="w-full h-9 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-[#242925] dark:text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5"
                     >
                       <PenTool className="w-3.5 h-3.5 text-[#557A67]" />
                       <span>Report an Issue</span>
@@ -1086,7 +1086,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   </div>
                 </div>
               ) : isStaffOrLandlord ? (
-                <div className="p-4 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] space-y-3 text-xs">
+                <div className="p-4 rounded-xl bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 space-y-3 text-xs">
                   <div className="font-bold text-[#242925] dark:text-white">
                     {session?.role === 'LANDLORD' ? 'Landlord Preview Mode' : 'Operations Preview Mode'}
                   </div>
@@ -1197,7 +1197,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                           setSelectedRoomId(e.target.value);
                           setBookingMessage(null);
                         }}
-                        className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+                        className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
                       >
                         {property.rooms.map((room: any) => {
                           const soldOut =
@@ -1217,7 +1217,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
                   {/* Unit & Bed Selection */}
                   {currentRoom && currentRoom.roomUnits && currentRoom.roomUnits.length > 0 && (
-                    <div className="p-3.5 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] space-y-3">
+                    <div className="p-3.5 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 space-y-3">
                       <div>
                         <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] mb-1.5">
                           Select Unit ({currentRoom.roomUnits.length} total)
@@ -1248,8 +1248,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                                   isSelected && isAvail
                                     ? 'bg-[#173D32] text-white border-[#173D32] font-semibold'
                                     : isAvail
-                                    ? 'bg-white dark:bg-[#141816] border-[#E7E7DF] dark:border-[#262E2A] text-[#242925] dark:text-white cursor-pointer'
-                                    : 'bg-[#F1EFE8] text-[#6F756F] border-[#E7E7DF] opacity-50 cursor-not-allowed'
+                                    ? 'bg-white dark:bg-[#141816] border-zinc-200 dark:border-zinc-800 text-[#242925] dark:text-white cursor-pointer'
+                                    : 'bg-zinc-100 text-[#6F756F] border-zinc-200 opacity-50 cursor-not-allowed'
                                 )}
                               >
                                 <div className="font-bold">{unit.unitNumber}</div>
@@ -1268,7 +1268,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                       </div>
 
                       {selectedUnitObj?.beds && selectedUnitObj.beds.length > 1 && (
-                        <div className="pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+                        <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800">
                           <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#6F756F] mb-1.5">
                             Select Bed Space
                           </span>
@@ -1287,7 +1287,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                                     isBedSelected
                                       ? 'bg-[#16A34A] text-white border-[#16A34A] font-semibold shadow-xs'
                                       : isAvail
-                                      ? 'bg-white dark:bg-[#141816] border-[#E7E7DF] text-[#242925] dark:text-white cursor-pointer'
+                                      ? 'bg-white dark:bg-[#141816] border-zinc-200 text-[#242925] dark:text-white cursor-pointer'
                                       : 'opacity-50 cursor-not-allowed'
                                   )}
                                 >
@@ -1324,7 +1324,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                         type="date"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full h-10 px-2.5 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg text-xs font-medium outline-none focus:border-[#173D32]"
+                        className="w-full h-10 px-2.5 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-medium outline-none focus:border-[#173D32]"
                       />
                     </div>
                     <div>
@@ -1340,13 +1340,13 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                         type="date"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full h-10 px-2.5 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg text-xs font-medium outline-none focus:border-[#173D32]"
+                        className="w-full h-10 px-2.5 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs font-medium outline-none focus:border-[#173D32]"
                       />
                     </div>
                   </div>
 
                   {/* Transparent Price Breakdown */}
-                  <div className="p-3.5 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] space-y-2 text-xs">
+                  <div className="p-3.5 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
                     <div className="flex justify-between text-[#5E645E] dark:text-[#9EA69F]">
                       <span>
                         Rental rate ({getRentalPeriodLabel(property.type, property.pricePeriod, false)})
@@ -1367,7 +1367,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                         <span className="font-semibold">{parsedUtilities.join(', ')}</span>
                       </div>
                     )}
-                    <div className="pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A] flex justify-between items-baseline font-bold text-sm text-[#242925] dark:text-white">
+                    <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-baseline font-bold text-sm text-[#242925] dark:text-white">
                       <span>Total initial amount</span>
                       <span>{formatCedis(displayPrice + cautionDepositAmt)}</span>
                     </div>
@@ -1405,7 +1405,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     </Button>
                   </div>
 
-                  <div className="pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between text-[11px] text-[#6F756F]">
+                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex items-center justify-between text-[11px] text-[#6F756F]">
                     <span className="inline-flex items-center gap-1">
                       <Lock className="w-3 h-3" />
                       <span>Transparent terms</span>
@@ -1432,8 +1432,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           aria-modal="true"
           aria-labelledby="reservation-modal-title"
         >
-          <div className="bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A] p-6 max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E7E7DF] dark:border-[#262E2A]">
+          <div className="bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-lg w-full shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#557A67] block">
                   Reservation Review
@@ -1480,7 +1480,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             ) : (
               <div className="space-y-4 text-xs sm:text-sm">
                 {/* Step 1: Selected Accommodation Summary */}
-                <div className="p-3.5 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] space-y-1">
+                <div className="p-3.5 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 space-y-1">
                   <div className="font-bold text-[#242925] dark:text-white">{property.title}</div>
                   <div className="text-xs text-[#6F756F]">{property.location}</div>
                   {selectedRoom && (
@@ -1493,7 +1493,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 </div>
 
                 {/* Step 2: Price Breakdown */}
-                <div className="p-3.5 rounded-lg bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] space-y-2 text-xs">
+                <div className="p-3.5 rounded-lg bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 space-y-2 text-xs">
                   <div className="flex justify-between">
                     <span className="text-[#6F756F]">
                       Rent ({getRentalPeriodLabel(property.type, property.pricePeriod, false)})
@@ -1504,7 +1504,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     <span className="text-[#6F756F]">Refundable Caution Deposit</span>
                     <span className="font-semibold">{formatCedis(cautionDepositAmt)}</span>
                   </div>
-                  <div className="pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A] flex justify-between font-bold text-sm">
+                  <div className="pt-2 border-t border-zinc-200 dark:border-zinc-800 flex justify-between font-bold text-sm">
                     <span>Total Amount</span>
                     <span className="text-[#173D32] dark:text-emerald-400">
                       {formatCedis(displayPrice + cautionDepositAmt)}
@@ -1513,12 +1513,12 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 </div>
 
                 {/* Step 3: Terms Confirmation */}
-                <label className="flex items-start gap-2.5 p-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] cursor-pointer">
+                <label className="flex items-start gap-2.5 p-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={agreedToTerms}
                     onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-[#E7E7DF] accent-[#173D32]"
+                    className="mt-0.5 h-4 w-4 rounded border-zinc-200 accent-[#173D32]"
                   />
                   <span className="text-xs text-[#5E645E] dark:text-[#9EA69F] leading-relaxed">
                     I have reviewed the property details, pricing in GH₵, house rules, and agree to submit this reservation request.
@@ -1557,8 +1557,8 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
           aria-modal="true"
           aria-label="Schedule physical inspection"
         >
-          <div className="bg-white dark:bg-[#141816] rounded-xl border border-[#E7E7DF] dark:border-[#262E2A] p-6 max-w-md w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E7E7DF] dark:border-[#262E2A]">
+          <div className="bg-white dark:bg-[#141816] rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-zinc-800">
               <h3 className="font-editorial text-lg text-[#242925] dark:text-white">
                 Schedule On-Site Inspection
               </h3>
@@ -1585,7 +1585,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   min={new Date().toISOString().split('T')[0]}
                   value={viewingDate}
                   onChange={(e) => setViewingDate(e.target.value)}
-                  className="w-full h-10 px-3 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                  className="w-full h-10 px-3 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg"
                 />
               </div>
 
@@ -1598,7 +1598,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   name="viewingPreferredTime"
                   value={viewingTime}
                   onChange={(e) => setViewingTime(e.target.value)}
-                  className="w-full h-10 px-3 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                  className="w-full h-10 px-3 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg"
                 >
                   <option value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</option>
                   <option value="Afternoon (1:00 PM - 3:30 PM)">Afternoon (1:00 PM - 3:30 PM)</option>
@@ -1620,7 +1620,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   value={viewingPhone}
                   onChange={(e) => setViewingPhone(e.target.value)}
                   placeholder="024XXXXXXX"
-                  className="w-full h-10 px-3 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                  className="w-full h-10 px-3 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg"
                 />
               </div>
 
@@ -1635,7 +1635,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   value={viewingNotes}
                   onChange={(e) => setViewingNotes(e.target.value)}
                   placeholder="Any specific questions for the host..."
-                  className="w-full p-3 bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                  className="w-full p-3 bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 rounded-lg"
                 />
               </div>
 
@@ -1714,7 +1714,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
 
       {/* ── COMPACT MOBILE BOOKING ACTION BAR ── */}
       {!myActiveBookingData && property?.isAvailable !== false && !isStaffOrLandlord && (
-        <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-t border-[#E7E7DF] dark:border-[#262E2A] px-4 py-3 flex items-center justify-between gap-4">
+        <div className="lg:hidden fixed bottom-14 md:bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between gap-4">
           <PriceDisplay
             amount={displayPrice}
             propertyType={property.type}

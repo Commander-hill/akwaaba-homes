@@ -1104,7 +1104,7 @@ function MessagesContent() {
         >
           {!activeConversation ? (
             // Empty State when no conversation is selected (Resolves Anomaly 2)
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FAFBF9] dark:bg-[#0E1210]">
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white dark:bg-[#0E1210]">
               <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-[#0F5A3E] dark:text-emerald-400 flex items-center justify-center mb-4 shadow-2xs border border-emerald-100 dark:border-emerald-900/40">
                 <MessageSquare className="w-8 h-8" />
               </div>
@@ -1252,7 +1252,7 @@ function MessagesContent() {
 
               {/* Message Stream Body */}
               <div
-                className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#FAFBF9] dark:bg-[#0E1210]"
+                className="flex-1 overflow-y-auto p-5 space-y-4 bg-white dark:bg-[#0E1210]"
                 style={{
                   backgroundImage: "url('/images/messages/chat-houses-pattern.svg')",
                   backgroundRepeat: 'repeat',

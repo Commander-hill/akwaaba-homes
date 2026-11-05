@@ -203,7 +203,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
 
       {/* ── 1. HERO SECTION ── */}
       <section className="relative overflow-hidden min-h-[270px] sm:min-h-[320px]">
@@ -225,7 +225,7 @@ export default function HomePage() {
             }}
           />
           {/* Additional bottom fade for readability */}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#F8F7F2] dark:from-[#0D100E] to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white dark:from-[#0D100E] to-transparent" />
         </div>
 
         {/* Hero Content */}
@@ -403,7 +403,7 @@ export default function HomePage() {
       </div>
 
       {/* ── 3. FEATURED LISTINGS ("Handpicked for you") ── */}
-      <section className="py-10 sm:py-12 bg-[#F8F7F2] dark:bg-[#0D100E]">
+      <section className="py-10 sm:py-12 bg-white dark:bg-[#0D100E]">
         <div className="container-akwaaba space-y-6">
           {/* Section Header */}
           <div className="flex items-start justify-between gap-4">
@@ -529,7 +529,7 @@ export default function HomePage() {
       </section>
 
       {/* ── 4. WHY CHOOSE AKWAABAHOMES ── */}
-      <section className="py-4 pb-10 bg-[#F8F7F2] dark:bg-[#0D100E]">
+      <section className="py-4 pb-10 bg-white dark:bg-[#0D100E]">
         <div className="container-akwaaba">
           <div className="bg-[#F0FDF4] dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl px-6 sm:px-8 py-6 sm:py-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">

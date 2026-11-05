@@ -133,8 +133,8 @@ export default function Navbar() {
         className={clsx(
           'border-b transition-all duration-200',
           scrolled
-            ? 'bg-white/95 dark:bg-[#0C0F0E]/95 backdrop-blur-md border-[#E7E7DF] dark:border-[#262E2A] shadow-xs'
-            : 'bg-white dark:bg-[#141816] border-[#E7E7DF] dark:border-[#262E2A]'
+            ? 'bg-white/95 dark:bg-[#0C0F0E]/95 backdrop-blur-md border-zinc-200 dark:border-zinc-800 shadow-xs'
+            : 'bg-white dark:bg-[#141816] border-zinc-200 dark:border-zinc-800'
         )}
       >
         <div className="container-akwaaba">
@@ -191,7 +191,7 @@ export default function Navbar() {
                         'inline-flex items-center gap-0.5 px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]',
                         isActive
                           ? 'text-[#16A34A] dark:text-emerald-400 bg-[#EDF6F0] dark:bg-emerald-950/40 border border-[#16A34A]/30'
-                          : 'text-[#5E645E] hover:text-[#242925] dark:text-[#9EA69F] dark:hover:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
+                          : 'text-[#5E645E] hover:text-[#242925] dark:text-[#9EA69F] dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
                       )}
                     >
                       {link.name}
@@ -311,7 +311,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E] cursor-pointer"
+                className="p-2 rounded-lg text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E] cursor-pointer"
                 aria-label="Toggle navigation menu"
                 aria-expanded={isMenuOpen}
               >
@@ -328,7 +328,7 @@ export default function Navbar() {
               className="fixed inset-0 top-16 bg-black/40 backdrop-blur-xs"
               onClick={() => setIsMenuOpen(false)}
             />
-            <div className="relative bg-white dark:bg-[#141816] border-b border-[#E7E7DF] dark:border-[#262E2A] px-5 pt-4 pb-6 space-y-4 shadow-xl">
+            <div className="relative bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-5 pt-4 pb-6 space-y-4 shadow-xl">
               <div className="space-y-1">
                 {navLinks.map((link) => (
                   <Link
@@ -339,7 +339,7 @@ export default function Navbar() {
                       'block px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-colors',
                       pathname === link.href
                         ? 'bg-[#EDF6F0] text-[#16A34A] dark:bg-emerald-950/40 dark:text-emerald-400'
-                        : 'text-[#242925] dark:text-white hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
+                        : 'text-[#242925] dark:text-white hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
                     )}
                   >
                     {link.name}
@@ -347,7 +347,7 @@ export default function Navbar() {
                 ))}
               </div>
 
-              <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
                 {isAuthenticated ? (
                   <div className="grid grid-cols-2 gap-2.5">
                     <Link
@@ -360,7 +360,7 @@ export default function Navbar() {
                     <Link
                       href="/bookings"
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-lg"
                     >
                       My Bookings
                     </Link>
@@ -370,7 +370,7 @@ export default function Navbar() {
                     <Link
                       href="/login"
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-[#E7E7DF] dark:border-[#262E2A] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-[#242925] dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-lg"
                     >
                       Sign in
                     </Link>

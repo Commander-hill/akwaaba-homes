@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Allow guest access on /dashboard/wishlist (renders inside public shell)
   if (!user && isGuestAllowedRoute) {
     return (
-      <div className="min-h-screen bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+      <div className="min-h-screen bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
         <div className="container-akwaaba py-8">{children}</div>
       </div>
     );
@@ -212,7 +212,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       </Suspense>
 
-      <div className="flex-1 overflow-y-auto bg-[#FBFBF9] dark:bg-[#0D0F12] min-w-0">
+      <div className="flex-1 overflow-y-auto bg-white dark:bg-[#0D0F12] min-w-0">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 min-h-full">
           {children}
         </div>

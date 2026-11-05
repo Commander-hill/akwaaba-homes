@@ -300,7 +300,7 @@ export default function TenantPaymentsPage() {
   }, [recentPayments]);
 
   return (
-    <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
+    <div className="min-h-screen bg-white dark:bg-[#0D100E] text-zinc-900 dark:text-zinc-100 font-sans relative overflow-x-hidden flex flex-col justify-between">
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6 flex-1">
         {/* ── Top Title & Actions Bar ── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
@@ -406,7 +406,7 @@ export default function TenantPaymentsPage() {
           </div>
 
           {/* ──── RIGHT CARD: CAUTION DEPOSIT & ACTIVE TENANCY (Light Card) ──── */}
-          <div className="lg:col-span-6 rounded-2xl bg-[#FFFDF7] dark:bg-zinc-900 border border-[#F4E6D2] dark:border-zinc-800 shadow-2xs p-5 flex flex-col justify-between min-h-[114px]">
+          <div className="lg:col-span-6 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xs p-5 flex flex-col justify-between min-h-[114px]">
             {/* Top 2 Columns */}
             <div className="grid grid-cols-2 divide-x divide-zinc-200/80 dark:divide-zinc-800">
               {/* Col 1: Caution Deposit */}
@@ -813,7 +813,7 @@ export default function TenantPaymentsPage() {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="w-full bg-[#FBFBFA] dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 mt-6">
+      <footer className="w-full bg-white dark:bg-[#0D100E] border-t border-zinc-200/60 dark:border-zinc-800 py-4 px-4 sm:px-6 lg:px-8 mt-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-400">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">

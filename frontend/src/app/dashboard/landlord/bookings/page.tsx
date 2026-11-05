@@ -63,7 +63,7 @@ function Queue() {
         </p>
       </header>
 
-      <div role="tablist" aria-label="Booking status" className="flex gap-1 overflow-x-auto border-b border-[#E7E7DF]">
+      <div role="tablist" aria-label="Booking status" className="flex gap-1 overflow-x-auto border-b border-zinc-200">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -95,7 +95,7 @@ function Queue() {
           }}
           placeholder="Search tenant or property"
           aria-label="Search bookings"
-          className="w-full h-10 pl-9 pr-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+          className="w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
         />
       </div>
 
@@ -115,9 +115,9 @@ function Queue() {
         />
       ) : (
         <>
-          <div className="overflow-x-auto rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816]">
+          <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816]">
             <table className="w-full text-sm">
-              <thead className="text-left text-xs text-[#6F756F] bg-[#F8F7F2] dark:bg-[#1B211E]">
+              <thead className="text-left text-xs text-[#6F756F] bg-zinc-50 dark:bg-[#1B211E]">
                 <tr>
                   <th className="px-4 py-2.5 font-medium">Tenant</th>
                   <th className="px-4 py-2.5 font-medium">Property and room</th>
@@ -129,9 +129,9 @@ function Queue() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                 {visible.map((b) => (
-                  <tr key={b.id} className="hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]">
+                  <tr key={b.id} className="hover:bg-zinc-50 dark:hover:bg-[#1B211E]">
                     <td className="px-4 py-3 font-medium">
                       {b.tenant?.firstName} {b.tenant?.lastName}
                     </td>
@@ -175,14 +175,14 @@ function Queue() {
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(page - 1)}
-                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
+                  className="h-9 px-3 rounded-lg border border-zinc-200 disabled:opacity-40 cursor-pointer"
                 >
                   Previous
                 </button>
                 <button
                   disabled={page === pages}
                   onClick={() => setPage(page + 1)}
-                  className="h-9 px-3 rounded-lg border border-[#E7E7DF] disabled:opacity-40 cursor-pointer"
+                  className="h-9 px-3 rounded-lg border border-zinc-200 disabled:opacity-40 cursor-pointer"
                 >
                   Next
                 </button>

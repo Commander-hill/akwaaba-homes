@@ -142,11 +142,11 @@ export default function TenantBookingDetailsPage() {
   if (isLoading) {
     return (
       <div className="max-w-5xl mx-auto py-4 space-y-6 animate-pulse">
-        <div className="h-6 w-40 bg-[#E7E7DF] dark:bg-[#262E29] rounded" />
-        <div className="h-44 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px]" />
+        <div className="h-6 w-40 bg-zinc-200 dark:bg-zinc-800 rounded" />
+        <div className="h-44 bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px]" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 h-72 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px]" />
-          <div className="h-72 bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px]" />
+          <div className="md:col-span-2 h-72 bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px]" />
+          <div className="h-72 bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px]" />
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ export default function TenantBookingDetailsPage() {
   if (isError || !booking) {
     return (
       <div className="max-w-3xl mx-auto py-12">
-        <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-8 text-center space-y-4">
+        <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-8 text-center space-y-4">
           <AlertTriangle className="w-10 h-10 text-[#B45309] mx-auto" />
           <h1 className="font-editorial text-2xl text-[#242925] dark:text-white">
             Booking Record Not Found
@@ -276,9 +276,9 @@ export default function TenantBookingDetailsPage() {
       </div>
 
       {/* Property Banner Card */}
-      <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 shadow-2xs flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
+      <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 shadow-2xs flex flex-col md:flex-row gap-5 items-start md:items-center justify-between">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 min-w-0">
-          <div className="relative w-full sm:w-36 h-28 rounded-[12px] overflow-hidden bg-[#F1EFE7] dark:bg-[#222925] shrink-0 border border-[#E7E7DF] dark:border-[#262E29]">
+          <div className="relative w-full sm:w-36 h-28 rounded-[12px] overflow-hidden bg-zinc-100 dark:bg-[#222925] shrink-0 border border-zinc-200 dark:border-zinc-800">
             <Image
               src={primaryImage}
               alt={prop.title || 'Property'}
@@ -288,7 +288,7 @@ export default function TenantBookingDetailsPage() {
             />
           </div>
           <div className="space-y-1.5 min-w-0">
-            <span className="inline-block text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#F1EFE7] dark:bg-[#222925] text-[#5E645E] dark:text-[#A0A8A2] font-semibold">
+            <span className="inline-block text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-zinc-100 dark:bg-[#222925] text-[#5E645E] dark:text-[#A0A8A2] font-semibold">
               {prop.type?.replace(/_/g, ' ') || 'ACCOMMODATION'}
             </span>
             <h1 className="font-editorial text-xl sm:text-2xl text-[#242925] dark:text-white truncate">
@@ -312,14 +312,14 @@ export default function TenantBookingDetailsPage() {
 
         <Link
           href={`/properties/${prop.id}`}
-          className="px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:border-[#16A34A] text-xs sm:text-sm font-medium text-[#242925] dark:text-white shrink-0 transition-colors"
+          className="px-4 py-2.5 rounded-[10px] border border-zinc-200 dark:border-zinc-700 hover:border-[#16A34A] text-xs sm:text-sm font-medium text-[#242925] dark:text-white shrink-0 transition-colors"
         >
           View Property Listing
         </Link>
       </div>
 
       {/* Booking Lifecycle Timeline */}
-      <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 shadow-2xs">
+      <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 shadow-2xs">
         <h2 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2] mb-4">
           Reservation &amp; Tenancy Progression
         </h2>
@@ -330,7 +330,7 @@ export default function TenantBookingDetailsPage() {
               className={`p-3.5 rounded-[12px] border ${
                 s.done
                   ? 'bg-[#ECFDF3]/60 dark:bg-[#064E3B]/25 border-[#A7F3D0] dark:border-[#065F46]'
-                  : 'bg-[#F8F7F2] dark:bg-[#111513] border-[#E7E7DF] dark:border-[#262E29]'
+                  : 'bg-zinc-50 dark:bg-[#111513] border-zinc-200 dark:border-zinc-800'
               }`}
             >
               <div className="flex items-center justify-between mb-1.5">
@@ -357,14 +357,14 @@ export default function TenantBookingDetailsPage() {
         {/* Left Column: Stay Details, Lease Agreement, Check-in & House Rules */}
         <div className="lg:col-span-7 space-y-6">
           {/* Stay Dates & Allocation */}
-          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-4">
+          <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 space-y-4">
             <h2 className="text-base font-semibold text-[#242925] dark:text-white flex items-center gap-2">
               <Calendar className="w-4 h-4 text-[#173D32] dark:text-[#86B59C]" />
               <span>Tenancy Period &amp; Room Allocation</span>
             </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-              <div className="p-3.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]">
+              <div className="p-3.5 rounded-[12px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800">
                 <span className="text-[11px] uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
                   Move-In Date
                 </span>
@@ -376,7 +376,7 @@ export default function TenantBookingDetailsPage() {
                   })}
                 </span>
               </div>
-              <div className="p-3.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]">
+              <div className="p-3.5 rounded-[12px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800">
                 <span className="text-[11px] uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
                   Move-Out Date
                 </span>
@@ -388,7 +388,7 @@ export default function TenantBookingDetailsPage() {
                   })}
                 </span>
               </div>
-              <div className="p-3.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] col-span-2 sm:col-span-1">
+              <div className="p-3.5 rounded-[12px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 col-span-2 sm:col-span-1">
                 <span className="text-[11px] uppercase tracking-wider text-[#6F756F] dark:text-[#A0A8A2] block">
                   Assigned Space
                 </span>
@@ -401,12 +401,12 @@ export default function TenantBookingDetailsPage() {
             </div>
 
             {/* Check-in Instructions & House Rules */}
-            <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29] space-y-2.5">
+            <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
               <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2]">
                 Check-In Guidelines &amp; Compound Rules
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-                <div className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]">
+                <div className="p-3 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] text-[#6F756F] dark:text-[#A0A8A2] block">
                     Gate Curfew
                   </span>
@@ -414,7 +414,7 @@ export default function TenantBookingDetailsPage() {
                     {prop.gateLockTime || '24/7 Access'}
                   </span>
                 </div>
-                <div className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]">
+                <div className="p-3 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] text-[#6F756F] dark:text-[#A0A8A2] block">
                     Visitor Policy
                   </span>
@@ -422,7 +422,7 @@ export default function TenantBookingDetailsPage() {
                     {prop.visitorPolicy || 'Standard Guest Hours'}
                   </span>
                 </div>
-                <div className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29]">
+                <div className="p-3 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800">
                   <span className="text-[11px] text-[#6F756F] dark:text-[#A0A8A2] block">
                     Quiet Hours
                   </span>
@@ -435,7 +435,7 @@ export default function TenantBookingDetailsPage() {
           </div>
 
           {/* Digital Lease Agreement Card */}
-          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-4">
+          <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#242925] dark:text-white flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#173D32] dark:text-[#86B59C]" />
@@ -451,7 +451,7 @@ export default function TenantBookingDetailsPage() {
             </p>
 
             {isCancelledOrRejected ? (
-              <div className="p-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] text-xs text-[#5E645E] dark:text-[#A0A8A2]">
+              <div className="p-3.5 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 text-xs text-[#5E645E] dark:text-[#A0A8A2]">
                 This reservation request is {booking.status.toLowerCase()}. Lease execution is disabled.
               </div>
             ) : (
@@ -480,7 +480,7 @@ export default function TenantBookingDetailsPage() {
           </div>
 
           {/* Landlord / Host Contact Card */}
-          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-semibold text-[#242925] dark:text-white">
@@ -508,7 +508,7 @@ export default function TenantBookingDetailsPage() {
 
             <Link
               href={landlord.id ? `/dashboard/messages?partnerId=${landlord.id}` : '/dashboard/messages'}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-[#D4D6CE] dark:border-[#2E3832] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] text-[#242925] dark:text-white text-xs sm:text-sm font-medium shrink-0 self-start sm:self-center transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-[#222925] text-[#242925] dark:text-white text-xs sm:text-sm font-medium shrink-0 self-start sm:self-center transition-colors"
             >
               <MessageSquare className="w-4 h-4" />
               <span>Message Host</span>
@@ -518,8 +518,8 @@ export default function TenantBookingDetailsPage() {
 
         {/* Right Column: Price Breakdown, Payment, Check-in Pass & Actions */}
         <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 sm:p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-[#E7E7DF] dark:border-[#262E29] pb-3">
+          <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 sm:p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-3">
               <h2 className="text-base font-semibold text-[#242925] dark:text-white flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-[#173D32] dark:text-[#86B59C]" />
                 <span>Price Breakdown</span>
@@ -548,7 +548,7 @@ export default function TenantBookingDetailsPage() {
                   GH₵ 0 (No Tenant Fee)
                 </span>
               </div>
-              <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E29] flex justify-between items-baseline">
+              <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-baseline">
                 <span className="font-semibold text-[#242925] dark:text-white">Total Amount</span>
                 <span className="text-xl font-bold text-[#242925] dark:text-white">
                   {formatCedis(totalPayable)}
@@ -581,7 +581,7 @@ export default function TenantBookingDetailsPage() {
                 </div>
 
                 {/* Gatehouse Handover / Check-In Reference Card */}
-                <div className="p-3.5 rounded-[12px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] flex items-center justify-between gap-3">
+                <div className="p-3.5 rounded-[12px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-lg bg-[#173D32]/10 dark:bg-emerald-500/10 text-[#173D32] dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <KeyRound className="w-4 h-4" />
@@ -598,7 +598,7 @@ export default function TenantBookingDetailsPage() {
                   <button
                     type="button"
                     onClick={() => handleCopyCheckInCode(checkInReferenceCode)}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#D4D6CE] dark:border-[#2E3832] bg-white dark:bg-[#171C19] text-xs font-semibold text-[#242925] dark:text-white hover:border-[#16A34A] transition cursor-pointer inline-flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#171C19] text-xs font-semibold text-[#242925] dark:text-white hover:border-[#16A34A] transition cursor-pointer inline-flex items-center gap-1"
                   >
                     {copiedCode ? (
                       <>
@@ -653,7 +653,7 @@ export default function TenantBookingDetailsPage() {
 
             {/* Recorded Transactions */}
             {Array.isArray(booking.transactions) && booking.transactions.length > 0 && (
-              <div className="pt-4 border-t border-[#E7E7DF] dark:border-[#262E29] space-y-2.5">
+              <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2]">
                     Transaction Receipts
@@ -669,7 +669,7 @@ export default function TenantBookingDetailsPage() {
                   <Link
                     key={tx.id}
                     href={`/dashboard/invoice/${tx.id}`}
-                    className="p-3 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] hover:border-[#16A34A]/60 transition flex items-center justify-between text-xs block"
+                    className="p-3 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 hover:border-[#16A34A]/60 transition flex items-center justify-between text-xs block"
                   >
                     <div>
                       <p className="font-semibold text-[#242925] dark:text-white">
@@ -687,7 +687,7 @@ export default function TenantBookingDetailsPage() {
           </div>
 
           {/* Post-Booking Resident Actions (Reviews, Maintenance, Support) */}
-          <div className="bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-5 space-y-3">
+          <div className="bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-5 space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-[#6F756F] dark:text-[#A0A8A2]">
               Resident Services &amp; Support
             </h3>
@@ -696,7 +696,7 @@ export default function TenantBookingDetailsPage() {
               <>
                 <Link
                   href={`/dashboard/tenant/tickets/new?bookingId=${booking.id}&propertyId=${prop.id || ''}`}
-                  className="w-full py-2.5 px-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] border border-[#E7E7DF] dark:border-[#262E29] text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
+                  className="w-full py-2.5 px-3.5 rounded-[10px] bg-zinc-50 dark:bg-[#111513] hover:bg-zinc-50 dark:hover:bg-[#222925] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-[#173D32] dark:text-[#86B59C]" />
@@ -708,7 +708,7 @@ export default function TenantBookingDetailsPage() {
                 {!booking.review ? (
                   <Link
                     href={`/dashboard/tenant/reviews/new?bookingId=${booking.id}&propertyId=${prop.id || ''}`}
-                    className="w-full py-2.5 px-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] border border-[#E7E7DF] dark:border-[#262E29] text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
+                    className="w-full py-2.5 px-3.5 rounded-[10px] bg-zinc-50 dark:bg-[#111513] hover:bg-zinc-50 dark:hover:bg-[#222925] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
                   >
                     <span className="flex items-center gap-2">
                       <Star className="w-4 h-4 text-[#C77B59]" />
@@ -717,7 +717,7 @@ export default function TenantBookingDetailsPage() {
                     <span>&rarr;</span>
                   </Link>
                 ) : (
-                  <div className="p-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] border border-[#E7E7DF] dark:border-[#262E29] text-xs">
+                  <div className="p-3.5 rounded-[10px] bg-zinc-50 dark:bg-[#111513] border border-zinc-200 dark:border-zinc-800 text-xs">
                     <p className="font-semibold text-[#242925] dark:text-white flex items-center gap-1">
                       <Star className="w-3.5 h-3.5 fill-[#C77B59] text-[#C77B59]" />
                       Your Review: {booking.review.rating}/5
@@ -732,7 +732,7 @@ export default function TenantBookingDetailsPage() {
 
             <Link
               href={`/support?bookingId=${booking.id}`}
-              className="w-full py-2.5 px-3.5 rounded-[10px] bg-[#F8F7F2] dark:bg-[#111513] hover:bg-[#F1EFE7] dark:hover:bg-[#222925] border border-[#E7E7DF] dark:border-[#262E29] text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
+              className="w-full py-2.5 px-3.5 rounded-[10px] bg-zinc-50 dark:bg-[#111513] hover:bg-zinc-50 dark:hover:bg-[#222925] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm font-medium text-[#242925] dark:text-white flex items-center justify-between transition-colors"
             >
               <span className="flex items-center gap-2">
                 <HelpCircle className="w-4 h-4 text-[#175CD3] dark:text-[#93C5FD]" />
@@ -752,7 +752,7 @@ export default function TenantBookingDetailsPage() {
           aria-modal="true"
           aria-labelledby="cancel-detail-modal-title"
         >
-          <div className="w-full max-w-md bg-white dark:bg-[#171C19] border border-[#E7E7DF] dark:border-[#262E29] rounded-[16px] p-6 space-y-4 shadow-xl">
+          <div className="w-full max-w-md bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 rounded-[16px] p-6 space-y-4 shadow-xl">
             <div className="w-11 h-11 rounded-full bg-[#FEF3F2] dark:bg-[#450A0A]/50 text-[#B42318] dark:text-[#FCA5A5] flex items-center justify-center">
               <XCircle className="w-5 h-5" />
             </div>

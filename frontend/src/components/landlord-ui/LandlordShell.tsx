@@ -240,7 +240,7 @@ export default function LandlordShell({
   );
 
   const footer = (
-    <div className="p-3.5 border-t border-[#E7E7DF] dark:border-[#262E2A] flex items-center gap-2.5 bg-[#F8F7F2]/60 dark:bg-[#111513]">
+    <div className="p-3.5 border-t border-zinc-200 dark:border-zinc-800 flex items-center gap-2.5 bg-white dark:bg-[#111513]">
       <Link href="/dashboard/profile" className="flex items-center gap-2.5 min-w-0 flex-1">
         <span className="w-9 h-9 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0">
           {user?.avatarUrl ? (
@@ -260,21 +260,21 @@ export default function LandlordShell({
   );
 
   return (
-    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
-      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-white dark:bg-[#141816] border-r border-[#E7E7DF] dark:border-[#262E2A] sticky top-0 h-screen">
-        <div className="h-16 px-5 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center shrink-0">{brand}</div>
+    <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col bg-white dark:bg-[#141816] border-r border-zinc-200 dark:border-zinc-800 sticky top-0 h-screen">
+        <div className="h-16 px-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center shrink-0">{brand}</div>
         {nav()}
         {footer}
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-[#E7E7DF] dark:border-[#262E2A] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-[#F1EFE8] cursor-pointer"
+              className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-zinc-100 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -296,7 +296,7 @@ export default function LandlordShell({
             <Link
               href="/dashboard/profile"
               aria-label="Profile and settings"
-              className="w-8 h-8 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-[#E7E7DF]"
+              className="w-8 h-8 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-zinc-200"
             >
               {user?.avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -315,7 +315,7 @@ export default function LandlordShell({
         <div className="lg:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div className="fixed inset-0 bg-black/50" onClick={() => setDrawerOpen(false)} />
           <aside className="relative w-72 max-w-[85vw] bg-white dark:bg-[#141816] h-full flex flex-col z-10 shadow-xl">
-            <div className="h-16 px-4 border-b border-[#E7E7DF] flex items-center justify-between">
+            <div className="h-16 px-4 border-b border-zinc-200 flex items-center justify-between">
               {brand}
               <button
                 type="button"

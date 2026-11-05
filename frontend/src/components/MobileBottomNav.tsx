@@ -178,7 +178,7 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-t border-[#E7E7DF] dark:border-[#262E2A] px-2 py-1.5 shadow-[0_-2px_10px_rgba(23,61,50,0.04)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#141816]/95 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 px-2 py-1.5 shadow-[0_-2px_10px_rgba(23,61,50,0.04)]"
       style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
     >
       <div className="flex items-center justify-around">

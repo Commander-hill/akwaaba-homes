@@ -146,7 +146,7 @@ function Inventory() {
             }}
             aria-label="Search properties"
             placeholder="Search by name or location"
-            className="w-full h-10 pl-9 pr-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+            className="w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
           />
         </div>
         <select
@@ -156,7 +156,7 @@ function Inventory() {
             setFilter(e.target.value as any);
             setPage(1);
           }}
-          className="h-10 px-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+          className="h-10 px-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
         >
           {FILTERS.map((f) => (
             <option key={f.key} value={f.key}>
@@ -168,7 +168,7 @@ function Inventory() {
           aria-label="Sort"
           value={sort}
           onChange={(e) => setSort(e.target.value as any)}
-          className="h-10 px-3 rounded-lg border border-[#E7E7DF] bg-white dark:bg-[#141816] text-sm"
+          className="h-10 px-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
         >
           <option value="newest">Newest first</option>
           <option value="title">Name (A to Z)</option>
@@ -196,7 +196,7 @@ function Inventory() {
         <EmptyState icon={Search} title="No matching properties" description="Try a different search or filter." />
       ) : (
         <>
-          <ul className="rounded-lg border border-[#E7E7DF] dark:border-[#262E2A] bg-white dark:bg-[#141816] divide-y divide-[#E7E7DF] dark:divide-[#262E2A]">
+          <ul className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816] divide-y divide-zinc-200 dark:divide-zinc-800">
             {visible.map((p) => {
               const state = lifecycle(p);
               const imgs: string[] = Array.isArray(p.images) ? p.images : [];

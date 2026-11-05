@@ -279,7 +279,7 @@ function SearchDiscoveryContent() {
               updateUrlParams({ location: e.target.value });
             }}
             placeholder="e.g. Legon, Kumasi, Osu..."
-            className="w-full h-10 pl-9 pr-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+            className="w-full h-10 pl-9 pr-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
           />
         </div>
       </div>
@@ -303,7 +303,7 @@ function SearchDiscoveryContent() {
                 className={`w-full px-3 py-2 rounded-lg text-xs font-medium text-left flex items-center justify-between transition-colors cursor-pointer ${
                   active
                     ? 'bg-[#16A34A] text-white font-semibold shadow-xs'
-                    : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E]'
+                    : 'text-[#5E645E] dark:text-[#9EA69F] hover:bg-zinc-50 dark:hover:bg-[#1B211E]'
                 }`}
               >
                 <span>{t.label}</span>
@@ -315,7 +315,7 @@ function SearchDiscoveryContent() {
       </div>
 
       {/* Price Range (GH₵) */}
-      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+      <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <span className="block text-xs font-bold text-[#242925] dark:text-white">
           Budget Range (GH₵)
         </span>
@@ -335,7 +335,7 @@ function SearchDiscoveryContent() {
                 setMinPrice(e.target.value);
                 updateUrlParams({ minPrice: e.target.value });
               }}
-              className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+              className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
             />
           </div>
           <div>
@@ -353,14 +353,14 @@ function SearchDiscoveryContent() {
                 setMaxPrice(e.target.value);
                 updateUrlParams({ maxPrice: e.target.value });
               }}
-              className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+              className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
             />
           </div>
         </div>
       </div>
 
       {/* Occupant Capacity */}
-      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+      <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <label
           htmlFor={`${prefix}-filter-capacity`}
           className="block text-xs font-bold text-[#242925] dark:text-white"
@@ -375,7 +375,7 @@ function SearchDiscoveryContent() {
             setCapacityFilter(e.target.value);
             updateUrlParams({ capacity: e.target.value });
           }}
-          className="w-full h-10 px-3 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
+          className="w-full h-10 px-3 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs text-[#242925] dark:text-white outline-none focus:border-[#173D32] cursor-pointer"
         >
           <option value="">Any occupancy</option>
           <option value="1">1+ Person</option>
@@ -386,7 +386,7 @@ function SearchDiscoveryContent() {
       </div>
 
       {/* Amenities */}
-      <div className="space-y-2 pt-2 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+      <div className="space-y-2 pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <span className="block text-xs font-bold text-[#242925] dark:text-white">
           Facilities &amp; Amenities
         </span>
@@ -402,7 +402,7 @@ function SearchDiscoveryContent() {
                 className={`px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors cursor-pointer ${
                   checked
                     ? 'bg-[#16A34A]/10 border-[#16A34A] text-[#16A34A] dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-500 font-semibold'
-                    : 'bg-[#F8F7F2] dark:bg-[#1B211E] border-[#E7E7DF] dark:border-[#262E2A] text-[#5E645E] dark:text-[#9EA69F] hover:border-[#557A67]'
+                    : 'bg-white dark:bg-[#1B211E] border-zinc-200 dark:border-zinc-800 text-[#5E645E] dark:text-[#9EA69F] hover:border-[#557A67]'
                 }`}
               >
                 {amenity}
@@ -414,7 +414,7 @@ function SearchDiscoveryContent() {
 
       {/* Reset All */}
       {activePills.length > 0 && (
-        <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E2A]">
+        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800">
           <Button
             variant="outline"
             size="sm"
@@ -430,9 +430,9 @@ function SearchDiscoveryContent() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F8F7F2] dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-[#0D100E] text-[#242925] dark:text-[#F2F2EE]">
       {/* ── SEARCH HEADER SUMMARY BAR ── */}
-      <div className="bg-white dark:bg-[#141816] border-b border-[#E7E7DF] dark:border-[#262E2A]">
+      <div className="bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800">
         <div className="container-akwaaba py-6 sm:py-8 space-y-4">
           <BreadcrumbNav
             items={[
@@ -481,7 +481,7 @@ function SearchDiscoveryContent() {
                   }}
                   placeholder="Search property name or keyword..."
                   aria-label="Search by property name or keyword"
-                  className="w-full h-10 pl-9 pr-8 rounded-lg bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
+                  className="w-full h-10 pl-9 pr-8 rounded-lg bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs sm:text-sm text-[#242925] dark:text-white outline-none focus:border-[#173D32]"
                 />
                 {searchQuery && (
                   <button
@@ -514,7 +514,7 @@ function SearchDiscoveryContent() {
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="lg:hidden h-9 px-3.5 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold flex items-center gap-2 cursor-pointer"
+                  className="lg:hidden h-9 px-3.5 rounded-xl bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs font-semibold flex items-center gap-2 cursor-pointer"
                 >
                   <SlidersHorizontal className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Filters</span>
@@ -540,7 +540,7 @@ function SearchDiscoveryContent() {
                       setSortBy(e.target.value);
                       updateUrlParams({ sort: e.target.value });
                     }}
-                    className="h-9 pl-8 pr-3 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#16A34A] cursor-pointer"
+                    className="h-9 pl-8 pr-3 rounded-xl bg-white dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-[#242925] dark:text-white outline-none focus:border-[#16A34A] cursor-pointer"
                   >
                     {SORT_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -590,9 +590,9 @@ function SearchDiscoveryContent() {
           {/* Desktop Filter Sidebar (3 cols) */}
           <aside
             aria-label="Search filters"
-            className="hidden lg:block lg:col-span-3 bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl p-5 sticky top-22"
+            className="hidden lg:block lg:col-span-3 bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 sticky top-22"
           >
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#E7E7DF] dark:border-[#262E2A]">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-zinc-200 dark:border-zinc-800">
               <h2 className="text-sm font-bold text-[#242925] dark:text-white flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-[#173D32]" />
                 <span>Filter Properties</span>
@@ -638,7 +638,7 @@ function SearchDiscoveryContent() {
 
                 {/* Pagination & "See more matches" */}
                 {totalPages > 1 && (
-                  <div className="pt-8 border-t border-[#E7E7DF] dark:border-[#262E2A] flex flex-col items-center gap-6">
+                  <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800 flex flex-col items-center gap-6">
                     {page < totalPages && (
                       <Button
                         variant="blue"
@@ -712,7 +712,7 @@ function SearchDiscoveryContent() {
             onClick={() => setMobileFiltersOpen(false)}
           />
           <div className="relative w-80 max-w-[90vw] bg-white dark:bg-[#141816] h-full flex flex-col z-10 shadow-2xl">
-            <div className="h-16 px-5 border-b border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-between">
+            <div className="h-16 px-5 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between">
               <span className="font-editorial text-lg text-[#242925] dark:text-white">
                 Filter Properties
               </span>
@@ -726,7 +726,7 @@ function SearchDiscoveryContent() {
               </button>
             </div>
             <div className="flex-1 p-5 overflow-y-auto">{renderFilterControls('mobile')}</div>
-            <div className="p-4 border-t border-[#E7E7DF] dark:border-[#262E2A] bg-[#F8F7F2] dark:bg-[#111513]">
+            <div className="p-4 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#111513]">
               <Button fullWidth onClick={() => setMobileFiltersOpen(false)}>
                 View {totalCount} {totalCount === 1 ? 'Result' : 'Results'}
               </Button>

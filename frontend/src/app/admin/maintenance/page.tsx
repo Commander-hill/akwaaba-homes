@@ -1341,7 +1341,7 @@ export default function AdminMaintenancePage() {
             </div>
 
             {/* Simulated Public Canvas matching /maintenance */}
-            <div className="p-5 bg-[#F8F7F2] dark:bg-[#0B0E14]">
+            <div className="p-5 bg-white dark:bg-[#0B0E14]">
               <div className="rounded-xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 shadow-2xs overflow-hidden">
                 {/* Simulated Top Status Strip */}
                 <div className="px-4 py-2.5 bg-zinc-50 dark:bg-zinc-900/70 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-[11px]">

@@ -58,9 +58,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       clay:
         'bg-[#C77B59] hover:bg-[#B26948] active:bg-[#9C5A3C] text-white border border-[#9C5A3C]/40 shadow-xs',
       outline:
-        'bg-white dark:bg-[#141816] hover:bg-[#F8F7F2] dark:hover:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border border-[#E7E7DF] dark:border-[#262E2A] shadow-2xs',
+        'bg-white dark:bg-[#141816] hover:bg-zinc-50 dark:hover:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border border-zinc-200 dark:border-zinc-800 shadow-2xs',
       ghost:
-        'bg-transparent hover:bg-[#F1EFE8] dark:hover:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border border-transparent',
+        'bg-transparent hover:bg-zinc-100 dark:hover:bg-[#1B211E] text-[#242925] dark:text-[#F2F2EE] border border-transparent',
       danger:
         'bg-[#FCEEEE] hover:bg-[#F9DCDC] text-[#9E2A2B] border border-[#F3C5C5] dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
     };
@@ -142,12 +142,12 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(
             className={clsx(
               'w-full h-11 bg-white dark:bg-[#141816] border rounded-lg text-sm text-[#242925] dark:text-[#F2F2EE] placeholder:text-[#6F756F]/70',
               'transition-colors outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A]',
-              'disabled:bg-[#F1EFE8] disabled:text-[#6F756F] disabled:cursor-not-allowed',
+              'disabled:bg-zinc-100 disabled:text-[#6F756F] disabled:cursor-not-allowed',
               leftIcon ? 'pl-10' : 'px-3.5',
               rightElement ? 'pr-10' : 'pr-3.5',
               error
                 ? 'border-[#9E2A2B] focus:border-[#9E2A2B] focus:ring-[#9E2A2B]'
-                : 'border-[#E7E7DF] dark:border-[#262E2A]',
+                : 'border-zinc-200 dark:border-zinc-800',
               className
             )}
             {...props}
@@ -203,10 +203,10 @@ export const SelectField = React.forwardRef<HTMLSelectElement, SelectFieldProps>
           className={clsx(
             'w-full h-11 px-3.5 bg-white dark:bg-[#141816] border rounded-lg text-sm text-[#242925] dark:text-[#F2F2EE]',
             'transition-colors outline-none focus:border-[#16A34A] focus:ring-1 focus:ring-[#16A34A] cursor-pointer',
-            'disabled:bg-[#F1EFE8] disabled:text-[#6F756F] disabled:cursor-not-allowed',
+            'disabled:bg-zinc-100 disabled:text-[#6F756F] disabled:cursor-not-allowed',
             error
               ? 'border-[#9E2A2B]'
-              : 'border-[#E7E7DF] dark:border-[#262E2A]',
+              : 'border-zinc-200 dark:border-zinc-800',
             className
           )}
           {...props}
@@ -358,7 +358,7 @@ export function StatusBadge({
     info:
       'bg-[#EEF4F8] text-[#1E4E68] border-[#C7DCE8] dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800/60',
     neutral:
-      'bg-[#F1EFE8] text-[#5E645E] border-[#E7E7DF] dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
+      'bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
   };
 
   const Icon = mapped.icon;
@@ -525,9 +525,9 @@ export function EmptyState({
   };
 
   return (
-    <div className="bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl p-8 sm:p-12 text-center max-w-xl mx-auto my-4">
+    <div className="bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 rounded-xl p-8 sm:p-12 text-center max-w-xl mx-auto my-4">
       {icon && (
-        <div className="w-12 h-12 rounded-xl bg-[#F8F7F2] dark:bg-[#1B211E] border border-[#E7E7DF] dark:border-[#262E2A] flex items-center justify-center mx-auto mb-4 text-[#173D32] dark:text-emerald-400">
+        <div className="w-12 h-12 rounded-xl bg-zinc-50 dark:bg-[#1B211E] border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mx-auto mb-4 text-[#173D32] dark:text-emerald-400">
           {renderIcon()}
         </div>
       )}
@@ -605,18 +605,18 @@ export function ErrorState({
 
 export function PropertyCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-[#141816] border border-[#E7E7DF] dark:border-[#262E2A] rounded-xl overflow-hidden animate-pulse">
-      <div className="aspect-[4/3] w-full bg-[#F1EFE8] dark:bg-[#1B211E]" />
+    <div className="bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden animate-pulse">
+      <div className="aspect-[4/3] w-full bg-zinc-200 dark:bg-zinc-800" />
       <div className="p-4 sm:p-5 space-y-3">
         <div className="flex justify-between gap-2">
-          <div className="h-3.5 w-24 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
-          <div className="h-3.5 w-16 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
+          <div className="h-3.5 w-24 bg-zinc-200 dark:bg-zinc-800 rounded" />
+          <div className="h-3.5 w-16 bg-zinc-200 dark:bg-zinc-800 rounded" />
         </div>
-        <div className="h-5 w-3/4 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
-        <div className="h-3.5 w-1/2 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
-        <div className="pt-3 border-t border-[#E7E7DF] dark:border-[#262E2A] flex justify-between items-center">
-          <div className="h-5 w-28 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
-          <div className="h-4 w-20 bg-[#F1EFE8] dark:bg-[#1B211E] rounded" />
+        <div className="h-5 w-3/4 bg-zinc-200 dark:bg-zinc-800 rounded" />
+        <div className="h-3.5 w-1/2 bg-zinc-200 dark:bg-zinc-800 rounded" />
+        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+          <div className="h-5 w-28 bg-zinc-200 dark:bg-zinc-800 rounded" />
+          <div className="h-4 w-20 bg-zinc-200 dark:bg-zinc-800 rounded" />
         </div>
       </div>
     </div>

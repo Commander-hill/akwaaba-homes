@@ -131,7 +131,7 @@ export default function WishlistButton({
       className={`p-2 rounded-full backdrop-blur-md transition-all duration-200 flex items-center justify-center gap-1.5 shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#173D32] cursor-pointer border ${
         isSaved
           ? 'bg-white/95 dark:bg-[#141816]/95 text-[#E11D48] border-[#FECDD3] dark:border-[#881337]/60 hover:bg-[#FFF1F2] dark:hover:bg-[#1F1216]'
-          : 'bg-white/90 dark:bg-[#141816]/90 text-[#242925] dark:text-[#F2F2EE] border-[#E7E7DF] dark:border-[#262E2A] hover:text-[#E11D48] dark:hover:text-[#FB7185]'
+          : 'bg-white/90 dark:bg-[#141816]/90 text-[#242925] dark:text-[#F2F2EE] border-zinc-200 dark:border-zinc-800 hover:text-[#E11D48] dark:hover:text-[#FB7185]'
       } ${showText ? 'px-3.5 py-2 rounded-xl text-xs font-semibold' : 'w-9 h-9'} ${
         isLoading ? 'opacity-60 cursor-wait' : ''
       } ${className}`}

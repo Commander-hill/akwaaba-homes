@@ -85,11 +85,11 @@ export default function ServicesPage() {
       : '/dashboard/tenant';
 
   return (
-    <div className="-mt-16 min-h-screen bg-[#FAF8F2] text-[#14221A] flex flex-col justify-between font-sans overflow-x-hidden">
+    <div className="-mt-16 min-h-screen bg-white text-[#14221A] flex flex-col justify-between font-sans overflow-x-hidden">
       {/* ══════════════════════════════════════════════════════════════════════
           1. INTEGRATED HERO SECTION WITH TOP OVERLAY NAVBAR
          ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full bg-[#FAF6EC] overflow-hidden">
+      <section className="relative w-full bg-white overflow-hidden">
         {/* Right-Side Full-Bleed Curved Wave + Apartment Building & Palm Trees */}
         <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-[62%] pointer-events-none select-none z-0">
           <Image
@@ -246,7 +246,7 @@ export default function ServicesPage() {
                 onClick={() =>
                   journeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
                 }
-                className="px-4 py-2.5 rounded-lg bg-[#FAF8F2] hover:bg-white border border-[#9BA69E] text-[#14221A] text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
+                className="px-4 py-2.5 rounded-lg bg-white hover:bg-white border border-zinc-200 text-[#14221A] text-xs font-bold inline-flex items-center gap-2 transition cursor-pointer"
               >
                 <span className="w-4 h-4 rounded-full border border-[#14221A] inline-flex items-center justify-center">
                   <Play className="w-2 h-2 fill-[#14221A] ml-0.5" />
@@ -261,9 +261,9 @@ export default function ServicesPage() {
       {/* ══════════════════════════════════════════════════════════════════════
           2. 4-PILLAR TRUST STRIP
          ══════════════════════════════════════════════════════════════════════ */}
-      <div className="w-full bg-[#FBFBF7] border-y border-[#E6E4DA]">
+      <div className="w-full bg-white border-y border-zinc-200">
         <div className="max-w-[1380px] mx-auto px-4 sm:px-8 lg:px-12 py-3">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-[#DFDDD2] text-xs font-bold text-[#1E2E24]">
+          <div className="grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-zinc-200 text-xs font-bold text-[#1E2E24]">
             <div className="flex items-center justify-center gap-2 py-1.5 lg:py-0.5">
               <ShieldCheck className="w-4 h-4 text-[#16A34A] shrink-0" />
               <span>Verified hosts</span>
@@ -477,12 +477,12 @@ export default function ServicesPage() {
         </div>
 
         {/* ── Section 4: The AkwaabaHomes standard Bar ── */}
-        <div className="bg-[#FBFBF7] border border-[#E2E0D5] rounded-2xl px-4 sm:px-6 py-3 shadow-2xs space-y-2">
+        <div className="bg-white border border-zinc-200 rounded-2xl px-4 sm:px-6 py-3 shadow-2xs space-y-2">
           <h3 className="text-xs sm:text-[13px] font-extrabold text-[#14221A]">
             The AkwaabaHomes standard
           </h3>
 
-          <div className="pt-1.5 border-t border-[#EAE8DF] grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:divide-x divide-[#DFDDD2] text-[11px] font-semibold text-[#233128]">
+          <div className="pt-1.5 border-t border-zinc-200 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 lg:divide-x divide-zinc-200 text-[11px] font-semibold text-[#233128]">
             {[
               'Clear viewing terms',
               'Transparent pricing',
@@ -531,7 +531,7 @@ export default function ServicesPage() {
 
             <Link
               href="/properties"
-              className="px-5 py-2 rounded-lg bg-[#FAF8F2] hover:bg-white text-[#14221A] text-xs font-extrabold inline-flex items-center gap-1.5 shadow-xs transition shrink-0"
+              className="px-5 py-2 rounded-lg bg-white hover:bg-white text-[#14221A] text-xs font-extrabold inline-flex items-center gap-1.5 shadow-xs transition shrink-0"
             >
               <span>Browse homes</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -540,7 +540,7 @@ export default function ServicesPage() {
         </div>
 
         {/* Footer Bar */}
-        <footer className="w-full bg-[#FAF8F2] border-t border-[#E6E4DA] py-3.5 px-4 sm:px-8 lg:px-12">
+        <footer className="w-full bg-white border-t border-zinc-200 py-3.5 px-4 sm:px-8 lg:px-12">
           <div className="max-w-[1380px] mx-auto flex flex-col lg:flex-row items-center justify-between gap-3 text-[11px] text-[#3B4B41]">
             {/* Left Brand */}
             <Link href="/" className="flex items-center gap-2">

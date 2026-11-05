@@ -48,7 +48,7 @@ export default function AboutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F3] dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden">
       {/* ══════════════════════════════════════════════════════════════════════
           1. HERO SECTION: A better way to find a place to call home
          ══════════════════════════════════════════════════════════════════════ */}
@@ -133,8 +133,8 @@ export default function AboutPage() {
                 className="object-cover object-center"
               />
 
-              {/* Soft gradient edge fade into the warm background */}
-              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#FAF8F3]/60 dark:from-[#0C100D]/60 to-transparent pointer-events-none" />
+              {/* Soft gradient edge fade into the clean white background */}
+              <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white/60 dark:from-[#0C100D]/60 to-transparent pointer-events-none" />
 
               {/* Floating Pill: Built for renters and property owners across Ghana */}
               <div className="absolute bottom-4 right-4 z-20 inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xs border border-zinc-200/80 dark:border-zinc-700 shadow-md">

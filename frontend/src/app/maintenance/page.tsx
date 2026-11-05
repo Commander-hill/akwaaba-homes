@@ -104,7 +104,7 @@ export default function PublicMaintenancePage() {
     'Our engineering team is currently conducting scheduled database performance enhancements and infrastructure upgrades. All resident records and tenancy agreements remain strictly safeguarded.';
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#F8F7F2] dark:bg-[#0B0E14] text-zinc-950 dark:text-zinc-100 antialiased p-6 sm:p-10">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-white dark:bg-[#0B0E14] text-zinc-950 dark:text-zinc-100 antialiased p-6 sm:p-10">
       
       {/* Top Header: Brand & Operational Controls */}
       <header className="w-full max-w-4xl mx-auto flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800/80 pb-5">

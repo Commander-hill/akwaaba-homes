@@ -238,7 +238,7 @@ export default function AgreementPage() {
           THE PHYSICAL LEGAL INSTRUMENT (AUTHENTIC GHANAIAN CONVEYANCING PAPER)
          ══════════════════════════════════════════════════════════════════════════ */}
       <article
-        className="bg-[#FCFBF9] text-[#1A1A18] rounded-xs px-7 py-10 sm:px-16 sm:py-16 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-[#DED8CE] relative print:shadow-none print:border-none print:p-0 overflow-hidden"
+        className="bg-white text-[#1A1A18] rounded-xs px-7 py-10 sm:px-16 sm:py-16 shadow-[0_10px_35px_rgba(15,23,42,0.08)] border border-zinc-200 relative print:shadow-none print:border-none print:p-0 overflow-hidden"
         style={{
           fontFamily: 'Georgia, "Times New Roman", Times, serif',
         }}
@@ -347,7 +347,7 @@ export default function AgreementPage() {
             <table className="w-full border-collapse border border-[#A8A29E] text-[13px] text-left">
               <tbody>
                 <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
+                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] w-2/5 border-r border-[#A8A29E]">
                     1. Description &amp; Location of Premises
                   </th>
                   <td className="py-2.5 px-3.5 text-[#1C1917]">
@@ -355,13 +355,13 @@ export default function AgreementPage() {
                   </td>
                 </tr>
                 <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
                     2. Unit / Accommodation Category
                   </th>
                   <td className="py-2.5 px-3.5 text-[#1C1917]">{unitDescription}</td>
                 </tr>
                 <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
                     3. Term of Tenancy
                   </th>
                   <td className="py-2.5 px-3.5 text-[#1C1917]">
@@ -370,7 +370,7 @@ export default function AgreementPage() {
                   </td>
                 </tr>
                 <tr className="border-b border-[#A8A29E]">
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
                     4. Agreed Rent for the Term
                   </th>
                   <td className="py-2.5 px-3.5 text-[#1C1917]">
@@ -379,7 +379,7 @@ export default function AgreementPage() {
                   </td>
                 </tr>
                 <tr>
-                  <th className="py-2.5 px-3.5 bg-[#F5F2EB] font-bold text-[#292524] border-r border-[#A8A29E]">
+                  <th className="py-2.5 px-3.5 bg-zinc-50 font-bold text-[#292524] border-r border-[#A8A29E]">
                     5. Permitted Use
                   </th>
                   <td className="py-2.5 px-3.5 text-[#1C1917]">Private Residential Occupation Only</td>
