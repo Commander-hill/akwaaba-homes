@@ -4,11 +4,14 @@ const express_1 = require("express");
 const subscription_controller_1 = require("../controllers/subscription.controller");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
-// Public webhook route (Protected via Paystack HMAC SHA512 signature check)
+// Public webhook routes (Protected via HMAC signature checks)
 router.post('/webhook', subscription_controller_1.handlePaystackWebhook);
+router.post('/webhook/paystack', subscription_controller_1.handlePaystackWebhook);
+router.post('/webhook/hubtel', subscription_controller_1.handleHubtelWebhook);
 // Only landlords can access protected subscription routes
 router.use(auth_middleware_1.authenticate);
 router.use((0, auth_middleware_1.authorizeRole)(['LANDLORD']));
+router.get('/fee', subscription_controller_1.getSubscriptionFee);
 router.get('/status', subscription_controller_1.getSubscriptionStatus);
 router.get('/overview', subscription_controller_1.getLandlordSubscriptionsOverview);
 router.post('/initialize', subscription_controller_1.initializePayment);

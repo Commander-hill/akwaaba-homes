@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.getAllNotices = exports.getActiveNotices = void 0;
+exports.reorderNotices = exports.deleteNotice = exports.updateNotice = exports.createNotice = exports.getAllNotices = exports.getActiveNotices = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
 const socket_1 = require("../socket");
@@ -123,4 +123,28 @@ const deleteNotice = async (req, res) => {
     }
 };
 exports.deleteNotice = deleteNotice;
+const reorderNotices = async (req, res) => {
+    try {
+        const { items } = req.body; // Array<{ id: string; orderIndex: number }>
+        if (!Array.isArray(items)) {
+            res.status(400).json({ message: 'Invalid items array' });
+            return;
+        }
+        await prisma_1.default.$transaction(items.map((item) => prisma_1.default.notice.update({
+            where: { id: item.id },
+            data: { orderIndex: item.orderIndex }
+        })));
+        try {
+            (0, socket_1.getIO)().emit('notice_updated', { reordered: true });
+            cache_1.default.flushAll();
+        }
+        catch (e) { }
+        res.status(200).json({ message: 'Notices reordered successfully' });
+    }
+    catch (error) {
+        console.error('Error reordering notices:', error);
+        res.status(500).json({ message: 'Failed to reorder notices' });
+    }
+};
+exports.reorderNotices = reorderNotices;
 //# sourceMappingURL=notice.controller.js.map

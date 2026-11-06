@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emitToAll = exports.emitToUser = exports.getIO = exports.initializeSocket = void 0;
+exports.emitToAdmins = exports.emitToAll = exports.emitToUser = exports.getIO = exports.initializeSocket = void 0;
 const socket_io_1 = require("socket.io");
 const prisma_1 = __importDefault(require("./utils/prisma"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -211,4 +211,16 @@ const emitToAll = (event, payload) => {
     }
 };
 exports.emitToAll = emitToAll;
+// Safe helper to emit an event strictly to the admin room
+const emitToAdmins = (event, payload) => {
+    try {
+        if (io) {
+            io.to('admin_room').emit(event, payload);
+        }
+    }
+    catch (err) {
+        console.error(`Failed to emit socket event ${event} to admin_room:`, err);
+    }
+};
+exports.emitToAdmins = emitToAdmins;
 //# sourceMappingURL=socket.js.map

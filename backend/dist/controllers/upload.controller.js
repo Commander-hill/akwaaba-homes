@@ -5,6 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.uploadMedia = exports.serveSecureDocument = exports.uploadPropertyImages = exports.uploadDocument = exports.uploadVideo = exports.uploadAvatar = exports.isValidFileType = void 0;
 const axios_1 = __importDefault(require("axios"));
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
+const crypto_1 = __importDefault(require("crypto"));
 const sharp_1 = __importDefault(require("sharp"));
 const cloudinary_1 = require("cloudinary");
 const streamifier_1 = __importDefault(require("streamifier"));
@@ -71,7 +74,7 @@ const uploadAvatar = async (req, res) => {
             return;
         }
         if (!(0, exports.isValidFileType)(req.file.buffer, 'image')) {
-            res.status(400).json({ error: 'Invalid or corrupted image format. Magic bytes header check failed.' });
+            res.status(400).json({ error: 'Invalid or corrupted image format. Only JPG, PNG, and WebP are allowed.' });
             return;
         }
         const image = (0, sharp_1.default)(req.file.buffer);
@@ -80,23 +83,30 @@ const uploadAvatar = async (req, res) => {
             res.status(400).json({ error: 'Invalid image format' });
             return;
         }
-        if (metadata.width < 200 || metadata.height < 200) {
-            res.status(400).json({ error: 'Image too small. Minimum size is 200x200 pixels.' });
+        if (metadata.width < 100 || metadata.height < 100) {
+            res.status(400).json({ error: 'Image too small. Minimum size is 100x100 pixels.' });
             return;
         }
-        const ratio = metadata.width / metadata.height;
-        const isSquare = ratio >= 0.95 && ratio <= 1.05;
-        const isPassport = ratio >= 0.72 && ratio <= 0.78;
-        if (!isSquare && !isPassport) {
-            res.status(400).json({ error: 'Picture must be a square (1:1) or standard passport size (3:4 aspect ratio).' });
-            return;
-        }
+        // Gracefully center-crop & resize any portrait or landscape photo to clean 800x800 square webp
         const processedBuffer = await image
-            .resize(800, 800, { fit: 'inside' })
+            .resize(800, 800, { fit: 'cover', position: 'center' })
             .webp({ quality: 80 })
             .toBuffer();
-        const fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
-        res.status(200).json({ url: fileUrl });
+        let fileUrl;
+        try {
+            fileUrl = await streamUpload(processedBuffer, 'avatars', 'image');
+        }
+        catch (cloudErr) {
+            console.warn('Cloudinary upload failed or unconfigured, saving locally to public/uploads/avatars:', cloudErr);
+            const uploadDir = path_1.default.resolve(process.cwd(), 'public/uploads/avatars');
+            if (!fs_1.default.existsSync(uploadDir)) {
+                fs_1.default.mkdirSync(uploadDir, { recursive: true });
+            }
+            const filename = `avatar-${Date.now()}-${crypto_1.default.randomBytes(6).toString('hex')}.webp`;
+            fs_1.default.writeFileSync(path_1.default.join(uploadDir, filename), processedBuffer);
+            fileUrl = `/uploads/avatars/${filename}`;
+        }
+        res.status(200).json({ url: fileUrl, avatarUrl: fileUrl });
     }
     catch (error) {
         console.error('Error uploading avatar:', error);
@@ -226,13 +236,24 @@ const serveSecureDocument = async (req, res) => {
         // Stream directly through backend so client never sees or stores raw Cloudinary bucket URL
         const documentResponse = await axios_1.default.get(rawUrl, {
             responseType: 'stream',
-            timeout: 15000
+            timeout: 20000
         });
         res.setHeader('Content-Type', documentResponse.headers['content-type'] || 'application/octet-stream');
+        if (documentResponse.headers['content-length']) {
+            res.setHeader('Content-Length', documentResponse.headers['content-length']);
+        }
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
         res.setHeader('X-Content-Type-Options', 'nosniff');
+        documentResponse.data.on('error', (streamErr) => {
+            console.error('Error during document streaming:', streamErr);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Failed to stream document' });
+            }
+        });
         documentResponse.data.pipe(res);
     }
     catch (error) {

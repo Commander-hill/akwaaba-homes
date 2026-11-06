@@ -7,6 +7,7 @@ exports.exportGRATaxReport = exports.getLandlordFinancialLedger = exports.handle
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const pdf_service_1 = require("../utils/pdf.service");
+const auditLogger_1 = require("../utils/auditLogger");
 const getLandlordCashflows = async (req, res) => {
     try {
         const landlordId = req.user.id;
@@ -78,19 +79,92 @@ const getTenantTransactions = async (req, res) => {
     }
 };
 exports.getTenantTransactions = getTenantTransactions;
+const resolveTransactionOrBookingReceipt = async (id) => {
+    let transaction = await prisma_1.default.transaction.findFirst({
+        where: {
+            OR: [
+                { id },
+                { bookingId: id },
+                { reference: id }
+            ]
+        },
+        include: {
+            tenant: true,
+            property: {
+                include: {
+                    landlord: {
+                        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+                    }
+                }
+            },
+            room: true,
+            booking: {
+                include: {
+                    room: true,
+                    roomUnit: true,
+                    bed: true
+                }
+            }
+        }
+    });
+    if (transaction) {
+        return {
+            ...transaction,
+            paymentReference: transaction.reference,
+            paymentMethod: 'Paystack (MoMo / Card)',
+            room: transaction.room || transaction.booking?.room || null
+        };
+    }
+    // Fallback: look up directly by Booking ID if no Transaction row exists yet
+    const booking = await prisma_1.default.booking.findUnique({
+        where: { id },
+        include: {
+            tenant: true,
+            property: {
+                include: {
+                    landlord: {
+                        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+                    }
+                }
+            },
+            room: true,
+            roomUnit: true,
+            bed: true,
+            transaction: true
+        }
+    });
+    if (!booking)
+        return null;
+    const baseRent = booking.room?.price ?? booking.property?.price ?? 0;
+    const caution = booking.cautionDepositAmount ?? booking.property?.cautionDeposit ?? 0;
+    const totalAmount = booking.transaction?.amount ?? (baseRent + caution);
+    const isPaid = ['COMPLETED', 'ACTIVE', 'CHECKED_IN', 'CHECKED_OUT'].includes(booking.status);
+    const syntheticRef = booking.transaction?.reference || (booking.checkInCode ? `PAY-${booking.checkInCode}` : `INV-${booking.id.slice(0, 8).toUpperCase()}`);
+    return {
+        id: booking.transaction?.id || booking.id,
+        bookingId: booking.id,
+        tenantId: booking.tenantId,
+        landlordId: booking.property.landlordId,
+        propertyId: booking.propertyId,
+        roomId: booking.roomId,
+        amount: totalAmount,
+        reference: syntheticRef,
+        paymentReference: syntheticRef,
+        paymentMethod: isPaid ? 'Paystack (MoMo / Card)' : 'Pending Settlement',
+        status: booking.transaction?.status || (isPaid ? 'SUCCESS' : 'PENDING'),
+        createdAt: booking.transaction?.createdAt || booking.updatedAt || booking.createdAt,
+        tenant: booking.tenant,
+        property: booking.property,
+        room: booking.room,
+        booking
+    };
+};
 const getTransactionById = async (req, res) => {
     try {
         const userId = req.user.id;
         const role = req.user.role;
         const id = req.params.id;
-        const transaction = await prisma_1.default.transaction.findUnique({
-            where: { id },
-            include: {
-                tenant: true, // We need all details for the invoice (campus, programmeOfStudy, etc.)
-                property: true,
-                booking: true
-            }
-        });
+        const transaction = await resolveTransactionOrBookingReceipt(id);
         if (!transaction) {
             res.status(404).json({ message: 'Transaction not found' });
             return;
@@ -99,7 +173,9 @@ const getTransactionById = async (req, res) => {
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
             where: { propertyId: transaction.propertyId, userId }
         });
-        if (role !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(role);
+        const isOwnerLandlord = transaction.landlordId === userId || transaction.property?.landlordId === userId;
+        if (!isAdmin && transaction.tenantId !== userId && !isOwnerLandlord && !isStaff) {
             res.status(403).json({ message: 'Forbidden' });
             return;
         }
@@ -115,14 +191,7 @@ const pdf_service_2 = require("../utils/pdf.service");
 const downloadReceiptPDF = async (req, res) => {
     try {
         const id = req.params.id;
-        const transaction = await prisma_1.default.transaction.findUnique({
-            where: { id },
-            include: {
-                tenant: true,
-                property: true,
-                room: true
-            }
-        });
+        const transaction = await resolveTransactionOrBookingReceipt(id);
         if (!transaction) {
             res.status(404).json({ message: 'Transaction record not found' });
             return;
@@ -132,8 +201,10 @@ const downloadReceiptPDF = async (req, res) => {
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
             where: { propertyId: transaction.propertyId, userId }
         });
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
+        const isOwnerLandlord = transaction.landlordId === userId || transaction.property?.landlordId === userId;
         // Check authorization: must be tenant who paid, property landlord, authorized property staff, or admin
-        if (userRole !== 'ADMIN' && transaction.tenantId !== userId && transaction.landlordId !== userId && !isStaff) {
+        if (!isAdmin && transaction.tenantId !== userId && !isOwnerLandlord && !isStaff) {
             res.status(403).json({ message: 'Forbidden: You do not have access to this receipt' });
             return;
         }
@@ -141,20 +212,54 @@ const downloadReceiptPDF = async (req, res) => {
         const commissionPercent = sysConfig.platformCommissionPercent || 5.0;
         const platformFee = (transaction.amount * commissionPercent) / 100;
         const netAmount = transaction.amount - platformFee;
+        const createdAtIso = transaction.createdAt instanceof Date
+            ? transaction.createdAt.toISOString()
+            : new Date(transaction.createdAt).toISOString();
+        const landlord = transaction.property?.landlord;
+        const booking = transaction.booking;
+        const room = transaction.room || booking?.room;
+        const unitParts = [
+            room?.blockName ? `Block ${room.blockName}` : null,
+            booking?.roomUnit?.unitNumber ? `Unit ${booking.roomUnit.unitNumber}` : null,
+            booking?.bed?.bedNumber ? `Bed ${booking.bed.bedNumber}` : null
+        ].filter(Boolean);
+        const startStr = booking?.startDate
+            ? new Date(booking.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+            : null;
+        const endStr = booking?.endDate
+            ? new Date(booking.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+            : null;
+        const cautionAmount = Number(booking?.cautionDepositAmount ?? transaction.property?.cautionDeposit ?? 0);
+        const totalPaid = Number(transaction.amount || 0);
+        const baseRentAmount = cautionAmount > 0 && totalPaid > cautionAmount ? totalPaid - cautionAmount : totalPaid;
         const pdfBuffer = await (0, pdf_service_2.generateReceiptPDF)({
             transactionId: transaction.id,
+            bookingId: booking?.id || transaction.bookingId,
             reference: transaction.reference,
             studentName: `${transaction.tenant.firstName} ${transaction.tenant.lastName}`,
             studentEmail: transaction.tenant.email,
-            studentPhone: transaction.tenant.phoneNumber,
+            studentPhone: transaction.tenant.phoneNumber || 'N/A',
+            studentId: transaction.tenant.studentId || null,
+            studentCampus: transaction.tenant.campus || null,
+            landlordName: landlord ? `${landlord.firstName} ${landlord.lastName}` : null,
+            landlordPhone: landlord?.phoneNumber || null,
+            landlordEmail: landlord?.email || null,
             propertyTitle: transaction.property.title,
-            roomType: transaction.room?.roomType || 'Hostel Room',
-            grossAmount: transaction.amount,
+            propertyLocation: transaction.property.location || null,
+            roomType: room?.roomType || transaction.property?.type || 'Residential Unit',
+            unitAllocation: unitParts.length > 0 ? unitParts.join(' • ') : 'Standard Allocation',
+            startDate: startStr,
+            endDate: endStr,
+            pricePeriod: transaction.property?.pricePeriod || null,
+            baseRentAmount,
+            cautionDepositAmount: totalPaid > baseRentAmount ? cautionAmount : 0,
+            grossAmount: totalPaid,
             platformFee,
             netAmount,
-            paymentMethod: 'Paystack MoMo / Card',
+            paymentMethod: transaction.paymentMethod || 'Paystack (MoMo / Card)',
             paymentStatus: transaction.status,
-            paidAt: transaction.createdAt.toISOString()
+            checkInCode: booking?.checkInCode || null,
+            paidAt: createdAtIso
         });
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=Receipt_${transaction.reference}.pdf`);
@@ -313,6 +418,33 @@ const handlePaystackWebhook = async (req, res) => {
                 res.status(200).json({ message: 'Booking already completed' });
                 return;
             }
+            // ── SECURITY DEFENSE: REPLAY & DUPLICATE TRANSACTION PREVENTION ──
+            if (reference) {
+                const existingTx = await prisma_1.default.transaction.findFirst({ where: { reference } });
+                if (existingTx) {
+                    console.log(`[Paystack Webhook] Duplicate transaction reference ignored: ${reference}`);
+                    res.status(200).json({ message: 'Transaction reference already recorded' });
+                    return;
+                }
+            }
+            // ── SECURITY DEFENSE: CURRENCY VALIDATION ──
+            if (data?.currency && data.currency.toUpperCase() !== 'GHS') {
+                console.error(`[Paystack Webhook] Currency mismatch for booking ${booking.id}: expected GHS, received ${data.currency}`);
+                res.status(400).json({ message: 'Invalid transaction currency. Only GHS accepted.' });
+                return;
+            }
+            // ── SECURITY DEFENSE: PRICE TAMPERING & AMOUNT MISMATCH GUARD ──
+            const expectedPrice = booking.room ? booking.room.price : 0;
+            const paidAmountGhs = data?.amount ? Number(data.amount) / 100 : expectedPrice;
+            if (expectedPrice > 0 && paidAmountGhs < expectedPrice) {
+                console.error(`[Paystack Webhook] Price tampering blocked for booking ${booking.id}: expected GHS ${expectedPrice}, received GHS ${paidAmountGhs}`);
+                try {
+                    await (0, auditLogger_1.logAudit)(booking.tenantId, 'PAYMENT_PRICE_TAMPERING_BLOCKED', 'Booking', booking.id, { expectedPrice, paidAmountGhs, reference }, null, req.ip || 'PAYSTACK_WEBHOOK');
+                }
+                catch (e) { /* non-blocking */ }
+                res.status(400).json({ message: 'Payment rejected: amount paid does not cover room price.' });
+                return;
+            }
             // Prepare atomic transaction operations
             const operations = [
                 prisma_1.default.booking.update({
@@ -326,7 +458,7 @@ const handlePaystackWebhook = async (req, res) => {
                         landlordId: booking.property.landlordId,
                         propertyId: booking.propertyId,
                         roomId: booking.roomId,
-                        amount: data.amount ? data.amount / 100 : booking.room.price,
+                        amount: paidAmountGhs,
                         reference: reference || `WEBHOOK_${Date.now()}`,
                         status: 'SUCCESS'
                     }

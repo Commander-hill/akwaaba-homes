@@ -7,13 +7,13 @@ exports.verifySignedDocumentUrl = exports.generateSignedDocumentUrl = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 /**
  * Generates an expiring signed URL token for sensitive document access (Ghana Cards, etc.)
- * Expiration defaults to 15 minutes.
+ * Expiration defaults to 60 minutes for administrative review sessions.
  */
-const generateSignedDocumentUrl = (rawUrl, expiresMinutes = 15) => {
+const generateSignedDocumentUrl = (rawUrl, expiresMinutes = 60) => {
     if (!rawUrl)
         return null;
     // If already signed proxy URL, return as-is
-    if (rawUrl.includes('/api/upload/secure-document') || rawUrl.includes('/upload/secure-document')) {
+    if (rawUrl.includes('/secure-document')) {
         return rawUrl;
     }
     const expires = Date.now() + expiresMinutes * 60 * 1000;
@@ -25,7 +25,7 @@ const generateSignedDocumentUrl = (rawUrl, expiresMinutes = 15) => {
         .createHmac('sha256', secret)
         .update(`${rawUrl}:${expires}`)
         .digest('hex');
-    const proxyUrl = `/api/upload/secure-document?url=${encodeURIComponent(rawUrl)}&expires=${expires}&signature=${signature}`;
+    const proxyUrl = `/api/v1/upload/secure-document?url=${encodeURIComponent(rawUrl)}&expires=${expires}&signature=${signature}`;
     return proxyUrl;
 };
 exports.generateSignedDocumentUrl = generateSignedDocumentUrl;
@@ -48,7 +48,9 @@ const verifySignedDocumentUrl = (url, expiresStr, signatureStr) => {
         .createHmac('sha256', secret)
         .update(`${url}:${expires}`)
         .digest('hex');
-    if (signatureStr !== expectedSignature) {
+    const expectedBuf = Buffer.from(expectedSignature, 'utf8');
+    const actualBuf = Buffer.from(signatureStr, 'utf8');
+    if (expectedBuf.length !== actualBuf.length || !crypto_1.default.timingSafeEqual(expectedBuf, actualBuf)) {
         return { valid: false, error: 'Invalid document signature' };
     }
     return { valid: true };

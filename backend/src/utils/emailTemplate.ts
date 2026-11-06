@@ -80,12 +80,22 @@ export const emailMetaTableHtml = (rows: EmailMetaRow[]): string => `
   </table>
 `;
 
+const getBaseUrl = (): string => {
+  const envUrl = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
+  if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+    return envUrl.replace(/\/$/, '');
+  }
+  return 'https://akwaabahomes.com';
+};
+
 export interface RenderEmailOptions {
   title: string;
   preheader: string;
   categoryTag?: string;
   bodyHtml: string;
   footerNote?: string;
+  watermarkUrl?: string;
+  logoUrl?: string;
 }
 
 export const renderInstitutionalEmail = ({
@@ -94,8 +104,13 @@ export const renderInstitutionalEmail = ({
   categoryTag = 'NOTICE',
   bodyHtml,
   footerNote = 'This is an official transactional message sent by AkwaabaHomes for your account records.',
+  watermarkUrl: customWatermarkUrl,
+  logoUrl: customLogoUrl,
 }: RenderEmailOptions): string => {
   const currentYear = new Date().getFullYear();
+  const baseUrl = getBaseUrl();
+  const logoUrl = customLogoUrl || `${baseUrl}/logo-light.png`;
+  const watermarkUrl = customWatermarkUrl || `${baseUrl}/logo-watermark.png`;
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -120,12 +135,15 @@ export const renderInstitutionalEmail = ({
         <!-- Main Email Container -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#FFFFFF;border-radius:10px;overflow:hidden;border:1px solid #E4E4E7;">
           
-          <!-- Editorial Header -->
+          <!-- Editorial Header with Akwaaba Logo -->
           <tr>
-            <td style="padding:24px 28px 20px;border-bottom:1px solid #E4E4E7;background-color:#FFFFFF;">
+            <td style="padding:22px 28px 18px;border-bottom:1px solid #E4E4E7;background-color:#FFFFFF;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td>
+                  <td style="width:40px;vertical-align:middle;padding-right:12px;">
+                    <img src="${logoUrl}" alt="AkwaabaHomes" width="36" height="36" style="display:block;width:36px;height:36px;border-radius:6px;object-fit:contain;" />
+                  </td>
+                  <td style="vertical-align:middle;">
                     <div style="font-size:18px;font-weight:800;color:#18181B;letter-spacing:-0.4px;line-height:1.2;">
                       Akwaaba<span style="color:#0F5132;">Homes</span>
                     </div>
@@ -143,19 +161,37 @@ export const renderInstitutionalEmail = ({
             </td>
           </tr>
 
-          <!-- Editorial Body -->
+          <!-- Editorial Body with Akwaaba Logo Watermark -->
           <tr>
-            <td style="padding:32px 28px;background-color:#FFFFFF;">
-              ${bodyHtml}
+            <td background="${watermarkUrl}" style="padding:32px 28px;background-color:#FFFFFF;background-image:url('${watermarkUrl}');background-repeat:no-repeat;background-position:center center;background-size:280px 280px;position:relative;">
+              <!--[if gte mso 9]>
+              <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:504px;">
+                <v:fill type="frame" src="${watermarkUrl}" color="#FFFFFF" />
+                <v:textbox style="mso-fit-shape-to-text:true" inset="0,0,0,0">
+              <![endif]-->
+              <div style="position:relative;z-index:2;">
+                ${bodyHtml}
+              </div>
+              <!--[if gte mso 9]>
+                </v:textbox>
+              </v:rect>
+              <![endif]-->
             </td>
           </tr>
 
-          <!-- Professional Footer -->
+          <!-- Professional Footer with Authenticity Badge -->
           <tr>
             <td style="background-color:#FAFAFA;border-top:1px solid #E4E4E7;padding:22px 28px;text-align:center;">
-              <div style="font-size:11px;font-weight:600;color:#52525B;margin-bottom:6px;">
-                AkwaabaHomes Ghana
-              </div>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px auto;">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:6px;">
+                    <img src="${logoUrl}" alt="AkwaabaHomes" width="16" height="16" style="display:block;width:16px;height:16px;opacity:0.75;" />
+                  </td>
+                  <td style="vertical-align:middle;font-size:11px;font-weight:700;color:#52525B;letter-spacing:0.3px;text-transform:uppercase;">
+                    Official AkwaabaHomes Communication
+                  </td>
+                </tr>
+              </table>
               <p style="margin:0 0 10px;color:#71717A;font-size:11px;line-height:1.5;">
                 ${footerNote}
               </p>

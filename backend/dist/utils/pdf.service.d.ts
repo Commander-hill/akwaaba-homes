@@ -1,5 +1,5 @@
 /**
- * Generate official signed Tenancy Agreement PDF
+ * Generate official signed Tenancy Agreement PDF (Human-Crafted Ghanaian Conveyancing Standard)
  */
 export declare function generateTenancyAgreementPDF(data: {
     agreementId: string;
@@ -29,24 +29,40 @@ export declare function generateTenancyAgreementPDF(data: {
 }): Promise<Buffer>;
 /**
  * Generate official Payment Receipt / Invoice PDF
+ * Exact Ghana Transaction Receipt Standard with Akwaaba Homes Watermark & Scannable QR
  */
 export declare function generateReceiptPDF(data: {
     transactionId: string;
+    bookingId?: string;
     reference: string;
     studentName: string;
     studentEmail: string;
     studentPhone?: string | null;
+    studentId?: string | null;
+    studentCampus?: string | null;
+    landlordName?: string | null;
+    landlordPhone?: string | null;
+    landlordEmail?: string | null;
     propertyTitle: string;
+    propertyLocation?: string | null;
     roomType: string;
+    unitAllocation?: string | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    pricePeriod?: string | null;
+    baseRentAmount?: number;
+    cautionDepositAmount?: number;
     grossAmount: number;
     platformFee: number;
     netAmount: number;
     paymentMethod: string;
     paymentStatus: string;
+    checkInCode?: string | null;
     paidAt: string;
 }): Promise<Buffer>;
 /**
  * Generate official GRA Tax Statement PDF for Landlords
+ * Crafted in classical Ghanaian Statutory Tax Return Schedule format (Income Tax Act, 2015 Act 896)
  */
 export declare function generateGRATaxReportPDF(data: {
     landlordName: string;

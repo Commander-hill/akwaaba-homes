@@ -88,5 +88,14 @@ export declare const notifyLandlordVerification: (opts: {
     isVerified: boolean;
     notes?: string;
 }) => Promise<void>;
+export declare const notifyContactInquiry: (opts: {
+    referenceId: string;
+    name: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+    ipAddress?: string;
+}) => Promise<void>;
 export {};
 //# sourceMappingURL=notification.service.d.ts.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
+exports.kycRateLimiter = exports.chatRateLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 // ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 exports.loginRateLimiter = (0, express_rate_limit_1.default)({
@@ -50,14 +50,15 @@ exports.adminRateLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
     statusCode: 429,
 });
-// ─── Upload routes: prevent bandwidth abuse ───────────────────────────────────
+// ─── Upload routes: prevent bandwidth abuse (POST/PUT uploads only) ─────────
 exports.uploadRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 10 * 60 * 1000, // 10 minutes
-    max: 20,
+    max: 100,
     message: { error: 'Too many upload requests. Please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
     statusCode: 429,
+    skip: (req) => req.method === 'GET' || req.method === 'OPTIONS',
 });
 // ─── General API limiter: all other routes (Safe DDoS Protection, No artificial lag) ─────
 exports.apiRateLimiter = (0, express_rate_limit_1.default)({
@@ -68,5 +69,23 @@ exports.apiRateLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
     statusCode: 429,
     skip: (req) => req.path.startsWith('/api/health') || req.method === 'OPTIONS',
+});
+// ─── Chat Message Rate Limiter (Prevent automated spamming & flood attacks) ──
+exports.chatRateLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 1 * 60 * 1000, // 1 minute window
+    max: 30, // 30 messages per minute
+    message: { message: 'Message rate limit exceeded. Please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    statusCode: 429,
+});
+// ─── KYC Document Submission Rate Limiter ────────────────────────────────────
+exports.kycRateLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: 10,
+    message: { message: 'Too many identity verification submission attempts. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    statusCode: 429,
 });
 //# sourceMappingURL=rateLimiter.middleware.js.map

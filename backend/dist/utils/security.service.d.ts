@@ -1,6 +1,6 @@
 /**
  * Generates an expiring signed URL token for sensitive document access (Ghana Cards, etc.)
- * Expiration defaults to 15 minutes.
+ * Expiration defaults to 60 minutes for administrative review sessions.
  */
 export declare const generateSignedDocumentUrl: (rawUrl: string | null, expiresMinutes?: number) => string | null;
 /**

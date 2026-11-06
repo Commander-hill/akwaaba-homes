@@ -29,7 +29,7 @@ const scanFraudRisk = async (req, res) => {
         // Compute campus average prices
         const areaPrices = {};
         properties.forEach(p => {
-            const area = p.location.split(',')[0].trim();
+            const area = (p.location || 'Accra').split(',')[0].trim();
             if (!areaPrices[area])
                 areaPrices[area] = [];
             areaPrices[area].push(p.price);
@@ -72,7 +72,7 @@ const scanFraudRisk = async (req, res) => {
             let riskScore = 0;
             const flags = [];
             // 1. Price Anomaly Check
-            const area = p.location.split(',')[0].trim();
+            const area = (p.location || 'Accra').split(',')[0].trim();
             const avgPrice = areaAverages[area] || 1500;
             if (p.price < avgPrice * 0.35) {
                 riskScore += 35;
@@ -90,11 +90,12 @@ const scanFraudRisk = async (req, res) => {
                 flags.push('Duplicate Property Photos (Shared with another Landlord listing)');
             }
             // 3. Landlord Identity Signal
+            const isLandlordVerified = p.landlord.ghanaCardStatus === 'VERIFIED' || p.landlord.isVerifiedLandlord;
             if (p.landlord.ghanaCardStatus === 'REJECTED') {
                 riskScore += 30;
                 flags.push('Landlord Ghana Card ID Verification Failed / Rejected');
             }
-            else if (p.landlord.ghanaCardStatus !== 'VERIFIED' && !p.landlord.isVerifiedLandlord) {
+            else if (!isLandlordVerified) {
                 riskScore += 15;
                 flags.push('Unverified Landlord (Ghana Card Pending)');
             }
@@ -102,6 +103,14 @@ const scanFraudRisk = async (req, res) => {
             if (images.length === 0) {
                 riskScore += 15;
                 flags.push('No Property Photos Provided');
+            }
+            // 5. Existing Moderation Status
+            if (p.approvalStatus === 'REJECTED' || !p.isAvailable) {
+                flags.push('Listing Currently Suspended / Inactive');
+            }
+            else if (p.approvalStatus === 'APPROVED') {
+                // De-escalate false positives if admin has already manually certified this listing
+                riskScore = Math.max(0, riskScore - 25);
             }
             const riskLevel = riskScore >= 50 ? 'HIGH' : riskScore >= 25 ? 'MEDIUM' : 'LOW';
             return {
@@ -115,6 +124,8 @@ const scanFraudRisk = async (req, res) => {
                 price: p.price,
                 riskScore: Math.min(100, riskScore),
                 riskLevel,
+                approvalStatus: p.approvalStatus,
+                isAvailable: p.isAvailable,
                 flags,
                 createdAt: p.createdAt
             };
@@ -190,7 +201,7 @@ const resolveFraudAction = async (req, res) => {
                     type: 'SECURITY',
                     title: '⛔ Account Suspended for Safety Violations',
                     message: `Your landlord account and property listings have been suspended following an anti-fraud security review.`,
-                    link: '/support'
+                    link: '/contact'
                 }
             }).catch(() => null);
             (0, socket_1.getIO)().to(property.landlordId).emit('user_updated', { isSuspended: true });

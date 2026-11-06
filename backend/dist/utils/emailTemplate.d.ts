@@ -1,7 +1,7 @@
 /**
- * Akwaaba Homes Institutional Email Templating Engine
- * Designed to Ghanaian Forest Emerald (#0F5132) & Heritage Gold (#D97706) aesthetic.
- * Fully responsive, cross-client safe (Gmail, Apple Mail, Outlook, Mobile).
+ * AkwaabaHomes Production Email Templating Engine
+ * Designed to a modern, restrained Ghanaian PropTech aesthetic.
+ * Clean typography, warm ivory canvas, cross-client safe (Gmail, Apple Mail, Outlook, Mobile).
  */
 export interface EmailBadge {
     label: string;
@@ -29,6 +29,8 @@ export interface RenderEmailOptions {
     categoryTag?: string;
     bodyHtml: string;
     footerNote?: string;
+    watermarkUrl?: string;
+    logoUrl?: string;
 }
-export declare const renderInstitutionalEmail: ({ title, preheader, categoryTag, bodyHtml, footerNote, }: RenderEmailOptions) => string;
+export declare const renderInstitutionalEmail: ({ title, preheader, categoryTag, bodyHtml, footerNote, watermarkUrl: customWatermarkUrl, logoUrl: customLogoUrl, }: RenderEmailOptions) => string;
 //# sourceMappingURL=emailTemplate.d.ts.map

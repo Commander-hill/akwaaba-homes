@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyReviews = exports.submitAppeal = exports.flagReview = exports.getPropertyReviews = exports.createReview = void 0;
+exports.getLandlordReviews = exports.getMyReviews = exports.submitAppeal = exports.flagReview = exports.getPropertyReviews = exports.createReview = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
@@ -113,8 +113,13 @@ const getPropertyReviews = async (req, res) => {
         }));
         // Compute aggregate stats
         const allRatings = reviews.map(r => r.rating);
-        const avgRating = allRatings.length > 0 ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length) : null;
-        res.status(200).json({ reviews: mappedReviews, avgRating, totalReviews: reviews.length });
+        const avgRating = allRatings.length > 0 ? Number((allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(2)) : null;
+        const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        for (const r of reviews) {
+            const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+            ratingDistribution[star] = (ratingDistribution[star] || 0) + 1;
+        }
+        res.status(200).json({ reviews: mappedReviews, avgRating, totalReviews: reviews.length, ratingDistribution });
     }
     catch (error) {
         console.error('Error fetching property reviews:', error);
@@ -122,26 +127,22 @@ const getPropertyReviews = async (req, res) => {
     }
 };
 exports.getPropertyReviews = getPropertyReviews;
-// Tenant, landlord, or admin flags a review for admin moderation
+// Authenticated tenant, landlord, or admin flags a review for admin moderation
 const flagReview = async (req, res) => {
     try {
         const userId = req.user?.id;
-        const userRole = req.user?.role;
         const { id } = req.params;
         const { reason } = req.body;
+        if (!userId) {
+            res.status(401).json({ message: 'Authentication required to report a review' });
+            return;
+        }
         const review = await prisma_1.default.review.findUnique({
             where: { id },
             include: { booking: { include: { property: true } } }
         });
         if (!review) {
             res.status(404).json({ message: 'Review not found' });
-            return;
-        }
-        const isAuthor = review.authorId === userId;
-        const isLandlord = review.booking?.property?.landlordId === userId;
-        const isAdmin = userRole === 'ADMIN';
-        if (!isAuthor && !isLandlord && !isAdmin) {
-            res.status(403).json({ message: 'Forbidden: You do not have permission to flag this review' });
             return;
         }
         await prisma_1.default.review.update({
@@ -236,4 +237,32 @@ const getMyReviews = async (req, res) => {
     }
 };
 exports.getMyReviews = getMyReviews;
+// Get landlord's property reviews from tenants
+const getLandlordReviews = async (req, res) => {
+    try {
+        const landlordId = req.user.id;
+        const reviews = await prisma_1.default.review.findMany({
+            where: {
+                booking: {
+                    property: { landlordId }
+                }
+            },
+            include: {
+                booking: {
+                    include: {
+                        property: { select: { id: true, title: true, location: true } },
+                        tenant: { select: { id: true, firstName: true, lastName: true, email: true, avatarUrl: true } }
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.status(200).json({ reviews });
+    }
+    catch (error) {
+        console.error('Error fetching landlord reviews:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getLandlordReviews = getLandlordReviews;
 //# sourceMappingURL=review.controller.js.map

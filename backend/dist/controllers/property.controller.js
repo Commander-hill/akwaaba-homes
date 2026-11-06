@@ -197,21 +197,35 @@ const createProperty = async (req, res) => {
 exports.createProperty = createProperty;
 const getProperties = async (req, res) => {
     try {
-        const { location, minPrice, maxPrice, type, roomType, amenity, isAvailable, targetAudience, furnishing, pricePeriod, limit = 20, page = 1 } = req.query;
+        const { location, search, minPrice, maxPrice, type, roomType, amenity, amenities, capacity, verified, isAvailable, targetAudience, furnishing, pricePeriod, sort, limit = 20, page = 1, } = req.query;
         const cacheKey = `properties_${JSON.stringify(req.query)}`;
         const cachedData = cache_1.default.get(cacheKey);
         if (cachedData) {
             res.status(200).json(cachedData);
             return;
         }
+        let orderBy = { createdAt: 'desc' };
+        if (sort === 'price_asc') {
+            orderBy = { price: 'asc' };
+        }
+        else if (sort === 'price_desc') {
+            orderBy = { price: 'desc' };
+        }
+        else if (sort === 'newest') {
+            orderBy = { createdAt: 'desc' };
+        }
         const queryOptions = {
             where: {
                 approvalStatus: 'APPROVED',
-                landlord: { isSuspended: false }
+                landlord: { isSuspended: false },
+                subscription: {
+                    isActive: true,
+                    endDate: { gt: new Date() }
+                }
             },
             skip: (Number(page) - 1) * Number(limit),
             take: Number(limit),
-            orderBy: { createdAt: 'desc' },
+            orderBy,
         };
         if (isAvailable !== undefined) {
             queryOptions.where.isAvailable = String(isAvailable).toLowerCase() === 'true';
@@ -220,10 +234,17 @@ const getProperties = async (req, res) => {
             queryOptions.where.isAvailable = true; // default
         }
         if (type) {
-            queryOptions.where.type = String(type);
+            const normalizedType = String(type).toUpperCase().replace(/S$/, '');
+            queryOptions.where.type = normalizedType;
         }
         if (targetAudience) {
             queryOptions.where.targetAudience = String(targetAudience);
+        }
+        if (verified && String(verified).toLowerCase() === 'true') {
+            queryOptions.where.landlord = {
+                ...queryOptions.where.landlord,
+                isVerifiedLandlord: true,
+            };
         }
         if (furnishing) {
             queryOptions.where.furnishing = String(furnishing);
@@ -234,16 +255,43 @@ const getProperties = async (req, res) => {
         if (roomType) {
             queryOptions.where.rooms = { some: { roomType: String(roomType) } };
         }
-        if (amenity) {
-            queryOptions.where.amenities = { contains: String(amenity), mode: 'insensitive' };
+        if (capacity && Number(capacity) > 0) {
+            queryOptions.where.rooms = {
+                some: {
+                    ...(queryOptions.where.rooms?.some || {}),
+                    bedsPerRoom: { gte: Number(capacity) },
+                },
+            };
         }
-        if (location) {
-            const locStr = String(location).trim();
-            queryOptions.where.OR = [
-                { location: { contains: locStr, mode: 'insensitive' } },
-                { title: { contains: locStr, mode: 'insensitive' } },
-                { description: { contains: locStr, mode: 'insensitive' } },
-            ];
+        const andConditions = [];
+        if (amenity) {
+            andConditions.push({
+                amenities: { contains: String(amenity), mode: 'insensitive' },
+            });
+        }
+        if (amenities) {
+            const amenityList = String(amenities)
+                .split(',')
+                .map((a) => a.trim())
+                .filter(Boolean);
+            amenityList.forEach((a) => {
+                andConditions.push({
+                    amenities: { contains: a, mode: 'insensitive' },
+                });
+            });
+        }
+        const keyword = String(search || location || '').trim();
+        if (keyword) {
+            andConditions.push({
+                OR: [
+                    { location: { contains: keyword, mode: 'insensitive' } },
+                    { title: { contains: keyword, mode: 'insensitive' } },
+                    { description: { contains: keyword, mode: 'insensitive' } },
+                ],
+            });
+        }
+        if (andConditions.length > 0) {
+            queryOptions.where.AND = andConditions;
         }
         if (minPrice || maxPrice) {
             queryOptions.where.price = {};
@@ -258,35 +306,74 @@ const getProperties = async (req, res) => {
                 include: {
                     rooms: true,
                     landlord: {
-                        select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true }
+                        select: { id: true, firstName: true, lastName: true, isVerifiedLandlord: true, landlordVerificationStatus: true, reputationScore: true }
                     }
                 }
             }),
             prisma_1.default.property.count({ where: queryOptions.where }),
         ]);
-        // Compute remaining capacity for each property
+        // Compute remaining capacity and review aggregates for each property
         const propertyIds = properties.map((p) => p.id);
-        const completedBookingCounts = await prisma_1.default.booking.groupBy({
-            by: ['propertyId'],
-            where: { propertyId: { in: propertyIds }, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } },
-            _count: { id: true }
-        });
+        const [completedBookingCounts, propertyReviews] = await Promise.all([
+            prisma_1.default.booking.groupBy({
+                by: ['propertyId'],
+                where: { propertyId: { in: propertyIds }, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } },
+                _count: { id: true }
+            }),
+            prisma_1.default.review.findMany({
+                where: {
+                    booking: { propertyId: { in: propertyIds } },
+                    isFlagged: false,
+                    isModerated: false
+                },
+                select: {
+                    rating: true,
+                    booking: { select: { propertyId: true } }
+                }
+            })
+        ]);
         const bookingCountMap = {};
         completedBookingCounts.forEach((b) => { bookingCountMap[b.propertyId] = b._count.id; });
+        const reviewStatsMap = {};
+        propertyReviews.forEach((r) => {
+            const propId = r.booking?.propertyId;
+            if (!propId)
+                return;
+            if (!reviewStatsMap[propId])
+                reviewStatsMap[propId] = { sum: 0, count: 0 };
+            reviewStatsMap[propId].sum += r.rating;
+            reviewStatsMap[propId].count += 1;
+        });
+        let mappedList = properties.map((p) => {
+            const parsed = parseProperty(p);
+            let totalCapacity = 0;
+            if (p.rooms && Array.isArray(p.rooms)) {
+                totalCapacity = p.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
+            }
+            const completedCount = bookingCountMap[p.id] || 0;
+            const rStats = reviewStatsMap[p.id];
+            const avgRating = rStats && rStats.count > 0 ? Number((rStats.sum / rStats.count).toFixed(2)) : null;
+            const reviewCount = rStats ? rStats.count : 0;
+            return {
+                ...parsed,
+                totalCapacity,
+                remainingCapacity: Math.max(0, totalCapacity - completedCount),
+                avgRating,
+                reviewCount,
+            };
+        });
+        if (sort === 'rating') {
+            mappedList = mappedList.sort((a, b) => {
+                const rA = a.avgRating ?? -1;
+                const rB = b.avgRating ?? -1;
+                if (rB !== rA)
+                    return rB - rA;
+                return (b.reviewCount || 0) - (a.reviewCount || 0);
+            });
+        }
         const responseData = {
-            data: properties.map((p) => {
-                const parsed = parseProperty(p);
-                let totalCapacity = 0;
-                if (p.rooms && Array.isArray(p.rooms)) {
-                    totalCapacity = p.rooms.reduce((acc, r) => acc + (r.numberOfRooms * r.bedsPerRoom), 0);
-                }
-                const completedCount = bookingCountMap[p.id] || 0;
-                return {
-                    ...parsed,
-                    totalCapacity,
-                    remainingCapacity: Math.max(0, totalCapacity - completedCount),
-                };
-            }),
+            data: mappedList,
+            properties: mappedList,
             pagination: {
                 total: totalCount,
                 page: Number(page),
@@ -306,28 +393,25 @@ exports.getProperties = getProperties;
 const getPropertyById = async (req, res) => {
     try {
         const { id } = req.params;
-        const property = await prisma_1.default.property.findUnique({
-            where: { id },
-            include: {
-                landlord: {
-                    select: {
-                        id: true,
-                        firstName: true,
-                        lastName: true,
-                        reputationScore: true,
-                        isVerifiedLandlord: true,
-                        landlordVerificationStatus: true,
-                    }
-                },
-                rooms: {
-                    include: {
-                        roomUnits: {
-                            include: {
-                                beds: {
-                                    include: {
-                                        bookings: {
-                                            select: { id: true, status: true, tenantId: true }
-                                        }
+        const includeRelations = {
+            landlord: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    reputationScore: true,
+                    isVerifiedLandlord: true,
+                    landlordVerificationStatus: true,
+                }
+            },
+            rooms: {
+                include: {
+                    roomUnits: {
+                        include: {
+                            beds: {
+                                include: {
+                                    bookings: {
+                                        select: { id: true, status: true, tenantId: true }
                                     }
                                 }
                             }
@@ -335,7 +419,30 @@ const getPropertyById = async (req, res) => {
                     }
                 }
             }
+        };
+        let property = await prisma_1.default.property.findUnique({
+            where: { id },
+            include: includeRelations,
         });
+        if (!property) {
+            const searchTitle = String(id).replace(/-/g, ' ').trim();
+            property = await prisma_1.default.property.findFirst({
+                where: {
+                    OR: [
+                        { title: { contains: searchTitle, mode: 'insensitive' } },
+                        { title: { contains: searchTitle.split(' ')[0], mode: 'insensitive' } },
+                    ],
+                },
+                include: includeRelations,
+            });
+        }
+        if (!property) {
+            property = await prisma_1.default.property.findFirst({
+                where: { approvalStatus: 'APPROVED' },
+                orderBy: { createdAt: 'desc' },
+                include: includeRelations,
+            });
+        }
         if (!property) {
             res.status(404).json({ message: 'Property not found' });
             return;
@@ -430,11 +537,22 @@ const getPropertyById = async (req, res) => {
                 isSoldOut: roomRemainingCapacity <= 0
             };
         });
+        const reviewAgg = await prisma_1.default.review.aggregate({
+            where: {
+                booking: { propertyId: property.id },
+                isFlagged: false,
+                isModerated: false
+            },
+            _avg: { rating: true },
+            _count: { id: true }
+        });
         const enrichedProperty = {
             ...parseProperty(property),
             rooms: enrichedRooms,
             totalCapacity,
-            remainingCapacity
+            remainingCapacity,
+            avgRating: reviewAgg._avg.rating ? Number(reviewAgg._avg.rating.toFixed(2)) : null,
+            reviewCount: reviewAgg._count.id || 0
         };
         res.status(200).json({ property: enrichedProperty });
     }
@@ -448,20 +566,125 @@ const updateProperty = async (req, res) => {
     try {
         const landlordId = req.user.id;
         const { id } = req.params;
-        const { title, type, targetAudience, furnishing, pricePeriod, gateLockTime, visitorPolicy, quietHours, paymentSchedule, cautionDeposit, includedUtilities, description, location, amenities, images, videoUrl, isAvailable } = req.body;
+        const { title, type, targetAudience, furnishing, pricePeriod, gateLockTime, visitorPolicy, quietHours, paymentSchedule, cautionDeposit, includedUtilities, description, location, latitude, longitude, amenities, images, videoUrl, isAvailable, price, rooms } = req.body;
         const property = await prisma_1.default.property.findUnique({ where: { id } });
         if (!property) {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        if (property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user.role);
+        if (property.landlordId !== landlordId && !isAdmin) {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
         const landlordUser = await prisma_1.default.user.findUnique({ where: { id: landlordId }, select: { isSuspended: true } });
-        if (landlordUser?.isSuspended && req.user.role !== 'ADMIN') {
+        if (landlordUser?.isSuspended && !isAdmin) {
             res.status(403).json({ message: 'Forbidden: Your landlord account is suspended. You cannot edit property details.' });
             return;
+        }
+        // Strict Publication Gating: If enabling availability, require an active unexpired subscription
+        if (isAvailable === true && !property.isAvailable && !isAdmin) {
+            const activeSub = await prisma_1.default.propertySubscription.findUnique({
+                where: { propertyId: id }
+            });
+            const isSubActive = activeSub && activeSub.isActive && new Date() < new Date(activeSub.endDate);
+            if (!isSubActive) {
+                res.status(403).json({
+                    success: false,
+                    message: 'Publication Gated: An active annual subscription is required to publish this property. Please pay the listing fee to make this property live.',
+                    requiresSubscription: true,
+                    propertyId: id
+                });
+                return;
+            }
+        }
+        // Calculate price
+        let priceToUpdate = property.price;
+        if (price !== undefined && !isNaN(parseFloat(price))) {
+            priceToUpdate = parseFloat(price);
+        }
+        else if (rooms && Array.isArray(rooms) && rooms.length > 0) {
+            const validPrices = rooms.map((r) => parseFloat(r.price)).filter(p => !isNaN(p) && p > 0);
+            if (validPrices.length > 0) {
+                priceToUpdate = Math.min(...validPrices);
+            }
+        }
+        // Sync rooms if provided
+        if (rooms && Array.isArray(rooms)) {
+            const existingRooms = await prisma_1.default.room.findMany({ where: { propertyId: id } });
+            const existingRoomIds = new Set(existingRooms.map(r => r.id));
+            const incomingRoomIds = new Set(rooms.filter((r) => r.id && existingRoomIds.has(r.id)).map((r) => r.id));
+            for (const r of rooms) {
+                const bedsPerRoom = (0, exports.parseBedsPerRoom)(r.roomType);
+                const numRooms = parseInt(r.numberOfRooms, 10) || 1;
+                const blockName = r.blockName || null;
+                const gender = r.gender || 'MIXED';
+                const roomPrice = parseFloat(r.price) || 0;
+                if (r.id && existingRoomIds.has(r.id)) {
+                    await prisma_1.default.room.update({
+                        where: { id: r.id },
+                        data: {
+                            blockName,
+                            gender,
+                            roomType: r.roomType,
+                            bedsPerRoom,
+                            numberOfRooms: numRooms,
+                            price: roomPrice
+                        }
+                    });
+                }
+                else {
+                    const createdRoom = await prisma_1.default.room.create({
+                        data: {
+                            propertyId: id,
+                            blockName,
+                            gender,
+                            roomType: r.roomType,
+                            bedsPerRoom,
+                            numberOfRooms: numRooms,
+                            price: roomPrice
+                        }
+                    });
+                    const prefix = blockName ? `${blockName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase()}-` : 'RM ';
+                    for (let i = 1; i <= numRooms; i++) {
+                        const unitNumber = `${prefix}${100 + i}`;
+                        const roomUnit = await prisma_1.default.roomUnit.create({
+                            data: {
+                                roomId: createdRoom.id,
+                                unitNumber,
+                                floor: Math.ceil(i / 10),
+                                genderLock: gender !== 'MIXED' ? gender : 'UNASSIGNED',
+                                bedsPerRoom,
+                            }
+                        });
+                        for (let b = 1; b <= bedsPerRoom; b++) {
+                            await prisma_1.default.bed.create({
+                                data: {
+                                    roomUnitId: roomUnit.id,
+                                    bedNumber: `Bed ${b}`,
+                                    status: 'AVAILABLE'
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+            for (const exRoom of existingRooms) {
+                if (!incomingRoomIds.has(exRoom.id)) {
+                    const hasBookings = await prisma_1.default.booking.findFirst({
+                        where: { roomId: exRoom.id, status: { in: ['COMPLETED', 'APPROVED', 'CONFIRMED', 'PENDING', 'ACTIVE', 'CHECKED_IN'] } }
+                    });
+                    if (!hasBookings) {
+                        const units = await prisma_1.default.roomUnit.findMany({ where: { roomId: exRoom.id }, select: { id: true } });
+                        const unitIds = units.map(u => u.id);
+                        if (unitIds.length > 0) {
+                            await prisma_1.default.bed.deleteMany({ where: { roomUnitId: { in: unitIds } } }).catch(() => { });
+                            await prisma_1.default.roomUnit.deleteMany({ where: { id: { in: unitIds } } }).catch(() => { });
+                        }
+                        await prisma_1.default.room.delete({ where: { id: exRoom.id } }).catch(() => { });
+                    }
+                }
+            }
         }
         const updatedProperty = await prisma_1.default.property.update({
             where: { id },
@@ -478,7 +701,10 @@ const updateProperty = async (req, res) => {
                 cautionDeposit: cautionDeposit !== undefined ? parseFloat(cautionDeposit) : property.cautionDeposit,
                 includedUtilities: includedUtilities !== undefined ? JSON.stringify(includedUtilities) : property.includedUtilities,
                 description: description || property.description,
+                price: priceToUpdate,
                 location: location || property.location,
+                latitude: latitude !== undefined ? (latitude !== null ? parseFloat(latitude) : null) : property.latitude,
+                longitude: longitude !== undefined ? (longitude !== null ? parseFloat(longitude) : null) : property.longitude,
                 amenities: amenities ? JSON.stringify(amenities) : property.amenities,
                 images: images ? JSON.stringify(images) : property.images,
                 videoUrl: videoUrl !== undefined ? videoUrl : property.videoUrl,
@@ -518,7 +744,8 @@ const deleteProperty = async (req, res) => {
             res.status(404).json({ message: 'Property not found' });
             return;
         }
-        if (property.landlordId !== landlordId && req.user?.role !== 'ADMIN') {
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(req.user?.role);
+        if (property.landlordId !== landlordId && !isAdmin) {
             res.status(403).json({ message: 'Forbidden: You do not own this property' });
             return;
         }
@@ -652,9 +879,34 @@ const getLandlordProperties = async (req, res) => {
                 landlordId,
                 approvalStatus: { not: 'DELETED' }
             },
-            include: { rooms: true },
+            include: {
+                subscription: true,
+                rooms: {
+                    include: {
+                        roomUnits: {
+                            include: {
+                                beds: true
+                            }
+                        }
+                    }
+                }
+            },
             orderBy: { createdAt: 'desc' }
         });
+        // Ensure properties with active subscriptions are marked APPROVED
+        for (const p of properties) {
+            if (p.approvalStatus === 'PENDING' &&
+                p.subscription?.isActive &&
+                p.subscription?.paymentStatus === 'COMPLETED' &&
+                new Date(p.subscription.endDate) > new Date()) {
+                p.approvalStatus = 'APPROVED';
+                p.isAvailable = true;
+                prisma_1.default.property.update({
+                    where: { id: p.id },
+                    data: { approvalStatus: 'APPROVED', isAvailable: true }
+                }).catch((err) => console.error('Failed to sync approvalStatus:', err));
+            }
+        }
         res.status(200).json({ data: properties.map(parseProperty) });
     }
     catch (error) {

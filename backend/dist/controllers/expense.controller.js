@@ -51,7 +51,7 @@ const createExpense = async (req, res) => {
                     type: 'ANNOUNCEMENT',
                     title: '🧾 Operating Expense Logged by Staff',
                     message: `Staff logged an expense: "${title}" (GHS ${parseFloat(amount).toFixed(2)}) for ${property.title}.`,
-                    link: '/dashboard/earnings'
+                    link: '/dashboard/landlord/withdraw'
                 }
             }).catch(() => { });
         }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 export declare const downloadAgreementPDF: (req: Request, res: Response) => Promise<void>;
 export declare const createBooking: (req: Request, res: Response) => Promise<void>;
 export declare const getTenantBookings: (req: Request, res: Response) => Promise<void>;
+export declare const getBookingById: (req: Request, res: Response) => Promise<void>;
 export declare const getLandlordBookings: (req: Request, res: Response) => Promise<void>;
 export declare const updateBookingStatus: (req: Request, res: Response) => Promise<void>;
 export declare const payBooking: (req: Request, res: Response) => Promise<void>;

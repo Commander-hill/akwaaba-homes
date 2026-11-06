@@ -120,6 +120,10 @@ const getPropertyNotices = async (req, res) => {
             where: {
                 propertyId,
                 isActive: true,
+                NOT: [
+                    { title: { startsWith: '__' } },
+                    { category: 'ASSET_INVENTORY' }
+                ],
                 OR: [
                     { expiresAt: null },
                     { expiresAt: { gt: new Date() } }
@@ -154,6 +158,10 @@ const getLandlordNotices = async (req, res) => {
         const staffPropertyIds = staffAssignments.map(s => s.propertyId);
         const notices = await prisma_1.default.compoundNotice.findMany({
             where: {
+                NOT: [
+                    { title: { startsWith: '__' } },
+                    { category: 'ASSET_INVENTORY' }
+                ],
                 OR: [
                     { landlordId },
                     ...(staffPropertyIds.length > 0 ? [{ propertyId: { in: staffPropertyIds } }] : [])

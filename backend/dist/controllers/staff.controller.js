@@ -72,15 +72,15 @@ const assignStaff = async (req, res) => {
             data: {
                 userId: staffUser.id,
                 type: 'ANNOUNCEMENT',
-                title: '🛡️ Property Staff Assignment',
+                title: 'Property Staff Assignment',
                 message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}". You now have on-site management privileges.`,
-                link: '/dashboard/staff'
+                link: '/dashboard/caretaker'
             }
         }).catch(() => null);
         try {
             const io = (0, socket_1.getIO)();
             io.to(staffUser.id).emit('notification', {
-                title: '🛡️ Property Staff Assignment',
+                title: 'Property Staff Assignment',
                 message: `You have been appointed as ${role || 'CARETAKER'} for "${property.title}".`,
                 type: 'staff'
             });
@@ -157,15 +157,15 @@ const removeStaff = async (req, res) => {
             data: {
                 userId: assignment.userId,
                 type: 'ANNOUNCEMENT',
-                title: '🛡️ Staff Assignment Concluded',
+                title: 'Staff Assignment Concluded',
                 message: 'Your property staff assignment has concluded.',
-                link: '/dashboard'
+                link: '/dashboard/caretaker'
             }
         }).catch(() => null);
         try {
             const io = (0, socket_1.getIO)();
             io.to(assignment.userId).emit('notification', {
-                title: '🛡️ Staff Assignment Concluded',
+                title: 'Staff Assignment Concluded',
                 message: 'Your staff assignment has been removed by the property owner.',
                 type: 'staff'
             });
@@ -207,7 +207,11 @@ const getMyStaffAssignments = async (req, res) => {
                 property: {
                     include: {
                         landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
-                        rooms: true,
+                        rooms: {
+                            include: {
+                                roomUnits: true,
+                            },
+                        },
                         tickets: {
                             include: {
                                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true } },
@@ -226,6 +230,12 @@ const getMyStaffAssignments = async (req, res) => {
                                 tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } }
                             },
                             orderBy: { createdAt: 'desc' }
+                        },
+                        BreachReport: {
+                            include: {
+                                tenant: { select: { id: true, firstName: true, lastName: true, phoneNumber: true, email: true } },
+                            },
+                            orderBy: { createdAt: 'desc' },
                         },
                         bookings: {
                             where: { status: { in: ['CONFIRMED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN', 'APPROVED', 'PAID'] } },
@@ -246,6 +256,8 @@ const getMyStaffAssignments = async (req, res) => {
                                     }
                                 },
                                 room: true,
+                                roomUnit: true,
+                                bed: true,
                                 inspections: true,
                             },
                             orderBy: { createdAt: 'desc' },

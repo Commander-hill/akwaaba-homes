@@ -6,6 +6,8 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const router = (0, express_1.Router)();
 // Public: view approved reviews for a property
 router.get('/property/:propertyId', review_controller_1.getPropertyReviews);
+// Protected: landlord views reviews for their properties
+router.get('/landlord', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['LANDLORD', 'ADMIN']), review_controller_1.getLandlordReviews);
 // Protected: tenant creates a review (eligibility enforced in controller)
 router.post('/', auth_middleware_1.authenticate, (0, auth_middleware_1.authorizeRole)(['TENANT']), review_controller_1.createReview);
 // Protected: tenant views their own reviews + appeal/flag status

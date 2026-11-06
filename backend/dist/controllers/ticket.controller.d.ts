@@ -9,4 +9,6 @@ export declare const updateTicketStatus: (req: Request, res: Response) => Promis
  */
 export declare const checkAndEscalateTickets: (req: Request, res: Response) => Promise<void>;
 export declare const getAdminEscalatedTickets: (req: Request, res: Response) => Promise<void>;
+export declare const getTicketById: (req: Request, res: Response) => Promise<void>;
+export declare const addTicketNote: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=ticket.controller.d.ts.map

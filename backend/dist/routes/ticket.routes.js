@@ -9,6 +9,9 @@ router.use(auth_middleware_1.authenticate);
 // Tenant routes
 router.post('/', ticket_controller_1.createTicket);
 router.get('/me', ticket_controller_1.getTenantTickets);
+// Specific ticket details & notes
+router.get('/:id', ticket_controller_1.getTicketById);
+router.post('/:id/notes', ticket_controller_1.addTicketNote);
 // Landlord & Multi-stage routes
 router.get('/landlord', ticket_controller_1.getLandlordTickets);
 router.patch('/:id/status', ticket_controller_1.updateTicketStatus);

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBroadcastHistory = exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllTransactions = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.getAllUsers = exports.getPlatformAnalytics = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.getBroadcastHistory = exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.getMaintenanceHistory = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllTransactions = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.toggleAdminStatus = exports.createAdministrator = exports.getAdministrators = exports.searchEntities = exports.getReviewById = exports.getDisputeById = exports.getTransactionById = exports.getSubscriptionById = exports.getBookingById = exports.getPropertyById = exports.getUserById = exports.getAllUsers = exports.getPlatformAnalytics = exports.getActionRequiredQueue = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
@@ -15,13 +15,156 @@ const config_service_1 = require("../utils/config.service");
 const socket_1 = require("../socket");
 const getAuditLogs = async (req, res) => {
     try {
-        const logs = await prisma_1.default.auditLog.findMany({
-            include: {
-                user: { select: { firstName: true, lastName: true, email: true, role: true } }
+        const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+        const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit || '50'), 10) || 50));
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+        const category = typeof req.query.category === 'string' ? req.query.category.toUpperCase().trim() : 'ALL';
+        const entity = typeof req.query.entity === 'string' ? req.query.entity.trim() : 'ALL';
+        const actorId = typeof req.query.actorId === 'string' ? req.query.actorId.trim() : '';
+        const startDate = typeof req.query.startDate === 'string' ? req.query.startDate.trim() : '';
+        const endDate = typeof req.query.endDate === 'string' ? req.query.endDate.trim() : '';
+        const where = {};
+        if (actorId && actorId !== 'ALL') {
+            where.userId = actorId;
+        }
+        if (entity && entity !== 'ALL') {
+            where.entity = entity;
+        }
+        if (startDate || endDate) {
+            where.createdAt = {};
+            if (startDate) {
+                where.createdAt.gte = new Date(startDate);
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                if (endDate.length === 10) {
+                    end.setHours(23, 59, 59, 999);
+                }
+                where.createdAt.lte = end;
+            }
+        }
+        // Category mapping
+        if (category && category !== 'ALL') {
+            if (category === 'VERIFICATIONS' || category === 'APPROVALS') {
+                where.OR = [
+                    { action: { contains: 'APPROVE', mode: 'insensitive' } },
+                    { action: { contains: 'VERIF', mode: 'insensitive' } },
+                    { action: { contains: 'ACTIVATE', mode: 'insensitive' } },
+                    { action: { contains: 'ACCEPT', mode: 'insensitive' } }
+                ];
+            }
+            else if (category === 'SANCTIONS') {
+                where.OR = [
+                    { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+                    { action: { contains: 'REJECT', mode: 'insensitive' } },
+                    { action: { contains: 'DELETE', mode: 'insensitive' } },
+                    { action: { contains: 'LOCK', mode: 'insensitive' } },
+                    { action: { contains: 'PENAL', mode: 'insensitive' } },
+                    { action: { contains: 'STRIKE', mode: 'insensitive' } },
+                    { action: { contains: 'BAN', mode: 'insensitive' } }
+                ];
+            }
+            else if (category === 'FINANCIAL') {
+                where.OR = [
+                    { action: { contains: 'PAY', mode: 'insensitive' } },
+                    { action: { contains: 'REFUND', mode: 'insensitive' } },
+                    { action: { contains: 'DISBURSE', mode: 'insensitive' } },
+                    { action: { contains: 'TRANSACTION', mode: 'insensitive' } },
+                    { action: { contains: 'RENT', mode: 'insensitive' } }
+                ];
+            }
+            else if (category === 'CONFIG') {
+                where.OR = [
+                    { action: { contains: 'CONFIG', mode: 'insensitive' } },
+                    { action: { contains: 'BROADCAST', mode: 'insensitive' } },
+                    { action: { contains: 'NOTICE', mode: 'insensitive' } },
+                    { action: { contains: 'SETTING', mode: 'insensitive' } },
+                    { action: { contains: 'FEE', mode: 'insensitive' } }
+                ];
+            }
+            else if (category === 'UPDATES') {
+                where.OR = [
+                    { action: { contains: 'UPDATE', mode: 'insensitive' } },
+                    { action: { contains: 'EDIT', mode: 'insensitive' } },
+                    { action: { contains: 'CHANGE', mode: 'insensitive' } },
+                    { action: { contains: 'ASSIGN', mode: 'insensitive' } }
+                ];
+            }
+        }
+        // Search query
+        if (search) {
+            const searchCondition = [
+                { action: { contains: search, mode: 'insensitive' } },
+                { entity: { contains: search, mode: 'insensitive' } },
+                { entityId: { contains: search, mode: 'insensitive' } },
+                { ipAddress: { contains: search, mode: 'insensitive' } },
+                { user: { firstName: { contains: search, mode: 'insensitive' } } },
+                { user: { lastName: { contains: search, mode: 'insensitive' } } },
+                { user: { email: { contains: search, mode: 'insensitive' } } }
+            ];
+            if (where.OR) {
+                where.AND = [{ OR: where.OR }, { OR: searchCondition }];
+                delete where.OR;
+            }
+            else {
+                where.OR = searchCondition;
+            }
+        }
+        const skip = (page - 1) * limit;
+        const [logs, total, totalSanctions, totalApprovals, allEntitiesRaw] = await Promise.all([
+            prisma_1.default.auditLog.findMany({
+                where,
+                include: {
+                    user: { select: { id: true, firstName: true, lastName: true, email: true, role: true } }
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            prisma_1.default.auditLog.count({ where }),
+            prisma_1.default.auditLog.count({
+                where: {
+                    OR: [
+                        { action: { contains: 'SUSPEND', mode: 'insensitive' } },
+                        { action: { contains: 'REJECT', mode: 'insensitive' } },
+                        { action: { contains: 'DELETE', mode: 'insensitive' } },
+                        { action: { contains: 'LOCK', mode: 'insensitive' } },
+                        { action: { contains: 'PENAL', mode: 'insensitive' } }
+                    ]
+                }
+            }),
+            prisma_1.default.auditLog.count({
+                where: {
+                    OR: [
+                        { action: { contains: 'APPROVE', mode: 'insensitive' } },
+                        { action: { contains: 'VERIF', mode: 'insensitive' } },
+                        { action: { contains: 'ACTIVATE', mode: 'insensitive' } }
+                    ]
+                }
+            }),
+            prisma_1.default.auditLog.findMany({
+                distinct: ['entity'],
+                select: { entity: true }
+            })
+        ]);
+        const availableEntities = allEntitiesRaw.map((e) => e.entity).filter(Boolean).sort();
+        const uniqueIpsCount = new Set(logs.map((l) => l.ipAddress).filter(Boolean)).size;
+        res.status(200).json({
+            logs,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit) || 1
             },
-            orderBy: { createdAt: 'desc' }
+            metrics: {
+                total,
+                sanctions: totalSanctions,
+                approvals: totalApprovals,
+                uniqueIps: uniqueIpsCount
+            },
+            availableEntities
         });
-        res.status(200).json(logs);
     }
     catch (error) {
         console.error('Error fetching audit logs:', error);
@@ -36,32 +179,49 @@ const getSystemStats = async (req, res) => {
             res.status(200).json(cachedStats);
             return;
         }
-        const totalUsers = await prisma_1.default.user.count();
-        const totalLandlords = await prisma_1.default.user.count({ where: { role: 'LANDLORD' } });
-        const totalTenants = await prisma_1.default.user.count({ where: { role: 'TENANT' } });
-        const totalProperties = await prisma_1.default.property.count();
-        const verifiedProperties = await prisma_1.default.property.count({ where: { approvalStatus: 'APPROVED' } });
-        const verifiedUsers = await prisma_1.default.user.count({ where: { isCardVerified: true } });
-        const verifiedLandlords = await prisma_1.default.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } });
-        const totalBookings = await prisma_1.default.booking.count();
-        // Sum all successful transaction amounts (total platform transaction volume)
+        const [totalUsers, totalLandlords, totalTenants, totalProperties, verifiedProperties, verifiedUsers, verifiedLandlords, totalBookings, pendingProperties, pendingKyc, pendingLandlordDeeds, openBreaches, activeSubscriptions] = await Promise.all([
+            prisma_1.default.user.count(),
+            prisma_1.default.user.count({ where: { role: 'LANDLORD' } }),
+            prisma_1.default.user.count({ where: { role: 'TENANT' } }),
+            prisma_1.default.property.count(),
+            prisma_1.default.property.count({ where: { approvalStatus: 'APPROVED' } }),
+            prisma_1.default.user.count({ where: { ghanaCardStatus: 'VERIFIED' } }),
+            prisma_1.default.user.count({ where: { role: 'LANDLORD', isVerifiedLandlord: true } }),
+            prisma_1.default.booking.count(),
+            prisma_1.default.property.count({ where: { approvalStatus: 'PENDING' } }),
+            prisma_1.default.user.count({ where: { ghanaCardStatus: { in: ['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'] } } }),
+            prisma_1.default.user.count({ where: { role: 'LANDLORD', landlordVerificationStatus: 'PENDING' } }),
+            prisma_1.default.breachReport.count({ where: { status: 'PENDING' } }),
+            prisma_1.default.propertySubscription.count({ where: { isActive: true } })
+        ]);
+        // Sum all successful transaction amounts (total platform payment volume)
         const transactionSum = await prisma_1.default.transaction.aggregate({
             _sum: { amount: true },
             where: { status: 'SUCCESS' }
         });
         const totalRevenue = transactionSum._sum.amount || 0;
-        // Generate 6 months of historical data based on current totals for the chart
-        const months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-        const monthlyGrowth = months.map((month, index) => {
-            // Create an escalating curve that culminates in the current totals
-            const factor = (index + 1) / 6;
-            return {
-                name: month,
-                users: Math.round(totalUsers * factor * (0.8 + Math.random() * 0.4)),
-                properties: Math.round(totalProperties * factor * (0.8 + Math.random() * 0.4)),
-                revenue: Math.round(totalRevenue * factor * (0.8 + Math.random() * 0.4))
-            };
-        });
+        // Authentic monthly historical curves computed from real database records (no Math.random)
+        const now = new Date();
+        const monthlyGrowth = [];
+        for (let i = 5; i >= 0; i--) {
+            const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+            const monthName = monthStart.toLocaleString('en-US', { month: 'short' });
+            const [userCount, propCount, txSum] = await Promise.all([
+                prisma_1.default.user.count({ where: { createdAt: { lte: monthEnd } } }),
+                prisma_1.default.property.count({ where: { createdAt: { lte: monthEnd } } }),
+                prisma_1.default.transaction.aggregate({
+                    _sum: { amount: true },
+                    where: { status: 'SUCCESS', createdAt: { lte: monthEnd } }
+                })
+            ]);
+            monthlyGrowth.push({
+                name: monthName,
+                users: userCount,
+                properties: propCount,
+                revenue: txSum._sum.amount || 0
+            });
+        }
         const responseData = {
             totalUsers,
             totalLandlords,
@@ -72,6 +232,11 @@ const getSystemStats = async (req, res) => {
             verifiedLandlords,
             totalBookings,
             totalRevenue,
+            pendingProperties,
+            pendingKyc,
+            pendingLandlordDeeds,
+            openBreaches,
+            activeSubscriptions,
             monthlyGrowth
         };
         cache_1.default.set('admin_stats', responseData, 60); // Cache stats for 60 seconds
@@ -83,6 +248,102 @@ const getSystemStats = async (req, res) => {
     }
 };
 exports.getSystemStats = getSystemStats;
+const getActionRequiredQueue = async (req, res) => {
+    try {
+        const [pendingLandlords, pendingKycUsers, pendingProperties, openBreaches, pendingTickets] = await Promise.all([
+            prisma_1.default.user.findMany({
+                where: { role: 'LANDLORD', landlordVerificationStatus: 'PENDING' },
+                select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, landlordDocUrl: true, createdAt: true, updatedAt: true },
+                take: 10
+            }),
+            prisma_1.default.user.findMany({
+                where: { ghanaCardStatus: { in: ['PENDING', 'UNDER_REVIEW', 'RESUBMISSION_REQUIRED'] } },
+                select: { id: true, firstName: true, lastName: true, email: true, role: true, ghanaCardStatus: true, createdAt: true, updatedAt: true },
+                take: 10
+            }),
+            prisma_1.default.property.findMany({
+                where: { approvalStatus: 'PENDING' },
+                include: { landlord: { select: { id: true, firstName: true, lastName: true, email: true } } },
+                take: 10
+            }),
+            prisma_1.default.breachReport.findMany({
+                where: { status: 'PENDING' },
+                include: {
+                    reporter: { select: { id: true, firstName: true, lastName: true } },
+                    tenant: { select: { id: true, firstName: true, lastName: true } },
+                    property: { select: { id: true, title: true } }
+                },
+                take: 10
+            }),
+            prisma_1.default.maintenanceTicket.findMany({
+                where: { status: 'PENDING', priority: { in: ['HIGH', 'URGENT'] } },
+                include: {
+                    tenant: { select: { id: true, firstName: true, lastName: true } },
+                    property: { select: { id: true, title: true } }
+                },
+                take: 10
+            })
+        ]);
+        const queue = [
+            ...pendingLandlords.map(l => ({
+                id: `action-landlord-${l.id}`,
+                category: 'LANDLORD_VERIFICATION',
+                priority: 'HIGH',
+                title: `Landlord Ownership Deed: ${l.firstName} ${l.lastName}`,
+                description: `Ownership proof deed awaiting statutory verification.`,
+                targetUrl: `/admin/verifications/${l.id}`,
+                entityId: l.id,
+                createdAt: l.updatedAt || l.createdAt
+            })),
+            ...pendingKycUsers.map(u => ({
+                id: `action-kyc-${u.id}`,
+                category: 'IDENTITY_KYC',
+                priority: u.ghanaCardStatus === 'UNDER_REVIEW' ? 'MEDIUM' : 'HIGH',
+                title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Ghana Card KYC: ${u.firstName} ${u.lastName}`,
+                description: `Status: ${u.ghanaCardStatus.replace('_', ' ')}. Identity documents submitted for compliance review.`,
+                targetUrl: `/admin/verifications/${u.id}`,
+                entityId: u.id,
+                createdAt: u.updatedAt || u.createdAt
+            })),
+            ...pendingProperties.map(p => ({
+                id: `action-prop-${p.id}`,
+                category: 'PROPERTY_APPROVAL',
+                priority: 'HIGH',
+                title: `Listing Approval: "${p.title}"`,
+                description: `Submitted by ${p.landlord?.firstName || 'Host'} ${p.landlord?.lastName || ''} in ${p.location}. Awaiting listing moderation.`,
+                targetUrl: `/admin/properties/${p.id}`,
+                entityId: p.id,
+                createdAt: p.createdAt
+            })),
+            ...openBreaches.map(b => ({
+                id: `action-breach-${b.id}`,
+                category: 'DISPUTE_BREACH',
+                priority: 'URGENT',
+                title: `Active Tenancy Breach Claim: ${b.title}`,
+                description: `Lodged by ${b.reporter?.firstName || 'User'} regarding "${b.property?.title}".`,
+                targetUrl: `/admin/disputes/${b.id}`,
+                entityId: b.id,
+                createdAt: b.createdAt
+            })),
+            ...pendingTickets.map(t => ({
+                id: `action-ticket-${t.id}`,
+                category: 'ESCALATED_MAINTENANCE',
+                priority: 'URGENT',
+                title: `Urgent Repair Escalation: "${t.title}"`,
+                description: `At "${t.property?.title}". Reported by ${t.tenant?.firstName || 'Tenant'}.`,
+                targetUrl: `/admin/tickets/${t.id}`,
+                entityId: t.id,
+                createdAt: t.createdAt
+            }))
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        res.status(200).json(queue);
+    }
+    catch (error) {
+        console.error('Error fetching action required queue:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getActionRequiredQueue = getActionRequiredQueue;
 const getPlatformAnalytics = async (req, res) => {
     try {
         // 1. Conversion Metrics (Proper real estate tenancy pipeline)
@@ -94,7 +355,7 @@ const getPlatformAnalytics = async (req, res) => {
             where: { status: { in: ['COMPLETED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] } }
         });
         const conversionRate = totalBookings > 0 ? ((paidBookings / totalBookings) * 100).toFixed(1) : '0.0';
-        // 2. Revenue Metrics (Escrow volume)
+        // 2. Revenue Metrics (Transaction volume)
         const totalTransactions = await prisma_1.default.transaction.aggregate({
             _sum: { amount: true },
             where: { status: 'SUCCESS' }
@@ -197,7 +458,7 @@ const getPlatformAnalytics = async (req, res) => {
                 revenueGhs: Math.round(totalRevenueGhs * factor)
             };
         });
-        // 6. Act 220 Tenancy Deed Compliance
+        // 6. Digital Tenancy Agreement Compliance
         const totalDeeds = await prisma_1.default.leaseAgreement.count();
         const completedDeeds = await prisma_1.default.leaseAgreement.count({ where: { status: 'COMPLETED' } });
         const deedExecutionRate = totalDeeds > 0 ? Math.round((completedDeeds / totalDeeds) * 100) : 100;
@@ -225,8 +486,503 @@ const getPlatformAnalytics = async (req, res) => {
 exports.getPlatformAnalytics = getPlatformAnalytics;
 const getAllUsers = async (req, res) => {
     try {
-        const users = await prisma_1.default.user.findMany({
-            orderBy: { createdAt: 'desc' },
+        const { role, status, search, page, limit } = req.query;
+        const where = {};
+        if (role && role !== 'ALL') {
+            where.role = String(role);
+        }
+        if (status && status !== 'ALL') {
+            if (status === 'SUSPENDED')
+                where.isSuspended = true;
+            else if (status === 'ACTIVE')
+                where.isSuspended = false;
+            else if (status === 'VERIFIED_LANDLORD')
+                where.isVerifiedLandlord = true;
+            else if (status === 'VERIFIED_KYC')
+                where.ghanaCardStatus = 'VERIFIED';
+            else if (status === 'PENDING_KYC')
+                where.ghanaCardStatus = { in: ['PENDING', 'UNDER_REVIEW'] };
+        }
+        if (search && String(search).trim()) {
+            const q = String(search).trim();
+            where.OR = [
+                { firstName: { contains: q, mode: 'insensitive' } },
+                { lastName: { contains: q, mode: 'insensitive' } },
+                { email: { contains: q, mode: 'insensitive' } },
+                { phoneNumber: { contains: q } }
+            ];
+        }
+        const isPaginated = Boolean(page || limit);
+        const pageNum = Math.max(1, parseInt(String(page || 1), 10));
+        const takeNum = Math.min(100, Math.max(1, parseInt(String(limit || 50), 10)));
+        const skipNum = (pageNum - 1) * takeNum;
+        const [total, users] = await Promise.all([
+            prisma_1.default.user.count({ where }),
+            prisma_1.default.user.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                ...(isPaginated ? { skip: skipNum, take: takeNum } : {}),
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    role: true,
+                    phoneNumber: true,
+                    gender: true,
+                    campus: true,
+                    studentId: true,
+                    programmeOfStudy: true,
+                    studentType: true,
+                    isSuspended: true,
+                    isProfileLocked: true,
+                    profileUnlockRequested: true,
+                    profileUnlockReason: true,
+                    ghanaCardStatus: true,
+                    ghanaCardNumber: true,
+                    ghanaCardFrontUrl: true,
+                    ghanaCardBackUrl: true,
+                    ghanaCardRejectionReason: true,
+                    ghanaCardReviewedAt: true,
+                    ghanaCardReviewedBy: true,
+                    landlordDocUrl: true,
+                    isVerifiedLandlord: true,
+                    landlordVerificationStatus: true,
+                    reputationScore: true,
+                    createdAt: true
+                }
+            })
+        ]);
+        // Mask sensitive national identity card numbers in list responses (Act 843 compliance)
+        const sanitizedUsers = users.map(user => {
+            let maskedCard = null;
+            if (user.ghanaCardNumber) {
+                try {
+                    const decrypted = (0, crypto_1.decryptData)(user.ghanaCardNumber);
+                    maskedCard = (0, crypto_1.maskGhanaCardNumber)(decrypted);
+                }
+                catch {
+                    maskedCard = 'GHA-•••••••••';
+                }
+            }
+            return {
+                ...user,
+                ghanaCardNumber: maskedCard,
+                ghanaCardFrontUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl),
+                ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl),
+                landlordDocUrl: (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl)
+            };
+        });
+        if (isPaginated) {
+            res.status(200).json({
+                users: sanitizedUsers,
+                total,
+                page: pageNum,
+                totalPages: Math.ceil(total / takeNum),
+                limit: takeNum
+            });
+        }
+        else {
+            res.status(200).json(sanitizedUsers);
+        }
+    }
+    catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllUsers = getAllUsers;
+const getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await prisma_1.default.user.findUnique({
+            where: { id },
+            include: {
+                properties: {
+                    select: { id: true, title: true, type: true, location: true, price: true, approvalStatus: true, isAvailable: true, createdAt: true },
+                    orderBy: { createdAt: 'desc' }
+                },
+                bookings: {
+                    include: {
+                        property: { select: { id: true, title: true, location: true } },
+                        transaction: { select: { id: true, amount: true, status: true, reference: true } }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 20
+                },
+                transactionsAsTenant: {
+                    include: { property: { select: { id: true, title: true } } },
+                    orderBy: { createdAt: 'desc' },
+                    take: 15
+                },
+                transactionsAsLandlord: {
+                    include: { property: { select: { id: true, title: true } } },
+                    orderBy: { createdAt: 'desc' },
+                    take: 15
+                },
+                reviews: {
+                    include: {
+                        booking: { include: { property: { select: { id: true, title: true } } } }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 15
+                },
+                tenantBreaches: {
+                    include: { property: { select: { id: true, title: true } } },
+                    orderBy: { createdAt: 'desc' }
+                },
+                reportedBreaches: {
+                    include: { property: { select: { id: true, title: true } } },
+                    orderBy: { createdAt: 'desc' }
+                },
+                auditLogs: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 20
+                }
+            }
+        });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        let decryptedCard = null;
+        let maskedCard = null;
+        if (user.ghanaCardNumber) {
+            try {
+                decryptedCard = (0, crypto_1.decryptData)(user.ghanaCardNumber);
+                maskedCard = (0, crypto_1.maskGhanaCardNumber)(decryptedCard);
+            }
+            catch {
+                maskedCard = 'GHA-•••••••••';
+            }
+        }
+        res.status(200).json({
+            ...user,
+            ghanaCardNumber: decryptedCard,
+            maskedGhanaCard: maskedCard,
+            ghanaCardFrontUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl),
+            ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl),
+            landlordDocUrl: (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl)
+        });
+    }
+    catch (error) {
+        console.error('Error fetching user by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getUserById = getUserById;
+const getPropertyById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const property = await prisma_1.default.property.findUnique({
+            where: { id },
+            include: {
+                landlord: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        phoneNumber: true,
+                        avatarUrl: true,
+                        isVerifiedLandlord: true,
+                        landlordVerificationStatus: true,
+                        reputationScore: true,
+                        createdAt: true
+                    }
+                },
+                rooms: {
+                    include: {
+                        roomUnits: {
+                            include: {
+                                beds: true
+                            }
+                        }
+                    }
+                },
+                bookings: {
+                    include: {
+                        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                        transaction: { select: { id: true, amount: true, status: true, reference: true } }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                    take: 15
+                },
+                subscription: true,
+                tickets: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 10
+                }
+            }
+        });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        res.status(200).json({
+            ...property,
+            images: (0, json_1.safeJsonParse)(property.images, []),
+            amenities: (0, json_1.safeJsonParse)(property.amenities, []),
+            includedUtilities: (0, json_1.safeJsonParse)(property.includedUtilities, [])
+        });
+    }
+    catch (error) {
+        console.error('Error fetching property by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getPropertyById = getPropertyById;
+const getBookingById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await prisma_1.default.booking.findUnique({
+            where: { id },
+            include: {
+                tenant: {
+                    select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, studentId: true, campus: true }
+                },
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                    }
+                },
+                room: true,
+                roomUnit: true,
+                bed: true,
+                leaseAgreement: true,
+                transaction: true,
+                review: true
+            }
+        });
+        if (!booking) {
+            res.status(404).json({ message: 'Booking not found' });
+            return;
+        }
+        res.status(200).json(booking);
+    }
+    catch (error) {
+        console.error('Error fetching booking by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getBookingById = getBookingById;
+const getSubscriptionById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const subscription = await prisma_1.default.propertySubscription.findUnique({
+            where: { id },
+            include: {
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                    }
+                }
+            }
+        });
+        if (!subscription) {
+            res.status(404).json({ message: 'Subscription not found' });
+            return;
+        }
+        const now = new Date();
+        const endDate = new Date(subscription.endDate);
+        const diffMs = endDate.getTime() - now.getTime();
+        const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        res.status(200).json({ ...subscription, daysRemaining });
+    }
+    catch (error) {
+        console.error('Error fetching subscription by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getSubscriptionById = getSubscriptionById;
+const getTransactionById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const transaction = await prisma_1.default.transaction.findUnique({
+            where: { id },
+            include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } },
+                property: { select: { id: true, title: true, location: true, type: true } },
+                booking: {
+                    include: {
+                        leaseAgreement: { select: { id: true, status: true, cryptographicHash: true } }
+                    }
+                }
+            }
+        });
+        if (!transaction) {
+            res.status(404).json({ message: 'Transaction not found' });
+            return;
+        }
+        res.status(200).json(transaction);
+    }
+    catch (error) {
+        console.error('Error fetching transaction by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getTransactionById = getTransactionById;
+const getDisputeById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const dispute = await prisma_1.default.breachReport.findUnique({
+            where: { id },
+            include: {
+                reporter: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, reputationScore: true } },
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, reputationScore: true, isSuspended: true } },
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+                    }
+                }
+            }
+        });
+        if (!dispute) {
+            res.status(404).json({ message: 'Dispute case not found' });
+            return;
+        }
+        res.status(200).json(dispute);
+    }
+    catch (error) {
+        console.error('Error fetching dispute by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getDisputeById = getDisputeById;
+const getReviewById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const review = await prisma_1.default.review.findUnique({
+            where: { id },
+            include: {
+                author: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true } },
+                booking: {
+                    include: {
+                        property: {
+                            include: {
+                                landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        if (!review) {
+            res.status(404).json({ message: 'Review not found' });
+            return;
+        }
+        res.status(200).json(review);
+    }
+    catch (error) {
+        console.error('Error fetching review by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getReviewById = getReviewById;
+const searchEntities = async (req, res) => {
+    try {
+        const q = String(req.query.q || '').trim();
+        if (!q || q.length < 2) {
+            res.status(200).json({ results: [] });
+            return;
+        }
+        const [users, properties, bookings, transactions] = await Promise.all([
+            prisma_1.default.user.findMany({
+                where: {
+                    OR: [
+                        { firstName: { contains: q, mode: 'insensitive' } },
+                        { lastName: { contains: q, mode: 'insensitive' } },
+                        { email: { contains: q, mode: 'insensitive' } },
+                        { phoneNumber: { contains: q } }
+                    ]
+                },
+                select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true },
+                take: 6
+            }),
+            prisma_1.default.property.findMany({
+                where: {
+                    OR: [
+                        { title: { contains: q, mode: 'insensitive' } },
+                        { location: { contains: q, mode: 'insensitive' } },
+                        { type: { contains: q, mode: 'insensitive' } }
+                    ]
+                },
+                select: { id: true, title: true, location: true, price: true, approvalStatus: true },
+                take: 6
+            }),
+            prisma_1.default.booking.findMany({
+                where: {
+                    OR: [
+                        { id: { contains: q, mode: 'insensitive' } },
+                        { property: { title: { contains: q, mode: 'insensitive' } } },
+                        { tenant: { firstName: { contains: q, mode: 'insensitive' } } },
+                        { tenant: { lastName: { contains: q, mode: 'insensitive' } } }
+                    ]
+                },
+                include: {
+                    property: { select: { title: true } },
+                    tenant: { select: { firstName: true, lastName: true } }
+                },
+                take: 6
+            }),
+            prisma_1.default.transaction.findMany({
+                where: {
+                    OR: [
+                        { reference: { contains: q, mode: 'insensitive' } },
+                        { id: { contains: q, mode: 'insensitive' } }
+                    ]
+                },
+                select: { id: true, reference: true, amount: true, status: true, createdAt: true },
+                take: 5
+            })
+        ]);
+        const results = [
+            ...users.map(u => ({
+                id: u.id,
+                type: u.role === 'LANDLORD' ? 'LANDLORD' : (u.role === 'ADMIN' ? 'ADMIN' : 'TENANT'),
+                title: `${u.firstName} ${u.lastName}`,
+                subtitle: u.email,
+                status: u.isSuspended ? 'SUSPENDED' : 'ACTIVE',
+                url: u.role === 'LANDLORD' ? `/admin/landlords/${u.id}` : `/admin/tenants/${u.id}`
+            })),
+            ...properties.map(p => ({
+                id: p.id,
+                type: 'PROPERTY',
+                title: p.title,
+                subtitle: p.location,
+                status: p.approvalStatus,
+                url: `/admin/properties/${p.id}`
+            })),
+            ...bookings.map(b => ({
+                id: b.id,
+                type: 'BOOKING',
+                title: `Booking #${b.id.slice(0, 8)}`,
+                subtitle: `${b.tenant?.firstName || 'Tenant'} - ${b.property?.title || 'Property'}`,
+                status: b.status,
+                url: `/admin/bookings/${b.id}`
+            })),
+            ...transactions.map(t => ({
+                id: t.id,
+                type: 'TRANSACTION',
+                title: `Ref: ${t.reference}`,
+                subtitle: `GH₵ ${t.amount.toLocaleString()}`,
+                status: t.status,
+                url: `/admin/transactions/${t.id}`
+            }))
+        ];
+        res.status(200).json({ results });
+    }
+    catch (error) {
+        console.error('Error performing global search:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.searchEntities = searchEntities;
+const getAdministrators = async (req, res) => {
+    try {
+        const admins = await prisma_1.default.user.findMany({
+            where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
             select: {
                 id: true,
                 firstName: true,
@@ -234,53 +990,109 @@ const getAllUsers = async (req, res) => {
                 email: true,
                 role: true,
                 phoneNumber: true,
-                gender: true,
-                campus: true,
-                studentId: true,
-                programmeOfStudy: true,
-                studentType: true,
                 isSuspended: true,
-                isProfileLocked: true,
-                profileUnlockRequested: true,
-                profileUnlockReason: true,
-                ghanaCardStatus: true,
-                ghanaCardNumber: true,
-                ghanaCardFrontUrl: true,
-                ghanaCardBackUrl: true,
-                landlordDocUrl: true,
-                isVerifiedLandlord: true,
-                landlordVerificationStatus: true,
-                reputationScore: true,
-                createdAt: true
-            }
+                twoFactorEnabled: true,
+                createdAt: true,
+                updatedAt: true
+            },
+            orderBy: { createdAt: 'asc' }
         });
-        const decryptedUsers = users.map(user => ({
-            ...user,
-            ghanaCardNumber: user.ghanaCardNumber ? (0, crypto_1.decryptData)(user.ghanaCardNumber) : null,
-            ghanaCardFrontUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl),
-            ghanaCardBackUrl: (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardBackUrl),
-            landlordDocUrl: (0, security_service_1.generateSignedDocumentUrl)(user.landlordDocUrl)
-        }));
-        res.status(200).json(decryptedUsers);
+        res.status(200).json(admins);
     }
     catch (error) {
+        console.error('Error fetching administrators:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-exports.getAllUsers = getAllUsers;
+exports.getAdministrators = getAdministrators;
+const createAdministrator = async (req, res) => {
+    try {
+        const { firstName, lastName, email, password, role, phoneNumber } = req.body;
+        if (!firstName || !lastName || !email || !password) {
+            res.status(400).json({ message: 'Missing required administrator fields' });
+            return;
+        }
+        const assignedRole = role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN';
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const existing = await prisma_1.default.user.findUnique({ where: { email: normalizedEmail } });
+        if (existing) {
+            res.status(409).json({ message: 'A user with this email address already exists' });
+            return;
+        }
+        const bcrypt = await import('bcrypt');
+        const passwordHash = await bcrypt.hash(password, 10);
+        const newAdmin = await prisma_1.default.user.create({
+            data: {
+                firstName,
+                lastName,
+                email: normalizedEmail,
+                phoneNumber: phoneNumber || null,
+                passwordHash,
+                role: assignedRole,
+                isEmailVerified: true
+            },
+            select: { id: true, firstName: true, lastName: true, email: true, role: true, createdAt: true }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, 'CREATE_ADMINISTRATOR', 'User', newAdmin.id, null, { email: normalizedEmail, role: assignedRole }, req.ip || req.socket.remoteAddress);
+        res.status(201).json({ message: 'Administrator account provisioned successfully', admin: newAdmin });
+    }
+    catch (error) {
+        console.error('Error creating administrator:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.createAdministrator = createAdministrator;
+const toggleAdminStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isSuspended } = req.body;
+        if (id === req.user.id) {
+            res.status(400).json({ message: 'Security restriction: You cannot suspend your own administrative account.' });
+            return;
+        }
+        const target = await prisma_1.default.user.findUnique({ where: { id } });
+        if (!target || !['ADMIN', 'SUPER_ADMIN'].includes(target.role)) {
+            res.status(404).json({ message: 'Administrator account not found.' });
+            return;
+        }
+        if (target.role === 'SUPER_ADMIN' && isSuspended) {
+            const superAdminCount = await prisma_1.default.user.count({
+                where: { role: 'SUPER_ADMIN', isSuspended: false }
+            });
+            if (superAdminCount <= 1) {
+                res.status(400).json({ message: 'Operation aborted: Cannot suspend the last active Super Administrator.' });
+                return;
+            }
+        }
+        const updated = await prisma_1.default.user.update({
+            where: { id },
+            data: { isSuspended: Boolean(isSuspended) },
+            select: { id: true, firstName: true, lastName: true, email: true, role: true, isSuspended: true }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, isSuspended ? 'SUSPEND_ADMIN' : 'REINSTATE_ADMIN', 'User', id, { isSuspended: target.isSuspended }, { isSuspended }, req.ip || req.socket.remoteAddress);
+        res.status(200).json({ message: `Administrator status updated to ${isSuspended ? 'Suspended' : 'Active'}`, admin: updated });
+    }
+    catch (error) {
+        console.error('Error toggling admin status:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.toggleAdminStatus = toggleAdminStatus;
 const toggleUserSuspension = async (req, res) => {
     try {
         const { id } = req.params;
         const { isSuspended } = req.body;
         const targetSuspensionState = Boolean(isSuspended);
-        // Prevent suspending self or other admins
         const targetUser = await prisma_1.default.user.findUnique({ where: { id } });
         if (!targetUser) {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        if (targetUser.role === 'ADMIN') {
-            res.status(403).json({ message: 'Cannot suspend an administrator account' });
+        // Security policy: General user suspension cannot target administrators or super administrators
+        if (['ADMIN', 'SUPER_ADMIN'].includes(targetUser.role)) {
+            res.status(403).json({
+                message: 'Security Policy: Administrative accounts cannot be suspended via general user moderation. Only an authorized Super Administrator can manage administrator lifecycle.'
+            });
             return;
         }
         const updatedUser = await prisma_1.default.user.update({
@@ -553,9 +1365,16 @@ exports.getAllTransactions = getAllTransactions;
 const verifyUserCard = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; // VERIFIED, REJECTED
-        if (!['VERIFIED', 'REJECTED'].includes(status)) {
-            res.status(400).json({ message: 'Invalid status' });
+        const { status, reason } = req.body; // PENDING, UNDER_REVIEW, VERIFIED, REJECTED, RESUBMISSION_REQUIRED
+        const validStatuses = ['PENDING', 'UNDER_REVIEW', 'VERIFIED', 'REJECTED', 'RESUBMISSION_REQUIRED'];
+        if (!validStatuses.includes(status)) {
+            res.status(400).json({ message: `Invalid status. Allowed values: ${validStatuses.join(', ')}` });
+            return;
+        }
+        if (['REJECTED', 'RESUBMISSION_REQUIRED'].includes(status) && (!reason || !String(reason).trim())) {
+            res.status(400).json({
+                message: 'A clear explanation/reason is required when rejecting or requesting document resubmission.'
+            });
             return;
         }
         const oldUser = await prisma_1.default.user.findUnique({ where: { id } });
@@ -563,47 +1382,85 @@ const verifyUserCard = async (req, res) => {
             res.status(404).json({ message: 'User not found' });
             return;
         }
-        const isCardVerified = status === 'VERIFIED';
+        const trimmedReason = reason ? String(reason).trim() : null;
         const user = await prisma_1.default.user.update({
             where: { id },
             data: {
                 ghanaCardStatus: status,
-                isCardVerified
+                ghanaCardRejectionReason: ['REJECTED', 'RESUBMISSION_REQUIRED'].includes(status) ? trimmedReason : null,
+                ghanaCardReviewedAt: new Date(),
+                ghanaCardReviewedBy: req.user?.id || 'ADMIN'
             },
-            select: { id: true, ghanaCardStatus: true, isCardVerified: true }
+            select: {
+                id: true,
+                ghanaCardStatus: true,
+                ghanaCardRejectionReason: true,
+                ghanaCardReviewedAt: true,
+                ghanaCardReviewedBy: true
+            }
         });
-        await (0, auditLogger_1.logAudit)(req.user.id, status === 'VERIFIED' ? 'VERIFY_ID_CARD' : 'REJECT_ID_CARD', 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus, isCardVerified: oldUser.isCardVerified }, { ghanaCardStatus: status, isCardVerified }, req.ip || req.socket.remoteAddress);
+        await (0, auditLogger_1.logAudit)(req.user.id, `KYC_STATUS_${status}`, 'User', id, { ghanaCardStatus: oldUser.ghanaCardStatus }, { ghanaCardStatus: status, reason: trimmedReason }, req.ip || req.socket.remoteAddress);
         // Clear cached profile so dashboard and verification page immediately reflect new status
         cache_1.default.del(`user:me:${id}`);
         cache_1.default.flushAll();
+        // Determine notification copy based on status
+        let notificationTitle = '🪪 Ghana Card Verification Update';
+        let notificationMessage = `Your Ghana Card status has been updated to ${status}.`;
+        let notifType = 'SYSTEM_ALERT';
+        if (status === 'VERIFIED') {
+            notificationTitle = '✅ Ghana Card Identity Verified!';
+            notificationMessage = 'Your Ghana Card has been approved. You now have full access to listings and bookings.';
+            notifType = 'ANNOUNCEMENT';
+        }
+        else if (status === 'UNDER_REVIEW') {
+            notificationTitle = '🔍 Ghana Card Under Review';
+            notificationMessage = 'Our compliance team is currently reviewing your Ghana Card identity credentials.';
+            notifType = 'INFO';
+        }
+        else if (status === 'RESUBMISSION_REQUIRED') {
+            notificationTitle = '⚠️ Ghana Card Resubmission Required';
+            notificationMessage = `Please re-upload your Ghana Card images: ${trimmedReason}`;
+            notifType = 'SYSTEM_ALERT';
+        }
+        else if (status === 'REJECTED') {
+            notificationTitle = '❌ Ghana Card Verification Rejected';
+            notificationMessage = `Your Ghana Card submission was rejected: ${trimmedReason}`;
+            notifType = 'SYSTEM_ALERT';
+        }
         // In-app persistent notification
         await prisma_1.default.notification.create({
             data: {
                 userId: id,
-                type: status === 'VERIFIED' ? 'ANNOUNCEMENT' : 'SYSTEM_ALERT',
-                title: status === 'VERIFIED' ? '✅ Ghana Card Identity Verified!' : '❌ Ghana Card Verification Rejected',
-                message: status === 'VERIFIED'
-                    ? 'Your Ghana Card has been approved. You now have full access to listings and bookings.'
-                    : 'Your Ghana Card submission was rejected. Please review and re-submit your ID.',
+                type: notifType,
+                title: notificationTitle,
+                message: notificationMessage,
                 link: '/dashboard/verification'
             }
         }).catch(() => { });
-        // Notify the user in real-time so the onboarding widget refreshes instantly
+        // Notify the user in real-time and broadcast update to all admins
         try {
-            const { getIO } = await import('../socket');
+            const { getIO, emitToAdmins, emitToAll } = await import('../socket');
             getIO().to(id).emit('notification', {
-                title: status === 'VERIFIED' ? '✅ Identity Verified!' : '❌ Verification Rejected',
-                message: status === 'VERIFIED'
-                    ? 'Your Ghana Card has been verified. You can now list properties and make bookings.'
-                    : 'Your Ghana Card submission was rejected. Please re-submit with a clearer image.',
+                title: notificationTitle,
+                message: notificationMessage,
                 type: 'verification'
             });
-            getIO().to(id).emit('user_updated', { ghanaCardStatus: status, isCardVerified });
+            getIO().to(id).emit('user_updated', {
+                ghanaCardStatus: status,
+                ghanaCardRejectionReason: user.ghanaCardRejectionReason
+            });
+            emitToAdmins('verification_updated', { userId: id, ghanaCardStatus: status, type: 'GHANA_CARD' });
+            emitToAll('user_updated', { userId: id, ghanaCardStatus: status });
+            emitToAll('verification_updated', { userId: id, ghanaCardStatus: status, type: 'GHANA_CARD' });
         }
         catch (e) { /* socket optional */ }
-        res.status(200).json({ message: `User card ${status.toLowerCase()} successfully`, user });
+        res.status(200).json({
+            message: `User Ghana Card status updated to ${status.replace('_', ' ')} successfully`,
+            user
+        });
     }
     catch (error) {
+        console.error('Error verifying user card:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -631,17 +1488,20 @@ const verifyLandlord = async (req, res) => {
             data: {
                 userId: user.id,
                 type: 'ANNOUNCEMENT',
-                title: isVerified ? '🛡️ Verified Landlord Badge Approved!' : 'Landlord Verification Update',
+                title: isVerified ? 'Verified Landlord Status Approved' : 'Landlord Verification Update',
                 message: isVerified
-                    ? 'Congratulations! Your identity and ownership have been verified with the official Verified Landlord Badge.'
+                    ? 'Congratulations! Your identity and ownership documents have been verified with official Verified Landlord status.'
                     : 'Your landlord verification request was not approved. Please review your documents or contact support.',
                 link: '/dashboard/landlord'
             }
         }).catch(() => { });
         try {
-            const { emitToUser, emitToAll } = await import('../socket');
+            const { emitToUser, emitToAll, emitToAdmins } = await import('../socket');
             emitToUser(id, 'user_updated', { landlordVerificationStatus: status, isVerifiedLandlord: isVerified });
+            emitToAdmins('verification_updated', { userId: id, landlordVerificationStatus: status, isVerifiedLandlord: isVerified, type: 'LANDLORD_DEED' });
             emitToAll('user_updated', { userId: id });
+            emitToAll('verification_updated', { userId: id, type: 'LANDLORD_DEED' });
+            emitToAll('landlord_deeds_updated', { userId: id });
         }
         catch (e) { }
         // Dispatch SMS & Email Notification
@@ -653,7 +1513,7 @@ const verifyLandlord = async (req, res) => {
             isVerified
         }).catch((e) => console.error('[Notification Error]', e));
         res.status(200).json({
-            message: `Landlord verification ${isVerified ? 'approved with Verified Blue Badge 🛡️' : 'rejected'}.`,
+            message: `Landlord verification ${isVerified ? 'approved with Verified status' : 'rejected'}.`,
             user
         });
     }
@@ -727,6 +1587,7 @@ const activateSubscription = async (req, res) => {
         });
         await (0, auditLogger_1.logAudit)(req.user.id, 'ACTIVATE_SUBSCRIPTION', 'PropertySubscription', id, { isActive: false }, { isActive: true }, req.ip || req.socket.remoteAddress);
         try {
+            cache_1.default.flushAll();
             const { getIO } = await import('../socket');
             getIO().to(subscription.property.landlord.id).emit('notification', {
                 title: 'Subscription Activated',
@@ -765,6 +1626,7 @@ const revokeSubscription = async (req, res) => {
         });
         await (0, auditLogger_1.logAudit)(req.user.id, 'REVOKE_SUBSCRIPTION', 'PropertySubscription', id, { isActive: true }, { isActive: false, reason: reason || 'Admin revocation' }, req.ip || req.socket.remoteAddress);
         try {
+            cache_1.default.flushAll();
             const { getIO } = await import('../socket');
             getIO().to(subscription.property.landlord.id).emit('notification', {
                 title: 'Listing Subscription Revoked',
@@ -850,7 +1712,7 @@ const getSystemActivity = async (req, res) => {
             prisma_1.default.user.findMany({
                 take: 12,
                 orderBy: { createdAt: 'desc' },
-                select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, isCardVerified: true, isVerifiedLandlord: true, createdAt: true }
+                select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, role: true, ghanaCardStatus: true, isVerifiedLandlord: true, createdAt: true }
             }),
             prisma_1.default.property.findMany({
                 take: 12,
@@ -905,7 +1767,7 @@ const getSystemActivity = async (req, res) => {
                 id: `booking-${b.id}`,
                 type: 'BOOKING',
                 severity: b.status === 'CANCELLED' ? 'NOTICE' : (b.status === 'CONFIRMED' || b.status === 'COMPLETED' ? 'COMPLIANCE' : 'INFO'),
-                title: 'Tenancy Escrow Booking',
+                title: 'Tenancy Booking',
                 message: `${b.tenant?.firstName || 'Tenant'} ${b.tenant?.lastName || ''} booked residential lease on "${b.property?.title || 'Property'}"`,
                 actor: {
                     name: `${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}`.trim() || 'Tenant',
@@ -926,7 +1788,7 @@ const getSystemActivity = async (req, res) => {
             ...recentUsers.map(u => ({
                 id: `user-${u.id}`,
                 type: 'USER',
-                severity: u.isVerifiedLandlord || u.isCardVerified ? 'COMPLIANCE' : 'INFO',
+                severity: u.isVerifiedLandlord || u.ghanaCardStatus === 'VERIFIED' ? 'COMPLIANCE' : 'INFO',
                 title: `${u.role === 'LANDLORD' ? 'Landlord' : 'Tenant'} Registration`,
                 message: `New verified registration: ${u.firstName} ${u.lastName} (${u.role === 'LANDLORD' ? 'Property Owner' : 'Resident'})`,
                 actor: {
@@ -939,9 +1801,9 @@ const getSystemActivity = async (req, res) => {
                     type: 'User Profile',
                     id: u.id,
                     title: `${u.firstName} ${u.lastName}`,
-                    location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.isCardVerified ? 'Verified Ghana Card' : 'Pending NIA KYC')
+                    location: u.role === 'LANDLORD' ? (u.isVerifiedLandlord ? 'Verified Title Deed' : 'Pending Deed Audit') : (u.ghanaCardStatus === 'VERIFIED' ? 'Verified Ghana Card' : 'Pending NIA KYC')
                 },
-                status: u.isCardVerified || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
+                status: u.ghanaCardStatus === 'VERIFIED' || u.isVerifiedLandlord ? 'VERIFIED' : 'NEW',
                 createdAt: u.createdAt
             })),
             ...recentProperties.map(p => ({
@@ -1010,7 +1872,7 @@ const getSystemActivity = async (req, res) => {
                 id: `breach-${b.id}`,
                 type: 'SECURITY',
                 severity: 'CRITICAL',
-                title: 'Statutory Act 220 Breach Report',
+                title: 'Tenancy Dispute Report',
                 message: `Breach claim lodged against tenant ${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''} at "${b.property?.title || 'Property'}": ${b.title}`,
                 actor: {
                     name: b.reporter ? `${b.reporter.firstName} ${b.reporter.lastName}` : 'Complainant',
@@ -1054,8 +1916,20 @@ const getSystemActivity = async (req, res) => {
 exports.getSystemActivity = getSystemActivity;
 const getConfig = async (req, res) => {
     try {
-        const config = await (0, config_service_1.getSystemConfig)();
-        res.status(200).json(config);
+        const [config, pendingSubscribersCount, totalSubscribersCount, activeBookingsInFlight] = await Promise.all([
+            (0, config_service_1.getSystemConfig)(),
+            prisma_1.default.maintenanceSubscriber.count({ where: { notified: false } }).catch(() => 0),
+            prisma_1.default.maintenanceSubscriber.count().catch(() => 0),
+            prisma_1.default.booking.count({ where: { status: { in: ['PENDING', 'APPROVED'] } } }).catch(() => 0),
+        ]);
+        res.status(200).json({
+            ...config,
+            operationalContext: {
+                pendingSubscribersCount,
+                totalSubscribersCount,
+                activeBookingsInFlight,
+            },
+        });
     }
     catch (error) {
         console.error('Error fetching config:', error);
@@ -1065,7 +1939,11 @@ const getConfig = async (req, res) => {
 exports.getConfig = getConfig;
 const updateConfig = async (req, res) => {
     try {
-        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime } = req.body;
+        const { ghanaCardVerificationEnabled, bookingGracePeriodHours, platformCommissionPercent, roommateFinderEnabled, maintenanceMode, maintenanceEndTime, maintenanceStartTime, maintenanceScheduled, maintenanceTitle, maintenanceMessage, maintenanceScope, maintenanceReason, maintenanceContactEmail, maintenanceContactPhone, } = req.body;
+        const previousConfig = await prisma_1.default.systemConfig.findUnique({ where: { id: 'GLOBAL' } });
+        const adminIdentity = req.user?.firstName
+            ? `${req.user.firstName} ${req.user.lastName} (${req.user.email})`
+            : req.user?.email || 'Administrator';
         const updatedConfig = await prisma_1.default.systemConfig.upsert({
             where: { id: 'GLOBAL' },
             update: {
@@ -1075,6 +1953,15 @@ const updateConfig = async (req, res) => {
                 ...(roommateFinderEnabled !== undefined && { roommateFinderEnabled }),
                 ...(maintenanceMode !== undefined && { maintenanceMode }),
                 ...(maintenanceEndTime !== undefined && { maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null }),
+                ...(maintenanceStartTime !== undefined && { maintenanceStartTime: maintenanceStartTime ? new Date(maintenanceStartTime) : null }),
+                ...(maintenanceScheduled !== undefined && { maintenanceScheduled }),
+                ...(maintenanceTitle !== undefined && { maintenanceTitle }),
+                ...(maintenanceMessage !== undefined && { maintenanceMessage }),
+                ...(maintenanceScope !== undefined && { maintenanceScope }),
+                ...(maintenanceReason !== undefined && { maintenanceReason }),
+                ...(maintenanceContactEmail !== undefined && { maintenanceContactEmail }),
+                ...(maintenanceContactPhone !== undefined && { maintenanceContactPhone }),
+                maintenanceUpdatedBy: adminIdentity,
             },
             create: {
                 id: 'GLOBAL',
@@ -1084,6 +1971,15 @@ const updateConfig = async (req, res) => {
                 roommateFinderEnabled: roommateFinderEnabled ?? true,
                 maintenanceMode: maintenanceMode ?? false,
                 maintenanceEndTime: maintenanceEndTime ? new Date(maintenanceEndTime) : null,
+                maintenanceStartTime: maintenanceStartTime ? new Date(maintenanceStartTime) : null,
+                maintenanceScheduled: maintenanceScheduled ?? false,
+                maintenanceTitle: maintenanceTitle ?? 'Scheduled Platform Maintenance',
+                maintenanceMessage: maintenanceMessage ?? 'AkwaabaHomes is currently undergoing scheduled maintenance to upgrade our infrastructure and improve your rental experience. We will be back online shortly.',
+                maintenanceScope: maintenanceScope ?? 'GLOBAL',
+                maintenanceReason: maintenanceReason ?? null,
+                maintenanceContactEmail: maintenanceContactEmail ?? 'support@akwaabahomes.com',
+                maintenanceContactPhone: maintenanceContactPhone ?? '+233 24 000 0000',
+                maintenanceUpdatedBy: adminIdentity,
             }
         });
         (0, config_service_1.invalidateConfigCache)();
@@ -1093,8 +1989,49 @@ const updateConfig = async (req, res) => {
         catch (e) {
             console.error('Failed to emit config_updated socket event', e);
         }
-        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_UPDATE_CONFIG', 'SystemConfig', 'GLOBAL', null, updatedConfig, req.ip || req.socket.remoteAddress);
-        res.status(200).json({ message: 'Configuration updated successfully', config: updatedConfig });
+        // Determine granular audit action
+        let auditAction = 'MAINTENANCE_CONFIG_UPDATED';
+        if (previousConfig?.maintenanceMode !== true && updatedConfig.maintenanceMode === true) {
+            auditAction = 'MAINTENANCE_ACTIVATED';
+        }
+        else if (previousConfig?.maintenanceMode === true && updatedConfig.maintenanceMode === false) {
+            auditAction = 'MAINTENANCE_DEACTIVATED';
+        }
+        else if (!previousConfig?.maintenanceScheduled && updatedConfig.maintenanceScheduled === true) {
+            auditAction = 'MAINTENANCE_SCHEDULED';
+        }
+        else if (previousConfig?.maintenanceScheduled && updatedConfig.maintenanceScheduled === false && !updatedConfig.maintenanceMode) {
+            auditAction = 'MAINTENANCE_SCHEDULE_CANCELLED';
+        }
+        await (0, auditLogger_1.logAudit)(req.user.id, auditAction, 'SystemConfig', 'GLOBAL', previousConfig ? {
+            maintenanceMode: previousConfig.maintenanceMode,
+            maintenanceScheduled: previousConfig.maintenanceScheduled,
+            maintenanceScope: previousConfig.maintenanceScope,
+            maintenanceStartTime: previousConfig.maintenanceStartTime,
+            maintenanceEndTime: previousConfig.maintenanceEndTime,
+            maintenanceTitle: previousConfig.maintenanceTitle,
+            maintenanceMessage: previousConfig.maintenanceMessage,
+            maintenanceReason: previousConfig.maintenanceReason,
+            maintenanceContactEmail: previousConfig.maintenanceContactEmail,
+            maintenanceContactPhone: previousConfig.maintenanceContactPhone,
+        } : null, {
+            maintenanceMode: updatedConfig.maintenanceMode,
+            maintenanceScheduled: updatedConfig.maintenanceScheduled,
+            maintenanceScope: updatedConfig.maintenanceScope,
+            maintenanceStartTime: updatedConfig.maintenanceStartTime,
+            maintenanceEndTime: updatedConfig.maintenanceEndTime,
+            maintenanceTitle: updatedConfig.maintenanceTitle,
+            maintenanceMessage: updatedConfig.maintenanceMessage,
+            maintenanceReason: updatedConfig.maintenanceReason,
+            maintenanceContactEmail: updatedConfig.maintenanceContactEmail,
+            maintenanceContactPhone: updatedConfig.maintenanceContactPhone,
+            updatedBy: adminIdentity
+        }, req.ip || req.socket.remoteAddress);
+        res.status(200).json({
+            message: 'Configuration updated successfully',
+            config: updatedConfig,
+            action: auditAction
+        });
     }
     catch (error) {
         console.error('Error updating config:', error);
@@ -1102,6 +2039,74 @@ const updateConfig = async (req, res) => {
     }
 };
 exports.updateConfig = updateConfig;
+const getMaintenanceHistory = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+        const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit || '15'), 10) || 15));
+        const actionFilter = typeof req.query.action === 'string' ? req.query.action.trim() : '';
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+        const skip = (page - 1) * limit;
+        const andConditions = [
+            {
+                OR: [
+                    { entity: 'SystemConfig' },
+                    { action: { startsWith: 'MAINTENANCE_' } },
+                    { action: 'ADMIN_UPDATE_CONFIG' }
+                ]
+            }
+        ];
+        if (actionFilter && actionFilter !== 'ALL') {
+            andConditions.push({ action: actionFilter });
+        }
+        if (search) {
+            andConditions.push({
+                OR: [
+                    { action: { contains: search, mode: 'insensitive' } },
+                    { newData: { contains: search, mode: 'insensitive' } },
+                    { oldData: { contains: search, mode: 'insensitive' } },
+                    { user: { firstName: { contains: search, mode: 'insensitive' } } },
+                    { user: { lastName: { contains: search, mode: 'insensitive' } } },
+                    { user: { email: { contains: search, mode: 'insensitive' } } },
+                ]
+            });
+        }
+        const where = andConditions.length === 1 ? andConditions[0] : { AND: andConditions };
+        const [logs, total] = await Promise.all([
+            prisma_1.default.auditLog.findMany({
+                where,
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit,
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                            role: true
+                        }
+                    }
+                }
+            }),
+            prisma_1.default.auditLog.count({ where })
+        ]);
+        res.status(200).json({
+            history: logs,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error fetching maintenance audit history:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getMaintenanceHistory = getMaintenanceHistory;
 const getAllTickets = async (req, res) => {
     try {
         const tickets = await prisma_1.default.maintenanceTicket.findMany({
@@ -1191,47 +2196,107 @@ const adminUpdateTicketStatus = async (req, res) => {
 exports.adminUpdateTicketStatus = adminUpdateTicketStatus;
 const broadcastNotification = async (req, res) => {
     try {
-        const { target, title, message } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
+        const { target, title, message, category = 'GENERAL_ANNOUNCEMENT', priority = 'NORMAL', channels = ['IN_APP', 'SOCKET'] } = req.body; // target: 'ALL_TENANTS' | 'ALL_LANDLORDS' | 'ALL_USERS'
         if (!['ALL_TENANTS', 'ALL_LANDLORDS', 'ALL_USERS'].includes(target)) {
             res.status(400).json({ message: 'Invalid target group' });
             return;
         }
-        let users = [];
-        if (target === 'ALL_TENANTS') {
-            users = await prisma_1.default.user.findMany({ where: { role: 'TENANT' }, select: { id: true } });
-        }
-        else if (target === 'ALL_LANDLORDS') {
-            users = await prisma_1.default.user.findMany({ where: { role: 'LANDLORD' }, select: { id: true } });
-        }
-        else {
-            users = await prisma_1.default.user.findMany({ select: { id: true } });
-        }
-        if (users.length === 0) {
-            res.status(200).json({ message: 'No users found for the target group', count: 0 });
+        if (!title?.trim() || !message?.trim()) {
+            res.status(400).json({ message: 'Broadcast title and message are required' });
             return;
         }
-        // Create DB notifications
-        const notificationsData = users.map(u => ({
-            userId: u.id,
-            title,
-            message,
-            type: 'ANNOUNCEMENT'
-        }));
-        await prisma_1.default.notification.createMany({
-            data: notificationsData
-        });
-        // Broadcast via socket
-        try {
-            const { emitToUser } = await import('../socket');
-            users.forEach(u => {
-                emitToUser(u.id, 'notification', { title, message, type: 'ANNOUNCEMENT' });
+        let users = [];
+        if (target === 'ALL_TENANTS') {
+            users = await prisma_1.default.user.findMany({
+                where: { role: 'TENANT', isSuspended: false },
+                select: { id: true, email: true, firstName: true, lastName: true }
             });
         }
-        catch (e) {
-            console.error('Socket emission failed for broadcast', e);
+        else if (target === 'ALL_LANDLORDS') {
+            users = await prisma_1.default.user.findMany({
+                where: { role: 'LANDLORD', isSuspended: false },
+                select: { id: true, email: true, firstName: true, lastName: true }
+            });
         }
-        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS', null, { target, count: users.length, title, message }, req.ip || req.socket.remoteAddress);
-        res.status(200).json({ message: 'Broadcast successful', count: users.length });
+        else {
+            users = await prisma_1.default.user.findMany({
+                where: { isSuspended: false },
+                select: { id: true, email: true, firstName: true, lastName: true }
+            });
+        }
+        if (users.length === 0) {
+            res.status(200).json({ message: 'No eligible users found for the selected target group', count: 0 });
+            return;
+        }
+        // 1. In-App Notifications (Database Persistence)
+        if (channels.includes('IN_APP')) {
+            const notificationsData = users.map(u => ({
+                userId: u.id,
+                title,
+                message,
+                type: 'ANNOUNCEMENT'
+            }));
+            await prisma_1.default.notification.createMany({
+                data: notificationsData
+            });
+        }
+        // 2. Real-Time Socket.IO Alert Push
+        if (channels.includes('SOCKET')) {
+            try {
+                const { emitToUser } = await import('../socket');
+                users.forEach(u => {
+                    emitToUser(u.id, 'notification', {
+                        title,
+                        message,
+                        type: 'ANNOUNCEMENT',
+                        category,
+                        priority
+                    });
+                });
+            }
+            catch (e) {
+                console.error('Socket emission failed for broadcast', e);
+            }
+        }
+        // 3. Institutional Email Dispatch
+        if (channels.includes('EMAIL')) {
+            try {
+                await (0, notification_service_1.notifyAdminAnnouncement)({
+                    userIds: users.map(u => u.id),
+                    emailList: users.map(u => ({ email: u.email, name: `${u.firstName} ${u.lastName}` })),
+                    subject: title,
+                    message
+                });
+            }
+            catch (e) {
+                console.error('Email broadcast failed', e);
+            }
+        }
+        // Record Immutable Audit Log
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_BROADCAST_NOTIFICATION', 'Notification', 'MASS', null, {
+            target,
+            count: users.length,
+            title,
+            message,
+            category,
+            priority,
+            channels
+        }, req.ip || req.socket.remoteAddress);
+        // Notify all admin dashboards of new broadcast
+        try {
+            (0, socket_1.emitToAll)('broadcast_dispatched', {
+                target,
+                count: users.length,
+                title,
+                category,
+                createdAt: new Date().toISOString()
+            });
+        }
+        catch (e) { }
+        res.status(200).json({
+            message: `Broadcast successfully dispatched to ${users.length} recipient(s)`,
+            count: users.length
+        });
     }
     catch (error) {
         console.error('Error broadcasting notification:', error);
@@ -1245,7 +2310,7 @@ const getBroadcastHistory = async (req, res) => {
             where: { action: 'ADMIN_BROADCAST_NOTIFICATION' },
             include: { user: { select: { firstName: true, lastName: true, email: true } } },
             orderBy: { createdAt: 'desc' },
-            take: 15
+            take: 50
         });
         const history = logs.map(log => {
             let details = {};
@@ -1259,6 +2324,9 @@ const getBroadcastHistory = async (req, res) => {
                 message: details.message || '',
                 target: details.target || 'ALL_USERS',
                 count: details.count || 0,
+                category: details.category || 'GENERAL_ANNOUNCEMENT',
+                priority: details.priority || 'NORMAL',
+                channels: Array.isArray(details.channels) ? details.channels : ['IN_APP', 'SOCKET'],
                 dispatchedBy: `${log.user?.firstName || 'Admin'} ${log.user?.lastName || ''}`.trim(),
                 createdAt: log.createdAt
             };

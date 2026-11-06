@@ -10,6 +10,8 @@ export interface FraudRiskReport {
     price: number;
     riskScore: number;
     riskLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+    approvalStatus: string;
+    isAvailable: boolean;
     flags: string[];
     createdAt: Date;
 }

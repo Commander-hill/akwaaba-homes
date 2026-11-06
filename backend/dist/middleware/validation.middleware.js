@@ -13,12 +13,18 @@ const validate = (validations) => {
         }
         // Format errors strictly
         const errorList = errors.array();
-        const firstErrorMessage = errorList[0]?.msg || 'Invalid input data';
-        const extractedErrors = [];
-        errorList.forEach((err) => extractedErrors.push({ field: err.path || err.param, message: err.msg }));
+        const firstErrorMessage = errorList[0]?.msg || 'Validation failed';
+        const extractedErrors = errorList.map((err) => ({
+            field: err.path || err.param || 'field',
+            message: err.msg
+        }));
         res.status(400).json({
+            success: false,
             message: firstErrorMessage,
+            errorCode: 'VALIDATION_ERROR',
             errors: extractedErrors,
+            timestamp: new Date().toISOString(),
+            path: req.originalUrl || req.url
         });
     };
 };
@@ -35,7 +41,19 @@ exports.registerValidation = [
     (0, express_validator_1.body)('role').optional().isIn(['TENANT', 'LANDLORD']).withMessage('Public registration role must be either TENANT or LANDLORD'),
 ];
 exports.loginValidation = [
-    (0, express_validator_1.body)('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
+    (0, express_validator_1.body)().custom((reqBody) => {
+        const rawVal = reqBody.identifier || reqBody.email;
+        if (!rawVal || !String(rawVal).trim()) {
+            throw new Error('Email address or phone number is required');
+        }
+        const val = String(rawVal).trim();
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+        const isPhone = /^[+]?[\d\s\-().]{7,25}$/.test(val);
+        if (!isEmail && !isPhone) {
+            throw new Error('Please enter a valid email address or phone number');
+        }
+        return true;
+    }),
     (0, express_validator_1.body)('password').notEmpty().withMessage('Password is required'),
 ];
 exports.createPropertyValidation = [
@@ -75,5 +93,7 @@ exports.updatePropertyValidation = [
     (0, express_validator_1.body)('location').optional().notEmpty().withMessage('Location is required').trim().escape(),
     (0, express_validator_1.body)('amenities').optional().isArray().withMessage('Amenities must be an array'),
     (0, express_validator_1.body)('images').optional().isArray().withMessage('Images must be an array'),
+    (0, express_validator_1.body)('price').optional().isFloat({ min: 0 }),
+    (0, express_validator_1.body)('rooms').optional().isArray(),
 ];
 //# sourceMappingURL=validation.middleware.js.map

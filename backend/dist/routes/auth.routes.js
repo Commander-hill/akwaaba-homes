@@ -10,19 +10,24 @@ const router = (0, express_1.Router)();
 router.post('/register', rateLimiter_middleware_1.authRateLimiter, (0, validation_middleware_1.validate)(validation_middleware_1.registerValidation), auth_controller_1.register);
 router.post('/login', rateLimiter_middleware_1.loginRateLimiter, (0, validation_middleware_1.validate)(validation_middleware_1.loginValidation), auth_controller_1.login);
 router.post('/login/2fa', rateLimiter_middleware_1.loginRateLimiter, auth_controller_1.login2FA);
+router.post('/login/2fa/mandatory-setup', rateLimiter_middleware_1.loginRateLimiter, auth_controller_1.completeMandatory2FASetup);
 router.post('/logout', auth_controller_1.logout);
 router.post('/refresh', rateLimiter_middleware_1.authRateLimiter, auth_controller_1.refresh);
 router.post('/verify-email', rateLimiter_middleware_1.otpRateLimiter, auth_controller_1.verifyEmail);
-router.post('/ghana-card', auth_middleware_1.authenticate, auth_controller_1.submitGhanaCard);
-router.post('/landlord-verification', auth_middleware_1.authenticate, auth_controller_1.submitLandlordVerification);
+router.post('/ghana-card', auth_middleware_1.authenticate, rateLimiter_middleware_1.kycRateLimiter, auth_controller_1.submitGhanaCard);
+router.post('/landlord-verification', auth_middleware_1.authenticate, rateLimiter_middleware_1.kycRateLimiter, auth_controller_1.submitLandlordVerification);
 router.post('/student-verification', auth_middleware_1.authenticate, auth_controller_1.submitStudentVerification);
 router.post('/forgot-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.forgotPassword);
 router.post('/reset-password', rateLimiter_middleware_1.passwordResetRateLimiter, auth_controller_1.resetPassword);
+router.post('/change-password', auth_middleware_1.authenticate, auth_controller_1.changePassword);
 // Two-Factor Authentication Management (Authenticated)
 router.get('/2fa/status', auth_middleware_1.authenticate, auth_controller_1.get2FAStatus);
 router.post('/2fa/setup', auth_middleware_1.authenticate, auth_controller_1.setup2FA);
 router.post('/2fa/enable', auth_middleware_1.authenticate, auth_controller_1.enable2FA);
 router.post('/2fa/disable', auth_middleware_1.authenticate, auth_controller_1.disable2FA);
+router.post('/2fa/sms/send', auth_middleware_1.authenticate, auth_controller_1.send2FASMS);
+router.post('/2fa/sms/verify', auth_middleware_1.authenticate, auth_controller_1.verify2FASMS);
+router.post('/2fa/recovery-codes/regenerate', auth_middleware_1.authenticate, auth_controller_1.regenerateRecoveryCodes);
 // Protected routes
 router.get('/me', auth_middleware_1.authenticate, auth_controller_1.getMe);
 router.put('/profile', auth_middleware_1.authenticate, auth_controller_1.updateProfile);

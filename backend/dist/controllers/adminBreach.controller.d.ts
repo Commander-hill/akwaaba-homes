@@ -15,4 +15,12 @@ export declare const getLandlordDeedAudits: (req: Request, res: Response) => Pro
  * Audit Landlord Deed Document (Approve / Reject)
  */
 export declare const auditLandlordDeed: (req: Request, res: Response) => Promise<void>;
+/**
+ * Request Additional Title Deed Documentation from Landlord
+ */
+export declare const requestAdditionalDeedDocuments: (req: Request, res: Response) => Promise<void>;
+/**
+ * Admin directly attaches/replaces a Title Deed document for a Landlord
+ */
+export declare const attachLandlordDeed: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=adminBreach.controller.d.ts.map

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBooking = exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getTenantBookings = exports.createBooking = exports.downloadAgreementPDF = void 0;
+exports.deleteBooking = exports.cancelPendingBooking = exports.getMyActiveBooking = exports.verifyPayment = exports.payBooking = exports.updateBookingStatus = exports.getLandlordBookings = exports.getBookingById = exports.getTenantBookings = exports.createBooking = exports.downloadAgreementPDF = void 0;
 const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const auditLogger_1 = require("../utils/auditLogger");
@@ -53,7 +53,7 @@ const downloadAgreementPDF = async (req, res) => {
         const userRole = req.user?.role;
         const isTenant = booking.tenantId === userId;
         const isLandlord = booking.property?.landlordId === userId;
-        const isAdmin = userRole === 'ADMIN';
+        const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(userRole);
         const isStaff = await prisma_1.default.propertyStaff.findFirst({
             where: { propertyId: booking.propertyId, userId }
         });
@@ -200,6 +200,16 @@ const createBooking = async (req, res) => {
             res.status(400).json({ message: 'Property is currently not available for booking' });
             return;
         }
+        // Gating check: Property must have an active unexpired subscription to receive bookings
+        const activeSub = await prisma_1.default.propertySubscription.findUnique({
+            where: { propertyId }
+        });
+        if (!activeSub || !activeSub.isActive || new Date() > new Date(activeSub.endDate)) {
+            res.status(400).json({
+                message: 'This property is not currently accepting bookings because its listing subscription is inactive or expired.'
+            });
+            return;
+        }
         const tenant = await prisma_1.default.user.findUnique({
             where: { id: tenantId },
             select: {
@@ -278,18 +288,6 @@ const createBooking = async (req, res) => {
         let booking;
         try {
             booking = await prisma_1.default.$transaction(async (tx) => {
-                let targetRoomUnit = null;
-                let targetBed = null;
-                if (roomUnitId && bedId) {
-                    targetRoomUnit = await tx.roomUnit.findUnique({ where: { id: roomUnitId } });
-                    if (!targetRoomUnit || targetRoomUnit.roomId !== roomId) {
-                        throw { status: 400, message: 'Invalid room unit selected' };
-                    }
-                    targetBed = await tx.bed.findUnique({ where: { id: bedId } });
-                    if (!targetBed || targetBed.roomUnitId !== roomUnitId) {
-                        throw { status: 400, message: 'Invalid bed selected' };
-                    }
-                }
                 // Dynamic Gender Locking on Room Unit
                 if (targetRoomUnit) {
                     if (targetRoomUnit.genderLock !== 'UNASSIGNED' && targetRoomUnit.genderLock !== tenantGender) {
@@ -307,6 +305,23 @@ const createBooking = async (req, res) => {
                 }
                 // ATOMIC RESERVATION: Ensure bed slot is AVAILABLE and reserve it in a single atomic statement
                 if (targetBed) {
+                    // Concurrency Overlap Guard: Check if an active booking exists on this bed during requested date window
+                    const overlappingBooking = await tx.booking.findFirst({
+                        where: {
+                            bedId: targetBed.id,
+                            status: { in: ['PENDING', 'APPROVED', 'CONFIRMED', 'ACTIVE', 'CHECKED_IN'] },
+                            AND: [
+                                { startDate: { lte: new Date(endDate) } },
+                                { endDate: { gte: new Date(startDate) } }
+                            ]
+                        }
+                    });
+                    if (overlappingBooking) {
+                        throw {
+                            status: 409,
+                            message: `Conflict: Bed "${targetBed.bedNumber}" in Unit "${targetRoomUnit?.unitNumber || ''}" already has an active booking during the selected dates.`
+                        };
+                    }
                     const updateResult = await tx.bed.updateMany({
                         where: {
                             id: targetBed.id,
@@ -334,7 +349,7 @@ const createBooking = async (req, res) => {
                         status: 'PENDING'
                     }
                 });
-            });
+            }, { maxWait: 20000, timeout: 30000 });
         }
         catch (txError) {
             if (txError.status && txError.message) {
@@ -343,6 +358,8 @@ const createBooking = async (req, res) => {
             }
             throw txError;
         }
+        // Log audit trail for booking creation
+        await (0, auditLogger_1.logAudit)(tenantId, 'CREATE_BOOKING', 'Booking', booking.id, null, { propertyId, roomId, roomUnitId, bedId, startDate, endDate, status: 'PENDING' }, req.ip || req.socket.remoteAddress);
         // Notify landlord via email + in-app
         await (0, notification_service_1.notifyBookingCreated)({
             landlordId: property.landlordId,
@@ -445,15 +462,56 @@ const getTenantBookings = async (req, res) => {
         const bookings = await prisma_1.default.booking.findMany({
             where: { tenantId },
             include: {
-                property: { select: { title: true, location: true, price: true, images: true } },
-                leaseAgreement: { select: { status: true } }
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        price: true,
+                        pricePeriod: true,
+                        cautionDeposit: true,
+                        type: true,
+                        images: true,
+                        gateLockTime: true,
+                        visitorPolicy: true,
+                        quietHours: true,
+                        includedUtilities: true,
+                        landlord: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                phoneNumber: true,
+                                email: true,
+                                isVerifiedLandlord: true,
+                            }
+                        }
+                    }
+                },
+                room: { select: { id: true, blockName: true, roomType: true, gender: true, bedsPerRoom: true, price: true } },
+                roomUnit: { select: { id: true, unitNumber: true, floor: true, genderLock: true } },
+                bed: { select: { id: true, bedNumber: true, status: true } },
+                leaseAgreement: { select: { id: true, status: true, tenantSignedAt: true, landlordSignedAt: true } },
+                transaction: {
+                    select: { id: true, amount: true, status: true, reference: true, createdAt: true }
+                },
+                review: { select: { id: true, rating: true, comment: true, createdAt: true } }
             },
             orderBy: { createdAt: 'desc' }
         });
-        const parsedBookings = bookings.map(b => ({
-            ...b,
-            property: { ...b.property, images: (0, json_1.safeJsonParse)(b.property.images, []) }
-        }));
+        const parsedBookings = bookings.map(b => {
+            const effectivePrice = b.room?.price ?? b.property?.price ?? 0;
+            return {
+                ...b,
+                price: effectivePrice,
+                transactions: b.transaction ? [b.transaction] : [],
+                property: {
+                    ...b.property,
+                    images: (0, json_1.safeJsonParse)(b.property.images, []),
+                    includedUtilities: (0, json_1.safeJsonParse)(b.property.includedUtilities, [])
+                }
+            };
+        });
         const payload = { bookings: parsedBookings };
         cache_1.default.set(cacheKey, payload, 30);
         res.status(200).json(payload);
@@ -464,6 +522,104 @@ const getTenantBookings = async (req, res) => {
     }
 };
 exports.getTenantBookings = getTenantBookings;
+const getBookingById = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+        const { id } = req.params;
+        const booking = await prisma_1.default.booking.findUnique({
+            where: { id },
+            include: {
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        location: true,
+                        price: true,
+                        pricePeriod: true,
+                        paymentSchedule: true,
+                        cautionDeposit: true,
+                        type: true,
+                        images: true,
+                        gateLockTime: true,
+                        visitorPolicy: true,
+                        quietHours: true,
+                        includedUtilities: true,
+                        landlordId: true,
+                        landlord: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                phoneNumber: true,
+                                email: true,
+                                isVerifiedLandlord: true,
+                            }
+                        }
+                    }
+                },
+                tenant: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        phoneNumber: true,
+                        gender: true,
+                        nationality: true,
+                        guardianName: true,
+                        guardianPhone: true,
+                        studentId: true,
+                        campus: true,
+                        programmeOfStudy: true,
+                        yearOfStudy: true,
+                        ghanaCardStatus: true,
+                        avatarUrl: true,
+                    }
+                },
+                room: { select: { id: true, blockName: true, roomType: true, gender: true, price: true, bedsPerRoom: true } },
+                roomUnit: { select: { id: true, unitNumber: true, floor: true, genderLock: true } },
+                bed: { select: { id: true, bedNumber: true, status: true } },
+                leaseAgreement: { select: { id: true, status: true, cryptographicHash: true, tenantSignedAt: true, landlordSignedAt: true } },
+                transaction: {
+                    select: { id: true, amount: true, status: true, reference: true, createdAt: true }
+                },
+                review: { select: { id: true, rating: true, comment: true, createdAt: true } }
+            }
+        });
+        if (!booking) {
+            res.status(404).json({ message: 'Booking not found' });
+            return;
+        }
+        const isOwnerTenant = booking.tenantId === userId;
+        const isOwnerLandlord = booking.property?.landlordId === userId;
+        const isAdmin = userRole === 'ADMIN';
+        const isAssignedStaff = await prisma_1.default.propertyStaff.findFirst({
+            where: { propertyId: booking.propertyId, userId }
+        });
+        if (!isOwnerTenant && !isOwnerLandlord && !isAssignedStaff && !isAdmin) {
+            res.status(403).json({ message: 'Forbidden: You do not have permission to view this booking' });
+            return;
+        }
+        const effectivePrice = booking.room?.price ?? booking.property?.price ?? 0;
+        const parsedBooking = {
+            ...booking,
+            price: effectivePrice,
+            transactions: booking.transaction ? [booking.transaction] : [],
+            property: {
+                ...booking.property,
+                images: (0, json_1.safeJsonParse)(booking.property.images, []),
+                includedUtilities: (0, json_1.safeJsonParse)(booking.property.includedUtilities, [])
+            }
+        };
+        res.status(200).json({ booking: parsedBooking });
+    }
+    catch (error) {
+        console.error('Error fetching booking by ID:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getBookingById = getBookingById;
 const getLandlordBookings = async (req, res) => {
     try {
         const landlordId = req.user.id;
@@ -476,12 +632,91 @@ const getLandlordBookings = async (req, res) => {
         const bookings = await prisma_1.default.booking.findMany({
             where: { property: { landlordId } },
             include: {
-                property: { select: { id: true, title: true, cautionDeposit: true, location: true } },
-                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, reputationScore: true, avatarUrl: true, gender: true, studentId: true, programmeOfStudy: true } }
+                property: {
+                    select: {
+                        id: true,
+                        title: true,
+                        cautionDeposit: true,
+                        location: true,
+                        price: true,
+                        pricePeriod: true,
+                        type: true,
+                        images: true,
+                    }
+                },
+                room: {
+                    select: {
+                        id: true,
+                        blockName: true,
+                        roomType: true,
+                        gender: true,
+                        bedsPerRoom: true,
+                        price: true,
+                    }
+                },
+                roomUnit: {
+                    select: {
+                        id: true,
+                        unitNumber: true,
+                        floor: true,
+                        genderLock: true,
+                    }
+                },
+                bed: {
+                    select: {
+                        id: true,
+                        bedNumber: true,
+                        status: true,
+                    }
+                },
+                leaseAgreement: {
+                    select: {
+                        id: true,
+                        status: true,
+                        tenantSignedAt: true,
+                        landlordSignedAt: true,
+                    }
+                },
+                transaction: {
+                    select: {
+                        id: true,
+                        amount: true,
+                        reference: true,
+                        status: true,
+                        createdAt: true,
+                    }
+                },
+                tenant: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
+                        phoneNumber: true,
+                        reputationScore: true,
+                        avatarUrl: true,
+                        gender: true,
+                        campus: true,
+                        studentId: true,
+                        programmeOfStudy: true,
+                        yearOfStudy: true,
+                        ghanaCardStatus: true,
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
-        const payload = { bookings };
+        const parsedBookings = bookings.map((b) => ({
+            ...b,
+            price: b.room?.price ?? b.property?.price ?? 0,
+            property: b.property
+                ? {
+                    ...b.property,
+                    images: (0, json_1.safeJsonParse)(b.property.images, []),
+                }
+                : b.property,
+        }));
+        const payload = { bookings: parsedBookings };
         cache_1.default.set(cacheKey, payload, 30);
         res.status(200).json(payload);
     }
@@ -496,17 +731,9 @@ const updateBookingStatus = async (req, res) => {
         const landlordId = req.user.id;
         const { id } = req.params;
         let { status } = req.body;
-        if (status === 'CONFIRMED')
-            status = 'APPROVED';
-        const validStatuses = ['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
+        const validStatuses = ['APPROVED', 'CONFIRMED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'];
         if (!validStatuses.includes(status)) {
             res.status(400).json({ message: 'Invalid status' });
-            return;
-        }
-        if (status === 'COMPLETED' && req.user.role !== 'ADMIN') {
-            res.status(403).json({
-                message: 'Forbidden: Tenancy can only transition to COMPLETED upon verified escrow payment or administrative review.'
-            });
             return;
         }
         const booking = await prisma_1.default.booking.findUnique({
@@ -531,41 +758,93 @@ const updateBookingStatus = async (req, res) => {
             res.status(403).json({ message: 'Forbidden: You do not own or manage this property' });
             return;
         }
-        if (isStaff && status !== 'CHECKED_IN' && booking.property.landlordId !== landlordId && req.user.role !== 'ADMIN') {
-            res.status(403).json({ message: 'Forbidden: Caretaker staff can only perform tenant check-in' });
+        // ── STRICT STATE MACHINE TRANSITION MATRIX ──
+        const allowedTransitions = {
+            PENDING: ['APPROVED', 'REJECTED', 'CANCELLED'],
+            APPROVED: ['CONFIRMED', 'REJECTED', 'CANCELLED'],
+            CONFIRMED: ['CHECKED_IN', 'CANCELLED'],
+            CHECKED_IN: ['COMPLETED', 'CANCELLED'],
+            COMPLETED: [],
+            REJECTED: [],
+            CANCELLED: []
+        };
+        const currentStatus = booking.status || 'PENDING';
+        const permittedNext = allowedTransitions[currentStatus] || [];
+        if (currentStatus === status) {
+            res.status(200).json({
+                message: `Booking is already in state ${status}.`,
+                booking
+            });
             return;
         }
-        // Release reserved bed back to AVAILABLE if booking is rejected or cancelled
-        if ((status === 'REJECTED' || status === 'CANCELLED') && booking.bedId) {
-            await prisma_1.default.bed.update({
-                where: { id: booking.bedId },
-                data: { status: 'AVAILABLE' }
+        if (!permittedNext.includes(status)) {
+            res.status(409).json({
+                message: `Conflict: Booking in state "${currentStatus}" cannot be transitioned to "${status}".`,
+                currentStatus,
+                allowedTransitions: permittedNext
             });
+            return;
         }
-        // Mark assigned bed as OCCUPIED upon tenant check-in
-        if (status === 'CHECKED_IN' && booking.bedId) {
-            await prisma_1.default.bed.update({
-                where: { id: booking.bedId },
-                data: { status: 'OCCUPIED' }
-            });
-        }
-        if ((status === 'REJECTED' || status === 'CANCELLED') && booking.roomUnitId) {
+        // Release gender lock if empty and booking is rejected/cancelled
+        if ((status === 'REJECTED' || status === 'CANCELLED' || status === 'COMPLETED') && booking.roomUnitId) {
             await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id);
         }
-        const updatedBooking = await prisma_1.default.booking.update({ where: { id }, data: { status } });
-        // Auto-generate Lease Agreement when approved
-        if (status === 'APPROVED') {
-            const existingAgreement = await prisma_1.default.leaseAgreement.findUnique({ where: { bookingId: id } });
-            if (!existingAgreement) {
-                await prisma_1.default.leaseAgreement.create({
-                    data: {
-                        bookingId: id,
-                        status: 'PENDING_TENANT'
-                    }
+        // ── ATOMIC TRANSACTIONAL BOOKING UPDATE ──
+        const { updatedBooking, newAgreement } = await prisma_1.default.$transaction(async (tx) => {
+            // Re-verify booking status inside transaction to guard against concurrent mutations
+            const current = await tx.booking.findUnique({ where: { id } });
+            if (!current)
+                throw new Error('Booking not found');
+            if (current.status !== currentStatus) {
+                const conflictErr = new Error(`Conflict: Booking status was concurrently updated to ${current.status}`);
+                conflictErr.isConflict = true;
+                throw conflictErr;
+            }
+            // Release reserved bed back to AVAILABLE if booking is rejected, cancelled, or completed
+            if ((status === 'REJECTED' || status === 'CANCELLED' || status === 'COMPLETED') && current.bedId) {
+                await tx.bed.update({
+                    where: { id: current.bedId },
+                    data: { status: 'AVAILABLE' }
                 });
             }
-        }
-        // Notify tenant about the status change
+            // Mark assigned bed as OCCUPIED upon tenant check-in
+            if (status === 'CHECKED_IN' && current.bedId) {
+                await tx.bed.update({
+                    where: { id: current.bedId },
+                    data: { status: 'OCCUPIED' }
+                });
+            }
+            // Update the booking status
+            const updated = await tx.booking.update({
+                where: { id },
+                data: { status }
+            });
+            // Auto-generate Lease Agreement when approved
+            let agreement = null;
+            if (status === 'APPROVED') {
+                const existingAgreement = await tx.leaseAgreement.findUnique({ where: { bookingId: id } });
+                if (!existingAgreement) {
+                    agreement = await tx.leaseAgreement.create({
+                        data: {
+                            bookingId: id,
+                            status: 'PENDING_TENANT'
+                        }
+                    });
+                }
+            }
+            // In-app Notification for Tenant
+            await tx.notification.create({
+                data: {
+                    userId: booking.tenant.id,
+                    type: 'BOOKING',
+                    title: `Booking ${status === 'APPROVED' ? 'Approved 🎉' : status}`,
+                    message: `Your booking for "${booking.property.title}" has been ${status.toLowerCase()} by the landlord.`,
+                    link: '/dashboard/tenant'
+                }
+            }).catch(() => { });
+            return { updatedBooking: updated, newAgreement: agreement };
+        }, { maxWait: 20000, timeout: 30000 });
+        // Notify tenant about the status change via email/push
         if (['APPROVED', 'REJECTED', 'COMPLETED', 'CANCELLED', 'CHECKED_IN'].includes(status)) {
             await (0, notification_service_1.notifyBookingStatusChanged)({
                 tenantId: booking.tenant.id,
@@ -582,7 +861,7 @@ const updateBookingStatus = async (req, res) => {
                         type: 'ANNOUNCEMENT',
                         title: '🔑 Tenant Checked In by Caretaker',
                         message: `${booking.tenant.firstName} ${booking.tenant.lastName} has been checked into ${booking.property.title} by property staff.`,
-                        link: '/dashboard/landlord/bookings'
+                        link: '/dashboard/landlord'
                     }
                 }).catch(() => { });
                 try {
@@ -627,6 +906,10 @@ const updateBookingStatus = async (req, res) => {
         res.status(200).json({ message: `Booking status updated to ${status}`, booking: updatedBooking });
     }
     catch (error) {
+        if (error?.isConflict || error?.message?.includes('Conflict:')) {
+            res.status(409).json({ message: error.message });
+            return;
+        }
         console.error('Error updating booking status:', error);
         res.status(500).json({ message: 'Internal server error' });
     }
@@ -916,7 +1199,7 @@ const getMyActiveBooking = async (req, res) => {
         const activeBooking = await prisma_1.default.booking.findFirst({
             where: {
                 tenantId,
-                status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE'] }
+                status: { in: ['PENDING', 'CONFIRMED', 'APPROVED', 'COMPLETED', 'ACTIVE', 'CHECKED_IN'] }
             },
             include: {
                 property: {
@@ -924,7 +1207,18 @@ const getMyActiveBooking = async (req, res) => {
                         id: true,
                         title: true,
                         location: true,
-                        images: true
+                        price: true,
+                        pricePeriod: true,
+                        images: true,
+                        landlord: {
+                            select: {
+                                id: true,
+                                firstName: true,
+                                lastName: true,
+                                phoneNumber: true,
+                                email: true,
+                            }
+                        }
                     }
                 },
                 room: {
@@ -952,7 +1246,18 @@ const getMyActiveBooking = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
-        res.status(200).json({ booking: activeBooking || null });
+        const parsedBooking = activeBooking
+            ? {
+                ...activeBooking,
+                property: activeBooking.property
+                    ? {
+                        ...activeBooking.property,
+                        images: (0, json_1.safeJsonParse)(activeBooking.property.images, []),
+                    }
+                    : null,
+            }
+            : null;
+        res.status(200).json({ booking: parsedBooking });
     }
     catch (error) {
         console.error('Error fetching active booking:', error);
@@ -966,7 +1271,11 @@ const cancelPendingBooking = async (req, res) => {
         const { id } = req.params;
         const booking = await prisma_1.default.booking.findUnique({
             where: { id },
-            include: { bed: true }
+            include: {
+                bed: true,
+                property: { select: { id: true, title: true, landlordId: true } },
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true } }
+            }
         });
         if (!booking) {
             res.status(404).json({ message: 'Booking not found' });
@@ -976,35 +1285,100 @@ const cancelPendingBooking = async (req, res) => {
             res.status(403).json({ message: 'Unauthorized' });
             return;
         }
-        if (booking.status !== 'PENDING') {
-            res.status(400).json({ message: 'Only pending (unpaid) bookings can be cancelled by the student.' });
+        if (booking.status === 'CANCELLED') {
+            res.status(400).json({ message: 'Booking is already cancelled.' });
             return;
         }
-        // Release reserved bed if any
-        if (booking.bedId) {
-            await prisma_1.default.bed.update({
-                where: { id: booking.bedId },
-                data: { status: 'AVAILABLE' }
+        if (booking.status === 'REJECTED') {
+            res.status(400).json({ message: 'Booking was already rejected.' });
+            return;
+        }
+        // Bookings that are CONFIRMED, ACTIVE, CHECKED_IN, or COMPLETED require admin/landlord intervention
+        if (!['PENDING', 'APPROVED'].includes(booking.status)) {
+            res.status(400).json({
+                message: `Bookings with status '${booking.status}' cannot be cancelled directly. Please contact support or your landlord.`
             });
+            return;
         }
+        // Atomic transaction for state transition & bed release
+        const updated = await prisma_1.default.$transaction(async (tx) => {
+            // Re-verify current status atomically
+            const current = await tx.booking.findUnique({
+                where: { id },
+                select: { id: true, status: true, bedId: true, roomUnitId: true }
+            });
+            if (!current || !['PENDING', 'APPROVED'].includes(current.status)) {
+                const err = new Error(`Conflict: Booking status changed to ${current?.status || 'unknown'}`);
+                err.isConflict = true;
+                throw err;
+            }
+            // Release reserved bed if any
+            if (current.bedId) {
+                await tx.bed.update({
+                    where: { id: current.bedId },
+                    data: { status: 'AVAILABLE' }
+                });
+            }
+            const updatedBooking = await tx.booking.update({
+                where: { id },
+                data: { status: 'CANCELLED' }
+            });
+            // Notification to landlord
+            if (booking.property?.landlordId) {
+                await tx.notification.create({
+                    data: {
+                        userId: booking.property.landlordId,
+                        type: 'ANNOUNCEMENT',
+                        title: 'Booking Cancelled by Tenant',
+                        message: `${booking.tenant?.firstName || 'Tenant'} ${booking.tenant?.lastName || ''} has cancelled their booking for "${booking.property.title}".`,
+                        link: '/dashboard/landlord'
+                    }
+                }).catch(() => null);
+            }
+            return updatedBooking;
+        }, { maxWait: 20000, timeout: 30000 });
         if (booking.roomUnitId) {
-            await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id);
+            await (0, bookingCleanup_1.releaseUnitGenderLockIfEmpty)(booking.roomUnitId, id).catch(() => { });
         }
-        // Update booking status to CANCELLED
-        const updated = await prisma_1.default.booking.update({
-            where: { id },
-            data: { status: 'CANCELLED' }
-        });
+        // Audit log
+        await (0, auditLogger_1.logAudit)(tenantId, 'CANCEL_BOOKING', 'Booking', id, { status: booking.status }, { status: 'CANCELLED' }, req.ip || req.socket.remoteAddress);
+        // Real-time broadcasts
         try {
-            (0, socket_1.getIO)().emit('booking_updated', { bookingId: id, propertyId: booking.propertyId });
+            const io = (0, socket_1.getIO)();
+            io.to(booking.tenantId).emit('notification', {
+                title: 'Booking Cancelled',
+                message: `Your booking for "${booking.property?.title}" has been cancelled.`,
+                type: 'booking'
+            });
+            io.to(booking.tenantId).emit('booking_updated', { booking: updated });
+            if (booking.property?.landlordId) {
+                io.to(booking.property.landlordId).emit('booking_updated', { booking: updated });
+            }
+            io.emit('booking_updated', { bookingId: id, propertyId: booking.propertyId, status: 'CANCELLED' });
+            io.emit('property_updated', { propertyId: booking.propertyId });
+            if (booking.roomId) {
+                io.emit('room_capacity_updated', { roomId: booking.roomId, propertyId: booking.propertyId });
+            }
+            io.emit('activity:new', {
+                type: 'BOOKING',
+                status: 'CANCELLED',
+                message: `Booking for "${booking.property?.title}" was cancelled by tenant`,
+                createdAt: new Date(),
+            });
+            cache_1.default.del(`bookings:landlord:${booking.property?.landlordId}`);
+            cache_1.default.del(`bookings:tenant:${tenantId}`);
             cache_1.default.flushAll();
         }
         catch (e) {
             /* non-blocking */
         }
-        res.status(200).json({ message: 'Pending booking cancelled successfully', booking: updated });
+        res.status(200).json({ message: 'Booking cancelled successfully', booking: updated });
     }
     catch (error) {
+        if (error?.isConflict || error?.message?.includes('Conflict:')) {
+            res.status(409).json({ message: error.message });
+            return;
+        }
         console.error('Error cancelling pending booking:', error);
         res.status(500).json({ message: 'Internal server error' });
     }

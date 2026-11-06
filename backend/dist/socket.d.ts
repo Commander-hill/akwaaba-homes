@@ -14,5 +14,6 @@ export declare const initializeSocket: (server: HttpServer) => Server<import("so
 export declare const getIO: () => Server<import("socket.io").DefaultEventsMap, import("socket.io").DefaultEventsMap, import("socket.io").DefaultEventsMap, any>;
 export declare const emitToUser: (userId: string, event: string, payload: any) => void;
 export declare const emitToAll: (event: string, payload: any) => void;
+export declare const emitToAdmins: (event: string, payload: any) => void;
 export {};
 //# sourceMappingURL=socket.d.ts.map

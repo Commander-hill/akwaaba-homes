@@ -103,7 +103,8 @@ const getRoommateMatches = async (req, res) => {
                         campus: true,
                         programmeOfStudy: true,
                         avatarUrl: true,
-                        gender: true
+                        gender: true,
+                        ghanaCardStatus: true
                     }
                 }
             }
