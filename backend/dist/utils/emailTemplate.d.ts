@@ -23,6 +23,10 @@ export declare const emailBadgeHtml: (badge: EmailBadge) => string;
 export declare const emailButtonHtml: (action: EmailAction) => string;
 export declare const emailCardHtml: (contentHtml: string, title?: string) => string;
 export declare const emailMetaTableHtml: (rows: EmailMetaRow[]) => string;
+export declare const CLOUDINARY_EMAIL_ASSETS: {
+    logo: string;
+    watermark: string;
+};
 export interface RenderEmailOptions {
     title: string;
     preheader: string;

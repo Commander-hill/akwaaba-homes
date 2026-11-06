@@ -5,7 +5,7 @@
  * Clean typography, warm ivory canvas, cross-client safe (Gmail, Apple Mail, Outlook, Mobile).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.renderInstitutionalEmail = exports.emailMetaTableHtml = exports.emailCardHtml = exports.emailButtonHtml = exports.emailBadgeHtml = void 0;
+exports.renderInstitutionalEmail = exports.CLOUDINARY_EMAIL_ASSETS = exports.emailMetaTableHtml = exports.emailCardHtml = exports.emailButtonHtml = exports.emailBadgeHtml = void 0;
 const emailBadgeHtml = (badge) => {
     const styles = {
         emerald: { bg: '#ECFDF5', text: '#065F46', border: '#A7F3D0' },
@@ -59,18 +59,14 @@ const emailMetaTableHtml = (rows) => `
   </table>
 `;
 exports.emailMetaTableHtml = emailMetaTableHtml;
-const getBaseUrl = () => {
-    const envUrl = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
-    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
-        return envUrl.replace(/\/$/, '');
-    }
-    return 'https://akwaabahomes.com';
+exports.CLOUDINARY_EMAIL_ASSETS = {
+    logo: 'https://res.cloudinary.com/kmns2bin/image/upload/v1793972099/akwaaba-logo-light.png',
+    watermark: 'https://res.cloudinary.com/kmns2bin/image/upload/v1793972153/akwaaba-logo-watermark.png',
 };
 const renderInstitutionalEmail = ({ title, preheader, categoryTag = 'NOTICE', bodyHtml, footerNote = 'This is an official transactional message sent by AkwaabaHomes for your account records.', watermarkUrl: customWatermarkUrl, logoUrl: customLogoUrl, }) => {
     const currentYear = new Date().getFullYear();
-    const baseUrl = getBaseUrl();
-    const logoUrl = customLogoUrl || `${baseUrl}/logo-light.png`;
-    const watermarkUrl = customWatermarkUrl || `${baseUrl}/logo-watermark.png`;
+    const logoUrl = customLogoUrl || exports.CLOUDINARY_EMAIL_ASSETS.logo;
+    const watermarkUrl = customWatermarkUrl || exports.CLOUDINARY_EMAIL_ASSETS.watermark;
     return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -94,13 +90,13 @@ const renderInstitutionalEmail = ({ title, preheader, categoryTag = 'NOTICE', bo
         <!-- Main Email Container -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background-color:#FFFFFF;border-radius:10px;overflow:hidden;border:1px solid #E4E4E7;">
           
-          <!-- Editorial Header with Akwaaba Logo -->
+          <!-- Editorial Header with Akwaaba Logo Branding -->
           <tr>
             <td style="padding:22px 28px 18px;border-bottom:1px solid #E4E4E7;background-color:#FFFFFF;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="width:40px;vertical-align:middle;padding-right:12px;">
-                    <img src="${logoUrl}" alt="AkwaabaHomes" width="36" height="36" style="display:block;width:36px;height:36px;border-radius:6px;object-fit:contain;" />
+                  <td style="width:44px;vertical-align:middle;padding-right:12px;">
+                    <img src="${logoUrl}" alt="AkwaabaHomes" width="40" height="40" style="display:block;width:40px;height:40px;border-radius:8px;object-fit:contain;" />
                   </td>
                   <td style="vertical-align:middle;">
                     <div style="font-size:18px;font-weight:800;color:#18181B;letter-spacing:-0.4px;line-height:1.2;">
@@ -122,12 +118,27 @@ const renderInstitutionalEmail = ({ title, preheader, categoryTag = 'NOTICE', bo
 
           <!-- Editorial Body with Akwaaba Logo Watermark -->
           <tr>
-            <td background="${watermarkUrl}" style="padding:32px 28px;background-color:#FFFFFF;background-image:url('${watermarkUrl}');background-repeat:no-repeat;background-position:center center;background-size:280px 280px;position:relative;">
+            <td background="${watermarkUrl}" style="padding:28px 28px 32px;background-color:#FFFFFF;background-image:url('${watermarkUrl}');background-repeat:no-repeat;background-position:center center;background-size:280px 280px;position:relative;">
               <!--[if gte mso 9]>
               <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="true" stroke="false" style="width:504px;">
                 <v:fill type="frame" src="${watermarkUrl}" color="#FFFFFF" />
                 <v:textbox style="mso-fit-shape-to-text:true" inset="0,0,0,0">
               <![endif]-->
+              
+              <!-- Watermark Authenticity Pill -->
+              <div style="text-align:center;margin:0 auto 20px auto;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;background-color:#F4F8F5;border:1px solid #D1E5D9;border-radius:20px;padding:4px 12px 4px 6px;">
+                  <tr>
+                    <td style="vertical-align:middle;padding-right:6px;">
+                      <img src="${logoUrl}" alt="Akwaaba Homes" width="18" height="18" style="display:block;width:18px;height:18px;object-fit:contain;" />
+                    </td>
+                    <td style="vertical-align:middle;font-size:10px;font-weight:700;color:#0F5132;letter-spacing:0.3px;text-transform:uppercase;">
+                      Verified AkwaabaHomes Notice
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
               <div style="position:relative;z-index:2;">
                 ${bodyHtml}
               </div>
