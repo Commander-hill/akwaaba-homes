@@ -234,15 +234,81 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, portal } = req.body;
+    const { email, identifier, password, portal } = req.body;
+    const loginIdentifier = String(identifier || email || '').trim();
 
-    if (!email || !password) {
-      res.status(400).json({ message: 'Missing email or password' });
+    if (!loginIdentifier || !password) {
+      res.status(400).json({ message: 'Missing email, phone number, or password' });
       return;
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    let user: any = null;
+
+    if (loginIdentifier.includes('@')) {
+      // 1. Direct Email lookup
+      const normalizedEmail = loginIdentifier.toLowerCase();
+      user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    } else {
+      // 2. Phone Number Lookup with Ghanaian & International Normalization
+      const rawDigits = loginIdentifier.replace(/\D/g, '');
+      const phoneCandidates = new Set<string>();
+      phoneCandidates.add(loginIdentifier);
+      phoneCandidates.add(loginIdentifier.replace(/\s+/g, ''));
+
+      if (rawDigits.length >= 7) {
+        phoneCandidates.add(rawDigits);
+        phoneCandidates.add(`+${rawDigits}`);
+
+        if (rawDigits.startsWith('0')) {
+          const withoutZero = rawDigits.slice(1);
+          phoneCandidates.add(`+233${withoutZero}`);
+          phoneCandidates.add(`233${withoutZero}`);
+          phoneCandidates.add(rawDigits);
+        } else if (rawDigits.startsWith('233')) {
+          const without233 = rawDigits.slice(3);
+          phoneCandidates.add(`0${without233}`);
+          phoneCandidates.add(`+${rawDigits}`);
+          phoneCandidates.add(rawDigits);
+        } else if (rawDigits.length === 9) {
+          phoneCandidates.add(`0${rawDigits}`);
+          phoneCandidates.add(`+233${rawDigits}`);
+          phoneCandidates.add(`233${rawDigits}`);
+        }
+      }
+
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: loginIdentifier.toLowerCase() },
+            { phoneNumber: { in: Array.from(phoneCandidates) } },
+          ],
+        },
+      });
+
+      // Flexible fallback: match last 8 digits if phone in DB contains custom formatting/spaces
+      if (!user && rawDigits.length >= 8) {
+        const last8 = rawDigits.slice(-8);
+        const candidates = await prisma.user.findMany({
+          where: {
+            phoneNumber: {
+              contains: last8,
+            },
+          },
+          take: 5,
+        });
+
+        for (const candidate of candidates) {
+          if (candidate.phoneNumber) {
+            const candDigits = candidate.phoneNumber.replace(/\D/g, '');
+            if (candDigits.endsWith(last8) || rawDigits.endsWith(candDigits.slice(-8))) {
+              user = candidate;
+              break;
+            }
+          }
+        }
+      }
+    }
+
     if (!user) {
       res.status(401).json({ message: 'Invalid credentials' });
       return;

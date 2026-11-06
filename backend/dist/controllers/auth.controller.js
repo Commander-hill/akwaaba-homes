@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -17,6 +17,7 @@ const emailTemplate_1 = require("../utils/emailTemplate");
 const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
 const totp_service_1 = require("../utils/totp.service");
+const sms_service_1 = require("../utils/sms.service");
 const register = async (req, res) => {
     try {
         const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
@@ -26,6 +27,10 @@ const register = async (req, res) => {
         }
         if (!phoneNumber || !gender || !nationality) {
             res.status(400).json({ message: 'Missing mandatory personal details (Phone, Gender, and Nationality are required)' });
+            return;
+        }
+        if (!avatarUrl || !String(avatarUrl).trim()) {
+            res.status(400).json({ message: 'Profile picture is mandatory. Please upload a clear portrait photo.' });
             return;
         }
         if (role === 'TENANT') {
@@ -88,53 +93,43 @@ const register = async (req, res) => {
         const transporter = (0, notification_service_1.getTransporter)();
         if (transporter) {
             const bodyHtml = `
-        <div style="margin-bottom:24px;">
-          <div style="margin-bottom:12px;">
-            ${(0, emailTemplate_1.emailBadgeHtml)({ label: 'ACCOUNT SECURITY', value: 'IDENTITY VERIFICATION', variant: 'emerald' })}
-          </div>
-          <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-            Welcome to Akwaaba Homes — Verify Your Account
+        <div style="margin-bottom:20px;">
+          <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+            Welcome to AkwaabaHomes
           </h2>
-          <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-            Dear <strong>${user.firstName}</strong>, thank you for joining Ghana's institutional housing and tenancy network.
-          </p>
-          <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
-            To authenticate your account, protect against impersonation, and enable verified tenant/landlord transactions, please confirm your email address below:
+          <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
+            Hi ${user.firstName}, thank you for creating an account. Please confirm your email address to complete your registration and get started.
           </p>
         </div>
 
         ${(0, emailTemplate_1.emailCardHtml)(`
           ${(0, emailTemplate_1.emailMetaTableHtml)([
                 { label: 'Registered Email', value: user.email },
-                { label: 'Platform Role', value: user.role || 'TENANT' },
-                { label: 'Identity Protection', value: 'NIA Ghana Card Protocol Ready' },
-                { label: 'Legal Compliance', value: 'Rent Act, 1963 (Act 220)' }
+                { label: 'Account Type', value: user.role === 'LANDLORD' ? 'Landlord & Host' : 'Student & Resident Tenant' }
             ])}
-        `, 'Account Credentials')}
+        `, 'Account Overview')}
 
         ${(0, emailTemplate_1.emailButtonHtml)({
-                label: 'Verify Email Address',
+                label: 'Confirm Email Address',
                 url: verifyLink,
                 variant: 'primary'
             })}
 
-        <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-top:20px;">
-          <p style="color:#64748B;font-size:12px;line-height:1.6;margin:0 0 6px;">
-            If the button above does not open, copy and paste this secure link directly into your browser:
-          </p>
-          <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,Menlo,monospace;word-break:break-all;margin:0;">
-            ${verifyLink}
-          </p>
-        </div>
+        <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
+          If the button does not open, copy and paste this link into your browser:
+        </p>
+        <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+          ${verifyLink}
+        </p>
       `;
             const mailOptions = {
-                from: `"Akwaaba Homes" <${process.env.SMTP_USER}>`,
+                from: `"AkwaabaHomes" <${process.env.SMTP_USER}>`,
                 to: user.email,
-                subject: 'Verify your Akwaaba Homes Account',
+                subject: 'Confirm your AkwaabaHomes email address',
                 html: (0, emailTemplate_1.renderInstitutionalEmail)({
-                    title: 'Verify Your Akwaaba Homes Account',
-                    preheader: `Hi ${user.firstName}, please verify your email address on Akwaaba Homes`,
-                    categoryTag: 'ACCOUNT ACTIVATION',
+                    title: 'Confirm Your AkwaabaHomes Account',
+                    preheader: `Hi ${user.firstName}, please confirm your email address on AkwaabaHomes`,
+                    categoryTag: 'VERIFICATION',
                     bodyHtml
                 }),
             };
@@ -201,13 +196,75 @@ const verifyEmail = async (req, res) => {
 exports.verifyEmail = verifyEmail;
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        if (!email || !password) {
-            res.status(400).json({ message: 'Missing email or password' });
+        const { email, identifier, password, portal } = req.body;
+        const loginIdentifier = String(identifier || email || '').trim();
+        if (!loginIdentifier || !password) {
+            res.status(400).json({ message: 'Missing email, phone number, or password' });
             return;
         }
-        const normalizedEmail = String(email).trim().toLowerCase();
-        const user = await prisma_1.default.user.findUnique({ where: { email: normalizedEmail } });
+        let user = null;
+        if (loginIdentifier.includes('@')) {
+            // 1. Direct Email lookup
+            const normalizedEmail = loginIdentifier.toLowerCase();
+            user = await prisma_1.default.user.findUnique({ where: { email: normalizedEmail } });
+        }
+        else {
+            // 2. Phone Number Lookup with Ghanaian & International Normalization
+            const rawDigits = loginIdentifier.replace(/\D/g, '');
+            const phoneCandidates = new Set();
+            phoneCandidates.add(loginIdentifier);
+            phoneCandidates.add(loginIdentifier.replace(/\s+/g, ''));
+            if (rawDigits.length >= 7) {
+                phoneCandidates.add(rawDigits);
+                phoneCandidates.add(`+${rawDigits}`);
+                if (rawDigits.startsWith('0')) {
+                    const withoutZero = rawDigits.slice(1);
+                    phoneCandidates.add(`+233${withoutZero}`);
+                    phoneCandidates.add(`233${withoutZero}`);
+                    phoneCandidates.add(rawDigits);
+                }
+                else if (rawDigits.startsWith('233')) {
+                    const without233 = rawDigits.slice(3);
+                    phoneCandidates.add(`0${without233}`);
+                    phoneCandidates.add(`+${rawDigits}`);
+                    phoneCandidates.add(rawDigits);
+                }
+                else if (rawDigits.length === 9) {
+                    phoneCandidates.add(`0${rawDigits}`);
+                    phoneCandidates.add(`+233${rawDigits}`);
+                    phoneCandidates.add(`233${rawDigits}`);
+                }
+            }
+            user = await prisma_1.default.user.findFirst({
+                where: {
+                    OR: [
+                        { email: loginIdentifier.toLowerCase() },
+                        { phoneNumber: { in: Array.from(phoneCandidates) } },
+                    ],
+                },
+            });
+            // Flexible fallback: match last 8 digits if phone in DB contains custom formatting/spaces
+            if (!user && rawDigits.length >= 8) {
+                const last8 = rawDigits.slice(-8);
+                const candidates = await prisma_1.default.user.findMany({
+                    where: {
+                        phoneNumber: {
+                            contains: last8,
+                        },
+                    },
+                    take: 5,
+                });
+                for (const candidate of candidates) {
+                    if (candidate.phoneNumber) {
+                        const candDigits = candidate.phoneNumber.replace(/\D/g, '');
+                        if (candDigits.endsWith(last8) || rawDigits.endsWith(candDigits.slice(-8))) {
+                            user = candidate;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
         if (!user) {
             res.status(401).json({ message: 'Invalid credentials' });
             return;
@@ -262,6 +319,33 @@ const login = async (req, res) => {
                 data: { failedLoginAttempts: 0, lockoutUntil: null }
             });
         }
+        // ── 2. DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
+        const isElevatedAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role);
+        // Admin accounts must NOT log in through the public tenant/landlord portal
+        if (isElevatedAdmin && portal !== 'ADMIN') {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_PUBLIC_LOGIN_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
+            }
+            catch (e) { /* non-blocking */ }
+            res.status(403).json({
+                message: 'Access restricted: Administrator accounts cannot sign in through public portals. Please use the administrative security portal.',
+                code: 'ADMIN_PORTAL_REQUIRED',
+                portalUrl: '/admin/login'
+            });
+            return;
+        }
+        // Non-admin accounts must NOT log in through the admin portal
+        if (portal === 'ADMIN' && !isElevatedAdmin) {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'UNAUTHORIZED_ADMIN_PORTAL_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
+            }
+            catch (e) { /* non-blocking */ }
+            res.status(403).json({
+                message: 'Access restricted: This portal is reserved for administrative personnel only.',
+                code: 'ADMIN_ROLE_REQUIRED'
+            });
+            return;
+        }
         // BLOCK SUSPENDED USERS
         if (user.isSuspended) {
             res.status(403).json({
@@ -278,21 +362,64 @@ const login = async (req, res) => {
             });
             return;
         }
-        // CHECK TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE)
-        if (user.twoFactorEnabled) {
-            const tempToken = crypto_2.default.randomBytes(32).toString('hex');
-            cache_1.default.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
-            res.status(200).json({
-                requireTwoFactor: true,
-                tempToken,
-                message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
-            });
-            return;
+        // ── 3. TWO-FACTOR AUTHENTICATION (TOTP / RECOVERY CODE) ──
+        // Mandatory for ADMIN & SUPER_ADMIN accounts, or any user with 2FA enabled
+        if (isElevatedAdmin || user.twoFactorEnabled) {
+            if (user.twoFactorEnabled && user.twoFactorSecret) {
+                const tempToken = crypto_2.default.randomBytes(32).toString('hex');
+                cache_1.default.set(`2fa_pending_${tempToken}`, user.id, 300); // 5 minutes TTL
+                res.status(200).json({
+                    requireTwoFactor: true,
+                    tempToken,
+                    message: 'Two-factor authentication required. Please enter your 6-digit TOTP code or a recovery code.'
+                });
+                return;
+            }
+            // Mandatory enrollment for administrators who have not yet configured 2FA
+            if (isElevatedAdmin) {
+                const tempToken = crypto_2.default.randomBytes(32).toString('hex');
+                const secret = (0, totp_service_1.generateTOTPSecret)();
+                const generated = (0, totp_service_1.generateRecoveryCodes)(8);
+                cache_1.default.set(`2fa_mandatory_setup_${tempToken}`, {
+                    userId: user.id,
+                    secret,
+                    hashedCodes: generated.hashedCodes,
+                    rawCodes: generated.rawCodes
+                }, 600); // 10 minutes TTL
+                const uri = (0, totp_service_1.getTOTPUri)(user.email, secret, 'Akwaaba Homes Admin');
+                let qrCodeSvg = '';
+                try {
+                    qrCodeSvg = (0, totp_service_1.generateQRCodeSvg)(uri, 240);
+                }
+                catch (e) { }
+                res.status(200).json({
+                    requireTwoFactorSetup: true,
+                    tempToken,
+                    secret,
+                    formattedSecret: (0, totp_service_1.formatSecretKey)(secret),
+                    qrCodeSvg,
+                    rawCodes: generated.rawCodes,
+                    otpauthUri: uri,
+                    message: 'Mandatory Security Setup: All Administrator and Super Administrator accounts must configure Two-Factor Authentication before accessing administrative systems.'
+                });
+                return;
+            }
         }
         await establishUserSessionAndRespond(user, req, res);
     }
     catch (error) {
         console.error('Login error:', error);
+        const errorMsg = String(error?.message || '');
+        if (errorMsg.includes('connection pool') ||
+            errorMsg.includes("Can't reach database server") ||
+            errorMsg.includes('P1001') ||
+            errorMsg.includes('ETIMEDOUT') ||
+            errorMsg.includes('ECONNREFUSED')) {
+            res.status(503).json({
+                message: 'The database is currently warming up from sleep mode. Please try signing in again in a few seconds.'
+            });
+            return;
+        }
         res.status(500).json({ message: 'Internal server error' });
     }
 };
@@ -357,7 +484,7 @@ const establishUserSessionAndRespond = async (user, req, res, message = 'Logged 
             expiresAt
         }
     });
-    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+    const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
     res.cookie('accessToken', accessToken, {
         httpOnly: true,
         secure: isProd,
@@ -386,12 +513,13 @@ const establishUserSessionAndRespond = async (user, req, res, message = 'Logged 
             twoFactorEnabled: !!user.twoFactorEnabled,
             isVerifiedLandlord: !!user.isVerifiedLandlord,
             landlordVerificationStatus: user.landlordVerificationStatus || 'NOT_SUBMITTED',
+            avatarUrl: user.avatarUrl || null,
         },
     });
 };
 const login2FA = async (req, res) => {
     try {
-        const { tempToken, code } = req.body;
+        const { tempToken, code, portal } = req.body;
         if (!tempToken || !code) {
             res.status(400).json({ message: 'Missing temporary token or verification code' });
             return;
@@ -437,6 +565,31 @@ const login2FA = async (req, res) => {
         }
         // Invalidate the pending 2FA token
         cache_1.default.del(`2fa_pending_${tempToken}`);
+        // ── DEFENSE-IN-DEPTH: STRICT PORTAL ISOLATION ──
+        const isElevatedAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(user.role);
+        if (isElevatedAdmin && portal !== 'ADMIN') {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'ADMIN_PUBLIC_2FA_REJECTED', 'User', user.id, null, { email: user.email, portal: portal || 'PUBLIC', ip: req.ip }, req.ip);
+            }
+            catch (e) { /* non-blocking */ }
+            res.status(403).json({
+                message: 'Access restricted: Administrator accounts cannot sign in through public portals. Please use the administrative security portal.',
+                code: 'ADMIN_PORTAL_REQUIRED',
+                portalUrl: '/admin/login'
+            });
+            return;
+        }
+        if (portal === 'ADMIN' && !isElevatedAdmin) {
+            try {
+                await (0, auditLogger_1.logAudit)(user.id, 'UNAUTHORIZED_ADMIN_2FA_ATTEMPT', 'User', user.id, null, { email: user.email, role: user.role, ip: req.ip }, req.ip);
+            }
+            catch (e) { /* non-blocking */ }
+            res.status(403).json({
+                message: 'Access restricted: This portal is reserved for administrative personnel only.',
+                code: 'ADMIN_ROLE_REQUIRED'
+            });
+            return;
+        }
         try {
             await (0, auditLogger_1.logAudit)(user.id, 'LOGIN_2FA_SUCCESS', 'User', user.id, null, { method: isRecoveryValid ? 'RECOVERY_CODE' : 'TOTP' }, req.ip);
         }
@@ -473,18 +626,26 @@ const refresh = async (req, res) => {
             res.status(403).json({ message: 'Account is suspended' });
             return;
         }
-        // Generate new Access Token with tokenVersion
+        // ── SECURE REFRESH-TOKEN ROTATION ──
+        // Generate fresh Access Token (15 mins) and fresh Refresh Token (7 days)
         const accessToken = (0, jwt_1.generateAccessToken)({
             id: session.user.id,
             role: session.user.role,
             tokenVersion: session.user.tokenVersion || 0
         });
-        // Update lastActive
+        const newRefreshToken = (0, jwt_1.generateRefreshToken)({
+            id: session.user.id,
+            tokenVersion: session.user.tokenVersion || 0
+        });
+        // Atomically rotate refresh token and update session activity
         await prisma_1.default.session.update({
             where: { id: session.id },
-            data: { lastActive: new Date() }
+            data: {
+                refreshToken: newRefreshToken,
+                lastActive: new Date()
+            }
         });
-        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: isProd,
@@ -492,10 +653,17 @@ const refresh = async (req, res) => {
             maxAge: 15 * 60 * 1000, // 15 mins
             path: '/'
         });
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: isProd,
+            sameSite: isProd ? 'none' : 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            path: '/'
+        });
         res.status(200).json({
-            message: 'Token refreshed successfully',
+            message: 'Token refreshed and rotated successfully',
             accessToken,
-            refreshToken // Return the same refresh token so frontend can keep it if needed
+            refreshToken: newRefreshToken
         });
     }
     catch (error) {
@@ -517,7 +685,7 @@ const logout = async (req, res) => {
                 data: { isValid: false }
             });
         }
-        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && process.env.FRONTEND_URL.includes('onrender'));
+        const isProd = process.env.NODE_ENV === 'production' || !!(process.env.FRONTEND_URL && (process.env.FRONTEND_URL.startsWith('https://') || process.env.FRONTEND_URL.includes('vercel') || process.env.FRONTEND_URL.includes('onrender')));
         res.cookie('accessToken', '', {
             httpOnly: true,
             secure: isProd,
@@ -563,6 +731,8 @@ const getMe = async (req, res) => {
                 ghanaCardStatus: true,
                 ghanaCardFrontUrl: true,
                 ghanaCardBackUrl: true,
+                ghanaCardRejectionReason: true,
+                ghanaCardReviewedAt: true,
                 landlordDocUrl: true,
                 isVerifiedLandlord: true,
                 landlordVerificationStatus: true,
@@ -594,7 +764,8 @@ const getMe = async (req, res) => {
             return;
         }
         if (user.ghanaCardNumber) {
-            user.ghanaCardNumber = (0, crypto_1.decryptData)(user.ghanaCardNumber);
+            const decrypted = (0, crypto_1.decryptData)(user.ghanaCardNumber);
+            user.ghanaCardNumber = (0, crypto_1.maskGhanaCardNumber)(decrypted);
         }
         if (user.ghanaCardFrontUrl) {
             user.ghanaCardFrontUrl = (0, security_service_1.generateSignedDocumentUrl)(user.ghanaCardFrontUrl);
@@ -674,37 +845,86 @@ const submitGhanaCard = async (req, res) => {
             return;
         }
         if (!ghanaCardNumber || !ghanaCardFrontUrl || !ghanaCardBackUrl) {
-            res.status(400).json({ message: 'Ghana Card Number and both images are required' });
+            res.status(400).json({ message: 'Ghana Card Number and both front and reverse images are required' });
             return;
         }
-        const encryptedCardNumber = (0, crypto_1.encryptData)(ghanaCardNumber);
+        const cleanCard = String(ghanaCardNumber).trim().toUpperCase();
+        const ghanaCardRegex = /^GHA-\d{9}-\d$/;
+        if (!ghanaCardRegex.test(cleanCard)) {
+            res.status(400).json({
+                message: 'Invalid Ghana Card PIN format. Format must be GHA-XXXXXXXXX-X (e.g. GHA-123456789-0)'
+            });
+            return;
+        }
+        const existingUser = await prisma_1.default.user.findUnique({ where: { id: req.user.id } });
+        if (!existingUser) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        if (existingUser.ghanaCardStatus === 'VERIFIED') {
+            res.status(400).json({
+                message: 'Your identity has already been verified and locked. Contact compliance support if you need to update it.'
+            });
+            return;
+        }
+        const encryptedCardNumber = (0, crypto_1.encryptData)(cleanCard);
         await prisma_1.default.user.update({
             where: { id: req.user.id },
             data: {
                 ghanaCardNumber: encryptedCardNumber,
                 ghanaCardFrontUrl,
                 ghanaCardBackUrl,
-                ghanaCardStatus: 'PENDING'
+                ghanaCardStatus: 'PENDING',
+                ghanaCardRejectionReason: null,
             }
         });
         // Bust user cache so next /auth/me returns fresh Ghana Card data
         cache_1.default.del(`user:me:${req.user.id}`);
-        // Notify admins of new KYC Ghana Card submission
-        const cardAdmins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        // Notify all admins of new KYC Ghana Card submission in realtime
+        const cardAdmins = await prisma_1.default.user.findMany({
+            where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+            select: { id: true }
+        });
+        const masked = (0, crypto_1.maskGhanaCardNumber)(cleanCard);
+        const applicantName = `${existingUser.firstName || ''} ${existingUser.lastName || ''}`.trim() || 'User';
         if (cardAdmins.length > 0) {
             await prisma_1.default.notification.createMany({
                 data: cardAdmins.map(a => ({
                     userId: a.id,
                     type: 'SYSTEM_ALERT',
                     title: '🪪 New Ghana Card KYC Submission',
-                    message: `User submitted Ghana Card for identity verification.`,
-                    link: '/admin/users'
+                    message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+                    link: `/admin/verifications/${existingUser.id}`
                 }))
             }).catch(() => null);
+            // Emit live desktop notification event to all connected admin sockets
+            cardAdmins.forEach(a => {
+                (0, socket_1.emitToUser)(a.id, 'notification', {
+                    title: '🪪 New Ghana Card KYC Submission',
+                    message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+                    type: 'SYSTEM_ALERT'
+                });
+            });
         }
         try {
-            (0, socket_1.emitToUser)(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING' });
-            (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+            (0, socket_1.emitToUser)(req.user.id, 'user_updated', { ghanaCardStatus: 'PENDING', ghanaCardRejectionReason: null });
+            (0, socket_1.emitToAdmins)('kyc_submitted', {
+                userId: existingUser.id,
+                name: applicantName,
+                role: existingUser.role,
+                ghanaCardStatus: 'PENDING',
+                submittedAt: new Date().toISOString()
+            });
+            (0, socket_1.emitToAdmins)('admin_action_required', {
+                type: 'KYC_VERIFICATION',
+                userId: existingUser.id,
+                name: applicantName,
+                title: '🪪 New Ghana Card KYC Submission',
+                message: `${applicantName} submitted Ghana Card (${masked}) for identity verification.`,
+                timestamp: new Date().toISOString()
+            });
+            (0, socket_1.emitToAll)('user_updated', { userId: existingUser.id });
+            (0, socket_1.emitToAll)('verification_updated', { userId: existingUser.id, type: 'GHANA_CARD' });
         }
         catch (e) { /* non-blocking */ }
         res.status(200).json({ message: 'Ghana Card submitted successfully for verification' });
@@ -743,21 +963,48 @@ const submitLandlordVerification = async (req, res) => {
         });
         cache_1.default.del(`user:me:${req.user.id}`);
         // Notify admins of new Landlord verification document submission
-        const landlordAdmins = await prisma_1.default.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+        const landlordAdmins = await prisma_1.default.user.findMany({
+            where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+            select: { id: true }
+        });
+        const landlordName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || 'Landlord';
         if (landlordAdmins.length > 0) {
             await prisma_1.default.notification.createMany({
                 data: landlordAdmins.map(a => ({
                     userId: a.id,
                     type: 'SYSTEM_ALERT',
-                    title: '🛡️ Landlord Verification Document Submitted',
-                    message: `Landlord submitted property ownership & Ghana Card for verification.`,
-                    link: '/admin/landlord-verification'
+                    title: '📜 Landlord Verification Document Submitted',
+                    message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+                    link: `/admin/verifications/${req.user.id}`
                 }))
             }).catch(() => null);
+            landlordAdmins.forEach(a => {
+                (0, socket_1.emitToUser)(a.id, 'notification', {
+                    title: '📜 Landlord Verification Document Submitted',
+                    message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+                    type: 'SYSTEM_ALERT'
+                });
+            });
         }
         try {
             (0, socket_1.emitToUser)(req.user.id, 'user_updated', { landlordVerificationStatus: 'PENDING' });
+            (0, socket_1.emitToAdmins)('deed_submitted', {
+                userId: req.user.id,
+                name: landlordName,
+                landlordVerificationStatus: 'PENDING',
+                submittedAt: new Date().toISOString()
+            });
+            (0, socket_1.emitToAdmins)('admin_action_required', {
+                type: 'LANDLORD_DEED',
+                userId: req.user.id,
+                name: landlordName,
+                title: '📜 Landlord Verification Document Submitted',
+                message: `${landlordName} submitted property ownership & Ghana Card for verification.`,
+                timestamp: new Date().toISOString()
+            });
             (0, socket_1.emitToAll)('user_updated', { userId: req.user.id });
+            (0, socket_1.emitToAll)('verification_updated', { userId: req.user.id, type: 'LANDLORD_DEED' });
+            (0, socket_1.emitToAll)('landlord_deeds_updated', { userId: req.user.id });
         }
         catch (e) { }
         res.status(200).json({ message: 'Landlord verification document submitted successfully for admin review' });
@@ -896,51 +1143,43 @@ const forgotPassword = async (req, res) => {
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
             const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
             const bodyHtml = `
-      <div style="margin-bottom:24px;">
-        <div style="margin-bottom:12px;">
-          ${(0, emailTemplate_1.emailBadgeHtml)({ label: 'SECURITY NOTICE', value: '15-MINUTE EXPIRATION', variant: 'gold' })}
-        </div>
-        <h2 style="color:#0F172A;font-size:22px;font-weight:800;margin:0 0 10px;line-height:1.3;">
-          Account Password Recovery Protocol
+      <div style="margin-bottom:20px;">
+        <h2 style="color:#18181B;font-size:20px;font-weight:700;margin:0 0 8px;line-height:1.3;">
+          Reset your password
         </h2>
-        <p style="color:#475569;font-size:15px;line-height:1.7;margin:0;">
-          A password reset request was initiated for your Akwaaba Homes account associated with <strong>${user.email}</strong>.
-        </p>
-        <p style="color:#475569;font-size:15px;line-height:1.7;margin:10px 0 0;">
-          To authorize this security request and create a new password, click the secure credential reset button below:
+        <p style="color:#52525B;font-size:14px;line-height:1.6;margin:0 0 10px;">
+          We received a request to reset the password for your AkwaabaHomes account (<strong>${user.email}</strong>). Click the button below to choose a new password:
         </p>
       </div>
 
-      ${(0, emailTemplate_1.emailCardHtml)(`
-        ${(0, emailTemplate_1.emailMetaTableHtml)([
-                { label: 'Security Window', value: '15 Minutes From Request' },
-                { label: 'Target Account', value: user.email },
-                { label: 'Authentication Protocol', value: 'SHA-256 Single-Use Nonce Token' },
-                { label: 'Platform Protection', value: 'Ghana Cyber Security Authority (Act 1038) Standards' }
-            ])}
-      `, 'Security Assessment')}
-
       ${(0, emailTemplate_1.emailButtonHtml)({
-                label: 'Reset Account Password',
+                label: 'Reset Password',
                 url: resetUrl,
                 variant: 'primary'
             })}
 
-      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:16px;margin-top:20px;">
-        <p style="color:#92400E;font-size:13px;line-height:1.6;margin:0;">
-          🔒 <strong>Did not request this?</strong> If you did not initiate this password recovery request, your account remains secure. You can safely disregard this email or notify <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;font-weight:700;">support@akwaabahomes.com</a> immediately.
+      <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #D97706;border-radius:6px;padding:12px 16px;margin:20px 0;">
+        <p style="color:#71717A;font-size:12px;line-height:1.5;margin:0;">
+          <strong>Security note:</strong> This link expires in 15 minutes. If you did not request a password reset, you can safely ignore this email—your account remains secure.
         </p>
       </div>
+
+      <p style="color:#71717A;font-size:12px;line-height:1.5;margin:16px 0 4px;text-align:center;">
+        If the button does not open, copy and paste this link into your browser:
+      </p>
+      <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+        ${resetUrl}
+      </p>
     `;
             // Send email asynchronously
             transporter.sendMail({
-                from: `"Akwaaba Homes Security" <${process.env.SMTP_USER}>`,
+                from: `"AkwaabaHomes Security" <${process.env.SMTP_USER}>`,
                 to: user.email,
-                subject: 'Security Alert: Password Reset Request — Akwaaba Homes',
+                subject: 'Reset your AkwaabaHomes password',
                 html: (0, emailTemplate_1.renderInstitutionalEmail)({
-                    title: 'Account Password Recovery Protocol',
-                    preheader: 'Reset your Akwaaba Homes account password (valid for 15 minutes)',
-                    categoryTag: 'SECURITY VERIFICATION',
+                    title: 'Reset Your Password',
+                    preheader: 'Use this link to reset your AkwaabaHomes password (expires in 15 minutes)',
+                    categoryTag: 'SECURITY',
                     bodyHtml
                 }),
             })
@@ -1017,6 +1256,62 @@ const resetPassword = async (req, res) => {
     }
 };
 exports.resetPassword = resetPassword;
+const changePassword = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const { currentPassword, newPassword, signOutOthers } = req.body;
+        if (!currentPassword || !newPassword) {
+            res.status(400).json({ message: 'Current password and new password are required' });
+            return;
+        }
+        if (newPassword.length < 8) {
+            res.status(400).json({ message: 'New password must be at least 8 characters long' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        const isCurrentValid = await bcrypt_1.default.compare(currentPassword, user.passwordHash);
+        if (!isCurrentValid) {
+            res.status(400).json({ message: 'The current password you entered is incorrect.' });
+            return;
+        }
+        const salt = await bcrypt_1.default.genSalt(10);
+        const passwordHash = await bcrypt_1.default.hash(newPassword, salt);
+        await prisma_1.default.user.update({
+            where: { id: user.id },
+            data: {
+                passwordHash,
+                failedLoginAttempts: 0,
+                lockoutUntil: null,
+                ...(signOutOthers ? { tokenVersion: { increment: 1 } } : {})
+            }
+        });
+        if (signOutOthers) {
+            await prisma_1.default.session.updateMany({
+                where: { userId: user.id, isValid: true },
+                data: { isValid: false }
+            }).catch(() => { });
+        }
+        cache_1.default.del(`user:me:${user.id}`);
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'PASSWORD_CHANGE_SUCCESS', 'User', user.id, null, { signOutOthers }, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({ message: 'Password updated successfully' });
+    }
+    catch (error) {
+        console.error('Error in change password:', error);
+        res.status(500).json({ message: 'Failed to update password' });
+    }
+};
+exports.changePassword = changePassword;
 // ─── TWO-FACTOR AUTHENTICATION (TOTP / RFC 6238) MANAGEMENT ───────────────────
 const get2FAStatus = async (req, res) => {
     try {
@@ -1080,6 +1375,14 @@ const setup2FA = async (req, res) => {
         }
         // Refresh temporary setup data for 10 minutes
         cache_1.default.set(`2fa_setup_${userId}`, { secret, hashedCodes, rawCodes }, 600);
+        const uri = (0, totp_service_1.getTOTPUri)(user.email, secret, 'Akwaaba Homes');
+        let qrCodeSvg = '';
+        try {
+            qrCodeSvg = (0, totp_service_1.generateQRCodeSvg)(uri, 240);
+        }
+        catch (qrErr) {
+            console.warn('QR code generation warning:', qrErr);
+        }
         res.status(200).json({
             secret,
             formattedSecret: (0, totp_service_1.formatSecretKey)(secret),
@@ -1159,6 +1462,13 @@ const disable2FA = async (req, res) => {
             res.status(400).json({ message: '2FA is not currently enabled on your account.' });
             return;
         }
+        // Security policy: Administrative personnel cannot disable 2FA
+        if (['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
+            res.status(403).json({
+                message: 'Security Policy: Two-factor authentication is mandatory for administrative accounts and cannot be disabled.'
+            });
+            return;
+        }
         // Require either correct account password or valid current TOTP code to disable
         let isAuthorized = false;
         if (password) {
@@ -1195,4 +1505,200 @@ const disable2FA = async (req, res) => {
     }
 };
 exports.disable2FA = disable2FA;
+/**
+ * Send SMS OTP for 2FA Fallback Verification
+ */
+const send2FASMS = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        if (!user.phoneNumber) {
+            res.status(400).json({ message: 'No registered Ghanaian phone number found on your account. Please update your profile with a valid phone number first.' });
+            return;
+        }
+        // Rate limiting: check if OTP was requested within 60 seconds
+        const existing = cache_1.default.get(`2fa_sms_${userId}`);
+        if (existing && Date.now() - existing.lastSentAt < 60000) {
+            const waitSecs = Math.ceil((60000 - (Date.now() - existing.lastSentAt)) / 1000);
+            res.status(429).json({ message: `Please wait ${waitSecs} seconds before requesting a new SMS verification code.` });
+            return;
+        }
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        cache_1.default.set(`2fa_sms_${userId}`, { code, lastSentAt: Date.now() }, 600);
+        const message = `Akwaaba Homes: Your 2FA security verification code is ${code}. Valid for 10 minutes. Do not share this code with anyone.`;
+        await (0, sms_service_1.sendSMS)(user.phoneNumber, message);
+        const clean = user.phoneNumber.trim();
+        const maskedPhone = clean.length > 6
+            ? clean.slice(0, 4) + '••••' + clean.slice(-3)
+            : clean;
+        res.status(200).json({
+            success: true,
+            message: `SMS security verification code dispatched to ${maskedPhone}`,
+            maskedPhone
+        });
+    }
+    catch (error) {
+        console.error('send2FASMS error:', error);
+        res.status(500).json({ message: 'Failed to send 2FA SMS code' });
+    }
+};
+exports.send2FASMS = send2FASMS;
+/**
+ * Verify SMS OTP for 2FA Activation / Fallback
+ */
+const verify2FASMS = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { code } = req.body;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        if (!code || typeof code !== 'string') {
+            res.status(400).json({ message: '6-digit SMS verification code is required' });
+            return;
+        }
+        const cached = cache_1.default.get(`2fa_sms_${userId}`);
+        if (!cached || cached.code !== code.trim()) {
+            res.status(400).json({ message: 'Invalid or expired SMS verification code.' });
+            return;
+        }
+        // If user has an active 2FA setup session pending, activate it
+        const setupData = cache_1.default.get(`2fa_setup_${userId}`);
+        if (setupData) {
+            const encryptedSecret = (0, crypto_1.encryptData)(setupData.secret);
+            await prisma_1.default.user.update({
+                where: { id: userId },
+                data: {
+                    twoFactorEnabled: true,
+                    twoFactorSecret: encryptedSecret,
+                    twoFactorRecoveryCodes: JSON.stringify(setupData.hashedCodes)
+                }
+            });
+            cache_1.default.del(`2fa_setup_${userId}`);
+        }
+        cache_1.default.del(`2fa_sms_${userId}`);
+        try {
+            await (0, auditLogger_1.logAudit)(userId, '2FA_SMS_VERIFIED', 'User', userId, null, {}, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({
+            success: true,
+            message: 'SMS verification code confirmed. Two-Factor Authentication is active.'
+        });
+    }
+    catch (error) {
+        console.error('verify2FASMS error:', error);
+        res.status(500).json({ message: 'Failed to verify 2FA SMS code' });
+    }
+};
+exports.verify2FASMS = verify2FASMS;
+/**
+ * Regenerate Emergency Recovery Codes for Enrolled User
+ */
+const regenerateRecoveryCodes = async (req, res) => {
+    try {
+        const userId = req.user?.id;
+        const { password, code } = req.body;
+        if (!userId) {
+            res.status(401).json({ message: 'Unauthorized' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
+        if (!user || !user.twoFactorEnabled) {
+            res.status(400).json({ message: 'Two-factor authentication is not active on this account.' });
+            return;
+        }
+        // Verify password or TOTP code for authorization
+        let isAuthorized = false;
+        if (password) {
+            isAuthorized = await bcrypt_1.default.compare(password, user.passwordHash);
+        }
+        if (!isAuthorized && code && user.twoFactorSecret) {
+            const decryptedSecret = (0, crypto_1.decryptData)(user.twoFactorSecret);
+            isAuthorized = (0, totp_service_1.verifyTOTPCode)(String(code).trim(), decryptedSecret);
+        }
+        if (!isAuthorized) {
+            res.status(401).json({ message: 'Authorization required. Please provide your current password or 6-digit TOTP code.' });
+            return;
+        }
+        const { rawCodes, hashedCodes } = (0, totp_service_1.generateRecoveryCodes)(8);
+        await prisma_1.default.user.update({
+            where: { id: userId },
+            data: {
+                twoFactorRecoveryCodes: JSON.stringify(hashedCodes)
+            }
+        });
+        try {
+            await (0, auditLogger_1.logAudit)(userId, '2FA_RECOVERY_CODES_REGENERATED', 'User', userId, null, { count: 8 }, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        res.status(200).json({
+            success: true,
+            rawCodes,
+            message: '8 fresh emergency recovery codes have been generated. Previous recovery codes are now void.'
+        });
+    }
+    catch (error) {
+        console.error('regenerateRecoveryCodes error:', error);
+        res.status(500).json({ message: 'Failed to regenerate recovery codes' });
+    }
+};
+exports.regenerateRecoveryCodes = regenerateRecoveryCodes;
+/**
+ * Completes mandatory TOTP 2FA enrollment for administrative accounts during login
+ */
+const completeMandatory2FASetup = async (req, res) => {
+    try {
+        const { tempToken, code } = req.body;
+        if (!tempToken || !code) {
+            res.status(400).json({ message: 'Missing temporary token or verification code.' });
+            return;
+        }
+        const pendingSetup = cache_1.default.get(`2fa_mandatory_setup_${tempToken}`);
+        if (!pendingSetup) {
+            res.status(401).json({ message: 'Two-factor enrollment session expired or invalid. Please sign in again.' });
+            return;
+        }
+        const user = await prisma_1.default.user.findUnique({ where: { id: pendingSetup.userId } });
+        if (!user) {
+            res.status(404).json({ message: 'User not found.' });
+            return;
+        }
+        const cleanCode = String(code).trim();
+        const isValid = (0, totp_service_1.verifyTOTPCode)(cleanCode, pendingSetup.secret);
+        if (!isValid) {
+            res.status(400).json({ message: 'Invalid 6-digit TOTP code. Please verify the code displayed in your authenticator app.' });
+            return;
+        }
+        const encryptedSecret = (0, crypto_1.encryptData)(pendingSetup.secret);
+        const updatedUser = await prisma_1.default.user.update({
+            where: { id: user.id },
+            data: {
+                twoFactorEnabled: true,
+                twoFactorSecret: encryptedSecret,
+                twoFactorRecoveryCodes: JSON.stringify(pendingSetup.hashedCodes)
+            }
+        });
+        cache_1.default.del(`2fa_mandatory_setup_${tempToken}`);
+        try {
+            await (0, auditLogger_1.logAudit)(user.id, 'MANDATORY_ADMIN_2FA_CONFIGURED', 'User', user.id, null, { role: user.role }, req.ip);
+        }
+        catch (e) { /* non-blocking */ }
+        await establishUserSessionAndRespond(updatedUser, req, res, 'Two-factor authentication configured and verified successfully');
+    }
+    catch (error) {
+        console.error('completeMandatory2FASetup error:', error);
+        res.status(500).json({ message: 'Internal server error during 2FA enrollment.' });
+    }
+};
+exports.completeMandatory2FASetup = completeMandatory2FASetup;
 //# sourceMappingURL=auth.controller.js.map

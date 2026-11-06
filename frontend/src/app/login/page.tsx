@@ -17,6 +17,8 @@ import {
   Users,
   Handshake,
   MapPin,
+  Phone,
+  User,
 } from 'lucide-react';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -51,7 +53,7 @@ function LoginForm() {
   const isRegistered = searchParams.get('registered') === 'true';
   const redirectParam = searchParams.get('redirect');
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,8 +127,8 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) {
-      setError('Please enter both your email address and password.');
+    if (!identifier.trim() || !password) {
+      setError('Please enter your email or phone number and password.');
       return;
     }
 
@@ -135,7 +137,8 @@ function LoginForm() {
 
     try {
       const response = await api.post('/auth/login', {
-        email: email.trim(),
+        email: identifier.trim(),
+        identifier: identifier.trim(),
         password,
       });
 
@@ -329,15 +332,22 @@ function LoginForm() {
 
             {/* Email & Password Form */}
             <form onSubmit={handleSubmit} className="space-y-2.5 xl:space-y-3">
-              {/* Email Address */}
+              {/* Email or Phone Number */}
               <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                {identifier.includes('@') ? (
+                  <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
+                ) : /\d/.test(identifier) ? (
+                  <Phone className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
+                ) : (
+                  <Mail className="w-3.5 h-3.5 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors" />
+                )}
                 <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  placeholder="Email or phone number"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   required
+                  autoComplete="username"
                   className="w-full h-9 xl:h-10 pl-9 pr-3 text-xs rounded-lg border border-zinc-200/90 dark:border-zinc-700 bg-[#F7F8FA] dark:bg-zinc-800/60 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-none focus:ring-1.5 focus:ring-[#16A34A] focus:border-[#16A34A] transition"
                 />
               </div>
