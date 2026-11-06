@@ -45,7 +45,19 @@ export const registerValidation = [
 ];
 
 export const loginValidation = [
-  body('email').isEmail().withMessage('Must be a valid email address').normalizeEmail(),
+  body().custom((reqBody) => {
+    const rawVal = reqBody.identifier || reqBody.email;
+    if (!rawVal || !String(rawVal).trim()) {
+      throw new Error('Email address or phone number is required');
+    }
+    const val = String(rawVal).trim();
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    const isPhone = /^[+]?[\d\s\-().]{7,25}$/.test(val);
+    if (!isEmail && !isPhone) {
+      throw new Error('Please enter a valid email address or phone number');
+    }
+    return true;
+  }),
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
