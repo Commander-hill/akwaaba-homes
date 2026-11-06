@@ -16,7 +16,10 @@ import {
   Check, 
   Download, 
   AlertCircle, 
-  X
+  X,
+  ShieldCheck,
+  TrendingUp,
+  SlidersHorizontal
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -660,11 +663,11 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   return (
     <div className="-mt-16 min-h-screen lg:h-screen lg:max-h-screen w-full bg-[#EBF7EE] text-[#141816] font-sans relative overflow-hidden">
       
-      {/* ── Desktop View (Stationary, Full 16:9 2K Scene, Zero Cropping of Bottom Wave/Copyright) ── */}
+      {/* ── Desktop View (Stationary, Full 16:9 2K Scene, Zero Cropping, Crisp DOM Typography) ── */}
       <div className="hidden lg:block w-full h-full max-h-screen overflow-hidden relative select-none">
-        {/* Full 2K Master Scene Background */}
+        {/* Full 2K Master Scene Background (Zero Baked Text) */}
         <Image
-          src="/images/auth/admin-hero-scene-v1.png"
+          src="/images/auth/admin-hero-scene-v2.png"
           alt="AkwaabaHomes Admin Portal"
           fill
           priority
@@ -698,6 +701,63 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           </div>
         </Link>
 
+        {/* ── Left Hero Crisp DOM Typography (Admin Portal, Headline, Subtitle, Feature Badges) ── */}
+        <div 
+          className="absolute z-20 flex flex-col justify-start pointer-events-auto select-none"
+          style={{
+            left: '4.8%',
+            top: '18.5%',
+            width: '38%',
+            maxWidth: '460px',
+          }}
+        >
+          {/* Admin Portal Pill */}
+          <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#04793d] text-white text-[11px] xl:text-xs font-bold tracking-wide w-fit shadow-2xs">
+            Admin Portal
+          </div>
+
+          {/* Headline */}
+          <h1 className="mt-3.5 xl:mt-4 text-3xl xl:text-[38px] 2xl:text-[42px] font-black text-zinc-950 tracking-tight leading-[1.12]">
+            Welcome Back,<br />
+            Administrator!
+          </h1>
+
+          {/* Subtitle */}
+          <p className="mt-2.5 xl:mt-3 text-xs xl:text-sm text-zinc-600 font-medium leading-relaxed max-w-[360px]">
+            Manage users, properties, and system settings from your secure dashboard.
+          </p>
+
+          {/* 3 Feature Items */}
+          <div className="mt-5 xl:mt-6 flex flex-col gap-2.5 xl:gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 xl:w-7 xl:h-7 rounded-full bg-[#04793d] flex items-center justify-center text-white shrink-0 shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 xl:w-4 xl:h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-xs xl:text-sm font-semibold text-zinc-900 tracking-tight">
+                Secure Access
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 xl:w-7 xl:h-7 rounded-full bg-[#04793d] flex items-center justify-center text-white shrink-0 shadow-2xs">
+                <TrendingUp className="w-3.5 h-3.5 xl:w-4 xl:h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-xs xl:text-sm font-semibold text-zinc-900 tracking-tight">
+                Real-Time Management
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 xl:w-7 xl:h-7 rounded-full bg-[#04793d] flex items-center justify-center text-white shrink-0 shadow-2xs">
+                <SlidersHorizontal className="w-3.5 h-3.5 xl:w-4 xl:h-4 stroke-[2.5]" />
+              </div>
+              <span className="text-xs xl:text-sm font-semibold text-zinc-900 tracking-tight">
+                Complete Control
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Floating White Authentication Card (Overlays Card Region Perfectly) */}
         <div 
           className="absolute z-20 flex flex-col justify-center pointer-events-auto"
@@ -713,6 +773,17 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           <div className="w-full bg-white rounded-[28px] xl:rounded-[32px] p-6 xl:p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] border border-zinc-100 overflow-y-auto">
             {renderCardContent()}
           </div>
+        </div>
+
+        {/* Bottom-Left Crisp Copyright Folio (Over Dark Green Wave) */}
+        <div 
+          className="absolute z-20 pointer-events-none select-none text-[11px] xl:text-xs text-white/90 font-medium tracking-wide drop-shadow-xs"
+          style={{
+            left: '4.8%',
+            bottom: '4.2%',
+          }}
+        >
+          &copy; {new Date().getFullYear()} AkwaabaHomes Ghana Ltd. | Admin Portal
         </div>
       </div>
 
