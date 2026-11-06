@@ -10,16 +10,13 @@ import {
   CheckCircle2, 
   Eye, 
   EyeOff, 
-  ShieldCheck, 
   KeyRound,
   ShieldAlert,
   Copy, 
   Check, 
   Download, 
   AlertCircle, 
-  X,
-  TrendingUp,
-  Sliders
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -276,114 +273,68 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   }
 
   return (
-    <div className="-mt-16 min-h-screen w-full bg-gradient-to-br from-[#EBF7EE] via-[#F4FBF7] to-[#F8FDF9] text-[#141816] font-sans relative overflow-x-hidden flex flex-col justify-between">
+    <div className="-mt-16 min-h-screen w-full bg-white text-[#141816] font-sans relative overflow-x-hidden flex flex-col lg:flex-row">
       
-      {/* ── Background Landmark Watermark (Right Side) ── */}
-      <div 
-        className="pointer-events-none select-none absolute bottom-0 right-0 w-[180px] sm:w-[240px] md:w-[280px] lg:w-[320px] h-[360px] sm:h-[480px] lg:h-[576px] z-0 opacity-80"
-        style={{
-          backgroundImage: "url('/images/auth/admin-landmark-watermark.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'bottom right',
-          backgroundSize: 'contain',
-        }}
-      />
-
-      {/* ── Background Building & Green Waves (Bottom Left Side) ── */}
-      <div 
-        className="pointer-events-none select-none absolute bottom-0 left-0 w-[320px] sm:w-[420px] md:w-[480px] lg:w-[540px] h-[220px] sm:h-[280px] md:h-[320px] z-0 opacity-95"
-        style={{
-          backgroundImage: "url('/images/auth/admin-building-base.png')",
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'bottom left',
-          backgroundSize: 'contain',
-        }}
-      />
-
-      {/* ── Top Navigation Bar (Logo Link) ── */}
-      <div className="w-full px-6 sm:px-10 lg:px-14 pt-7 sm:pt-8 relative z-20 flex items-center justify-between">
-        <Link href="/" className="inline-flex items-center gap-3 group">
-          <Image 
-            src="/logo-light.png" 
-            alt="AkwaabaHomes" 
-            width={44} 
-            height={44} 
-            className="w-10 h-10 sm:w-11 sm:h-11 object-contain shrink-0" 
-            priority 
-          />
-          <div className="flex flex-col leading-none">
-            <span className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
-              AkwaabaHomes
-            </span>
-            <span className="text-xs font-semibold text-zinc-600 mt-1">
-              Live Well. Feel at Home.
-            </span>
-          </div>
+      {/* ── Left Column: Master Visual Banner (Exact Mockup Match) ── */}
+      <div className="hidden lg:block lg:w-[48%] xl:w-[46%] 2xl:w-[45%] relative min-h-screen bg-[#EBF7EE] shrink-0 overflow-hidden select-none">
+        <Image
+          src="/images/auth/admin-left-banner.png"
+          alt="AkwaabaHomes Admin Portal - Welcome Back, Administrator"
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover object-left-top pointer-events-none"
+        />
+        {/* Invisible accessible link over top-left logo */}
+        <Link 
+          href="/" 
+          className="absolute top-6 left-8 w-56 h-16 z-20 cursor-pointer"
+          title="AkwaabaHomes Home"
+        >
+          <span className="sr-only">Go to AkwaabaHomes Home</span>
         </Link>
       </div>
 
-      {/* ── Main Dual-Sided Workspace (Exact Mockup Match) ── */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-14 py-8 sm:py-10 flex items-center relative z-10">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-
-          {/* ──── Left Column: Welcome Back Administrator ──── */}
-          <div className="lg:col-span-6 xl:col-span-6 space-y-6 pt-2 pb-16 lg:pb-28">
-            
-            {/* Pill: Admin Portal */}
-            <div>
-              <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#0F5132] text-white text-xs font-bold tracking-wide shadow-xs">
-                Admin Portal
-              </span>
-            </div>
-
-            {/* Headline */}
-            <div className="space-y-3">
-              <h1 className="text-4xl sm:text-5xl lg:text-[52px] xl:text-[56px] font-black text-zinc-900 tracking-tight leading-[1.08]">
-                Welcome Back,<br />Administrator!
-              </h1>
-              <p className="text-sm sm:text-base text-zinc-700 font-medium max-w-md leading-relaxed">
-                Manage users, properties, and system settings from your secure dashboard.
-              </p>
-            </div>
-
-            {/* Feature Bullets with Circular Green Icons */}
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#0F5132] flex items-center justify-center text-white shrink-0 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-sm font-semibold text-zinc-900">
-                  Secure Access
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#0F5132] flex items-center justify-center text-white shrink-0 shadow-2xs">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-sm font-semibold text-zinc-900">
-                  Real-Time Management
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#0F5132] flex items-center justify-center text-white shrink-0 shadow-2xs">
-                  <Sliders className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-sm font-semibold text-zinc-900">
-                  Complete Control
-                </span>
-              </div>
-            </div>
-
+      {/* ── Mobile Top Header (< lg) ── */}
+      <div className="lg:hidden w-full px-6 pt-6 pb-2 flex items-center justify-between bg-[#EBF7EE]">
+        <Link href="/" className="inline-flex items-center gap-2.5">
+          <Image 
+            src="/logo-light.png" 
+            alt="AkwaabaHomes" 
+            width={38} 
+            height={38} 
+            className="w-9 h-9 object-contain" 
+            priority 
+          />
+          <div className="flex flex-col leading-none">
+            <span className="text-lg font-black text-zinc-900 tracking-tight">AkwaabaHomes</span>
+            <span className="text-[10px] font-semibold text-zinc-600 mt-0.5">Live Well. Feel at Home.</span>
           </div>
+        </Link>
+        <span className="px-3 py-1 rounded-full bg-[#04793d] text-white text-[11px] font-bold">
+          Admin Portal
+        </span>
+      </div>
 
-          {/* ──── Right Column: Floating White Admin Console Card ──── */}
-          <div className="lg:col-span-6 xl:col-span-6 flex justify-center lg:justify-end">
-            <div className="w-full max-w-[460px] bg-white rounded-[32px] p-8 sm:p-11 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-zinc-100 relative">
-              
-              {/* Shield Icon Badge */}
-              <div className="flex justify-center mb-3">
+      {/* ── Right Column: Interactive Admin Console Card with Landmark Backdrop ── */}
+      <div className="flex-1 relative min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 overflow-hidden">
+        
+        {/* Landmark & Diagonal Wave Backdrop (Anchored to Right Edge) */}
+        <div 
+          className="pointer-events-none select-none absolute top-0 right-0 h-full w-[320px] sm:w-[400px] md:w-[460px] lg:w-[500px] z-0 opacity-90"
+          style={{
+            backgroundImage: "url('/images/auth/admin-right-landmark.png')",
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'top right',
+            backgroundSize: 'contain',
+          }}
+        />
+
+        {/* Floating White Authentication Card */}
+        <div className="w-full max-w-[450px] bg-white rounded-[28px] sm:rounded-[32px] p-7 sm:p-10 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] border border-zinc-100 relative z-10">
+          
+          {/* Shield Icon Badge */}
+          <div className="flex justify-center mb-3">
                 <div className="w-20 h-20 relative flex items-center justify-center">
                   <Image 
                     src="/images/auth/admin-shield-icon.png" 
@@ -715,8 +666,8 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                   <div className="pt-2">
                     <button
                       type="submit"
-                      disabled={isLoading || !formData.email.trim() || !formData.password}
-                      className="w-full h-12 sm:h-13 bg-[#0F5132] hover:bg-[#0A3D24] active:bg-[#082E1B] text-white font-bold text-sm sm:text-base rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#0F5132]/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      disabled={isLoading}
+                      className="w-full h-12 sm:h-13 bg-[#04793d] hover:bg-[#035f30] active:bg-[#024a25] text-white font-bold text-sm sm:text-base rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#04793d]/25 transition-all cursor-pointer"
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -733,25 +684,23 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
               )}
 
               {/* Faint Divider with Security Check */}
-              <div className="mt-7 flex items-center justify-center gap-3">
+              <div className="mt-7 flex items-center justify-center gap-3 select-none">
                 <div className="flex-1 h-[1px] bg-zinc-200/80" />
                 <div className="flex items-center gap-1.5 px-2 text-[11px] text-zinc-600 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#0F5132] fill-[#0F5132] text-white" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#04793d] fill-[#04793d] text-white" />
                   <span>Secured by industry-standard encryption</span>
                 </div>
                 <div className="flex-1 h-[1px] bg-zinc-200/80" />
               </div>
 
             </div>
+
+            {/* Mobile Copyright */}
+            <div className="lg:hidden mt-6 text-center text-[11px] text-zinc-500 font-medium">
+              &copy; {new Date().getFullYear()} AkwaabaHomes Ghana Ltd. | Admin Portal
+            </div>
+
           </div>
-
-        </div>
-      </div>
-
-      {/* ── Subtitle / Footer Folio on Left Waves ── */}
-      <div className="w-full px-6 sm:px-10 lg:px-14 pb-5 relative z-20 text-[11px] text-white/90 font-medium">
-        <span>&copy; {new Date().getFullYear()} AkwaabaHomes Ghana Ltd. | Admin Portal</span>
-      </div>
 
       {/* ── Trouble Signing In / Forgot Password Modal ── */}
       {showRecoveryModal && (
