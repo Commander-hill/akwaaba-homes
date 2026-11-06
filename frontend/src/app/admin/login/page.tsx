@@ -278,37 +278,54 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
       {/* ── Left Column: Master Visual Banner (Exact Mockup Match) ── */}
       <div className="hidden lg:block lg:w-[48%] xl:w-[46%] 2xl:w-[45%] relative min-h-screen bg-[#EBF7EE] shrink-0 overflow-hidden select-none">
         <Image
-          src="/images/auth/admin-left-banner.png"
+          src="/images/auth/admin-left-banner-v2.png"
           alt="AkwaabaHomes Admin Portal - Welcome Back, Administrator"
           fill
           priority
           sizes="(max-width: 1024px) 100vw, 50vw"
           className="object-cover object-left-top pointer-events-none"
         />
-        {/* Invisible accessible link over top-left logo */}
+        {/* ── Authentic AkwaabaHomes Brand Logo & Slogan ── */}
         <Link 
           href="/" 
-          className="absolute top-6 left-8 w-56 h-16 z-20 cursor-pointer"
+          className="absolute top-8 left-8 sm:left-12 inline-flex items-center gap-3.5 group z-20 cursor-pointer"
           title="AkwaabaHomes Home"
         >
-          <span className="sr-only">Go to AkwaabaHomes Home</span>
+          <div className="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
+            <Image 
+              src="/images/auth/akwaaba-emblem.png" 
+              alt="AkwaabaHomes" 
+              width={48} 
+              height={48} 
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs" 
+              priority 
+            />
+          </div>
+          <div className="flex flex-col leading-none">
+            <span className="text-xl sm:text-2xl font-black text-zinc-900 tracking-tight">
+              AkwaabaHomes
+            </span>
+            <span className="text-xs font-semibold text-[#3B6E5C] mt-1 tracking-normal">
+              Live Well. Feel at Home.
+            </span>
+          </div>
         </Link>
       </div>
 
       {/* ── Mobile Top Header (< lg) ── */}
-      <div className="lg:hidden w-full px-6 pt-6 pb-2 flex items-center justify-between bg-[#EBF7EE]">
-        <Link href="/" className="inline-flex items-center gap-2.5">
+      <div className="lg:hidden w-full px-6 pt-6 pb-3 flex items-center justify-between bg-[#EBF7EE] border-b border-zinc-200/50">
+        <Link href="/" className="inline-flex items-center gap-3">
           <Image 
-            src="/logo-light.png" 
+            src="/images/auth/akwaaba-emblem.png" 
             alt="AkwaabaHomes" 
-            width={38} 
-            height={38} 
-            className="w-9 h-9 object-contain" 
+            width={40} 
+            height={40} 
+            className="w-10 h-10 object-contain drop-shadow-xs" 
             priority 
           />
           <div className="flex flex-col leading-none">
             <span className="text-lg font-black text-zinc-900 tracking-tight">AkwaabaHomes</span>
-            <span className="text-[10px] font-semibold text-zinc-600 mt-0.5">Live Well. Feel at Home.</span>
+            <span className="text-[11px] font-semibold text-[#3B6E5C] mt-0.5">Live Well. Feel at Home.</span>
           </div>
         </Link>
         <span className="px-3 py-1 rounded-full bg-[#04793d] text-white text-[11px] font-bold">
