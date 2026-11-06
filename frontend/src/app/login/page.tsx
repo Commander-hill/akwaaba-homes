@@ -120,6 +120,27 @@ function LoginForm() {
     }
   }, [sessionData, isTimeout]);
 
+  // Lock document/body scroll on desktop viewports so login page stays 100% stationary
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   // 2FA State
   const [requireTwoFactor, setRequireTwoFactor] = useState(false);
   const [tempToken, setTempToken] = useState('');
@@ -437,13 +458,13 @@ function LoginForm() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-white dark:bg-[#0D100E] font-sans overflow-hidden">
+    <div className="-mt-16 min-h-screen lg:h-screen lg:max-h-screen w-full bg-white dark:bg-[#0D100E] font-sans overflow-hidden">
 
       {/* ────────────────────────────────────────────────────────────────
           DESKTOP VIEW (Exact Full-Viewport Reference Match - Zero Overzoom, Zero Whitespace)
           Visible on lg: (1024px and wider screens)
          ──────────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:block w-screen h-screen overflow-hidden relative bg-white dark:bg-[#0D100E]">
+      <div className="hidden lg:block w-full h-full max-h-screen overflow-hidden relative bg-white dark:bg-[#0D100E]">
         <div className="relative w-full h-full overflow-hidden">
 
           {/* 1. Base 2K Background Scene (Clean Bokeh Foliage, Resident Woman & Building - Zero Baked Text) */}
@@ -651,7 +672,7 @@ function LoginForm() {
           MOBILE / TABLET RESPONSIVE VIEW (< 1024px)
           Provides beautiful full scrolling experience on phones/tablets
          ──────────────────────────────────────────────────────────────── */}
-      <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E]">
+      <div className="lg:hidden flex flex-col w-full min-h-screen bg-white dark:bg-[#0D100E] pt-16">
         {/* Mobile Top Header (Stationary & Blurred) */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 sticky top-0 bg-white/95 dark:bg-[#0D100E]/95 backdrop-blur-md z-30">
           <Link href="/" className="flex items-center gap-2.5">
