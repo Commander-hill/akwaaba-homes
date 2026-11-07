@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   register,
+  checkEmailAvailability,
   login,
   login2FA,
   completeMandatory2FASetup,
@@ -26,11 +27,12 @@ import {
 } from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter, kycRateLimiter } from '../middleware/rateLimiter.middleware';
+import { authRateLimiter, loginRateLimiter, passwordResetRateLimiter, otpRateLimiter, kycRateLimiter, checkEmailRateLimiter } from '../middleware/rateLimiter.middleware';
 import { validate, registerValidation, loginValidation } from '../middleware/validation.middleware';
 
 const router = Router();
 
+router.get('/check-email', checkEmailRateLimiter, checkEmailAvailability);
 router.post('/register', authRateLimiter, validate(registerValidation), register);
 router.post('/login', loginRateLimiter, validate(loginValidation), login);
 router.post('/login/2fa', loginRateLimiter, login2FA);

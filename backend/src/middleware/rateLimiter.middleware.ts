@@ -21,6 +21,16 @@ export const authRateLimiter = rateLimit({
   statusCode: 429,
 });
 
+// ─── Check email availability limiter (generous to support debounced typing) ───
+export const checkEmailRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+  message: { message: 'Too many email checks. Please wait a moment.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+});
+
 // ─── Password reset: protect email-flooding & token brute-force ───────────────
 export const passwordResetRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

@@ -31,8 +31,36 @@ import {
 } from '../utils/totp.service';
 import { sendSMS } from '../utils/sms.service';
 
+export const checkEmailAvailability = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rawEmail = (req.query.email as string) || (req.body?.email as string);
+    if (!rawEmail || typeof rawEmail !== 'string') {
+      res.status(400).json({ available: false, message: 'Valid email is required.' });
+      return;
+    }
 
+    const email = rawEmail.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      res.status(400).json({ available: false, message: 'Invalid email format.' });
+      return;
+    }
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true }
+    });
+
+    if (existingUser) {
+      res.status(200).json({ available: false, exists: true, message: 'An account with this email already exists.' });
+    } else {
+      res.status(200).json({ available: true, exists: false, message: 'Email is available.' });
+    }
+  } catch (error) {
+    console.error('Error checking email availability:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {

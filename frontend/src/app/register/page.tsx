@@ -19,7 +19,8 @@ import {
   Lock,
   AlertCircle,
   Circle,
-  Phone
+  Phone,
+  Mail
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -165,6 +166,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailCheckStatus, setEmailCheckStatus] = useState<'IDLE' | 'CHECKING' | 'AVAILABLE' | 'EXISTS'>('IDLE');
+  const [emailCheckMessage, setEmailCheckMessage] = useState('');
   
   const REGISTRATION_DRAFT_KEY = 'akwaaba_registration_draft_v1';
 
@@ -235,6 +238,48 @@ export default function RegisterPage() {
     }
   }, [formData, currentStep]);
 
+  // Debounced real-time email availability verification
+  useEffect(() => {
+    const rawEmail = formData.email ? formData.email.trim().toLowerCase() : '';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!rawEmail || !emailRegex.test(rawEmail)) {
+      setEmailCheckStatus('IDLE');
+      setEmailCheckMessage('');
+      return;
+    }
+
+    setEmailCheckStatus('CHECKING');
+    setEmailCheckMessage('');
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get('/auth/check-email', { params: { email: rawEmail } });
+        if (res.data?.available) {
+          setEmailCheckStatus('AVAILABLE');
+          setEmailCheckMessage('Email is available');
+        } else if (res.data?.exists) {
+          setEmailCheckStatus('EXISTS');
+          setEmailCheckMessage('An account with this email already exists.');
+        } else {
+          setEmailCheckStatus('IDLE');
+          setEmailCheckMessage('');
+        }
+      } catch (err: any) {
+        if (err.response?.status === 409 || err.response?.data?.exists) {
+          setEmailCheckStatus('EXISTS');
+          setEmailCheckMessage('An account with this email already exists.');
+        } else {
+          // If network error or rate limit, fallback to IDLE so user is never blocked
+          setEmailCheckStatus('IDLE');
+          setEmailCheckMessage('');
+        }
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [formData.email]);
+
   const errorRef = useRef<HTMLDivElement>(null);
 
   const triggerError = (msg: string) => {
@@ -280,6 +325,11 @@ export default function RegisterPage() {
 
     if (!formData.email.trim()) {
       triggerError('Please enter a valid email address.');
+      return;
+    }
+
+    if (emailCheckStatus === 'EXISTS') {
+      triggerError('An account with this email already exists. Please sign in or use a different email.');
       return;
     }
 
@@ -397,6 +447,7 @@ export default function RegisterPage() {
 
   const isStep2Valid = Boolean(
     formData.email.trim() &&
+    emailCheckStatus !== 'EXISTS' &&
     formData.password.length >= 8 &&
     formData.confirmPassword.length >= 8 &&
     formData.password === formData.confirmPassword &&
@@ -987,18 +1038,85 @@ export default function RegisterPage() {
           {currentStep === 2 && (
             <div className="space-y-4">
               
-              {/* Email Address */}
-              <div>
-                <label className={labelClass}>Email Address *</label>
-                <input 
-                  type="email" 
-                  required 
-                  autoComplete="email" 
-                  className={inputClass} 
-                  value={formData.email} 
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                  placeholder="e.g. kwame@st.ug.edu.gh or name@gmail.com" 
-                />
+              {/* Email Address with Live Availability Check */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className={labelClass}>Email Address *</label>
+                  {emailCheckStatus === 'CHECKING' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400">
+                      <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                      <span>Checking availability...</span>
+                    </span>
+                  )}
+                  {emailCheckStatus === 'AVAILABLE' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Email available</span>
+                    </span>
+                  )}
+                  {emailCheckStatus === 'EXISTS' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Already registered</span>
+                    </span>
+                  )}
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input 
+                    type="email" 
+                    required 
+                    autoComplete="email" 
+                    className={`${inputClass} pl-10 pr-9 ${
+                      emailCheckStatus === 'EXISTS' 
+                        ? 'border-rose-400 dark:border-rose-700 focus:border-rose-500 focus:ring-rose-500/10' 
+                        : emailCheckStatus === 'AVAILABLE'
+                        ? 'border-emerald-400 dark:border-emerald-700'
+                        : ''
+                    }`} 
+                    value={formData.email} 
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                    placeholder="e.g. kwame@st.ug.edu.gh or name@gmail.com" 
+                  />
+                  {emailCheckStatus === 'CHECKING' && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 pointer-events-none">
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                    </div>
+                  )}
+                  {emailCheckStatus === 'AVAILABLE' && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-600 dark:text-emerald-400 pointer-events-none">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </div>
+                  )}
+                  {emailCheckStatus === 'EXISTS' && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-rose-500 pointer-events-none">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Email Feedback Helper */}
+                {emailCheckStatus === 'EXISTS' ? (
+                  <div className="rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 p-2.5 text-[11px] text-rose-700 dark:text-rose-300 flex items-center justify-between gap-2 animate-in fade-in">
+                    <span>This email is already associated with an AkwaabaHomes account.</span>
+                    <Link
+                      href="/login"
+                      className="font-bold underline text-rose-800 dark:text-rose-200 hover:text-rose-950 shrink-0"
+                    >
+                      Sign in &rarr;
+                    </Link>
+                  </div>
+                ) : emailCheckStatus === 'AVAILABLE' ? (
+                  <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Ready to register. Verification link will be sent here.
+                  </p>
+                ) : (
+                  <p className="text-[10.5px] text-zinc-400">
+                    We will send a statutory confirmation link to this address.
+                  </p>
+                )}
               </div>
 
               {/* Student Campus Verification Fields */}

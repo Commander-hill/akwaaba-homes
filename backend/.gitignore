@@ -6,3 +6,4 @@ dist
 /generated/prisma
 *.db
 *.db-journal
+public/uploads
