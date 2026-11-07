@@ -335,7 +335,7 @@ export default function RegisterPage() {
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
 
   // Active Session Fallback
-  if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token')) {
+  if (isCheckingAuth) {
     return (
       <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0E1210] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
         <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-400" />

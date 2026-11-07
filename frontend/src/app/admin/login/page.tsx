@@ -104,12 +104,8 @@ function AdminLoginForm() {
   const finalizeAdminSession = async (data: any) => {
     const userRole = data?.user?.role;
     if (['ADMIN', 'SUPER_ADMIN'].includes(userRole)) {
-      if (data?.accessToken) {
-        localStorage.setItem('akwaaba_access_token', data.accessToken);
+      if (typeof window !== 'undefined') {
         localStorage.setItem('akwaaba_last_active', String(Date.now()));
-      }
-      if (data?.refreshToken) {
-        localStorage.setItem('akwaaba_refresh_token', data.refreshToken);
       }
       toast.success(`Welcome back, ${data?.user?.firstName || 'Administrator'}`);
       window.location.href = '/admin/dashboard';
@@ -243,7 +239,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   };
 
   // Checking Auth State
-  if (isCheckingAuth && typeof window !== 'undefined' && localStorage.getItem('akwaaba_access_token') && !isTimeout) {
+  if (isCheckingAuth && !isTimeout) {
     return (
       <div className="-mt-16 min-h-screen flex flex-col items-center justify-center bg-[#F4FBF7] text-zinc-900 p-4 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />

@@ -179,12 +179,8 @@ function LoginForm() {
         return;
       }
 
-      if (response.data?.accessToken) {
-        localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+      if (typeof window !== 'undefined') {
         localStorage.setItem('akwaaba_last_active', String(Date.now()));
-      }
-      if (response.data?.refreshToken) {
-        localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
       }
 
       redirectByRole(response.data.user);
@@ -228,12 +224,8 @@ function LoginForm() {
         return;
       }
 
-      if (response.data?.accessToken) {
-        localStorage.setItem('akwaaba_access_token', response.data.accessToken);
+      if (typeof window !== 'undefined') {
         localStorage.setItem('akwaaba_last_active', String(Date.now()));
-      }
-      if (response.data?.refreshToken) {
-        localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
       }
 
       redirectByRole(response.data.user);

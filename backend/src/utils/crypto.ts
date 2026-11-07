@@ -1,51 +1,83 @@
 import crypto from 'crypto';
 
-const ENCRYPTION_KEY =
-  process.env.ENCRYPTION_KEY ||
-  (process.env.JWT_SECRET
-    ? crypto.createHash('sha256').update(process.env.JWT_SECRET + '_akwaaba_enc_key').digest('hex')
-    : 'akwaaba_fallback_32byte_aes_key');
 const ALGORITHM = 'aes-256-cbc';
 
-// Helper to ensure key is exactly 32 bytes
-const getKeyBuffer = () => {
-  let key = Buffer.from(ENCRYPTION_KEY, 'hex');
-  if (key.length !== 32) {
-    // If it's not a valid 32-byte hex, hash the string to get 32 bytes
-    key = crypto.createHash('sha256').update(String(ENCRYPTION_KEY)).digest();
+/**
+ * Returns a validated 32-byte Buffer for AES-256 encryption.
+ * Enforces an independent, explicitly configured ENCRYPTION_KEY.
+ */
+const getKeyBuffer = (): Buffer => {
+  const rawKey = process.env.ENCRYPTION_KEY;
+  if (!rawKey || typeof rawKey !== 'string') {
+    throw new Error('Fatal Cryptographic Configuration: ENCRYPTION_KEY environment variable is not defined.');
   }
-  return key;
+
+  const trimmed = rawKey.trim();
+
+  // If provided as a 64-character hex string (32 bytes)
+  if (/^[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return Buffer.from(trimmed, 'hex');
+  }
+
+  // If provided as exactly 32 raw UTF-8 bytes
+  const utf8Buf = Buffer.from(trimmed, 'utf8');
+  if (utf8Buf.length === 32) {
+    return utf8Buf;
+  }
+
+  // If in non-production environment with a custom string, hash to derive 32 bytes with high entropy
+  if (process.env.NODE_ENV !== 'production' && trimmed.length >= 16) {
+    return crypto.createHash('sha256').update(trimmed).digest();
+  }
+
+  throw new Error('Fatal Cryptographic Configuration: ENCRYPTION_KEY must be a 64-character hex string or 32-byte secret.');
 };
 
+/**
+ * Encrypts sensitive string data using AES-256-CBC with a cryptographically random IV.
+ * STRICT FAIL-CLOSED: Throws an error immediately upon any cryptographic failure.
+ * NEVER falls back to returning raw unencrypted text to prevent sensitive data leakage.
+ */
 export const encryptData = (text: string): string => {
   if (!text) return text;
-  
+
   try {
+    const key = getKeyBuffer();
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(ALGORITHM, getKeyBuffer(), iv);
+    const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
     return `${iv.toString('hex')}:${encrypted}`;
-  } catch (error) {
-    console.error('Encryption error:', error);
-    return text; // Fallback to raw text if encryption fails (better than losing data, though risky. In strict environments, throw error.)
+  } catch (error: any) {
+    console.error('🚨 [Security Violation] Strict Fail-Closed: Field encryption failed:', error.message);
+    throw new Error('Cryptographic operation failed: sensitive data could not be securely encrypted.');
   }
 };
 
+/**
+ * Decrypts AES-256-CBC encrypted data formatted as "iv:ciphertext".
+ */
 export const decryptData = (text: string): string => {
   if (!text) return text;
-  if (!text.includes(':')) return text; // If it doesn't look like an encrypted string (iv:cipher), return as is (for backwards compatibility)
+  if (!text.includes(':')) return text; // Plain text or legacy unencrypted string
 
   try {
+    const key = getKeyBuffer();
     const textParts = text.split(':');
-    const iv = Buffer.from(textParts.shift() as string, 'hex');
+    const ivHex = textParts.shift() as string;
     const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-    const decipher = crypto.createDecipheriv(ALGORITHM, getKeyBuffer(), iv);
+    const iv = Buffer.from(ivHex, 'hex');
+
+    if (iv.length !== 16) {
+      throw new Error('Invalid initialization vector length');
+    }
+
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString('utf8');
-  } catch (error) {
-    console.error('Decryption error:', error);
+  } catch (error: any) {
+    console.error('🚨 Decryption error:', error.message);
     return '*** ENCRYPTED DATA CORRUPTED ***';
   }
 };
@@ -75,4 +107,3 @@ export const maskGhanaCardNumber = (card: string | null | undefined): string | n
 
   return 'GHA-•••••••••';
 };
-

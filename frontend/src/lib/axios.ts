@@ -2,103 +2,77 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1',
-  withCredentials: true, // Enables browser to send HTTP-only cookies whenever supported
+  withCredentials: true, // Strictly relies on HTTP-only, secure, SameSite cookies
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
 
-// Attach token from localStorage if available (Guarantees seamless cross-origin and strict-cookie browser compatibility)
-api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('akwaaba_access_token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
-  return config;
-});
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
+const processQueue = (error: any) => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve();
     }
   });
-  
+
   failedQueue = [];
 };
 
 api.interceptors.response.use(
   (response) => {
-    // Synchronize tokens when server returns them in payload (login, 2FA, refresh)
-    if (typeof window !== 'undefined' && response.data?.accessToken) {
-      localStorage.setItem('akwaaba_access_token', response.data.accessToken);
-    }
-    if (typeof window !== 'undefined' && response.data?.refreshToken) {
-      localStorage.setItem('akwaaba_refresh_token', response.data.refreshToken);
-    }
+    // Defense-in-depth: if logout endpoint is invoked, ensure any historical legacy localStorage keys are purged
     if (typeof window !== 'undefined' && response.config.url?.includes('/auth/logout')) {
-      localStorage.removeItem('akwaaba_access_token');
-      localStorage.removeItem('akwaaba_refresh_token');
+      try {
+        localStorage.removeItem('akwaaba_access_token');
+        localStorage.removeItem('akwaaba_refresh_token');
+      } catch {}
     }
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
 
-    const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_refresh_token') : null;
-    const storedAccessToken = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_access_token') : null;
-
+    // Handle token refresh on 401 Unauthorized
     if (
-      error.response?.status === 401 && 
-      !originalRequest._retry && 
-      originalRequest.url !== '/auth/login' && 
-      originalRequest.url !== '/auth/login/2fa' && 
-      originalRequest.url !== '/auth/refresh' &&
-      // Only attempt refresh if the user previously had a session
-      (storedRefreshToken || storedAccessToken)
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      originalRequest.url !== '/auth/login' &&
+      originalRequest.url !== '/auth/login/2fa' &&
+      originalRequest.url !== '/auth/refresh'
     ) {
-      
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then((token) => {
-          if (token && originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-          }
-          return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
 
       originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        const refreshRes = await api.post('/auth/refresh', { refreshToken: storedRefreshToken });
-        const newAccessToken = refreshRes.data?.accessToken;
-
-        if (newAccessToken && typeof window !== 'undefined') {
-          localStorage.setItem('akwaaba_access_token', newAccessToken);
-          if (originalRequest.headers) {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          }
-        }
-
-        processQueue(null, newAccessToken);
+        // withCredentials: true transmits the HTTP-only refreshToken cookie automatically
+        await api.post('/auth/refresh');
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError, null);
+        processQueue(refreshError);
+
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('akwaaba_access_token');
-          localStorage.removeItem('akwaaba_refresh_token');
+          try {
+            localStorage.removeItem('akwaaba_access_token');
+            localStorage.removeItem('akwaaba_refresh_token');
+          } catch {}
+
           const publicPaths = ['/login', '/register', '/admin/login', '/forgot-password', '/reset-password'];
           if (!publicPaths.includes(window.location.pathname) && window.location.pathname !== '/') {
             window.location.href = '/login';

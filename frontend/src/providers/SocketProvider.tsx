@@ -23,13 +23,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Extract token from localStorage as fallback if HTTP-only cookie is not accessible
-    const token = typeof window !== 'undefined' ? localStorage.getItem('akwaaba_access_token') : null;
-    
     // Connect to the root domain, stripping /api or /api/v1 if it exists in NEXT_PUBLIC_API_URL
     const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     const socketUrl = rawUrl.replace(/\/api(\/v1)?\/?$/, '');
 
+    // Socket.io sends the browser's HTTP-only cookies automatically via withCredentials: true
     const socketInstance = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
@@ -37,9 +35,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      auth: {
-        token: token ? `Bearer ${token}` : undefined,
-      },
     });
 
     socketInstance.on('connect', () => {
