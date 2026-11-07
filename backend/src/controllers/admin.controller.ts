@@ -558,6 +558,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
           firstName: true,
           lastName: true,
           email: true,
+          avatarUrl: true,
           role: true,
           phoneNumber: true,
           gender: true,
