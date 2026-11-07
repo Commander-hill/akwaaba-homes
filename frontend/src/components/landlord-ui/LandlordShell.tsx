@@ -19,6 +19,11 @@ import {
   X,
   Plus,
   Megaphone,
+  Receipt,
+  UserCheck,
+  ClipboardList,
+  AlertTriangle,
+  BadgeCheck,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
@@ -66,54 +71,95 @@ export default function LandlordShell({
 
   const groups: NavGroup[] = [
     {
-      title: 'Overview',
+      title: 'Portfolio',
       items: [
         { label: 'Dashboard', href: '/dashboard/landlord', prefixes: [], icon: LayoutDashboard },
-      ],
-    },
-    {
-      title: 'Property management',
-      items: [
         {
-          label: 'Properties',
+          label: 'Properties & Units',
           href: '/dashboard/landlord/properties',
           prefixes: ['/dashboard/landlord/properties', '/dashboard/landlord/new'],
           icon: Building2,
         },
         {
-          label: 'Bookings',
+          label: 'Bookings & Applications',
           href: '/dashboard/landlord/bookings',
           prefixes: ['/dashboard/landlord/bookings'],
           icon: CalendarCheck,
         },
         {
-          label: 'Tenants',
+          label: 'Tenants & Residents',
           href: '/dashboard/landlord/tenants',
           prefixes: ['/dashboard/landlord/tenants'],
           icon: Users,
         },
+      ],
+    },
+    {
+      title: 'Finances & Revenue',
+      items: [
+        {
+          label: 'Revenue & Operations',
+          href: '/dashboard/landlord/operations',
+          prefixes: ['/dashboard/landlord/operations'],
+          icon: Receipt,
+        },
+        {
+          label: 'Earnings & Payouts',
+          href: '/dashboard/landlord/withdraw',
+          prefixes: ['/dashboard/landlord/withdraw'],
+          icon: Wallet,
+        },
+        {
+          label: 'Property Expenses',
+          href: '/dashboard/landlord/expenses/new',
+          prefixes: ['/dashboard/landlord/expenses'],
+          icon: CreditCard,
+        },
+        {
+          label: 'Platform Subscription',
+          href: '/dashboard/landlord/subscription',
+          prefixes: ['/dashboard/landlord/subscription'],
+          icon: BadgeCheck,
+        },
+      ],
+    },
+    {
+      title: 'Operations & Caretakers',
+      items: [
         {
           label: 'Resident Notices',
           href: '/dashboard/landlord/notices',
           prefixes: ['/dashboard/landlord/notices'],
           icon: Megaphone,
         },
+        {
+          label: 'Staff & Caretakers',
+          href: '/dashboard/landlord/staff/new',
+          prefixes: ['/dashboard/landlord/staff'],
+          icon: UserCheck,
+        },
+        {
+          label: 'Fixture Inventory',
+          href: '/dashboard/landlord/inventory/new',
+          prefixes: ['/dashboard/landlord/inventory'],
+          icon: ClipboardList,
+        },
+        {
+          label: 'Report Tenant Breach',
+          href: '/dashboard/landlord/disciplinary/new',
+          prefixes: ['/dashboard/landlord/disciplinary'],
+          icon: AlertTriangle,
+        },
       ],
     },
     {
-      title: 'Business and account',
+      title: 'Account & Trust',
       items: [
         {
-          label: 'Subscription',
-          href: '/dashboard/landlord/subscription',
-          prefixes: ['/dashboard/landlord/subscription'],
-          icon: CreditCard,
-        },
-        {
-          label: 'Earnings and payouts',
-          href: '/dashboard/landlord/withdraw',
-          prefixes: ['/dashboard/landlord/withdraw'],
-          icon: Wallet,
+          label: 'ID & Title Deeds',
+          href: '/dashboard/verification',
+          prefixes: ['/dashboard/verification'],
+          icon: ShieldCheck,
         },
         {
           label: 'Notifications',
@@ -123,13 +169,7 @@ export default function LandlordShell({
           badge: unreadNotificationsCount,
         },
         {
-          label: 'ID & Title Deeds',
-          href: '/dashboard/verification',
-          prefixes: ['/dashboard/verification'],
-          icon: ShieldCheck,
-        },
-        {
-          label: 'Profile and settings',
+          label: 'Profile & Settings',
           href: '/dashboard/profile',
           prefixes: ['/dashboard/profile'],
           icon: User,

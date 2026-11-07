@@ -27,6 +27,11 @@ import {
   Moon,
   Sun,
   Scale,
+  Heart,
+  BadgeCheck,
+  Receipt,
+  Users,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
@@ -54,6 +59,11 @@ interface NavItem {
   matchPrefixes: string[];
   icon: React.ElementType;
   badge?: number;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
 }
 
 export default function TenantShell({
@@ -181,72 +191,122 @@ export default function TenantShell({
   const fullName = `${user?.firstName || 'Stephen'} ${user?.lastName || 'Darko'}`.trim();
   const initials = `${user?.firstName?.[0] || 'S'}${user?.lastName?.[0] || 'D'}`.toUpperCase();
 
-  // Navigation Items matching media_1793394736521.jpg exactly
-  const navItems: NavItem[] = [
+  // Categorized Navigation Groups exposing 100% of Resident features
+  const navGroups: NavGroup[] = [
     {
-      label: 'Dashboard',
-      href: '/dashboard/tenant',
-      matchPrefixes: ['/dashboard/tenant'],
-      icon: LayoutDashboard,
+      title: 'MY LIVING',
+      items: [
+        {
+          label: 'Dashboard',
+          href: '/dashboard/tenant',
+          matchPrefixes: ['/dashboard/tenant'],
+          icon: LayoutDashboard,
+        },
+        {
+          label: 'My Residence',
+          href: '/dashboard/tenant/residence',
+          matchPrefixes: ['/dashboard/tenant/residence'],
+          icon: Building2,
+        },
+        {
+          label: 'My Bookings',
+          href: '/dashboard/tenant/bookings',
+          matchPrefixes: ['/dashboard/tenant/bookings', '/bookings'],
+          icon: CalendarCheck,
+        },
+        {
+          label: 'Lease & Agreements',
+          href: '/dashboard/agreements',
+          matchPrefixes: ['/dashboard/agreements', '/lease-agreement'],
+          icon: Scale,
+        },
+        {
+          label: 'Visitor Gate Passes',
+          href: '/dashboard/tenant/visitors',
+          matchPrefixes: ['/dashboard/tenant/visitors'],
+          icon: ShieldCheck,
+        },
+      ],
     },
     {
-      label: 'My Residence',
-      href: '/dashboard/tenant/residence',
-      matchPrefixes: ['/dashboard/tenant/residence'],
-      icon: Building2,
+      title: 'PAYMENTS & BILLS',
+      items: [
+        {
+          label: 'Rent & Utility Bills',
+          href: '/dashboard/tenant/bills',
+          matchPrefixes: ['/dashboard/tenant/bills'],
+          icon: CreditCard,
+        },
+        {
+          label: 'Invoices & Receipts',
+          href: '/dashboard/invoice',
+          matchPrefixes: ['/dashboard/invoice'],
+          icon: Receipt,
+        },
+      ],
     },
     {
-      label: 'Bookings',
-      href: '/dashboard/tenant/bookings',
-      matchPrefixes: ['/dashboard/tenant/bookings', '/bookings'],
-      icon: CalendarCheck,
+      title: 'COMMUNITY & LIFE',
+      items: [
+        {
+          label: 'Find Roommates',
+          href: '/dashboard/roommates',
+          matchPrefixes: ['/dashboard/roommates'],
+          icon: Users,
+        },
+        {
+          label: 'Maintenance & Repairs',
+          href: '/dashboard/tenant/tickets',
+          matchPrefixes: ['/dashboard/tenant/tickets', '/maintenance'],
+          icon: Wrench,
+          badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
+        },
+        {
+          label: 'Messages & Chat',
+          href: '/dashboard/messages',
+          matchPrefixes: ['/dashboard/messages'],
+          icon: MessageSquare,
+          badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
+        },
+        {
+          label: 'Saved Wishlist',
+          href: '/dashboard/wishlist',
+          matchPrefixes: ['/dashboard/wishlist'],
+          icon: Heart,
+        },
+      ],
     },
     {
-      label: 'Payments',
-      href: '/dashboard/invoice',
-      matchPrefixes: ['/dashboard/invoice', '/dashboard/tenant/bills'],
-      icon: CreditCard,
-    },
-    {
-      label: 'Messages',
-      href: '/dashboard/messages',
-      matchPrefixes: ['/dashboard/messages'],
-      icon: MessageSquare,
-      badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
-    },
-    {
-      label: 'Documents',
-      href: '/dashboard/documents',
-      matchPrefixes: ['/dashboard/documents', '/dashboard/verification'],
-      icon: FileText,
-    },
-    {
-      label: 'Agreements',
-      href: '/dashboard/agreements',
-      matchPrefixes: ['/dashboard/agreements', '/lease-agreement'],
-      icon: Scale,
-    },
-    {
-      label: 'Maintenance',
-      href: '/dashboard/tenant/tickets',
-      matchPrefixes: ['/dashboard/tenant/tickets', '/maintenance'],
-      icon: Wrench,
-      badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
-    },
-    {
-      label: 'Account Settings',
-      href: '/dashboard/profile',
-      matchPrefixes: ['/dashboard/profile', '/profile', '/settings', '/account'],
-      icon: User,
+      title: 'ACCOUNT & VAULT',
+      items: [
+        {
+          label: 'Document Vault',
+          href: '/dashboard/documents',
+          matchPrefixes: ['/dashboard/documents'],
+          icon: FileText,
+        },
+        {
+          label: 'Ghana Card KYC',
+          href: '/dashboard/verification',
+          matchPrefixes: ['/dashboard/verification'],
+          icon: BadgeCheck,
+        },
+        {
+          label: 'Account Settings',
+          href: '/dashboard/profile',
+          matchPrefixes: ['/dashboard/profile', '/profile', '/settings', '/account'],
+          icon: User,
+        },
+      ],
     },
   ];
 
   const isNavItemActive = (item: NavItem) => {
     const currentPath = optimisticPath || pathname;
-    if (item.label === 'Dashboard') {
+    if (item.href === '/dashboard/tenant') {
       return currentPath === '/dashboard/tenant' || currentPath === '/dashboard';
     }
-    if (item.label === 'My Residence') {
+    if (item.href === '/dashboard/tenant/residence') {
       return currentPath.startsWith('/dashboard/tenant/residence');
     }
     return item.matchPrefixes.some((prefix) => currentPath === prefix || currentPath.startsWith(`${prefix}/`));
@@ -285,57 +345,68 @@ export default function TenantShell({
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav aria-label="Resident Navigation" className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isNavItemActive(item);
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              onClick={() => {
-                setOptimisticPath(item.href);
-                if (onNavigate) onNavigate();
-              }}
-              aria-current={active ? 'page' : undefined}
-              className={clsx(
-                'group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm transition-all duration-150 select-none',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
-                active
-                  ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 font-semibold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
-                  : 'text-zinc-600 dark:text-zinc-400 hover:text-[#15803D] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/40 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/40 font-medium border border-transparent active:bg-[#DCFCE7] active:text-[#15803D] active:border-[#BBF7D0]'
-              )}
-            >
-              <span className="flex items-center gap-3.5 min-w-0">
-                <Icon
-                  className={clsx(
-                    'w-4.5 h-4.5 shrink-0 stroke-[2] transition-colors',
-                    active
-                      ? 'text-[#15803D] dark:text-emerald-300'
-                      : 'text-zinc-400 dark:text-zinc-500 stroke-[1.8] group-hover:text-[#15803D] dark:group-hover:text-emerald-300 group-active:text-[#15803D]'
-                  )}
-                  aria-hidden="true"
-                />
-                <span className="truncate">{item.label}</span>
+      {/* Navigation Links Grouped */}
+      <nav aria-label="Resident Navigation" className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+        {navGroups.map((group) => (
+          <div key={group.title}>
+            <div className="px-3 pb-1 pt-1">
+              <span className="text-[10px] font-bold tracking-wider text-zinc-400 dark:text-zinc-500 uppercase">
+                {group.title}
               </span>
+            </div>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const active = isNavItemActive(item);
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={() => {
+                      setOptimisticPath(item.href);
+                      if (onNavigate) onNavigate();
+                    }}
+                    aria-current={active ? 'page' : undefined}
+                    className={clsx(
+                      'group flex items-center justify-between px-3.5 py-2 rounded-xl text-xs sm:text-[13px] transition-all duration-150 select-none',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
+                      active
+                        ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 font-semibold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-[#15803D] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/40 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/40 font-medium border border-transparent active:bg-[#DCFCE7] active:text-[#15803D] active:border-[#BBF7D0]'
+                    )}
+                  >
+                    <span className="flex items-center gap-3 min-w-0">
+                      <Icon
+                        className={clsx(
+                          'w-4 h-4 shrink-0 stroke-[2] transition-colors',
+                          active
+                            ? 'text-[#15803D] dark:text-emerald-300'
+                            : 'text-zinc-400 dark:text-zinc-500 stroke-[1.8] group-hover:text-[#15803D] dark:group-hover:text-emerald-300 group-active:text-[#15803D]'
+                        )}
+                        aria-hidden="true"
+                      />
+                      <span className="truncate">{item.label}</span>
+                    </span>
 
-              {item.badge !== undefined && item.badge > 0 && (
-                <span className="w-5 h-5 rounded-full bg-[#E0533C] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="w-4.5 h-4.5 rounded-full bg-[#E0533C] text-white text-[9.5px] font-bold flex items-center justify-center shrink-0">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Bottom "Need Help?" Card matching reference screenshot */}
-      <div className="p-4 mt-auto">
-        <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-center flex flex-col items-center space-y-2">
-          <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+      <div className="p-3.5 mt-auto">
+        <div className="p-3.5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 text-center flex flex-col items-center space-y-1.5">
+          <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <svg
-              className="w-5 h-5"
+              className="w-4 h-4"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -350,13 +421,13 @@ export default function TenantShell({
           <h4 className="text-xs font-bold text-zinc-900 dark:text-white">
             Need Help?
           </h4>
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
+          <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed px-1">
             Our support team is here to help.
           </p>
           <Link
             href="/support"
             onClick={onNavigate}
-            className="w-full py-2.5 px-3 mt-1 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+            className="w-full py-2 px-3 mt-0.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
           >
             <span>Contact Support</span>
             <span aria-hidden="true">&rarr;</span>
@@ -383,7 +454,8 @@ export default function TenantShell({
     pathname === '/dashboard/profile' ||
     pathname === '/profile' ||
     pathname === '/settings' ||
-    pathname === '/dashboard/tenant/tickets';
+    pathname === '/dashboard/tenant/tickets' ||
+    pathname === '/dashboard/messages';
 
   return (
     <div className="-mt-16 min-h-screen flex flex-col lg:flex-row bg-white dark:bg-[#0E1210] text-zinc-900 dark:text-zinc-100 font-sans">
@@ -416,11 +488,21 @@ export default function TenantShell({
               <span className="text-zinc-300 dark:text-zinc-600">/</span>
               <span className="font-bold text-zinc-900 dark:text-white capitalize">
                 {pathname.includes('/invoice')
-                  ? 'Payments'
+                  ? 'Invoices & Receipts'
                   : pathname.includes('/agreements')
                   ? 'Agreements'
-                  : pathname.includes('/documents') || pathname.includes('/verification')
-                  ? 'Documents'
+                  : pathname.includes('/roommates')
+                  ? 'Find Roommates'
+                  : pathname.includes('/visitors')
+                  ? 'Visitor Gate Passes'
+                  : pathname.includes('/wishlist')
+                  ? 'Saved Wishlist'
+                  : pathname.includes('/bills')
+                  ? 'Rent & Utility Bills'
+                  : pathname.includes('/documents')
+                  ? 'Document Vault'
+                  : pathname.includes('/verification')
+                  ? 'Ghana Card Verification'
                   : pathname.includes('/profile') || pathname.includes('/settings')
                   ? 'Settings'
                   : pathname.includes('/tickets')

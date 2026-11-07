@@ -159,6 +159,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
     {
       title: 'PEOPLE',
       links: [
+        { name: 'All Users Directory', href: '/admin/users', icon: Users },
         { name: 'Landlords & Owners', href: '/admin/landlords', icon: UserCheck },
         { name: 'Tenants & Residents', href: '/admin/tenants', icon: Users },
       ]
@@ -178,7 +179,8 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         { name: 'Payments & Ledger', href: '/admin/transactions', icon: Receipt },
         { name: 'Maintenance & Repairs', href: '/admin/tickets', icon: Wrench },
         { name: 'Review Moderation', href: '/admin/reviews', icon: Star },
-        { name: 'Disputes & Support', href: '/admin/disputes', icon: Scale }
+        { name: 'Disputes & Support', href: '/admin/disputes', icon: Scale },
+        { name: 'Breaches Tribunal', href: '/admin/breaches', icon: ShieldAlert },
       ]
     },
     {
@@ -189,9 +191,10 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
       ]
     },
     {
-      title: 'INSIGHTS',
+      title: 'INSIGHTS & TELEMETRY',
       links: [
-        { name: 'Reports & Analytics', href: '/admin/analytics', icon: BarChart3 }
+        { name: 'Reports & Analytics', href: '/admin/analytics', icon: BarChart3 },
+        { name: 'Live Activity Stream', href: '/admin/activity', icon: Activity },
       ]
     },
     {
@@ -208,6 +211,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
   const getCurrentPageTitle = (path: string): string => {
     if (path === '/admin/dashboard') return 'Command Centre';
     if (path.startsWith('/admin/properties')) return 'Property Listings';
+    if (path.startsWith('/admin/users')) return 'All Users Directory';
     if (path.startsWith('/admin/landlords')) return 'Landlords & Owners';
     if (path.startsWith('/admin/tenants')) return 'Tenants & Residents';
     if (path.startsWith('/admin/verifications')) return 'Ghana Card KYC';
@@ -218,14 +222,15 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
     if (path.startsWith('/admin/tickets')) return 'Maintenance & Repairs';
     if (path.startsWith('/admin/reviews')) return 'Review Moderation';
     if (path.startsWith('/admin/disputes')) return 'Disputes & Support';
+    if (path.startsWith('/admin/breaches')) return 'Breaches Tribunal';
     if (path.startsWith('/admin/notices')) return 'Notices & Announcements';
     if (path.startsWith('/admin/broadcasts')) return 'Live Broadcasts';
     if (path.startsWith('/admin/analytics')) return 'Reports & Analytics';
+    if (path.startsWith('/admin/activity')) return 'Live Activity Stream';
     if (path.startsWith('/admin/audit')) return 'Audit Logs';
     if (path.startsWith('/admin/maintenance')) return 'Maintenance Mode';
     if (path.startsWith('/admin/administrators')) return 'Administrators & Roles';
     if (path.startsWith('/admin/config')) return 'Platform Settings';
-    if (path.startsWith('/admin/activity')) return 'Activity Stream';
     return path.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Dashboard';
   };
 
