@@ -18,7 +18,8 @@ import {
   Check,
   Lock,
   AlertCircle,
-  Circle
+  Circle,
+  Phone
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -28,6 +29,96 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import PassportUpload from '@/components/PassportUpload';
 import { getImageUrl } from '@/lib/utils';
+
+interface GhanaCarrierInfo {
+  carrier: 'MTN' | 'Telecel' | 'AT' | 'Glo';
+  badgeColor: string;
+  badgeBg: string;
+  badgeBorder: string;
+  label: string;
+}
+
+function detectGhanaCarrier(rawPhone: string): GhanaCarrierInfo | null {
+  const digits = (rawPhone || '').replace(/\D/g, '');
+  if (!digits) return null;
+
+  let local = digits;
+  if (local.startsWith('233')) {
+    local = '0' + local.slice(3);
+  }
+
+  if (local.length < 3) return null;
+  const prefix3 = local.slice(0, 3);
+
+  // MTN Ghana: 024, 025, 053, 054, 055, 059
+  if (['024', '025', '053', '054', '055', '059'].includes(prefix3)) {
+    return {
+      carrier: 'MTN',
+      label: 'MTN MoMo',
+      badgeBg: 'bg-amber-100 dark:bg-amber-950/70',
+      badgeColor: 'text-amber-800 dark:text-amber-300',
+      badgeBorder: 'border-amber-300/80 dark:border-amber-800'
+    };
+  }
+
+  // Telecel Ghana: 020, 050
+  if (['020', '050'].includes(prefix3)) {
+    return {
+      carrier: 'Telecel',
+      label: 'Telecel Cash',
+      badgeBg: 'bg-rose-100 dark:bg-rose-950/70',
+      badgeColor: 'text-rose-800 dark:text-rose-300',
+      badgeBorder: 'border-rose-300/80 dark:border-rose-800'
+    };
+  }
+
+  // AT Ghana (AirtelTigo): 027, 057, 026, 056
+  if (['027', '057', '026', '056'].includes(prefix3)) {
+    return {
+      carrier: 'AT',
+      label: 'AT Money',
+      badgeBg: 'bg-blue-100 dark:bg-blue-950/70',
+      badgeColor: 'text-blue-800 dark:text-blue-300',
+      badgeBorder: 'border-blue-300/80 dark:border-blue-800'
+    };
+  }
+
+  // Glo Ghana: 023
+  if (['023'].includes(prefix3)) {
+    return {
+      carrier: 'Glo',
+      label: 'Glo',
+      badgeBg: 'bg-emerald-100 dark:bg-emerald-950/70',
+      badgeColor: 'text-emerald-800 dark:text-emerald-300',
+      badgeBorder: 'border-emerald-300/80 dark:border-emerald-800'
+    };
+  }
+
+  return null;
+}
+
+function formatGhanaianPhone(input: string): string {
+  if (!input) return '';
+  const isPlus = input.trim().startsWith('+');
+  const digits = input.replace(/\D/g, '');
+
+  if (isPlus || digits.startsWith('233')) {
+    let clean = digits.startsWith('233') ? digits.slice(3) : digits;
+    if (clean.length > 9) clean = clean.slice(0, 9);
+    
+    if (clean.length === 0) return '+233 ';
+    if (clean.length <= 2) return `+233 ${clean}`;
+    if (clean.length <= 5) return `+233 ${clean.slice(0, 2)} ${clean.slice(2)}`;
+    return `+233 ${clean.slice(0, 2)} ${clean.slice(2, 5)} ${clean.slice(5)}`;
+  }
+
+  let clean = digits;
+  if (clean.length > 10) clean = clean.slice(0, 10);
+
+  if (clean.length <= 3) return clean;
+  if (clean.length <= 6) return `${clean.slice(0, 3)} ${clean.slice(3)}`;
+  return `${clean.slice(0, 3)} ${clean.slice(3, 6)} ${clean.slice(6)}`;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -162,8 +253,9 @@ export default function RegisterPage() {
       triggerError('Please enter your first and last name.');
       return;
     }
-    if (!formData.phoneNumber.trim()) {
-      triggerError('Please provide a valid Ghanaian phone number (e.g. 054xxxxxxx).');
+    const cleanPhone = formData.phoneNumber.replace(/\D/g, '');
+    if (cleanPhone.length < 9) {
+      triggerError('Please provide a valid 10-digit Ghanaian phone number (e.g. 054 123 4567).');
       return;
     }
     if (!formData.gender || !formData.nationality.trim()) {
@@ -192,8 +284,8 @@ export default function RegisterPage() {
     }
 
     if (formData.role === 'TENANT' && formData.isStudent) {
-      if (!formData.guardianName.trim() || !formData.guardianPhone.trim()) {
-        triggerError('Please provide emergency guardian contact details.');
+      if (!formData.guardianName.trim() || formData.guardianPhone.replace(/\D/g, '').length < 9) {
+        triggerError('Please provide valid emergency guardian contact details (10-digit Ghanaian phone number).');
         return;
       }
       if (!formData.campus || !formData.studentId.trim() || !formData.dateOfAdmission || !formData.programmeOfStudy.trim()) {
@@ -296,7 +388,7 @@ export default function RegisterPage() {
   const isStep1Valid = Boolean(
     formData.firstName.trim() &&
     formData.lastName.trim() &&
-    formData.phoneNumber.trim() &&
+    formData.phoneNumber.replace(/\D/g, '').length >= 9 &&
     formData.gender &&
     formData.nationality.trim() &&
     formData.avatarUrl && formData.avatarUrl.trim() &&
@@ -316,7 +408,7 @@ export default function RegisterPage() {
         Boolean(formData.dateOfAdmission) &&
         Boolean(formData.programmeOfStudy.trim()) &&
         Boolean(formData.guardianName.trim()) &&
-        Boolean(formData.guardianPhone.trim())))
+        formData.guardianPhone.replace(/\D/g, '').length >= 9))
   );
 
   const campusLabels: Record<string, string> = {
@@ -399,6 +491,25 @@ export default function RegisterPage() {
       isMismatch
     };
   }, [formData.password, formData.confirmPassword]);
+
+  // Ghanaian phone number auto-formatting & carrier detection
+  const handlePhoneChange = (raw: string, field: 'phoneNumber' | 'guardianPhone') => {
+    const formatted = formatGhanaianPhone(raw);
+    setFormData((prev) => ({ ...prev, [field]: formatted }));
+  };
+
+  const userCarrier = useMemo(() => detectGhanaCarrier(formData.phoneNumber), [formData.phoneNumber]);
+  const guardianCarrier = useMemo(() => detectGhanaCarrier(formData.guardianPhone), [formData.guardianPhone]);
+
+  const isUserPhoneValid = useMemo(() => {
+    const digits = formData.phoneNumber.replace(/\D/g, '');
+    return digits.length === 10 || (digits.startsWith('233') && digits.length === 12);
+  }, [formData.phoneNumber]);
+
+  const isGuardianPhoneValid = useMemo(() => {
+    const digits = formData.guardianPhone.replace(/\D/g, '');
+    return digits.length === 10 || (digits.startsWith('233') && digits.length === 12);
+  }, [formData.guardianPhone]);
 
   const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
@@ -778,16 +889,44 @@ export default function RegisterPage() {
                     placeholder="e.g. Osei" 
                   />
                 </div>
+                {/* User Phone Number with Ghanaian Carrier Detection */}
                 <div>
-                  <label className={labelClass}>Phone Number *</label>
-                  <input 
-                    type="tel" 
-                    required 
-                    className={inputClass} 
-                    value={formData.phoneNumber} 
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })} 
-                    placeholder="054XXXXXXX" 
-                  />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className={labelClass}>Phone Number *</label>
+                    {userCarrier && (
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all animate-in fade-in ${userCarrier.badgeBg} ${userCarrier.badgeColor} ${userCarrier.badgeBorder}`}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                        <span>{userCarrier.label}</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                      <span className="text-xs mr-1 select-none">🇬🇭</span>
+                    </div>
+                    <input 
+                      type="tel" 
+                      required 
+                      className={`${inputClass} pl-10 pr-9 font-mono`} 
+                      value={formData.phoneNumber} 
+                      onChange={(e) => handlePhoneChange(e.target.value, 'phoneNumber')} 
+                      placeholder="054 123 4567" 
+                    />
+                    {isUserPhoneValid && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-600 dark:text-emerald-400 pointer-events-none">
+                        <CheckCircle2 className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 mt-1">
+                    {isUserPhoneValid ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                        <Check className="w-3 h-3" /> Valid Ghanaian mobile line (MoMo ready)
+                      </span>
+                    ) : (
+                      'Format: 0XX XXX XXXX (e.g. 054 123 4567)'
+                    )}
+                  </p>
                 </div>
                 <div>
                   <label className={labelClass}>Gender *</label>
@@ -952,16 +1091,44 @@ export default function RegisterPage() {
                           placeholder="Parent or Guardian Name" 
                         />
                       </div>
+                      {/* Guardian Phone Number with Carrier Detection */}
                       <div>
-                        <label className={labelClass}>Guardian Phone Number *</label>
-                        <input 
-                          type="tel" 
-                          required 
-                          className={inputClass} 
-                          value={formData.guardianPhone} 
-                          onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })} 
-                          placeholder="054XXXXXXX" 
-                        />
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className={labelClass}>Guardian Phone Number *</label>
+                          {guardianCarrier && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all animate-in fade-in ${guardianCarrier.badgeBg} ${guardianCarrier.badgeColor} ${guardianCarrier.badgeBorder}`}>
+                              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                              <span>{guardianCarrier.label}</span>
+                            </span>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                            <span className="text-xs mr-1 select-none">🇬🇭</span>
+                          </div>
+                          <input 
+                            type="tel" 
+                            required 
+                            className={`${inputClass} pl-10 pr-9 font-mono`} 
+                            value={formData.guardianPhone} 
+                            onChange={(e) => handlePhoneChange(e.target.value, 'guardianPhone')} 
+                            placeholder="054 123 4567" 
+                          />
+                          {isGuardianPhoneValid && (
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-600 dark:text-emerald-400 pointer-events-none">
+                              <CheckCircle2 className="w-4 h-4" />
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 mt-1">
+                          {isGuardianPhoneValid ? (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                              <Check className="w-3 h-3" /> Valid Ghanaian mobile line
+                            </span>
+                          ) : (
+                            'Format: 0XX XXX XXXX (e.g. 054 123 4567)'
+                          )}
+                        </p>
                       </div>
                     </div>
 
@@ -1199,7 +1366,14 @@ export default function RegisterPage() {
                   </div>
                   <div>
                     <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Phone Number</dt>
-                    <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100">{formData.phoneNumber}</dd>
+                    <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
+                      <span>{formData.phoneNumber}</span>
+                      {userCarrier && (
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${userCarrier.badgeBg} ${userCarrier.badgeColor} ${userCarrier.badgeBorder}`}>
+                          {userCarrier.label}
+                        </span>
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Gender</dt>
@@ -1281,8 +1455,13 @@ export default function RegisterPage() {
                       </div>
                       <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
                         <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Emergency Guardian Contact</dt>
-                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
-                          {formData.guardianName} &bull; <span className="font-mono">{formData.guardianPhone}</span>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
+                          <span>{formData.guardianName} &bull; <span className="font-mono">{formData.guardianPhone}</span></span>
+                          {guardianCarrier && (
+                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${guardianCarrier.badgeBg} ${guardianCarrier.badgeColor} ${guardianCarrier.badgeBorder}`}>
+                              {guardianCarrier.label}
+                            </span>
+                          )}
                         </dd>
                       </div>
                     </>
