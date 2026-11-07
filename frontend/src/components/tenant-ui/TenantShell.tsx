@@ -280,16 +280,10 @@ export default function TenantShell({
       title: 'ACCOUNT & VAULT',
       items: [
         {
-          label: 'Document Vault',
+          label: 'Documents & KYC Vault',
           href: '/dashboard/documents',
-          matchPrefixes: ['/dashboard/documents'],
+          matchPrefixes: ['/dashboard/documents', '/dashboard/verification'],
           icon: FileText,
-        },
-        {
-          label: 'Ghana Card KYC',
-          href: '/dashboard/verification',
-          matchPrefixes: ['/dashboard/verification'],
-          icon: BadgeCheck,
         },
         {
           label: 'Account Settings',
@@ -500,10 +494,8 @@ export default function TenantShell({
                   ? 'Saved Wishlist'
                   : pathname.includes('/bills')
                   ? 'Rent & Utility Bills'
-                  : pathname.includes('/documents')
-                  ? 'Document Vault'
-                  : pathname.includes('/verification')
-                  ? 'Ghana Card Verification'
+                  : pathname.includes('/documents') || pathname.includes('/verification')
+                  ? 'Documents & KYC Vault'
                   : pathname.includes('/profile') || pathname.includes('/settings')
                   ? 'Settings'
                   : pathname.includes('/tickets')

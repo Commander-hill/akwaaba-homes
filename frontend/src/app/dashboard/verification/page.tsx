@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CreditCard,
   Loader2,
@@ -24,6 +25,7 @@ import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 
 export default function VerificationPage() {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [ghanaCardNumber, setGhanaCardNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +38,13 @@ export default function VerificationPage() {
       return res.data.user;
     },
   });
+
+  // Automatically forward residents/tenants to the unified Documents & KYC Vault
+  useEffect(() => {
+    if (session && session.role !== 'LANDLORD' && session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN') {
+      router.replace('/dashboard/documents');
+    }
+  }, [session, router]);
 
   const [frontImage, setFrontImage] = useState<File | null>(null);
   const [backImage, setBackImage] = useState<File | null>(null);
@@ -189,7 +198,14 @@ export default function VerificationPage() {
     }
   };
 
-  if (!session) return null;
+  if (!session || (session.role !== 'LANDLORD' && session.role !== 'ADMIN' && session.role !== 'SUPER_ADMIN')) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-3">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
+        <p className="text-xs text-zinc-500 font-medium">Opening Documents &amp; KYC Vault...</p>
+      </div>
+    );
+  }
 
   const isVerified = session.ghanaCardStatus === 'VERIFIED';
   const isPending = session.ghanaCardStatus === 'PENDING';
