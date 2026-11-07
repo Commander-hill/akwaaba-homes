@@ -111,9 +111,14 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
 
   const getBadgeCount = (href: string): number => {
     if (!Array.isArray(actionQueue) || actionQueue.length === 0) return 0;
+    if (href === '/admin/users') {
+      return actionQueue.filter(
+        (a: any) => a.category === 'UNLOCK_REQUEST' || a.id?.includes('unlock')
+      ).length;
+    }
     if (href === '/admin/verifications') {
       return actionQueue.filter(
-        (a: any) => a.category === 'KYC_VERIFICATION' || a.id?.includes('kyc') || a.id?.includes('user')
+        (a: any) => a.category === 'KYC_VERIFICATION' || a.category === 'IDENTITY_KYC' || a.id?.includes('kyc') || a.id?.includes('user')
       ).length;
     }
     if (href === '/admin/deeds') {
@@ -133,7 +138,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
     }
     if (href === '/admin/disputes') {
       return actionQueue.filter(
-        (a: any) => a.category === 'BREACH_REPORT' || a.id?.includes('breach')
+        (a: any) => a.category === 'BREACH_REPORT' || a.category === 'DISPUTE' || a.id?.includes('breach') || a.id?.includes('dispute')
       ).length;
     }
     return 0;
@@ -179,8 +184,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         { name: 'Payments & Ledger', href: '/admin/transactions', icon: Receipt },
         { name: 'Maintenance & Repairs', href: '/admin/tickets', icon: Wrench },
         { name: 'Review Moderation', href: '/admin/reviews', icon: Star },
-        { name: 'Disputes & Support', href: '/admin/disputes', icon: Scale },
-        { name: 'Breaches Tribunal', href: '/admin/breaches', icon: ShieldAlert },
+        { name: 'Disputes & Lease Breaches', href: '/admin/disputes', icon: Scale },
       ]
     },
     {
@@ -210,20 +214,32 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
 
   const getCurrentPageTitle = (path: string): string => {
     if (path === '/admin/dashboard') return 'Command Centre';
-    if (path.startsWith('/admin/properties')) return 'Property Listings';
-    if (path.startsWith('/admin/users')) return 'All Users Directory';
-    if (path.startsWith('/admin/landlords')) return 'Landlords & Owners';
-    if (path.startsWith('/admin/tenants')) return 'Tenants & Residents';
-    if (path.startsWith('/admin/verifications')) return 'Ghana Card KYC';
-    if (path.startsWith('/admin/deeds')) return 'Title Deeds & Ownership';
-    if (path.startsWith('/admin/bookings')) return 'Bookings';
-    if (path.startsWith('/admin/subscriptions')) return 'Subscriptions';
-    if (path.startsWith('/admin/transactions')) return 'Payments & Ledger';
-    if (path.startsWith('/admin/tickets')) return 'Maintenance & Repairs';
-    if (path.startsWith('/admin/reviews')) return 'Review Moderation';
-    if (path.startsWith('/admin/disputes')) return 'Disputes & Support';
-    if (path.startsWith('/admin/breaches')) return 'Breaches Tribunal';
-    if (path.startsWith('/admin/notices')) return 'Notices & Announcements';
+    if (path === '/admin/properties') return 'Property Listings';
+    if (path.startsWith('/admin/properties/')) return 'Property Inspection';
+    if (path === '/admin/users') return 'All Users Directory';
+    if (path === '/admin/landlords') return 'Landlords & Owners';
+    if (path.startsWith('/admin/landlords/')) return 'Landlord Portfolio';
+    if (path === '/admin/tenants') return 'Tenants & Residents';
+    if (path.startsWith('/admin/tenants/')) return 'Tenant Dossier';
+    if (path === '/admin/verifications') return 'Ghana Card KYC';
+    if (path.startsWith('/admin/verifications/')) return 'Ghana Card KYC Dossier';
+    if (path === '/admin/deeds') return 'Title Deeds & Ownership';
+    if (path.startsWith('/admin/deeds/')) return 'Title Deed Audit';
+    if (path === '/admin/bookings') return 'Bookings';
+    if (path.startsWith('/admin/bookings/')) return 'Booking Docket';
+    if (path === '/admin/subscriptions') return 'Subscriptions';
+    if (path.startsWith('/admin/subscriptions/')) return 'Subscription License';
+    if (path === '/admin/transactions') return 'Payments & Ledger';
+    if (path.startsWith('/admin/transactions/')) return 'Transaction Receipt & Ledger';
+    if (path === '/admin/tickets') return 'Maintenance & Repairs';
+    if (path.startsWith('/admin/tickets/')) return 'Maintenance Ticket Docket';
+    if (path === '/admin/reviews') return 'Review Moderation';
+    if (path.startsWith('/admin/reviews/')) return 'Review Dispute';
+    if (path === '/admin/disputes') return 'Disputes & Lease Breaches';
+    if (path.startsWith('/admin/disputes/')) return 'Dispute Tribunal Hearing';
+    if (path.startsWith('/admin/breaches')) return 'Disputes & Lease Breaches';
+    if (path === '/admin/notices') return 'Notices & Announcements';
+    if (path.startsWith('/admin/notices/new')) return 'Draft Statutory Notice';
     if (path.startsWith('/admin/broadcasts')) return 'Live Broadcasts';
     if (path.startsWith('/admin/analytics')) return 'Reports & Analytics';
     if (path.startsWith('/admin/activity')) return 'Live Activity Stream';

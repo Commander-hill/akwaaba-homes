@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
@@ -63,7 +64,8 @@ export default function AdminAdministratorsPage() {
     queryFn: async () => {
       const res = await api.get('/admin/administrators');
       return res.data;
-    }
+    },
+    enabled: currentUser?.role === 'SUPER_ADMIN'
   });
 
   const provisionMutation = useMutation({
@@ -194,6 +196,45 @@ export default function AdminAdministratorsPage() {
       }
     }
   ];
+
+  if (currentUser && currentUser.role !== 'SUPER_ADMIN') {
+    return (
+      <div className="space-y-6">
+        <AdminPageHeader
+          title="Administrator Governance & Access Control"
+          subtitle="Provision platform administrators, enforce two-factor authentication, and govern privileged system authority."
+          badge={
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+              Access Restricted
+            </span>
+          }
+          breadcrumbs={[
+            { label: 'Admin', href: '/admin/dashboard' },
+            { label: 'Governance', href: '/admin/administrators' },
+            { label: 'Administrators' }
+          ]}
+        />
+
+        <div className="bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-10 text-center max-w-xl mx-auto shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center mx-auto mb-4 text-amber-600 dark:text-amber-400">
+            <Lock className="w-8 h-8" />
+          </div>
+          <h2 className="text-lg font-black text-zinc-950 dark:text-white mb-2">
+            Elevated Super Admin Clearance Required
+          </h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-6">
+            Administrator provisioning, account elevation, and security suspension controls are strictly reserved for accounts with the <span className="font-bold text-purple-600 dark:text-purple-400">SUPER_ADMIN</span> governance role.
+          </p>
+          <Link
+            href="/admin/dashboard"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7A46] hover:bg-[#096338] text-white text-xs font-bold transition shadow-xs"
+          >
+            <span>Return to Command Centre</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -7,13 +7,22 @@ import Link from 'next/link';
 import { 
   Loader2, Settings, BadgeCheck, CreditCard, Users, 
   Save, Power, Clock, AlertTriangle, CheckCircle2,
-  Percent, Calendar, HelpCircle, ArrowRight
+  Percent, Calendar, HelpCircle, ArrowRight, Lock
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 
 export default function AdminConfigPage() {
   const queryClient = useQueryClient();
+
+  const { data: authData } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data;
+    }
+  });
+  const isSuperAdmin = authData?.user?.role === 'SUPER_ADMIN';
 
   const { data: configData, isLoading } = useQuery({
     queryKey: ['admin-config'],
@@ -69,10 +78,18 @@ export default function AdminConfigPage() {
   }
 
   const handleToggle = (key: keyof typeof formData) => {
+    if (!isSuperAdmin) {
+      toast.error('Super Admin clearance required to modify platform configuration.');
+      return;
+    }
     setFormData(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = () => {
+    if (!isSuperAdmin) {
+      toast.error('Super Admin clearance required to alter configuration.');
+      return;
+    }
     updateMutation.mutate(formData);
   };
 
@@ -97,13 +114,32 @@ export default function AdminConfigPage() {
 
         <button
           onClick={handleSave}
-          disabled={updateMutation.isPending}
-          className="px-5 py-2.5 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+          disabled={!isSuperAdmin || updateMutation.isPending}
+          title={!isSuperAdmin ? 'Super Admin clearance required to save changes' : undefined}
+          className={clsx(
+            "px-5 py-2.5 rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition-colors shrink-0",
+            isSuperAdmin
+              ? "bg-[#16A34A] hover:bg-[#15803D] text-white cursor-pointer"
+              : "bg-zinc-200 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed"
+          )}
         >
-          {updateMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-          <span>Save Changes</span>
+          {updateMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isSuperAdmin ? <Save className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+          <span>{isSuperAdmin ? 'Save Changes' : 'Super Admin Restricted'}</span>
         </button>
       </div>
+
+      {/* ── SUPER ADMIN CLEARANCE ALERT BANNER ── */}
+      {!isSuperAdmin && (
+        <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs shadow-2xs">
+          <Lock className="w-5 h-5 text-amber-600 shrink-0" />
+          <div>
+            <p className="font-bold">Read-Only Governance Mode</p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-300/80 mt-0.5">
+              You are viewing system configuration in read-only mode. Modifying statutory KYC policies, commission rates, or emergency maintenance triggers requires elevated <span className="font-bold">SUPER_ADMIN</span> clearance.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── SECTION 1: IDENTITY & KYC COMPLIANCE ── */}
       <div className="bg-white dark:bg-[#12151D] rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5 space-y-4 shadow-xs">
@@ -131,9 +167,11 @@ export default function AdminConfigPage() {
 
           <button
             type="button"
+            disabled={!isSuperAdmin}
             onClick={() => handleToggle('ghanaCardVerificationEnabled')}
             className={clsx(
-              "w-12 h-6 rounded-full transition-colors relative cursor-pointer shrink-0 mt-1",
+              "w-12 h-6 rounded-full transition-colors relative shrink-0 mt-1",
+              isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-80",
               formData.ghanaCardVerificationEnabled ? "bg-[#0F5132]" : "bg-zinc-300 dark:bg-zinc-700"
             )}
           >
@@ -175,9 +213,13 @@ export default function AdminConfigPage() {
                 step="0.1"
                 min="0"
                 max="30"
+                disabled={!isSuperAdmin}
                 value={formData.platformCommissionPercent}
                 onChange={(e) => setFormData(prev => ({ ...prev, platformCommissionPercent: parseFloat(e.target.value) || 0 }))}
-                className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none focus:border-[#0F5132]"
+                className={clsx(
+                  "w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none focus:border-[#0F5132]",
+                  !isSuperAdmin && "opacity-70 cursor-not-allowed bg-zinc-50 dark:bg-zinc-800/50"
+                )}
               />
               <span className="absolute right-3 top-2.5 text-xs text-zinc-400 font-bold">%</span>
             </div>
@@ -201,9 +243,13 @@ export default function AdminConfigPage() {
                 type="number"
                 min="1"
                 max="168"
+                disabled={!isSuperAdmin}
                 value={formData.bookingGracePeriodHours}
                 onChange={(e) => setFormData(prev => ({ ...prev, bookingGracePeriodHours: parseInt(e.target.value) || 0 }))}
-                className="w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none focus:border-[#0F5132]"
+                className={clsx(
+                  "w-full p-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-bold outline-none focus:border-[#0F5132]",
+                  !isSuperAdmin && "opacity-70 cursor-not-allowed bg-zinc-50 dark:bg-zinc-800/50"
+                )}
               />
               <span className="absolute right-3 top-2.5 text-xs text-zinc-400 font-bold">hrs</span>
             </div>
@@ -238,9 +284,11 @@ export default function AdminConfigPage() {
 
           <button
             type="button"
+            disabled={!isSuperAdmin}
             onClick={() => handleToggle('roommateFinderEnabled')}
             className={clsx(
-              "w-12 h-6 rounded-full transition-colors relative cursor-pointer shrink-0 mt-1",
+              "w-12 h-6 rounded-full transition-colors relative shrink-0 mt-1",
+              isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-80",
               formData.roommateFinderEnabled ? "bg-[#0F5132]" : "bg-zinc-300 dark:bg-zinc-700"
             )}
           >
@@ -290,9 +338,11 @@ export default function AdminConfigPage() {
 
             <button
               type="button"
+              disabled={!isSuperAdmin}
               onClick={() => handleToggle('maintenanceMode')}
               className={clsx(
-                "w-12 h-6 rounded-full transition-colors relative cursor-pointer shrink-0 mt-1",
+                "w-12 h-6 rounded-full transition-colors relative shrink-0 mt-1",
+                isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-80",
                 formData.maintenanceMode ? "bg-rose-600" : "bg-zinc-300 dark:bg-zinc-700"
               )}
             >
@@ -313,9 +363,13 @@ export default function AdminConfigPage() {
               </p>
               <input
                 type="datetime-local"
+                disabled={!isSuperAdmin}
                 value={formData.maintenanceEndTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, maintenanceEndTime: e.target.value }))}
-                className="w-full sm:w-72 p-2 bg-white dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-xl text-xs font-semibold outline-none focus:border-rose-600"
+                className={clsx(
+                  "w-full sm:w-72 p-2 bg-white dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-xl text-xs font-semibold outline-none focus:border-rose-600",
+                  !isSuperAdmin && "opacity-70 cursor-not-allowed bg-zinc-50 dark:bg-zinc-800/50"
+                )}
               />
             </div>
           )}

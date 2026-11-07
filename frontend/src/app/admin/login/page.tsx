@@ -278,8 +278,6 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                 try {
                   await api.post('/auth/logout');
                 } catch (e) {}
-                localStorage.removeItem('akwaaba_access_token');
-                localStorage.removeItem('akwaaba_refresh_token');
                 window.location.reload();
               }}
               className="w-full py-2.5 px-4 text-xs font-semibold text-zinc-500 hover:text-rose-600 transition-colors cursor-pointer"

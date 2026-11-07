@@ -69,14 +69,24 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
   const { data: landlord, isLoading, refetch } = useQuery({
     queryKey: ['admin-landlord-deeds-single', id],
     queryFn: async () => {
-      const res = await api.get('/admin/landlord-deeds');
-      const found = (res.data?.landlords || []).find((l: any) => l.id === id);
-      if (found) return found;
+      try {
+        const res = await api.get('/admin/landlord-deeds');
+        const deedsList = res.data?.landlords || (Array.isArray(res.data) ? res.data : []);
+        const found = deedsList.find((l: any) => l.id === id);
+        if (found) return found;
+      } catch {}
 
-      // Fallback lookup via admin users
+      // Direct lookup via single user endpoint
+      try {
+        const singleUserRes = await api.get(`/admin/users/${id}`);
+        if (singleUserRes.data) return singleUserRes.data;
+      } catch {}
+
+      // Fallback lookup via admin users directory
       try {
         const userRes = await api.get('/admin/users');
-        return (userRes.data?.users || []).find((u: any) => u.id === id);
+        const usersList = Array.isArray(userRes.data) ? userRes.data : (userRes.data?.users || []);
+        return usersList.find((u: any) => u.id === id) || null;
       } catch {
         return null;
       }

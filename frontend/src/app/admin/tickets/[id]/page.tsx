@@ -42,16 +42,23 @@ export default function AdminTicketDetailPage({
 
   const [zoomedPhoto, setZoomedPhoto] = useState<{ url: string; title: string } | null>(null);
 
-  // Fetch all tickets to find this case file
-  const { data: tickets = [], isLoading } = useQuery({
-    queryKey: ['admin-tickets'],
+  // Fetch single ticket directly with resilient fallback
+  const { data: ticket, isLoading } = useQuery({
+    queryKey: ['admin-ticket', ticketId],
     queryFn: async () => {
-      const res = await api.get('/admin/tickets');
-      return res.data;
+      try {
+        const res = await api.get(`/admin/tickets/${ticketId}`);
+        return res.data;
+      } catch (err: any) {
+        // Fallback to list search if direct lookup fails
+        const listRes = await api.get('/admin/tickets');
+        const list = Array.isArray(listRes.data) ? listRes.data : [];
+        const found = list.find((t: any) => t.id === ticketId);
+        if (found) return found;
+        throw err;
+      }
     }
   });
-
-  const ticket = (tickets as any[]).find((t: any) => t.id === ticketId);
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -60,6 +67,7 @@ export default function AdminTicketDetailPage({
     },
     onSuccess: (data) => {
       toast.success(data?.message || 'Ticket status updated by platform arbitration');
+      queryClient.invalidateQueries({ queryKey: ['admin-ticket', ticketId] });
       queryClient.invalidateQueries({ queryKey: ['admin-tickets'] });
     },
     onError: (err: any) => {

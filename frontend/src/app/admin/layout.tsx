@@ -64,8 +64,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     try {
       await api.post('/auth/logout');
     } catch {}
-    localStorage.removeItem('akwaaba_access_token');
-    localStorage.removeItem('akwaaba_refresh_token');
     window.location.href = '/admin/login';
   };
 

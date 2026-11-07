@@ -2312,6 +2312,33 @@ export const getAllTickets = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+export const getTicketById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const ticket = await prisma.maintenanceTicket.findUnique({
+      where: { id },
+      include: {
+        tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+        property: {
+          include: {
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } }
+          }
+        }
+      }
+    });
+
+    if (!ticket) {
+      res.status(404).json({ message: 'Ticket not found' });
+      return;
+    }
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    console.error('Error fetching ticket by id:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 export const adminUpdateTicketStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

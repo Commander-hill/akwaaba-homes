@@ -28,6 +28,7 @@ import {
   activateSubscription,
   revokeSubscription,
   getAllTickets,
+  getTicketById,
   adminUpdateTicketStatus,
   getConfig,
   updateConfig,
@@ -111,6 +112,7 @@ router.put('/reviews/:id/appeal', resolveAppeal);
 
 // Maintenance Tickets
 router.get('/tickets', getAllTickets);
+router.get('/tickets/:id', getTicketById);
 router.put('/tickets/:id/status', adminUpdateTicketStatus);
 
 // Notices
