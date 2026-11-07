@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 
 export default function TenantBillsPage() {
   const queryClient = useQueryClient();
@@ -44,6 +45,24 @@ export default function TenantBillsPage() {
     }
   });
 
+  const { data: bookingsData, isLoading: isBookingsLoading } = useQuery({
+    queryKey: ['bookings', 'tenant'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/bookings/me');
+        return Array.isArray(data) ? data : data?.bookings || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const hasActiveStay = Boolean(
+    (bookingsData || []).some((b: any) =>
+      ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+    )
+  );
+
   const togglePaidMutation = useMutation({
     mutationFn: async ({ participantId, isPaid }: { participantId: string; isPaid: boolean }) => {
       const res = await api.patch(`/bill-splits/participants/${participantId}/status`, { isPaid });
@@ -59,6 +78,24 @@ export default function TenantBillsPage() {
   });
 
   const rawSplits: any[] = billsData || [];
+
+  if (!isLoading && !isBookingsLoading && !hasActiveStay && rawSplits.length === 0) {
+    return (
+      <ResidentLockedTeaser
+        icon={Receipt}
+        title="Rent & Utility Bills Splitting"
+        badge="Unlocks Upon Active Residence"
+        description="Split ECG electricity, Ghana Water Company, and high-speed Wi-Fi expenses with flatmates and track who has contributed in real time."
+        bullets={[
+          'Automatic split calculations per roommate',
+          'Ghana MoMo and card payment collection',
+          'Instant proof of payment receipts for compound audit',
+        ]}
+        ctaText="Find & Book Your Residence"
+        ctaHref="/properties"
+      />
+    );
+  }
 
   // Fallback demo splits if empty
   const splits = rawSplits.length > 0 ? rawSplits : [

@@ -69,12 +69,12 @@ export default function TenantDashboardPage() {
     },
   });
 
-  const bookings: any[] = bookingsResponse?.bookings || [];
+  const bookings: any[] = bookingsResponse?.bookings || (Array.isArray(bookingsResponse) ? bookingsResponse : []);
   const primaryBooking = bookings.find(
-    (b) => ['ACTIVE', 'CHECKED_IN', 'COMPLETED', 'CONFIRMED'].includes(b.status)
-  ) || bookings[0];
+    (b) => ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+  ) || bookings[0] || null;
 
-  const firstName = session?.firstName || 'Stephen';
+  const firstName = session?.firstName || 'Resident';
 
   // Dynamic time-based greeting
   const greeting = useMemo(() => {
@@ -107,7 +107,7 @@ export default function TenantDashboardPage() {
       });
       return `${start} – ${end}`;
     }
-    return '6 Sept 2026 – 6 Sept 2027';
+    return 'Active Stay';
   }, [primaryBooking]);
 
   const totalDueAmount = primaryBooking?.amount
@@ -159,72 +159,118 @@ export default function TenantDashboardPage() {
               {firstName} 👋
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-md pt-0.5">
-              Your home at Akwaaba awaits. Stay comfortable, connected, and enjoy your living experience.
+              {primaryBooking
+                ? 'Your home at Akwaaba awaits. Stay comfortable, connected, and enjoy your living experience.'
+                : 'Welcome to AkwaabaHomes! Discover verified student housing, executive apartments, and campus roommates.'}
             </p>
 
             {/* Resident Stay Tags */}
-            <div className="flex items-center gap-2 pt-3 text-emerald-300 text-xs font-semibold">
-              <span className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{activePropertyTitle}</span>
-              </span>
-              <span className="text-emerald-500/60">|</span>
-              <span className="flex items-center gap-1.5">
-                <DoorOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{activeRoomUnit}</span>
-              </span>
-            </div>
+            {primaryBooking ? (
+              <div className="flex items-center gap-2 pt-3 text-emerald-300 text-xs font-semibold">
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{activePropertyTitle}</span>
+                </span>
+                <span className="text-emerald-500/60">|</span>
+                <span className="flex items-center gap-1.5">
+                  <DoorOpen className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{activeRoomUnit}</span>
+                </span>
+              </div>
+            ) : (
+              <div className="pt-2 text-emerald-200/90 text-xs font-medium">
+                Complete your Ghana Card verification &amp; explore available homes below.
+              </div>
+            )}
           </div>
 
-          {/* Right Floating Card: Current Stay */}
-          <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:w-[340px] shrink-0">
-            <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
-                <Image
-                  src="/images/resident/glacier-thumb.jpg"
-                  alt={activePropertyTitle}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <div className="min-w-0 flex-1 space-y-1">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white truncate">
-                    {activePropertyTitle}
-                  </h3>
-                  <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0">
-                    Active
-                  </span>
+          {/* Right Floating Card: Current Stay OR Onboarding Milestone Tracker */}
+          {primaryBooking ? (
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:w-[340px] shrink-0">
+              <div className="flex items-start gap-3">
+                <div className="w-14 h-14 rounded-xl overflow-hidden relative shrink-0 border border-zinc-100 dark:border-zinc-800">
+                  <Image
+                    src={primaryBooking?.property?.images?.[0] || '/images/resident/glacier-thumb.jpg'}
+                    alt={activePropertyTitle}
+                    fill
+                    className="object-cover"
+                  />
                 </div>
 
-                <p className="text-[11px] text-zinc-500 flex items-center gap-1 truncate">
-                  <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
-                  <span>{activePropertyLocation}</span>
-                </p>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white truncate">
+                      {activePropertyTitle}
+                    </h3>
+                    <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0">
+                      {primaryBooking.status === 'ACTIVE' || primaryBooking.status === 'CHECKED_IN' ? 'Active' : 'Booked'}
+                    </span>
+                  </div>
 
-                <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 pt-0.5 truncate">
-                  <span className="flex items-center gap-1">
-                    <Bed className="w-3 h-3 text-zinc-400 shrink-0" />
-                    <span>1 in a room</span>
-                  </span>
-                  <span>|</span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-zinc-400 shrink-0" />
-                    <span>{stayDates}</span>
-                  </span>
+                  <p className="text-[11px] text-zinc-500 flex items-center gap-1 truncate">
+                    <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                    <span>{activePropertyLocation}</span>
+                  </p>
+
+                  <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 pt-0.5 truncate">
+                    <span className="flex items-center gap-1">
+                      <Bed className="w-3 h-3 text-zinc-400 shrink-0" />
+                      <span>Allocated Unit</span>
+                    </span>
+                    <span>|</span>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-zinc-400 shrink-0" />
+                      <span>{stayDates}</span>
+                    </span>
+                  </div>
                 </div>
               </div>
+
+              <Link
+                href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
+                className="mt-3.5 w-full py-2 rounded-xl border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+              >
+                <span>View Details</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
+          ) : (
+            <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-xl border border-zinc-100/80 dark:border-zinc-800 w-full md:w-[340px] shrink-0 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  Getting Started
+                </span>
+                <span className="text-[10px] font-semibold text-zinc-400">Step 1 of 3</span>
+              </div>
 
-            <Link
-              href={primaryBooking?.id ? `/dashboard/tenant/bookings/${primaryBooking.id}` : '/dashboard/tenant/bookings'}
-              className="mt-3.5 w-full py-2 rounded-xl border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-            >
-              <span>View Details</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+              <h4 className="text-xs sm:text-sm font-bold text-zinc-950 dark:text-white leading-snug">
+                Find your perfect verified home in Ghana
+              </h4>
+
+              <div className="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[10px] font-bold">1</span>
+                  <span>Explore student hostels &amp; apartments</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span>Submit booking &amp; Ghana Card KYC</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-bold">3</span>
+                  <span>Unlock gate passes &amp; caretaker maintenance</span>
+                </div>
+              </div>
+
+              <Link
+                href="/properties"
+                className="w-full py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
+              >
+                <span>Explore Available Listings</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

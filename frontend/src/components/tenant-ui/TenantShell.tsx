@@ -32,6 +32,7 @@ import {
   Receipt,
   Users,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import api from '@/lib/axios';
@@ -59,6 +60,8 @@ interface NavItem {
   matchPrefixes: string[];
   icon: React.ElementType;
   badge?: number;
+  requiresStay?: boolean;
+  requiresBooking?: boolean;
 }
 
 interface NavGroup {
@@ -147,6 +150,28 @@ export default function TenantShell({
     (t: any) => t.status !== 'RESOLVED' && t.status !== 'CLOSED' && t.status !== 'REJECTED'
   ).length;
 
+  const { data: bookingsData } = useQuery({
+    queryKey: ['tenant-shell-bookings'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/bookings/me');
+        return Array.isArray(data) ? data : data?.bookings || [];
+      } catch {
+        return [];
+      }
+    },
+    enabled: Boolean(user),
+    staleTime: 60_000,
+  });
+
+  const hasActiveStay = Boolean(
+    (bookingsData || []).some((b: any) =>
+      ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+    )
+  );
+
+  const hasAnyBooking = Boolean((bookingsData || []).length > 0);
+
   const liveUnreadCount =
     unreadNotificationsCount > 0
       ? unreadNotificationsCount
@@ -191,7 +216,7 @@ export default function TenantShell({
   const fullName = `${user?.firstName || 'Stephen'} ${user?.lastName || 'Darko'}`.trim();
   const initials = `${user?.firstName?.[0] || 'S'}${user?.lastName?.[0] || 'D'}`.toUpperCase();
 
-  // Categorized Navigation Groups exposing 100% of Resident features
+  // Categorized Navigation Groups exposing 100% of Resident features with progressive unlocking
   const navGroups: NavGroup[] = [
     {
       title: 'MY LIVING',
@@ -207,6 +232,7 @@ export default function TenantShell({
           href: '/dashboard/tenant/residence',
           matchPrefixes: ['/dashboard/tenant/residence'],
           icon: Building2,
+          requiresStay: true,
         },
         {
           label: 'My Bookings',
@@ -225,6 +251,7 @@ export default function TenantShell({
           href: '/dashboard/tenant/visitors',
           matchPrefixes: ['/dashboard/tenant/visitors'],
           icon: ShieldCheck,
+          requiresStay: true,
         },
       ],
     },
@@ -236,12 +263,14 @@ export default function TenantShell({
           href: '/dashboard/tenant/bills',
           matchPrefixes: ['/dashboard/tenant/bills'],
           icon: CreditCard,
+          requiresStay: true,
         },
         {
           label: 'Invoices & Receipts',
           href: '/dashboard/invoice',
           matchPrefixes: ['/dashboard/invoice'],
           icon: Receipt,
+          requiresBooking: true,
         },
       ],
     },
@@ -260,6 +289,7 @@ export default function TenantShell({
           matchPrefixes: ['/dashboard/tenant/tickets', '/maintenance'],
           icon: Wrench,
           badge: activeTicketsCount > 0 ? activeTicketsCount : undefined,
+          requiresStay: true,
         },
         {
           label: 'Messages & Chat',
@@ -352,6 +382,10 @@ export default function TenantShell({
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const active = isNavItemActive(item);
+                const isLocked = Boolean(
+                  (item.requiresStay && !hasActiveStay) ||
+                  (item.requiresBooking && !hasAnyBooking)
+                );
                 return (
                   <Link
                     key={item.label}
@@ -366,6 +400,8 @@ export default function TenantShell({
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400',
                       active
                         ? 'bg-[#DCFCE7] dark:bg-emerald-950/60 text-[#15803D] dark:text-emerald-300 font-semibold border border-[#BBF7D0] dark:border-emerald-800/60 shadow-2xs'
+                        : isLocked
+                        ? 'text-zinc-500 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 font-medium border border-transparent'
                         : 'text-zinc-600 dark:text-zinc-400 hover:text-[#15803D] dark:hover:text-emerald-300 hover:bg-[#DCFCE7]/40 dark:hover:bg-emerald-950/30 hover:border-[#BBF7D0]/40 font-medium border border-transparent active:bg-[#DCFCE7] active:text-[#15803D] active:border-[#BBF7D0]'
                     )}
                   >
@@ -375,6 +411,8 @@ export default function TenantShell({
                           'w-4 h-4 shrink-0 stroke-[2] transition-colors',
                           active
                             ? 'text-[#15803D] dark:text-emerald-300'
+                            : isLocked
+                            ? 'text-zinc-400 dark:text-zinc-600 stroke-[1.8]'
                             : 'text-zinc-400 dark:text-zinc-500 stroke-[1.8] group-hover:text-[#15803D] dark:group-hover:text-emerald-300 group-active:text-[#15803D]'
                         )}
                         aria-hidden="true"
@@ -382,11 +420,19 @@ export default function TenantShell({
                       <span className="truncate">{item.label}</span>
                     </span>
 
-                    {item.badge !== undefined && item.badge > 0 && (
+                    {isLocked ? (
+                      <span
+                        title="Unlocks once your stay begins"
+                        className="flex items-center gap-1 text-[9px] font-bold text-zinc-400 dark:text-zinc-500 bg-zinc-100 dark:bg-zinc-800/90 px-1.5 py-0.5 rounded-md shrink-0 border border-zinc-200/50 dark:border-zinc-700/50"
+                      >
+                        <Lock className="w-2.5 h-2.5" />
+                        <span className="hidden xl:inline tracking-tight">Stay</span>
+                      </span>
+                    ) : item.badge !== undefined && item.badge > 0 ? (
                       <span className="w-4.5 h-4.5 rounded-full bg-[#E0533C] text-white text-[9.5px] font-bold flex items-center justify-center shrink-0">
                         {item.badge}
                       </span>
-                    )}
+                    ) : null}
                   </Link>
                 );
               })}

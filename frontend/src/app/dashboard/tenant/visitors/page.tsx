@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
 
 export default function TenantVisitorsPage() {
   const queryClient = useQueryClient();
@@ -47,6 +48,24 @@ export default function TenantVisitorsPage() {
     }
   });
 
+  const { data: bookingsData, isLoading: isBookingsLoading } = useQuery({
+    queryKey: ['bookings', 'tenant'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/bookings/me');
+        return Array.isArray(data) ? data : data?.bookings || [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const hasActiveStay = Boolean(
+    (bookingsData || []).some((b: any) =>
+      ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
+    )
+  );
+
   const revokeMutation = useMutation({
     mutationFn: async (passId: string) => {
       const res = await api.patch(`/visitor-passes/${passId}/revoke`);
@@ -62,6 +81,24 @@ export default function TenantVisitorsPage() {
   });
 
   const rawPasses: any[] = passesData || [];
+
+  if (!isLoading && !isBookingsLoading && !hasActiveStay && rawPasses.length === 0) {
+    return (
+      <ResidentLockedTeaser
+        icon={KeyRound}
+        title="Visitor Gate Pass Access"
+        badge="Unlocks Upon Active Residence"
+        description="Pre-authorize visitors, food delivery couriers, and artisans for seamless compound gate clearance with QR codes and SMS verification."
+        bullets={[
+          'Instant QR codes for compound security gate guards',
+          'One-click WhatsApp shareable visitor passes',
+          'Scheduled expiry times for delivery & courier safety',
+        ]}
+        ctaText="Find & Book Your Residence"
+        ctaHref="/properties"
+      />
+    );
+  }
 
   // Fallback demo passes if user hasn't generated passes yet
   const passes = rawPasses.length > 0 ? rawPasses : [
