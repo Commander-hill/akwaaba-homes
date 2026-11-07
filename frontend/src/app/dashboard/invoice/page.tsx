@@ -757,6 +757,7 @@ export default function TenantPaymentsPage() {
                   src="/images/payments/receipts-doc.png"
                   alt="Receipts and documents"
                   fill
+                  sizes="144px"
                   className="object-contain"
                   priority
                 />

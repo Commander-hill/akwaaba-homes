@@ -36,10 +36,32 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
+  let url;
+  try {
+    url = new URL(event.request.url);
+  } catch {
+    return;
+  }
 
-  // Bypass service worker cache for API requests to ensure fresh state
-  if (url.pathname.startsWith('/api/') || url.pathname.includes('/auth/')) {
+  // 1. Strictly ignore non-HTTP/HTTPS protocols (e.g. chrome-extension:, moz-extension:, blob:, data:)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return;
+  }
+
+  // 2. Only intercept same-origin requests (never touch localhost:5000 socket.io or external APIs)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // 3. Bypass service worker for APIs, auth, WebSockets, Next.js internal dev routes, and RSC payloads
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.includes('/auth/') ||
+    url.pathname.includes('/socket.io') ||
+    url.pathname.startsWith('/_next/webpack-hmr') ||
+    url.pathname.startsWith('/_next/static/development') ||
+    url.searchParams.has('_rsc')
+  ) {
     return;
   }
 
@@ -49,19 +71,28 @@ self.addEventListener('fetch', (event) => {
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+            cache.put(event.request, responseToCache).catch(() => {});
+          }).catch(() => {});
         }
         return networkResponse;
       })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
+      .catch(async () => {
+        try {
+          const cachedResponse = await caches.match(event.request);
           if (cachedResponse) {
             return cachedResponse;
           }
           if (event.request.mode === 'navigate') {
-            return caches.match('/');
+            const fallback = await caches.match('/');
+            if (fallback) return fallback;
           }
+        } catch {
+          // ignore cache read errors
+        }
+        return new Response('Network error occurred', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain' },
         });
       })
   );

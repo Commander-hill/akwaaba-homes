@@ -441,6 +441,7 @@ export default function TenantShell({
           src="/images/agreements/kente-sidebar-pattern.png"
           alt="Ghanaian Kente Texture"
           fill
+          sizes="256px"
           className="object-cover object-bottom"
         />
       </div>

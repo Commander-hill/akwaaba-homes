@@ -16,28 +16,45 @@ function urlBase64ToUint8Array(base64String: string) {
 
 export default function PwaRegister() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window) {
-      window.addEventListener('load', async () => {
-        try {
-          const reg = await navigator.serviceWorker.register('/sw.js');
-          console.log('Akwaaba Homes PWA Service Worker registered successfully:', reg.scope);
-
-          // Request push notification subscription if user permits
-          if (Notification.permission === 'granted') {
-            subscribePushUser(reg);
-          } else if (Notification.permission !== 'denied') {
-            // Prompt permission softly after initial interaction
-            setTimeout(async () => {
-              const permission = await Notification.requestPermission();
-              if (permission === 'granted') {
-                subscribePushUser(reg);
-              }
-            }, 5000);
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      // In local development, proactively unregister existing service workers to avoid intercepting dev HMR & socket polling
+      if (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const reg of registrations) {
+            reg.unregister();
           }
-        } catch (err) {
-          console.error('PWA Service Worker registration failed:', err);
+        });
+        if ('caches' in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((key) => caches.delete(key));
+          });
         }
-      });
+        return;
+      }
+
+      if ('PushManager' in window) {
+        window.addEventListener('load', async () => {
+          try {
+            const reg = await navigator.serviceWorker.register('/sw.js');
+            console.log('Akwaaba Homes PWA Service Worker registered successfully:', reg.scope);
+
+            // Request push notification subscription if user permits
+            if (Notification.permission === 'granted') {
+              subscribePushUser(reg);
+            } else if (Notification.permission !== 'denied') {
+              // Prompt permission softly after initial interaction
+              setTimeout(async () => {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                  subscribePushUser(reg);
+                }
+              }, 5000);
+            }
+          } catch (err) {
+            console.error('PWA Service Worker registration failed:', err);
+          }
+        });
+      }
     }
   }, []);
 
