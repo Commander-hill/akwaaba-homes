@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -15,7 +15,10 @@ import {
   EyeOff, 
   CheckCircle2,
   ShieldCheck,
-  Check
+  Check,
+  Lock,
+  AlertCircle,
+  Circle
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -330,6 +333,72 @@ export default function RegisterPage() {
     .map((part) => part.trim())
     .filter(Boolean)
     .join(' ');
+
+  // Real-time password security & strength evaluation
+  const passwordCriteria = useMemo(() => {
+    const pwd = formData.password || '';
+    const hasMinLength = pwd.length >= 8;
+    const hasNumber = /\d/.test(pwd);
+    const hasUpper = /[A-Z]/.test(pwd);
+    const hasLower = /[a-z]/.test(pwd);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pwd);
+
+    let score = 0;
+    if (hasMinLength) score += 1;
+    if (hasNumber) score += 1;
+    if (hasUpper) score += 1;
+    if (hasLower && (hasSpecial || pwd.length >= 10)) score += 1;
+
+    let label = 'Too short';
+    let colorClass = 'text-zinc-400';
+    let barColor = 'bg-zinc-200 dark:bg-zinc-800';
+
+    if (pwd.length === 0) {
+      score = 0;
+      label = '';
+    } else if (score <= 1) {
+      label = 'Weak';
+      colorClass = 'text-rose-500 font-bold';
+      barColor = 'bg-rose-500';
+    } else if (score === 2) {
+      label = 'Fair';
+      colorClass = 'text-amber-500 font-bold';
+      barColor = 'bg-amber-500';
+    } else if (score === 3) {
+      label = 'Good';
+      colorClass = 'text-emerald-500 font-bold';
+      barColor = 'bg-emerald-500';
+    } else if (score >= 4) {
+      label = 'Strong';
+      colorClass = 'text-[#047857] dark:text-emerald-400 font-extrabold';
+      barColor = 'bg-[#047857] dark:bg-emerald-400';
+    }
+
+    const isMatch = Boolean(
+      formData.confirmPassword &&
+      pwd &&
+      formData.confirmPassword === pwd
+    );
+    const isMismatch = Boolean(
+      formData.confirmPassword &&
+      pwd &&
+      formData.confirmPassword !== pwd
+    );
+
+    return {
+      hasMinLength,
+      hasNumber,
+      hasUpper,
+      hasLower,
+      hasSpecial,
+      score,
+      label,
+      colorClass,
+      barColor,
+      isMatch,
+      isMismatch
+    };
+  }, [formData.password, formData.confirmPassword]);
 
   const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
@@ -900,51 +969,139 @@ export default function RegisterPage() {
                 </div>
               )}
 
-              {/* Password Fields */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className={labelClass}>Password *</label>
-                  <div className="relative">
-                    <input 
-                      type={showPassword ? 'text' : 'password'} 
-                      required 
-                      autoComplete="new-password" 
-                      className={`${inputClass} pr-10`} 
-                      value={formData.password} 
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
-                      placeholder="Min. 8 characters" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+              {/* Password Fields & Security Meter */}
+              <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <div>
+                    <label className={labelClass}>Password *</label>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? 'text' : 'password'} 
+                        required 
+                        autoComplete="new-password" 
+                        className={`${inputClass} pr-10`} 
+                        value={formData.password} 
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+                        placeholder="Min. 8 characters" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Confirm Password *</label>
+                    <div className="relative">
+                      <input 
+                        type={showConfirmPassword ? 'text' : 'password'} 
+                        required 
+                        autoComplete="new-password" 
+                        className={`${inputClass} pr-10`} 
+                        value={formData.confirmPassword} 
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} 
+                        placeholder="Re-enter password" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* Match / Mismatch Live Feedback */}
+                    {formData.confirmPassword.length > 0 && (
+                      <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
+                        {passwordCriteria.isMatch ? (
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Passwords match</span>
+                          </span>
+                        ) : (
+                          <span className="text-rose-500 font-bold flex items-center gap-1">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            <span>Passwords do not match yet</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <label className={labelClass}>Confirm Password *</label>
-                  <div className="relative">
-                    <input 
-                      type={showConfirmPassword ? 'text' : 'password'} 
-                      required 
-                      autoComplete="new-password" 
-                      className={`${inputClass} pr-10`} 
-                      value={formData.confirmPassword} 
-                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} 
-                      placeholder="Re-enter password" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
+                {/* Password Strength Meter & Interactive Checklist */}
+                {formData.password.length > 0 && (
+                  <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/50 p-3.5 space-y-2.5 animate-in fade-in duration-200">
+                    
+                    {/* Multi-segment strength bar */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-zinc-400" />
+                          <span>Password Strength</span>
+                        </span>
+                        <span className={`text-[11px] font-bold ${passwordCriteria.colorClass}`}>
+                          {passwordCriteria.label}
+                        </span>
+                      </div>
+
+                      {/* 4 Segment Bars */}
+                      <div className="grid grid-cols-4 gap-1.5 h-1.5">
+                        <div className={`rounded-full transition-all duration-300 ${passwordCriteria.score >= 1 ? passwordCriteria.barColor : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                        <div className={`rounded-full transition-all duration-300 ${passwordCriteria.score >= 2 ? passwordCriteria.barColor : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                        <div className={`rounded-full transition-all duration-300 ${passwordCriteria.score >= 3 ? passwordCriteria.barColor : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                        <div className={`rounded-full transition-all duration-300 ${passwordCriteria.score >= 4 ? passwordCriteria.barColor : 'bg-zinc-200 dark:bg-zinc-800'}`} />
+                      </div>
+                    </div>
+
+                    {/* Interactive Security Checklist */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-zinc-200/60 dark:border-zinc-800/60 text-[11px]">
+                      <div className={`flex items-center gap-1.5 transition-colors ${passwordCriteria.hasMinLength ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-400'}`}>
+                        {passwordCriteria.hasMinLength ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                        )}
+                        <span>8+ characters</span>
+                      </div>
+
+                      <div className={`flex items-center gap-1.5 transition-colors ${passwordCriteria.hasNumber ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-400'}`}>
+                        {passwordCriteria.hasNumber ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                        )}
+                        <span>At least 1 number (0–9)</span>
+                      </div>
+
+                      <div className={`flex items-center gap-1.5 transition-colors ${passwordCriteria.hasUpper ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-400'}`}>
+                        {passwordCriteria.hasUpper ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                        )}
+                        <span>Uppercase letter (A–Z)</span>
+                      </div>
+
+                      <div className={`flex items-center gap-1.5 transition-colors ${passwordCriteria.hasLower ? 'text-emerald-700 dark:text-emerald-400 font-bold' : 'text-zinc-400'}`}>
+                        {passwordCriteria.hasLower ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700 shrink-0" />
+                        )}
+                        <span>Lowercase letter (a–z)</span>
+                      </div>
+                    </div>
+
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Step 2 Buttons */}
