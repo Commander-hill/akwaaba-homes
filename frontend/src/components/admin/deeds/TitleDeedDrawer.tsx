@@ -37,6 +37,7 @@ export interface PropertySummary {
   title: string;
   location: string;
   approvalStatus: string;
+  images?: string[];
 }
 
 export interface LandlordDeedRecord {
