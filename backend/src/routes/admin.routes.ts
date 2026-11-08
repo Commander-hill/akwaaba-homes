@@ -37,6 +37,9 @@ import {
   getBroadcastHistory,
   searchEntities,
   getAdministrators,
+  getAllPayouts,
+  updatePayoutStatus,
+  togglePropertyPhysicalVerification,
   createAdministrator,
   toggleAdminStatus
 } from '../controllers/admin.controller';
@@ -93,6 +96,7 @@ router.post('/landlord-deeds/:id/attach', attachLandlordDeed);
 router.get('/properties', getAllProperties);
 router.get('/properties/:id', getPropertyById);
 router.put('/properties/:id/status', updatePropertyApproval);
+router.put('/properties/:id/physical-verification', togglePropertyPhysicalVerification);
 
 // Bookings & Transactions
 router.get('/bookings', getAllBookings);
@@ -103,6 +107,10 @@ router.put('/subscriptions/:id/activate', activateSubscription);
 router.put('/subscriptions/:id/revoke', revokeSubscription);
 router.get('/transactions', getAllTransactions);
 router.get('/transactions/:id', getTransactionById);
+
+// Landlord Payouts & Disbursements
+router.get('/payouts', getAllPayouts);
+router.put('/payouts/:id/status', requireSuperAdmin, updatePayoutStatus);
 
 // Reviews & Reputation
 router.get('/reviews', getAllReviews);

@@ -4,12 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSocket } from '@/providers/SocketProvider';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import {
   LayoutDashboard,
+  Banknote,
   Building,
   UserCheck,
   Users,
@@ -96,6 +98,32 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
   }, []);
 
   // Real-time Action Queue Query for dynamic sidebar count badges
+    const { socket } = useSocket();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleInvalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-payouts'] });
+    };
+
+    socket.on('admin_action_required', handleInvalidate);
+    socket.on('kyc_submitted', handleInvalidate);
+    socket.on('property_created', handleInvalidate);
+    socket.on('breach_reported', handleInvalidate);
+    socket.on('booking_updated', handleInvalidate);
+
+    return () => {
+      socket.off('admin_action_required', handleInvalidate);
+      socket.off('kyc_submitted', handleInvalidate);
+      socket.off('property_created', handleInvalidate);
+      socket.off('breach_reported', handleInvalidate);
+      socket.off('booking_updated', handleInvalidate);
+    };
+  }, [socket, queryClient]);
+
   const { data: actionQueue = [] } = useQuery({
     queryKey: ['admin-action-queue'],
     queryFn: async () => {
@@ -182,6 +210,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
         { name: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
         { name: 'Subscriptions', href: '/admin/subscriptions', icon: CreditCard },
         { name: 'Payments & Ledger', href: '/admin/transactions', icon: Receipt },
+        { name: 'Disbursements & Payouts', href: '/admin/payouts', icon: Banknote },
         { name: 'Maintenance & Repairs', href: '/admin/tickets', icon: Wrench },
         { name: 'Review Moderation', href: '/admin/reviews', icon: Star },
         { name: 'Disputes & Lease Breaches', href: '/admin/disputes', icon: Scale },
@@ -230,6 +259,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
     if (path === '/admin/subscriptions') return 'Subscriptions';
     if (path.startsWith('/admin/subscriptions/')) return 'Subscription License';
     if (path === '/admin/transactions') return 'Payments & Ledger';
+    if (path === '/admin/payouts') return 'Disbursements & Payouts';
     if (path.startsWith('/admin/transactions/')) return 'Transaction Receipt & Ledger';
     if (path === '/admin/tickets') return 'Maintenance & Repairs';
     if (path.startsWith('/admin/tickets/')) return 'Maintenance Ticket Docket';

@@ -1,3 +1,4 @@
+import toast from 'react-hot-toast';
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -6,6 +7,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
   CalendarCheck,
+  Download,
+  RefreshCw,
   Home,
   User as UserIcon,
   CreditCard,
@@ -41,7 +44,7 @@ export default function AdminBookingsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  const { data: bookings = [], isLoading } = useQuery({
+  const { data: bookings = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['admin-bookings'],
     queryFn: async () => {
       const res = await api.get('/admin/bookings');
@@ -81,7 +84,36 @@ export default function AdminBookingsPage() {
     });
   }, [bookings, statusFilter, search]);
 
-  const filterConfigs: FilterConfig[] = [
+    const exportBookingsCSV = () => {
+    if (!bookings.length) {
+      toast.error('No bookings to export');
+      return;
+    }
+    const headers = ['Booking ID', 'Tenant Name', 'Tenant Email', 'Landlord Name', 'Property Title', 'Room / Bed', 'Start Date', 'End Date', 'Status', 'Date Created'];
+    const rows = bookings.map((b: any) => [
+      b.id,
+      `"${b.tenant?.firstName || ''} ${b.tenant?.lastName || ''}"`,
+      `"${b.tenant?.email || ''}"`,
+      `"${b.property?.landlord?.firstName || ''} ${b.property?.landlord?.lastName || ''}"`,
+      `"${b.property?.title || ''}"`,
+      `"${b.room?.title || b.roomUnit?.unitNumber || ''} ${b.bed?.bedNumber || ''}"`,
+      new Date(b.startDate).toISOString().slice(0, 10),
+      new Date(b.endDate).toISOString().slice(0, 10),
+      b.status || 'PENDING',
+      new Date(b.createdAt).toISOString()
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `AkwaabaHomes_Bookings_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Bookings exported to CSV');
+  };
+
+const filterConfigs: FilterConfig[] = [
     {
       id: 'status',
       label: 'Booking Status',
@@ -250,6 +282,27 @@ export default function AdminBookingsPage() {
           { label: 'Marketplace', href: '/admin/bookings' },
           { label: 'Bookings' }
         ]}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={exportBookingsCSV}
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+              className="px-3.5 py-2 text-xs font-bold rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-750 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefetching ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+        }
       />
 
       <AdminFilterBar

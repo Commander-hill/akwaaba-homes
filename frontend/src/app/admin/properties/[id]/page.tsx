@@ -54,6 +54,21 @@ export default function AdminPropertyDetailPage({
     }
   });
 
+    const togglePhysicalMutation = useMutation({
+    mutationFn: async (isPhysicallyVerified: boolean) => {
+      const res = await api.put(`/admin/properties/${propertyId}/physical-verification`, { isPhysicallyVerified });
+      return res.data;
+    },
+    onSuccess: (data, isVerified) => {
+      toast.success(isVerified ? 'Awarded Physically Verified badge' : 'Revoked physical verification badge');
+      queryClient.invalidateQueries({ queryKey: ['admin-property', propertyId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Failed to update physical verification status');
+    }
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: async ({ approvalStatus, rejectionReason }: { approvalStatus: string; rejectionReason?: string }) => {
       const res = await api.put(`/admin/properties/${propertyId}/status`, { approvalStatus, rejectionReason });

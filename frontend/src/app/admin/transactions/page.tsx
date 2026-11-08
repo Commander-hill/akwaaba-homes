@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import {
   Banknote,
+  Download,
   Receipt,
   CheckCircle,
   AlertCircle,
@@ -35,7 +36,36 @@ export default function AdminTransactionsPage() {
     }
   });
 
-  const copyToClipboard = (text: string) => {
+    const exportTransactionsCSV = () => {
+    if (!transactions.length) {
+      toast.error('No transactions to export');
+      return;
+    }
+    const headers = ['Transaction ID', 'Booking ID', 'Tenant Name', 'Tenant Email', 'Landlord Name', 'Property Title', 'Amount (GHS)', 'Gateway Reference', 'Status', 'Date'];
+    const rows = transactions.map((t: any) => [
+      t.id,
+      t.bookingId || '',
+      `"${t.tenant?.firstName || ''} ${t.tenant?.lastName || ''}"`,
+      `"${t.tenant?.email || ''}"`,
+      `"${t.landlord?.firstName || ''} ${t.landlord?.lastName || ''}"`,
+      `"${t.property?.title || ''}"`,
+      Number(t.amount || 0).toFixed(2),
+      t.reference || '',
+      t.status || 'PENDING',
+      new Date(t.createdAt).toISOString()
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `AkwaabaHomes_Transactions_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Transactions exported to CSV');
+  };
+
+const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Gateway reference copied to clipboard');
   };
