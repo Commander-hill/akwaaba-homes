@@ -1883,6 +1883,97 @@ export default function RegisterPage() {
                 </div>
               </div>
 
+              {/* "What Happens Next?" Post-Registration Expectations Roadmap (#7) */}
+              <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#0F5132] dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>What Happens After You Submit?</span>
+                  </span>
+                  <span className="text-[10px] font-mono font-semibold text-zinc-500 dark:text-zinc-400">
+                    3-Step Onboarding
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Step 1: Email Verification */}
+                  <div className="p-2.5 rounded-lg bg-white/90 dark:bg-zinc-900/70 border border-emerald-200/60 dark:border-emerald-900/40 flex flex-col justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0F5132] text-white text-[10px] font-bold font-mono">
+                        1
+                      </span>
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-[#0F5132] dark:text-emerald-300">
+                        ~1 min
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
+                        Confirm Your Email
+                      </div>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
+                        Click the activation link sent to{' '}
+                        <span className="font-mono font-semibold text-zinc-700 dark:text-zinc-300">
+                          {formData.email || 'your inbox'}
+                        </span>
+                        .
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Role-specific KYC */}
+                  <div className="p-2.5 rounded-lg bg-white/90 dark:bg-zinc-900/70 border border-emerald-200/60 dark:border-emerald-900/40 flex flex-col justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0F5132] text-white text-[10px] font-bold font-mono">
+                        2
+                      </span>
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
+                        {formData.role === 'LANDLORD' ? '< 24 hrs' : 'Fast-Track'}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
+                        {formData.role === 'LANDLORD'
+                          ? 'Host & Deed Verification'
+                          : 'Ghana Card KYC Unlock'}
+                      </div>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
+                        {formData.role === 'LANDLORD'
+                          ? 'Upload your Ghana Card & ownership proof to earn your Verified Host badge.'
+                          : formData.isStudent
+                          ? 'Complete quick Ghana Card verification in your portal for roommate matching.'
+                          : 'Complete NIA Ghana Card verification in your dashboard for priority approval.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Step 3: Instant Access */}
+                  <div className="p-2.5 rounded-lg bg-white/90 dark:bg-zinc-900/70 border border-emerald-200/60 dark:border-emerald-900/40 flex flex-col justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#16A34A] text-white text-[10px] font-bold font-mono">
+                        3
+                      </span>
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
+                        Instant
+                      </span>
+                    </div>
+                    <div>
+                      <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
+                        {formData.role === 'LANDLORD'
+                          ? 'List & Receive Payouts'
+                          : 'Book & Lock Your Room'}
+                      </div>
+                      <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
+                        {formData.role === 'LANDLORD'
+                          ? 'Publish properties, automate Act 220 leases, and collect MoMo/Bank payouts.'
+                          : formData.isStudent
+                          ? `Reserve verified hostels near ${formData.campus || 'campus'} with MoMo & escrow safety.`
+                          : 'Reserve verified homes, sign digital leases, and pay securely via escrow.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Terms and Privacy Checkbox */}
               <div className="pt-1">
                 <label htmlFor="register-accept-terms" className="inline-flex items-start gap-2.5 cursor-pointer select-none">
