@@ -486,6 +486,29 @@ export default function RegisterPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleInputKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    onLastAction?: () => void
+  ) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const currentInput = e.currentTarget;
+      const container = currentInput.closest('[data-step-container]') || document;
+      const focusables = Array.from(
+        container.querySelectorAll<HTMLElement>(
+          'input:not([type="hidden"]):not([disabled]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), select:not([disabled]), textarea:not([disabled])'
+        )
+      ).filter((el) => el.offsetParent !== null);
+
+      const currentIndex = focusables.indexOf(currentInput);
+      if (currentIndex >= 0 && currentIndex < focusables.length - 1) {
+        focusables[currentIndex + 1].focus();
+      } else if (onLastAction) {
+        onLastAction();
+      }
+    }
+  };
+
   const handleLandlordNextSubStep = () => {
     setError('');
     if (!formData.email.trim()) {
@@ -1139,7 +1162,7 @@ export default function RegisterPage() {
 
           {/* ──── STEP 1: Role Selection & Personal Information ──── */}
           {currentStep === 1 && (
-            <div className="space-y-5">
+            <div data-step-container className="space-y-5">
               
               {/* Role Cards */}
               <div className="space-y-1.5">
@@ -1264,6 +1287,9 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoComplete="given-name"
+                    enterKeyHint="next"
+                    onKeyDown={(e) => handleInputKeyDown(e)}
                     className={inputClass} 
                     value={formData.firstName} 
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
@@ -1275,6 +1301,9 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoComplete="family-name"
+                    enterKeyHint="next"
+                    onKeyDown={(e) => handleInputKeyDown(e)}
                     className={inputClass} 
                     value={formData.lastName} 
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
@@ -1285,6 +1314,9 @@ export default function RegisterPage() {
                   <label className={labelClass}>Other Names (Optional)</label>
                   <input 
                     type="text" 
+                    autoComplete="additional-name"
+                    enterKeyHint="next"
+                    onKeyDown={(e) => handleInputKeyDown(e)}
                     className={inputClass} 
                     value={formData.otherNames} 
                     onChange={(e) => setFormData({ ...formData, otherNames: e.target.value })} 
@@ -1303,6 +1335,9 @@ export default function RegisterPage() {
                     <input 
                       type="tel" 
                       required 
+                      autoComplete="tel"
+                      enterKeyHint="next"
+                      onKeyDown={(e) => handleInputKeyDown(e)}
                       className={`${inputClass} pl-10 pr-20 font-mono`} 
                       value={formData.phoneNumber} 
                       onChange={(e) => handlePhoneChange(e.target.value, 'phoneNumber')} 
@@ -1335,6 +1370,7 @@ export default function RegisterPage() {
                   <label className={labelClass}>Gender *</label>
                   <select 
                     required 
+                    onKeyDown={(e) => handleInputKeyDown(e)}
                     className={`${inputClass} appearance-none cursor-pointer`} 
                     value={formData.gender} 
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
@@ -1349,6 +1385,9 @@ export default function RegisterPage() {
                     <input 
                       type="date" 
                       required 
+                      autoComplete="bday"
+                      enterKeyHint="next"
+                      onKeyDown={(e) => handleInputKeyDown(e)}
                       className={inputClass} 
                       value={formData.dateOfBirth} 
                       onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })} 
@@ -1360,6 +1399,9 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoComplete="country-name"
+                    enterKeyHint="go"
+                    onKeyDown={(e) => handleInputKeyDown(e, handleNextStep)}
                     className={inputClass} 
                     value={formData.nationality} 
                     onChange={(e) => setFormData({ ...formData, nationality: e.target.value })} 
@@ -1388,7 +1430,7 @@ export default function RegisterPage() {
 
           {/* ──── STEP 2: Credentials & Verification Information ──── */}
           {currentStep === 2 && (
-            <div className="space-y-4">
+            <div data-step-container className="space-y-4">
               
               {/* Landlord Progressive Disclosure Sub-step Tabs */}
               {formData.role === 'LANDLORD' && (
@@ -1467,7 +1509,9 @@ export default function RegisterPage() {
                   <input 
                     type="email" 
                     required 
-                    autoComplete="email" 
+                    autoComplete="email"
+                    enterKeyHint="next"
+                    onKeyDown={(e) => handleInputKeyDown(e)} 
                     className={`${inputClass} pl-10 pr-9 ${
                       emailCheckStatus === 'EXISTS' 
                         ? 'border-rose-400 dark:border-rose-700 focus:border-rose-500 focus:ring-rose-500/10' 
@@ -1553,6 +1597,8 @@ export default function RegisterPage() {
                         required 
                         className={inputClass} 
                         value={formData.studentId} 
+                        enterKeyHint="next"
+                        onKeyDown={(e) => handleInputKeyDown(e)}
                         onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
                         placeholder="e.g. 20849201" 
                       />
@@ -1581,6 +1627,8 @@ export default function RegisterPage() {
                         required 
                         className={inputClass} 
                         value={formData.dateOfAdmission} 
+                        enterKeyHint="next"
+                        onKeyDown={(e) => handleInputKeyDown(e)}
                         onChange={(e) => setFormData({ ...formData, dateOfAdmission: e.target.value })} 
                       />
                     </div>
@@ -1592,6 +1640,8 @@ export default function RegisterPage() {
                         required 
                         className={inputClass} 
                         value={formData.programmeOfStudy} 
+                        enterKeyHint="next"
+                        onKeyDown={(e) => handleInputKeyDown(e)}
                         onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })} 
                         placeholder="e.g. Computer Science" 
                       />
@@ -1605,6 +1655,8 @@ export default function RegisterPage() {
                           required 
                           className={inputClass} 
                           value={formData.guardianName} 
+                          enterKeyHint="next"
+                          onKeyDown={(e) => handleInputKeyDown(e)}
                           onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })} 
                           placeholder="Parent or Guardian Name" 
                         />
@@ -1623,6 +1675,8 @@ export default function RegisterPage() {
                             required 
                             className={`${inputClass} pl-10 pr-20 font-mono`} 
                             value={formData.guardianPhone} 
+                            enterKeyHint="next"
+                            onKeyDown={(e) => handleInputKeyDown(e)}
                             onChange={(e) => handlePhoneChange(e.target.value, 'guardianPhone')} 
                             placeholder="054 123 4567" 
                           />
@@ -1737,6 +1791,8 @@ export default function RegisterPage() {
                         required={formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'}
                         className={inputClass}
                         value={formData.businessName}
+                        enterKeyHint="next"
+                        onKeyDown={(e) => handleInputKeyDown(e)}
                         onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                         placeholder="e.g. Evandy Hostels Ltd, Ayeduase Executive Courts, or Personal Portfolio"
                       />
@@ -1811,6 +1867,8 @@ export default function RegisterPage() {
                           type="text"
                           className={`${inputClass} font-mono uppercase`}
                           value={formData.businessRegistrationNumber}
+                          enterKeyHint="next"
+                          onKeyDown={(e) => handleInputKeyDown(e)}
                           onChange={(e) => setFormData({ ...formData, businessRegistrationNumber: e.target.value.toUpperCase() })}
                           placeholder="CS / BN / CA Registration No."
                         />
@@ -1828,6 +1886,8 @@ export default function RegisterPage() {
                           type="text"
                           className={`${inputClass} font-mono uppercase`}
                           value={formData.tinNumber}
+                          enterKeyHint="next"
+                          onKeyDown={(e) => handleInputKeyDown(e)}
                           onChange={(e) => setFormData({ ...formData, tinNumber: e.target.value.toUpperCase() })}
                           placeholder="P00 / C00 Taxpayer TIN"
                         />
@@ -1968,6 +2028,8 @@ export default function RegisterPage() {
                                 type="tel"
                                 className={`${inputClass} pl-10 pr-16 font-mono`}
                                 value={formData.payoutAccountNumber}
+                                enterKeyHint="go"
+                                onKeyDown={(e) => handleInputKeyDown(e, handleReviewStep)}
                                 onChange={(e) => handlePhoneChange(e.target.value, 'payoutAccountNumber')}
                                 placeholder="024 000 0000 (Dedicated Host MoMo Line)"
                               />
@@ -2286,6 +2348,8 @@ export default function RegisterPage() {
                         type={showPassword ? 'text' : 'password'} 
                         required 
                         autoComplete="new-password" 
+                        enterKeyHint="next"
+                        onKeyDown={(e) => handleInputKeyDown(e)}
                         className={`${inputClass} pr-10`} 
                         value={formData.password} 
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
@@ -2309,6 +2373,8 @@ export default function RegisterPage() {
                         type={showConfirmPassword ? 'text' : 'password'} 
                         required 
                         autoComplete="new-password" 
+                        enterKeyHint="go"
+                        onKeyDown={(e) => handleInputKeyDown(e, formData.role === 'LANDLORD' ? handleLandlordNextSubStep : handleReviewStep)}
                         className={`${inputClass} pr-10`} 
                         value={formData.confirmPassword} 
                         onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} 
