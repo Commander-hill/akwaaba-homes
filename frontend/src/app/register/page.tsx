@@ -26,7 +26,9 @@ import {
   Sparkles,
   X,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Wallet,
+  Landmark
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -221,6 +223,10 @@ export default function RegisterPage() {
     businessName: '',
     primaryRegion: 'ACCRA_LEGON_UPSA',
     portfolioSize: '1_TO_5_UNITS',
+    payoutMethod: 'MOMO',
+    payoutProvider: 'MTN',
+    payoutAccountNumber: '',
+    useRegisteredPhoneForMoMo: true,
     
     // Security
     password: '',
@@ -519,7 +525,23 @@ export default function RegisterPage() {
     }
 
     try {
-      await api.post('/auth/register', formData);
+      const resolvedPayoutAccount =
+        formData.role === 'LANDLORD' && formData.payoutMethod === 'MOMO' && formData.useRegisteredPhoneForMoMo
+          ? formData.phoneNumber
+          : formData.payoutAccountNumber;
+
+      const resolvedPayoutProvider =
+        formData.role === 'LANDLORD' && formData.payoutMethod === 'MOMO'
+          ? (formData.useRegisteredPhoneForMoMo
+              ? detectGhanaCarrier(formData.phoneNumber)?.carrier?.toUpperCase()
+              : detectGhanaCarrier(formData.payoutAccountNumber)?.carrier?.toUpperCase()) || formData.payoutProvider || 'MTN'
+          : formData.payoutProvider;
+
+      await api.post('/auth/register', {
+        ...formData,
+        payoutAccountNumber: resolvedPayoutAccount,
+        payoutProvider: resolvedPayoutProvider,
+      });
       try {
         sessionStorage.removeItem(REGISTRATION_DRAFT_KEY);
         localStorage.removeItem(REGISTRATION_DRAFT_KEY);
@@ -597,6 +619,20 @@ export default function RegisterPage() {
     '20_PLUS_ROOMS': '20+ Rooms / Multi-Block Student Hostel',
   };
 
+  const ghanaBankLabels: Record<string, string> = {
+    GCB: 'GCB Bank PLC',
+    ECOBANK: 'Ecobank Ghana PLC',
+    FIDELITY: 'Fidelity Bank Ghana',
+    STANBIC: 'Stanbic Bank Ghana',
+    CALBANK: 'CalBank PLC',
+    ABSA: 'Absa Bank Ghana',
+    ZENITH: 'Zenith Bank Ghana',
+    ACCESS: 'Access Bank Ghana',
+    UBA: 'United Bank for Africa (UBA Ghana)',
+    REPUBLIC: 'Republic Bank Ghana',
+    CBG: 'Consolidated Bank Ghana (CBG)',
+  };
+
   const fullNameDisplay = [formData.firstName, formData.otherNames, formData.lastName]
     .map((part) => part.trim())
     .filter(Boolean)
@@ -669,13 +705,14 @@ export default function RegisterPage() {
   }, [formData.password, formData.confirmPassword]);
 
   // Ghanaian phone number auto-formatting & carrier detection
-  const handlePhoneChange = (raw: string, field: 'phoneNumber' | 'guardianPhone') => {
+  const handlePhoneChange = (raw: string, field: 'phoneNumber' | 'guardianPhone' | 'payoutAccountNumber') => {
     const formatted = formatGhanaianPhone(raw);
     setFormData((prev) => ({ ...prev, [field]: formatted }));
   };
 
   const userCarrier = useMemo(() => detectGhanaCarrier(formData.phoneNumber), [formData.phoneNumber]);
   const guardianCarrier = useMemo(() => detectGhanaCarrier(formData.guardianPhone), [formData.guardianPhone]);
+  const payoutMoMoCarrier = useMemo(() => detectGhanaCarrier(formData.payoutAccountNumber), [formData.payoutAccountNumber]);
 
   const isUserPhoneValid = useMemo(() => {
     const digits = formData.phoneNumber.replace(/\D/g, '');
@@ -1506,11 +1543,190 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
+                  {/* Preferred Escrow Payout Settlement Pre-Configuration */}
+                  <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                        <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                          Preferred Escrow Payout Settlement
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold text-[#0F5132] dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">
+                        T+0 Instant Release
+                      </span>
+                    </div>
+
+                    {/* Payout Method Toggle (MoMo vs Bank Transfer) */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            payoutMethod: 'MOMO',
+                            payoutProvider: userCarrier?.carrier?.toUpperCase() || 'MTN',
+                          })
+                        }
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                          formData.payoutMethod === 'MOMO'
+                            ? 'border-[#16A34A] bg-emerald-50/70 dark:bg-emerald-950/40 ring-1 ring-[#16A34A]'
+                            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        }`}
+                      >
+                        <Phone className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
+                              Instant Mobile Money
+                            </span>
+                            {formData.payoutMethod === 'MOMO' && (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                            MTN MoMo • Telecel • AT Money
+                          </p>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            payoutMethod: 'BANK_TRANSFER',
+                            payoutProvider:
+                              formData.payoutMethod === 'BANK_TRANSFER' && ghanaBankLabels[formData.payoutProvider]
+                                ? formData.payoutProvider
+                                : 'GCB',
+                            payoutAccountNumber:
+                              formData.payoutMethod === 'BANK_TRANSFER' ? formData.payoutAccountNumber : '',
+                          })
+                        }
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-2.5 ${
+                          formData.payoutMethod === 'BANK_TRANSFER'
+                            ? 'border-[#16A34A] bg-emerald-50/70 dark:bg-emerald-950/40 ring-1 ring-[#16A34A]'
+                            : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                        }`}
+                      >
+                        <Landmark className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
+                              Commercial Bank GH
+                            </span>
+                            {formData.payoutMethod === 'BANK_TRANSFER' && (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                            GIP Instant Interbank Settlement
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Conditional Sub-Fields for MoMo vs Bank Transfer */}
+                    {formData.payoutMethod === 'MOMO' ? (
+                      <div className="space-y-2.5 bg-white/80 dark:bg-zinc-950/50 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3">
+                        <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={formData.useRegisteredPhoneForMoMo}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  useRegisteredPhoneForMoMo: e.target.checked,
+                                })
+                              }
+                              className="w-4 h-4 rounded border-zinc-300 text-[#0F5132] focus:ring-[#0F5132] cursor-pointer"
+                            />
+                            <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                              Use my registered phone number ({formData.phoneNumber || 'from Step 1'})
+                            </span>
+                          </div>
+                          {formData.useRegisteredPhoneForMoMo && userCarrier && (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${userCarrier.badgeBg} ${userCarrier.badgeColor} ${userCarrier.badgeBorder}`}
+                            >
+                              {userCarrier.label} Wallet
+                            </span>
+                          )}
+                        </label>
+
+                        {!formData.useRegisteredPhoneForMoMo && (
+                          <div className="pt-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                Dedicated MoMo Settlement Number
+                              </label>
+                              {payoutMoMoCarrier && (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${payoutMoMoCarrier.badgeBg} ${payoutMoMoCarrier.badgeColor} ${payoutMoMoCarrier.badgeBorder}`}
+                                >
+                                  {payoutMoMoCarrier.label}
+                                </span>
+                              )}
+                            </div>
+                            <input
+                              type="tel"
+                              className={inputClass}
+                              value={formData.payoutAccountNumber}
+                              onChange={(e) => handlePhoneChange(e.target.value, 'payoutAccountNumber')}
+                              placeholder="024 000 0000 (Dedicated Host MoMo Line)"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 bg-white/80 dark:bg-zinc-950/50 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300 mb-1">
+                            Settlement Bank (Ghana) *
+                          </label>
+                          <select
+                            className={`${inputClass} appearance-none cursor-pointer`}
+                            value={ghanaBankLabels[formData.payoutProvider] ? formData.payoutProvider : 'GCB'}
+                            onChange={(e) => setFormData({ ...formData, payoutProvider: e.target.value })}
+                          >
+                            {Object.entries(ghanaBankLabels).map(([code, name]) => (
+                              <option key={code} value={code}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                              Account Number
+                            </label>
+                            <span className="text-[10px] font-mono text-zinc-400">Optional now</span>
+                          </div>
+                          <input
+                            type="text"
+                            className={`${inputClass} font-mono`}
+                            value={formData.payoutAccountNumber}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                payoutAccountNumber: e.target.value.replace(/[^\d-]/g, '').slice(0, 20),
+                              })
+                            }
+                            placeholder="e.g. 1011234567890 (or add later)"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Host Profile Helper Footnote */}
                   <div className="pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>
-                      Your portfolio profile pre-configures your landlord console, Rent Act (Act 220) digital lease templates, and campus demand matching.
+                      Your portfolio profile & escrow settlement rail pre-configure your landlord console, Rent Act (Act 220) digital lease templates, and instant rent release upon tenant check-in.
                     </span>
                   </div>
                 </div>
@@ -1835,6 +2051,44 @@ export default function RegisterPage() {
                         <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Primary Operating Zone</dt>
                         <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
                           {primaryRegionLabels[formData.primaryRegion] || formData.primaryRegion}
+                        </dd>
+                      </div>
+                      <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Preferred Escrow Settlement Rail</dt>
+                        <dd className="font-semibold text-zinc-950 dark:text-white flex items-center flex-wrap gap-1.5 mt-0.5">
+                          {formData.payoutMethod === 'MOMO' ? (
+                            <>
+                              <span className="font-bold">Instant Mobile Money</span>
+                              <span className="font-mono text-zinc-700 dark:text-zinc-300">
+                                ({formData.useRegisteredPhoneForMoMo ? formData.phoneNumber : formData.payoutAccountNumber || 'Pending line'})
+                              </span>
+                              {(() => {
+                                const c = formData.useRegisteredPhoneForMoMo ? userCarrier : payoutMoMoCarrier;
+                                return c ? (
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${c.badgeBg} ${c.badgeColor} ${c.badgeBorder}`}
+                                  >
+                                    {c.label}
+                                  </span>
+                                ) : null;
+                              })()}
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-bold">
+                                {ghanaBankLabels[formData.payoutProvider] || 'Commercial Bank Transfer'}
+                              </span>
+                              {formData.payoutAccountNumber.trim() ? (
+                                <span className="font-mono text-emerald-700 dark:text-emerald-400">
+                                  • Acct: {formData.payoutAccountNumber.trim()}
+                                </span>
+                              ) : (
+                                <span className="text-[10.5px] text-zinc-500 dark:text-zinc-400">
+                                  (Account # to be finalized in Console)
+                                </span>
+                              )}
+                            </>
+                          )}
                         </dd>
                       </div>
                     </>

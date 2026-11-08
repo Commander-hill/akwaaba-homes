@@ -48,6 +48,9 @@ model User {
   businessName               String?   // Optional Hostel or Real Estate Brand Name
   primaryRegion              String?   // Primary Operating City / Campus Corridor
   portfolioSize              String?   // 1_TO_5_UNITS, 6_TO_20_ROOMS, 20_PLUS_ROOMS
+  payoutMethod               String?   // MOMO, BANK_TRANSFER
+  payoutProvider             String?   // MTN, TELECEL, AT, or Ghanaian Commercial Bank Code
+  payoutAccountNumber        String?   // MoMo Wallet Number or Commercial Bank Account Number (Optional at signup)
   reputationScore        Float     @default(5.0)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
