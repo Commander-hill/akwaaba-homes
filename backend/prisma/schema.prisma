@@ -64,6 +64,12 @@ model User {
   isProfileLocked        Boolean   @default(false)
   profileUnlockRequested Boolean   @default(false)
   profileUnlockReason    String?
+
+  // Campus Referral & Ambassador Promo System
+  referralCode           String?   @unique
+  referredBy             String?
+  referralRewardClaimed  Boolean   @default(false)
+
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 

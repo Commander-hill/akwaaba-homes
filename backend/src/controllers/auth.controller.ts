@@ -62,13 +62,193 @@ export const checkEmailAvailability = async (req: Request, res: Response): Promi
   }
 };
 
+// Ghanaian Campus Partner & Ambassador Promotional Codes
+export const CAMPUS_PROMO_CODES: Record<string, {
+  campus: string;
+  campusName: string;
+  title: string;
+  benefit: string;
+  badgeText: string;
+  badgeBg: string;
+  badgeColor: string;
+  badgeBorder: string;
+}> = {
+  'LEGON2025': {
+    campus: 'UG',
+    campusName: 'University of Ghana (Legon)',
+    title: 'UG Campus Ambassador Welcome Perk',
+    benefit: 'GH₵ 50 Tenancy Legal Fee Subsidy & Priority Booking Placement',
+    badgeText: 'UG Legon Ambassador Partner',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+    badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+  },
+  'UG2025': {
+    campus: 'UG',
+    campusName: 'University of Ghana (Legon)',
+    title: 'UG Campus Ambassador Welcome Perk',
+    benefit: 'GH₵ 50 Tenancy Legal Fee Subsidy & Priority Booking Placement',
+    badgeText: 'UG Legon Ambassador Partner',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+    badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+  },
+  'KNUST2025': {
+    campus: 'KNUST',
+    campusName: 'Kwame Nkrumah University of Science & Technology',
+    title: 'KNUST Tech Stars Ambassador Perk',
+    benefit: 'Priority Room Lock-in & Free Digital Tenancy Agreement Generation',
+    badgeText: 'KNUST Kumasi Partner',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+    badgeColor: 'text-amber-800 dark:text-amber-300',
+    badgeBorder: 'border-amber-300 dark:border-amber-800'
+  },
+  'KNUST50': {
+    campus: 'KNUST',
+    campusName: 'Kwame Nkrumah University of Science & Technology',
+    title: 'KNUST Tech Stars Ambassador Perk',
+    benefit: 'GH₵ 50 First-Semester Utility Credit & Priority Lock-in',
+    badgeText: 'KNUST Kumasi Partner',
+    badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+    badgeColor: 'text-amber-800 dark:text-amber-300',
+    badgeBorder: 'border-amber-300 dark:border-amber-800'
+  },
+  'UCC2025': {
+    campus: 'UCC',
+    campusName: 'University of Cape Coast',
+    title: 'UCC Coastal Scholar Welcome',
+    benefit: 'Zero Caution Deposit Dispute Protection + Move-in Escrow Voucher',
+    badgeText: 'UCC Ambassador Partner',
+    badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
+    badgeColor: 'text-blue-800 dark:text-blue-300',
+    badgeBorder: 'border-blue-300 dark:border-blue-800'
+  },
+  'UPSA2025': {
+    campus: 'UPSA',
+    campusName: 'University of Professional Studies, Accra',
+    title: 'UPSA Leadership & Finance Ambassador Promo',
+    benefit: 'Priority Verified Host Access & GH₵ 40 Escrow Credit',
+    badgeText: 'UPSA Ambassador Partner',
+    badgeBg: 'bg-purple-50 dark:bg-purple-950/60',
+    badgeColor: 'text-purple-800 dark:text-purple-300',
+    badgeBorder: 'border-purple-300 dark:border-purple-800'
+  },
+  'AKWAABA': {
+    campus: 'ALL',
+    campusName: 'All Campuses & Hostels',
+    title: 'Akwaaba Homes Community Welcome Pass',
+    benefit: 'Verified Resident Trust Badge & GH₵ 30 Booking Credit',
+    badgeText: 'Official Akwaaba Partner',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+    badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+  },
+  'GIMPA2025': {
+    campus: 'GIMPA',
+    campusName: 'Ghana Institute of Management and Public Administration',
+    title: 'GIMPA Executive Greenhill Welcome',
+    benefit: 'Executive Studio Priority Access + Instant Lease Generation',
+    badgeText: 'GIMPA Ambassador Partner',
+    badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+    badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+    badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+  },
+  'ATU2025': {
+    campus: 'ATU',
+    campusName: 'Accra Technical University',
+    title: 'ATU Technical Scholars Promo',
+    benefit: 'Express Check-in & Verified Student Tenancy Record',
+    badgeText: 'ATU Ambassador Partner',
+    badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
+    badgeColor: 'text-teal-800 dark:text-teal-300',
+    badgeBorder: 'border-teal-300 dark:border-teal-800'
+  }
+};
+
+export const verifyPromoCode = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rawCode = (req.query.code as string) || (req.body?.code as string);
+    if (!rawCode || typeof rawCode !== 'string') {
+      res.status(400).json({ valid: false, message: 'Referral or promo code is required.' });
+      return;
+    }
+
+    const cleanCode = rawCode.trim().toUpperCase();
+    if (cleanCode.length < 3 || cleanCode.length > 30) {
+      res.status(400).json({ valid: false, message: 'Invalid code format. Codes are typically 4 to 12 characters.' });
+      return;
+    }
+
+    // 1. Check official campus promotional / partner campaigns
+    if (CAMPUS_PROMO_CODES[cleanCode]) {
+      const promo = CAMPUS_PROMO_CODES[cleanCode];
+      res.status(200).json({
+        valid: true,
+        code: cleanCode,
+        type: 'CAMPUS_PROMO',
+        campus: promo.campus,
+        campusName: promo.campusName,
+        title: promo.title,
+        benefit: promo.benefit,
+        badgeText: promo.badgeText,
+        badgeBg: promo.badgeBg,
+        badgeColor: promo.badgeColor,
+        badgeBorder: promo.badgeBorder
+      });
+      return;
+    }
+
+    // 2. Check personal student / ambassador referral codes in database
+    const referrer = await prisma.user.findFirst({
+      where: {
+        referralCode: {
+          equals: cleanCode,
+          mode: 'insensitive'
+        }
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        campus: true,
+        role: true
+      }
+    });
+
+    if (referrer) {
+      res.status(200).json({
+        valid: true,
+        code: cleanCode,
+        type: 'AMBASSADOR',
+        campus: referrer.campus || 'ALL',
+        campusName: referrer.campus || 'Akwaaba Network',
+        title: `Referred by ${referrer.firstName} ${referrer.lastName?.charAt(0) || ''}.`,
+        benefit: 'GH₵ 25 Tenancy Booking Credit unlocked upon your first confirmed reservation',
+        badgeText: `Ambassador: ${referrer.firstName} ${referrer.lastName?.charAt(0) || ''}.`,
+        badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+        badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+        badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+      });
+      return;
+    }
+
+    res.status(404).json({
+      valid: false,
+      message: `Code "${cleanCode}" is unrecognized or has expired. You can clear this field and proceed.`
+    });
+  } catch (error) {
+    console.error('Error verifying referral promo code:', error);
+    res.status(500).json({ valid: false, message: 'Internal server error checking referral code.' });
+  }
+};
+
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { 
       email, password, role, firstName, lastName, otherNames, phoneNumber,
       gender, dateOfBirth, nationality, guardianName, guardianPhone,
       campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
-      isStudent, avatarUrl
+      isStudent, avatarUrl, promoCode, referralCode, referredBy: incomingReferredBy
     } = req.body;
 
     if (!email || !password || !firstName || !lastName || !role) {
@@ -120,6 +300,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const allowedRoles = ['TENANT', 'LANDLORD'];
     const safeRole = allowedRoles.includes(role) ? role : 'TENANT';
 
+    // Generate unique personal referral code for the new user (e.g., AKW-KWA-A7B2)
+    const namePrefix = (firstName || 'AKW').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'AKW';
+    const randomSuffix = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const generatedReferralCode = `${namePrefix}-${randomSuffix}`;
+
+    // Normalize incoming referral/promo code if provided
+    const appliedCode = (incomingReferredBy || referralCode || promoCode || '').toString().trim().toUpperCase() || null;
+
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
@@ -141,6 +329,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         programmeOfStudy: isStudent ? programmeOfStudy : null,
         yearOfStudy: isStudent ? yearOfStudy : null,
         studentType: isStudent ? studentType : null,
+        referralCode: generatedReferralCode,
+        referredBy: appliedCode,
         isEmailVerified: false,
         emailVerificationToken: verificationToken
       },

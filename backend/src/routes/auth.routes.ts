@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   register,
   checkEmailAvailability,
+  verifyPromoCode,
   login,
   login2FA,
   completeMandatory2FASetup,
@@ -33,6 +34,7 @@ import { validate, registerValidation, loginValidation } from '../middleware/val
 const router = Router();
 
 router.get('/check-email', checkEmailRateLimiter, checkEmailAvailability);
+router.get('/verify-promo', checkEmailRateLimiter, verifyPromoCode);
 router.post('/register', authRateLimiter, validate(registerValidation), register);
 router.post('/login', loginRateLimiter, validate(loginValidation), login);
 router.post('/login/2fa', loginRateLimiter, login2FA);

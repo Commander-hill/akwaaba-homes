@@ -20,7 +20,13 @@ import {
   AlertCircle,
   Circle,
   Phone,
-  Mail
+  Mail,
+  Gift,
+  Tag,
+  Sparkles,
+  X,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -30,6 +36,20 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import PassportUpload from '@/components/PassportUpload';
 import { getImageUrl } from '@/lib/utils';
+
+interface AppliedPromoInfo {
+  valid: boolean;
+  code: string;
+  type: 'CAMPUS_PROMO' | 'AMBASSADOR';
+  campus: string;
+  campusName: string;
+  title: string;
+  benefit: string;
+  badgeText: string;
+  badgeBg: string;
+  badgeColor: string;
+  badgeBorder: string;
+}
 
 interface GhanaCarrierInfo {
   carrier: 'MTN' | 'Telecel' | 'AT' | 'Glo';
@@ -199,8 +219,68 @@ export default function RegisterPage() {
     // Security
     password: '',
     confirmPassword: '',
-    acceptTerms: false
+    acceptTerms: false,
+
+    // Optional Referral / Campus Ambassador Code
+    promoCode: ''
   });
+
+  const [showPromoField, setShowPromoField] = useState(false);
+  const [promoInput, setPromoInput] = useState('');
+  const [isVerifyingPromo, setIsVerifyingPromo] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromoInfo | null>(null);
+  const [promoError, setPromoError] = useState('');
+
+  const verifyPromo = async (codeToVerify?: string) => {
+    const code = (codeToVerify || promoInput).trim().toUpperCase();
+    if (!code) {
+      setPromoError('Please enter a referral or promo code.');
+      return;
+    }
+    setIsVerifyingPromo(true);
+    setPromoError('');
+    try {
+      const res = await api.get('/auth/verify-promo', { params: { code } });
+      if (res.data?.valid) {
+        setAppliedPromo(res.data);
+        setFormData((prev) => ({ ...prev, promoCode: res.data.code }));
+        setPromoInput(res.data.code);
+        setShowPromoField(true);
+        toast.success(`Promo code ${res.data.code} applied!`);
+      } else {
+        setPromoError(res.data?.message || 'Invalid or unrecognized promo code.');
+      }
+    } catch (err: any) {
+      setPromoError(err.response?.data?.message || `Code "${code}" is unrecognized or has expired.`);
+    } finally {
+      setIsVerifyingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoInput('');
+    setPromoError('');
+    setFormData((prev) => ({ ...prev, promoCode: '' }));
+    toast.success('Referral code removed.');
+  };
+
+  // Check URL query parameters for ?ref=... or ?promo=... or ?referral=...
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const refParam = params.get('ref') || params.get('promo') || params.get('referral') || params.get('code');
+      if (refParam && refParam.trim()) {
+        const clean = refParam.trim().toUpperCase();
+        setPromoInput(clean);
+        setShowPromoField(true);
+        verifyPromo(clean);
+      }
+    } catch (e) {
+      // Ignore URL parsing error
+    }
+  }, []);
 
   // Restore saved registration draft upon page refresh / reload
   useEffect(() => {
@@ -1584,7 +1664,152 @@ export default function RegisterPage() {
                       </div>
                     </>
                   )}
+
+                  {appliedPromo && (
+                    <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                      <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Campus Promo / Referral</dt>
+                      <dd className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-2 flex-wrap">
+                        <span className="font-mono font-bold text-xs">{appliedPromo.code}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${appliedPromo.badgeBg} ${appliedPromo.badgeColor} ${appliedPromo.badgeBorder}`}>
+                          {appliedPromo.badgeText}
+                        </span>
+                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400">• {appliedPromo.benefit}</span>
+                      </dd>
+                    </div>
+                  )}
                 </dl>
+              </div>
+
+              {/* Optional Campus Ambassador / Referral Promo Code Card */}
+              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 transition-all">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#0F5132] dark:text-emerald-400 shrink-0">
+                      <Gift className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
+                        <span>Campus Ambassador / Referral Promo</span>
+                        <span className="text-[10px] text-zinc-400 font-normal">(Optional)</span>
+                      </div>
+                      <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                        Have a student ambassador promo code or friend referral link?
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {!appliedPromo && (
+                    <button
+                      type="button"
+                      onClick={() => setShowPromoField(!showPromoField)}
+                      className="text-xs font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <span>{showPromoField ? 'Hide' : 'Add Code'}</span>
+                      {showPromoField ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    </button>
+                  )}
+                </div>
+
+                {/* Applied Promo Banner */}
+                {appliedPromo && (
+                  <div className="mt-3 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-emerald-50/90 dark:bg-emerald-950/50 p-3 flex items-start justify-between gap-3 animate-in fade-in duration-200">
+                    <div className="flex items-start gap-2.5">
+                      <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-emerald-950 dark:text-emerald-100 font-mono tracking-wide">
+                            {appliedPromo.code}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${appliedPromo.badgeBg} ${appliedPromo.badgeColor} ${appliedPromo.badgeBorder}`}>
+                            {appliedPromo.badgeText}
+                          </span>
+                        </div>
+                        <div className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 mt-1">
+                          {appliedPromo.title}
+                        </div>
+                        <div className="text-[11px] text-emerald-700 dark:text-emerald-300 mt-0.5 leading-snug">
+                          ✨ {appliedPromo.benefit}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={removePromo}
+                      className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-xs font-semibold p-1 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition shrink-0 cursor-pointer"
+                      title="Remove code"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Collapsible Input Field */}
+                {showPromoField && !appliedPromo && (
+                  <div className="mt-3 pt-3 border-t border-zinc-200/70 dark:border-zinc-800/80 space-y-2.5 animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                        <input
+                          type="text"
+                          value={promoInput}
+                          onChange={(e) => {
+                            setPromoInput(e.target.value.toUpperCase());
+                            setPromoError('');
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              verifyPromo();
+                            }
+                          }}
+                          placeholder="e.g. LEGON2025, KNUST50, or AMB-CODE"
+                          className="w-full pl-9 pr-3 py-2 text-xs font-mono uppercase rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800/70 text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-[#16A34A] focus:border-transparent transition"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="emerald"
+                        onClick={() => verifyPromo()}
+                        disabled={!promoInput.trim() || isVerifyingPromo}
+                        isLoading={isVerifyingPromo}
+                        className="text-xs h-8.5 px-3.5 shrink-0"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+
+                    {promoError && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-rose-500 font-semibold animate-in fade-in duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{promoError}</span>
+                      </div>
+                    )}
+
+                    {/* Recommended Campus Quick-Picks */}
+                    <div className="pt-1 flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] text-zinc-400 font-medium">Campus perks:</span>
+                      {(formData.campus === 'UG' ? ['LEGON2025', 'AKWAABA'] :
+                        formData.campus === 'KNUST' ? ['KNUST2025', 'KNUST50', 'AKWAABA'] :
+                        formData.campus === 'UCC' ? ['UCC2025', 'AKWAABA'] :
+                        formData.campus === 'UPSA' ? ['UPSA2025', 'AKWAABA'] :
+                        ['LEGON2025', 'KNUST2025', 'UCC2025', 'AKWAABA']
+                      ).map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => {
+                            setPromoInput(chip);
+                            verifyPromo(chip);
+                          }}
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-zinc-800 text-zinc-600 hover:text-[#0F5132] dark:text-zinc-300 dark:hover:text-emerald-300 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 transition cursor-pointer"
+                        >
+                          +{chip}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Statutory Verification Note */}
