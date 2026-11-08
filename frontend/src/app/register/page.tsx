@@ -190,6 +190,7 @@ export default function RegisterPage() {
   }, [sessionData]);
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [landlordSubStep, setLandlordSubStep] = useState<1 | 2>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -252,7 +253,7 @@ export default function RegisterPage() {
   const [promoError, setPromoError] = useState('');
 
   // Interactive Landlord Earnings & Escrow Fee Transparency Preview State
-  const [showEarningsPreview, setShowEarningsPreview] = useState(true);
+  const [showEarningsPreview, setShowEarningsPreview] = useState(false);
   const [earningsCycle, setEarningsCycle] = useState<'ACADEMIC_YEAR' | 'SIX_MONTH_LEASE'>('ACADEMIC_YEAR');
   const [earningsRatePerUnit, setEarningsRatePerUnit] = useState<number>(4500);
   const [earningsUnitCount, setEarningsUnitCount] = useState<number>(4);
@@ -328,6 +329,9 @@ export default function RegisterPage() {
           if (parsed.currentStep && typeof parsed.currentStep === 'number') {
             setCurrentStep(parsed.currentStep);
           }
+          if (parsed.landlordSubStep && typeof parsed.landlordSubStep === 'number') {
+            setLandlordSubStep(parsed.landlordSubStep as 1 | 2);
+          }
         }
       }
     } catch (e) {
@@ -339,13 +343,13 @@ export default function RegisterPage() {
   useEffect(() => {
     try {
       const { password, confirmPassword, ...safeDraft } = formData;
-      const payload = JSON.stringify({ ...safeDraft, currentStep });
+      const payload = JSON.stringify({ ...safeDraft, currentStep, landlordSubStep });
       sessionStorage.setItem(REGISTRATION_DRAFT_KEY, payload);
       localStorage.setItem(REGISTRATION_DRAFT_KEY, payload);
     } catch (e) {
       // ignore quota errors
     }
-  }, [formData, currentStep]);
+  }, [formData, currentStep, landlordSubStep]);
 
   // Debounced real-time email availability verification
   useEffect(() => {
@@ -454,6 +458,10 @@ export default function RegisterPage() {
     }
 
     if (formData.role === 'LANDLORD') {
+      if (landlordSubStep === 1) {
+        handleLandlordNextSubStep();
+        return;
+      }
       if (!formData.hostEntityType || !formData.primaryRegion || !formData.portfolioSize) {
         triggerError('Please complete your host portfolio profile details.');
         return;
@@ -478,8 +486,35 @@ export default function RegisterPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLandlordNextSubStep = () => {
+    setError('');
+    if (!formData.email.trim()) {
+      triggerError('Please enter a valid email address.');
+      return;
+    }
+    if (emailCheckStatus === 'EXISTS') {
+      triggerError('An account with this email already exists. Please sign in or use a different email.');
+      return;
+    }
+    if (formData.password.length < 8) {
+      triggerError('Password must be at least 8 characters long.');
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      triggerError('Passwords do not match. Please re-enter your password.');
+      return;
+    }
+    setLandlordSubStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleBackStep = () => {
     setError('');
+    if (currentStep === 2 && formData.role === 'LANDLORD' && landlordSubStep === 2) {
+      setLandlordSubStep(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setCurrentStep((prev) => Math.max(1, prev - 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -626,6 +661,21 @@ export default function RegisterPage() {
         (formData.hostEntityType !== 'REGISTERED_HOSTEL_COMPANY' || Boolean(formData.businessName.trim()))))
   );
 
+  const isLandlordCredentialsValid = Boolean(
+    formData.email.trim() &&
+    emailCheckStatus !== 'EXISTS' &&
+    formData.password.length >= 8 &&
+    formData.confirmPassword.length >= 8 &&
+    formData.password === formData.confirmPassword
+  );
+
+  const isLandlordPortfolioValid = Boolean(
+    formData.hostEntityType &&
+    formData.primaryRegion &&
+    formData.portfolioSize &&
+    (formData.hostEntityType !== 'REGISTERED_HOSTEL_COMPANY' || Boolean(formData.businessName.trim()))
+  );
+
   const campusLabels: Record<string, string> = {
     KNUST: 'KNUST — Kwame Nkrumah Univ. of Science & Tech.',
     UG: 'UG — University of Ghana, Legon',
@@ -764,14 +814,14 @@ export default function RegisterPage() {
     return digits.length === 10 || (digits.startsWith('233') && digits.length === 12);
   }, [formData.guardianPhone]);
 
-  const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#0F5132] focus:ring-4 focus:ring-[#0F5132]/10 outline-none transition";
+  const inputClass = "w-full h-11 px-3.5 bg-zinc-50 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium text-zinc-900 dark:text-white placeholder:text-zinc-400 focus:bg-white dark:focus:bg-zinc-900 focus:border-[#16A34A] focus:ring-4 focus:ring-[#16A34A]/10 outline-none transition";
   const labelClass = "block text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-1.5";
 
   // Active Session Fallback
   if (isCheckingAuth) {
     return (
       <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex flex-col items-center justify-center bg-white dark:bg-[#0E1210] text-[#242925] dark:text-zinc-100 p-6 space-y-4">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132] dark:text-emerald-400" />
+        <Loader2 className="w-7 h-7 animate-spin text-[#16A34A] dark:text-emerald-400" />
         <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Verifying session...</p>
       </div>
     );
@@ -789,7 +839,7 @@ export default function RegisterPage() {
     return (
       <div className="-mt-16 -mb-16 md:mb-0 min-h-screen flex items-center justify-center bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-white p-6">
         <div className="w-full max-w-md bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 text-center space-y-6 shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
             <CheckCircle2 className="w-7 h-7" />
           </div>
 
@@ -1015,23 +1065,46 @@ export default function RegisterPage() {
           {/* Header & Step Indicator */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#0F5132] dark:text-emerald-400">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#16A34A] dark:text-emerald-400">
                 Step {currentStep} of 3 &bull;{' '}
                 {currentStep === 1
                   ? 'Personal Profile'
                   : currentStep === 2
-                  ? 'Credentials & Verification'
+                  ? formData.role === 'LANDLORD'
+                    ? landlordSubStep === 1
+                      ? 'Security & Credentials (Part 1 of 2)'
+                      : 'Host Portfolio & Payout (Part 2 of 2)'
+                    : 'Credentials & Verification'
                   : 'Review & Confirm'}
               </span>
               <span className="text-[10px] font-mono font-bold text-zinc-400">
-                {currentStep === 1 ? '33%' : currentStep === 2 ? '66%' : '100%'}
+                {currentStep === 1
+                  ? '33%'
+                  : currentStep === 2
+                  ? formData.role === 'LANDLORD'
+                    ? landlordSubStep === 1
+                      ? '50%'
+                      : '75%'
+                    : '66%'
+                  : '100%'}
               </span>
             </div>
             
             <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-[#0F5132] dark:bg-emerald-500 rounded-full transition-all duration-300"
-                style={{ width: currentStep === 1 ? '33.33%' : currentStep === 2 ? '66.66%' : '100%' }}
+                className="h-full bg-[#16A34A] dark:bg-emerald-500 rounded-full transition-all duration-300"
+                style={{
+                  width:
+                    currentStep === 1
+                      ? '33.33%'
+                      : currentStep === 2
+                      ? formData.role === 'LANDLORD'
+                        ? landlordSubStep === 1
+                          ? '50%'
+                          : '75%'
+                        : '66.66%'
+                      : '100%',
+                }}
               />
             </div>
 
@@ -1044,7 +1117,9 @@ export default function RegisterPage() {
                   ? 'Select your role and provide your basic personal details.' 
                   : currentStep === 2
                   ? formData.role === 'LANDLORD'
-                    ? 'Configure your host portfolio profile and account security credentials.'
+                    ? landlordSubStep === 1
+                      ? 'Set your official host email and secure account password.'
+                      : 'Configure your property portfolio and instant escrow payout settlement rail.'
                     : formData.isStudent
                     ? 'Set your secure password and university enrollment information.'
                     : 'Set your account email and security credentials.'
@@ -1074,7 +1149,7 @@ export default function RegisterPage() {
                   {/* Tenant / Student Card */}
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, role: 'TENANT' })}
+                    onClick={() => { setFormData({ ...formData, role: 'TENANT' }); setLandlordSubStep(1); }}
                     className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                       formData.role === 'TENANT'
                         ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 ring-1 ring-[#16A34A]'
@@ -1095,14 +1170,14 @@ export default function RegisterPage() {
                   {/* Landlord Card */}
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, role: 'LANDLORD', isStudent: false })}
+                    onClick={() => { setFormData({ ...formData, role: 'LANDLORD', isStudent: false }); setLandlordSubStep(1); }}
                     className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
                       formData.role === 'LANDLORD'
                         ? 'border-[#16A34A] bg-[#16A34A]/10 dark:bg-emerald-950/30 ring-1 ring-[#16A34A]'
                         : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/30'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center mb-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center mb-2.5">
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-bold text-zinc-950 dark:text-white">
@@ -1120,7 +1195,7 @@ export default function RegisterPage() {
               {formData.role === 'TENANT' && (
                 <div className="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-400 flex items-center justify-center shrink-0">
                       <GraduationCap className="w-4 h-4" />
                     </div>
                     <div>
@@ -1315,7 +1390,54 @@ export default function RegisterPage() {
           {currentStep === 2 && (
             <div className="space-y-4">
               
+              {/* Landlord Progressive Disclosure Sub-step Tabs */}
+              {formData.role === 'LANDLORD' && (
+                <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200/80 dark:border-zinc-800 rounded-xl mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setLandlordSubStep(1)}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      landlordSubStep === 1
+                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
+                        : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-bold ${
+                      landlordSubStep === 1
+                        ? 'bg-[#16A34A] text-white'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
+                    }`}>1</span>
+                    <span>Security &amp; Credentials</span>
+                    {isLandlordCredentialsValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isLandlordCredentialsValid) {
+                        setLandlordSubStep(2);
+                      } else {
+                        triggerError('Please set your email and valid password first.');
+                      }
+                    }}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      landlordSubStep === 2
+                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs border border-zinc-200/80 dark:border-zinc-700'
+                        : 'text-zinc-500 hover:text-zinc-900 dark:text-zinc-400'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono font-bold ${
+                      landlordSubStep === 2
+                        ? 'bg-[#16A34A] text-white'
+                        : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300'
+                    }`}>2</span>
+                    <span>Host Portfolio &amp; Payout</span>
+                    {isLandlordPortfolioValid && <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />}
+                  </button>
+                </div>
+              )}
+              
               {/* Email Address with Live Availability Check */}
+              {(formData.role === 'TENANT' || (formData.role === 'LANDLORD' && landlordSubStep === 1)) && (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className={labelClass}>Email Address *</label>
@@ -1395,12 +1517,13 @@ export default function RegisterPage() {
                   </p>
                 )}
               </div>
+              )}
 
               {/* Student Campus Verification Fields */}
               {formData.role === 'TENANT' && formData.isStudent && (
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
                   <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                    <GraduationCap className="w-4 h-4 text-[#16A34A] dark:text-emerald-400" />
                     <span>Student Enrollment Verification</span>
                   </div>
 
@@ -1533,14 +1656,14 @@ export default function RegisterPage() {
               )}
 
               {/* Landlord & Host Portfolio Profile Fields (#1) */}
-              {formData.role === 'LANDLORD' && (
+              {formData.role === 'LANDLORD' && landlordSubStep === 2 && (
                 <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                      <Building2 className="w-4 h-4 text-[#16A34A] dark:text-emerald-400" />
                       <span>Host &amp; Property Portfolio Profile</span>
                     </div>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                       Host Onboarding
                     </span>
                   </div>
@@ -1665,7 +1788,7 @@ export default function RegisterPage() {
                   <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Building2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                        <Building2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                         <span className="text-xs font-bold text-zinc-900 dark:text-white">
                           Business Registration &amp; Tax ID
                         </span>
@@ -1712,7 +1835,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
                       <span>Accelerates corporate verified badge &amp; statutory Rent Act (Act 220) withholding tax receipts.</span>
                     </div>
                   </div>
@@ -1721,12 +1844,12 @@ export default function RegisterPage() {
                   <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Wallet className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                        <Wallet className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                         <span className="text-xs font-bold text-zinc-900 dark:text-white">
                           Preferred Escrow Payout Settlement
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono font-bold text-[#0F5132] dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-mono font-bold text-[#16A34A] dark:text-emerald-400 bg-emerald-100/80 dark:bg-emerald-900/40 px-2 py-0.5 rounded-md">
                         T+0 Instant Release
                       </span>
                     </div>
@@ -1748,7 +1871,7 @@ export default function RegisterPage() {
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                         }`}
                       >
-                        <Phone className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <Phone className="w-4 h-4 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
@@ -1784,7 +1907,7 @@ export default function RegisterPage() {
                             : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
                         }`}
                       >
-                        <Landmark className="w-4 h-4 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <Landmark className="w-4 h-4 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
@@ -1815,7 +1938,7 @@ export default function RegisterPage() {
                                   useRegisteredPhoneForMoMo: e.target.checked,
                                 })
                               }
-                              className="w-4 h-4 rounded border-zinc-300 text-[#0F5132] focus:ring-[#0F5132] cursor-pointer"
+                              className="w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer"
                             />
                             <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
                               Use my registered phone number ({formData.phoneNumber || 'from Step 1'})
@@ -1923,7 +2046,7 @@ export default function RegisterPage() {
                             className="w-full px-3.5 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-emerald-100/40 dark:hover:bg-emerald-900/20 transition cursor-pointer"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-6 h-6 rounded-lg bg-[#0F5132] text-white flex items-center justify-center shrink-0">
+                              <div className="w-6 h-6 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shrink-0">
                                 <Calculator className="w-3.5 h-3.5" />
                               </div>
                               <div className="min-w-0">
@@ -1937,7 +2060,7 @@ export default function RegisterPage() {
                                 </div>
                                 <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 truncate">
                                   Est. Net Payout:{' '}
-                                  <strong className="font-mono text-[#0F5132] dark:text-emerald-400">
+                                  <strong className="font-mono text-[#16A34A] dark:text-emerald-400">
                                     GH₵ {netInstantPayout.toLocaleString()}
                                   </strong>{' '}
                                   (100% of listed rent)
@@ -1945,7 +2068,7 @@ export default function RegisterPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] font-bold text-[#0F5132] dark:text-emerald-400 hidden sm:inline">
+                              <span className="text-[10px] font-bold text-[#16A34A] dark:text-emerald-400 hidden sm:inline">
                                 {showEarningsPreview ? 'Hide' : 'Simulate'}
                               </span>
                               {showEarningsPreview ? (
@@ -1972,7 +2095,7 @@ export default function RegisterPage() {
                                     }}
                                     className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
                                       earningsCycle === 'ACADEMIC_YEAR'
-                                        ? 'bg-white dark:bg-zinc-900 text-[#0F5132] dark:text-emerald-400 shadow-xs'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs'
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
@@ -1986,7 +2109,7 @@ export default function RegisterPage() {
                                     }}
                                     className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
                                       earningsCycle === 'SIX_MONTH_LEASE'
-                                        ? 'bg-white dark:bg-zinc-900 text-[#0F5132] dark:text-emerald-400 shadow-xs'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#16A34A] dark:text-emerald-400 shadow-xs'
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
@@ -2005,7 +2128,7 @@ export default function RegisterPage() {
                                         ? 'Rent per Bed / Room (Yr)'
                                         : '6-Mo Advance per Unit'}
                                     </label>
-                                    <span className="text-xs font-mono font-extrabold text-[#0F5132] dark:text-emerald-400">
+                                    <span className="text-xs font-mono font-extrabold text-[#16A34A] dark:text-emerald-400">
                                       GH₵ {earningsRatePerUnit.toLocaleString()}
                                     </span>
                                   </div>
@@ -2016,7 +2139,7 @@ export default function RegisterPage() {
                                     step={500}
                                     value={earningsRatePerUnit}
                                     onChange={(e) => setEarningsRatePerUnit(Number(e.target.value))}
-                                    className="w-full accent-[#0F5132] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
+                                    className="w-full accent-[#16A34A] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
                                   />
                                   <div className="flex items-center gap-1 pt-0.5 flex-wrap">
                                     {(earningsCycle === 'ACADEMIC_YEAR'
@@ -2029,7 +2152,7 @@ export default function RegisterPage() {
                                         onClick={() => setEarningsRatePerUnit(preset)}
                                         className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold border transition cursor-pointer ${
                                           earningsRatePerUnit === preset
-                                            ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                                            ? 'bg-[#16A34A] text-white border-[#16A34A]'
                                             : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'
                                         }`}
                                       >
@@ -2063,7 +2186,7 @@ export default function RegisterPage() {
                                     step={1}
                                     value={earningsUnitCount}
                                     onChange={(e) => setEarningsUnitCount(Number(e.target.value))}
-                                    className="w-full accent-[#0F5132] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
+                                    className="w-full accent-[#16A34A] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
                                   />
                                   <div className="flex items-center gap-1 pt-0.5">
                                     {[1, 4, 12, 24, 40].map((countPreset) => (
@@ -2073,7 +2196,7 @@ export default function RegisterPage() {
                                         onClick={() => setEarningsUnitCount(countPreset)}
                                         className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold border transition cursor-pointer ${
                                           earningsUnitCount === countPreset
-                                            ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                                            ? 'bg-[#16A34A] text-white border-[#16A34A]'
                                             : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'
                                         }`}
                                       >
@@ -2117,7 +2240,7 @@ export default function RegisterPage() {
                                       Disbursed automatically at T+0 upon tenant QR check-in verification
                                     </span>
                                   </div>
-                                  <span className="text-sm sm:text-base font-mono font-black text-[#0F5132] dark:text-emerald-400">
+                                  <span className="text-sm sm:text-base font-mono font-black text-[#16A34A] dark:text-emerald-400">
                                     GH₵ {netInstantPayout.toLocaleString()}
                                   </span>
                                 </div>
@@ -2144,7 +2267,7 @@ export default function RegisterPage() {
 
                   {/* Host Profile Helper Footnote */}
                   <div className="pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0 mt-0.5" />
                     <span>
                       Your portfolio profile & escrow settlement rail pre-configure your landlord console, Rent Act (Act 220) digital lease templates, and instant rent release upon tenant check-in.
                     </span>
@@ -2153,6 +2276,7 @@ export default function RegisterPage() {
               )}
 
               {/* Password Fields & Security Meter */}
+              {(formData.role === 'TENANT' || (formData.role === 'LANDLORD' && landlordSubStep === 1)) && (
               <div className="space-y-3 pt-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
@@ -2286,30 +2410,83 @@ export default function RegisterPage() {
                   </div>
                 )}
               </div>
+              )}
 
-              {/* Step 2 Buttons */}
+              {/* Step 2 Buttons with Adaptive Progressive Disclosure Actions */}
               <div className="flex items-center gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleBackStep}
-                  leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
-                >
-                  Back
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="emerald"
-                  size="sm"
-                  onClick={handleReviewStep}
-                  disabled={!isStep1Valid || !isStep2Valid}
-                  rightIcon={<ArrowRight className="w-4 h-4" />}
-                  className="flex-1"
-                >
-                  Review Summary
-                </Button>
+                {formData.role === 'LANDLORD' && landlordSubStep === 1 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBackStep}
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="emerald"
+                      size="sm"
+                      onClick={handleLandlordNextSubStep}
+                      disabled={!isLandlordCredentialsValid}
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                      className="flex-1"
+                    >
+                      Continue to Host Portfolio
+                    </Button>
+                  </>
+                ) : formData.role === 'LANDLORD' && landlordSubStep === 2 ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setLandlordSubStep(1);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back to Credentials
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="emerald"
+                      size="sm"
+                      onClick={handleReviewStep}
+                      disabled={!isStep1Valid || !isStep2Valid}
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                      className="flex-1"
+                    >
+                      Review Summary
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBackStep}
+                      leftIcon={<ArrowLeft className="w-3.5 h-3.5" />}
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="emerald"
+                      size="sm"
+                      onClick={handleReviewStep}
+                      disabled={!isStep1Valid || !isStep2Valid}
+                      rightIcon={<ArrowRight className="w-4 h-4" />}
+                      className="flex-1"
+                    >
+                      Review Summary
+                    </Button>
+                  </>
+                )}
               </div>
 
             </div>
@@ -2323,11 +2500,11 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <User className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                     <span className="text-xs font-bold text-zinc-950 dark:text-white">
                       Personal Identity
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-100/80 dark:bg-emerald-950/60 text-[#16A34A] dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50">
                       {formData.role === 'LANDLORD'
                         ? 'Landlord & Host'
                         : formData.isStudent
@@ -2412,7 +2589,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                 <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                     <span className="text-xs font-bold text-zinc-950 dark:text-white">
                       {formData.role === 'LANDLORD'
                         ? 'Credentials & Host Portfolio'
@@ -2478,7 +2655,7 @@ export default function RegisterPage() {
                             {formData.businessRegistrationNumber.trim() && (
                               <span className="flex items-center gap-1">
                                 <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">ORC No:</span>
-                                <strong className="text-[#0F5132] dark:text-emerald-400">{formData.businessRegistrationNumber.trim()}</strong>
+                                <strong className="text-[#16A34A] dark:text-emerald-400">{formData.businessRegistrationNumber.trim()}</strong>
                               </span>
                             )}
                             {formData.tinNumber.trim() && (
@@ -2531,14 +2708,14 @@ export default function RegisterPage() {
                       <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-2 flex-wrap">
                         <div>
                           <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Simulated Net Escrow Yield</dt>
-                          <dd className="font-mono font-extrabold text-[#0F5132] dark:text-emerald-400">
+                          <dd className="font-mono font-extrabold text-[#16A34A] dark:text-emerald-400">
                             GH₵ {(earningsRatePerUnit * earningsUnitCount).toLocaleString()}{' '}
                             <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">
                               ({earningsUnitCount} × GH₵ {earningsRatePerUnit.toLocaleString()})
                             </span>
                           </dd>
                         </div>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-[#0F5132] dark:text-emerald-300 text-[10px] font-mono font-extrabold border border-emerald-300/70 dark:border-emerald-800">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-[#16A34A] dark:text-emerald-300 text-[10px] font-mono font-extrabold border border-emerald-300/70 dark:border-emerald-800">
                           0% Host Fee • 100% Remitted
                         </span>
                       </div>
@@ -2690,7 +2867,7 @@ export default function RegisterPage() {
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#0F5132] dark:text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#16A34A] dark:text-emerald-400 shrink-0">
                           <ClipboardCheck className="w-4 h-4" />
                         </div>
                         <div>
@@ -2755,7 +2932,7 @@ export default function RegisterPage() {
                                 onChange={(e) =>
                                   setDeedChecklist((prev) => ({ ...prev, [item.id]: e.target.checked }))
                                 }
-                                className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#0F5132] focus:ring-[#0F5132] cursor-pointer shrink-0"
+                                className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer shrink-0"
                               />
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -2799,7 +2976,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#0F5132] dark:text-emerald-400 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#16A34A] dark:text-emerald-400 shrink-0">
                       <Gift className="w-4 h-4" />
                     </div>
                     <div>
@@ -2917,7 +3094,7 @@ export default function RegisterPage() {
                             setPromoInput(chip);
                             verifyPromo(chip);
                           }}
-                          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-zinc-800 text-zinc-600 hover:text-[#0F5132] dark:text-zinc-300 dark:hover:text-emerald-300 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 transition cursor-pointer"
+                          className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-zinc-800 text-zinc-600 hover:text-[#16A34A] dark:text-zinc-300 dark:hover:text-emerald-300 border border-zinc-200 dark:border-zinc-700 hover:border-emerald-300 transition cursor-pointer"
                         >
                           +{chip}
                         </button>
@@ -2931,7 +3108,7 @@ export default function RegisterPage() {
               <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-linear-to-b from-zinc-50/80 to-zinc-100/40 dark:from-zinc-900/60 dark:to-zinc-950/40 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
                     <span>Statutory Compliance & Escrow Protection</span>
                   </span>
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-300/60 dark:border-emerald-800/60">
@@ -2944,7 +3121,7 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {/* Seal 1: Act 843 Privacy */}
                   <div className="p-2.5 rounded-lg border border-emerald-200/80 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/30 flex items-start gap-2">
-                    <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[#0F5132] dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-6 h-6 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] dark:text-emerald-300 flex items-center justify-center shrink-0 mt-0.5">
                       <ShieldCheck className="w-3.5 h-3.5" />
                     </div>
                     <div className="min-w-0">
@@ -3001,7 +3178,7 @@ export default function RegisterPage() {
               {/* "What Happens Next?" Post-Registration Expectations Roadmap (#7) */}
               <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20 p-3.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#0F5132] dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-[#16A34A] dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
                     <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>What Happens After You Submit?</span>
                   </span>
@@ -3014,10 +3191,10 @@ export default function RegisterPage() {
                   {/* Step 1: Email Verification */}
                   <div className="p-2.5 rounded-lg bg-white/90 dark:bg-zinc-900/70 border border-emerald-200/60 dark:border-emerald-900/40 flex flex-col justify-between gap-1.5">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0F5132] text-white text-[10px] font-bold font-mono">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#16A34A] text-white text-[10px] font-bold font-mono">
                         1
                       </span>
-                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-[#0F5132] dark:text-emerald-300">
+                      <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-emerald-100/80 dark:bg-emerald-950/80 text-[#16A34A] dark:text-emerald-300">
                         ~1 min
                       </span>
                     </div>
@@ -3038,7 +3215,7 @@ export default function RegisterPage() {
                   {/* Step 2: Role-specific KYC */}
                   <div className="p-2.5 rounded-lg bg-white/90 dark:bg-zinc-900/70 border border-emerald-200/60 dark:border-emerald-900/40 flex flex-col justify-between gap-1.5">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0F5132] text-white text-[10px] font-bold font-mono">
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#16A34A] text-white text-[10px] font-bold font-mono">
                         2
                       </span>
                       <span className="text-[9px] font-mono font-semibold px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300">
