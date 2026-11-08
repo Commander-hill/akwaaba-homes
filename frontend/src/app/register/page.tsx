@@ -847,8 +847,8 @@ export default function RegisterPage() {
               src="/images/auth/register-hero-banner.webp"
               alt="Find. Book. Live. With Confidence. - AkwaabaHomes verified accommodations"
               fill
-              sizes="55vw"
-              className={`object-cover object-left-top transition-opacity duration-700 ease-out select-none ${
+              sizes="(min-width: 1024px) 60vw, 100vw"
+              className={`object-fill transition-opacity duration-700 ease-out select-none ${
                 isHost ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
               priority
@@ -859,7 +859,7 @@ export default function RegisterPage() {
               src="/images/hero_accra_apartment.png"
               alt="Verified student residences and apartments managed by Akwaaba hosts"
               fill
-              sizes="55vw"
+              sizes="(min-width: 1024px) 60vw, 100vw"
               className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
                 isHost ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
@@ -964,7 +964,7 @@ export default function RegisterPage() {
       })()}
 
       {/* ──── RIGHT COLUMN: REGISTRATION FORM (48% Desktop, 100% Mobile) ──── */}
-      <div className="w-full lg:w-[48%] xl:w-[44%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
+      <div className="w-full lg:w-[45%] xl:w-[40%] 2xl:w-[38%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-8 lg:p-10 xl:p-12 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
         
         {/* Top Header: Brand + Theme Toggle + Sign In */}
         <div className="flex items-center justify-between">
