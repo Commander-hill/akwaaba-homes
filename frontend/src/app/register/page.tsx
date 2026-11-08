@@ -232,6 +232,8 @@ export default function RegisterPage() {
     payoutProvider: 'MTN',
     payoutAccountNumber: '',
     useRegisteredPhoneForMoMo: true,
+    tinNumber: '',
+    businessRegistrationNumber: '',
     
     // Security
     password: '',
@@ -1626,6 +1628,62 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
+                  {/* Statutory Tax & Business Registration (ORC / GRA) */}
+                  <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
+                        <span className="text-xs font-bold text-zinc-900 dark:text-white">
+                          Business Registration &amp; Tax ID
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? 'Recommended for Companies' : 'Optional'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* ORC Registration No */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                            Registrar General (ORC) No.
+                          </label>
+                          <span className="text-[9.5px] font-mono text-zinc-400">e.g. CS123452021 / BN-4491</span>
+                        </div>
+                        <input
+                          type="text"
+                          className={`${inputClass} font-mono uppercase`}
+                          value={formData.businessRegistrationNumber}
+                          onChange={(e) => setFormData({ ...formData, businessRegistrationNumber: e.target.value.toUpperCase() })}
+                          placeholder="CS / BN / CA Registration No."
+                        />
+                      </div>
+
+                      {/* GRA TIN */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                            GRA Taxpayer ID (TIN)
+                          </label>
+                          <span className="text-[9.5px] font-mono text-zinc-400">e.g. P0012345678 / C00...</span>
+                        </div>
+                        <input
+                          type="text"
+                          className={`${inputClass} font-mono uppercase`}
+                          value={formData.tinNumber}
+                          onChange={(e) => setFormData({ ...formData, tinNumber: e.target.value.toUpperCase() })}
+                          placeholder="P00 / C00 Taxpayer TIN"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0" />
+                      <span>Accelerates corporate verified badge &amp; statutory Rent Act (Act 220) withholding tax receipts.</span>
+                    </div>
+                  </div>
+
                   {/* Preferred Escrow Payout Settlement Pre-Configuration */}
                   <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-3">
                     <div className="flex items-center justify-between">
@@ -2379,6 +2437,25 @@ export default function RegisterPage() {
                           {primaryRegionLabels[formData.primaryRegion] || formData.primaryRegion}
                         </dd>
                       </div>
+                      {(formData.businessRegistrationNumber.trim() || formData.tinNumber.trim()) && (
+                        <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                          <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Business Registration &amp; Tax ID</dt>
+                          <dd className="font-mono text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-3 flex-wrap mt-0.5">
+                            {formData.businessRegistrationNumber.trim() && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">ORC No:</span>
+                                <strong className="text-[#0F5132] dark:text-emerald-400">{formData.businessRegistrationNumber.trim()}</strong>
+                              </span>
+                            )}
+                            {formData.tinNumber.trim() && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">GRA TIN:</span>
+                                <strong className="text-zinc-700 dark:text-zinc-300">{formData.tinNumber.trim()}</strong>
+                              </span>
+                            )}
+                          </dd>
+                        </div>
+                      )}
                       <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
                         <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Preferred Escrow Settlement Rail</dt>
                         <dd className="font-semibold text-zinc-950 dark:text-white flex items-center flex-wrap gap-1.5 mt-0.5">

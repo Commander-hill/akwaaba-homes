@@ -250,7 +250,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
       isStudent, avatarUrl, promoCode, referralCode, referredBy: incomingReferredBy,
       hostEntityType, businessName, primaryRegion, portfolioSize,
-      payoutMethod, payoutProvider, payoutAccountNumber
+      payoutMethod, payoutProvider, payoutAccountNumber,
+      tinNumber, businessRegistrationNumber
     } = req.body;
 
     if (!email || !password || !firstName || !lastName || !role) {
@@ -338,6 +339,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         payoutMethod: safeRole === 'LANDLORD' ? (payoutMethod || 'MOMO') : null,
         payoutProvider: safeRole === 'LANDLORD' && payoutProvider ? String(payoutProvider).trim() : null,
         payoutAccountNumber: safeRole === 'LANDLORD' && payoutAccountNumber ? String(payoutAccountNumber).trim() : null,
+        tinNumber: safeRole === 'LANDLORD' && tinNumber ? String(tinNumber).trim().toUpperCase() : null,
+        businessRegistrationNumber: safeRole === 'LANDLORD' && businessRegistrationNumber ? String(businessRegistrationNumber).trim().toUpperCase() : null,
         referralCode: generatedReferralCode,
         referredBy: appliedCode,
         isEmailVerified: false,

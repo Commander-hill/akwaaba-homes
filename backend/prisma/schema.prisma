@@ -51,6 +51,8 @@ model User {
   payoutMethod               String?   // MOMO, BANK_TRANSFER
   payoutProvider             String?   // MTN, TELECEL, AT, or Ghanaian Commercial Bank Code
   payoutAccountNumber        String?   // MoMo Wallet Number or Commercial Bank Account Number (Optional at signup)
+  tinNumber                  String?   // Ghana Revenue Authority (GRA) Tax Identification Number (Optional)
+  businessRegistrationNumber String?   // Registrar General / ORC Business Registration No. (e.g. CS123452021)
   reputationScore        Float     @default(5.0)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
