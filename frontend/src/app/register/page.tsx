@@ -848,7 +848,7 @@ export default function RegisterPage() {
               alt="Find. Book. Live. With Confidence. - AkwaabaHomes verified accommodations"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
-              className={`object-fill transition-opacity duration-700 ease-out select-none ${
+              className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
                 isHost ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
               priority
