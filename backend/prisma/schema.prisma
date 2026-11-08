@@ -146,6 +146,8 @@ model Property {
 
   isAvailable    Boolean  @default(true)
   approvalStatus String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  isPhysicallyVerified Boolean  @default(false)
+  physicalVerifiedAt   DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -247,6 +249,8 @@ model Booking {
   startDate  DateTime
   endDate    DateTime
   status     String    @default("PENDING")
+  paymentReference String?   // Active Paystack/Hubtel reference for reconciliation
+  holdExpiresAt    DateTime? // Concurrency hold expiry
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -607,6 +611,9 @@ model InspectionChecklist {
   items                   String    // JSON array string of checklist points & statuses (e.g. key handover, wall paint, lighting, plumbing)
   notes                   String?
   photos                  String?   // JSON array of photo URLs
+  latitude                Float?
+  longitude               Float?
+  gpsAccuracyMeters       Float?
   cautionDepositDeduction Float     @default(0)
   deductionReason         String?
   status                  String    @default("COMPLETED") // DRAFT, COMPLETED, DISPUTED, RESOLVED

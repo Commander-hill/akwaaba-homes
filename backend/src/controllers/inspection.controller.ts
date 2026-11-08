@@ -10,7 +10,7 @@ import { safeJsonParse } from '../utils/json';
 export const createOrUpdateInspection = async (req: Request, res: Response): Promise<void> => {
   try {
     const inspectorId = req.user?.id;
-    const { bookingId, type, items, notes, photos, cautionDepositDeduction, deductionReason } = req.body;
+    const { bookingId, type, items, notes, photos, cautionDepositDeduction, deductionReason, latitude, longitude, gpsAccuracyMeters } = req.body;
 
     if (!bookingId || !type || !items) {
       res.status(400).json({ message: 'Booking ID, inspection type, and checklist items are required' });
@@ -78,6 +78,9 @@ export const createOrUpdateInspection = async (req: Request, res: Response): Pro
           photos: photosJson,
           cautionDepositDeduction: parseFloat(cautionDepositDeduction || '0'),
           deductionReason: deductionReason || null,
+          latitude: latitude ? parseFloat(latitude) : null,
+          longitude: longitude ? parseFloat(longitude) : null,
+          gpsAccuracyMeters: gpsAccuracyMeters ? parseFloat(gpsAccuracyMeters) : null,
           status: 'COMPLETED',
           signedAt: new Date()
         }

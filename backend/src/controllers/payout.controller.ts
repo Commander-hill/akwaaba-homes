@@ -237,12 +237,30 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
       async (tx) => {
         const transactions = await tx.transaction.findMany({
           where: { landlordId, status: 'SUCCESS' },
+          include: { booking: true }
         });
 
-        const totalNetEarnings = transactions.reduce((acc, t) => {
+        const now = Date.now();
+        const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+        let totalEligibleNet = 0;
+        let totalEscrowHeldNet = 0;
+
+        for (const t of transactions) {
           const net = t.amount - (t.amount * commissionPct) / 100;
-          return acc + net;
-        }, 0);
+          const bkg = t.booking;
+          const startDateMs = bkg ? new Date(bkg.startDate).getTime() : new Date(t.createdAt).getTime();
+          const isPost24h = now >= (startDateMs + TWENTY_FOUR_HOURS_MS);
+
+          // Escrow protection gate: funds release 24 hours after move-in/start date
+          if (isPost24h || ['CHECKED_IN', 'CHECKED_OUT', 'ACTIVE'].includes(bkg?.status || '')) {
+            totalEligibleNet += net;
+          } else {
+            totalEscrowHeldNet += net;
+          }
+        }
+
+        const totalNetEarnings = totalEligibleNet;
 
         // Sum previous pending, processing, and successful payouts
         const previousPayouts = await tx.payoutRequest.findMany({
@@ -253,7 +271,7 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
         const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
 
         if (amount > availableBalance) {
-          throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`);
+          throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)} (GHS ${totalEscrowHeldNet.toFixed(2)} currently in 24h Move-in Escrow hold).`);
         }
 
         // Atomically create payout record (PENDING state)

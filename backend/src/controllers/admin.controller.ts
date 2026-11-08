@@ -690,6 +690,24 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       }
     }
 
+    // Act 843 Statutory Compliance: Audit log administrative access to sensitive identity PII
+    try {
+      await logAudit(
+        req.user.id,
+        'KYC_PII_DOCUMENT_INSPECTED',
+        'User',
+        user.id,
+        {
+          inspectedUserId: user.id,
+          hasGhanaCard: !!user.ghanaCardNumber,
+          hasLandlordDoc: !!user.landlordDocUrl,
+          complianceAct: 'Act 843 Section 20'
+        },
+        null,
+        req.ip || 'ADMIN_CONSOLE'
+      );
+    } catch (e) {}
+
     res.status(200).json({
       ...user,
       ghanaCardNumber: decryptedCard,

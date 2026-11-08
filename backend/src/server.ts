@@ -400,6 +400,7 @@ process.on('SIGTERM', () => shutdownGracefully('SIGTERM'));
 process.on('SIGINT', () => shutdownGracefully('SIGINT'));
 
 import { cleanupExpiredBookings } from './utils/bookingCleanup';
+import { reconcilePendingPayments } from './utils/paymentReconciliation';
 
 if (process.env.NODE_ENV !== 'test') {
   let listenRetries = 0;

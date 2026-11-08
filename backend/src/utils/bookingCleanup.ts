@@ -11,9 +11,10 @@ export const cleanupExpiredBookings = async (): Promise<number> => {
     const expiredBookings = await prisma.booking.findMany({
       where: {
         status: 'PENDING',
-        createdAt: {
-          lt: expiryThreshold
-        }
+        OR: [
+          { holdExpiresAt: { lt: new Date() } },
+          { createdAt: { lt: expiryThreshold } }
+        ]
       },
       include: {
         bed: true

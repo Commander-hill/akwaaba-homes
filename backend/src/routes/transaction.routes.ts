@@ -6,6 +6,7 @@ import {
   getTenantTransactions, 
   getLandlordEarningsReport,
   handlePaystackWebhook,
+  verifyPaymentStatus,
   downloadReceiptPDF,
   getLandlordFinancialLedger,
   exportGRATaxReport
@@ -15,6 +16,7 @@ const router = Router();
 
 // Unauthenticated public route (verified via HMAC SHA512 signature header)
 router.post('/webhook', handlePaystackWebhook);
+router.get('/verify/:reference', authenticate, verifyPaymentStatus);
 
 router.get('/tenant', authenticate, getTenantTransactions);
 router.get('/landlord', authenticate, authorizeRole(['LANDLORD']), getLandlordCashflows);

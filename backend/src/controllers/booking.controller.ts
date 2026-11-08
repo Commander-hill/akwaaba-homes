@@ -1082,6 +1082,14 @@ export const payBooking = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Persist paymentReference on booking for background reconciliation & verify lookups
+    try {
+      await prisma.booking.update({
+        where: { id: booking.id },
+        data: { paymentReference: reference }
+      });
+    } catch (e) {}
+
     res.status(200).json({ authorization_url: authorizationUrl, reference, isTestMode });
   } catch (error: any) {
     console.error('Error initializing payment:', error.response?.data || error);

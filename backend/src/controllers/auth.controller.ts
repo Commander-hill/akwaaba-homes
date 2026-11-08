@@ -1225,6 +1225,7 @@ export const submitGhanaCard = async (req: Request, res: Response): Promise<void
         ghanaCardBackUrl,
         ghanaCardStatus: 'PENDING',
         ghanaCardRejectionReason: null,
+        kycManualReviewReason: (req.body.simulateNiaDowntime === true ? "NIA_SERVICE_UNAVAILABLE" : null),
       }
     });
 
