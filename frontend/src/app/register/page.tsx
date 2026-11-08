@@ -30,7 +30,10 @@ import {
   Wallet,
   Landmark,
   Calculator,
-  TrendingUp
+  TrendingUp,
+  FileText,
+  Download,
+  ClipboardCheck
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -250,6 +253,9 @@ export default function RegisterPage() {
   const [earningsCycle, setEarningsCycle] = useState<'ACADEMIC_YEAR' | 'SIX_MONTH_LEASE'>('ACADEMIC_YEAR');
   const [earningsRatePerUnit, setEarningsRatePerUnit] = useState<number>(4500);
   const [earningsUnitCount, setEarningsUnitCount] = useState<number>(4);
+
+  // Landlord Pre-Registration Deed & KYC Readiness Checklist (local-only readiness ticks)
+  const [deedChecklist, setDeedChecklist] = useState<Record<string, boolean>>({});
 
   const verifyPromo = async (codeToVerify?: string) => {
     const code = (codeToVerify || promoInput).trim().toUpperCase();
@@ -2419,6 +2425,203 @@ export default function RegisterPage() {
                   )}
                 </dl>
               </div>
+
+              {/* Landlord #4: Pre-Registration Deed & KYC Readiness Checklist */}
+              {formData.role === 'LANDLORD' && (() => {
+                const checklistItems: { id: string; title: string; detail: string; required: boolean }[] = [
+                  {
+                    id: 'ghana_card',
+                    title: 'Ghana Card (NIA) — Front & Back',
+                    detail: 'Name must match the account holder. Used for NIA identity verification.',
+                    required: true,
+                  },
+                  ...(formData.hostEntityType === 'PROPERTY_MANAGER'
+                    ? [
+                        {
+                          id: 'authorization',
+                          title: 'Owner Authorization Letter / Power of Attorney',
+                          detail: "Signed by the property owner, naming you as manager or caretaker, with the owner's Ghana Card copy.",
+                          required: true,
+                        },
+                        {
+                          id: 'owner_deed',
+                          title: "Owner's Proof of Ownership",
+                          detail: 'Land Title Certificate, Lands Commission-stamped Indenture, or Lease Agreement held by the owner.',
+                          required: true,
+                        },
+                      ]
+                    : [
+                        {
+                          id: 'ownership_deed',
+                          title: 'Proof of Ownership',
+                          detail: 'Land Title Certificate, Lands Commission-stamped Indenture, or registered Lease. Allocation papers are accepted pending review.',
+                          required: true,
+                        },
+                      ]),
+                  ...(formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'
+                    ? [
+                        {
+                          id: 'business_reg',
+                          title: 'ORC Business Registration Certificate',
+                          detail: 'Certificate of Incorporation / Business Name Registration from the Office of the Registrar of Companies.',
+                          required: true,
+                        },
+                      ]
+                    : []),
+                  {
+                    id: 'rate_receipt',
+                    title: 'Recent Property Rate Receipt (MMDA)',
+                    detail: 'Latest Metropolitan/Municipal Assembly property rate bill or receipt for the listed address.',
+                    required: false,
+                  },
+                  {
+                    id: 'property_photos',
+                    title: 'Exterior & Room Photos + GhanaPost GPS Address',
+                    detail: 'At least 5 clear photos and the digital address (e.g. AK-039-5028) for each property.',
+                    required: false,
+                  },
+                ];
+
+                const requiredItems = checklistItems.filter((i) => i.required);
+                const readyRequired = requiredItems.filter((i) => deedChecklist[i.id]).length;
+                const readyTotal = checklistItems.filter((i) => deedChecklist[i.id]).length;
+                const readinessPct = Math.round((readyTotal / checklistItems.length) * 100);
+                const allRequiredReady = readyRequired === requiredItems.length;
+
+                const downloadChecklist = () => {
+                  const lines = [
+                    'AKWAABA HOMES — LANDLORD VERIFICATION DOCUMENT CHECKLIST',
+                    `Host Type: ${hostEntityLabels[formData.hostEntityType] || formData.hostEntityType}`,
+                    formData.businessName.trim() ? `Brand: ${formData.businessName.trim()}` : '',
+                    `Prepared for: ${fullNameDisplay || 'New Host'}`,
+                    '',
+                    ...checklistItems.map(
+                      (i) =>
+                        `[${deedChecklist[i.id] ? 'x' : ' '}] ${i.title}${i.required ? ' (REQUIRED)' : ' (Recommended)'}\n    ${i.detail}`
+                    ),
+                    '',
+                    'Upload these from your Landlord Console after signing in.',
+                    'All documents are stored encrypted in line with the Data Protection Act, 2012 (Act 843).',
+                  ].filter((l) => l !== '');
+                  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'akwaaba-landlord-kyc-checklist.txt';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                };
+
+                return (
+                  <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800 flex items-center justify-center text-[#0F5132] dark:text-emerald-400 shrink-0">
+                          <ClipboardCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-zinc-950 dark:text-white">
+                            Deed & KYC Readiness Checklist
+                          </div>
+                          <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                            You&apos;ll upload these after sign-in. Tick what you already have on hand.
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={downloadChecklist}
+                        className="text-[11px] font-bold text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 flex items-center gap-1 shrink-0 cursor-pointer"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Save list</span>
+                      </button>
+                    </div>
+
+                    {/* Readiness Progress */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-[10.5px]">
+                        <span className="font-semibold text-zinc-600 dark:text-zinc-400">
+                          Required documents ready: {readyRequired}/{requiredItems.length}
+                        </span>
+                        <span
+                          className={`font-mono font-bold ${
+                            allRequiredReady ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                          }`}
+                        >
+                          {readinessPct}% ready
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            allRequiredReady ? 'bg-[#16A34A]' : 'bg-amber-500'
+                          }`}
+                          style={{ width: `${readinessPct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Checklist Items */}
+                    <ul className="space-y-1.5">
+                      {checklistItems.map((item) => {
+                        const checked = Boolean(deedChecklist[item.id]);
+                        return (
+                          <li key={item.id}>
+                            <label
+                              className={`flex items-start gap-2.5 p-2.5 rounded-lg border cursor-pointer select-none transition ${
+                                checked
+                                  ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30'
+                                  : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(e) =>
+                                  setDeedChecklist((prev) => ({ ...prev, [item.id]: e.target.checked }))
+                                }
+                                className="mt-0.5 w-4 h-4 rounded border-zinc-300 text-[#0F5132] focus:ring-[#0F5132] cursor-pointer shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <FileText className="w-3 h-3 text-zinc-400 shrink-0" />
+                                  <span className="text-[11.5px] font-bold text-zinc-900 dark:text-white">
+                                    {item.title}
+                                  </span>
+                                  <span
+                                    className={`text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                                      item.required
+                                        ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300'
+                                        : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400'
+                                    }`}
+                                  >
+                                    {item.required ? 'Required' : 'Recommended'}
+                                  </span>
+                                </div>
+                                <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-snug">
+                                  {item.detail}
+                                </p>
+                              </div>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+
+                    <div className="flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                      <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                      <span>
+                        {allRequiredReady
+                          ? 'Great — you can complete verification right after sign-in. Listings go live once documents are approved (typically within 24–48 hrs).'
+                          : "Not ready yet? No problem — you can still create your account now and upload documents later. Listings stay in draft until verification is complete."}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Optional Campus Ambassador / Referral Promo Code Card */}
               <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/70 dark:bg-zinc-900/40 p-4 transition-all">
