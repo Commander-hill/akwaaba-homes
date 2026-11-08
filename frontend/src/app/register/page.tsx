@@ -812,61 +812,124 @@ export default function RegisterPage() {
   return (
     <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (52% Desktop, Full Bleed) ──── */}
-      <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-        <Image
-          src="/images/auth-partnership.jpg"
-          alt="Connecting trusted Ghanaian landlords & verified residents"
-          fill
-          sizes="55vw"
-          className="object-cover object-center transform hover:scale-[1.01] transition-transform duration-1000 ease-out"
-          priority
-        />
+      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (52% Desktop, Full Bleed) — Role-Adaptive ──── */}
+      {(() => {
+        const isHost = formData.role === 'LANDLORD';
+        return (
+          <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
+            {/* Crossfading role imagery (both preloaded so the switch is instant) */}
+            <Image
+              src="/images/auth-partnership.jpg"
+              alt="Connecting trusted Ghanaian landlords & verified residents"
+              fill
+              sizes="55vw"
+              className={`object-cover object-center transition-opacity duration-700 ease-out ${
+                isHost ? 'opacity-0' : 'opacity-100'
+              }`}
+              priority
+            />
+            <Image
+              src="/images/hero_accra_apartment.png"
+              alt="Verified student residences and apartments managed by Akwaaba hosts"
+              fill
+              sizes="55vw"
+              className={`object-cover object-center transition-opacity duration-700 ease-out ${
+                isHost ? 'opacity-100' : 'opacity-0'
+              }`}
+              priority
+            />
 
-        {/* Cinematic Vignette */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
+            {/* Cinematic Vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
 
-        {/* Top-Left Floating Action */}
-        <div className="absolute top-8 left-8 z-10">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
-          >
-            <span>Already registered? Sign in</span>
-            <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
+            {/* Top-Left Floating Action */}
+            <div className="absolute top-8 left-8 z-10">
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+              >
+                <span>Already registered? Sign in</span>
+                <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
 
-        {/* Bottom Overlay Content */}
-        <div className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
-            <span>AKWAABA • VERIFIED PARTNERSHIP</span>
+            {/* Bottom Overlay Content (re-keyed per role to replay the fade-in) */}
+            <div
+              key={isHost ? 'host-hero' : 'tenant-hero'}
+              className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-500"
+            >
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
+                <span>{isHost ? 'AKWAABA • HOST PARTNER PROGRAMME' : 'AKWAABA • VERIFIED PARTNERSHIP'}</span>
+              </div>
+
+              <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
+                {isHost
+                  ? 'List once. Fill every room. Get paid on check-in.'
+                  : 'Connecting trusted landlords & verified residents'}
+              </h2>
+
+              <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
+                {isHost
+                  ? 'Reach verified students and professionals across Ghana. Rent is held in escrow and released straight to your MoMo wallet or bank account when your tenant checks in — with 0% host commission.'
+                  : 'Digital tenancy agreements, instant Paystack payouts, and verified Ghana Card identification uniting property owners and residents across Ghana.'}
+              </p>
+
+              {/* Host value-prop cards */}
+              {isHost && (
+                <div className="grid grid-cols-3 gap-2.5 pt-2 max-w-xl">
+                  {[
+                    { icon: Wallet, title: '0% Host Fee', sub: '100% of listed rent remitted' },
+                    { icon: ShieldCheck, title: 'Escrow-Backed', sub: 'Released at T+0 on check-in' },
+                    { icon: FileText, title: 'Act 220 Leases', sub: 'Auto-generated digital tenancy' },
+                  ].map(({ icon: Icon, title, sub }) => (
+                    <div
+                      key={title}
+                      className="rounded-xl bg-white/10 backdrop-blur-md border border-white/15 px-3 py-2.5"
+                    >
+                      <Icon className="w-4 h-4 text-emerald-400 mb-1" />
+                      <div className="text-xs font-extrabold text-white leading-tight">{title}</div>
+                      <div className="text-[10.5px] text-zinc-300 leading-snug mt-0.5">{sub}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Trust Markers */}
+              <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
+                {isHost ? (
+                  <>
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" /> MTN MoMo • Telecel • AT
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Landmark className="w-3.5 h-3.5 text-emerald-400" /> GIP Bank Settlement
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-emerald-400" /> Act 843 Data Protection
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Listings
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5 text-emerald-400" /> Ghana Card Verified
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-emerald-400" /> KNUST • UG • UCC • ATU
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
-
-          <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-            Connecting trusted landlords &amp; verified residents
-          </h2>
-
-          <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-            Digital tenancy agreements, instant Paystack payouts, and verified Ghana Card identification uniting property owners and residents across Ghana.
-          </p>
-
-          {/* Trust Markers */}
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Listings
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-400" /> Ghana Card Verified
-            </span>
-            <span>•</span>
-            <span className="flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5 text-emerald-400" /> KNUST • UG • UCC • ATU
-            </span>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* ──── RIGHT COLUMN: REGISTRATION FORM (48% Desktop, 100% Mobile) ──── */}
       <div className="w-full lg:w-[48%] xl:w-[44%] min-h-screen lg:h-screen lg:overflow-y-auto flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white dark:bg-[#0E1210] lg:border-l border-zinc-200/80 dark:border-zinc-800/80 relative z-10 shrink-0">
