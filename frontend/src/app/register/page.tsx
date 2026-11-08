@@ -489,6 +489,13 @@ export default function RegisterPage() {
     setError('');
 
     // Final Validations
+    if (!formData.firstName.trim() || !formData.lastName.trim() || formData.phoneNumber.replace(/\D/g, '').length < 9) {
+      triggerError('Please complete your personal and contact details in Step 1.');
+      setIsLoading(false);
+      setCurrentStep(1);
+      return;
+    }
+
     if (!formData.avatarUrl || !formData.avatarUrl.trim()) {
       triggerError('Please upload your profile photo to complete registration.');
       setIsLoading(false);
@@ -499,7 +506,23 @@ export default function RegisterPage() {
     if (!formData.email.trim()) {
       triggerError('Please enter a valid email address.');
       setIsLoading(false);
+      setCurrentStep(2);
       return;
+    }
+
+    if (formData.role === 'LANDLORD') {
+      if (!formData.hostEntityType || !formData.primaryRegion || !formData.portfolioSize) {
+        triggerError('Please complete your host portfolio profile details in Step 2.');
+        setIsLoading(false);
+        setCurrentStep(2);
+        return;
+      }
+      if (formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' && !formData.businessName.trim()) {
+        triggerError('Please enter your registered hostel or business name in Step 2.');
+        setIsLoading(false);
+        setCurrentStep(2);
+        return;
+      }
     }
 
     if (formData.role === 'TENANT') {
