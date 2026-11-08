@@ -844,7 +844,7 @@ export default function RegisterPage() {
           <div className="relative hidden lg:flex flex-col justify-between flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27] p-8 xl:p-12 select-none">
             {/* Background 1: Tenant Scene with Students, Architecture, Wave & Card (Pristine, Zero Baked Text) */}
             <Image
-              src="/images/auth/register-hero-bg.webp"
+              src="/images/auth/register-hero-master-v3.webp"
               alt="AkwaabaHomes verified student accommodations"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
@@ -853,6 +853,16 @@ export default function RegisterPage() {
               }`}
               priority
             />
+
+            {/* Seamless Left Vignette: Soft natural fade across text area, stopping before the student */}
+            {!isHost && (
+              <div 
+                className="absolute inset-y-0 left-0 w-3/5 pointer-events-none z-0"
+                style={{
+                  background: 'linear-gradient(to right, #012E27 0%, #012E27 45%, rgba(1, 46, 39, 0.85) 65%, transparent 100%)',
+                }}
+              />
+            )}
 
             {/* Background 2: Landlord Architecture Scene */}
             <Image
