@@ -919,12 +919,7 @@ export const login2FA = async (req: Request, res: Response): Promise<void> => {
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
   try {
-    let { refreshToken } = req.cookies;
-    
-    // Fallback to request body for environments where 3rd-party cookies are blocked
-    if (!refreshToken && req.body.refreshToken) {
-      refreshToken = req.body.refreshToken;
-    }
+    let refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
     if (!refreshToken) {
       res.status(401).json({ message: 'No refresh token provided' });
@@ -994,7 +989,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     console.error('Refresh error:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(401).json({ message: 'Invalid or expired session' });
   }
 };
 

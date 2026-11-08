@@ -73,9 +73,18 @@ api.interceptors.response.use(
             localStorage.removeItem('akwaaba_refresh_token');
           } catch {}
 
-          const publicPaths = ['/login', '/register', '/admin/login', '/forgot-password', '/reset-password'];
-          if (!publicPaths.includes(window.location.pathname) && window.location.pathname !== '/') {
-            window.location.href = '/login';
+          const currentPath = window.location.pathname;
+          const isProtected = 
+            currentPath.startsWith('/dashboard') || 
+            (currentPath.startsWith('/admin') && currentPath !== '/admin/login') ||
+            currentPath.startsWith('/account') || 
+            currentPath.startsWith('/settings') || 
+            currentPath.startsWith('/bookings') || 
+            currentPath.startsWith('/onboarding') ||
+            currentPath.startsWith('/lease-agreement');
+
+          if (isProtected) {
+            window.location.href = currentPath.startsWith('/admin') ? '/admin/login' : '/login';
           }
         }
         return Promise.reject(refreshError);
