@@ -40,10 +40,14 @@ model User {
   ghanaCardReviewedAt    DateTime?
   ghanaCardReviewedBy    String?
   
-  // Landlord Ownership Verification
+  // Landlord Ownership Verification & Portfolio Profile
   landlordDocUrl             String?   // Ownership Proof / Deed / Business Reg
   isVerifiedLandlord         Boolean   @default(false)
   landlordVerificationStatus String    @default("NOT_SUBMITTED") // NOT_SUBMITTED, PENDING, VERIFIED, REJECTED
+  hostEntityType             String?   // INDIVIDUAL_OWNER, REGISTERED_HOSTEL_COMPANY, PROPERTY_MANAGER
+  businessName               String?   // Optional Hostel or Real Estate Brand Name
+  primaryRegion              String?   // Primary Operating City / Campus Corridor
+  portfolioSize              String?   // 1_TO_5_UNITS, 6_TO_20_ROOMS, 20_PLUS_ROOMS
   reputationScore        Float     @default(5.0)
   isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?

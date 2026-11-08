@@ -215,6 +215,12 @@ export default function RegisterPage() {
     programmeOfStudy: '',
     yearOfStudy: '100',
     studentType: 'UNDERGRADUATE',
+
+    // Landlord & Host Portfolio Info
+    hostEntityType: 'INDIVIDUAL_OWNER',
+    businessName: '',
+    primaryRegion: 'ACCRA_LEGON_UPSA',
+    portfolioSize: '1_TO_5_UNITS',
     
     // Security
     password: '',
@@ -424,6 +430,17 @@ export default function RegisterPage() {
       }
     }
 
+    if (formData.role === 'LANDLORD') {
+      if (!formData.hostEntityType || !formData.primaryRegion || !formData.portfolioSize) {
+        triggerError('Please complete your host portfolio profile details.');
+        return;
+      }
+      if (formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' && !formData.businessName.trim()) {
+        triggerError('Please enter your registered hostel or business name.');
+        return;
+      }
+    }
+
     if (formData.password.length < 8) {
       triggerError('Password must be at least 8 characters long.');
       return;
@@ -539,7 +556,12 @@ export default function RegisterPage() {
         Boolean(formData.dateOfAdmission) &&
         Boolean(formData.programmeOfStudy.trim()) &&
         Boolean(formData.guardianName.trim()) &&
-        formData.guardianPhone.replace(/\D/g, '').length >= 9))
+        formData.guardianPhone.replace(/\D/g, '').length >= 9)) &&
+    (formData.role !== 'LANDLORD' ||
+      (Boolean(formData.hostEntityType) &&
+        Boolean(formData.primaryRegion) &&
+        Boolean(formData.portfolioSize) &&
+        (formData.hostEntityType !== 'REGISTERED_HOSTEL_COMPANY' || Boolean(formData.businessName.trim()))))
   );
 
   const campusLabels: Record<string, string> = {
@@ -550,6 +572,29 @@ export default function RegisterPage() {
     ATU: 'ATU — Accra Technical University',
     UDS: 'UDS — Univ. for Development Studies',
     OTHER: 'Other Tertiary Institution',
+  };
+
+  const hostEntityLabels: Record<string, string> = {
+    INDIVIDUAL_OWNER: 'Individual Property Owner',
+    REGISTERED_HOSTEL_COMPANY: 'Registered Hostel Operator / Company',
+    PROPERTY_MANAGER: 'Accredited Property Manager / Agent',
+  };
+
+  const primaryRegionLabels: Record<string, string> = {
+    ACCRA_LEGON_UPSA: 'Accra — East Legon / UG / UPSA / GIMPA Corridor',
+    ACCRA_METRO: 'Accra — Airport / Cantonments / Osu / Spintex',
+    KUMASI_KNUST: 'Kumasi — KNUST / Ayeduase / Bomso / Kotei',
+    CAPE_COAST_UCC: 'Cape Coast — UCC / Ayensu / Amamoma / Pedu',
+    TAKORADI: 'Sekondi-Takoradi Metro',
+    TAMALE_UDS: 'Tamale — UDS / Nyankpala Corridor',
+    WINNEBA_UEW: 'Winneba / Kasoa / Central Corridor',
+    OTHER_GHANA: 'Other City / Multi-Region Ghana',
+  };
+
+  const portfolioSizeLabels: Record<string, string> = {
+    '1_TO_5_UNITS': '1–5 Units / Apartments',
+    '6_TO_20_ROOMS': '6–20 Rooms (Boutique Hostel / Compound)',
+    '20_PLUS_ROOMS': '20+ Rooms / Multi-Block Student Hostel',
   };
 
   const fullNameDisplay = [formData.firstName, formData.otherNames, formData.lastName]
@@ -851,7 +896,11 @@ export default function RegisterPage() {
                 {currentStep === 1 
                   ? 'Select your role and provide your basic personal details.' 
                   : currentStep === 2
-                  ? 'Set your secure password and university enrollment information.'
+                  ? formData.role === 'LANDLORD'
+                    ? 'Configure your host portfolio profile and account security credentials.'
+                    : formData.isStudent
+                    ? 'Set your secure password and university enrollment information.'
+                    : 'Set your account email and security credentials.'
                   : 'Verify your registration summary before creating your AkwaabaHomes account.'}
               </p>
             </div>
@@ -1334,6 +1383,139 @@ export default function RegisterPage() {
                 </div>
               )}
 
+              {/* Landlord & Host Portfolio Profile Fields (#1) */}
+              {formData.role === 'LANDLORD' && (
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-[#0F5132] dark:text-emerald-400" />
+                      <span>Host &amp; Property Portfolio Profile</span>
+                    </div>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100/80 dark:bg-emerald-950/60 text-[#0F5132] dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
+                      Host Onboarding
+                    </span>
+                  </div>
+
+                  {/* Host Entity Type Selector Cards */}
+                  <div className="space-y-1.5">
+                    <label className={labelClass}>Host Entity Type *</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        {
+                          value: 'INDIVIDUAL_OWNER',
+                          title: 'Individual Owner',
+                          sub: 'Direct private landlord',
+                        },
+                        {
+                          value: 'REGISTERED_HOSTEL_COMPANY',
+                          title: 'Registered Hostel / Co.',
+                          sub: 'Commercial hostel or firm',
+                        },
+                        {
+                          value: 'PROPERTY_MANAGER',
+                          title: 'Property Manager',
+                          sub: 'Authorized caretaker/agent',
+                        },
+                      ].map((item) => {
+                        const isSelected = formData.hostEntityType === item.value;
+                        return (
+                          <button
+                            key={item.value}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, hostEntityType: item.value })}
+                            className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? 'border-[#16A34A] bg-emerald-50/70 dark:bg-emerald-950/40 ring-1 ring-[#16A34A]'
+                                : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[11px] font-bold text-zinc-900 dark:text-white">
+                                {item.title}
+                              </span>
+                              {isSelected && (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                              {item.sub}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Business / Hostel Brand Name */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
+                          Hostel / Property Brand Name{' '}
+                          {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? '*' : ''}
+                        </label>
+                        <span className="text-[10px] font-mono font-semibold text-zinc-400">
+                          {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'
+                            ? 'Required for Registered Hostel'
+                            : 'Optional'}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        required={formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'}
+                        className={inputClass}
+                        value={formData.businessName}
+                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                        placeholder="e.g. Evandy Hostels Ltd, Ayeduase Executive Courts, or Personal Portfolio"
+                      />
+                    </div>
+
+                    {/* Primary Operating City / Campus Zone */}
+                    <div>
+                      <label className={labelClass}>Primary Operating Zone *</label>
+                      <select
+                        required
+                        className={`${inputClass} appearance-none cursor-pointer`}
+                        value={formData.primaryRegion}
+                        onChange={(e) => setFormData({ ...formData, primaryRegion: e.target.value })}
+                      >
+                        <option value="ACCRA_LEGON_UPSA">Accra — East Legon / UG / UPSA / GIMPA</option>
+                        <option value="ACCRA_METRO">Accra — Airport / Cantonments / Osu / Spintex</option>
+                        <option value="KUMASI_KNUST">Kumasi — KNUST / Ayeduase / Bomso / Kotei</option>
+                        <option value="CAPE_COAST_UCC">Cape Coast — UCC / Ayensu / Amamoma</option>
+                        <option value="TAKORADI">Sekondi-Takoradi Metro</option>
+                        <option value="TAMALE_UDS">Tamale — UDS / Nyankpala Corridor</option>
+                        <option value="WINNEBA_UEW">Winneba / Kasoa / Central Corridor</option>
+                        <option value="OTHER_GHANA">Other City / Multi-Region Ghana</option>
+                      </select>
+                    </div>
+
+                    {/* Estimated Portfolio Size */}
+                    <div>
+                      <label className={labelClass}>Estimated Portfolio Size *</label>
+                      <select
+                        required
+                        className={`${inputClass} appearance-none cursor-pointer`}
+                        value={formData.portfolioSize}
+                        onChange={(e) => setFormData({ ...formData, portfolioSize: e.target.value })}
+                      >
+                        <option value="1_TO_5_UNITS">1–5 Units / Residential Apartments</option>
+                        <option value="6_TO_20_ROOMS">6–20 Rooms (Boutique Hostel / Compound)</option>
+                        <option value="20_PLUS_ROOMS">20+ Rooms / Multi-Block Student Hostel</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Host Profile Helper Footnote */}
+                  <div className="pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400 shrink-0 mt-0.5" />
+                    <span>
+                      Your portfolio profile pre-configures your landlord console, Rent Act (Act 220) digital lease templates, and campus demand matching.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* Password Fields & Security Meter */}
               <div className="space-y-3 pt-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1598,7 +1780,9 @@ export default function RegisterPage() {
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#0F5132] dark:text-emerald-400" />
                     <span className="text-xs font-bold text-zinc-950 dark:text-white">
-                      {formData.role === 'TENANT' && formData.isStudent
+                      {formData.role === 'LANDLORD'
+                        ? 'Credentials & Host Portfolio'
+                        : formData.isStudent
                         ? 'Credentials & Campus Enrolment'
                         : 'Account Credentials'}
                     </span>
@@ -1624,6 +1808,37 @@ export default function RegisterPage() {
                       <Check className="w-3 h-3" />
                     </dd>
                   </div>
+
+                  {formData.role === 'LANDLORD' && (
+                    <>
+                      <div className="col-span-2 sm:col-span-1 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Host Entity Type</dt>
+                        <dd className="font-bold text-zinc-950 dark:text-white">
+                          {hostEntityLabels[formData.hostEntityType] || formData.hostEntityType}
+                        </dd>
+                      </div>
+                      <div className="col-span-2 sm:col-span-1 pt-1.5 sm:border-t border-zinc-200/70 dark:border-zinc-800/80">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Portfolio Capacity</dt>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          {portfolioSizeLabels[formData.portfolioSize] || formData.portfolioSize}
+                        </dd>
+                      </div>
+                      {formData.businessName.trim() && (
+                        <div className="col-span-2">
+                          <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Hostel / Property Brand Name</dt>
+                          <dd className="font-bold text-emerald-800 dark:text-emerald-300 truncate">
+                            {formData.businessName.trim()}
+                          </dd>
+                        </div>
+                      )}
+                      <div className="col-span-2">
+                        <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Primary Operating Zone</dt>
+                        <dd className="font-semibold text-zinc-900 dark:text-zinc-100">
+                          {primaryRegionLabels[formData.primaryRegion] || formData.primaryRegion}
+                        </dd>
+                      </div>
+                    </>
+                  )}
 
                   {formData.role === 'TENANT' && formData.isStudent && (
                     <>
