@@ -844,7 +844,7 @@ export default function RegisterPage() {
           <div className="relative hidden lg:flex flex-col justify-between flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27] p-8 xl:p-12 select-none">
             {/* Background 1: Tenant Scene with Students, Architecture, Wave & Card (Pristine, Zero Baked Text) */}
             <Image
-              src="/images/auth/register-hero-master-v3.webp"
+              src="/images/auth/register-hero-clean-v4.webp"
               alt="AkwaabaHomes verified student accommodations"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
@@ -854,15 +854,7 @@ export default function RegisterPage() {
               priority
             />
 
-            {/* Seamless Left Vignette: Soft natural fade across text area, stopping before the student */}
-            {!isHost && (
-              <div 
-                className="absolute inset-y-0 left-0 w-3/5 pointer-events-none z-0"
-                style={{
-                  background: 'linear-gradient(to right, #012E27 0%, #012E27 45%, rgba(1, 46, 39, 0.85) 65%, transparent 100%)',
-                }}
-              />
-            )}
+            
 
             {/* Background 2: Landlord Architecture Scene */}
             <Image
@@ -896,16 +888,16 @@ export default function RegisterPage() {
                     alt="AkwaabaHomes"
                     width={44}
                     height={44}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-sm"
+                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
                     priority
                   />
                 </div>
                 <div className="flex flex-col leading-none">
-                  <div className="flex items-center text-xl xl:text-2xl font-black tracking-tight drop-shadow-xs">
+                  <div className="flex items-center text-xl xl:text-2xl font-black tracking-tight">
                     <span className="text-white">Akwaaba</span>
                     <span className="text-[#22C55E]">Homes</span>
                   </div>
-                  <span className="text-[11px] xl:text-xs font-semibold text-zinc-200/90 tracking-wide mt-1 drop-shadow-xs">
+                  <span className="text-[11px] xl:text-xs font-semibold text-zinc-200/90 tracking-wide mt-1">
                     Live Well. Feel at Home.
                   </span>
                 </div>
@@ -925,13 +917,13 @@ export default function RegisterPage() {
             {!isHost ? (
               <div className="relative z-10 my-auto py-4 xl:py-6 space-y-5 max-w-lg animate-in fade-in duration-500">
                 {/* Headline: High-DPI Real HTML Typography */}
-                <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12] drop-shadow-md">
+                <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12]">
                   Find. Book. Live.<br />
                   <span className="text-[#22C55E]">With Confidence.</span>
                 </h1>
 
                 {/* Subtitle */}
-                <p className="text-xs sm:text-sm xl:text-base text-zinc-200/95 leading-relaxed font-normal max-w-md drop-shadow-xs">
+                <p className="text-xs sm:text-sm xl:text-base text-zinc-200/95 leading-relaxed font-normal max-w-md">
                   Join AkwaabaHomes and get access to verified hostels, apartments and houses across campus and beyond.
                 </p>
 
