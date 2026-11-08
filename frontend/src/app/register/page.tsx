@@ -837,137 +837,81 @@ export default function RegisterPage() {
   return (
     <div className="-mt-16 -mb-16 md:mb-0 min-h-screen w-full flex bg-white dark:bg-[#0E1210] text-zinc-950 dark:text-zinc-100 antialiased overflow-hidden">
       
-      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (Official Brand Logo & Extracted Real High-DPI HTML/CSS Elements) ──── */}
+      {/* ──── LEFT COLUMN: BRAND VISUAL HERO (Exact Master Artwork Match) ──── */}
       {(() => {
         const isHost = formData.role === 'LANDLORD';
         return (
-          <div className="relative hidden lg:flex flex-col justify-between flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27] p-8 xl:p-12 select-none">
-            {/* Background 1: Tenant Scene with Students, Architecture, Wave & Card (Pristine, Zero Baked Text) */}
+          <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27]">
+            {/* 1. Tenant/Student View: Exact Master Artwork */}
             <Image
-              src="/images/auth/register-hero-clean-v4.webp"
-              alt="AkwaabaHomes verified student accommodations"
+              src="/images/auth/register-hero-exact.webp"
+              alt="Find. Book. Live. With Confidence. - AkwaabaHomes verified accommodations"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
-              className={`object-cover object-right transition-opacity duration-700 ease-out pointer-events-none ${
-                isHost ? 'opacity-0' : 'opacity-100'
+              className={`object-fill transition-opacity duration-700 ease-out select-none ${
+                isHost ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
               priority
             />
 
-            
-
-            {/* Background 2: Landlord Architecture Scene */}
+            {/* 2. Landlord/Host View: Host architecture imagery */}
             <Image
               src="/images/hero_accra_apartment.png"
               alt="Verified student residences and apartments managed by Akwaaba hosts"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
-              className={`object-cover object-center transition-opacity duration-700 ease-out pointer-events-none ${
-                isHost ? 'opacity-100' : 'opacity-0'
+              className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
+                isHost ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
               priority
             />
 
-            {/* Vignette for Landlord view */}
-            {isHost && (
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 z-0 pointer-events-none" />
-            )}
-
-            {/* ── TOP BAR: Official House Emblem Logo (/logo-light.png) & Sign In Pill ── */}
-            <div className="relative z-10 flex items-center justify-between w-full">
-              {/* 1. Official AkwaabaHomes Brand House Emblem (/logo-light.png) and Typography */}
+            {/* Invisible clickable home link overlay matching top-left logo location in the artwork */}
+            {!isHost && (
               <Link
                 href="/"
                 title="AkwaabaHomes Home"
-                className="inline-flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-lg cursor-pointer"
+                className="absolute top-6 left-6 w-56 h-16 z-20 focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-lg cursor-pointer"
                 aria-label="AkwaabaHomes Home"
-              >
-                <div className="w-10 h-10 xl:w-11 xl:h-11 flex items-center justify-center shrink-0">
-                  <Image
-                    src="/logo-light.png"
-                    alt="AkwaabaHomes"
-                    width={44}
-                    height={44}
-                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                    priority
-                  />
-                </div>
-                <div className="flex flex-col leading-none">
-                  <div className="flex items-center text-xl xl:text-2xl font-black tracking-tight">
-                    <span className="text-white">Akwaaba</span>
-                    <span className="text-[#22C55E]">Homes</span>
-                  </div>
-                  <span className="text-[11px] xl:text-xs font-semibold text-zinc-200/90 tracking-wide mt-1">
-                    Live Well. Feel at Home.
-                  </span>
-                </div>
-              </Link>
+              />
+            )}
 
-              {/* Top-Right Floating 'Already registered? Sign in' glass pill */}
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 xl:px-4 xl:py-2 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
-              >
-                <span>Already registered? Sign in</span>
-                <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
-
-            {/* ── MIDDLE: 2. Extracted Embedded Text into 100% Real, High-DPI HTML/CSS Elements ── */}
-            {!isHost ? (
-              <div className="relative z-10 my-auto py-4 xl:py-6 space-y-5 max-w-lg animate-in fade-in duration-500">
-                {/* Headline: High-DPI Real HTML Typography */}
-                <h1 className="text-3xl sm:text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12]">
-                  Find. Book. Live.<br />
-                  <span className="text-[#22C55E]">With Confidence.</span>
-                </h1>
-
-                {/* Subtitle */}
-                <p className="text-xs sm:text-sm xl:text-base text-zinc-200/95 leading-relaxed font-normal max-w-md">
-                  Join AkwaabaHomes and get access to verified hostels, apartments and houses across campus and beyond.
-                </p>
-
-                {/* 3 Real Verification Badges */}
-                <div className="space-y-3 pt-1 max-w-sm">
-                  {/* Badge 1: Verified Listings */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <div className="text-xs xl:text-sm font-extrabold text-white leading-tight">Verified Listings</div>
-                      <div className="text-[11px] xl:text-xs text-zinc-300/85 mt-0.5">Trusted & Secure</div>
-                    </div>
-                  </div>
-
-                  {/* Badge 2: Safe Transactions */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <div className="text-xs xl:text-sm font-extrabold text-white leading-tight">Safe Transactions</div>
-                      <div className="text-[11px] xl:text-xs text-zinc-300/85 mt-0.5">Book with Confidence</div>
-                    </div>
-                  </div>
-
-                  {/* Badge 3: 24/7 Support */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
-                      <Phone className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <div className="text-xs xl:text-sm font-extrabold text-white leading-tight">24/7 Support</div>
-                      <div className="text-[11px] xl:text-xs text-zinc-300/85 mt-0.5">We&apos;re Always Here</div>
-                    </div>
-                  </div>
-                </div>
+            {/* Top-Right Floating "Already registered? Sign in" glass pill for Tenant view */}
+            {!isHost && (
+              <div className="absolute top-8 right-8 z-20">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+                >
+                  <span>Already registered? Sign in</span>
+                  <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
               </div>
-            ) : (
-              /* Host / Landlord Overlay Content */
+            )}
+
+            {/* Cinematic Vignette for Host view only */}
+            {isHost && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+            )}
+
+            {/* Top-Left Floating Action for Host view */}
+            {isHost && (
+              <div className="absolute top-8 left-8 z-10">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+                >
+                  <span>Already registered? Sign in</span>
+                  <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            )}
+
+            {/* Bottom Overlay Content for Host role only */}
+            {isHost && (
               <div
                 key="host-hero"
-                className="relative z-10 my-auto py-6 xl:py-8 space-y-4 max-w-xl text-white animate-in fade-in duration-500"
+                className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-500"
               >
                 <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
                   <span>AKWAABA • HOST PARTNER PROGRAMME</span>
@@ -1015,9 +959,6 @@ export default function RegisterPage() {
                 </div>
               </div>
             )}
-
-            {/* ── BOTTOM SPACER: Leaves the authentic bottom wave & card in the artwork completely visible ── */}
-            <div className="relative z-10 h-16 xl:h-20 pointer-events-none" />
           </div>
         );
       })()}
