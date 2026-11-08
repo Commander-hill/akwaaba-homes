@@ -841,66 +841,91 @@ export default function RegisterPage() {
       {(() => {
         const isHost = formData.role === 'LANDLORD';
         return (
-          <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden">
-            {/* Crossfading role imagery (both preloaded so the switch is instant) */}
+          <div className="relative hidden lg:block flex-1 min-h-screen lg:h-screen overflow-hidden bg-[#012E27]">
+            {/* 1. Tenant/Student View: Exact User Reference Artwork ("Find. Book. Live. With Confidence.") */}
             <Image
-              src="/images/auth-partnership.jpg"
-              alt="Connecting trusted Ghanaian landlords & verified residents"
+              src="/images/auth/register-hero-banner.webp"
+              alt="Find. Book. Live. With Confidence. - AkwaabaHomes verified accommodations"
               fill
               sizes="55vw"
-              className={`object-cover object-center transition-opacity duration-700 ease-out ${
-                isHost ? 'opacity-0' : 'opacity-100'
+              className={`object-cover object-left-top transition-opacity duration-700 ease-out select-none ${
+                isHost ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
               priority
             />
+
+            {/* 2. Landlord/Host View: Host architecture imagery */}
             <Image
               src="/images/hero_accra_apartment.png"
               alt="Verified student residences and apartments managed by Akwaaba hosts"
               fill
               sizes="55vw"
-              className={`object-cover object-center transition-opacity duration-700 ease-out ${
-                isHost ? 'opacity-100' : 'opacity-0'
+              className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
+                isHost ? 'opacity-100' : 'opacity-0 pointer-events-none'
               }`}
               priority
             />
 
-            {/* Cinematic Vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-black/20" />
-
-            {/* Top-Left Floating Action */}
-            <div className="absolute top-8 left-8 z-10">
+            {/* Invisible clickable home link overlay matching top-left logo location in the artwork */}
+            {!isHost && (
               <Link
-                href="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
-              >
-                <span>Already registered? Sign in</span>
-                <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
-            </div>
+                href="/"
+                title="AkwaabaHomes Home"
+                className="absolute top-6 left-6 w-56 h-16 z-20 focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-lg cursor-pointer"
+                aria-label="AkwaabaHomes Home"
+              />
+            )}
 
-            {/* Bottom Overlay Content (re-keyed per role to replay the fade-in) */}
-            <div
-              key={isHost ? 'host-hero' : 'tenant-hero'}
-              className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-500"
-            >
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
-                <span>{isHost ? 'AKWAABA • HOST PARTNER PROGRAMME' : 'AKWAABA • VERIFIED PARTNERSHIP'}</span>
+            {/* Top-Right Floating "Already registered? Sign in" glass pill for Tenant view */}
+            {!isHost && (
+              <div className="absolute top-8 right-8 z-20">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+                >
+                  <span>Already registered? Sign in</span>
+                  <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
               </div>
+            )}
 
-              <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
-                {isHost
-                  ? 'List once. Fill every room. Get paid on check-in.'
-                  : 'Connecting trusted landlords & verified residents'}
-              </h2>
+            {/* Cinematic Vignette for Host view only */}
+            {isHost && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+            )}
 
-              <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-                {isHost
-                  ? 'Reach verified students and professionals across Ghana. Rent is held in escrow and released straight to your MoMo wallet or bank account when your tenant checks in — with 0% host commission.'
-                  : 'Digital tenancy agreements, instant Paystack payouts, and verified Ghana Card identification uniting property owners and residents across Ghana.'}
-              </p>
+            {/* Top-Left Floating Action for Host view */}
+            {isHost && (
+              <div className="absolute top-8 left-8 z-10">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold transition shadow-xs cursor-pointer group"
+                >
+                  <span>Already registered? Sign in</span>
+                  <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            )}
 
-              {/* Host value-prop cards */}
-              {isHost && (
+            {/* Bottom Overlay Content for Host role only (Tenant view displays the artwork's baked copy cleanly) */}
+            {isHost && (
+              <div
+                key="host-hero"
+                className="absolute bottom-0 inset-x-0 p-10 xl:p-14 text-white space-y-3 z-10 max-w-2xl animate-in fade-in slide-in-from-bottom-2 duration-500"
+              >
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/20 backdrop-blur-xs border border-emerald-400/30 text-emerald-300 text-[10px] font-mono uppercase tracking-wider font-bold">
+                  <span>AKWAABA • HOST PARTNER PROGRAMME</span>
+                </div>
+
+                <h2 className="text-3xl xl:text-4xl font-black text-white tracking-tight leading-tight">
+                  List once. Fill every room. Get paid on check-in.
+                </h2>
+
+                <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
+                  Reach verified students and professionals across Ghana. Rent is held in escrow and released straight to your MoMo wallet or bank account when your tenant checks in — with 0% host commission.
+                </p>
+
+                {/* Host value-prop cards */}
                 <div className="grid grid-cols-3 gap-2.5 pt-2 max-w-xl">
                   {[
                     { icon: Wallet, title: '0% Host Fee', sub: '100% of listed rent remitted' },
@@ -917,41 +942,23 @@ export default function RegisterPage() {
                     </div>
                   ))}
                 </div>
-              )}
 
-              {/* Trust Markers */}
-              <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
-                {isHost ? (
-                  <>
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-emerald-400" /> MTN MoMo • Telecel • AT
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1.5">
-                      <Landmark className="w-3.5 h-3.5 text-emerald-400" /> GIP Bank Settlement
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-emerald-400" /> Act 843 Data Protection
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Verified Listings
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1.5">
-                      <Check className="w-3.5 h-3.5 text-emerald-400" /> Ghana Card Verified
-                    </span>
-                    <span>•</span>
-                    <span className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-emerald-400" /> KNUST • UG • UCC • ATU
-                    </span>
-                  </>
-                )}
+                {/* Trust Markers */}
+                <div className="pt-2 flex flex-wrap items-center gap-4 text-[11px] text-zinc-300 font-medium">
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-400" /> MTN MoMo • Telecel • AT
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Landmark className="w-3.5 h-3.5 text-emerald-400" /> GIP Bank Settlement
+                  </span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-emerald-400" /> Act 843 Data Protection
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       })()}
