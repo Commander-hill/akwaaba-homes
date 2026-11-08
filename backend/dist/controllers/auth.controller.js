@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = void 0;
+exports.completeMandatory2FASetup = exports.regenerateRecoveryCodes = exports.verify2FASMS = exports.send2FASMS = exports.disable2FA = exports.enable2FA = exports.setup2FA = exports.get2FAStatus = exports.changePassword = exports.resetPassword = exports.forgotPassword = exports.updateProfile = exports.submitStudentVerification = exports.submitLandlordVerification = exports.submitGhanaCard = exports.requestProfileUnlock = exports.getMe = exports.logout = exports.refresh = exports.login2FA = exports.login = exports.verifyEmail = exports.register = exports.verifyPromoCode = exports.CAMPUS_PROMO_CODES = exports.checkEmailAvailability = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const jwt_1 = require("../utils/jwt");
@@ -18,9 +18,205 @@ const socket_1 = require("../socket");
 const cache_1 = __importDefault(require("../utils/cache"));
 const totp_service_1 = require("../utils/totp.service");
 const sms_service_1 = require("../utils/sms.service");
+const checkEmailAvailability = async (req, res) => {
+    try {
+        const rawEmail = req.query.email || req.body?.email;
+        if (!rawEmail || typeof rawEmail !== 'string') {
+            res.status(400).json({ available: false, message: 'Valid email is required.' });
+            return;
+        }
+        const email = rawEmail.trim().toLowerCase();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            res.status(400).json({ available: false, message: 'Invalid email format.' });
+            return;
+        }
+        const existingUser = await prisma_1.default.user.findUnique({
+            where: { email },
+            select: { id: true }
+        });
+        if (existingUser) {
+            res.status(200).json({ available: false, exists: true, message: 'An account with this email already exists.' });
+        }
+        else {
+            res.status(200).json({ available: true, exists: false, message: 'Email is available.' });
+        }
+    }
+    catch (error) {
+        console.error('Error checking email availability:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.checkEmailAvailability = checkEmailAvailability;
+// Ghanaian Campus Partner & Ambassador Promotional Codes
+exports.CAMPUS_PROMO_CODES = {
+    'LEGON2025': {
+        campus: 'UG',
+        campusName: 'University of Ghana (Legon)',
+        title: 'UG Campus Ambassador Welcome Perk',
+        benefit: 'GH₵ 50 Tenancy Legal Fee Subsidy & Priority Booking Placement',
+        badgeText: 'UG Legon Ambassador Partner',
+        badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+        badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+        badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+    },
+    'UG2025': {
+        campus: 'UG',
+        campusName: 'University of Ghana (Legon)',
+        title: 'UG Campus Ambassador Welcome Perk',
+        benefit: 'GH₵ 50 Tenancy Legal Fee Subsidy & Priority Booking Placement',
+        badgeText: 'UG Legon Ambassador Partner',
+        badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+        badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+        badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+    },
+    'KNUST2025': {
+        campus: 'KNUST',
+        campusName: 'Kwame Nkrumah University of Science & Technology',
+        title: 'KNUST Tech Stars Ambassador Perk',
+        benefit: 'Priority Room Lock-in & Free Digital Tenancy Agreement Generation',
+        badgeText: 'KNUST Kumasi Partner',
+        badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+        badgeColor: 'text-amber-800 dark:text-amber-300',
+        badgeBorder: 'border-amber-300 dark:border-amber-800'
+    },
+    'KNUST50': {
+        campus: 'KNUST',
+        campusName: 'Kwame Nkrumah University of Science & Technology',
+        title: 'KNUST Tech Stars Ambassador Perk',
+        benefit: 'GH₵ 50 First-Semester Utility Credit & Priority Lock-in',
+        badgeText: 'KNUST Kumasi Partner',
+        badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
+        badgeColor: 'text-amber-800 dark:text-amber-300',
+        badgeBorder: 'border-amber-300 dark:border-amber-800'
+    },
+    'UCC2025': {
+        campus: 'UCC',
+        campusName: 'University of Cape Coast',
+        title: 'UCC Coastal Scholar Welcome',
+        benefit: 'Zero Caution Deposit Dispute Protection + Move-in Escrow Voucher',
+        badgeText: 'UCC Ambassador Partner',
+        badgeBg: 'bg-blue-50 dark:bg-blue-950/60',
+        badgeColor: 'text-blue-800 dark:text-blue-300',
+        badgeBorder: 'border-blue-300 dark:border-blue-800'
+    },
+    'UPSA2025': {
+        campus: 'UPSA',
+        campusName: 'University of Professional Studies, Accra',
+        title: 'UPSA Leadership & Finance Ambassador Promo',
+        benefit: 'Priority Verified Host Access & GH₵ 40 Escrow Credit',
+        badgeText: 'UPSA Ambassador Partner',
+        badgeBg: 'bg-purple-50 dark:bg-purple-950/60',
+        badgeColor: 'text-purple-800 dark:text-purple-300',
+        badgeBorder: 'border-purple-300 dark:border-purple-800'
+    },
+    'AKWAABA': {
+        campus: 'ALL',
+        campusName: 'All Campuses & Hostels',
+        title: 'Akwaaba Homes Community Welcome Pass',
+        benefit: 'Verified Resident Trust Badge & GH₵ 30 Booking Credit',
+        badgeText: 'Official Akwaaba Partner',
+        badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+        badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+        badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+    },
+    'GIMPA2025': {
+        campus: 'GIMPA',
+        campusName: 'Ghana Institute of Management and Public Administration',
+        title: 'GIMPA Executive Greenhill Welcome',
+        benefit: 'Executive Studio Priority Access + Instant Lease Generation',
+        badgeText: 'GIMPA Ambassador Partner',
+        badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+        badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+        badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+    },
+    'ATU2025': {
+        campus: 'ATU',
+        campusName: 'Accra Technical University',
+        title: 'ATU Technical Scholars Promo',
+        benefit: 'Express Check-in & Verified Student Tenancy Record',
+        badgeText: 'ATU Ambassador Partner',
+        badgeBg: 'bg-teal-50 dark:bg-teal-950/60',
+        badgeColor: 'text-teal-800 dark:text-teal-300',
+        badgeBorder: 'border-teal-300 dark:border-teal-800'
+    }
+};
+const verifyPromoCode = async (req, res) => {
+    try {
+        const rawCode = req.query.code || req.body?.code;
+        if (!rawCode || typeof rawCode !== 'string') {
+            res.status(400).json({ valid: false, message: 'Referral or promo code is required.' });
+            return;
+        }
+        const cleanCode = rawCode.trim().toUpperCase();
+        if (cleanCode.length < 3 || cleanCode.length > 30) {
+            res.status(400).json({ valid: false, message: 'Invalid code format. Codes are typically 4 to 12 characters.' });
+            return;
+        }
+        // 1. Check official campus promotional / partner campaigns
+        if (exports.CAMPUS_PROMO_CODES[cleanCode]) {
+            const promo = exports.CAMPUS_PROMO_CODES[cleanCode];
+            res.status(200).json({
+                valid: true,
+                code: cleanCode,
+                type: 'CAMPUS_PROMO',
+                campus: promo.campus,
+                campusName: promo.campusName,
+                title: promo.title,
+                benefit: promo.benefit,
+                badgeText: promo.badgeText,
+                badgeBg: promo.badgeBg,
+                badgeColor: promo.badgeColor,
+                badgeBorder: promo.badgeBorder
+            });
+            return;
+        }
+        // 2. Check personal student / ambassador referral codes in database
+        const referrer = await prisma_1.default.user.findFirst({
+            where: {
+                referralCode: {
+                    equals: cleanCode,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                campus: true,
+                role: true
+            }
+        });
+        if (referrer) {
+            res.status(200).json({
+                valid: true,
+                code: cleanCode,
+                type: 'AMBASSADOR',
+                campus: referrer.campus || 'ALL',
+                campusName: referrer.campus || 'Akwaaba Network',
+                title: `Referred by ${referrer.firstName} ${referrer.lastName?.charAt(0) || ''}.`,
+                benefit: 'GH₵ 25 Tenancy Booking Credit unlocked upon your first confirmed reservation',
+                badgeText: `Ambassador: ${referrer.firstName} ${referrer.lastName?.charAt(0) || ''}.`,
+                badgeBg: 'bg-emerald-50 dark:bg-emerald-950/60',
+                badgeColor: 'text-[#0F5132] dark:text-emerald-300',
+                badgeBorder: 'border-emerald-300 dark:border-emerald-800'
+            });
+            return;
+        }
+        res.status(404).json({
+            valid: false,
+            message: `Code "${cleanCode}" is unrecognized or has expired. You can clear this field and proceed.`
+        });
+    }
+    catch (error) {
+        console.error('Error verifying referral promo code:', error);
+        res.status(500).json({ valid: false, message: 'Internal server error checking referral code.' });
+    }
+};
+exports.verifyPromoCode = verifyPromoCode;
 const register = async (req, res) => {
     try {
-        const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl } = req.body;
+        const { email, password, role, firstName, lastName, otherNames, phoneNumber, gender, dateOfBirth, nationality, guardianName, guardianPhone, campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType, isStudent, avatarUrl, promoCode, referralCode, referredBy: incomingReferredBy, hostEntityType, businessName, primaryRegion, portfolioSize, payoutMethod, payoutProvider, payoutAccountNumber, tinNumber, businessRegistrationNumber } = req.body;
         if (!email || !password || !firstName || !lastName || !role) {
             res.status(400).json({ message: 'Missing required basic registration fields' });
             return;
@@ -62,6 +258,12 @@ const register = async (req, res) => {
         // Strict defense-in-depth: public registration only allows TENANT or LANDLORD
         const allowedRoles = ['TENANT', 'LANDLORD'];
         const safeRole = allowedRoles.includes(role) ? role : 'TENANT';
+        // Generate unique personal referral code for the new user (e.g., AKW-KWA-A7B2)
+        const namePrefix = (firstName || 'AKW').replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase() || 'AKW';
+        const randomSuffix = crypto_2.default.randomBytes(2).toString('hex').toUpperCase();
+        const generatedReferralCode = `${namePrefix}-${randomSuffix}`;
+        // Normalize incoming referral/promo code if provided
+        const appliedCode = (incomingReferredBy || referralCode || promoCode || '').toString().trim().toUpperCase() || null;
         const user = await prisma_1.default.user.create({
             data: {
                 email: normalizedEmail,
@@ -83,6 +285,17 @@ const register = async (req, res) => {
                 programmeOfStudy: isStudent ? programmeOfStudy : null,
                 yearOfStudy: isStudent ? yearOfStudy : null,
                 studentType: isStudent ? studentType : null,
+                hostEntityType: safeRole === 'LANDLORD' ? (hostEntityType || 'INDIVIDUAL_OWNER') : null,
+                businessName: safeRole === 'LANDLORD' && businessName ? String(businessName).trim() : null,
+                primaryRegion: safeRole === 'LANDLORD' ? (primaryRegion || 'ACCRA_LEGON_UPSA') : null,
+                portfolioSize: safeRole === 'LANDLORD' ? (portfolioSize || '1_TO_5_UNITS') : null,
+                payoutMethod: safeRole === 'LANDLORD' ? (payoutMethod || 'MOMO') : null,
+                payoutProvider: safeRole === 'LANDLORD' && payoutProvider ? String(payoutProvider).trim() : null,
+                payoutAccountNumber: safeRole === 'LANDLORD' && payoutAccountNumber ? String(payoutAccountNumber).trim() : null,
+                tinNumber: safeRole === 'LANDLORD' && tinNumber ? String(tinNumber).trim().toUpperCase() : null,
+                businessRegistrationNumber: safeRole === 'LANDLORD' && businessRegistrationNumber ? String(businessRegistrationNumber).trim().toUpperCase() : null,
+                referralCode: generatedReferralCode,
+                referredBy: appliedCode,
                 isEmailVerified: false,
                 emailVerificationToken: verificationToken
             },
@@ -118,7 +331,7 @@ const register = async (req, res) => {
         <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
           If the button does not open, copy and paste this link into your browser:
         </p>
-        <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+        <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
           ${verifyLink}
         </p>
       `;
@@ -604,11 +817,7 @@ const login2FA = async (req, res) => {
 exports.login2FA = login2FA;
 const refresh = async (req, res) => {
     try {
-        let { refreshToken } = req.cookies;
-        // Fallback to request body for environments where 3rd-party cookies are blocked
-        if (!refreshToken && req.body.refreshToken) {
-            refreshToken = req.body.refreshToken;
-        }
+        let refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
         if (!refreshToken) {
             res.status(401).json({ message: 'No refresh token provided' });
             return;
@@ -668,7 +877,7 @@ const refresh = async (req, res) => {
     }
     catch (error) {
         console.error('Refresh error:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(401).json({ message: 'Invalid or expired session' });
     }
 };
 exports.refresh = refresh;
@@ -876,6 +1085,7 @@ const submitGhanaCard = async (req, res) => {
                 ghanaCardBackUrl,
                 ghanaCardStatus: 'PENDING',
                 ghanaCardRejectionReason: null,
+                kycManualReviewReason: (req.body.simulateNiaDowntime === true ? "NIA_SERVICE_UNAVAILABLE" : null),
             }
         });
         // Bust user cache so next /auth/me returns fresh Ghana Card data
@@ -1167,7 +1377,7 @@ const forgotPassword = async (req, res) => {
       <p style="color:#71717A;font-size:12px;line-height:1.5;margin:16px 0 4px;text-align:center;">
         If the button does not open, copy and paste this link into your browser:
       </p>
-      <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+      <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
         ${resetUrl}
       </p>
     `;

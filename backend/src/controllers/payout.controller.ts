@@ -84,7 +84,7 @@ export const requestPayoutOTP = async (req: Request, res: Response): Promise<voi
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#71717A;margin-bottom:6px;">
               Verification Code
             </div>
-            <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#0F5132;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+            <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#16A34A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
               ${otpCode}
             </div>
             <p style="color:#71717A;font-size:11px;margin:8px 0 0;">
@@ -92,7 +92,7 @@ export const requestPayoutOTP = async (req: Request, res: Response): Promise<voi
             </p>
           </div>
           <p style="color:#71717A;font-size:12px;line-height:1.5;margin:0;">
-            If you did not initiate this withdrawal, please secure your account immediately and contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
+            If you did not initiate this withdrawal, please secure your account immediately and contact <a href="mailto:support@akwaabahomes.com" style="color:#16A34A;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
           </p>
         </div>
       `;

@@ -35,6 +35,7 @@ router.post('/landlord-deeds/:id/attach', adminBreach_controller_1.attachLandlor
 router.get('/properties', admin_controller_1.getAllProperties);
 router.get('/properties/:id', admin_controller_1.getPropertyById);
 router.put('/properties/:id/status', admin_controller_1.updatePropertyApproval);
+router.put('/properties/:id/physical-verification', admin_controller_1.togglePropertyPhysicalVerification);
 // Bookings & Transactions
 router.get('/bookings', admin_controller_1.getAllBookings);
 router.get('/bookings/:id', admin_controller_1.getBookingById);
@@ -44,6 +45,9 @@ router.put('/subscriptions/:id/activate', admin_controller_1.activateSubscriptio
 router.put('/subscriptions/:id/revoke', admin_controller_1.revokeSubscription);
 router.get('/transactions', admin_controller_1.getAllTransactions);
 router.get('/transactions/:id', admin_controller_1.getTransactionById);
+// Landlord Payouts & Disbursements
+router.get('/payouts', admin_controller_1.getAllPayouts);
+router.put('/payouts/:id/status', auth_middleware_1.requireSuperAdmin, admin_controller_1.updatePayoutStatus);
 // Reviews & Reputation
 router.get('/reviews', admin_controller_1.getAllReviews);
 router.get('/reviews/:id', admin_controller_1.getReviewById);
@@ -51,6 +55,7 @@ router.delete('/reviews/:id', admin_controller_1.deleteReview);
 router.put('/reviews/:id/appeal', admin_controller_1.resolveAppeal);
 // Maintenance Tickets
 router.get('/tickets', admin_controller_1.getAllTickets);
+router.get('/tickets/:id', admin_controller_1.getTicketById);
 router.put('/tickets/:id/status', admin_controller_1.adminUpdateTicketStatus);
 // Notices
 router.get('/notices', notice_controller_1.getAllNotices);

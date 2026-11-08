@@ -74,7 +74,7 @@ const requestPayoutOTP = async (req, res) => {
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#71717A;margin-bottom:6px;">
               Verification Code
             </div>
-            <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#0F5132;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+            <div style="font-size:30px;font-weight:800;letter-spacing:6px;color:#16A34A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
               ${otpCode}
             </div>
             <p style="color:#71717A;font-size:11px;margin:8px 0 0;">
@@ -82,7 +82,7 @@ const requestPayoutOTP = async (req, res) => {
             </p>
           </div>
           <p style="color:#71717A;font-size:12px;line-height:1.5;margin:0;">
-            If you did not initiate this withdrawal, please secure your account immediately and contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
+            If you did not initiate this withdrawal, please secure your account immediately and contact <a href="mailto:support@akwaabahomes.com" style="color:#16A34A;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
           </p>
         </div>
       `;
@@ -216,11 +216,26 @@ const requestPayout = async (req, res) => {
         const payout = await prisma_1.default.$transaction(async (tx) => {
             const transactions = await tx.transaction.findMany({
                 where: { landlordId, status: 'SUCCESS' },
+                include: { booking: true }
             });
-            const totalNetEarnings = transactions.reduce((acc, t) => {
+            const now = Date.now();
+            const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+            let totalEligibleNet = 0;
+            let totalEscrowHeldNet = 0;
+            for (const t of transactions) {
                 const net = t.amount - (t.amount * commissionPct) / 100;
-                return acc + net;
-            }, 0);
+                const bkg = t.booking;
+                const startDateMs = bkg ? new Date(bkg.startDate).getTime() : new Date(t.createdAt).getTime();
+                const isPost24h = now >= (startDateMs + TWENTY_FOUR_HOURS_MS);
+                // Escrow protection gate: funds release 24 hours after move-in/start date
+                if (isPost24h || ['CHECKED_IN', 'CHECKED_OUT', 'ACTIVE'].includes(bkg?.status || '')) {
+                    totalEligibleNet += net;
+                }
+                else {
+                    totalEscrowHeldNet += net;
+                }
+            }
+            const totalNetEarnings = totalEligibleNet;
             // Sum previous pending, processing, and successful payouts
             const previousPayouts = await tx.payoutRequest.findMany({
                 where: { landlordId, status: { in: ['PENDING', 'PROCESSING', 'SUCCESS'] } },
@@ -228,7 +243,7 @@ const requestPayout = async (req, res) => {
             const totalPaidOut = previousPayouts.reduce((acc, p) => acc + p.amount, 0);
             const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
             if (amount > availableBalance) {
-                throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)}`);
+                throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)} (GHS ${totalEscrowHeldNet.toFixed(2)} currently in 24h Move-in Escrow hold).`);
             }
             // Atomically create payout record (PENDING state)
             return await tx.payoutRequest.create({

@@ -1,4 +1,16 @@
 import { Request, Response } from 'express';
+export declare const checkEmailAvailability: (req: Request, res: Response) => Promise<void>;
+export declare const CAMPUS_PROMO_CODES: Record<string, {
+    campus: string;
+    campusName: string;
+    title: string;
+    benefit: string;
+    badgeText: string;
+    badgeBg: string;
+    badgeColor: string;
+    badgeBorder: string;
+}>;
+export declare const verifyPromoCode: (req: Request, res: Response) => Promise<void>;
 export declare const register: (req: Request, res: Response) => Promise<void>;
 export declare const verifyEmail: (req: Request, res: Response) => Promise<void>;
 export declare const login: (req: Request, res: Response) => Promise<void>;

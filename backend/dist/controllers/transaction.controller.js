@@ -3,7 +3,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.exportGRATaxReport = exports.getLandlordFinancialLedger = exports.handlePaystackWebhook = exports.getLandlordEarningsReport = exports.downloadReceiptPDF = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
+exports.exportGRATaxReport = exports.getLandlordFinancialLedger = exports.verifyPaymentStatus = exports.fulfillBookingPayment = exports.handlePaystackWebhook = exports.getLandlordEarningsReport = exports.downloadReceiptPDF = exports.getTransactionById = exports.getTenantTransactions = exports.getLandlordCashflows = void 0;
+const axios_1 = __importDefault(require("axios"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const config_service_1 = require("../utils/config.service");
 const pdf_service_1 = require("../utils/pdf.service");
@@ -375,12 +376,8 @@ const handlePaystackWebhook = async (req, res) => {
             res.status(401).json({ message: 'Missing signature header' });
             return;
         }
-        // Verify Paystack HMAC SHA512 Signature using raw body buffer
         const rawPayload = req.rawBody || Buffer.from(JSON.stringify(req.body), 'utf8');
-        const hash = crypto_1.default
-            .createHmac('sha512', secretKey)
-            .update(rawPayload)
-            .digest('hex');
+        const hash = crypto_1.default.createHmac('sha512', secretKey).update(rawPayload).digest('hex');
         const expectedBuf = Buffer.from(hash, 'utf8');
         const actualBuf = Buffer.from(paystackSignature, 'utf8');
         if (expectedBuf.length !== actualBuf.length || !crypto_1.default.timingSafeEqual(expectedBuf, actualBuf)) {
@@ -392,129 +389,15 @@ const handlePaystackWebhook = async (req, res) => {
         if (event === 'charge.success') {
             const reference = data?.reference;
             const bookingId = data?.metadata?.bookingId;
-            let booking = null;
-            if (bookingId) {
-                booking = await prisma_1.default.booking.findUnique({
-                    where: { id: bookingId },
-                    include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
-                });
-            }
-            else if (reference) {
-                const tx = await prisma_1.default.transaction.findFirst({ where: { reference } });
-                if (tx) {
-                    booking = await prisma_1.default.booking.findUnique({
-                        where: { id: tx.bookingId },
-                        include: { property: true, room: true, tenant: { select: { firstName: true, lastName: true, email: true } } }
-                    });
-                }
-            }
-            if (!booking) {
-                console.warn(`[Paystack Webhook] Booking not found for reference: ${reference}, bookingId: ${bookingId}`);
-                res.status(200).json({ message: 'Event acknowledged, booking not found' });
-                return;
-            }
-            // Idempotency: If already COMPLETED, simply respond 200 OK
-            if (booking.status === 'COMPLETED') {
-                res.status(200).json({ message: 'Booking already completed' });
-                return;
-            }
-            // ── SECURITY DEFENSE: REPLAY & DUPLICATE TRANSACTION PREVENTION ──
-            if (reference) {
-                const existingTx = await prisma_1.default.transaction.findFirst({ where: { reference } });
-                if (existingTx) {
-                    console.log(`[Paystack Webhook] Duplicate transaction reference ignored: ${reference}`);
-                    res.status(200).json({ message: 'Transaction reference already recorded' });
-                    return;
-                }
-            }
-            // ── SECURITY DEFENSE: CURRENCY VALIDATION ──
-            if (data?.currency && data.currency.toUpperCase() !== 'GHS') {
-                console.error(`[Paystack Webhook] Currency mismatch for booking ${booking.id}: expected GHS, received ${data.currency}`);
-                res.status(400).json({ message: 'Invalid transaction currency. Only GHS accepted.' });
-                return;
-            }
-            // ── SECURITY DEFENSE: PRICE TAMPERING & AMOUNT MISMATCH GUARD ──
-            const expectedPrice = booking.room ? booking.room.price : 0;
-            const paidAmountGhs = data?.amount ? Number(data.amount) / 100 : expectedPrice;
-            if (expectedPrice > 0 && paidAmountGhs < expectedPrice) {
-                console.error(`[Paystack Webhook] Price tampering blocked for booking ${booking.id}: expected GHS ${expectedPrice}, received GHS ${paidAmountGhs}`);
-                try {
-                    await (0, auditLogger_1.logAudit)(booking.tenantId, 'PAYMENT_PRICE_TAMPERING_BLOCKED', 'Booking', booking.id, { expectedPrice, paidAmountGhs, reference }, null, req.ip || 'PAYSTACK_WEBHOOK');
-                }
-                catch (e) { /* non-blocking */ }
-                res.status(400).json({ message: 'Payment rejected: amount paid does not cover room price.' });
-                return;
-            }
-            // Prepare atomic transaction operations
-            const operations = [
-                prisma_1.default.booking.update({
-                    where: { id: booking.id },
-                    data: { status: 'COMPLETED' }
-                }),
-                prisma_1.default.transaction.create({
-                    data: {
-                        bookingId: booking.id,
-                        tenantId: booking.tenantId,
-                        landlordId: booking.property.landlordId,
-                        propertyId: booking.propertyId,
-                        roomId: booking.roomId,
-                        amount: paidAmountGhs,
-                        reference: reference || `WEBHOOK_${Date.now()}`,
-                        status: 'SUCCESS'
-                    }
-                })
-            ];
-            if (booking.bedId) {
-                operations.push(prisma_1.default.bed.update({
-                    where: { id: booking.bedId },
-                    data: { status: 'BOOKED' }
-                }));
-            }
-            await prisma_1.default.$transaction(operations);
-            // Auto-reject other pending bookings if capacity is full
-            if (booking.roomId && booking.room) {
-                const completedBookings = await prisma_1.default.booking.count({
-                    where: { roomId: booking.roomId, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } }
-                });
-                if (completedBookings >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
-                    await prisma_1.default.booking.updateMany({
-                        where: {
-                            roomId: booking.roomId,
-                            id: { not: booking.id },
-                            status: { in: ['PENDING', 'APPROVED'] }
-                        },
-                        data: { status: 'REJECTED' }
-                    });
-                }
-            }
-            // Dispatch Notifications
-            if (booking.tenant?.email) {
-                await (0, notification_service_1.notifyBookingStatusChanged)({
-                    tenantId: booking.tenantId,
-                    tenantEmail: booking.tenant.email,
-                    tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
-                    propertyTitle: booking.property.title,
-                    status: 'COMPLETED'
-                });
-                await (0, notification_service_1.notifyPaymentReceipt)({
-                    tenantId: booking.tenantId,
-                    tenantEmail: booking.tenant.email,
-                    tenantName: `${booking.tenant.firstName} ${booking.tenant.lastName}`,
-                    propertyTitle: booking.property.title,
-                    amount: data.amount ? data.amount / 100 : booking.room.price,
-                    bookingId: booking.id
-                });
-            }
-            // Real-time Sockets & Cache
-            try {
-                const io = (0, socket_1.getIO)();
-                io.emit('booking_updated', { bookingId: booking.id, propertyId: booking.propertyId });
-                io.emit('property_updated', { propertyId: booking.propertyId });
-                io.to(booking.property.landlordId).emit('financials_updated', { propertyId: booking.propertyId });
-                cache_1.default.flushAll();
-            }
-            catch (e) { }
-            console.log(`[Paystack Webhook] Successfully processed charge.success for booking: ${booking.id}`);
+            const paidAmountGhs = data?.amount ? Number(data.amount) / 100 : undefined;
+            const fulfillResult = await (0, exports.fulfillBookingPayment)({
+                bookingId,
+                reference,
+                paidAmountGhs,
+                channel: data?.channel,
+                ipAddress: req.ip || 'PAYSTACK_WEBHOOK'
+            });
+            console.log('[Paystack Webhook] Charge.success handled:', fulfillResult.message);
         }
         res.status(200).json({ status: 'success' });
     }
@@ -524,6 +407,231 @@ const handlePaystackWebhook = async (req, res) => {
     }
 };
 exports.handlePaystackWebhook = handlePaystackWebhook;
+/**
+ * ── IDEMPOTENT ATOMIC PAYMENT FULFILLMENT ──
+ * Unified handler used by Webhooks, Polling Reconciliation, and Manual Verify
+ */
+const fulfillBookingPayment = async (params) => {
+    const { bookingId, reference, paidAmountGhs, channel, ipAddress, actorId } = params;
+    let booking = null;
+    if (bookingId) {
+        booking = await prisma_1.default.booking.findUnique({
+            where: { id: bookingId },
+            include: { property: true, room: true, tenant: { select: { id: true, firstName: true, lastName: true, email: true } } }
+        });
+    }
+    else if (reference) {
+        booking = await prisma_1.default.booking.findFirst({
+            where: {
+                OR: [
+                    { paymentReference: reference },
+                    { id: reference }
+                ]
+            },
+            include: { property: true, room: true, tenant: { select: { id: true, firstName: true, lastName: true, email: true } } }
+        });
+        if (!booking) {
+            const tx = await prisma_1.default.transaction.findFirst({ where: { reference } });
+            if (tx) {
+                booking = await prisma_1.default.booking.findUnique({
+                    where: { id: tx.bookingId },
+                    include: { property: true, room: true, tenant: { select: { id: true, firstName: true, lastName: true, email: true } } }
+                });
+            }
+        }
+    }
+    if (!booking) {
+        return { success: false, message: 'Booking not found for reference' };
+    }
+    // Idempotency: If already completed
+    if (['COMPLETED', 'ACTIVE', 'CHECKED_IN'].includes(booking.status)) {
+        const existingTx = await prisma_1.default.transaction.findFirst({ where: { bookingId: booking.id } });
+        return { success: true, message: 'Booking already completed', booking, transaction: existingTx };
+    }
+    // Duplicate transaction check
+    if (reference) {
+        const existingTx = await prisma_1.default.transaction.findFirst({ where: { reference } });
+        if (existingTx) {
+            return { success: true, message: 'Transaction reference already recorded', booking, transaction: existingTx };
+        }
+    }
+    const expectedPrice = booking.room ? booking.room.price : (booking.property?.price || 0);
+    const finalPaid = paidAmountGhs !== undefined && paidAmountGhs > 0 ? paidAmountGhs : expectedPrice;
+    // Price tampering validation
+    if (expectedPrice > 0 && finalPaid < expectedPrice) {
+        try {
+            await (0, auditLogger_1.logAudit)(actorId || booking.tenantId, 'PAYMENT_PRICE_TAMPERING_BLOCKED', 'Booking', booking.id, { expectedPrice, finalPaid, reference }, null, ipAddress || 'SYSTEM');
+        }
+        catch (e) { }
+        return { success: false, message: 'Payment rejected: amount paid does not cover room price.' };
+    }
+    const operations = [
+        prisma_1.default.booking.update({
+            where: { id: booking.id },
+            data: {
+                status: 'COMPLETED',
+                paymentReference: reference
+            }
+        }),
+        prisma_1.default.transaction.create({
+            data: {
+                bookingId: booking.id,
+                tenantId: booking.tenantId,
+                landlordId: booking.property.landlordId,
+                propertyId: booking.propertyId,
+                roomId: booking.roomId,
+                amount: finalPaid,
+                reference: reference || ('REF_' + Date.now()),
+                status: 'SUCCESS'
+            }
+        })
+    ];
+    if (booking.bedId) {
+        operations.push(prisma_1.default.bed.update({
+            where: { id: booking.bedId },
+            data: { status: 'BOOKED' }
+        }));
+    }
+    const [updatedBooking, newTx] = await prisma_1.default.$transaction(operations);
+    // Recalibrate Capacity and auto-reject oversubscribed bookings
+    if (booking.roomId && booking.room) {
+        const completedBookings = await prisma_1.default.booking.count({
+            where: { roomId: booking.roomId, status: { in: ['COMPLETED', 'ACTIVE', 'CHECKED_IN'] } }
+        });
+        if (completedBookings >= booking.room.numberOfRooms * booking.room.bedsPerRoom) {
+            await prisma_1.default.booking.updateMany({
+                where: {
+                    roomId: booking.roomId,
+                    id: { not: booking.id },
+                    status: { in: ['PENDING', 'APPROVED'] }
+                },
+                data: { status: 'REJECTED' }
+            });
+        }
+    }
+    // Dispatch Notifications
+    if (booking.tenant?.email) {
+        try {
+            await (0, notification_service_1.notifyBookingStatusChanged)({
+                tenantId: booking.tenantId,
+                tenantEmail: booking.tenant.email,
+                tenantName: booking.tenant.firstName + ' ' + booking.tenant.lastName,
+                propertyTitle: booking.property.title,
+                status: 'COMPLETED'
+            });
+            await (0, notification_service_1.notifyPaymentReceipt)({
+                tenantId: booking.tenantId,
+                tenantEmail: booking.tenant.email,
+                tenantName: booking.tenant.firstName + ' ' + booking.tenant.lastName,
+                propertyTitle: booking.property.title,
+                amount: finalPaid,
+                bookingId: booking.id
+            });
+        }
+        catch (e) { }
+    }
+    // Socket broadcast & Cache flush
+    try {
+        const io = (0, socket_1.getIO)();
+        io.emit('booking_updated', { bookingId: booking.id, propertyId: booking.propertyId });
+        io.emit('property_updated', { propertyId: booking.propertyId });
+        io.to(booking.property.landlordId).emit('financials_updated', { propertyId: booking.propertyId });
+        cache_1.default.flushAll();
+    }
+    catch (e) { }
+    return { success: true, message: 'Payment successfully fulfilled', booking: updatedBooking, transaction: newTx };
+};
+exports.fulfillBookingPayment = fulfillBookingPayment;
+/**
+ * Endpoint for Tenant or Admin to verify payment status on demand
+ * Handles MoMo USSD ongoing/pending states with 202 status
+ */
+const verifyPaymentStatus = async (req, res) => {
+    try {
+        const reference = String(req.params.reference || "");
+        const userId = req.user?.id;
+        if (!reference) {
+            res.status(400).json({ message: 'Transaction reference is required' });
+            return;
+        }
+        // Check if already completed locally
+        const existingTx = await prisma_1.default.transaction.findFirst({
+            where: { reference },
+            include: { booking: true }
+        });
+        if (existingTx) {
+            res.status(200).json({
+                status: 'SUCCESS',
+                message: 'Payment already verified and completed.',
+                transaction: existingTx,
+                booking: existingTx.booking
+            });
+            return;
+        }
+        const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+        const isProduction = process.env.NODE_ENV === 'production';
+        const isTestKey = !paystackKey || paystackKey.startsWith('sk_test_') || paystackKey.includes('replace_with_your_actual');
+        const isTestRef = (!isProduction && isTestKey) && reference.startsWith('BOOKING_TEST_');
+        if (isTestRef) {
+            const bkg = await prisma_1.default.booking.findFirst({
+                where: { OR: [{ paymentReference: reference }, { id: reference }] }
+            });
+            if (bkg) {
+                const fulfill = await (0, exports.fulfillBookingPayment)({
+                    bookingId: bkg.id,
+                    reference,
+                    ipAddress: req.ip,
+                    actorId: userId
+                });
+                res.status(200).json({ status: 'SUCCESS', ...fulfill });
+                return;
+            }
+        }
+        if (!paystackKey) {
+            res.status(500).json({ message: 'Paystack secret key is not configured.' });
+            return;
+        }
+        const paystackRes = await axios_1.default.get('https://api.paystack.co/transaction/verify/' + reference, {
+            headers: { Authorization: 'Bearer ' + paystackKey }
+        });
+        const txData = paystackRes.data?.data;
+        const paystackStatus = txData?.status;
+        const bookingId = txData?.metadata?.bookingId;
+        if (paystackStatus === 'success') {
+            const fulfill = await (0, exports.fulfillBookingPayment)({
+                bookingId,
+                reference,
+                paidAmountGhs: txData.amount ? txData.amount / 100 : undefined,
+                channel: txData.channel,
+                ipAddress: req.ip,
+                actorId: userId
+            });
+            res.status(200).json({ status: 'SUCCESS', ...fulfill });
+            return;
+        }
+        else if (['ongoing', 'pending', 'processing'].includes(paystackStatus)) {
+            res.status(202).json({
+                status: 'PENDING',
+                message: 'Mobile Money authorization prompt is active. Please confirm the prompt on your mobile phone and enter your MoMo PIN.',
+                reference
+            });
+            return;
+        }
+        else {
+            res.status(400).json({
+                status: 'FAILED',
+                message: txData?.gateway_response || 'Payment was not approved or timed out on your phone.',
+                reference
+            });
+            return;
+        }
+    }
+    catch (error) {
+        console.error('Error verifying payment status:', error.response?.data || error);
+        res.status(500).json({ message: 'Failed to verify payment status with payment provider' });
+    }
+};
+exports.verifyPaymentStatus = verifyPaymentStatus;
 /**
  * Fetch Landlord Financial Ledger (Gross Revenue, Maintenance Expense Deductions, 5% GRA Tax, Net Yield)
  */

@@ -13,7 +13,7 @@ const json_1 = require("../utils/json");
 const createOrUpdateInspection = async (req, res) => {
     try {
         const inspectorId = req.user?.id;
-        const { bookingId, type, items, notes, photos, cautionDepositDeduction, deductionReason } = req.body;
+        const { bookingId, type, items, notes, photos, cautionDepositDeduction, deductionReason, latitude, longitude, gpsAccuracyMeters } = req.body;
         if (!bookingId || !type || !items) {
             res.status(400).json({ message: 'Booking ID, inspection type, and checklist items are required' });
             return;
@@ -74,6 +74,9 @@ const createOrUpdateInspection = async (req, res) => {
                     photos: photosJson,
                     cautionDepositDeduction: parseFloat(cautionDepositDeduction || '0'),
                     deductionReason: deductionReason || null,
+                    latitude: latitude ? parseFloat(latitude) : null,
+                    longitude: longitude ? parseFloat(longitude) : null,
+                    gpsAccuracyMeters: gpsAccuracyMeters ? parseFloat(gpsAccuracyMeters) : null,
                     status: 'COMPLETED',
                     signedAt: new Date()
                 }

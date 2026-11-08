@@ -203,7 +203,8 @@ const getLandlordDeedAudits = async (req, res) => {
                         id: true,
                         title: true,
                         location: true,
-                        approvalStatus: true
+                        approvalStatus: true,
+                        images: true
                     }
                 }
             },

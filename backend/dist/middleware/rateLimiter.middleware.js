@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.kycRateLimiter = exports.chatRateLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
+exports.kycRateLimiter = exports.chatRateLimiter = exports.apiRateLimiter = exports.uploadRateLimiter = exports.adminRateLimiter = exports.otpRateLimiter = exports.passwordResetRateLimiter = exports.checkEmailRateLimiter = exports.authRateLimiter = exports.loginRateLimiter = void 0;
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 // ─── Login brute-force guard (5 attempts per 15 mins per IP in prod) ──────────
 exports.loginRateLimiter = (0, express_rate_limit_1.default)({
@@ -19,6 +19,15 @@ exports.authRateLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: process.env.NODE_ENV === 'production' ? 15 : 500,
     message: { error: 'Too many authentication requests. Please try again in 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    statusCode: 429,
+});
+// ─── Check email availability limiter (generous to support debounced typing) ───
+exports.checkEmailRateLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000,
+    message: { message: 'Too many email checks. Please wait a moment.' },
     standardHeaders: true,
     legacyHeaders: false,
     statusCode: 429,

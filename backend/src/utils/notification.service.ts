@@ -130,7 +130,7 @@ export const notifyBookingCreated = async (opts: {
       variant: 'primary'
     })}
 
-    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #16A34A;border-radius:6px;padding:12px 16px;margin-top:20px;">
       <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
         <strong>Settlement info:</strong> Rent payouts are transferred directly to your Mobile Money or bank account once the tenancy agreement is signed and check-in is completed.
       </p>
@@ -188,7 +188,7 @@ export const notifyPaymentReceipt = async (opts: {
       variant: 'primary'
     })}
 
-    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin-top:20px;">
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #16A34A;border-radius:6px;padding:12px 16px;margin-top:20px;">
       <p style="color:#71717A;font-size:12px;margin:0;line-height:1.5;">
         <strong>Next steps:</strong> Your official receipt and check-in clearance details are now available in your resident portal.
       </p>
@@ -491,7 +491,7 @@ export const notifyAgreementCompleted = async (opts: {
       ])}
     `, 'Agreement Summary')}
 
-    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #0F5132;border-radius:6px;padding:12px 16px;margin:20px 0;">
+    <div style="background-color:#FAFAFA;border:1px solid #E4E4E7;border-left:3px solid #16A34A;border-radius:6px;padding:12px 16px;margin:20px 0;">
       <p style="margin:0;color:#71717A;font-size:12px;line-height:1.5;">
         <strong>Legal notice:</strong> Under Ghana's Electronic Transactions Act, 2008 (Act 772), this digital agreement is legally binding. You can download and print an official copy anytime from your dashboard.
       </p>

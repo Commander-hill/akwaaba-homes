@@ -38,7 +38,7 @@ export const emailBadgeHtml = (badge: EmailBadge): string => {
 
 export const emailButtonHtml = (action: EmailAction): string => {
   const styles: Record<string, { bg: string; text: string; hoverBg: string }> = {
-    primary: { bg: '#0F5132', text: '#FFFFFF', hoverBg: '#0A3D24' },
+    primary: { bg: '#16A34A', text: '#FFFFFF', hoverBg: '#15803D' },
     accent: { bg: '#18181B', text: '#FFFFFF', hoverBg: '#27272A' },
     secondary: { bg: '#F4F4F5', text: '#18181B', hoverBg: '#E4E4E7' },
     danger: { bg: '#DC2626', text: '#FFFFFF', hoverBg: '#B91C1C' },
@@ -72,7 +72,7 @@ export const emailMetaTableHtml = (rows: EmailMetaRow[]): string => `
         (r, i) => `
       <tr style="border-bottom:${i === rows.length - 1 ? 'none' : '1px solid #F4F4F5'};">
         <td style="padding:7px 0;color:#71717A;font-size:13px;font-weight:500;">${r.label}</td>
-        <td style="padding:7px 0;color:${r.highlight ? '#0F5132' : '#18181B'};font-size:13px;font-weight:${r.highlight ? '700' : '600'};text-align:right;${r.isMono ? 'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;word-break:break-all;' : ''}">${r.value}</td>
+        <td style="padding:7px 0;color:${r.highlight ? '#16A34A' : '#18181B'};font-size:13px;font-weight:${r.highlight ? '700' : '600'};text-align:right;${r.isMono ? 'font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;word-break:break-all;' : ''}">${r.value}</td>
       </tr>
     `
       )
@@ -108,6 +108,20 @@ export const renderInstitutionalEmail = ({
   const logoUrl = customLogoUrl || CLOUDINARY_EMAIL_ASSETS.logo;
   const watermarkUrl = customWatermarkUrl || CLOUDINARY_EMAIL_ASSETS.watermark;
 
+  const upperTag = (categoryTag || '').toUpperCase();
+  const categoryTagStyles: Record<string, { bg: string; border: string; text: string }> = {
+    SECURITY: { bg: '#EBF7EE', border: '#CDEED5', text: '#16A34A' },
+    VERIFICATION: { bg: '#EBF7EE', border: '#CDEED5', text: '#16A34A' },
+    PAYOUT: { bg: '#EBF7EE', border: '#CDEED5', text: '#16A34A' },
+    BOOKING: { bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF' },
+    NOTICE: { bg: '#F4F4F5', border: '#E4E4E7', text: '#52525B' },
+  };
+  const activeTagStyle = categoryTagStyles[upperTag] || {
+    bg: '#F4F4F5',
+    border: '#E4E4E7',
+    text: '#52525B',
+  };
+
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -141,14 +155,14 @@ export const renderInstitutionalEmail = ({
                   </td>
                   <td style="vertical-align:middle;">
                     <div style="font-size:18px;font-weight:800;color:#18181B;letter-spacing:-0.4px;line-height:1.2;">
-                      Akwaaba<span style="color:#0F5132;">Homes</span>
+                      Akwaaba<span style="color:#16A34A;">Homes</span>
                     </div>
                     <div style="color:#71717A;font-size:11px;font-weight:500;margin-top:2px;letter-spacing:0.2px;">
                       Ghana Accommodation &amp; Tenancy Network
                     </div>
                   </td>
                   <td align="right" valign="middle">
-                    <span style="background-color:#F4F4F5;border:1px solid #E4E4E7;color:#52525B;padding:4px 9px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;display:inline-block;">
+                    <span style="background-color:${activeTagStyle.bg};border:1px solid ${activeTagStyle.border};color:${activeTagStyle.text};padding:4px 9px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;display:inline-block;">
                       ${categoryTag}
                     </span>
                   </td>
@@ -173,7 +187,7 @@ export const renderInstitutionalEmail = ({
                     <td style="vertical-align:middle;padding-right:6px;">
                       <img src="${logoUrl}" alt="Akwaaba Homes" width="18" height="18" style="display:block;width:18px;height:18px;object-fit:contain;" />
                     </td>
-                    <td style="vertical-align:middle;font-size:10px;font-weight:700;color:#0F5132;letter-spacing:0.3px;text-transform:uppercase;">
+                    <td style="vertical-align:middle;font-size:10px;font-weight:700;color:#16A34A;letter-spacing:0.3px;text-transform:uppercase;">
                       Verified AkwaabaHomes Notice
                     </td>
                   </tr>
@@ -208,7 +222,7 @@ export const renderInstitutionalEmail = ({
               </p>
               <div style="border-top:1px solid #E4E4E7;margin:12px 0 10px;padding-top:10px;color:#A1A1AA;font-size:10px;line-height:1.5;">
                 &copy; ${currentYear} Akwaaba Homes Ghana Ltd. Regulated under Ghana Data Protection Act, 2012 (Act 843).<br />
-                Accra Central &amp; Kumasi Hubs · For assistance, contact <a href="mailto:support@akwaabahomes.com" style="color:#0F5132;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
+                Accra Central &amp; Kumasi Hubs · For assistance, contact <a href="mailto:support@akwaabahomes.com" style="color:#16A34A;text-decoration:none;font-weight:600;">support@akwaabahomes.com</a>.
               </div>
             </td>
           </tr>

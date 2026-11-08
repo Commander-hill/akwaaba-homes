@@ -997,6 +997,14 @@ const payBooking = async (req, res) => {
             res.status(500).json({ message: 'Paystack payment provider is not configured for production.' });
             return;
         }
+        // Persist paymentReference on booking for background reconciliation & verify lookups
+        try {
+            await prisma_1.default.booking.update({
+                where: { id: booking.id },
+                data: { paymentReference: reference }
+            });
+        }
+        catch (e) { }
         res.status(200).json({ authorization_url: authorizationUrl, reference, isTestMode });
     }
     catch (error) {

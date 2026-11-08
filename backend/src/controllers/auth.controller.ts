@@ -381,7 +381,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
         <p style="color:#71717A;font-size:12px;line-height:1.5;margin:20px 0 4px;text-align:center;">
           If the button does not open, copy and paste this link into your browser:
         </p>
-        <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+        <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
           ${verifyLink}
         </p>
       `;
@@ -1548,7 +1548,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
       <p style="color:#71717A;font-size:12px;line-height:1.5;margin:16px 0 4px;text-align:center;">
         If the button does not open, copy and paste this link into your browser:
       </p>
-      <p style="color:#0F5132;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
+      <p style="color:#16A34A;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;margin:0;text-align:center;">
         ${resetUrl}
       </p>
     `;

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBroadcastHistory = exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getAllTickets = exports.getMaintenanceHistory = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllTransactions = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.toggleAdminStatus = exports.createAdministrator = exports.getAdministrators = exports.searchEntities = exports.getReviewById = exports.getDisputeById = exports.getTransactionById = exports.getSubscriptionById = exports.getBookingById = exports.getPropertyById = exports.getUserById = exports.getAllUsers = exports.getPlatformAnalytics = exports.getActionRequiredQueue = exports.getSystemStats = exports.getAuditLogs = void 0;
+exports.togglePropertyPhysicalVerification = exports.updatePayoutStatus = exports.getAllPayouts = exports.getBroadcastHistory = exports.broadcastNotification = exports.adminUpdateTicketStatus = exports.getTicketById = exports.getAllTickets = exports.getMaintenanceHistory = exports.updateConfig = exports.getConfig = exports.getSystemActivity = exports.resolveAppeal = exports.revokeSubscription = exports.activateSubscription = exports.deleteReview = exports.getAllReviews = exports.verifyLandlord = exports.verifyUserCard = exports.getAllTransactions = exports.getAllSubscriptions = exports.getAllBookings = exports.updatePropertyApproval = exports.getAllProperties = exports.toggleUserProfileLock = exports.toggleUserSuspension = exports.toggleAdminStatus = exports.createAdministrator = exports.getAdministrators = exports.searchEntities = exports.getReviewById = exports.getDisputeById = exports.getTransactionById = exports.getSubscriptionById = exports.getBookingById = exports.getPropertyById = exports.getUserById = exports.getAllUsers = exports.getPlatformAnalytics = exports.getActionRequiredQueue = exports.getSystemStats = exports.getAuditLogs = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const notification_service_1 = require("../utils/notification.service");
 const crypto_1 = require("../utils/crypto");
@@ -291,7 +291,7 @@ const getActionRequiredQueue = async (req, res) => {
                 priority: 'HIGH',
                 title: `Landlord Ownership Deed: ${l.firstName} ${l.lastName}`,
                 description: `Ownership proof deed awaiting statutory verification.`,
-                targetUrl: `/admin/verifications/${l.id}`,
+                targetUrl: `/admin/deeds/${l.id}`,
                 entityId: l.id,
                 createdAt: l.updatedAt || l.createdAt
             })),
@@ -527,6 +527,7 @@ const getAllUsers = async (req, res) => {
                     firstName: true,
                     lastName: true,
                     email: true,
+                    avatarUrl: true,
                     role: true,
                     phoneNumber: true,
                     gender: true,
@@ -656,6 +657,16 @@ const getUserById = async (req, res) => {
                 maskedCard = 'GHA-•••••••••';
             }
         }
+        // Act 843 Statutory Compliance: Audit log administrative access to sensitive identity PII
+        try {
+            await (0, auditLogger_1.logAudit)(req.user.id, 'KYC_PII_DOCUMENT_INSPECTED', 'User', user.id, {
+                inspectedUserId: user.id,
+                hasGhanaCard: !!user.ghanaCardNumber,
+                hasLandlordDoc: !!user.landlordDocUrl,
+                complianceAct: 'Act 843 Section 20'
+            }, null, req.ip || 'ADMIN_CONSOLE');
+        }
+        catch (e) { }
         res.status(200).json({
             ...user,
             ghanaCardNumber: decryptedCard,
@@ -2128,6 +2139,32 @@ const getAllTickets = async (req, res) => {
     }
 };
 exports.getAllTickets = getAllTickets;
+const getTicketById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const ticket = await prisma_1.default.maintenanceTicket.findUnique({
+            where: { id },
+            include: {
+                tenant: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } },
+                property: {
+                    include: {
+                        landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true } }
+                    }
+                }
+            }
+        });
+        if (!ticket) {
+            res.status(404).json({ message: 'Ticket not found' });
+            return;
+        }
+        res.status(200).json(ticket);
+    }
+    catch (error) {
+        console.error('Error fetching ticket by id:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getTicketById = getTicketById;
 const adminUpdateTicketStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -2339,4 +2376,157 @@ const getBroadcastHistory = async (req, res) => {
     }
 };
 exports.getBroadcastHistory = getBroadcastHistory;
+/**
+ * ── ADMIN PAYOUTS & DISBURSEMENTS ──
+ */
+const getAllPayouts = async (req, res) => {
+    try {
+        const page = Math.max(1, parseInt(String(req.query.page || '1'), 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(String(req.query.limit || '20'), 10) || 20));
+        const status = typeof req.query.status === 'string' ? req.query.status : 'ALL';
+        const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+        const skip = (page - 1) * limit;
+        const where = {};
+        if (status !== 'ALL') {
+            where.status = status;
+        }
+        if (search) {
+            where.OR = [
+                { accountName: { contains: search, mode: 'insensitive' } },
+                { accountNumber: { contains: search, mode: 'insensitive' } },
+                { transferReference: { contains: search, mode: 'insensitive' } },
+                { bankOrNetwork: { contains: search, mode: 'insensitive' } },
+                { landlord: { firstName: { contains: search, mode: 'insensitive' } } },
+                { landlord: { lastName: { contains: search, mode: 'insensitive' } } },
+                { landlord: { email: { contains: search, mode: 'insensitive' } } },
+            ];
+        }
+        const [payouts, total, statusCounts] = await Promise.all([
+            prisma_1.default.payoutRequest.findMany({
+                where,
+                include: {
+                    landlord: {
+                        select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            prisma_1.default.payoutRequest.count({ where }),
+            prisma_1.default.payoutRequest.groupBy({
+                by: ['status'],
+                _count: { _all: true },
+                _sum: { amount: true }
+            })
+        ]);
+        const stats = {
+            totalCount: total,
+            pendingCount: 0,
+            pendingSum: 0,
+            processingCount: 0,
+            processingSum: 0,
+            successCount: 0,
+            successSum: 0,
+            failedCount: 0,
+            failedSum: 0
+        };
+        statusCounts.forEach((s) => {
+            const amt = s._sum.amount || 0;
+            const cnt = s._count._all || 0;
+            if (s.status === 'PENDING') {
+                stats.pendingCount = cnt;
+                stats.pendingSum = amt;
+            }
+            else if (s.status === 'PROCESSING') {
+                stats.processingCount = cnt;
+                stats.processingSum = amt;
+            }
+            else if (s.status === 'SUCCESS') {
+                stats.successCount = cnt;
+                stats.successSum = amt;
+            }
+            else if (s.status === 'FAILED') {
+                stats.failedCount = cnt;
+                stats.failedSum = amt;
+            }
+        });
+        res.status(200).json({
+            payouts,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            },
+            stats
+        });
+    }
+    catch (error) {
+        console.error('Error fetching admin payouts:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.getAllPayouts = getAllPayouts;
+const updatePayoutStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, failureReason } = req.body;
+        if (!['PENDING', 'PROCESSING', 'SUCCESS', 'FAILED'].includes(status)) {
+            res.status(400).json({ message: 'Invalid payout status' });
+            return;
+        }
+        const payout = await prisma_1.default.payoutRequest.findUnique({ where: { id } });
+        if (!payout) {
+            res.status(404).json({ message: 'Payout request not found' });
+            return;
+        }
+        const updated = await prisma_1.default.payoutRequest.update({
+            where: { id },
+            data: {
+                status,
+                failureReason: failureReason || null,
+                processedAt: status === 'SUCCESS' ? new Date() : payout.processedAt
+            }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, 'ADMIN_UPDATE_PAYOUT_STATUS', 'PayoutRequest', id, { previousStatus: payout.status }, { newStatus: status, failureReason }, req.ip || 'ADMIN_CONSOLE');
+        res.status(200).json({ message: 'Payout status updated', payout: updated });
+    }
+    catch (error) {
+        console.error('Error updating payout status:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.updatePayoutStatus = updatePayoutStatus;
+/**
+ * ── TOGGLE PROPERTY PHYSICAL VERIFICATION BADGE ──
+ */
+const togglePropertyPhysicalVerification = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { isPhysicallyVerified } = req.body;
+        const property = await prisma_1.default.property.findUnique({ where: { id } });
+        if (!property) {
+            res.status(404).json({ message: 'Property not found' });
+            return;
+        }
+        const updated = await prisma_1.default.property.update({
+            where: { id },
+            data: {
+                isPhysicallyVerified: Boolean(isPhysicallyVerified),
+                physicalVerifiedAt: Boolean(isPhysicallyVerified) ? new Date() : null
+            }
+        });
+        await (0, auditLogger_1.logAudit)(req.user.id, Boolean(isPhysicallyVerified) ? 'PROPERTY_PHYSICAL_VERIFICATION_GRANTED' : 'PROPERTY_PHYSICAL_VERIFICATION_REVOKED', 'Property', id, { isPhysicallyVerified: property.isPhysicallyVerified }, { isPhysicallyVerified: Boolean(isPhysicallyVerified) }, req.ip || 'ADMIN_CONSOLE');
+        res.status(200).json({
+            message: Boolean(isPhysicallyVerified) ? 'Property marked as physically verified' : 'Physical verification badge revoked',
+            property: updated
+        });
+    }
+    catch (error) {
+        console.error('Error toggling physical verification:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+exports.togglePropertyPhysicalVerification = togglePropertyPhysicalVerification;
 //# sourceMappingURL=admin.controller.js.map

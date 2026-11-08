@@ -7,23 +7,32 @@ exports.httpServer = exports.app = void 0;
 require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-// ─── Startup environment validation & graceful fallbacks ─────────────────────
-const crypto_1 = __importDefault(require("crypto"));
 // If REFRESH_JWT_SECRET is missing, safely fallback to JWT_SECRET
 if (!process.env.REFRESH_JWT_SECRET && process.env.JWT_SECRET) {
     process.env.REFRESH_JWT_SECRET = process.env.JWT_SECRET;
 }
-// If ENCRYPTION_KEY is missing, safely derive a deterministic 32-byte hex key from JWT_SECRET
-if (!process.env.ENCRYPTION_KEY && process.env.JWT_SECRET) {
-    process.env.ENCRYPTION_KEY = crypto_1.default.createHash('sha256').update(process.env.JWT_SECRET + '_akwaaba_enc_key').digest('hex');
-    console.warn('⚠️ Notice: ENCRYPTION_KEY not explicitly configured; safely derived from JWT_SECRET.');
-}
-// Strictly required variables to initialize server and database
-const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET'];
+// Strictly required variables to initialize server, database, and cryptographic subsystems
+const REQUIRED_ENV = ['DATABASE_URL', 'JWT_SECRET', 'ENCRYPTION_KEY'];
 const missing = REQUIRED_ENV.filter((k) => !process.env[k]);
 if (missing.length > 0) {
-    console.error(`❌ Missing critical environment variables: ${missing.join(', ')}`);
+    console.error(`❌ FATAL: Missing critical security environment variables: ${missing.join(', ')}`);
     process.exit(1);
+}
+// Enforce independent, high-entropy ENCRYPTION_KEY validation
+if (process.env.ENCRYPTION_KEY) {
+    const encKey = process.env.ENCRYPTION_KEY.trim();
+    const is64Hex = /^[0-9a-fA-F]{64}$/.test(encKey);
+    const is32Bytes = Buffer.from(encKey, 'utf8').length === 32;
+    if (process.env.NODE_ENV === 'production') {
+        if (!is64Hex && !is32Bytes) {
+            console.error('❌ FATAL: Production requires an independent, 64-character hex or 32-byte ENCRYPTION_KEY. Terminating process.');
+            process.exit(1);
+        }
+        if (encKey === process.env.JWT_SECRET) {
+            console.error('❌ FATAL: ENCRYPTION_KEY must be an independent secret and cannot be identical to JWT_SECRET. Terminating process.');
+            process.exit(1);
+        }
+    }
 }
 if (!process.env.PAYSTACK_SECRET_KEY) {
     console.warn('⚠️ Notice: PAYSTACK_SECRET_KEY not set. Financial transactions will require configuration.');
@@ -156,6 +165,11 @@ app.use((0, cors_1.default)({
         const cleanOrigin = origin.replace(/\/$/, '');
         // Explicit exact match
         if (ALLOWED_ORIGIN_SET.has(cleanOrigin)) {
+            return callback(null, true);
+        }
+        // Allow private LAN origins in development (e.g. mobile/tablet testing on 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+        const isPrivateNetwork = /^(http:\/\/|https:\/\/)?(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(cleanOrigin);
+        if (isPrivateNetwork) {
             return callback(null, true);
         }
         // Strictly anchored official Akwaaba Vercel deployments & preview branches

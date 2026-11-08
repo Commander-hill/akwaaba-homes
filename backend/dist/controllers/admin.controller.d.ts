@@ -34,7 +34,17 @@ export declare const getConfig: (req: Request, res: Response) => Promise<void>;
 export declare const updateConfig: (req: Request, res: Response) => Promise<void>;
 export declare const getMaintenanceHistory: (req: Request, res: Response) => Promise<void>;
 export declare const getAllTickets: (req: Request, res: Response) => Promise<void>;
+export declare const getTicketById: (req: Request, res: Response) => Promise<void>;
 export declare const adminUpdateTicketStatus: (req: Request, res: Response) => Promise<void>;
 export declare const broadcastNotification: (req: Request, res: Response) => Promise<void>;
 export declare const getBroadcastHistory: (req: Request, res: Response) => Promise<void>;
+/**
+ * ── ADMIN PAYOUTS & DISBURSEMENTS ──
+ */
+export declare const getAllPayouts: (req: Request, res: Response) => Promise<void>;
+export declare const updatePayoutStatus: (req: Request, res: Response) => Promise<void>;
+/**
+ * ── TOGGLE PROPERTY PHYSICAL VERIFICATION BADGE ──
+ */
+export declare const togglePropertyPhysicalVerification: (req: Request, res: Response) => Promise<void>;
 //# sourceMappingURL=admin.controller.d.ts.map
