@@ -43,6 +43,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import PassportUpload from '@/components/PassportUpload';
 import { getImageUrl } from '@/lib/utils';
+import GhanaCarrierLogo from '@/components/ui/GhanaCarrierLogo';
 
 interface AppliedPromoInfo {
   valid: boolean;
@@ -1219,12 +1220,6 @@ export default function RegisterPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className={labelClass}>Phone Number *</label>
-                    {userCarrier && (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all animate-in fade-in ${userCarrier.badgeBg} ${userCarrier.badgeColor} ${userCarrier.badgeBorder}`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                        <span>{userCarrier.label}</span>
-                      </span>
-                    )}
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
@@ -1233,16 +1228,23 @@ export default function RegisterPage() {
                     <input 
                       type="tel" 
                       required 
-                      className={`${inputClass} pl-10 pr-9 font-mono`} 
+                      className={`${inputClass} pl-10 pr-20 font-mono`} 
                       value={formData.phoneNumber} 
                       onChange={(e) => handlePhoneChange(e.target.value, 'phoneNumber')} 
                       placeholder="054 123 4567" 
                     />
-                    {isUserPhoneValid && (
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-600 dark:text-emerald-400 pointer-events-none">
-                        <CheckCircle2 className="w-4 h-4" />
-                      </div>
-                    )}
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      {userCarrier ? (
+                        <div className="flex items-center gap-1.5 animate-in fade-in duration-200">
+                          <GhanaCarrierLogo carrier={userCarrier.carrier} />
+                          {isUserPhoneValid && (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          )}
+                        </div>
+                      ) : isUserPhoneValid ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      ) : null}
+                    </div>
                   </div>
                   <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 mt-1">
                     {isUserPhoneValid ? (
@@ -1488,12 +1490,6 @@ export default function RegisterPage() {
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label className={labelClass}>Guardian Phone Number *</label>
-                          {guardianCarrier && (
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border transition-all animate-in fade-in ${guardianCarrier.badgeBg} ${guardianCarrier.badgeColor} ${guardianCarrier.badgeBorder}`}>
-                              <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                              <span>{guardianCarrier.label}</span>
-                            </span>
-                          )}
                         </div>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
@@ -1502,16 +1498,23 @@ export default function RegisterPage() {
                           <input 
                             type="tel" 
                             required 
-                            className={`${inputClass} pl-10 pr-9 font-mono`} 
+                            className={`${inputClass} pl-10 pr-20 font-mono`} 
                             value={formData.guardianPhone} 
                             onChange={(e) => handlePhoneChange(e.target.value, 'guardianPhone')} 
                             placeholder="054 123 4567" 
                           />
-                          {isGuardianPhoneValid && (
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-600 dark:text-emerald-400 pointer-events-none">
-                              <CheckCircle2 className="w-4 h-4" />
-                            </div>
-                          )}
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            {guardianCarrier ? (
+                              <div className="flex items-center gap-1.5 animate-in fade-in duration-200">
+                                <GhanaCarrierLogo carrier={guardianCarrier.carrier} />
+                                {isGuardianPhoneValid && (
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                )}
+                              </div>
+                            ) : isGuardianPhoneValid ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            ) : null}
+                          </div>
                         </div>
                         <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 mt-1">
                           {isGuardianPhoneValid ? (
@@ -1833,21 +1836,24 @@ export default function RegisterPage() {
                               <label className="text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
                                 Dedicated MoMo Settlement Number
                               </label>
-                              {payoutMoMoCarrier && (
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${payoutMoMoCarrier.badgeBg} ${payoutMoMoCarrier.badgeColor} ${payoutMoMoCarrier.badgeBorder}`}
-                                >
-                                  {payoutMoMoCarrier.label}
-                                </span>
-                              )}
                             </div>
-                            <input
-                              type="tel"
-                              className={inputClass}
-                              value={formData.payoutAccountNumber}
-                              onChange={(e) => handlePhoneChange(e.target.value, 'payoutAccountNumber')}
-                              placeholder="024 000 0000 (Dedicated Host MoMo Line)"
-                            />
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400">
+                                <span className="text-xs mr-1 select-none">🇬🇭</span>
+                              </div>
+                              <input
+                                type="tel"
+                                className={`${inputClass} pl-10 pr-16 font-mono`}
+                                value={formData.payoutAccountNumber}
+                                onChange={(e) => handlePhoneChange(e.target.value, 'payoutAccountNumber')}
+                                placeholder="024 000 0000 (Dedicated Host MoMo Line)"
+                              />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                {payoutMoMoCarrier ? (
+                                  <GhanaCarrierLogo carrier={payoutMoMoCarrier.carrier} />
+                                ) : null}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -2379,9 +2385,7 @@ export default function RegisterPage() {
                     <dd className="font-mono font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
                       <span>{formData.phoneNumber}</span>
                       {userCarrier && (
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${userCarrier.badgeBg} ${userCarrier.badgeColor} ${userCarrier.badgeBorder}`}>
-                          {userCarrier.label}
-                        </span>
+                        <GhanaCarrierLogo carrier={userCarrier.carrier} />
                       )}
                     </dd>
                   </div>
@@ -2572,9 +2576,7 @@ export default function RegisterPage() {
                         <dd className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5 flex-wrap">
                           <span>{formData.guardianName} &bull; <span className="font-mono">{formData.guardianPhone}</span></span>
                           {guardianCarrier && (
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold border ${guardianCarrier.badgeBg} ${guardianCarrier.badgeColor} ${guardianCarrier.badgeBorder}`}>
-                              {guardianCarrier.label}
-                            </span>
+                            <GhanaCarrierLogo carrier={guardianCarrier.carrier} />
                           )}
                         </dd>
                       </div>
