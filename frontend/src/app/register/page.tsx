@@ -191,6 +191,7 @@ export default function RegisterPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [landlordSubStep, setLandlordSubStep] = useState<1 | 2>(1);
+  const [showTaxDetails, setShowTaxDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -1287,13 +1288,14 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoCapitalize="characters"
                     autoComplete="given-name"
                     enterKeyHint="next"
                     onKeyDown={(e) => handleInputKeyDown(e)}
-                    className={inputClass} 
+                    className={`${inputClass} uppercase`}
                     value={formData.firstName} 
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
-                    placeholder="e.g. Kwame" 
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value.toUpperCase() })} 
+                    placeholder="e.g. KWAME" 
                   />
                 </div>
                 <div>
@@ -1301,26 +1303,28 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoCapitalize="characters"
                     autoComplete="family-name"
                     enterKeyHint="next"
                     onKeyDown={(e) => handleInputKeyDown(e)}
-                    className={inputClass} 
+                    className={`${inputClass} uppercase`}
                     value={formData.lastName} 
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
-                    placeholder="e.g. Mensah" 
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value.toUpperCase() })} 
+                    placeholder="e.g. MENSAH" 
                   />
                 </div>
                 <div className="sm:col-span-2">
                   <label className={labelClass}>Other Names (Optional)</label>
                   <input 
                     type="text" 
+                    autoCapitalize="characters"
                     autoComplete="additional-name"
                     enterKeyHint="next"
                     onKeyDown={(e) => handleInputKeyDown(e)}
-                    className={inputClass} 
+                    className={`${inputClass} uppercase`}
                     value={formData.otherNames} 
-                    onChange={(e) => setFormData({ ...formData, otherNames: e.target.value })} 
-                    placeholder="e.g. Osei" 
+                    onChange={(e) => setFormData({ ...formData, otherNames: e.target.value.toUpperCase() })} 
+                    placeholder="e.g. OSEI" 
                   />
                 </div>
                 {/* User Phone Number with Ghanaian Carrier Detection */}
@@ -1334,6 +1338,8 @@ export default function RegisterPage() {
                     </div>
                     <input 
                       type="tel" 
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       required 
                       autoComplete="tel"
                       enterKeyHint="next"
@@ -1399,13 +1405,14 @@ export default function RegisterPage() {
                   <input 
                     type="text" 
                     required 
+                    autoCapitalize="characters"
                     autoComplete="country-name"
                     enterKeyHint="go"
                     onKeyDown={(e) => handleInputKeyDown(e, handleNextStep)}
-                    className={inputClass} 
+                    className={`${inputClass} uppercase`}
                     value={formData.nationality} 
-                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value })} 
-                    placeholder="Ghanaian" 
+                    onChange={(e) => setFormData({ ...formData, nationality: e.target.value.toUpperCase() })} 
+                    placeholder="GHANAIAN" 
                   />
                 </div>
               </div>
@@ -1595,11 +1602,12 @@ export default function RegisterPage() {
                       <input 
                         type="text" 
                         required 
-                        className={inputClass} 
+                        autoCapitalize="characters"
+                        className={`${inputClass} uppercase font-mono`}
                         value={formData.studentId} 
                         enterKeyHint="next"
                         onKeyDown={(e) => handleInputKeyDown(e)}
-                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
+                        onChange={(e) => setFormData({ ...formData, studentId: e.target.value.toUpperCase() })} 
                         placeholder="e.g. 20849201" 
                       />
                     </div>
@@ -1638,12 +1646,13 @@ export default function RegisterPage() {
                       <input 
                         type="text" 
                         required 
-                        className={inputClass} 
+                        autoCapitalize="characters"
+                        className={`${inputClass} uppercase`}
                         value={formData.programmeOfStudy} 
                         enterKeyHint="next"
                         onKeyDown={(e) => handleInputKeyDown(e)}
-                        onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value })} 
-                        placeholder="e.g. Computer Science" 
+                        onChange={(e) => setFormData({ ...formData, programmeOfStudy: e.target.value.toUpperCase() })} 
+                        placeholder="e.g. BSC. COMPUTER SCIENCE" 
                       />
                     </div>
 
@@ -1653,12 +1662,13 @@ export default function RegisterPage() {
                         <input 
                           type="text" 
                           required 
-                          className={inputClass} 
+                          autoCapitalize="characters"
+                          className={`${inputClass} uppercase`}
                           value={formData.guardianName} 
                           enterKeyHint="next"
                           onKeyDown={(e) => handleInputKeyDown(e)}
-                          onChange={(e) => setFormData({ ...formData, guardianName: e.target.value })} 
-                          placeholder="Parent or Guardian Name" 
+                          onChange={(e) => setFormData({ ...formData, guardianName: e.target.value.toUpperCase() })} 
+                          placeholder="PARENT OR GUARDIAN NAME" 
                         />
                       </div>
                       {/* Guardian Phone Number with Carrier Detection */}
@@ -1672,6 +1682,8 @@ export default function RegisterPage() {
                           </div>
                           <input 
                             type="tel" 
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             required 
                             className={`${inputClass} pl-10 pr-20 font-mono`} 
                             value={formData.guardianPhone} 
@@ -1789,12 +1801,13 @@ export default function RegisterPage() {
                       <input
                         type="text"
                         required={formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY'}
-                        className={inputClass}
+                        autoCapitalize="characters"
+                        className={`${inputClass} uppercase`}
                         value={formData.businessName}
                         enterKeyHint="next"
                         onKeyDown={(e) => handleInputKeyDown(e)}
-                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                        placeholder="e.g. Evandy Hostels Ltd, Ayeduase Executive Courts, or Personal Portfolio"
+                        onChange={(e) => setFormData({ ...formData, businessName: e.target.value.toUpperCase() })}
+                        placeholder="e.g. EVANDY HOSTELS LTD, AYEDUASE EXECUTIVE COURTS"
                       />
                     </div>
 
@@ -1840,65 +1853,87 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
-                  {/* Statutory Tax & Business Registration (ORC / GRA) */}
-                  <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Building2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
-                        <span className="text-xs font-bold text-zinc-900 dark:text-white">
-                          Business Registration &amp; Tax ID
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? 'Recommended for Companies' : 'Optional'}
-                      </span>
-                    </div>
+                  {/* Statutory Tax & Business Registration (ORC / GRA) - Collapsible Optional Drawer */}
+                  {(() => {
+                    const isTaxOpen = showTaxDetails || formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' || Boolean(formData.businessRegistrationNumber.trim()) || Boolean(formData.tinNumber.trim());
+                    return (
+                      <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setShowTaxDetails(!showTaxDetails)}
+                          className="w-full flex items-center justify-between text-left cursor-pointer group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Building2 className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400" />
+                            <span className="text-xs font-bold text-zinc-900 dark:text-white group-hover:text-[#16A34A] transition-colors">
+                              Business Registration &amp; Tax ID (ORC / GRA TIN)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-mono text-zinc-400">
+                              {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? 'Recommended for Companies' : 'Optional'}
+                            </span>
+                            {isTaxOpen ? (
+                              <ChevronUp className="w-4 h-4 text-zinc-400" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-zinc-400" />
+                            )}
+                          </div>
+                        </button>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* ORC Registration No */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
-                            Registrar General (ORC) No.
-                          </label>
-                          <span className="text-[9.5px] font-mono text-zinc-400">e.g. CS123452021 / BN-4491</span>
-                        </div>
-                        <input
-                          type="text"
-                          className={`${inputClass} font-mono uppercase`}
-                          value={formData.businessRegistrationNumber}
-                          enterKeyHint="next"
-                          onKeyDown={(e) => handleInputKeyDown(e)}
-                          onChange={(e) => setFormData({ ...formData, businessRegistrationNumber: e.target.value.toUpperCase() })}
-                          placeholder="CS / BN / CA Registration No."
-                        />
-                      </div>
+                        {isTaxOpen && (
+                          <div className="space-y-2.5 animate-in fade-in duration-200">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* ORC Registration No */}
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                    Registrar General (ORC) No.
+                                  </label>
+                                  <span className="text-[9.5px] font-mono text-zinc-400">e.g. CS123452021 / BN-4491</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  autoCapitalize="characters"
+                                  className={`${inputClass} font-mono uppercase`}
+                                  value={formData.businessRegistrationNumber}
+                                  enterKeyHint="next"
+                                  onKeyDown={(e) => handleInputKeyDown(e)}
+                                  onChange={(e) => setFormData({ ...formData, businessRegistrationNumber: e.target.value.toUpperCase() })}
+                                  placeholder="CS / BN / CA Registration No."
+                                />
+                              </div>
 
-                      {/* GRA TIN */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
-                            GRA Taxpayer ID (TIN)
-                          </label>
-                          <span className="text-[9.5px] font-mono text-zinc-400">e.g. P0012345678 / C00...</span>
-                        </div>
-                        <input
-                          type="text"
-                          className={`${inputClass} font-mono uppercase`}
-                          value={formData.tinNumber}
-                          enterKeyHint="next"
-                          onKeyDown={(e) => handleInputKeyDown(e)}
-                          onChange={(e) => setFormData({ ...formData, tinNumber: e.target.value.toUpperCase() })}
-                          placeholder="P00 / C00 Taxpayer TIN"
-                        />
-                      </div>
-                    </div>
+                              {/* GRA TIN */}
+                              <div>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label className="block text-[11px] font-bold text-zinc-700 dark:text-zinc-300">
+                                    GRA Taxpayer ID (TIN)
+                                  </label>
+                                  <span className="text-[9.5px] font-mono text-zinc-400">e.g. P0012345678 / C00...</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  autoCapitalize="characters"
+                                  className={`${inputClass} font-mono uppercase`}
+                                  value={formData.tinNumber}
+                                  enterKeyHint="next"
+                                  onKeyDown={(e) => handleInputKeyDown(e)}
+                                  onChange={(e) => setFormData({ ...formData, tinNumber: e.target.value.toUpperCase() })}
+                                  placeholder="P00 / C00 Taxpayer TIN"
+                                />
+                              </div>
+                            </div>
 
-                    <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
-                      <span>Accelerates corporate verified badge &amp; statutory Rent Act (Act 220) withholding tax receipts.</span>
-                    </div>
-                  </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-zinc-500 dark:text-zinc-400">
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#16A34A] dark:text-emerald-400 shrink-0" />
+                              <span>Accelerates corporate verified badge &amp; statutory Rent Act (Act 220) withholding tax receipts.</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* Preferred Escrow Payout Settlement Pre-Configuration */}
                   <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800 space-y-3">
@@ -2026,6 +2061,8 @@ export default function RegisterPage() {
                               </div>
                               <input
                                 type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 className={`${inputClass} pl-10 pr-16 font-mono`}
                                 value={formData.payoutAccountNumber}
                                 enterKeyHint="go"
