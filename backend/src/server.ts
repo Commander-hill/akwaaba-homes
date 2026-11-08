@@ -191,6 +191,12 @@ app.use(
         return callback(null, true);
       }
 
+      // Allow private LAN origins in development (e.g. mobile/tablet testing on 192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+      const isPrivateNetwork = /^(http:\/\/|https:\/\/)?(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(cleanOrigin);
+      if (isPrivateNetwork) {
+        return callback(null, true);
+      }
+
       // Strictly anchored official Akwaaba Vercel deployments & preview branches
       const isOfficialVercelPreview = /^https:\/\/(akwaaba-homes[a-z0-9-]*|[a-z0-9-]+-akwaaba-homes[a-z0-9-]*)\.vercel\.app$/.test(cleanOrigin);
       if (isOfficialVercelPreview) {

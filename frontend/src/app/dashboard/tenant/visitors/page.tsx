@@ -60,8 +60,14 @@ export default function TenantVisitorsPage() {
     },
   });
 
+  const bookingsList: any[] = Array.isArray(bookingsData)
+    ? bookingsData
+    : Array.isArray((bookingsData as any)?.bookings)
+    ? (bookingsData as any).bookings
+    : [];
+
   const hasActiveStay = Boolean(
-    (bookingsData || []).some((b: any) =>
+    bookingsList.some((b: any) =>
       ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
     )
   );

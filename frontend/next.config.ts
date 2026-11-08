@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 // Trigger router reload for newly added design-system routes
 const nextConfig: NextConfig = {
+  allowedDevOrigins: [
+    '192.168.189.163',
+    'localhost',
+    '127.0.0.1'
+  ],
   compress: true,
   poweredByHeader: false,
   reactStrictMode: false, // Prevents duplicate renders/network calls in dev mode

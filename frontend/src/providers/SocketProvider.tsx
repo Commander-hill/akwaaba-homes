@@ -23,15 +23,23 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Connect to the root domain, stripping /api or /api/v1 if it exists in NEXT_PUBLIC_API_URL
-    const rawUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-    const socketUrl = rawUrl.replace(/\/api(\/v1)?\/?$/, '');
+    // Connect to root domain, adapting localhost to actual hostname on LAN/mobile
+    const rawUrl = process.env.NEXT_PUBLIC_SOCKET_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    let socketUrl = rawUrl.replace(/\/api(\/v1)?\/?$/, '');
+
+    if (typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (!isLocal && socketUrl.includes('localhost')) {
+        socketUrl = socketUrl.replace('localhost', window.location.hostname);
+      }
+    }
 
     // Socket.io sends the browser's HTTP-only cookies automatically via withCredentials: true
     const socketInstance = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
       reconnection: true,
+      transports: ['websocket', 'polling'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,

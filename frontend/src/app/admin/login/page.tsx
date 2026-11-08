@@ -38,6 +38,11 @@ function AdminLoginForm() {
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCodes, setCopiedCodes] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check if admin is already authenticated
   const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
@@ -239,7 +244,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   };
 
   // Checking Auth State
-  if (isCheckingAuth && !isTimeout) {
+  if (mounted && isCheckingAuth && !isTimeout) {
     return (
       <div className="-mt-16 min-h-screen flex flex-col items-center justify-center bg-[#F4FBF7] text-zinc-900 p-4 space-y-3">
         <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
@@ -249,7 +254,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
   }
 
   // Active Authenticated State
-  if (sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
+  if (mounted && sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
     return (
       <div className="-mt-16 min-h-screen flex items-center justify-center bg-[#F4FBF7] text-[#141816] p-4">
         <div className="max-w-md w-full p-8 bg-white border border-zinc-200/90 rounded-[32px] text-center space-y-5 shadow-[0_20px_50px_rgba(0,0,0,0.08)]">

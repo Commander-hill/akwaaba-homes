@@ -164,13 +164,19 @@ export default function TenantShell({
     staleTime: 60_000,
   });
 
+  const bookingsList: any[] = Array.isArray(bookingsData)
+    ? bookingsData
+    : Array.isArray((bookingsData as any)?.bookings)
+    ? (bookingsData as any).bookings
+    : [];
+
   const hasActiveStay = Boolean(
-    (bookingsData || []).some((b: any) =>
+    bookingsList.some((b: any) =>
       ['ACTIVE', 'CHECKED_IN', 'CONFIRMED', 'APPROVED'].includes(b.status)
     )
   );
 
-  const hasAnyBooking = Boolean((bookingsData || []).length > 0);
+  const hasAnyBooking = Boolean(bookingsList.length > 0);
 
   const liveUnreadCount =
     unreadNotificationsCount > 0
