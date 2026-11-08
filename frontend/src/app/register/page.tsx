@@ -28,7 +28,9 @@ import {
   ChevronDown,
   ChevronUp,
   Wallet,
-  Landmark
+  Landmark,
+  Calculator,
+  TrendingUp
 } from 'lucide-react';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
@@ -242,6 +244,12 @@ export default function RegisterPage() {
   const [isVerifyingPromo, setIsVerifyingPromo] = useState(false);
   const [appliedPromo, setAppliedPromo] = useState<AppliedPromoInfo | null>(null);
   const [promoError, setPromoError] = useState('');
+
+  // Interactive Landlord Earnings & Escrow Fee Transparency Preview State
+  const [showEarningsPreview, setShowEarningsPreview] = useState(true);
+  const [earningsCycle, setEarningsCycle] = useState<'ACADEMIC_YEAR' | 'SIX_MONTH_LEASE'>('ACADEMIC_YEAR');
+  const [earningsRatePerUnit, setEarningsRatePerUnit] = useState<number>(4500);
+  const [earningsUnitCount, setEarningsUnitCount] = useState<number>(4);
 
   const verifyPromo = async (codeToVerify?: string) => {
     const code = (codeToVerify || promoInput).trim().toUpperCase();
@@ -1534,7 +1542,13 @@ export default function RegisterPage() {
                         required
                         className={`${inputClass} appearance-none cursor-pointer`}
                         value={formData.portfolioSize}
-                        onChange={(e) => setFormData({ ...formData, portfolioSize: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({ ...formData, portfolioSize: val });
+                          if (val === '1_TO_5_UNITS') setEarningsUnitCount(4);
+                          else if (val === '6_TO_20_ROOMS') setEarningsUnitCount(12);
+                          else if (val === '20_PLUS_ROOMS') setEarningsUnitCount(30);
+                        }}
                       >
                         <option value="1_TO_5_UNITS">1–5 Units / Residential Apartments</option>
                         <option value="6_TO_20_ROOMS">6–20 Rooms (Boutique Hostel / Compound)</option>
@@ -1721,6 +1735,249 @@ export default function RegisterPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Landlord #3: Interactive Landlord Earnings & Escrow Fee Transparency Preview */}
+                  {(() => {
+                    const grossEscrowRent = earningsRatePerUnit * earningsUnitCount;
+                    const landlordPlatformCommission = 0; // 0% Landlord Fee — 100% of listed rent goes to host
+                    const netInstantPayout = grossEscrowRent - landlordPlatformCommission;
+                    const traditionalAgentCommission = Math.round(grossEscrowRent * 0.1); // 10% traditional roadside agent cut
+                    const settlementTargetLabel =
+                      formData.payoutMethod === 'MOMO'
+                        ? `${
+                            (formData.useRegisteredPhoneForMoMo ? userCarrier?.label : payoutMoMoCarrier?.label) ||
+                            'Mobile Money'
+                          } Wallet`
+                        : ghanaBankLabels[formData.payoutProvider] || 'Commercial Bank Account';
+
+                    return (
+                      <div className="pt-3 border-t border-zinc-200/80 dark:border-zinc-800">
+                        <div className="rounded-xl border border-emerald-200/90 dark:border-emerald-900/60 bg-gradient-to-br from-emerald-50/90 via-white to-teal-50/50 dark:from-emerald-950/30 dark:via-zinc-900/80 dark:to-emerald-950/20 overflow-hidden">
+                          {/* Header / Collapsible Toggle */}
+                          <button
+                            type="button"
+                            onClick={() => setShowEarningsPreview(!showEarningsPreview)}
+                            className="w-full px-3.5 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-emerald-100/40 dark:hover:bg-emerald-900/20 transition cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-6 h-6 rounded-lg bg-[#0F5132] text-white flex items-center justify-center shrink-0">
+                                <Calculator className="w-3.5 h-3.5" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-xs font-extrabold text-zinc-900 dark:text-white">
+                                    Landlord Earnings & Escrow Fee Calculator
+                                  </span>
+                                  <span className="text-[9.5px] font-mono font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-600 text-white">
+                                    0% Host Fee
+                                  </span>
+                                </div>
+                                <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400 truncate">
+                                  Est. Net Payout:{' '}
+                                  <strong className="font-mono text-[#0F5132] dark:text-emerald-400">
+                                    GH₵ {netInstantPayout.toLocaleString()}
+                                  </strong>{' '}
+                                  (100% of listed rent)
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-[10px] font-bold text-[#0F5132] dark:text-emerald-400 hidden sm:inline">
+                                {showEarningsPreview ? 'Hide' : 'Simulate'}
+                              </span>
+                              {showEarningsPreview ? (
+                                <ChevronUp className="w-4 h-4 text-zinc-400" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-zinc-400" />
+                              )}
+                            </div>
+                          </button>
+
+                          {showEarningsPreview && (
+                            <div className="px-3.5 pb-3.5 pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40 space-y-3">
+                              {/* Lease Cycle Mode Switcher */}
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <span className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
+                                  Rental Pricing Basis:
+                                </span>
+                                <div className="inline-flex rounded-lg p-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEarningsCycle('ACADEMIC_YEAR');
+                                      if (earningsRatePerUnit > 15000) setEarningsRatePerUnit(4500);
+                                    }}
+                                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                                      earningsCycle === 'ACADEMIC_YEAR'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#0F5132] dark:text-emerald-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                  >
+                                    Student Bed / Academic Yr
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEarningsCycle('SIX_MONTH_LEASE');
+                                      if (earningsRatePerUnit < 6000) setEarningsRatePerUnit(12000);
+                                    }}
+                                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                                      earningsCycle === 'SIX_MONTH_LEASE'
+                                        ? 'bg-white dark:bg-zinc-900 text-[#0F5132] dark:text-emerald-400 shadow-xs'
+                                        : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
+                                    }`}
+                                  >
+                                    Apartment / Act 220 Advance
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Interactive Rate & Unit Count Controls */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {/* Rate per Room / Bed */}
+                                <div className="bg-white/90 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
+                                      {earningsCycle === 'ACADEMIC_YEAR'
+                                        ? 'Rent per Bed / Room (Yr)'
+                                        : '6-Mo Advance per Unit'}
+                                    </label>
+                                    <span className="text-xs font-mono font-extrabold text-[#0F5132] dark:text-emerald-400">
+                                      GH₵ {earningsRatePerUnit.toLocaleString()}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min={1500}
+                                    max={30000}
+                                    step={500}
+                                    value={earningsRatePerUnit}
+                                    onChange={(e) => setEarningsRatePerUnit(Number(e.target.value))}
+                                    className="w-full accent-[#0F5132] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
+                                  />
+                                  <div className="flex items-center gap-1 pt-0.5 flex-wrap">
+                                    {(earningsCycle === 'ACADEMIC_YEAR'
+                                      ? [3000, 4500, 6500, 9000]
+                                      : [6000, 12000, 18000, 24000]
+                                    ).map((preset) => (
+                                      <button
+                                        key={preset}
+                                        type="button"
+                                        onClick={() => setEarningsRatePerUnit(preset)}
+                                        className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold border transition cursor-pointer ${
+                                          earningsRatePerUnit === preset
+                                            ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                                            : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'
+                                        }`}
+                                      >
+                                        ₵{(preset / 1000).toFixed(preset % 1000 === 0 ? 0 : 1)}k
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+
+                                {/* Number of Occupied Rooms / Beds */}
+                                <div className="bg-white/90 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
+                                      Booked {earningsCycle === 'ACADEMIC_YEAR' ? 'Hostel Beds / Rooms' : 'Units'}
+                                    </label>
+                                    <span className="text-xs font-mono font-extrabold text-zinc-900 dark:text-white">
+                                      {earningsUnitCount}{' '}
+                                      {earningsUnitCount === 1
+                                        ? earningsCycle === 'ACADEMIC_YEAR'
+                                          ? 'Bed'
+                                          : 'Unit'
+                                        : earningsCycle === 'ACADEMIC_YEAR'
+                                        ? 'Beds'
+                                        : 'Units'}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min={1}
+                                    max={60}
+                                    step={1}
+                                    value={earningsUnitCount}
+                                    onChange={(e) => setEarningsUnitCount(Number(e.target.value))}
+                                    className="w-full accent-[#0F5132] cursor-pointer h-1.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"
+                                  />
+                                  <div className="flex items-center gap-1 pt-0.5">
+                                    {[1, 4, 12, 24, 40].map((countPreset) => (
+                                      <button
+                                        key={countPreset}
+                                        type="button"
+                                        onClick={() => setEarningsUnitCount(countPreset)}
+                                        className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold border transition cursor-pointer ${
+                                          earningsUnitCount === countPreset
+                                            ? 'bg-[#0F5132] text-white border-[#0F5132]'
+                                            : 'bg-zinc-50 dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-emerald-400'
+                                        }`}
+                                      >
+                                        {countPreset}x
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Escrow Fee Breakdown Ledger */}
+                              <div className="rounded-lg bg-white dark:bg-zinc-950/80 border border-emerald-200/80 dark:border-emerald-900/50 p-3 space-y-2 text-xs">
+                                <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                                  <span>
+                                    Gross Rent Held in Act 220 Escrow ({earningsUnitCount} × GH₵{' '}
+                                    {earningsRatePerUnit.toLocaleString()})
+                                  </span>
+                                  <span className="font-mono font-bold text-zinc-900 dark:text-white">
+                                    GH₵ {grossEscrowRent.toLocaleString()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+                                  <span className="flex items-center gap-1.5">
+                                    <span>Landlord Listing & Commission Deduction</span>
+                                    <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
+                                      FREE (0%)
+                                    </span>
+                                  </span>
+                                  <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
+                                    - GH₵ 0.00
+                                  </span>
+                                </div>
+
+                                <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between">
+                                  <div>
+                                    <span className="font-extrabold text-zinc-950 dark:text-white block">
+                                      Net Instant Payout to {settlementTargetLabel}
+                                    </span>
+                                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                                      Disbursed automatically at T+0 upon tenant QR check-in verification
+                                    </span>
+                                  </div>
+                                  <span className="text-sm sm:text-base font-mono font-black text-[#0F5132] dark:text-emerald-400">
+                                    GH₵ {netInstantPayout.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Roadside Agent Comparison Banner */}
+                              <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-emerald-950 text-emerald-50 text-[10.5px]">
+                                <div className="flex items-center gap-2">
+                                  <TrendingUp className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                  <span>
+                                    Saves <strong className="text-emerald-300 font-mono">GH₵ {traditionalAgentCommission.toLocaleString()}</strong> vs. traditional 10% unverified roadside agent commissions.
+                                  </span>
+                                </div>
+                                <span className="font-mono font-bold text-emerald-300 shrink-0 hidden sm:inline">
+                                  100% Retained
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Host Profile Helper Footnote */}
                   <div className="pt-1 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-start gap-2 text-[10.5px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -2090,6 +2347,20 @@ export default function RegisterPage() {
                             </>
                           )}
                         </dd>
+                      </div>
+                      <div className="col-span-2 pt-1.5 border-t border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-2 flex-wrap">
+                        <div>
+                          <dt className="text-[11px] text-zinc-500 dark:text-zinc-400">Simulated Net Escrow Yield</dt>
+                          <dd className="font-mono font-extrabold text-[#0F5132] dark:text-emerald-400">
+                            GH₵ {(earningsRatePerUnit * earningsUnitCount).toLocaleString()}{' '}
+                            <span className="text-[10.5px] font-sans font-medium text-zinc-500 dark:text-zinc-400">
+                              ({earningsUnitCount} × GH₵ {earningsRatePerUnit.toLocaleString()})
+                            </span>
+                          </dd>
+                        </div>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-[#0F5132] dark:text-emerald-300 text-[10px] font-mono font-extrabold border border-emerald-300/70 dark:border-emerald-800">
+                          0% Host Fee • 100% Remitted
+                        </span>
                       </div>
                     </>
                   )}
