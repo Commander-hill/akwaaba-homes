@@ -980,7 +980,7 @@ export default function RegisterPage() {
                     }
                   }}
                   label="Profile Picture"
-                  description="Upload a clear portrait or passport-style photo (up to 10MB). Automatically cropped and optimized."
+                  description="Upload a clear portrait or passport-style photo (up to 10MB). Frame, zoom, and crop before automatic HD optimization."
                   optional={false}
                   required={true}
                 />
