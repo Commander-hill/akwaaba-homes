@@ -28,7 +28,8 @@ import {
   Sparkles,
   Loader2,
   XCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
 
@@ -54,6 +55,120 @@ export default function AdminPropertiesPage() {
     title: ''
   });
   const [bulkUploadOpen, setBulkUploadOpen] = useState(false);
+
+  // Multi-select & Bulk Moderation state (Intake Rush Optimization)
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [bulkTargetStatus, setBulkTargetStatus] = useState<'APPROVED' | 'REJECTED' | 'PENDING'>('APPROVED');
+  const [bulkModerationNote, setBulkModerationNote] = useState('');
+  const [isBulkExecuting, setIsBulkExecuting] = useState(false);
+
+  // Quick Preset Notes for Intake Rush Moderation
+  const presetNotes = {
+    APPROVED: [
+      'Listing verified compliant with Akwaaba standards and Rent Act 1963.',
+      'Approved for public catalog and student intake bookings.',
+      'Physical verification completed and verified amenities confirmed.'
+    ],
+    REJECTED: [
+      'Listing rejected due to unclear/low-resolution photos of premises.',
+      'Duplicate listing detected on Akwaaba platform.',
+      'Pricing or security deposit inconsistent with standard residential tenancy regulations.'
+    ],
+    PENDING: [
+      'Revision required: Please upload clear photographs of the bedroom, bathroom, and kitchen.',
+      'Revision required: Please update and confirm utility bills and deposit policies.',
+      'Revision required: Proof of ownership or verified deed documentation requested.'
+    ]
+  };
+
+  const handleOpenBulkModal = (status: 'APPROVED' | 'REJECTED' | 'PENDING') => {
+    setBulkTargetStatus(status);
+    setBulkModerationNote(presetNotes[status][0]);
+    setBulkModalOpen(true);
+  };
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPropertyIds.length) {
+      toast.error('No properties selected.');
+      return;
+    }
+
+    setIsBulkExecuting(true);
+    try {
+      const res = await api.put('/admin/properties/bulk-status', {
+        propertyIds: selectedPropertyIds,
+        approvalStatus: bulkTargetStatus,
+        moderationNote: bulkModerationNote.trim() || undefined
+      });
+
+      toast.success(res.data?.message || `Updated ${selectedPropertyIds.length} properties to ${bulkTargetStatus}`);
+      setSelectedPropertyIds([]);
+      setBulkModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-action-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to bulk moderate properties.');
+    } finally {
+      setIsBulkExecuting(false);
+    }
+  };
+
+  // 1-Click CSV Export for GRA Tax Audits and Tenancy Reporting
+  const exportPropertiesToCSV = () => {
+    const listToExport = filteredProperties.length > 0 ? filteredProperties : properties;
+    if (!listToExport.length) {
+      toast.error('No properties available to export.');
+      return;
+    }
+
+    const headers = [
+      'Property ID',
+      'Listing Title',
+      'Property Type / Category',
+      'Location / Address',
+      'Host Legal Name',
+      'Host Email',
+      'Host Phone',
+      'Rent Amount (GHS)',
+      'Security Deposit (GHS)',
+      'Bedrooms / Units',
+      'Approval Status',
+      'Physically Verified',
+      'Date Listed',
+      'GRA Tenancy Tax Ref'
+    ];
+
+    const rows = listToExport.map((p: any) => [
+      `"${p.id}"`,
+      `"${(p.title || '').replace(/"/g, '""')}"`,
+      `"${p.type || 'Apartment'}"`,
+      `"${(p.location || '').replace(/"/g, '""')}"`,
+      `"${p.landlord ? `${p.landlord.firstName || ''} ${p.landlord.lastName || ''}`.trim() : 'Unassigned'}"`,
+      `"${p.landlord?.email || 'N/A'}"`,
+      `"${p.landlord?.phoneNumber || 'N/A'}"`,
+      Number(p.price || 0).toFixed(2),
+      Number(p.deposit || 0).toFixed(2),
+      p.bedrooms || 1,
+      `"${p.approvalStatus || 'PENDING'}"`,
+      p.isPhysicallyVerified ? 'VERIFIED' : 'UNVERIFIED',
+      `"${new Date(p.createdAt || Date.now()).toISOString().split('T')[0]}"`,
+      `"GRA-PROP-${(p.id || '').slice(0, 8).toUpperCase()}"`
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `AkwaabaHomes_Properties_Registry_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Property catalog exported to CSV (GRA Tax Audit Format)');
+  };
+
 
   // Close dropdown menu on outside click
   useEffect(() => {
@@ -245,8 +360,18 @@ export default function AdminPropertiesPage() {
           </p>
         </div>
 
-        {/* Hero right action button */}
-        <div className="relative z-10 hidden sm:flex items-center">
+
+        {/* Hero right action buttons */}
+        <div className="relative z-10 flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={exportPropertiesToCSV}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/95 dark:bg-zinc-900/95 hover:bg-white text-zinc-900 dark:text-white border border-emerald-200 dark:border-emerald-800/60 font-bold text-xs shadow-xs hover:shadow-md transition cursor-pointer"
+            title="Export full property catalog for GRA tax compliance and audits"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Export CSV</span>
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -255,12 +380,13 @@ export default function AdminPropertiesPage() {
                 duration: 4000
               });
             }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#04793d] hover:bg-[#035f30] text-white font-bold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#04793d] hover:bg-[#035f30] text-white font-bold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add Property</span>
           </button>
         </div>
+
       </div>
 
       {/* 2. FOUR KPI SUMMARY CARDS */}
@@ -436,6 +562,18 @@ export default function AdminPropertiesPage() {
               <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
               <span>Filter</span>
             </button>
+
+            {/* 1-Click Export in Filter Bar */}
+            <button
+              type="button"
+              onClick={exportPropertiesToCSV}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700/60 text-xs font-bold transition shadow-xs cursor-pointer ml-auto"
+              title="Export filtered records to CSV"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Export CSV</span>
+            </button>
+
           </div>
 
           {/* Properties Table */}
@@ -444,6 +582,23 @@ export default function AdminPropertiesPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                    <th className="py-3 px-3 w-10 text-center">
+                      <input
+                        type="checkbox"
+                        checked={paginatedProperties.length > 0 && paginatedProperties.every((p: any) => selectedPropertyIds.includes(p.id))}
+                        onChange={() => {
+                          const allOnPage = paginatedProperties.map((p: any) => p.id);
+                          const isAllSelected = allOnPage.every((id) => selectedPropertyIds.includes(id));
+                          if (isAllSelected) {
+                            setSelectedPropertyIds((prev) => prev.filter((id) => !allOnPage.includes(id)));
+                          } else {
+                            setSelectedPropertyIds((prev) => Array.from(new Set([...prev, ...allOnPage])));
+                          }
+                        }}
+                        aria-label="Select all on this page"
+                        className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                    </th>
                     <th className="py-3 px-4">Property</th>
                     <th className="py-3 px-4">Category</th>
                     <th className="py-3 px-4">Location</th>
@@ -456,14 +611,14 @@ export default function AdminPropertiesPage() {
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center text-zinc-400">
+                      <td colSpan={8} className="py-16 text-center text-zinc-400">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-600" />
                         <span className="font-medium text-xs">Loading AkwaabaHomes property inventory...</span>
                       </td>
                     </tr>
                   ) : paginatedProperties.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center text-zinc-400">
+                      <td colSpan={8} className="py-16 text-center text-zinc-400">
                         <Building className="w-8 h-8 mx-auto mb-2 opacity-40 text-zinc-400" />
                         <div className="font-semibold text-zinc-700 dark:text-zinc-300">No properties found</div>
                         <div className="text-xs text-zinc-400 mt-1">Try adjusting your filters or search keywords.</div>
@@ -479,8 +634,22 @@ export default function AdminPropertiesPage() {
                       return (
                         <tr
                           key={p.id}
-                          className="hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors"
+                          className={`hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors ${selectedPropertyIds.includes(p.id) ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''}`}
                         >
+                          {/* Multi-Select Checkbox */}
+                          <td className="py-3.5 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedPropertyIds.includes(p.id)}
+                              onChange={() => {
+                                setSelectedPropertyIds((prev) =>
+                                  prev.includes(p.id) ? prev.filter((item) => item !== p.id) : [...prev, p.id]
+                                );
+                              }}
+                              aria-label={`Select ${p.title}`}
+                              className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            />
+                          </td>
                           {/* 1. Property */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">

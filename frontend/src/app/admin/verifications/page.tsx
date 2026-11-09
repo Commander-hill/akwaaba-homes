@@ -487,45 +487,53 @@ export default function AdminVerificationsQueuePage() {
     }
   });
 
-  // Export report to CSV
+    // Export report to CSV (GRA Tax Reporting & Tenancy Audits)
   const handleExportReport = () => {
+    const listToExport = filteredSubmissions.length > 0 ? filteredSubmissions : allSubmissions;
+    if (!listToExport.length) {
+      toast.error('No verification records available to export.');
+      return;
+    }
+
     const headers = [
       'Applicant ID',
-      'Full Name',
-      'Email',
+      'Legal Full Name',
+      'Email Address',
       'Phone Number',
       'Verification Category',
-      'Verification Type',
-      'Ghana Card Number',
-      'Status',
+      'Verification Document Type',
+      'Ghana Card Number (NIN)',
+      'KYC Adjudication Status',
       'Submission Timestamp',
-      'Rejection Reason'
+      'Rejection / Resubmission Reason',
+      'GRA Tenancy Audit Status'
     ];
 
-    const rows = filteredSubmissions.map((i) => [
+    const rows = listToExport.map((i: any) => [
       `"${i.userId}"`,
       `"${i.applicantName.replace(/"/g, '""')}"`,
       `"${i.applicantEmail}"`,
-      `"${i.applicantPhone || 'N/A'}"`,
+      `"'${i.applicantPhone || 'N/A'}"`,
       `"${i.docCategory}"`,
       `"${i.typeDisplay}"`,
       `"${i.ghanaCardNumber || 'N/A'}"`,
       `"${i.statusDisplay}"`,
       `"${i.formattedDate}"`,
-      `"${(i.rejectionReason || '').replace(/"/g, '""')}"`
+      `"${(i.rejectionReason || '').replace(/"/g, '""')}"`,
+      i.statusDisplay === 'Approved' ? 'COMPLIANT' : 'PENDING_AUDIT'
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csvContent = [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `AkwaabaHomes_Verifications_Report_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `AkwaabaHomes_KYC_Verifications_GRA_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success('Verification ledger report exported to CSV!');
+    toast.success('KYC Verification ledger exported to CSV (GRA Audit Format)!');
   };
 
   const handleManualRefresh = async () => {
@@ -827,6 +835,18 @@ export default function AdminVerificationsQueuePage() {
           </select>
           <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
         </div>
+
+
+        {/* 1-Click Export CSV in Filter Bar */}
+        <button
+          type="button"
+          onClick={handleExportReport}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold transition shadow-2xs ml-auto cursor-pointer"
+          title="Export KYC verification ledger to CSV for GRA tax audits"
+        >
+          <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>Export CSV</span>
+        </button>
 
         {/* All Types Dropdown */}
         <div className="relative">

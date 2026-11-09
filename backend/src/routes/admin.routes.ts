@@ -9,7 +9,8 @@ import {
   toggleUserProfileLock,
   getAllProperties, 
   getPropertyById,
-  updatePropertyApproval, 
+  updatePropertyApproval,
+  bulkUpdatePropertyApproval, 
   getAllBookings, 
   getBookingById,
   getAllSubscriptions,
@@ -97,6 +98,7 @@ router.post('/landlord-deeds/:id/attach', attachLandlordDeed);
 // Properties & Moderation
 router.get('/properties', getAllProperties);
 router.get('/properties/:id', getPropertyById);
+router.put('/properties/bulk-status', bulkUpdatePropertyApproval);
 router.put('/properties/:id/status', updatePropertyApproval);
 router.put('/properties/:id/physical-verification', togglePropertyPhysicalVerification);
 

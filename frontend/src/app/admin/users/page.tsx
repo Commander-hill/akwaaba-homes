@@ -265,31 +265,68 @@ export default function AdminUsersPage() {
     );
   };
 
-  const exportUsersToCSV = () => {
-    if (!filteredUsers.length) {
+    const exportUsersToCSV = () => {
+    const listToExport = filteredUsers.length > 0 ? filteredUsers : users;
+    if (!listToExport.length) {
       toast.error('No users available to export.');
       return;
     }
-    const headers = ['Full Name', 'Email', 'Role', 'Phone Number', 'Ghana Card PIN', 'KYC Status', 'Account Status', 'Date Joined'];
-    const rows = filteredUsers.map((u: any) => [
-      `"${u.firstName || ''} ${u.lastName || ''}"`,
+
+    const headers = [
+      'User ID',
+      'Legal First Name',
+      'Legal Last Name',
+      'Email Address',
+      'Role',
+      'Phone Number',
+      'Ghana Card Number (NIN)',
+      'KYC Verification Status',
+      'GRA Tax Identification Number (TIN)',
+      'ORC Business Reg No.',
+      'Host Entity Type',
+      'Disbursement Channel',
+      'Settlement Provider',
+      'Settlement Account',
+      'Reputation Score',
+      'Account Safety Status',
+      'Profile Locked',
+      '2FA Enabled',
+      'Date Registered',
+      'GRA Tenancy Taxpayer Ref'
+    ];
+
+    const rows = listToExport.map((u: any) => [
+      `"${u.id}"`,
+      `"${(u.firstName || '').replace(/"/g, '""')}"`,
+      `"${(u.lastName || '').replace(/"/g, '""')}"`,
       `"${u.email || ''}"`,
       `"${u.role || ''}"`,
-      `"${u.phoneNumber || ''}"`,
+      `"'${u.phoneNumber || ''}"`,
       `"${u.ghanaCardNumber || 'N/A'}"`,
       `"${u.ghanaCardStatus || 'NOT_SUBMITTED'}"`,
-      `"${u.isSuspended ? 'Suspended' : 'Active'}"`,
-      `"${new Date(u.createdAt).toLocaleDateString('en-GB')}"`
+      `"${u.tinNumber || 'N/A'}"`,
+      `"${u.businessRegistrationNumber || 'N/A'}"`,
+      `"${u.hostEntityType || 'INDIVIDUAL_OWNER'}"`,
+      `"${u.payoutMethod || 'MOMO'}"`,
+      `"${u.payoutProvider || 'MTN'}"`,
+      `"'${u.payoutAccountNumber || u.phoneNumber || 'N/A'}"`,
+      Number(u.reputationScore || 5.0).toFixed(1),
+      `"${u.isSuspended ? 'SUSPENDED' : 'ACTIVE'}"`,
+      u.isProfileLocked ? 'LOCKED' : 'UNLOCKED',
+      u.twoFactorEnabled ? 'ACTIVE' : 'DISABLED',
+      `"${new Date(u.createdAt).toISOString().split('T')[0]}"`,
+      `"GRA-TXP-${(u.id || '').slice(0, 8).toUpperCase()}"`
     ]);
+
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `akwaaba_users_registry_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `AkwaabaHomes_Users_Directory_GRA_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('User directory exported to CSV.');
+    toast.success('User directory exported to CSV (GRA Tax Compliance Format).');
   };
 
   if (isLoading) {
@@ -485,6 +522,16 @@ export default function AdminUsersPage() {
             <span>More Filters</span>
           </button>
 
+          {/* 1-Click Export CSV (GRA Tax & Tenancy Audit Format) */}
+          <button
+            type="button"
+            onClick={exportUsersToCSV}
+            className="px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs hover:shadow transition cursor-pointer shrink-0"
+            title="1-Click CSV Export for GRA Tax Compliance & Internal Audits"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Export CSV</span>
+          </button>
           {/* Invite User Button */}
           <button
             type="button"

@@ -2858,3 +2858,104 @@ export const updateLandlordSettlement = async (req: Request, res: Response): Pro
     res.status(500).json({ message: 'Failed to update settlement account.' });
   }
 };
+
+
+/**
+ * ── BULK MODERATION FOR PROPERTY LISTINGS (PEAK INTAKE WORKFLOW) ──
+ * Allows multi-select bulk approval, rejection, or revision requests for properties
+ * with a shared moderation note dispatched to landlords (Act 843 compliant).
+ */
+export const bulkUpdatePropertyApproval = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { propertyIds, approvalStatus, moderationNote } = req.body;
+
+    if (!Array.isArray(propertyIds) || propertyIds.length === 0) {
+      res.status(400).json({ message: 'propertyIds array cannot be empty.' });
+      return;
+    }
+
+    const validStatuses = ['APPROVED', 'REJECTED', 'PENDING'];
+    if (!validStatuses.includes(approvalStatus)) {
+      res.status(400).json({ message: 'Invalid approval status. Must be APPROVED, REJECTED, or PENDING.' });
+      return;
+    }
+
+    const properties = await prisma.property.findMany({
+      where: { id: { in: propertyIds } },
+      include: { landlord: { select: { id: true, email: true, firstName: true } } }
+    });
+
+    if (properties.length === 0) {
+      res.status(404).json({ message: 'No matching properties found.' });
+      return;
+    }
+
+    // Update all matching properties
+    const updatedCount = await prisma.property.updateMany({
+      where: { id: { in: propertyIds } },
+      data: {
+        approvalStatus,
+        ...(approvalStatus === 'REJECTED' ? { isAvailable: false } : {})
+      }
+    });
+
+    // Log audits and dispatch notifications for each property
+    for (const prop of properties) {
+      try {
+        await logAudit(
+          req.user.id,
+          approvalStatus === 'APPROVED' ? 'BULK_APPROVE_PROPERTY' : 'BULK_REJECT_PROPERTY',
+          'Property',
+          prop.id,
+          { approvalStatus: prop.approvalStatus },
+          { approvalStatus, moderationNote },
+          req.ip || 'ADMIN_CONSOLE'
+        );
+      } catch (e) {}
+
+      // Notify landlord if applicable
+      if (approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') {
+        notifyPropertyApproval({
+          landlordId: prop.landlord.id,
+          landlordEmail: prop.landlord.email,
+          landlordName: prop.landlord.firstName,
+          propertyTitle: prop.title,
+          status: approvalStatus as 'APPROVED' | 'REJECTED'
+        }).catch(() => {});
+      }
+
+      // If moderationNote is provided, create an in-app notification
+      if (moderationNote && prop.landlord?.id) {
+        prisma.notification.create({
+          data: {
+            userId: prop.landlord.id,
+            type: 'PROPERTY_ALERT',
+            title: approvalStatus === 'APPROVED' ? 'Listing Approved (Bulk Intake Review)' : 'Listing Status Update',
+            message: `Property "${prop.title}": ${moderationNote}`,
+            link: `/dashboard/landlord/properties/${prop.id}`
+          }
+        }).catch(() => {});
+      }
+    }
+
+    // Invalidate properties cache
+    const keys = appCache.keys();
+    const propertyKeys = keys.filter(k => k.startsWith('properties_'));
+    appCache.del(propertyKeys);
+
+    // Emit real-time socket events
+    try {
+      const { emitToAll } = await import('../socket');
+      emitToAll('properties_updated', { count: updatedCount.count, status: approvalStatus });
+    } catch (e) {}
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully updated ${updatedCount.count} listing${updatedCount.count !== 1 ? 's' : ''} to ${approvalStatus}.`,
+      updatedCount: updatedCount.count
+    });
+  } catch (error) {
+    console.error('Error in bulkUpdatePropertyApproval:', error);
+    res.status(500).json({ message: 'Failed to bulk moderate properties.' });
+  }
+};
