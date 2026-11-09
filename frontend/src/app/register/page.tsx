@@ -203,7 +203,7 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState({
     role: 'TENANT',
-    isStudent: true,
+    isStudent: false,
     avatarUrl: '',
     
     // Basic Info
@@ -712,7 +712,7 @@ export default function RegisterPage() {
 
   const hostEntityLabels: Record<string, string> = {
     INDIVIDUAL_OWNER: 'Individual Property Owner',
-    REGISTERED_HOSTEL_COMPANY: 'Registered Hostel Operator / Company',
+    REGISTERED_HOSTEL_COMPANY: 'Real Estate / Corporate Management Firm',
     PROPERTY_MANAGER: 'Accredited Property Manager / Agent',
   };
 
@@ -729,8 +729,8 @@ export default function RegisterPage() {
 
   const portfolioSizeLabels: Record<string, string> = {
     '1_TO_5_UNITS': '1–5 Units / Apartments',
-    '6_TO_20_ROOMS': '6–20 Rooms (Boutique Hostel / Compound)',
-    '20_PLUS_ROOMS': '20+ Rooms / Multi-Block Student Hostel',
+    '6_TO_20_ROOMS': '6–20 Units (Apartment Block / Compound)',
+    '20_PLUS_ROOMS': '20+ Units (Gated Estate / Multi-Building Complex)',
   };
 
   const ghanaBankLabels: Record<string, string> = {
@@ -932,7 +932,7 @@ export default function RegisterPage() {
             {/* 2. Landlord/Host View: Host architecture imagery */}
             <Image
               src="/images/hero_accra_apartment.png"
-              alt="Verified student residences and apartments managed by Akwaaba hosts"
+              alt="Verified apartments, houses, and residences managed by Akwaaba hosts"
               fill
               sizes="(min-width: 1024px) 60vw, 100vw"
               className={`object-cover object-center transition-opacity duration-700 ease-out select-none ${
@@ -997,7 +997,7 @@ export default function RegisterPage() {
                 </h2>
 
                 <p className="text-xs sm:text-sm text-zinc-200/90 leading-relaxed max-w-lg font-normal">
-                  Reach verified students and professionals across Ghana. Rent is held in escrow and released straight to your MoMo wallet or bank account when your tenant checks in — with 0% host commission.
+                  Reach verified tenants, professionals, and families across Ghana. Rent is held in escrow and released straight to your MoMo wallet or bank account when your tenant checks in — with 0% host commission.
                 </p>
 
                 {/* Host value-prop cards */}
@@ -1789,7 +1789,7 @@ export default function RegisterPage() {
                     <div className="sm:col-span-2">
                       <div className="flex items-center justify-between mb-1.5">
                         <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">
-                          Hostel / Property Brand Name{' '}
+                          Property / Real Estate Brand Name{' '}
                           {formData.hostEntityType === 'REGISTERED_HOSTEL_COMPANY' ? '*' : ''}
                         </label>
                         <span className="text-[10px] font-mono font-semibold text-zinc-400">
@@ -1807,7 +1807,7 @@ export default function RegisterPage() {
                         enterKeyHint="next"
                         onKeyDown={(e) => handleInputKeyDown(e)}
                         onChange={(e) => setFormData({ ...formData, businessName: e.target.value.toUpperCase() })}
-                        placeholder="e.g. EVANDY HOSTELS LTD, AYEDUASE EXECUTIVE COURTS"
+                        placeholder="e.g. AYEDUASE EXECUTIVE APARTMENTS, HOMES & SUITES LTD"
                       />
                     </div>
 
@@ -1820,12 +1820,12 @@ export default function RegisterPage() {
                         value={formData.primaryRegion}
                         onChange={(e) => setFormData({ ...formData, primaryRegion: e.target.value })}
                       >
-                        <option value="ACCRA_LEGON_UPSA">Accra — East Legon / UG / UPSA / GIMPA</option>
-                        <option value="ACCRA_METRO">Accra — Airport / Cantonments / Osu / Spintex</option>
-                        <option value="KUMASI_KNUST">Kumasi — KNUST / Ayeduase / Bomso / Kotei</option>
-                        <option value="CAPE_COAST_UCC">Cape Coast — UCC / Ayensu / Amamoma</option>
-                        <option value="TAKORADI">Sekondi-Takoradi Metro</option>
-                        <option value="TAMALE_UDS">Tamale — UDS / Nyankpala Corridor</option>
+                        <option value="ACCRA_LEGON_UPSA">Accra — East Legon / Airport / Cantonments / Spintex</option>
+                        <option value="ACCRA_METRO">Accra — Dzorwulu / Roman Ridge / Osu / Labone</option>
+                        <option value="KUMASI_KNUST">Kumasi — Ahodwo / Nhyiaeso / Asokwa / KNUST Corridor</option>
+                        <option value="CAPE_COAST_UCC">Cape Coast &amp; Central Region</option>
+                        <option value="TAKORADI">Sekondi-Takoradi Metro &amp; Western Region</option>
+                        <option value="TAMALE_UDS">Tamale &amp; Northern Corridor</option>
                         <option value="WINNEBA_UEW">Winneba / Kasoa / Central Corridor</option>
                         <option value="OTHER_GHANA">Other City / Multi-Region Ghana</option>
                       </select>
@@ -1847,8 +1847,8 @@ export default function RegisterPage() {
                         }}
                       >
                         <option value="1_TO_5_UNITS">1–5 Units / Residential Apartments</option>
-                        <option value="6_TO_20_ROOMS">6–20 Rooms (Boutique Hostel / Compound)</option>
-                        <option value="20_PLUS_ROOMS">20+ Rooms / Multi-Block Student Hostel</option>
+                        <option value="6_TO_20_ROOMS">6–20 Units (Apartment Block / Compound)</option>
+                        <option value="20_PLUS_ROOMS">20+ Units (Gated Estate / Multi-Building Complex)</option>
                       </select>
                     </div>
                   </div>
@@ -2198,7 +2198,7 @@ export default function RegisterPage() {
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
-                                    Student Bed / Academic Yr
+                                    Annual / 1-Yr Tenancy
                                   </button>
                                   <button
                                     type="button"
@@ -2212,7 +2212,7 @@ export default function RegisterPage() {
                                         : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'
                                     }`}
                                   >
-                                    Apartment / Act 220 Advance
+                                    Monthly / Advance Lease
                                   </button>
                                 </div>
                               </div>
@@ -2224,7 +2224,7 @@ export default function RegisterPage() {
                                   <div className="flex items-center justify-between">
                                     <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
                                       {earningsCycle === 'ACADEMIC_YEAR'
-                                        ? 'Rent per Bed / Room (Yr)'
+                                        ? 'Rent per Unit (Annual)'
                                         : '6-Mo Advance per Unit'}
                                     </label>
                                     <span className="text-xs font-mono font-extrabold text-[#16A34A] dark:text-emerald-400">
@@ -2265,7 +2265,7 @@ export default function RegisterPage() {
                                 <div className="bg-white/90 dark:bg-zinc-950/60 border border-zinc-200/80 dark:border-zinc-800 rounded-lg p-2.5 space-y-1.5">
                                   <div className="flex items-center justify-between">
                                     <label className="text-[10.5px] font-bold text-zinc-600 dark:text-zinc-400">
-                                      Booked {earningsCycle === 'ACADEMIC_YEAR' ? 'Hostel Beds / Rooms' : 'Units'}
+                                      Occupied Rental Units
                                     </label>
                                     <span className="text-xs font-mono font-extrabold text-zinc-900 dark:text-white">
                                       {earningsUnitCount}{' '}
@@ -3084,11 +3084,11 @@ export default function RegisterPage() {
                     </div>
                     <div>
                       <div className="text-xs font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
-                        <span>Campus Ambassador / Referral Promo</span>
+                        <span>Referral Code or Promotional Voucher</span>
                         <span className="text-[10px] text-zinc-400 font-normal">(Optional)</span>
                       </div>
                       <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                        Have a student ambassador promo code or friend referral link?
+                        Have a referral promo code or partner discount voucher?
                       </div>
                     </div>
                   </div>
@@ -3355,14 +3355,14 @@ export default function RegisterPage() {
                       <div className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100">
                         {formData.role === 'LANDLORD'
                           ? 'List & Receive Payouts'
-                          : 'Book & Lock Your Room'}
+                          : 'Book & Move In'}
                       </div>
                       <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-tight mt-0.5">
                         {formData.role === 'LANDLORD'
                           ? 'Publish properties, automate Act 220 leases, and collect MoMo/Bank payouts.'
                           : formData.isStudent
                           ? `Reserve verified hostels near ${formData.campus || 'campus'} with MoMo & escrow safety.`
-                          : 'Reserve verified homes, sign digital leases, and pay securely via escrow.'}
+                          : 'Reserve verified apartments and homes, sign digital leases, and pay securely via escrow.'}
                       </p>
                     </div>
                   </div>

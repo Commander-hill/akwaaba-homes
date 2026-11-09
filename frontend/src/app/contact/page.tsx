@@ -10,7 +10,7 @@ import api from '@/lib/axios';
 import PublicFooter from '@/components/tenant-ui/PublicFooter';
 
 const SUBJECT_LABELS: Record<string, string> = {
-  TENANCY_INQUIRY: 'Student Hostel / Accommodation Inquiry',
+  TENANCY_INQUIRY: 'Residential Tenancy & Accommodation Inquiry',
   LANDLORD_ONBOARDING: 'Landlord Property Registration',
   ESCROW_ASSISTANCE: 'MoMo & Payment Support',
   DISPUTE_REPORT: 'Tenancy or Booking Dispute',
@@ -98,7 +98,7 @@ export default function ContactPage() {
             Get in Touch With Us
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">
-            Have questions about student hostel bookings, statutory leases, landlord listing onboarding, or rent payments? We are here to help.
+            Have questions about residential tenancies, apartment bookings, statutory leases, landlord listing onboarding, or rent payments? We are here to help.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ export default function ContactPage() {
                   onChange={(e) => setSubject(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 text-xs font-medium outline-none focus:border-[#0F5132] [&>option]:bg-white dark:[&>option]:bg-zinc-900"
                 >
-                  <option value="TENANCY_INQUIRY">Student Hostel / Accommodation Inquiry</option>
+                  <option value="TENANCY_INQUIRY">Residential Tenancy &amp; Accommodation Inquiry</option>
                   <option value="LANDLORD_ONBOARDING">Landlord Property Registration</option>
                   <option value="ESCROW_ASSISTANCE">MoMo &amp; Payment Support</option>
                   <option value="DISPUTE_REPORT">Tenancy or Booking Dispute</option>

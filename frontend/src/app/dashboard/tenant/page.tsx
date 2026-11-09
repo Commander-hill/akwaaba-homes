@@ -250,7 +250,7 @@ export default function TenantDashboardPage() {
               <div className="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[10px] font-bold">1</span>
-                  <span>Explore student hostels &amp; apartments</span>
+                  <span>Explore apartments, houses &amp; hostels</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-bold">2</span>

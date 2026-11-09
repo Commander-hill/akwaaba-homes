@@ -48,7 +48,7 @@ export default function PublicFooter() {
               </li>
               <li>
                 <Link href="/search?type=HOSTEL" className="hover:text-[#6EE7B7] transition-colors">
-                  University &amp; Student Hostels
+                  Hostels &amp; Co-Living Spaces
                 </Link>
               </li>
               <li>
