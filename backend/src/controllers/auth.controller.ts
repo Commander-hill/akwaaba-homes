@@ -107,7 +107,7 @@ export const CAMPUS_PROMO_CODES: Record<string, {
     campus: 'KNUST',
     campusName: 'Kwame Nkrumah University of Science & Technology',
     title: 'KNUST Tech Stars Ambassador Perk',
-    benefit: 'GH₵ 50 First-Semester Utility Credit & Priority Lock-in',
+    benefit: 'GH₵ 50 First-Month Utility Credit & Priority Lock-in',
     badgeText: 'KNUST Kumasi Partner',
     badgeBg: 'bg-amber-50 dark:bg-amber-950/60',
     badgeColor: 'text-amber-800 dark:text-amber-300',

@@ -121,7 +121,7 @@ model Property {
   landlordId     String
   landlord       User     @relation(fields: [landlordId], references: [id])
   title          String
-  type           String   @default("Hostel") // Hostel, Homestay, Apartment
+  type           String   @default("Apartment") // Apartment, Studio, House, Townhouse
   description    String
   price          Float    @default(0) // Floor/min price, derived from rooms for search indexing
   location       String
@@ -132,7 +132,7 @@ model Property {
   videoUrl       String?
   targetAudience String?  @default("Open to All")
   furnishing     String?  @default("Unfurnished")
-  pricePeriod    String?  @default("Academic Year") // Nightly, Monthly, Academic Year, Annual
+  pricePeriod    String?  @default("Monthly") // Monthly, Quarterly, Annual, Nightly
   
   // Rules & Policies
   gateLockTime   String?  @default("No Curfew / 24/7 Access")

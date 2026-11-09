@@ -145,7 +145,7 @@ export default function AdminTenantsPage() {
     },
     {
       key: 'academic',
-      header: 'Campus / Programme',
+      header: 'Location / Affiliation',
       render: (row) => (
         row.campus ? (
           <div>

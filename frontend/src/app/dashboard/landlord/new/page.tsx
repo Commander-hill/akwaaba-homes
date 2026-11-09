@@ -100,14 +100,14 @@ export default function NewPropertyPage() {
 
   const [formData, setFormData] = useState({
     title: '',
-    type: 'Hostel',
+    type: 'Apartment',
     targetAudience: 'Open to All',
     furnishing: 'Unfurnished',
-    pricePeriod: 'Academic Year',
+    pricePeriod: 'Monthly',
     gateLockTime: 'No Curfew / 24/7 Access',
     visitorPolicy: 'Day visitors allowed until 8 PM',
     quietHours: 'From 10:00 PM',
-    paymentSchedule: 'Full Academic Year',
+    paymentSchedule: 'Monthly Advance',
     cautionDeposit: '',
     includedUtilities: ['Water Bill Included', 'Garbage/Trash Service Included'] as string[],
     description: '',
@@ -496,13 +496,13 @@ export default function NewPropertyPage() {
           <div className="space-y-4">
             <div>
               <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                Property / Hostel Title *
+                Property Title *
               </label>
               <input
                 type="text"
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g. Evandy Hostel - Executive Wing"
+                placeholder="e.g. Ridge View Executive Apartments - Suite 4B"
                 className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
               />
             </div>
@@ -515,10 +515,10 @@ export default function NewPropertyPage() {
                   onChange={e => setFormData({ ...formData, type: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                 >
-                  <option value="Hostel">Student Hostel</option>
-                  <option value="Apartment">Self-Contain Apartment</option>
-                  <option value="Homestay">Residential Homestay</option>
-                  <option value="Studio">Executive Studio</option>
+                  <option value="Apartment">Residential Apartment</option>
+                  <option value="Studio">Executive Studio / Self-Contained</option>
+                  <option value="House">Detached House / Townhouse</option>
+                  <option value="Hostel">Multi-Unit Residence</option>
                 </select>
               </div>
 
@@ -556,17 +556,17 @@ export default function NewPropertyPage() {
                   onChange={e => setFormData({ ...formData, pricePeriod: e.target.value })}
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl px-3 py-2 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132] cursor-pointer"
                 >
-                  <option value="Academic Year">Academic Year (2 Sems)</option>
-                  <option value="Semester">Per Semester</option>
                   <option value="Monthly">Monthly Rent</option>
-                  <option value="Annual">1 Calendar Year</option>
+                  <option value="Annual">Annual / Yearly (12 Months)</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Academic Year">Academic Term / Semester</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-1">
-                Campus / Town Location *
+                Location / Area *
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -574,7 +574,7 @@ export default function NewPropertyPage() {
                   type="text"
                   value={formData.location}
                   onChange={e => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="e.g. Ayeduase Gate, KNUST / East Legon / Cape Coast"
+                  placeholder="e.g. East Legon, Airport Residential, Cantonments, Kumasi"
                   className="w-full bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/80 rounded-xl pl-9 pr-4 py-2.5 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-[#0F5132]"
                 />
               </div>

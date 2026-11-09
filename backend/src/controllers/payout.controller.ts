@@ -240,20 +240,35 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
           include: { booking: true }
         });
 
+        // Dispute Holding Escrow Freeze: Query any active, unresolved lease breaches/disputes
+        const activeBreachReports = await tx.breachReport.findMany({
+          where: {
+            property: { landlordId },
+            status: { in: ['PENDING', 'UNDER_REVIEW', 'ESCALATED', 'IN_INVESTIGATION'] }
+          },
+          select: { propertyId: true, tenantId: true }
+        });
+        const disputedPropertyIds = new Set(activeBreachReports.map(b => b.propertyId));
+
         const now = Date.now();
         const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
         let totalEligibleNet = 0;
         let totalEscrowHeldNet = 0;
+        let totalDisputeHeldNet = 0;
 
         for (const t of transactions) {
           const net = t.amount - (t.amount * commissionPct) / 100;
           const bkg = t.booking;
           const startDateMs = bkg ? new Date(bkg.startDate).getTime() : new Date(t.createdAt).getTime();
           const isPost24h = now >= (startDateMs + TWENTY_FOUR_HOURS_MS);
+          const isUnderDispute = t.propertyId && disputedPropertyIds.has(t.propertyId);
 
-          // Escrow protection gate: funds release 24 hours after move-in/start date
-          if (isPost24h || ['CHECKED_IN', 'CHECKED_OUT', 'ACTIVE'].includes(bkg?.status || '')) {
+          // Escrow protection gate & dispute holding freeze
+          if (isUnderDispute) {
+            // Funds strictly frozen until dispute reaches RESOLVED status
+            totalDisputeHeldNet += net;
+          } else if (isPost24h || ['CHECKED_IN', 'CHECKED_OUT', 'ACTIVE'].includes(bkg?.status || '')) {
             totalEligibleNet += net;
           } else {
             totalEscrowHeldNet += net;
@@ -271,7 +286,8 @@ export const requestPayout = async (req: Request, res: Response): Promise<void> 
         const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
 
         if (amount > availableBalance) {
-          throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GHS ${availableBalance.toFixed(2)} (GHS ${totalEscrowHeldNet.toFixed(2)} currently in 24h Move-in Escrow hold).`);
+          const disputeMsg = totalDisputeHeldNet > 0 ? ` (GH₵ ${totalDisputeHeldNet.toFixed(2)} frozen under active lease dispute hold)` : '';
+          throw new Error(`INSUFFICIENT_BALANCE: Insufficient balance. Available: GH₵ ${availableBalance.toFixed(2)} (GH₵ ${totalEscrowHeldNet.toFixed(2)} in 24h Move-in Escrow hold${disputeMsg}).`);
         }
 
         // Atomically create payout record (PENDING state)
@@ -449,13 +465,44 @@ export const getPayoutHistory = async (req: Request, res: Response): Promise<voi
     const sysConfig = await getSystemConfig();
     const commissionPct = sysConfig.platformCommissionPercent || 5.0;
 
-    const [transactions, payouts] = await Promise.all([
-      prisma.transaction.findMany({ where: { landlordId, status: 'SUCCESS' } }),
+    const [transactions, payouts, activeDisputes] = await Promise.all([
+      prisma.transaction.findMany({ where: { landlordId, status: 'SUCCESS' }, include: { booking: true } }),
       prisma.payoutRequest.findMany({
         where: { landlordId },
         orderBy: { createdAt: 'desc' },
       }),
+      prisma.breachReport.findMany({
+        where: {
+          property: { landlordId },
+          status: { in: ['PENDING', 'UNDER_REVIEW', 'ESCALATED', 'IN_INVESTIGATION'] }
+        },
+        select: { propertyId: true }
+      })
     ]);
+
+    const disputedPropIds = new Set(activeDisputes.map(d => d.propertyId));
+    const now = Date.now();
+    const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
+    let totalEligibleNet = 0;
+    let totalEscrowHeldNet = 0;
+    let totalDisputeHeldNet = 0;
+
+    for (const tx of transactions) {
+      const net = tx.amount - (tx.amount * commissionPct) / 100;
+      const bkg = tx.booking;
+      const startDateMs = bkg ? new Date(bkg.startDate).getTime() : new Date(tx.createdAt).getTime();
+      const isPost24h = now >= (startDateMs + TWENTY_FOUR_HOURS_MS);
+      const isUnderDispute = tx.propertyId && disputedPropIds.has(tx.propertyId);
+
+      if (isUnderDispute) {
+        totalDisputeHeldNet += net;
+      } else if (isPost24h || ['CHECKED_IN', 'CHECKED_OUT', 'ACTIVE'].includes(bkg?.status || '')) {
+        totalEligibleNet += net;
+      } else {
+        totalEscrowHeldNet += net;
+      }
+    }
 
     const totalNetEarnings = transactions.reduce((acc, tx) => {
       return acc + (tx.amount - (tx.amount * commissionPct) / 100);
@@ -465,13 +512,15 @@ export const getPayoutHistory = async (req: Request, res: Response): Promise<voi
       .filter((p) => ['PENDING', 'PROCESSING', 'SUCCESS'].includes(p.status))
       .reduce((acc, p) => acc + p.amount, 0);
 
-    const availableBalance = Math.max(0, totalNetEarnings - totalPaidOut);
+    const availableBalance = Math.max(0, totalEligibleNet - totalPaidOut);
 
     res.status(200).json({
       summary: {
         totalNetEarnings,
         totalPaidOut,
         availableBalance,
+        totalEscrowHeldNet,
+        totalDisputeHeldNet,
         platformCommissionPercent: commissionPct,
       },
       payouts,
