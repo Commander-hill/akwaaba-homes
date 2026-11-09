@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { LiveHealthHeartbeat } from '@/components/admin/LiveHealthHeartbeat';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
@@ -253,6 +254,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      <LiveHealthHeartbeat />
 
       {/* ── 2. FOUR KPI SUMMARY CARDS ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

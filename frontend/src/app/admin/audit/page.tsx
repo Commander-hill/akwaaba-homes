@@ -21,6 +21,7 @@ import {
   ChevronLeft, 
   ChevronRight,
   Shield,
+  Server,
   Layers,
   ArrowUpRight
 } from 'lucide-react';
@@ -29,6 +30,7 @@ import clsx from 'clsx';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AuditFilterBar, { AuditCategory, AuditDateRange } from '@/components/admin/audit/AuditFilterBar';
+import { WebhookDLQViewer } from '@/components/admin/audit/WebhookDLQViewer';
 import AuditDetailDrawer, { AuditLogItem, getActionCategory, getEntityRoute } from '@/components/admin/audit/AuditDetailDrawer';
 
 interface AuditLogsResponse {
@@ -66,6 +68,7 @@ export default function AuditLogsPage() {
   const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'audit' | 'dlq'>('audit');
 
   // Debounce search input by 300ms
   useEffect(() => {
@@ -282,6 +285,41 @@ export default function AuditLogsPage() {
         }
       />
 
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab('audit')}
+          className={clsx(
+            'flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer',
+            activeTab === 'audit'
+              ? 'bg-[#04793d] text-white shadow-xs'
+              : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'
+          )}
+        >
+          <ShieldCheck className="w-4 h-4" />
+          <span>Forensic Audit Ledger</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('dlq')}
+          className={clsx(
+            'flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer',
+            activeTab === 'dlq'
+              ? 'bg-[#04793d] text-white shadow-xs'
+              : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'
+          )}
+        >
+          <Server className="w-4 h-4" />
+          <span>Failed Webhook DLQ</span>
+        </button>
+      </div>
+
+      {activeTab === 'dlq' ? (
+        <WebhookDLQViewer />
+      ) : (
+        <>
       {/* 4 Compact High-Signal Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Events */}
@@ -573,6 +611,9 @@ export default function AuditLogsPage() {
           </div>
         </div>
       </div>
+
+      </>
+      )}
 
       {/* Slide-over Deep Forensic Inspection Drawer */}
       <AuditDetailDrawer

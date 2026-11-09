@@ -23,6 +23,9 @@ import {
   resolveAppeal,
   getDisputeById,
   getAuditLogs,
+  getLiveHealthHeartbeat,
+  getWebhookDLQ,
+  retryWebhookDelivery,
   getSystemActivity,
   verifyUserCard,
   verifyLandlord,
@@ -76,6 +79,9 @@ router.get('/action-queue', getActionRequiredQueue);
 router.get('/analytics', getPlatformAnalytics);
 router.get('/activity', getSystemActivity);
 router.get('/audit-logs', getAuditLogs);
+router.get('/health-heartbeat', getLiveHealthHeartbeat);
+router.get('/webhooks/dlq', getWebhookDLQ);
+router.post('/webhooks/dlq/:id/retry', retryWebhookDelivery);
 router.get('/search', searchEntities);
 
 // Users (Landlords & Tenants)
