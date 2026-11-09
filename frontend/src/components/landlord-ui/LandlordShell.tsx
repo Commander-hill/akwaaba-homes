@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   BadgeCheck,
   Search,
+  Moon,
   ChevronDown,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
@@ -316,12 +317,19 @@ export default function LandlordShell({
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="p-2 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
+              className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
             >
               <Menu className="w-5 h-5 stroke-[2]" />
             </button>
+            <button
+              type="button"
+              aria-label="Toggle theme"
+              className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hidden sm:flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors cursor-pointer shrink-0"
+            >
+              <Moon className="w-4 h-4 stroke-[2]" />
+            </button>
             <div className="relative flex-1 max-w-md hidden sm:block">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search your properties, bookings..."
@@ -345,7 +353,7 @@ export default function LandlordShell({
             <Link
               href="/dashboard/profile"
               aria-label="Profile and settings"
-              className="flex items-center gap-1.5 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-2.5 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-emerald-500/20 bg-zinc-200 shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -355,7 +363,11 @@ export default function LandlordShell({
                   className="w-full h-full object-cover"
                 />
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-600 hidden sm:block stroke-[2.2]" />
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-xs font-bold text-zinc-900 dark:text-white leading-tight">Stephen D.</span>
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium leading-none">Landlord</span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400 hidden sm:block stroke-[2.2]" />
             </Link>
           </div>
         </header>

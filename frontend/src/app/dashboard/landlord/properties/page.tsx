@@ -1,325 +1,527 @@
 'use client';
 
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
-import { Building2, Search } from 'lucide-react';
-import api from '@/lib/axios';
-import { getImageUrl } from '@/lib/utils';
-import { Button, EmptyState, ErrorState, StatusBadge, formatCedis } from '@/components/tenant-ui/primitives';
+import {
+  Home,
+  CalendarCheck,
+  Wallet,
+  TrendingUp,
+  Search,
+  LayoutGrid,
+  Check,
+  Heart,
+  Camera,
+  MapPin,
+  Star,
+  Bed,
+  Bath,
+  Maximize2,
+  Eye,
+  Edit2,
+  MoreHorizontal,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 
-const isSubActive = (sub: any) =>
-  !!sub && sub.isActive && sub.paymentStatus === 'COMPLETED' && new Date(sub.endDate) > new Date();
-
-type Lifecycle = 'LIVE' | 'NEEDS_SUBSCRIPTION' | 'PENDING' | 'REJECTED' | 'HIDDEN';
-
-const lifecycle = (p: any): Lifecycle => {
-  if (p.approvalStatus === 'REJECTED') return 'REJECTED';
-  if (isSubActive(p.subscription)) {
-    return p.isAvailable ? 'LIVE' : 'HIDDEN';
-  }
-  if (p.approvalStatus === 'PENDING') return 'PENDING';
-  return 'NEEDS_SUBSCRIPTION';
-};
-
-const LABEL: Record<Lifecycle, { text: string; tone: 'success' | 'warning' | 'error' | 'info' | 'neutral' }> = {
-  LIVE: { text: 'Live', tone: 'success' },
-  NEEDS_SUBSCRIPTION: { text: 'Approved, needs subscription', tone: 'warning' },
-  PENDING: { text: 'Pending approval', tone: 'info' },
-  REJECTED: { text: 'Not approved', tone: 'error' },
-  HIDDEN: { text: 'Approved, hidden', tone: 'neutral' },
-};
-
-const FILTERS: { key: 'ALL' | Lifecycle; label: string }[] = [
-  { key: 'ALL', label: 'All' },
-  { key: 'LIVE', label: 'Live' },
-  { key: 'NEEDS_SUBSCRIPTION', label: 'Needs subscription' },
-  { key: 'PENDING', label: 'Pending approval' },
-  { key: 'REJECTED', label: 'Not approved' },
-];
-
-function Inventory() {
-  const router = useRouter();
-  const sp = useSearchParams();
-  const qc = useQueryClient();
-  const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<'ALL' | Lifecycle>('ALL');
-  const [sort, setSort] = useState<'newest' | 'title' | 'price'>('newest');
-  const [page, setPage] = useState(1);
-  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
-  const PAGE = 8;
-
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['landlord', 'properties'],
-    queryFn: async () => (await api.get('/properties/landlord/mine')).data.data as any[],
-  });
-
-  // Subscription payment return: the backend verifies with the provider; the browser return alone activates nothing.
-  const verify = useMutation({
-    mutationFn: async ({ reference, provider }: { reference: string; provider?: string }) => {
-      const { data } = await api.post('/subscriptions/verify', {
-        paymentReference: reference,
-        provider: provider || (reference.includes('HUBTEL') ? 'HUBTEL' : 'PAYSTACK'),
-      });
-      return data?.data || data;
-    },
-    onSuccess: () => {
-      toast.success('Payment verified. Your subscription is active.');
-      qc.invalidateQueries({ queryKey: ['landlord'] });
-      router.replace('/dashboard/landlord/properties');
-    },
-    onError: (e: any) => {
-      toast.error(e?.response?.data?.message || 'We could not verify this payment yet. Check the Subscription page.');
-      router.replace('/dashboard/landlord/properties');
-    },
-  });
-  const verified = useRef(false);
-  useEffect(() => {
-    const reference = sp.get('reference') || sp.get('trxref') || sp.get('clientReference');
-    if (sp.get('verify') === 'true' && reference && !verified.current) {
-      verified.current = true;
-      verify.mutate({ reference, provider: sp.get('provider') || undefined });
-    }
-  }, [sp, verify]);
-
-  const del = useMutation({
-    mutationFn: async (id: string) => (await api.delete(`/properties/${id}`)).data,
-    onSuccess: (d) => {
-      toast.success(d?.message || 'Property removed');
-      qc.invalidateQueries({ queryKey: ['landlord'] });
-    },
-    onError: (e: any) => toast.error(e?.response?.data?.message || 'Could not remove this property.'),
-    onSettled: () => setDeleteTarget(null),
-  });
-
-  const all = useMemo(() => (data || []).filter((p) => p.approvalStatus !== 'DELETED'), [data]);
-
-  const rows = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    const out = all
-      .filter((p) => filter === 'ALL' || lifecycle(p) === filter)
-      .filter((p) => !term || `${p.title} ${p.location}`.toLowerCase().includes(term));
-    out.sort((a, b) =>
-      sort === 'title'
-        ? String(a.title).localeCompare(String(b.title))
-        : sort === 'price'
-          ? Number(a.price) - Number(b.price)
-          : +new Date(b.createdAt) - +new Date(a.createdAt)
-    );
-    return out;
-  }, [all, q, filter, sort]);
-
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE));
-  const visible = rows.slice((page - 1) * PAGE, page * PAGE);
-
+function RollingWaves({ color, darkColor }: { color: string; darkColor: string }) {
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-editorial text-3xl">Properties</h1>
-          <p className="text-sm text-[#6F756F] mt-1">
-            A listing is visible to tenants only when it is approved and has an active subscription.
-          </p>
-        </div>
-        <Link href="/dashboard/landlord/new">
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<Building2 className="w-4 h-4" />}
-          >
-            Add property
-          </Button>
-        </Link>
-      </header>
-
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[220px] max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#6F756F]" aria-hidden="true" />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPage(1);
-            }}
-            aria-label="Search properties"
-            placeholder="Search by name or location"
-            className="w-full h-10 pl-9 pr-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
-          />
-        </div>
-        <select
-          aria-label="Filter by status"
-          value={filter}
-          onChange={(e) => {
-            setFilter(e.target.value as any);
-            setPage(1);
-          }}
-          className="h-10 px-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
-        >
-          {FILTERS.map((f) => (
-            <option key={f.key} value={f.key}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Sort"
-          value={sort}
-          onChange={(e) => setSort(e.target.value as any)}
-          className="h-10 px-3 rounded-lg border border-zinc-200 bg-white dark:bg-[#141816] text-sm"
-        >
-          <option value="newest">Newest first</option>
-          <option value="title">Name (A to Z)</option>
-          <option value="price">Lowest price</option>
-        </select>
-      </div>
-
-      {isError ? (
-        <ErrorState message="We could not load your properties." onRetry={() => refetch()} />
-      ) : isLoading ? (
-        <div className="space-y-2" aria-busy="true">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-24 rounded-lg bg-[#EFEDE5] animate-pulse" />
-          ))}
-        </div>
-      ) : all.length === 0 ? (
-        <EmptyState
-          icon={Building2}
-          title="No properties yet"
-          description="Add a property, set up its rooms and upload photos. It is reviewed before tenants can see it."
-          actionLabel="Add property"
-          actionHref="/dashboard/landlord/new"
-        />
-      ) : rows.length === 0 ? (
-        <EmptyState icon={Search} title="No matching properties" description="Try a different search or filter." />
-      ) : (
-        <>
-          <ul className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816] divide-y divide-zinc-200 dark:divide-zinc-800">
-            {visible.map((p) => {
-              const state = lifecycle(p);
-              const imgs: string[] = Array.isArray(p.images) ? p.images : [];
-              const roomCount = (p.rooms || []).reduce((n: number, r: any) => n + Number(r.numberOfRooms || 0), 0);
-              return (
-                <li key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                  <div className="w-full sm:w-28 h-20 rounded-md bg-[#EFEDE5] overflow-hidden shrink-0">
-                    {imgs[0] && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={getImageUrl(imgs[0])} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-sm font-semibold truncate">{p.title}</h2>
-                      <StatusBadge tone={LABEL[state].tone} size="xs">
-                        {LABEL[state].text}
-                      </StatusBadge>
-                    </div>
-                    <p className="text-xs text-[#6F756F] mt-0.5 truncate">
-                      {p.type} · {p.location}
-                    </p>
-                    <p className="text-xs text-[#6F756F] mt-1">
-                      <span className="tabular-nums">{(p.rooms || []).length}</span> room type
-                      {(p.rooms || []).length === 1 ? '' : 's'} ·{' '}
-                      <span className="tabular-nums">{roomCount}</span> room{roomCount === 1 ? '' : 's'} · from{' '}
-                      <span className="tabular-nums">{formatCedis(p.price)}</span> per {p.pricePeriod || 'period'}
-                    </p>
-                    {state === 'REJECTED' && (
-                      <p className="text-xs text-[#9E2A2B] mt-1">
-                        This listing was not approved. Review the details and save changes to resubmit.
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs font-semibold shrink-0">
-                    {state === 'NEEDS_SUBSCRIPTION' && (
-                      <Link
-                        href={`/dashboard/landlord/properties/${p.id}/publish`}
-                        className="h-8 px-3 inline-flex items-center rounded-lg bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white transition-colors shadow-xs"
-                      >
-                        Activate subscription
-                      </Link>
-                    )}
-                    {state === 'LIVE' && (
-                      <Link href={`/properties/${p.id}`} className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline">
-                        View public page
-                      </Link>
-                    )}
-                    <Link
-                      href={`/dashboard/landlord/properties/${p.id}/edit`}
-                      className="text-[#16A34A] hover:text-[#15803D] dark:text-emerald-400 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteTarget(p)}
-                      className="text-[#9E2A2B] hover:underline cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {pages > 1 && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-[#6F756F]">
-                Page {page} of {pages}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === pages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="del-h">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !del.isPending && setDeleteTarget(null)} />
-          <div className="relative bg-white dark:bg-[#141816] rounded-xl p-6 max-w-sm w-full shadow-xl">
-            <h2 id="del-h" className="font-semibold">
-              Remove {deleteTarget.title}?
-            </h2>
-            <p className="text-sm text-[#6F756F] mt-2">
-              The listing will no longer be visible to tenants. Properties with active tenancies cannot be removed.
-            </p>
-            <div className="flex justify-end gap-2 mt-5">
-              <Button variant="outline" disabled={del.isPending} onClick={() => setDeleteTarget(null)}>
-                Keep property
-              </Button>
-              <Button variant="danger" isLoading={del.isPending} onClick={() => del.mutate(deleteTarget.id)}>
-                Remove
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <svg
+      className="absolute bottom-0 left-0 right-0 w-full h-8 pointer-events-none"
+      viewBox="0 0 320 40"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0,26 C40,12 80,32 120,18 C160,8 200,28 240,16 C270,6 295,22 320,18 L320,40 L0,40 Z"
+        fill={color}
+        fillOpacity="0.55"
+      />
+      <path
+        d="M0,32 C45,20 90,36 140,24 C190,14 235,32 275,22 C295,16 310,24 320,22 L320,40 L0,40 Z"
+        fill={darkColor}
+        fillOpacity="0.5"
+      />
+    </svg>
   );
 }
 
+interface PropertyItem {
+  id: string;
+  title: string;
+  location: string;
+  price: string;
+  period: string;
+  rating: number;
+  reviews: number;
+  rooms: string;
+  baths: string;
+  area: string;
+  status: 'Active' | 'Pending' | 'Under Review';
+  photosCount: number;
+  image: string;
+}
+
+const propertiesData: PropertyItem[] = [
+  {
+    id: 'kimo-apt',
+    title: 'KIMO APARTMENT',
+    location: 'Burma Camp, Accra',
+    price: 'GH₵ 2,000',
+    period: '/ month',
+    rating: 4.8,
+    reviews: 24,
+    rooms: '1 Room',
+    baths: '1 Bath',
+    area: '50 m²',
+    status: 'Active',
+    photosCount: 5,
+    image: '/images/resident/prop-kimo.jpg',
+  },
+  {
+    id: 'ssnit-apt',
+    title: 'SSNIT RESIDENTIAL APARTMENTS',
+    location: 'Koforidua',
+    price: 'GH₵ 4,500',
+    period: '/ month',
+    rating: 4.7,
+    reviews: 18,
+    rooms: '2 Rooms',
+    baths: '2 Baths',
+    area: '80 m²',
+    status: 'Active',
+    photosCount: 5,
+    image: '/images/resident/prop-premium-studio.jpg',
+  },
+  {
+    id: 'glacier-studio',
+    title: 'GLACIER STUDIO',
+    location: 'Achimota, Accra',
+    price: 'GH₵ 20,000',
+    period: '/ month',
+    rating: 4.9,
+    reviews: 32,
+    rooms: '1 Room',
+    baths: '1 Bath',
+    area: '40 m²',
+    status: 'Active',
+    photosCount: 5,
+    image: '/images/resident/residence-glacier-main.jpg',
+  },
+];
+
 export default function LandlordPropertiesPage() {
+  const [activeFilter, setActiveFilter] = useState<'ALL' | 'Active' | 'Pending' | 'Under Review'>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const filteredProperties = useMemo(() => {
+    return propertiesData.filter((prop) => {
+      const matchesFilter = activeFilter === 'ALL' || prop.status === activeFilter;
+      const matchesSearch =
+        !searchQuery.trim() ||
+        prop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prop.location.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [activeFilter, searchQuery]);
+
   return (
-    <Suspense fallback={null}>
-      <Inventory />
-    </Suspense>
+    <div className="space-y-6 pb-12">
+      {/* Hero Banner */}
+      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[235px] flex items-center shadow-xs bg-[#EAF5FC] border border-[#D5EBF9]">
+        {/* Panoramic apartment background on right */}
+        <div
+          className="absolute inset-y-0 right-0 w-full md:w-3/4 bg-cover bg-right md:bg-center"
+          style={{ backgroundImage: `url('/images/resident/hero-banner.jpg')` }}
+        />
+        {/* Soft sky-blue gradient mask on left */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#EBF5FB] via-[#EBF5FB]/95 via-38% md:via-48% to-transparent" />
+
+        {/* Content inside Hero */}
+        <div className="relative z-10 px-6 sm:px-10 py-7 max-w-xl text-zinc-900 space-y-1.5">
+          <p className="text-xs font-black tracking-wider text-[#14A248] uppercase">
+            LANDLORD PORTAL
+          </p>
+          <div>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-[#133E2B] tracking-tight">
+              My Properties
+            </h1>
+            {/* Green curved brush stroke under heading */}
+            <div className="w-16 h-1 rounded-full bg-[#14A248] mt-1" />
+          </div>
+          <p className="text-xs sm:text-sm text-zinc-700 font-medium leading-relaxed max-w-md pt-1">
+            Manage your listings, track performance and grow your rental business.
+          </p>
+        </div>
+      </div>
+
+      {/* 4 Stat / KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Card 1: Total Properties */}
+        <div className="relative rounded-2xl p-5 overflow-hidden bg-[#EDF9F0] border border-[#DCF5E3] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#D2F5DC] text-[#14A248] flex items-center justify-center shrink-0">
+              <Home className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 ml-4 min-w-0">
+              <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
+                3
+              </span>
+              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+                Total Properties
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[#14A248] flex items-center gap-0.5 mt-0.5">
+              ↑ +1
+            </span>
+          </div>
+          <RollingWaves color="#A7F3D0" darkColor="#4ADE80" />
+        </div>
+
+        {/* Card 2: Total Bookings */}
+        <div className="relative rounded-2xl p-5 overflow-hidden bg-[#EAF3FD] border border-[#D6E8FD] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#D6E8FD] text-[#2563EB] flex items-center justify-center shrink-0">
+              <CalendarCheck className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 ml-4 min-w-0">
+              <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
+                3
+              </span>
+              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+                Total Bookings
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[#2563EB] flex items-center gap-0.5 mt-0.5">
+              ↑ +1
+            </span>
+          </div>
+          <RollingWaves color="#BFDBFE" darkColor="#60A5FA" />
+        </div>
+
+        {/* Card 3: Pending Payments */}
+        <div className="relative rounded-2xl p-5 overflow-hidden bg-[#FEF7EB] border border-[#FDECCD] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#FDECCD] text-[#D97706] flex items-center justify-center shrink-0">
+              <Wallet className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 ml-4 min-w-0">
+              <span className="block text-2xl sm:text-3xl font-extrabold text-zinc-900 leading-none">
+                GH₵ 0.00
+              </span>
+              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+                Pending Payments
+              </span>
+            </div>
+          </div>
+          <RollingWaves color="#FDE68A" darkColor="#FBBF24" />
+        </div>
+
+        {/* Card 4: Occupancy Rate */}
+        <div className="relative rounded-2xl p-5 overflow-hidden bg-[#F3EEFD] border border-[#E6DBFC] shadow-2xs hover:shadow-sm transition-all flex flex-col justify-between min-h-[115px]">
+          <div className="flex items-start justify-between">
+            <div className="w-12 h-12 rounded-2xl bg-[#E6DBFC] text-[#7C3AED] flex items-center justify-center shrink-0">
+              <TrendingUp className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="flex-1 ml-4 min-w-0">
+              <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
+                92%
+              </span>
+              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+                Occupancy Rate
+              </span>
+            </div>
+            <span className="text-xs font-bold text-[#7C3AED] flex items-center gap-0.5 mt-0.5">
+              ↑ +5%
+            </span>
+          </div>
+          <RollingWaves color="#DDD6FE" darkColor="#A78BFA" />
+        </div>
+      </div>
+
+      {/* Filter Tabs, Search Bar, and Add Property Button */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+        {/* Left Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* All Properties Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveFilter('ALL')}
+            className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-2xs ${
+              activeFilter === 'ALL'
+                ? 'bg-[#14A248] text-white'
+                : 'bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>All Properties</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                activeFilter === 'ALL' ? 'bg-white text-[#14A248]' : 'bg-zinc-100 text-zinc-600'
+              }`}
+            >
+              3
+            </span>
+          </button>
+
+          {/* Active Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveFilter('Active')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
+              activeFilter === 'Active'
+                ? 'bg-[#14A248] text-white border-transparent shadow-xs'
+                : 'bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200 shadow-2xs'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#14A248]" />
+            <span>Active</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">3</span>
+          </button>
+
+          {/* Pending Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveFilter('Pending')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
+              activeFilter === 'Pending'
+                ? 'bg-[#F59E0B] text-white border-transparent shadow-xs'
+                : 'bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200 shadow-2xs'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+            <span>Pending</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">0</span>
+          </button>
+
+          {/* Under Review Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveFilter('Under Review')}
+            className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer border ${
+              activeFilter === 'Under Review'
+                ? 'bg-[#2563EB] text-white border-transparent shadow-xs'
+                : 'bg-white hover:bg-zinc-50 text-zinc-700 border-zinc-200 shadow-2xs'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+            <span>Under Review</span>
+            <span className="text-zinc-400 text-[11px] font-semibold">0</span>
+          </button>
+        </div>
+
+        {/* Right Search Input & Add Property Button */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search properties..."
+              className="h-10 pl-9 pr-4 rounded-full bg-white border border-zinc-200 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:border-emerald-500 w-44 sm:w-60 shadow-2xs"
+            />
+          </div>
+
+          <Link
+            href="/dashboard/landlord/new"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#14A248] hover:bg-[#11843b] text-white text-xs sm:text-sm font-semibold shadow-xs transition-all hover:scale-102"
+          >
+            <Home className="w-4 h-4 stroke-[2.2]" />
+            <span>Add Property</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* 3 Property Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {filteredProperties.map((prop) => (
+          <div
+            key={prop.id}
+            className="bg-white dark:bg-[#141816] rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-2xs hover:shadow-md transition-all overflow-hidden flex flex-col group"
+          >
+            {/* Property Image Container */}
+            <div className="relative h-52 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={prop.image}
+                alt={prop.title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+
+              {/* Active Badge on TOP-LEFT */}
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-[#14A248] text-white text-xs font-bold flex items-center gap-1.5 shadow-md">
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>{prop.status}</span>
+              </div>
+
+              {/* Wishlist Heart on TOP-RIGHT */}
+              <button
+                type="button"
+                onClick={() => toggleFavorite(prop.id)}
+                aria-label="Save to favorites"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-zinc-800 flex items-center justify-center backdrop-blur-xs shadow-xs transition-colors cursor-pointer"
+              >
+                <Heart
+                  className={`w-4 h-4 stroke-[2.2] transition-colors ${
+                    favorites[prop.id] ? 'fill-red-500 text-red-500' : 'text-zinc-800'
+                  }`}
+                />
+              </button>
+
+              {/* Photos Count on BOTTOM-LEFT of Image */}
+              <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs text-white text-[11px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-xs">
+                <Camera className="w-3.5 h-3.5" />
+                <span>{prop.photosCount} Photos</span>
+              </div>
+            </div>
+
+            {/* Card Content */}
+            <div className="p-5 flex flex-col flex-1 justify-between gap-4">
+              <div className="space-y-1.5">
+                <h3 className="text-sm sm:text-base font-extrabold text-zinc-900 dark:text-white uppercase tracking-tight truncate">
+                  {prop.title}
+                </h3>
+                <div className="flex items-center gap-1 text-xs text-zinc-500 font-medium truncate">
+                  <MapPin className="w-3.5 h-3.5 text-[#14A248] shrink-0" />
+                  <span className="truncate">{prop.location}</span>
+                </div>
+              </div>
+
+              {/* Price & Rating */}
+              <div className="flex items-center justify-between pt-0.5">
+                <div className="text-base font-extrabold text-[#14A248]">
+                  {prop.price}{' '}
+                  <span className="text-xs font-normal text-zinc-500 dark:text-zinc-400">
+                    {prop.period}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                  <Star className="w-3.5 h-3.5 fill-[#FBBF24] text-[#FBBF24]" />
+                  <span>{prop.rating}</span>
+                  <span className="text-zinc-400 font-normal">({prop.reviews} reviews)</span>
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div className="flex items-center justify-between py-2.5 border-t border-b border-zinc-100 dark:border-zinc-800 text-xs text-zinc-600 dark:text-zinc-300 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <Bed className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{prop.rooms}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Bath className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{prop.baths}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-zinc-400" />
+                  <span>{prop.area}</span>
+                </span>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                <Link
+                  href={`/dashboard/landlord/properties`}
+                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                >
+                  <Eye className="w-3.5 h-3.5 text-[#14A248]" />
+                  <span>View Details</span>
+                </Link>
+                <Link
+                  href={`/dashboard/landlord/properties`}
+                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-[#2563EB]" />
+                  <span>Edit</span>
+                </Link>
+                <button
+                  type="button"
+                  className="py-2 px-2 rounded-xl bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <MoreHorizontal className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>More</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom Section: Grow Your Business Banner & Pagination */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-6 pt-2">
+        {/* Grow Your Business Banner */}
+        <div className="flex-1 w-full lg:max-w-xl rounded-2xl bg-[#EAF7EE] dark:bg-emerald-950/30 border border-[#D0F2DC] dark:border-emerald-900/40 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-white dark:bg-zinc-800 text-[#14A248] flex items-center justify-center shrink-0 shadow-2xs">
+              <TrendingUp className="w-5 h-5 stroke-[2.2]" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-white">
+                Grow Your Business
+              </h4>
+              <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5">
+                Upgrade to a premium plan and unlock more features.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/landlord/subscription"
+            className="px-5 py-2.5 rounded-full bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
+          >
+            <span>Upgrade Plan</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            aria-label="Previous page"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="w-9 h-9 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shadow-2xs transition-colors cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4 stroke-[2]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentPage(1)}
+            className={`w-9 h-9 rounded-xl text-xs font-bold flex items-center justify-center shadow-xs cursor-pointer transition-colors ${
+              currentPage === 1
+                ? 'bg-[#14A248] text-white'
+                : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
+            }`}
+          >
+            1
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrentPage(2)}
+            className={`w-9 h-9 rounded-xl text-xs font-semibold flex items-center justify-center shadow-2xs cursor-pointer transition-colors ${
+              currentPage === 2
+                ? 'bg-[#14A248] text-white'
+                : 'bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
+            }`}
+          >
+            2
+          </button>
+          <button
+            type="button"
+            aria-label="Next page"
+            onClick={() => setCurrentPage((p) => Math.min(2, p + 1))}
+            className="w-9 h-9 rounded-xl bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 flex items-center justify-center shadow-2xs transition-colors cursor-pointer"
+          >
+            <ChevronRight className="w-4 h-4 stroke-[2]" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
