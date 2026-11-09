@@ -318,33 +318,44 @@ export default function LandlordShell({
               aria-label="Open navigation menu"
               className="p-2 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 stroke-[2]" />
             </button>
             <div className="relative flex-1 max-w-md hidden sm:block">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search your properties, bookings..."
-                className="w-full h-10 pl-10 pr-4 rounded-full bg-[#F3F4F8] dark:bg-zinc-800/80 border border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none transition-all"
+                className="w-full h-10 pl-10 pr-4 rounded-full bg-[#EEF2F6] dark:bg-zinc-800/80 border border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none transition-all"
               />
             </div>
           </div>
           <div className="flex items-center gap-3 sm:gap-4">
-            <NotificationBell />
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="relative p-2 text-zinc-700 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
+              >
+                <Bell className="w-5 h-5 stroke-[1.8]" />
+                <span className="absolute top-1 right-1 w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 leading-none">
+                  3
+                </span>
+              </button>
+            </div>
             <Link
               href="/dashboard/profile"
               aria-label="Profile and settings"
               className="flex items-center gap-1.5 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-emerald-500/20">
-                {user?.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={getImageUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  initials
-                )}
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-emerald-500/20 bg-zinc-200 shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : '/images/avatars/stephen-darko.png'}
+                  alt="Stephen Darko"
+                  className="w-full h-full object-cover"
+                />
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-500 hidden sm:block" />
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-600 hidden sm:block stroke-[2.2]" />
             </Link>
           </div>
         </header>
