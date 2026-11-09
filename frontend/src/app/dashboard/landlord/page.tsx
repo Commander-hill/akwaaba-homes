@@ -128,7 +128,7 @@ export default function LandlordDashboardPage() {
         {/* Panoramic apartment background on right */}
         <div
           className="absolute inset-y-0 right-0 w-full md:w-3/4 bg-cover bg-right md:bg-center"
-          style={{ backgroundImage: `url('/images/resident/hero-banner.jpg')` }}
+          style={{ backgroundImage: `url('/images/resident/hero-building-clean.jpg')` }}
         />
         {/* Dark emerald gradient mask on left */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#062A18] via-[#062A18]/95 via-35% md:via-42% to-transparent" />
