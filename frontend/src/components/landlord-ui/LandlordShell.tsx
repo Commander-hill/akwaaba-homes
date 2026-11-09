@@ -24,6 +24,8 @@ import {
   ClipboardList,
   AlertTriangle,
   BadgeCheck,
+  Search,
+  ChevronDown,
 } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import LogoutControl from '@/components/LogoutControl';
@@ -308,42 +310,41 @@ export default function LandlordShell({
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-200 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 left-0 right-0 lg:left-64 z-30">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-16 bg-white dark:bg-[#141816] border-b border-zinc-100 dark:border-zinc-800 px-4 sm:px-6 lg:px-8 flex items-center justify-between fixed top-0 left-0 right-0 lg:left-64 z-30">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 max-w-xl">
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation menu"
-              className="lg:hidden p-2 -ml-1 rounded-lg hover:bg-zinc-100 cursor-pointer"
+              className="p-2 -ml-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <nav aria-label="Breadcrumb" className="text-sm min-w-0 truncate">
-              <span className="text-[#6F756F] hidden sm:inline">Landlord / </span>
-              <span className="font-semibold">{pageLabel}</span>
-            </nav>
+            <div className="relative flex-1 max-w-md hidden sm:block">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search your properties, bookings..."
+                className="w-full h-10 pl-10 pr-4 rounded-full bg-[#F3F4F8] dark:bg-zinc-800/80 border border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-800 text-xs text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none transition-all"
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard/landlord/new"
-              className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold"
-            >
-              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-              <span className="hidden sm:inline">Add property</span>
-              <span className="sm:hidden sr-only">Add property</span>
-            </Link>
+          <div className="flex items-center gap-3 sm:gap-4">
             <NotificationBell />
             <Link
               href="/dashboard/profile"
               aria-label="Profile and settings"
-              className="w-8 h-8 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-zinc-200"
+              className="flex items-center gap-1.5 p-1 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              {user?.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={getImageUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
-              ) : (
-                initials
-              )}
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#173D32] text-white text-xs font-bold flex items-center justify-center overflow-hidden ring-2 ring-emerald-500/20">
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={getImageUrl(user.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-500 hidden sm:block" />
             </Link>
           </div>
         </header>
