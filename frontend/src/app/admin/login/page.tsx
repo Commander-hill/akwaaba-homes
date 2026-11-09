@@ -157,7 +157,6 @@ function AdminLoginForm() {
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Invalid work email address or password.';
       setError(msg);
-      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -181,7 +180,6 @@ function AdminLoginForm() {
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Invalid verification code or recovery backup key.';
       setError(msg);
-      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -203,7 +201,6 @@ function AdminLoginForm() {
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Could not verify the authenticator code.';
       setError(msg);
-      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
