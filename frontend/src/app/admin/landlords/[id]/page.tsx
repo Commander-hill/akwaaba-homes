@@ -29,6 +29,8 @@ import {
   ZoomIn
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useStepUpAuth } from '@/hooks/useStepUpAuth';
+import { Wallet, Edit3 } from 'lucide-react';
 import { getImageUrl } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
@@ -43,6 +45,10 @@ export default function AdminLandlordDetailPage({
   const landlordId = resolvedParams.id;
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { requestStepUp, StepUpModal } = useStepUpAuth();
+  const [isEditSettlementOpen, setIsEditSettlementOpen] = useState(false);
+  const [settlementForm, setSettlementForm] = useState({ payoutMethod: 'MOMO', payoutProvider: 'MTN', payoutAccountNumber: '' });
+  const [isSavingSettlement, setIsSavingSettlement] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'PROPERTIES' | 'BOOKINGS' | 'DOCUMENTS' | 'AUDIT'>('OVERVIEW');
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -79,8 +85,10 @@ export default function AdminLandlordDetailPage({
 
   // Deed Verification Mutation
   const deedMutation = useMutation({
-    mutationFn: async ({ status, reason }: { status: string; reason?: string }) => {
-      const res = await api.put(`/admin/verify-landlord/${landlordId}`, { status, reason });
+    mutationFn: async ({ status, reason, stepUpToken }: { status: string; reason?: string; stepUpToken?: string }) => {
+      const res = await api.put(`/admin/verify-landlord/${landlordId}`, { status, reason }, {
+        headers: stepUpToken ? { 'x-step-up-token': stepUpToken } : {}
+      });
       return res.data;
     },
     onSuccess: (data) => {
@@ -117,6 +125,51 @@ export default function AdminLandlordDetailPage({
       </div>
     );
   }
+
+
+  const handleOpenEditSettlement = () => {
+    setSettlementForm({
+      payoutMethod: landlord?.payoutMethod || 'MOMO',
+      payoutProvider: landlord?.payoutProvider || 'MTN',
+      payoutAccountNumber: landlord?.payoutAccountNumber || landlord?.phoneNumber || ''
+    });
+    setIsEditSettlementOpen(true);
+  };
+
+  const handleSettlementSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!settlementForm.payoutAccountNumber.trim()) {
+      toast.error('Payout account number or phone is required.');
+      return;
+    }
+
+    requestStepUp({
+      title: 'Update Landlord Settlement & Banking Details',
+      description: `Modifying disbursement destination for ${landlord.firstName} ${landlord.lastName} to ${settlementForm.payoutProvider} (${settlementForm.payoutAccountNumber}).`,
+      actionType: 'SETTLEMENT_UPDATE',
+      payloadSummary: [
+        { label: 'Landlord', value: `${landlord.firstName} ${landlord.lastName}` },
+        { label: 'Method', value: settlementForm.payoutMethod },
+        { label: 'Provider', value: settlementForm.payoutProvider },
+        { label: 'Account Number', value: settlementForm.payoutAccountNumber }
+      ],
+      onSuccess: async (stepUpToken: string) => {
+        setIsSavingSettlement(true);
+        try {
+          await api.put(`/admin/landlords/${landlordId}/settlement`, settlementForm, {
+            headers: { 'x-step-up-token': stepUpToken }
+          });
+          toast.success('Landlord settlement details updated and audited.');
+          refetch();
+          setIsEditSettlementOpen(false);
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Failed to update settlement details.');
+        } finally {
+          setIsSavingSettlement(false);
+        }
+      }
+    });
+  };
 
   const properties: any[] = landlord.properties || [];
   const bookings: any[] = landlord.bookings || [];
@@ -312,6 +365,48 @@ export default function AdminLandlordDetailPage({
               </div>
             </div>
           </div>
+
+          {/* Settlement & Banking Card (Act 843 Protected) */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-4 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-2">
+              <h3 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
+                <Wallet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Settlement &amp; MoMo Account</span>
+              </h3>
+              <button
+                type="button"
+                onClick={handleOpenEditSettlement}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-bold transition cursor-pointer"
+              >
+                <Edit3 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                <span>Edit Account</span>
+              </button>
+            </div>
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/40">
+                <span className="text-zinc-500 font-semibold">Disbursement Mode</span>
+                <span className="font-bold text-zinc-900 dark:text-white">
+                  {landlord.payoutMethod === 'BANK_TRANSFER' ? 'Commercial Bank Transfer' : 'Mobile Money (MoMo)'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/40">
+                <span className="text-zinc-500 font-semibold">Network / Bank Provider</span>
+                <span className="font-bold text-zinc-900 dark:text-white uppercase font-mono">
+                  {landlord.payoutProvider || 'MTN MoMo'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-1 border-b border-zinc-100 dark:border-zinc-800/40">
+                <span className="text-zinc-500 font-semibold">Account / MoMo Wallet</span>
+                <span className="font-bold text-zinc-900 dark:text-white font-mono">
+                  {landlord.payoutAccountNumber || landlord.phoneNumber || 'Not configured'}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-300 text-[11px] leading-relaxed">
+                Act 843 &amp; Cyber Security Act 1038 Notice: Modifying payout credentials requires step-up administrator password authentication.
+              </div>
+            </div>
+          </div>
+
         </div>
       )}
 

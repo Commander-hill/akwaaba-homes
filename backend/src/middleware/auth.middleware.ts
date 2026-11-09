@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
+import { verifyAccessToken, verifyStepUpToken } from '../utils/jwt';
 import prisma from '../utils/prisma';
 
 // Extend the Express Request interface to include the user & rawBody
@@ -93,3 +93,36 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
   next();
 };
 
+
+/**
+ * ── STEP-UP AUTHENTICATION (ACT 843 §20 & CYBER SECURITY ACT 1038) ──
+ * Enforces cryptographic step-up re-authentication token for critical financial
+ * and statutory deed governance operations.
+ */
+export const requireStepUpAuth = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+    res.status(403).json({ message: 'Access denied: Administrator clearance required.' });
+    return;
+  }
+
+  const stepUpToken = (req.headers['x-step-up-token'] as string) || req.body?.stepUpToken;
+
+  if (!stepUpToken) {
+    res.status(403).json({
+      requireStepUp: true,
+      message: 'Step-up authentication required under Act 843 and Ghana Cyber Security Act governance. Please confirm your administrator credentials to proceed with this critical action.'
+    });
+    return;
+  }
+
+  const decoded = verifyStepUpToken(stepUpToken) as any;
+  if (!decoded || decoded.purpose !== 'STEP_UP_AUTHENTICATION' || decoded.adminId !== req.user.id) {
+    res.status(403).json({
+      requireStepUp: true,
+      message: 'Step-up authentication token has expired or is invalid. Please re-authenticate.'
+    });
+    return;
+  }
+
+  next();
+};

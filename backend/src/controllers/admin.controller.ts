@@ -2775,3 +2775,86 @@ export const togglePropertyPhysicalVerification = async (req: Request, res: Resp
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
+/**
+ * ── UPDATE LANDLORD SETTLEMENT ACCOUNT (ACT 843 & STEP-UP AUTH PROTECTED) ──
+ * Modifies payout method, mobile money provider/bank, and payout account number.
+ * Protected by requireStepUpAuth.
+ */
+export const updateLandlordSettlement = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { payoutMethod, payoutProvider, payoutAccountNumber } = req.body;
+
+    if (!payoutMethod || !['MOMO', 'BANK_TRANSFER'].includes(payoutMethod)) {
+      res.status(400).json({ message: 'Invalid payout method. Must be MOMO or BANK_TRANSFER.' });
+      return;
+    }
+
+    if (!payoutAccountNumber || typeof payoutAccountNumber !== 'string' || !payoutAccountNumber.trim()) {
+      res.status(400).json({ message: 'Valid payout account number or MoMo phone is required.' });
+      return;
+    }
+
+    const landlord = await prisma.user.findUnique({ where: { id } });
+    if (!landlord || landlord.role !== 'LANDLORD') {
+      res.status(404).json({ message: 'Landlord profile not found.' });
+      return;
+    }
+
+    const previousSettlement = {
+      payoutMethod: landlord.payoutMethod,
+      payoutProvider: landlord.payoutProvider,
+      payoutAccountNumber: landlord.payoutAccountNumber
+    };
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        payoutMethod,
+        payoutProvider: payoutProvider ? String(payoutProvider).trim().toUpperCase() : null,
+        payoutAccountNumber: String(payoutAccountNumber).trim()
+      }
+    });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+
+    await logAudit(
+      req.user.id,
+      'ADMIN_UPDATE_LANDLORD_SETTLEMENT',
+      'User',
+      id,
+      previousSettlement,
+      {
+        payoutMethod,
+        payoutProvider,
+        payoutAccountNumber: String(payoutAccountNumber).trim()
+      },
+      req.ip || 'ADMIN_CONSOLE'
+    );
+
+    // Notify landlord about critical banking change
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: id,
+          type: 'SECURITY_ALERT',
+          title: 'Settlement Account Updated',
+          message: `Your disbursement account was updated to ${payoutProvider || ''} (${payoutAccountNumber}) by Akwaaba Compliance Admin. If you did not request this, please contact Security immediately.`,
+          link: '/dashboard/landlord/wallet'
+        }
+      });
+    } catch (e) {}
+
+    res.status(200).json({
+      success: true,
+      message: 'Landlord payout settlement account updated successfully.',
+      landlord: updated
+    });
+  } catch (error) {
+    console.error('Error updating landlord settlement:', error);
+    res.status(500).json({ message: 'Failed to update settlement account.' });
+  }
+};

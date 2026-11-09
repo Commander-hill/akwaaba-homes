@@ -24,9 +24,12 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminFilterBar, { FilterConfig } from '@/components/admin/AdminFilterBar';
 import AdminDataTable, { Column } from '@/components/admin/AdminDataTable';
+import { useStepUpAuth } from '@/hooks/useStepUpAuth';
+import { ShieldAlert, ShieldCheck } from 'lucide-react';
 
 export default function AdminPayoutsPage() {
   const queryClient = useQueryClient();
+  const { requestStepUp, StepUpModal } = useStepUpAuth();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
@@ -59,6 +62,56 @@ export default function AdminPayoutsPage() {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied to clipboard`);
+  };
+
+
+  const handleReleaseEscrow = (payout: any) => {
+    requestStepUp({
+      title: 'Manual Escrow Payout Release',
+      description: `You are executing an elevated financial action: Releasing GHS ${Number(payout.amount).toLocaleString('en-GH', { minimumFractionDigits: 2 })} from platform escrow to ${payout.landlord?.firstName || 'Landlord'} ${payout.landlord?.lastName || ''}.`,
+      actionType: 'ESCROW_RELEASE',
+      payloadSummary: [
+        { label: 'Recipient', value: `${payout.landlord?.firstName || ''} ${payout.landlord?.lastName || ''}` },
+        { label: 'Amount', value: `GHS ${Number(payout.amount).toFixed(2)}` },
+        { label: 'Destination', value: `${payout.bankOrNetwork} (${payout.accountNumber})` },
+        { label: 'Transfer Mode', value: payout.recipientType }
+      ],
+      onSuccess: async (stepUpToken: string) => {
+        try {
+          await api.put(`/admin/payouts/${payout.id}/status`, { status: 'SUCCESS' }, {
+            headers: { 'x-step-up-token': stepUpToken }
+          });
+          toast.success(`GHS ${Number(payout.amount).toFixed(2)} disbursed to ${payout.accountName} successfully!`);
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Failed to release escrow payout.');
+        }
+      }
+    });
+  };
+
+  const handleFailPayout = (payout: any) => {
+    const reason = window.prompt('Please enter the failure / rejection reason (logged to Act 843 audit):', 'Banking information mismatch / invalid MoMo number');
+    if (!reason) return;
+
+    requestStepUp({
+      title: 'Reject / Fail Escrow Disbursement',
+      description: `Reject payout of GHS ${Number(payout.amount).toFixed(2)} for ${payout.landlord?.firstName} ${payout.landlord?.lastName}. Reason: ${reason}`,
+      actionType: 'ESCROW_RELEASE',
+      onSuccess: async (stepUpToken: string) => {
+        try {
+          await api.put(`/admin/payouts/${payout.id}/status`, { status: 'FAILED', failureReason: reason }, {
+            headers: { 'x-step-up-token': stepUpToken }
+          });
+          toast.success('Payout marked as FAILED. Refund or revision logged.');
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Failed to update payout status.');
+        }
+      }
+    });
   };
 
   const exportCSV = () => {
@@ -209,6 +262,60 @@ export default function AdminPayoutsPage() {
           </div>
         </div>
       )
+    },
+    {
+      key: 'actions',
+      header: 'Escrow Action',
+      render: (p: any) => (
+        <div className="flex items-center gap-1.5">
+          {p.status === 'PENDING' && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleReleaseEscrow(p)}
+                className="px-2.5 py-1.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+                title="Authorize escrow payout release (Requires Step-Up Authentication)"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Release</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleFailPayout(p)}
+                className="px-2.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-rose-50 text-rose-600 dark:bg-zinc-800 dark:hover:bg-rose-950/40 text-xs font-bold transition cursor-pointer"
+                title="Reject or mark transfer as failed"
+              >
+                <span>Reject</span>
+              </button>
+            </>
+          )}
+          {p.status === 'PROCESSING' && (
+            <button
+              type="button"
+              onClick={() => handleReleaseEscrow(p)}
+              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Mark Settled</span>
+            </button>
+          )}
+          {p.status === 'SUCCESS' && (
+            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Settled</span>
+            </span>
+          )}
+          {p.status === 'FAILED' && (
+            <button
+              type="button"
+              onClick={() => handleReleaseEscrow(p)}
+              className="px-2 py-1 rounded-md text-[11px] font-semibold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 underline cursor-pointer"
+            >
+              Retry Release
+            </button>
+          )}
+        </div>
+      )
     }
   ];
 
@@ -293,6 +400,7 @@ export default function AdminPayoutsPage() {
         }}
       />
 
+      <StepUpModal />
       <AdminDataTable
         columns={columns}
         data={payouts}

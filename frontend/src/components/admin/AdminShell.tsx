@@ -29,6 +29,7 @@ import {
   Menu,
   X,
   LogOut,
+  Lock,
   ShieldAlert,
   Megaphone,
   Radio,
@@ -498,6 +499,17 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
               )}
             </button>
 
+
+            {/* Lock Workstation (Act 843 §20 Quick Action) */}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('admin_lock_station'))}
+              className="p-2 rounded-full hover:bg-amber-500/10 text-zinc-600 dark:text-zinc-300 hover:text-amber-600 dark:hover:text-amber-400 transition cursor-pointer"
+              aria-label="Lock Workstation"
+              title="Lock Workstation (Act 843 §20 Security Protocol)"
+            >
+              <Lock className="w-4 h-4" />
+            </button>
             {/* Notification Bell */}
             <NotificationBell />
 
@@ -595,6 +607,18 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
 
                   <div className="border-t border-zinc-100 dark:border-zinc-800 my-1" />
 
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      window.dispatchEvent(new CustomEvent('admin_lock_station'));
+                    }}
+                    className="w-full flex items-center gap-2 px-3.5 py-2 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition cursor-pointer font-medium"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>Lock Station (Act 843)</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => {

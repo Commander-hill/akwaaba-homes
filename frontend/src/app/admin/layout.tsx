@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import api from '@/lib/axios';
 import BrandLoader from '@/components/BrandLoader';
 import AdminShell from '@/components/admin/AdminShell';
+import AdminInactivityLock from '@/components/admin/AdminInactivityLock';
 import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -68,12 +69,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <AdminShell user={user} onLogout={handleLogout}>
+    <AdminInactivityLock user={user}>
+      <AdminShell user={user} onLogout={handleLogout}>
       <link rel="manifest" href="/admin-manifest.json" />
       <meta name="theme-color" content="#0A0F1D" />
       <meta name="apple-mobile-web-app-title" content="Akwaaba Admin" />
       {children}
       <AdminPwaInstallPrompt />
     </AdminShell>
+    </AdminInactivityLock>
   );
 }

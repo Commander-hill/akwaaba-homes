@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import prisma from '../utils/prisma';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
+import { generateAccessToken, generateRefreshToken, generateStepUpToken } from '../utils/jwt';
 import { encryptData, decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
 import { logAudit } from '../utils/auditLogger';
@@ -2150,3 +2150,159 @@ export const completeMandatory2FASetup = async (req: Request, res: Response): Pr
   }
 };
 
+
+/**
+ * ── WORKSTATION INACTIVITY AUTO-LOCK UNLOCK (ACT 843 §20) ──
+ * Allows an administrator to unlock their idle workstation screen by verifying
+ * their password without invalidating existing application state or active forms.
+ */
+export const verifyAdminUnlock = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      res.status(400).json({ message: 'Administrator password is required to unlock workstation.' });
+      return;
+    }
+
+    if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+      res.status(403).json({ message: 'Unauthorized access. Administrative credentials required.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      res.status(404).json({ message: 'Administrator account not found.' });
+      return;
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      try {
+        await logAudit(
+          user.id,
+          'ADMIN_WORKSTATION_UNLOCK_FAILED',
+          'User',
+          user.id,
+          null,
+          { reason: 'Invalid password attempt', ip: req.ip },
+          req.ip
+        );
+      } catch (e) {}
+      res.status(401).json({ message: 'Invalid administrator password. Workstation remains secured.' });
+      return;
+    }
+
+    try {
+      await logAudit(
+        user.id,
+        'ADMIN_WORKSTATION_UNLOCKED',
+        'User',
+        user.id,
+        null,
+        { compliance: 'Act 843 Section 20 Compliance Auto-Lock', ip: req.ip },
+        req.ip
+      );
+    } catch (e) {}
+
+    res.status(200).json({
+      success: true,
+      message: 'Workstation successfully unlocked. Session resumed.'
+    });
+  } catch (error) {
+    console.error('verifyAdminUnlock error:', error);
+    res.status(500).json({ message: 'Failed to unlock workstation. Please try again or re-login.' });
+  }
+};
+
+/**
+ * ── STEP-UP AUTHENTICATION (ACT 843 §20 & CYBER SECURITY ACT 1038) ──
+ * Issues a 5-minute elevated action token after verifying administrator credentials,
+ * required for critical operations like escrow release, deed grants, or settlement edits.
+ */
+export const verifyStepUpAuth = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { password, otp, actionType } = req.body;
+    if (!password) {
+      res.status(400).json({ message: 'Administrator password is required for step-up verification.' });
+      return;
+    }
+
+    if (!req.user || !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
+      res.status(403).json({ message: 'Access denied: Elevated administrator clearance required.' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      res.status(404).json({ message: 'Administrator account not found.' });
+      return;
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      try {
+        await logAudit(
+          user.id,
+          'ADMIN_STEP_UP_FAILED',
+          'User',
+          user.id,
+          null,
+          { actionType, reason: 'Invalid password entered during step-up authorization', ip: req.ip },
+          req.ip
+        );
+      } catch (e) {}
+      res.status(401).json({ message: 'Incorrect administrator password. Step-up authorization denied.' });
+      return;
+    }
+
+    // If admin has 2FA enabled and supplied an OTP, verify TOTP
+    if (user.twoFactorEnabled && user.twoFactorSecret && otp) {
+      const cleanOtp = String(otp).trim();
+      const decryptedSecret = decryptData(user.twoFactorSecret);
+      const isTotpValid = verifyTOTPCode(cleanOtp, decryptedSecret);
+      if (!isTotpValid) {
+        try {
+          await logAudit(
+            user.id,
+            'ADMIN_STEP_UP_FAILED',
+            'User',
+            user.id,
+            null,
+            { actionType, reason: 'Invalid 2FA OTP entered during step-up authorization', ip: req.ip },
+            req.ip
+          );
+        } catch (e) {}
+        res.status(401).json({ message: 'Invalid 2FA code. Please enter the current code from your authenticator app.' });
+        return;
+      }
+    }
+
+    const stepUpToken = generateStepUpToken({
+      adminId: user.id,
+      purpose: 'STEP_UP_AUTHENTICATION',
+      actionType: actionType || 'CRITICAL_ACTION'
+    });
+
+    try {
+      await logAudit(
+        user.id,
+        'ADMIN_STEP_UP_PASSED',
+        'User',
+        user.id,
+        null,
+        { actionType, ip: req.ip, tokenExpiresIn: 300 },
+        req.ip
+      );
+    } catch (e) {}
+
+    res.status(200).json({
+      success: true,
+      stepUpToken,
+      expiresIn: 300,
+      message: 'Elevated administrative authorization granted for 5 minutes.'
+    });
+  } catch (error) {
+    console.error('verifyStepUpAuth error:', error);
+    res.status(500).json({ message: 'Failed to verify step-up credentials.' });
+  }
+};

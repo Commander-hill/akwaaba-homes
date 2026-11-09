@@ -34,3 +34,15 @@ export const verifyRefreshToken = (token: string) => {
     return null;
   }
 };
+
+export const generateStepUpToken = (payload: { adminId: string; purpose: string; actionType?: string }) => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '5m' }); // 5 minutes validity
+};
+
+export const verifyStepUpToken = (token: string) => {
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    return null;
+  }
+};

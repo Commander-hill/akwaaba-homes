@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import { useStepUpAuth } from '@/hooks/useStepUpAuth';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -43,6 +44,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
   const { id } = use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { requestStepUp, StepUpModal } = useStepUpAuth();
 
   // Document canvas controls
   const [zoomLevel, setZoomLevel] = useState<number>(1);
@@ -95,8 +97,10 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
 
   // Audit decision mutation
   const auditMutation = useMutation({
-    mutationFn: async ({ status, notes }: { status: 'VERIFIED' | 'REJECTED'; notes?: string }) => {
-      await api.put(`/admin/landlord-deeds/${id}/audit`, { status, notes });
+    mutationFn: async ({ status, notes, stepUpToken }: { status: 'VERIFIED' | 'REJECTED'; notes?: string; stepUpToken?: string }) => {
+      await api.put(`/admin/landlord-deeds/${id}/audit`, { status, notes }, {
+        headers: stepUpToken ? { 'x-step-up-token': stepUpToken } : {}
+      });
     },
     onSuccess: (_, variables) => {
       if (variables.status === 'VERIFIED') {
@@ -510,7 +514,16 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                 <button
                   type="button"
                   disabled={auditMutation.isPending || !rejectionNotes.trim()}
-                  onClick={() => auditMutation.mutate({ status: 'REJECTED', notes: rejectionNotes })}
+                  onClick={() => {
+                  requestStepUp({
+                    title: 'Reject Property Ownership Deed',
+                    description: `You are rejecting the property ownership deed for ${landlord.firstName} ${landlord.lastName}. Notes: ${rejectionNotes}`,
+                    actionType: 'DEED_VERIFICATION',
+                    onSuccess: (stepUpToken: string) => {
+                      auditMutation.mutate({ status: 'REJECTED', notes: rejectionNotes, stepUpToken });
+                    }
+                  });
+                }}
                   className="px-4 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {auditMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -612,7 +625,21 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
               <button
                 type="button"
                 disabled={auditMutation.isPending || !landlord.landlordDocUrl}
-                onClick={() => auditMutation.mutate({ status: 'VERIFIED' })}
+                onClick={() => {
+                requestStepUp({
+                  title: 'Approve & Certify Property Ownership Deed',
+                  description: `You are granting official Verified Landlord status to ${landlord.firstName} ${landlord.lastName}. This authorizes full listing privileges and escrow disbursements on Akwaaba Homes.`,
+                  actionType: 'DEED_VERIFICATION',
+                  payloadSummary: [
+                    { label: 'Landlord Legal Name', value: `${landlord.firstName} ${landlord.lastName}` },
+                    { label: 'Target Action', value: 'Grant Verified Status' },
+                    { label: 'National ID', value: landlord.ghanaCardNumber || 'Attached' }
+                  ],
+                  onSuccess: (stepUpToken: string) => {
+                    auditMutation.mutate({ status: 'VERIFIED', stepUpToken });
+                  }
+                });
+              }}
                 className="w-full sm:w-auto flex-1 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1.5"
               >
                 {auditMutation.isPending ? (

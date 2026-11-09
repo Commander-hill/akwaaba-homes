@@ -24,7 +24,9 @@ import {
   requestProfileUnlock,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  verifyAdminUnlock,
+  verifyStepUpAuth
 } from '../controllers/auth.controller';
 import { getSessions, revokeSession, revokeAllOtherSessions } from '../controllers/session.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -68,5 +70,10 @@ router.post('/request-unlock', authenticate, requestProfileUnlock);
 router.get('/sessions', authenticate, getSessions);
 router.delete('/sessions/others', authenticate, revokeAllOtherSessions);
 router.delete('/sessions/:id', authenticate, revokeSession);
+
+
+// Workstation Auto-Lock & Step-Up Governance (Act 843 & Cyber Security Act)
+router.post('/unlock', authenticate, verifyAdminUnlock);
+router.post('/verify-step-up', authenticate, verifyStepUpAuth);
 
 export default router;

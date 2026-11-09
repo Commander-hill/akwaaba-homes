@@ -41,7 +41,8 @@ import {
   updatePayoutStatus,
   togglePropertyPhysicalVerification,
   createAdministrator,
-  toggleAdminStatus
+  toggleAdminStatus,
+  updateLandlordSettlement
 } from '../controllers/admin.controller';
 import { 
   getAllNotices, 
@@ -51,7 +52,7 @@ import {
   reorderNotices
 } from '../controllers/notice.controller';
 import { checkExpirations } from '../controllers/subscription.controller';
-import { authenticate, authorizeRole, requireSuperAdmin } from '../middleware/auth.middleware';
+import { authenticate, authorizeRole, requireSuperAdmin, requireStepUpAuth } from '../middleware/auth.middleware';
 
 import { 
   getAdminBreachReports, 
@@ -81,14 +82,15 @@ router.get('/users/:id', getUserById);
 router.put('/users/:id/suspend', toggleUserSuspension);
 router.put('/users/:id/lock', toggleUserProfileLock);
 router.put('/verify-user/:id', verifyUserCard);
-router.put('/verify-landlord/:id', verifyLandlord);
+router.put('/verify-landlord/:id', requireStepUpAuth, verifyLandlord);
+router.put('/landlords/:id/settlement', requireStepUpAuth, updateLandlordSettlement);
 
 // Breach Disputes & Deed Audits
 router.get('/breaches', getAdminBreachReports);
 router.get('/disputes/:id', getDisputeById);
 router.put('/breaches/:id/resolve', resolveBreachReport);
 router.get('/landlord-deeds', getLandlordDeedAudits);
-router.put('/landlord-deeds/:id/audit', auditLandlordDeed);
+router.put('/landlord-deeds/:id/audit', requireStepUpAuth, auditLandlordDeed);
 router.post('/landlord-deeds/:id/request-docs', requestAdditionalDeedDocuments);
 router.post('/landlord-deeds/:id/attach', attachLandlordDeed);
 
@@ -110,7 +112,7 @@ router.get('/transactions/:id', getTransactionById);
 
 // Landlord Payouts & Disbursements
 router.get('/payouts', getAllPayouts);
-router.put('/payouts/:id/status', requireSuperAdmin, updatePayoutStatus);
+router.put('/payouts/:id/status', requireSuperAdmin, requireStepUpAuth, updatePayoutStatus);
 
 // Reviews & Reputation
 router.get('/reviews', getAllReviews);
