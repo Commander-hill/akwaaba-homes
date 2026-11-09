@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import axios from 'axios';
+import { reconcilePendingPayments } from '../utils/paymentReconciliation';
 import { notifyPropertyApproval, notifyLandlordVerification, notifyAdminAnnouncement } from '../utils/notification.service';
 import { decryptData, maskGhanaCardNumber } from '../utils/crypto';
 import { generateSignedDocumentUrl } from '../utils/security.service';
@@ -900,7 +902,32 @@ export const getDisputeById = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    res.status(200).json(dispute);
+    // Query active escrow payouts under Dispute Holding Freeze
+    const heldPayouts = dispute.property?.landlord?.id
+      ? await prisma.payoutRequest.findMany({
+          where: {
+            landlordId: dispute.property.landlord.id,
+            status: { in: ['PENDING', 'PROCESSING'] }
+          },
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+            bankOrNetwork: true,
+            accountNumber: true,
+            recipientType: true,
+            createdAt: true
+          }
+        })
+      : [];
+
+    const isEscrowFreezeActive = !['RESOLVED', 'REJECTED', 'DISMISSED'].includes(dispute.status);
+
+    res.status(200).json({
+      ...dispute,
+      heldPayouts,
+      isEscrowFreezeActive
+    });
   } catch (error) {
     console.error('Error fetching dispute by id:', error);
     res.status(500).json({ message: 'Internal server error' });
@@ -2676,8 +2703,45 @@ export const getAllPayouts = async (req: Request, res: Response): Promise<void> 
       }
     });
 
+    // Cross-reference active breach disputes to enforce Dispute Holding Escrow Freeze
+    const landlordIds = Array.from(new Set(payouts.map((p) => p.landlordId)));
+    const activeDisputes = await prisma.breachReport.findMany({
+      where: {
+        property: { landlordId: { in: landlordIds } },
+        status: { in: ['PENDING', 'UNDER_REVIEW', 'VERIFIED'] }
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        property: { select: { landlordId: true, title: true } }
+      }
+    });
+
+    const disputeMap = new Map();
+    for (const d of activeDisputes) {
+      const lId = d.property?.landlordId;
+      if (lId && !disputeMap.has(lId)) {
+        disputeMap.set(lId, {
+          disputeId: d.id,
+          title: d.title,
+          propertyTitle: d.property?.title,
+          status: d.status
+        });
+      }
+    }
+
+    const enrichedPayouts = payouts.map((p) => {
+      const activeDisp = disputeMap.get(p.landlordId);
+      return {
+        ...p,
+        disputeHold: !!activeDisp,
+        activeDispute: activeDisp || null
+      };
+    });
+
     res.status(200).json({
-      payouts,
+      payouts: enrichedPayouts,
       pagination: {
         page,
         limit,
@@ -2706,6 +2770,22 @@ export const updatePayoutStatus = async (req: Request, res: Response): Promise<v
     if (!payout) {
       res.status(404).json({ message: 'Payout request not found' });
       return;
+    }
+
+    // Enforce Dispute Holding Escrow Freeze: Block release if landlord has active breach dispute
+    if (status === 'SUCCESS') {
+      const activeDispute = await prisma.breachReport.findFirst({
+        where: {
+          property: { landlordId: payout.landlordId },
+          status: { in: ['PENDING', 'UNDER_REVIEW', 'VERIFIED'] }
+        }
+      });
+      if (activeDispute) {
+        res.status(403).json({
+          message: `Dispute Holding Escrow Freeze Active: Host has an unresolved lease dispute ("${activeDispute.title}"). Escrow funds remain frozen until this dispute is resolved.`
+        });
+        return;
+      }
     }
 
     const updated = await prisma.payoutRequest.update({
@@ -2957,5 +3037,120 @@ export const bulkUpdatePropertyApproval = async (req: Request, res: Response): P
   } catch (error) {
     console.error('Error in bulkUpdatePropertyApproval:', error);
     res.status(500).json({ message: 'Failed to bulk moderate properties.' });
+  }
+};
+
+
+/**
+ * ── MANUAL ESCROW RECONCILIATION TRIGGER (PAYOUT RESILIENCE) ──
+ * Allows financial officers to immediately force a status query to Paystack/Telcos
+ * for stuck or pending MoMo/bank transfers and escrow deposits.
+ */
+export const reconcileManualEscrow = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+    const isMock = !paystackKey || paystackKey.includes('replace_with_your_actual');
+
+    // 1. Fetch pending/processing payouts
+    const pendingPayouts = await prisma.payoutRequest.findMany({
+      where: {
+        status: { in: ['PENDING', 'PROCESSING'] }
+      },
+      include: {
+        landlord: { select: { id: true, firstName: true, lastName: true, email: true } }
+      },
+      take: 50
+    });
+
+    let payoutsResolved = 0;
+    let payoutsFailed = 0;
+
+    for (const payout of pendingPayouts) {
+      if (payout.transferReference && !isMock) {
+        try {
+          const res = await axios.get(`https://api.paystack.co/transfer/verify/${payout.transferReference}`, {
+            headers: { Authorization: `Bearer ${paystackKey}` },
+            timeout: 6000
+          });
+          const transferData = res.data?.data;
+          const transferStatus = transferData?.status?.toLowerCase();
+
+          if (transferStatus === 'success') {
+            await prisma.payoutRequest.update({
+              where: { id: payout.id },
+              data: {
+                status: 'SUCCESS',
+                processedAt: new Date(),
+                failureReason: null
+              }
+            });
+            payoutsResolved++;
+          } else if (transferStatus === 'failed' || transferStatus === 'reversed') {
+            await prisma.payoutRequest.update({
+              where: { id: payout.id },
+              data: {
+                status: 'FAILED',
+                failureReason: transferData?.gateway_response || 'Transfer failed at Telco gateway'
+              }
+            });
+            payoutsFailed++;
+          }
+        } catch (err: any) {
+          console.warn(`[ReconcileEscrow] Error verifying transfer ref ${payout.transferReference}:`, err.response?.data?.message || err.message);
+        }
+      }
+    }
+
+    // 2. Also run payment reconciliation for incoming tenant escrow deposits
+    let paymentsChecked = 0;
+    let paymentsResolved = 0;
+    try {
+      const paymentRecResult = await reconcilePendingPayments();
+      paymentsChecked = paymentRecResult.checked;
+      paymentsResolved = paymentRecResult.resolved;
+    } catch (e) {}
+
+    // Invalidate caches
+    appCache.del('admin_stats');
+    appCache.del('admin_payouts');
+
+    // Log audit
+    await logAudit(
+      req.user.id,
+      'ADMIN_MANUAL_ESCROW_RECONCILE',
+      'PayoutRequest',
+      'ESCROW_RECONCILIATION_BATCH',
+      null,
+      {
+        payoutsChecked: pendingPayouts.length,
+        payoutsResolved,
+        payoutsFailed,
+        paymentsChecked,
+        paymentsResolved,
+        isMock
+      },
+      req.ip || 'ADMIN_CONSOLE'
+    );
+
+    // Emit real-time socket events
+    try {
+      const { emitToAdmins } = await import('../socket');
+      emitToAdmins('admin_action_required', { type: 'ESCROW_RECONCILED' });
+    } catch (e) {}
+
+    res.status(200).json({
+      success: true,
+      message: `Reconciliation completed: ${payoutsResolved} stuck payouts settled, ${payoutsFailed} failed transfers marked, ${paymentsResolved} incoming escrow deposits fulfilled.`,
+      stats: {
+        payoutsChecked: pendingPayouts.length,
+        payoutsResolved,
+        payoutsFailed,
+        paymentsChecked,
+        paymentsResolved
+      }
+    });
+  } catch (error) {
+    console.error('Error in reconcileManualEscrow:', error);
+    res.status(500).json({ message: 'Failed to execute manual escrow reconciliation.' });
   }
 };

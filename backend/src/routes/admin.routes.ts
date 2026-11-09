@@ -39,6 +39,7 @@ import {
   searchEntities,
   getAdministrators,
   getAllPayouts,
+  reconcileManualEscrow,
   updatePayoutStatus,
   togglePropertyPhysicalVerification,
   createAdministrator,
@@ -114,6 +115,7 @@ router.get('/transactions/:id', getTransactionById);
 
 // Landlord Payouts & Disbursements
 router.get('/payouts', getAllPayouts);
+router.post('/payouts/reconcile', requireSuperAdmin, reconcileManualEscrow);
 router.put('/payouts/:id/status', requireSuperAdmin, requireStepUpAuth, updatePayoutStatus);
 
 // Reviews & Reputation

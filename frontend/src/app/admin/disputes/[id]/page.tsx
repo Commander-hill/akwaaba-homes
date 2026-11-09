@@ -21,7 +21,9 @@ import {
   Star,
   Mail,
   Phone,
-  Gavel
+  Gavel,
+  ShieldCheck,
+  Banknote
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getImageUrl } from '@/lib/utils';
@@ -141,6 +143,80 @@ export default function AdminDisputeDetailPage({
         backUrl="/admin/disputes"
         backLabel="Back to Disputes"
       />
+
+
+      {/* ── DISPUTE HOLDING ESCROW FREEZE BANNER (RENT ACT 1963 & ACT 843 §20) ── */}
+      <div
+        className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+          dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING')
+            ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800/80 text-rose-950 dark:text-rose-100'
+            : 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80 text-emerald-950 dark:text-emerald-100'
+        }`}
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-white font-bold ${
+                dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING')
+                  ? 'bg-rose-600'
+                  : 'bg-[#16A34A]'
+              }`}
+            >
+              <Scale className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs sm:text-sm font-bold">
+                  {dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING')
+                    ? 'Dispute Holding Escrow Freeze: ACTIVE'
+                    : 'Dispute Holding Escrow Freeze: LIFTED'}
+                </h4>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING')
+                      ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200'
+                      : 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200'
+                  }`}
+                >
+                  {dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING') ? 'Escrow Locked' : 'Settlement Restored'}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-1 leading-relaxed">
+                {dispute.isEscrowFreezeActive ?? (dispute.status === 'PENDING')
+                  ? `Statutory escrow payout hold is active on Host ${property?.landlord?.firstName || ''} ${property?.landlord?.lastName || ''}'s settlement account for "${property?.title || 'this property'}". Funds remain frozen under Rent Act 1963 Section 20 until this dispute reaches RESOLVED status.`
+                  : 'This tenancy dispute has reached final adjudication. The statutory escrow hold on associated landlord payouts has been lifted.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-2 self-start sm:self-auto">
+            {property?.landlord?.email && (
+              <Link
+                href={`/admin/payouts?search=${encodeURIComponent(property.landlord.email)}`}
+                className="px-3.5 py-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+              >
+                <span>Inspect Payouts</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* List of Held Payouts if available */}
+        {dispute.heldPayouts && dispute.heldPayouts.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-rose-200/60 dark:border-rose-900/40 flex flex-wrap items-center gap-2 text-xs">
+            <span className="font-bold text-rose-800 dark:text-rose-300">Frozen Disbursements:</span>
+            {dispute.heldPayouts.map((hp: any) => (
+              <span
+                key={hp.id}
+                className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-zinc-900/80 border border-rose-200 dark:border-rose-800 font-mono text-[11px] font-bold"
+              >
+                GHS {Number(hp.amount).toFixed(2)} ({hp.bankOrNetwork}) • {hp.status}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Main 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
