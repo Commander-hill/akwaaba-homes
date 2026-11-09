@@ -601,7 +601,7 @@ export default function AdminUsersPage() {
             <table className="w-full text-xs text-left">
               <thead className="bg-[#f8faf9] dark:bg-zinc-800/50 border-b border-zinc-200/70 dark:border-zinc-800 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
                 <tr>
-                  <th className="w-10 px-4 py-3.5">
+                  <th className="sticky left-0 z-20 bg-[#f8faf9] dark:bg-zinc-800 py-3.5 px-3 w-11 min-w-[44px] text-center">
                     <input
                       type="checkbox"
                       aria-label="Select all users on current page"
@@ -613,7 +613,7 @@ export default function AdminUsersPage() {
                       className="rounded border-zinc-300 text-[#16A34A] focus:ring-[#16A34A] cursor-pointer"
                     />
                   </th>
-                  <th className="px-4 py-3.5 text-zinc-900 dark:text-zinc-100">User</th>
+                  <th className="sticky left-11 z-20 bg-[#f8faf9] dark:bg-zinc-800 py-3.5 px-4 min-w-[240px] text-zinc-900 dark:text-zinc-100 border-r border-zinc-200/70 dark:border-zinc-800 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_8px_-3px_rgba(0,0,0,0.35)]">User</th>
                   <th className="px-4 py-3.5 text-zinc-900 dark:text-zinc-100">Role</th>
                   <th className="px-4 py-3.5 text-zinc-900 dark:text-zinc-100">Contact Details</th>
                   <th className="px-4 py-3.5 text-zinc-900 dark:text-zinc-100">KYC Status</th>
@@ -659,12 +659,17 @@ export default function AdminUsersPage() {
                       <tr
                         key={user.id}
                         className={clsx(
-                          "hover:bg-[#fbfcfb] dark:hover:bg-zinc-800/30 transition-colors",
+                          "group hover:bg-[#fbfcfb] dark:hover:bg-zinc-800/30 transition-colors",
                           isSelected && "bg-emerald-50/40 dark:bg-emerald-950/20"
                         )}
                       >
-                        {/* Checkbox */}
-                        <td className="px-4 py-3.5">
+                        {/* Checkbox - Sticky Column 1 */}
+                        <td className={clsx(
+                          "sticky left-0 z-10 py-3.5 px-3 w-11 min-w-[44px] text-center transition-colors",
+                          isSelected
+                            ? "bg-[#ecf9f0] dark:bg-[#072714]"
+                            : "bg-white dark:bg-[#12151D] group-hover:bg-[#fbfcfb] dark:group-hover:bg-zinc-800/50"
+                        )}>
                           <input
                             type="checkbox"
                             aria-label={`Select user ${user.firstName || ''} ${user.lastName || ''}`}
@@ -674,8 +679,13 @@ export default function AdminUsersPage() {
                           />
                         </td>
 
-                        {/* User Identity */}
-                        <td className="px-4 py-3.5">
+                        {/* User Identity (Entity Name & Photo) - Sticky Column 2 */}
+                        <td className={clsx(
+                          "sticky left-11 z-10 py-3.5 px-4 min-w-[240px] border-r border-zinc-200/70 dark:border-zinc-800 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_8px_-3px_rgba(0,0,0,0.35)] transition-colors",
+                          isSelected
+                            ? "bg-[#ecf9f0] dark:bg-[#072714]"
+                            : "bg-white dark:bg-[#12151D] group-hover:bg-[#fbfcfb] dark:group-hover:bg-zinc-800/50"
+                        )}>
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden border border-zinc-200/80 dark:border-zinc-700">
                               {user.avatarUrl ? (

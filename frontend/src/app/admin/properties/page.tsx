@@ -582,7 +582,7 @@ export default function AdminPropertiesPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/40 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                    <th className="py-3 px-3 w-10 text-center">
+                    <th className="sticky left-0 z-20 bg-zinc-50 dark:bg-zinc-800 py-3 px-3 w-11 min-w-[44px] text-center">
                       <input
                         type="checkbox"
                         checked={paginatedProperties.length > 0 && paginatedProperties.every((p: any) => selectedPropertyIds.includes(p.id))}
@@ -599,13 +599,13 @@ export default function AdminPropertiesPage() {
                         className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                       />
                     </th>
-                    <th className="py-3 px-4">Property</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Location</th>
-                    <th className="py-3 px-4">Owner</th>
-                    <th className="py-3 px-4">Rent/Price</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="sticky left-11 z-20 bg-zinc-50 dark:bg-zinc-800 py-3 px-4 min-w-[240px] border-r border-zinc-200/80 dark:border-zinc-800 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_8px_-3px_rgba(0,0,0,0.35)]">Property</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Category</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Location</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Owner</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Rent/Price</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60 text-xs">
@@ -634,10 +634,14 @@ export default function AdminPropertiesPage() {
                       return (
                         <tr
                           key={p.id}
-                          className={`hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors ${selectedPropertyIds.includes(p.id) ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''}`}
+                          className={`group hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30 transition-colors ${selectedPropertyIds.includes(p.id) ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''}`}
                         >
-                          {/* Multi-Select Checkbox */}
-                          <td className="py-3.5 px-3 text-center">
+                          {/* Multi-Select Checkbox - Sticky Column 1 */}
+                          <td className={`sticky left-0 z-10 py-3.5 px-3 w-11 min-w-[44px] text-center transition-colors ${
+                            selectedPropertyIds.includes(p.id)
+                              ? 'bg-[#ecf9f0] dark:bg-[#072714]'
+                              : 'bg-white dark:bg-zinc-900 group-hover:bg-[#f9faf9] dark:group-hover:bg-zinc-800'
+                          }`}>
                             <input
                               type="checkbox"
                               checked={selectedPropertyIds.includes(p.id)}
@@ -650,8 +654,12 @@ export default function AdminPropertiesPage() {
                               className="w-4 h-4 rounded border-zinc-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                             />
                           </td>
-                          {/* 1. Property */}
-                          <td className="py-3.5 px-4">
+                          {/* 1. Property (Entity Name & Photo) - Sticky Column 2 */}
+                          <td className={`sticky left-11 z-10 py-3.5 px-4 min-w-[240px] border-r border-zinc-200/80 dark:border-zinc-800 shadow-[4px_0_8px_-3px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_8px_-3px_rgba(0,0,0,0.35)] transition-colors ${
+                            selectedPropertyIds.includes(p.id)
+                              ? 'bg-[#ecf9f0] dark:bg-[#072714]'
+                              : 'bg-white dark:bg-zinc-900 group-hover:bg-[#f9faf9] dark:group-hover:bg-zinc-800'
+                          }`}>
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden shrink-0 border border-zinc-200/80 dark:border-zinc-700">
                                 {img ? (
@@ -680,7 +688,7 @@ export default function AdminPropertiesPage() {
                           </td>
 
                           {/* 2. Category */}
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5 px-4 whitespace-nowrap">
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${getCategoryBadgeClass(
                                 p.type
@@ -691,7 +699,7 @@ export default function AdminPropertiesPage() {
                           </td>
 
                           {/* 3. Location */}
-                          <td className="py-3.5 px-4 text-zinc-600 dark:text-zinc-300">
+                          <td className="py-3.5 px-4 whitespace-nowrap text-zinc-600 dark:text-zinc-300">
                             <div className="flex items-center gap-1.5 max-w-[150px]">
                               <MapPin className="w-3.5 h-3.5 text-[#04793d] dark:text-emerald-400 shrink-0" />
                               <span className="truncate text-xs font-medium">{p.location || 'Location unlisted'}</span>
@@ -699,7 +707,7 @@ export default function AdminPropertiesPage() {
                           </td>
 
                           {/* 4. Owner */}
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5 px-4 whitespace-nowrap">
                             <div className="flex items-center gap-2 max-w-[160px]">
                               <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center font-bold text-[10px] shrink-0">
                                 {ownerName.charAt(0).toUpperCase()}
@@ -716,7 +724,7 @@ export default function AdminPropertiesPage() {
                           </td>
 
                           {/* 5. Rent / Price */}
-                          <td className="py-3.5 px-4 font-bold text-zinc-900 dark:text-white text-xs">
+                          <td className="py-3.5 px-4 whitespace-nowrap font-bold text-zinc-900 dark:text-white text-xs">
                             GH₵ {Number(p.price || 0).toLocaleString()}
                             <span className="text-[11px] text-zinc-400 font-normal ml-1">
                               /{p.pricePeriod ? p.pricePeriod.toLowerCase().replace('academic year', 'yr') : 'mo'}
@@ -724,7 +732,7 @@ export default function AdminPropertiesPage() {
                           </td>
 
                           {/* 6. Status */}
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5 px-4 whitespace-nowrap">
                             {p.approvalStatus === 'APPROVED' ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF7EE] text-[#04793d] border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/40">
                                 <span className="w-1.5 h-1.5 rounded-full bg-[#04793d]" />
