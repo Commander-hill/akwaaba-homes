@@ -398,7 +398,6 @@ export default function RegisterPage() {
 
   const triggerError = (msg: string) => {
     setError(msg);
-    toast.error(msg);
     if (errorRef.current) {
       errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }

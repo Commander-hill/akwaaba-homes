@@ -76,7 +76,6 @@ export default function StepUpAuthModal({
         err.response?.data?.message ||
         'Authorization denied. Invalid administrator password or 2FA OTP.';
       setError(msg);
-      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

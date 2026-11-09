@@ -138,7 +138,6 @@ export default function NewCompoundNoticePage() {
 
   const triggerError = (msg: string) => {
     setFormError(msg);
-    toast.error(msg);
     setTimeout(() => {
       if (errorRef.current) {
         errorRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });

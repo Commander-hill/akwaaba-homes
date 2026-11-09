@@ -275,11 +275,11 @@ function ReportIssueContent() {
     setFormError('');
     if (step === 2) {
       if (!title.trim()) {
-        toast.error('Please enter a short issue headline or select a fault suggestion');
+        setFormError('Please enter a short issue headline or select a fault suggestion');
         return;
       }
       if (!description.trim() || description.trim().length < 10) {
-        toast.error('Please provide at least 10 characters describing the fault');
+        setFormError('Please provide at least 10 characters describing the fault');
         return;
       }
     }
