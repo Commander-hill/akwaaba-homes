@@ -224,10 +224,10 @@ export default function VerificationPage() {
       {/* Page Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-black text-zinc-950 dark:text-white tracking-tight">
-          Identity, Academic &amp; Host Certification
+          {session.role === 'LANDLORD' ? 'Identity & Property Host Certification' : 'Identity, Academic & Host Certification'}
         </h1>
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Identity verification, tertiary student clearance, and property deed certification.
+          {session.role === 'LANDLORD' ? 'National ID verification and property title deed certification for verified hosts.' : 'Identity verification, tertiary student clearance, and property deed certification.'}
         </p>
       </div>
 

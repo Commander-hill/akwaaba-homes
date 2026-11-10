@@ -82,10 +82,10 @@ export default function TenancyAgreementsPage() {
 
   // ── 2. Fetch Digital Tenancy Agreements from Backend ──
   const { data: agreementsData } = useQuery({
-    queryKey: ['tenant-agreements'],
+    queryKey: ['tenant-agreements', session?.role],
     queryFn: async () => {
       try {
-        const { data } = await api.get('/agreements/tenant');
+        const { data } = await api.get(session?.role === 'LANDLORD' ? '/agreements/landlord' : '/agreements/tenant');
         return data.agreements || [];
       } catch {
         return [];
@@ -107,7 +107,7 @@ export default function TenancyAgreementsPage() {
         primaryAgreement.booking.property.owner.lastName || ''
       }`.trim()
     : 'Carefree Chelsea';
-  const tenantName = session
+  const tenantName = primaryAgreement?.booking?.tenant ? `${primaryAgreement.booking.tenant.firstName || ''} ${primaryAgreement.booking.tenant.lastName || ''}`.trim() : session && session.role !== 'LANDLORD'
     ? `${session.firstName || 'Stephen'} ${session.lastName || 'Darko'}`.trim()
     : 'Stephen Darko';
 

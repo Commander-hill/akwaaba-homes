@@ -419,10 +419,10 @@ function MessagesContent() {
 
   // 3. Fetch Tenant's Real Bookings for Contact Picker in New Message Modal
   const { data: tenantBookings = [], isLoading: isLoadingBookings } = useQuery<any>({
-    queryKey: ['myBookings', 'contacts'],
+    queryKey: ['myBookings', 'contacts', currentUser?.role],
     queryFn: async () => {
       try {
-        const { data } = await api.get('/bookings/me');
+        const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');
         if (Array.isArray(data)) return data;
         if (Array.isArray(data?.bookings)) return data.bookings;
         return [];
@@ -547,12 +547,12 @@ function MessagesContent() {
     >();
 
     for (const b of list) {
-      const landlord = b?.property?.landlord;
+      const landlord = currentUser?.role === 'LANDLORD' ? b?.tenant : b?.property?.landlord;
       if (landlord && landlord.id && !map.has(landlord.id)) {
         map.set(landlord.id, {
           id: landlord.id,
           name: `${landlord.firstName || ''} ${landlord.lastName || ''}`.trim() || 'Property Host',
-          role: `Landlord • ${b?.property?.title || 'Accommodation'}`,
+          role: `${currentUser?.role === 'LANDLORD' ? 'Tenant' : 'Landlord'} • ${b?.property?.title || 'Accommodation'}`,
           avatarUrl: landlord.avatarUrl || null,
           propertyName: b?.property?.title || 'Property',
           phoneNumber: landlord.phoneNumber || null,
@@ -1377,7 +1377,7 @@ function MessagesContent() {
                               {isMine && (
                                 <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700 bg-zinc-100">
                                   <Image
-                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : currentUser?.role === 'LANDLORD' ? '/images/avatars/landlord-avatar.png' : '/images/avatars/resident-stephen-darko.png'}
                                     alt={currentUserName}
                                     fill
                                     className="object-cover"
@@ -1397,7 +1397,7 @@ function MessagesContent() {
                               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden shrink-0 relative border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800">
                                 {isMine ? (
                                   <Image
-                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : '/images/avatars/resident-stephen-darko.png'}
+                                    src={currentUser?.avatarUrl ? getImageUrl(currentUser.avatarUrl) : currentUser?.role === 'LANDLORD' ? '/images/avatars/landlord-avatar.png' : '/images/avatars/resident-stephen-darko.png'}
                                     alt={currentUserName}
                                     fill
                                     className="object-cover"

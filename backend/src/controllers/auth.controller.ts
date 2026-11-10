@@ -1062,6 +1062,15 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         landlordDocUrl: true,
         isVerifiedLandlord: true,
         landlordVerificationStatus: true,
+        hostEntityType: true,
+        businessName: true,
+        primaryRegion: true,
+        portfolioSize: true,
+        payoutMethod: true,
+        payoutProvider: true,
+        payoutAccountNumber: true,
+        tinNumber: true,
+        businessRegistrationNumber: true,
         otherNames: true,
         phoneNumber: true,
         gender: true,
@@ -1434,7 +1443,8 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     const { 
       firstName, lastName, otherNames, phoneNumber, gender, 
       dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl,
-      campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType 
+      campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
+      hostEntityType, businessName, primaryRegion, portfolioSize, payoutMethod, payoutProvider, payoutAccountNumber, tinNumber, businessRegistrationNumber
     } = req.body;
     
     if (!req.user?.id) {
@@ -1462,7 +1472,21 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         firstName, lastName, otherNames, phoneNumber, 
         gender: gender !== undefined ? (gender ? gender.toUpperCase() : null) : existingUser.gender, 
         dateOfBirth, nationality, guardianName, guardianPhone, avatarUrl,
-        campus, studentId, dateOfAdmission, programmeOfStudy, yearOfStudy, studentType,
+        campus: existingUser.role === 'LANDLORD' ? null : campus,
+        studentId: existingUser.role === 'LANDLORD' ? null : studentId,
+        dateOfAdmission: existingUser.role === 'LANDLORD' ? null : dateOfAdmission,
+        programmeOfStudy: existingUser.role === 'LANDLORD' ? null : programmeOfStudy,
+        yearOfStudy: existingUser.role === 'LANDLORD' ? null : yearOfStudy,
+        studentType: existingUser.role === 'LANDLORD' ? null : studentType,
+        ...(hostEntityType !== undefined ? { hostEntityType } : {}),
+        ...(businessName !== undefined ? { businessName } : {}),
+        ...(primaryRegion !== undefined ? { primaryRegion } : {}),
+        ...(portfolioSize !== undefined ? { portfolioSize } : {}),
+        ...(payoutMethod !== undefined ? { payoutMethod } : {}),
+        ...(payoutProvider !== undefined ? { payoutProvider } : {}),
+        ...(payoutAccountNumber !== undefined ? { payoutAccountNumber } : {}),
+        ...(tinNumber !== undefined ? { tinNumber } : {}),
+        ...(businessRegistrationNumber !== undefined ? { businessRegistrationNumber } : {}),
         isProfileLocked: true // Lock profile upon hitting Save button
       }
     });

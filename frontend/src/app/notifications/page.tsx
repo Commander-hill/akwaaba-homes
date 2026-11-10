@@ -1,12 +1,12 @@
 'use client';
 
-import TenantShell from '@/components/tenant-ui/TenantShell';
+import DashboardLayout from '@/app/dashboard/layout';
 import NotificationsPage from '@/app/dashboard/notifications/page';
 
 export default function NotificationsRoutePage() {
   return (
-    <TenantShell>
+    <DashboardLayout>
       <NotificationsPage />
-    </TenantShell>
+    </DashboardLayout>
   );
 }

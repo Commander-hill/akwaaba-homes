@@ -2,12 +2,12 @@
 
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import TenantShell from '@/components/tenant-ui/TenantShell';
+import DashboardLayout from '@/app/dashboard/layout';
 import { ProfileWorkspaceContent } from '@/components/tenant-ui/ProfileWorkspaceContent';
 
 export default function StandaloneProfileEditRoute() {
   return (
-    <TenantShell>
+    <DashboardLayout>
       <Suspense
         fallback={
           <div className="flex justify-center p-12">
@@ -17,6 +17,6 @@ export default function StandaloneProfileEditRoute() {
       >
         <ProfileWorkspaceContent defaultTab="basic" />
       </Suspense>
-    </TenantShell>
+    </DashboardLayout>
   );
 }

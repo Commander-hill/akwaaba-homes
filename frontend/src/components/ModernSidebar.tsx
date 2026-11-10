@@ -101,9 +101,9 @@ export default function ModernSidebar({ user, groups, onLogout, mobileOpen, onMo
         )}>
           {/* Avatar with Status Ring */}
           <div className="relative shrink-0">
-            {user?.avatarUrl || user?.role === 'TENANT' || !user?.role ? (
+            {user?.avatarUrl || user?.role === 'TENANT' || user?.role === 'LANDLORD' || !user?.role ? (
               <img 
-                src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : '/images/avatars/resident-stephen-darko.png'} 
+                src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : user?.role === 'LANDLORD' ? '/images/avatars/landlord-avatar.png' : '/images/avatars/resident-stephen-darko.png'} 
                 alt={userDisplayName} 
                 className="w-9 h-9 rounded-xl object-cover ring-2 ring-emerald-500/40" 
               />

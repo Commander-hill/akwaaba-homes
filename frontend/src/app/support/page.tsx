@@ -191,7 +191,7 @@ export default function SupportHelpCentrePage() {
   const { data: bookingsData } = useQuery<{ bookings: BookingListItem[] }>({
     queryKey: ['my-bookings-support'],
     queryFn: async () => {
-      const { data } = await api.get('/bookings/me');
+      const { data } = await api.get(user?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');
       return data;
     },
     enabled: Boolean(user),
@@ -459,16 +459,16 @@ export default function SupportHelpCentrePage() {
               Explore
             </Link>
             <Link
-              href="/dashboard/tenant/bookings"
+              href={user?.role === 'LANDLORD' ? '/dashboard/landlord/bookings' : '/dashboard/tenant/bookings'}
               className="hover:text-[#0B3B24] transition-colors h-full flex items-center"
             >
               Bookings
             </Link>
             <Link
-              href="/dashboard/tenant"
+              href={user?.role === 'LANDLORD' ? '/dashboard/landlord' : '/dashboard/tenant'}
               className="hover:text-[#0B3B24] transition-colors h-full flex items-center"
             >
-              Resident Portal
+              {user?.role === 'LANDLORD' ? 'Landlord Portal' : 'Resident Portal'}
             </Link>
             <Link
               href="/support"
@@ -1208,7 +1208,7 @@ export default function SupportHelpCentrePage() {
             </Link>
             <span className="text-[#36654C]">|</span>
             <Link href="/dashboard/tenant" className="hover:text-white transition-colors">
-              Resident Portal
+              {user?.role === 'LANDLORD' ? 'Landlord Portal' : 'Resident Portal'}
             </Link>
             <span className="text-[#36654C]">|</span>
             <Link href="/dashboard/agreements" className="hover:text-white transition-colors">
