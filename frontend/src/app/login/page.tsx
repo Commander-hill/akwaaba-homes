@@ -466,7 +466,8 @@ function LoginForm() {
             fill
             priority
             className="object-fill pointer-events-none select-none"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
 
           {/* 2. Interactive Logo Link Overlay (top-left) */}
           <Link
@@ -632,7 +633,8 @@ function LoginForm() {
                 alt="Independence Arch Ghana"
                 fill
                 className="object-cover group-hover:scale-105 transition duration-300"
-              />
+                sizes="(max-width: 768px) 100vw, 256px"
+/>
             </div>
             <div className="flex flex-col justify-center min-w-0 pr-2">
               <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-xs font-bold">
@@ -706,7 +708,8 @@ function LoginForm() {
             fill
             priority
             className="object-cover object-center"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
           <div className="absolute bottom-3 left-4 right-4 text-white">
             <h1 className="text-lg font-black leading-tight drop-shadow-sm">

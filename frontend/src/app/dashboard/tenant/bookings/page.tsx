@@ -282,7 +282,8 @@ export default function TenantBookingsPage() {
             fill
             priority
             className="object-cover object-right"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           {/* Deep dark green gradient overlay on the left */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/90 to-transparent" />
         </div>
@@ -374,7 +375,8 @@ export default function TenantBookingsPage() {
                             alt={primaryTitle}
                             fill
                             className="object-cover"
-                          />
+                            sizes="(max-width: 768px) 100vw, 256px"
+/>
                           <div className="absolute bottom-2 left-2 z-10">
                             {activeTab === 'ACTIVE' || ['ACTIVE', 'CHECKED_IN'].includes(primaryBooking.status) ? (
                               <span className="bg-[#16A34A] text-white text-[10px] font-bold px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-xs">
@@ -793,7 +795,8 @@ export default function TenantBookingsPage() {
                                 alt={pastTitle}
                                 fill
                                 className="object-cover"
-                              />
+                                sizes="(max-width: 768px) 100vw, 256px"
+/>
                               <div className="absolute bottom-1.5 left-1.5 z-10">
                                 <span className="bg-slate-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
                                   <Check className="w-2.5 h-2.5" />

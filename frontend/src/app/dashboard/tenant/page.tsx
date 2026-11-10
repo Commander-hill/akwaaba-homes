@@ -145,7 +145,8 @@ export default function TenantDashboardPage() {
             fill
             priority
             className="object-cover object-right"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           {/* Deep dark green gradient overlay on the left */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/90 to-transparent" />
         </div>
@@ -196,7 +197,8 @@ export default function TenantDashboardPage() {
                     alt={activePropertyTitle}
                     fill
                     className="object-cover"
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                 </div>
 
                 <div className="min-w-0 flex-1 space-y-1">
@@ -428,7 +430,8 @@ export default function TenantDashboardPage() {
                           alt="Study room"
                           fill
                           className="object-cover"
-                        />
+                          sizes="(max-width: 768px) 100vw, 256px"
+/>
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -768,7 +771,8 @@ export default function TenantDashboardPage() {
                       alt="Premium Studio"
                       fill
                       className="object-cover group-hover:scale-105 transition duration-300"
-                    />
+                      sizes="(max-width: 768px) 100vw, 256px"
+/>
                   </div>
                   <div className="min-w-0 space-y-0.5">
                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
@@ -814,7 +818,8 @@ export default function TenantDashboardPage() {
                       alt="KIMO APARTMENT"
                       fill
                       className="object-cover group-hover:scale-105 transition duration-300"
-                    />
+                      sizes="(max-width: 768px) 100vw, 256px"
+/>
                   </div>
                   <div className="min-w-0 space-y-0.5">
                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full inline-block">
@@ -861,7 +866,8 @@ export default function TenantDashboardPage() {
             alt="Community Graphic"
             fill
             className="object-cover object-right"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         {/* Left: Leaf Logo & Slogan */}

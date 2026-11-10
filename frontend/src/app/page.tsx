@@ -215,7 +215,8 @@ export default function HomePage() {
             fill
             priority
             className="object-cover object-right"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           {/* Green wavy gradient overlay on left (matching reference) */}
           <div
             className="absolute inset-0"
@@ -362,7 +363,8 @@ export default function HomePage() {
                       className="w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-zinc-900 relative bg-zinc-100"
                       style={{ marginLeft: i === 0 ? 0 : '-8px', zIndex: 3 - i }}
                     >
-                      <Image src={src} alt="Resident" fill className="object-cover" />
+                      <Image src={src} alt="Resident" fill className="object-cover"   sizes="(max-width: 768px) 100vw, 256px"
+/>
                     </div>
                   ))}
                   <div
@@ -441,7 +443,8 @@ export default function HomePage() {
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={() => {}}
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
 
                   {/* Badge (top left) */}
                   <div
@@ -590,7 +593,8 @@ export default function HomePage() {
             alt="Independence Arch, Ghana"
             fill
             className="object-cover object-left"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           <div className="absolute inset-0 bg-gradient-to-r from-[#0A3826] via-[#0A3826]/60 to-transparent" />
         </div>
 

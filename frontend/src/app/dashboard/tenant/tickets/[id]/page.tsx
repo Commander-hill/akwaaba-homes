@@ -220,7 +220,8 @@ export default function TicketDetailsPage() {
                     alt="Maintenance photo"
                     fill
                     className="object-cover"
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                 </div>
               </div>
             )}

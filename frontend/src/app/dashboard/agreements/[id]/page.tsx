@@ -252,7 +252,8 @@ export default function AgreementPage() {
               fill
               priority
               className="object-contain"
-            />
+              sizes="(max-width: 768px) 100vw, 256px"
+/>
           </div>
         </div>
 
@@ -272,7 +273,8 @@ export default function AgreementPage() {
                 alt="Republic of Ghana Coat of Arms"
                 fill
                 className="object-contain"
-              />
+                sizes="(max-width: 768px) 100vw, 256px"
+/>
             </div>
             <div className="w-[1px] h-9 bg-[#A8A29E]" />
             <div className="w-16 h-14 relative">
@@ -281,7 +283,8 @@ export default function AgreementPage() {
                 alt="Akwaaba Homes"
                 fill
                 className="object-contain"
-              />
+                sizes="(max-width: 768px) 100vw, 256px"
+/>
             </div>
           </div>
           <p className="text-xs uppercase tracking-[0.25em] text-[#44403C] font-semibold">

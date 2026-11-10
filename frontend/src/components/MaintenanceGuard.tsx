@@ -5,17 +5,8 @@ import { usePathname } from 'next/navigation';
 import api from '@/lib/axios';
 import MaintenanceScreen from './MaintenanceScreen';
 
-const CONFIG_CACHE_KEY = 'akwaaba_public_config_v1';
-
-function getInitialPublicConfig() {
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = sessionStorage.getItem(CONFIG_CACHE_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {}
-  }
-  return { maintenanceMode: false };
-}
+// Deterministic SSR-safe default so server HTML and initial client hydration match 100%
+const DEFAULT_PUBLIC_CONFIG = { maintenanceMode: false };
 
 export default function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -30,17 +21,12 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
     queryFn: async () => {
       try {
         const res = await api.get('/config/public');
-        if (typeof window !== 'undefined' && res.data) {
-          try {
-            sessionStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(res.data));
-          } catch {}
-        }
         return res.data;
       } catch {
-        return { maintenanceMode: false };
+        return DEFAULT_PUBLIC_CONFIG;
       }
     },
-    placeholderData: getInitialPublicConfig,
+    placeholderData: DEFAULT_PUBLIC_CONFIG,
     refetchInterval: 15000,
     staleTime: 10000,
     refetchOnWindowFocus: false,

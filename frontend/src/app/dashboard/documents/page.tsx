@@ -1598,7 +1598,8 @@ export default function TenantDocumentsAndVerificationPage() {
                     fill
                     priority
                     className="object-contain"
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                 </div>
               </div>
 

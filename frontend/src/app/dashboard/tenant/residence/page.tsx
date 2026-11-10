@@ -408,7 +408,8 @@ function ResidencePageContent() {
                       unoptimized
                       className="object-cover transition duration-300"
                       priority
-                    />
+                      sizes="(max-width: 768px) 100vw, 256px"
+/>
                   </div>
 
                   {/* 3 Thumbnails Strip */}
@@ -433,7 +434,8 @@ function ResidencePageContent() {
                             fill
                             unoptimized
                             className="object-cover"
-                          />
+                            sizes="(max-width: 768px) 100vw, 256px"
+/>
                         </button>
                       );
                     })}

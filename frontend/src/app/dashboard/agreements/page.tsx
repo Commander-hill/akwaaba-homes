@@ -930,7 +930,8 @@ export default function TenancyAgreementsPage() {
                           fill
                           priority
                           className="object-contain"
-                        />
+                          sizes="(max-width: 768px) 100vw, 256px"
+/>
                       </div>
                     </div>
 
@@ -950,7 +951,8 @@ export default function TenancyAgreementsPage() {
                               fill
                               className="object-contain"
                               priority
-                            />
+                              sizes="(max-width: 768px) 100vw, 256px"
+/>
                           </div>
                           <div className="w-[1.5px] h-11 bg-[#C8A24A] shrink-0" />
                           <div className="w-16 h-14 relative shrink-0">
@@ -960,7 +962,8 @@ export default function TenancyAgreementsPage() {
                               fill
                               className="object-contain"
                               priority
-                            />
+                              sizes="(max-width: 768px) 100vw, 256px"
+/>
                           </div>
                         </div>
                         <p className="font-serif text-[12.5px] font-bold tracking-[0.08em] uppercase text-[#14221A] dark:text-zinc-200">

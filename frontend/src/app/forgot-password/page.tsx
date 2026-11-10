@@ -209,7 +209,8 @@ export default function ForgotPasswordPage() {
                 fill
                 priority
                 className="object-cover object-center"
-              />
+                sizes="(max-width: 768px) 100vw, 256px"
+/>
             </div>
 
             {/* Bottom 3-Pillar Security Strip */}
@@ -380,7 +381,8 @@ export default function ForgotPasswordPage() {
           alt="Ghana skyline"
           fill
           className="object-cover object-bottom"
-        />
+          sizes="(max-width: 768px) 100vw, 256px"
+/>
       </div>
 
       {/* ── 4. FOOTER ── */}

@@ -327,7 +327,8 @@ function ResetPasswordForm() {
                     alt=""
                     fill
                     className="object-contain object-right mr-12"
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                 </div>
 
                 {/* Thin Vertical Gold Accent Line */}

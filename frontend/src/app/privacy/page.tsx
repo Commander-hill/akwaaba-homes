@@ -150,7 +150,8 @@ export default function PrivacyPage() {
             fill
             className="object-cover object-left"
             priority
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
@@ -659,7 +660,8 @@ export default function PrivacyPage() {
             alt="Kente Motif"
             fill
             className="object-cover object-left"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         {/* Right Kente Corner Watermark */}
@@ -669,7 +671,8 @@ export default function PrivacyPage() {
             alt="Kente Motif"
             fill
             className="object-cover object-right"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-4">

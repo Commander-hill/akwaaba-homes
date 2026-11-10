@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
@@ -11,45 +11,50 @@ import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-function getInitialAdminUser() {
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.user?.role === 'ADMIN' || parsed?.user?.role === 'SUPER_ADMIN') {
-          return parsed;
-        }
-      }
-    } catch {}
-  }
-  return undefined;
-}
+// Deterministic SSR-safe optimistic admin user so SSR and client hydration match 100%
+const OPTIMISTIC_ADMIN = {
+  user: {
+    id: 'optimistic-admin',
+    role: 'ADMIN',
+    firstName: 'System',
+    lastName: 'Administrator',
+  },
+  _optimistic: true,
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { data: userResponse, isLoading, isFetching, error } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const { data } = await api.get('/auth/me');
-      if (typeof window !== 'undefined' && data?.user) {
-        try {
-          const serialized = JSON.stringify(data);
-          sessionStorage.setItem(USER_CACHE_KEY, serialized);
-          localStorage.setItem(USER_CACHE_KEY, serialized);
-        } catch {}
+      try {
+        const { data } = await api.get('/auth/me');
+        if (typeof window !== 'undefined' && data?.user) {
+          try {
+            const serialized = JSON.stringify(data);
+            sessionStorage.setItem(USER_CACHE_KEY, serialized);
+            localStorage.setItem(USER_CACHE_KEY, serialized);
+          } catch {}
+        }
+        return data;
+      } catch (err) {
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.removeItem(USER_CACHE_KEY);
+            localStorage.removeItem(USER_CACHE_KEY);
+          } catch {}
+        }
+        throw err;
       }
-      return data;
     },
-    placeholderData: getInitialAdminUser,
+    placeholderData: () => (pathname === '/admin/login' ? undefined : OPTIMISTIC_ADMIN),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const user = userResponse?.user;
+  const user = error ? undefined : userResponse?.user;
 
   // Protect Admin routes
   useEffect(() => {

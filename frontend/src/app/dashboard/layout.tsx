@@ -18,17 +18,8 @@ import LandlordShell from '@/components/landlord-ui/LandlordShell';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-function getInitialCachedUser(pathname: string) {
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed?.user?.role) return parsed;
-      }
-    } catch {}
-  }
-  // Optimistic shell hydration for direct Landlord/Tenant routes so LCP hero banners paint at 0ms
+// Deterministic SSR-safe optimistic shell based purely on pathname (100% identical on server and client)
+function getDeterministicRouteUser(pathname: string) {
   if (pathname.startsWith('/dashboard/landlord')) {
     return {
       user: {
@@ -59,29 +50,58 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname() || '';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cachedSession, setCachedSession] = useState<any>(undefined);
 
   const isGuestAllowedRoute = pathname === '/dashboard/wishlist';
+
+  // Read client storage only after hydration so SSR and initial client render match 100%
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.user?.role) {
+          setCachedSession(parsed);
+        }
+      }
+    } catch {}
+  }, []);
 
   const { data: userResponse, isLoading, isFetching, error } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const { data } = await api.get('/auth/me');
-      if (typeof window !== 'undefined' && data?.user) {
-        try {
-          const serialized = JSON.stringify(data);
-          sessionStorage.setItem(USER_CACHE_KEY, serialized);
-          localStorage.setItem(USER_CACHE_KEY, serialized);
-        } catch {}
+      try {
+        const { data } = await api.get('/auth/me');
+        if (typeof window !== 'undefined' && data?.user) {
+          try {
+            const serialized = JSON.stringify(data);
+            sessionStorage.setItem(USER_CACHE_KEY, serialized);
+            localStorage.setItem(USER_CACHE_KEY, serialized);
+          } catch {}
+        }
+        return data;
+      } catch (err) {
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.removeItem(USER_CACHE_KEY);
+            localStorage.removeItem(USER_CACHE_KEY);
+          } catch {}
+        }
+        setCachedSession(undefined);
+        throw err;
       }
-      return data;
     },
-    placeholderData: () => getInitialCachedUser(pathname),
+    placeholderData: () => getDeterministicRouteUser(pathname),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const isOptimisticPlaceholder = Boolean((userResponse as any)?._optimistic);
-  const user = error && isOptimisticPlaceholder ? undefined : userResponse?.user;
+  const effectiveResponse = userResponse && !(userResponse as any)?._optimistic
+    ? userResponse
+    : cachedSession || userResponse;
+
+  const isOptimisticPlaceholder = Boolean((effectiveResponse as any)?._optimistic);
+  const user = error ? undefined : effectiveResponse?.user;
 
   const { data: notificationsData } = useQuery({
     queryKey: ['notifications'],
@@ -93,7 +113,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return { notifications: [], unreadCount: 0 };
       }
     },
-    enabled: !!user && !isOptimisticPlaceholder,
+    enabled: !!user && !isOptimisticPlaceholder && !error,
     staleTime: 30000,
   });
   const unreadNotificationsCount = notificationsData?.unreadCount || 0;

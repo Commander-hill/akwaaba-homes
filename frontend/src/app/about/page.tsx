@@ -63,7 +63,8 @@ export default function AboutPage() {
             alt=""
             fill
             className="object-cover object-left"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
@@ -423,7 +424,8 @@ export default function AboutPage() {
             alt=""
             fill
             className="object-cover object-center"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 sm:gap-6 relative z-10 text-center sm:text-left">

@@ -1036,7 +1036,8 @@ function MessagesContent() {
                             alt={convPartnerName}
                             fill
                             className="object-cover"
-                          />
+                            sizes="(max-width: 768px) 100vw, 256px"
+/>
                         </div>
                       ) : (
                         <div className="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-black">
@@ -1162,7 +1163,8 @@ function MessagesContent() {
                           alt={partnerName}
                           fill
                           className="object-cover"
-                        />
+                          sizes="(max-width: 768px) 100vw, 256px"
+/>
                       </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-xs font-black">
@@ -1300,7 +1302,8 @@ function MessagesContent() {
                                     alt={partnerName}
                                     fill
                                     className="object-cover"
-                                  />
+                                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                                 ) : (
                                   <div className="w-full h-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold">
                                     {partnerInitials}
@@ -1315,7 +1318,8 @@ function MessagesContent() {
                                     alt={msg.propertyCard.title}
                                     fill
                                     className="object-cover"
-                                  />
+                                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                                 </div>
 
                                 <div className="flex-1 min-w-0 space-y-1">
@@ -1361,7 +1365,8 @@ function MessagesContent() {
                                       alt={partnerName}
                                       fill
                                       className="object-cover"
-                                    />
+                                      sizes="(max-width: 768px) 100vw, 256px"
+/>
                                   ) : (
                                     <div className="w-full h-full bg-emerald-100 text-emerald-800 text-[10px] font-bold flex items-center justify-center">
                                       {partnerInitials}
@@ -1381,7 +1386,8 @@ function MessagesContent() {
                                     alt={currentUserName}
                                     fill
                                     className="object-cover"
-                                  />
+                                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                                 </div>
                               )}
                             </div>
@@ -1401,14 +1407,16 @@ function MessagesContent() {
                                     alt={currentUserName}
                                     fill
                                     className="object-cover"
-                                  />
+                                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                                 ) : activeConversation.partner?.avatarUrl ? (
                                   <Image
                                     src={getImageUrl(activeConversation.partner.avatarUrl)}
                                     alt={partnerName}
                                     fill
                                     className="object-cover"
-                                  />
+                                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                                 ) : (
                                   <div className="w-full h-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[11px] font-bold flex items-center justify-center">
                                     {partnerInitials}
@@ -1434,7 +1442,8 @@ function MessagesContent() {
                                       fill
                                       className="object-cover cursor-pointer hover:scale-105 transition"
                                       onClick={() => window.open(getImageUrl(msg.mediaUrl), '_blank')}
-                                    />
+                                      sizes="(max-width: 768px) 100vw, 256px"
+/>
                                   </div>
                                 )}
 
@@ -1490,7 +1499,8 @@ function MessagesContent() {
                           alt={partnerName}
                           fill
                           className="object-cover"
-                        />
+                          sizes="(max-width: 768px) 100vw, 256px"
+/>
                       ) : (
                         <div className="w-full h-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">
                           {partnerInitials}
@@ -1643,7 +1653,8 @@ function MessagesContent() {
                           alt={contact.name}
                           fill
                           className="object-cover"
-                        />
+                          sizes="(max-width: 768px) 100vw, 256px"
+/>
                       ) : (
                         <div className="w-full h-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center text-xs">
                           {getInitials(contact.name)}

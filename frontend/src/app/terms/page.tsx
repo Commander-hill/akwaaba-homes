@@ -121,7 +121,8 @@ export default function TermsPage() {
             fill
             className="object-cover object-left"
             priority
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         {/* Building Exterior on Right with Smooth Fade */}
@@ -132,7 +133,8 @@ export default function TermsPage() {
             fill
             className="object-cover object-right opacity-60"
             priority
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
           {/* Gradient Mask to fade building into forest green */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/70 to-transparent" />
         </div>
@@ -188,7 +190,8 @@ export default function TermsPage() {
                     fill
                     className="object-contain"
                     priority
-                  />
+                    sizes="(max-width: 768px) 100vw, 256px"
+/>
                 </div>
               </div>
 
@@ -835,7 +838,8 @@ export default function TermsPage() {
                 alt="Accra Black Star Gate Illustration"
                 fill
                 className="object-contain object-bottom"
-              />
+                sizes="(max-width: 768px) 100vw, 256px"
+/>
             </div>
 
           </aside>
@@ -851,7 +855,8 @@ export default function TermsPage() {
             alt="Kente Motif"
             fill
             className="object-cover object-left"
-          />
+            sizes="(max-width: 768px) 100vw, 256px"
+/>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 space-y-4">
