@@ -867,7 +867,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
             <section className="pt-6 border-t border-zinc-200 dark:border-zinc-800">
               <div className="p-5 sm:p-6 rounded-xl bg-white dark:bg-[#141816] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#173D32] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#16A34A] text-white flex items-center justify-center font-bold text-sm shrink-0">
                     {property.landlord?.firstName?.[0] || 'H'}
                     {property.landlord?.lastName?.[0] || ''}
                   </div>
@@ -1099,7 +1099,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                         ? '/dashboard/landlord/properties'
                         : '/dashboard/caretaker'
                     }
-                    className="w-full h-10 bg-[#173D32] text-white font-semibold rounded-lg flex items-center justify-center gap-2"
+                    className="w-full h-10 bg-[#16A34A] hover:bg-[#15803D] text-white font-semibold rounded-lg flex items-center justify-center gap-2"
                   >
                     {session?.role === 'LANDLORD'
                       ? 'Return to Landlord Hub'
@@ -1246,7 +1246,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                                 className={clsx(
                                   'p-2 rounded-md border text-left transition-all text-xs',
                                   isSelected && isAvail
-                                    ? 'bg-[#173D32] text-white border-[#173D32] font-semibold'
+                                    ? 'bg-[#16A34A] text-white border-[#16A34A] font-semibold'
                                     : isAvail
                                     ? 'bg-white dark:bg-[#141816] border-zinc-200 dark:border-zinc-800 text-[#242925] dark:text-white cursor-pointer'
                                     : 'bg-zinc-100 text-[#6F756F] border-zinc-200 opacity-50 cursor-not-allowed'

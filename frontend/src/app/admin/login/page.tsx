@@ -270,7 +270,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => { window.location.href = '/admin/dashboard'; }}
-              className="w-full h-12 bg-[#0F5132] hover:bg-[#0A3D24] text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <span>Go to Admin Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -455,7 +455,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             <button
               type="submit"
               disabled={isLoading || twoFactorCode.length !== 6 || !codesAcknowledged}
-              className="w-full h-11 xl:h-12 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-2xl transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full h-11 xl:h-12 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-2xl transition-all shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -537,7 +537,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             <button
               type="submit"
               disabled={isLoading || !twoFactorCode.trim()}
-              className="w-full h-11 xl:h-12 inline-flex items-center justify-center gap-2 bg-[#0F5132] hover:bg-[#0A3D24] text-white text-xs font-bold rounded-2xl transition-all shadow-sm cursor-pointer disabled:opacity-40"
+              className="w-full h-11 xl:h-12 inline-flex items-center justify-center gap-2 bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold rounded-2xl transition-all shadow-sm cursor-pointer disabled:opacity-40"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -628,7 +628,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 xl:h-12 bg-[#04793d] hover:bg-[#035f30] active:bg-[#024a25] text-white font-bold text-xs xl:text-sm rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#04793d]/25 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full h-11 xl:h-12 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#024a25] text-white font-bold text-xs xl:text-sm rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#04793d]/25 transition-all cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 xl:w-5 xl:h-5 animate-spin" />

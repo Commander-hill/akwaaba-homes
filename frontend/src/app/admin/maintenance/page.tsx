@@ -773,7 +773,7 @@ export default function AdminMaintenancePage() {
                     ? 'bg-rose-600 text-white border-rose-700'
                     : serverScheduled
                     ? 'bg-amber-500 text-white border-amber-600'
-                    : 'bg-[#0F5132] text-white border-emerald-800'
+                    : 'bg-[#16A34A] text-white border-emerald-600'
                 )}
               >
                 <Power className="w-3.5 h-3.5" />
@@ -834,7 +834,7 @@ export default function AdminMaintenancePage() {
                   type="button"
                   onClick={handleDeactivate}
                   disabled={!isSuperAdmin || updateConfigMutation.isPending || actionInProgress !== null}
-                  className="px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0c4027] text-white text-sm font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-bold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {actionInProgress === 'DEACTIVATE' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -940,7 +940,7 @@ export default function AdminMaintenancePage() {
               type="button"
               onClick={handleSaveDraft}
               disabled={updateConfigMutation.isPending}
-              className="px-4 py-2 rounded-lg bg-[#0F5132] hover:bg-[#0c4027] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
             >
               <Save className="w-3.5 h-3.5" />
               <span>Save Configuration</span>

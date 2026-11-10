@@ -304,7 +304,7 @@ export default function WishlistPage() {
 
           <Link
             href="/search"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#173D32] hover:bg-[#1E4F41] text-white text-xs sm:text-sm font-semibold transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-semibold transition-colors"
           >
             <span>Explore More Homes</span>
             <ArrowRight className="w-4 h-4" />
@@ -354,7 +354,7 @@ export default function WishlistPage() {
           </div>
           <Link
             href="/login?redirect=/dashboard/wishlist"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#173D32] hover:bg-[#1E4F41] text-white text-xs font-semibold shrink-0 self-start sm:self-center"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold shrink-0 self-start sm:self-center"
           >
             <LogIn className="w-3.5 h-3.5" />
             <span>Sign In to Sync</span>
@@ -434,7 +434,7 @@ export default function WishlistPage() {
         <div className="bg-white dark:bg-[#171C19] border border-[#CFE0D6] dark:border-[#253D31] rounded-[16px] overflow-hidden shadow-xs">
           <div className="px-5 py-4 bg-[#F4F8F5] dark:bg-[#142019] border-b border-[#DCE7E0] dark:border-[#253D31] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-[#173D32] text-white flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-[#16A34A] text-white flex items-center justify-center shrink-0">
                 <Scale className="w-4 h-4" />
               </div>
               <div>
@@ -711,7 +711,7 @@ export default function WishlistPage() {
                     >
                       <Link
                         href={`/properties/${prop.id}`}
-                        className="inline-flex items-center justify-center gap-1.5 w-full px-3.5 py-2 rounded-lg bg-[#173D32] hover:bg-[#1E4F41] text-white text-xs font-semibold transition"
+                        className="inline-flex items-center justify-center gap-1.5 w-full px-3.5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold transition"
                       >
                         <span>View &amp; Select Room</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -746,7 +746,7 @@ export default function WishlistPage() {
                   onClick={() => setCategoryFilter(tab.id)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                     active
-                      ? 'bg-[#173D32] text-white'
+                      ? 'bg-[#16A34A] text-white'
                       : 'text-[#5E645E] dark:text-[#A0A8A2] hover:bg-[#F3F4F1] dark:hover:bg-[#1F2622]'
                   }`}
                 >
@@ -820,7 +820,7 @@ export default function WishlistPage() {
           action={
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-[#173D32] hover:bg-[#1E4F41] text-white text-sm font-semibold transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-sm font-semibold transition-colors"
             >
               <span>Browse Properties</span>
               <ArrowRight className="w-4 h-4" />
@@ -866,7 +866,7 @@ export default function WishlistPage() {
                       }}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                         isSelectedForCompare
-                          ? 'bg-[#173D32] text-white border-[#173D32]'
+                          ? 'bg-[#16A34A] text-white border-[#16A34A]'
                           : 'bg-white dark:bg-[#141816] text-[#242925] dark:text-[#F2F2EE] border-zinc-200 dark:border-zinc-700 hover:border-[#173D32]'
                       }`}
                     >

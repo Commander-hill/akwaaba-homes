@@ -321,7 +321,7 @@ export default function TenantPaymentsPage() {
             <button
               type="button"
               onClick={() => setPaymentModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <CreditCard className="w-4 h-4" />
               <span>Make a payment</span>
@@ -490,7 +490,7 @@ export default function TenantPaymentsPage() {
                   className={clsx(
                     'px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer whitespace-nowrap',
                     activeTab === 'ALL'
-                      ? 'bg-[#0A3826] text-white shadow-2xs'
+                      ? 'bg-[#16A34A] text-white shadow-2xs'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                   )}
                 >
@@ -503,7 +503,7 @@ export default function TenantPaymentsPage() {
                   className={clsx(
                     'px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer whitespace-nowrap',
                     activeTab === 'SUCCESS'
-                      ? 'bg-[#0A3826] text-white shadow-2xs'
+                      ? 'bg-[#16A34A] text-white shadow-2xs'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                   )}
                 >
@@ -516,7 +516,7 @@ export default function TenantPaymentsPage() {
                   className={clsx(
                     'px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer whitespace-nowrap',
                     activeTab === 'PENDING'
-                      ? 'bg-[#0A3826] text-white shadow-2xs'
+                      ? 'bg-[#16A34A] text-white shadow-2xs'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                   )}
                 >
@@ -529,7 +529,7 @@ export default function TenantPaymentsPage() {
                   className={clsx(
                     'px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer whitespace-nowrap',
                     activeTab === 'FAILED'
-                      ? 'bg-[#0A3826] text-white shadow-2xs'
+                      ? 'bg-[#16A34A] text-white shadow-2xs'
                       : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                   )}
                 >
@@ -594,7 +594,7 @@ export default function TenantPaymentsPage() {
                   </div>
                   <Link
                     href="/properties"
-                    className="mt-2 px-4 py-2 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5"
+                    className="mt-2 px-4 py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5"
                   >
                     <span>Browse Accommodations</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -774,7 +774,7 @@ export default function TenantPaymentsPage() {
                     setActiveTab('SUCCESS');
                     document.getElementById('transaction-history')?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
                 >
                   <span>Filter paid receipts</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -803,7 +803,7 @@ export default function TenantPaymentsPage() {
 
               <Link
                 href="/support"
-                className="w-full py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block text-center"
+                className="w-full py-2.5 px-4 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer block text-center"
               >
                 <span>Contact finance support</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -941,7 +941,7 @@ export default function TenantPaymentsPage() {
                     type="button"
                     disabled={isPaying}
                     onClick={handleProceedPayment}
-                    className="w-full py-3 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="w-full py-3 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     {isPaying ? (
                       <>
@@ -976,7 +976,7 @@ export default function TenantPaymentsPage() {
                   <Link
                     href="/properties"
                     onClick={() => setPaymentModalOpen(false)}
-                    className="flex-1 py-2.5 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white font-bold transition text-center"
+                    className="flex-1 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white font-bold transition text-center"
                   >
                     Browse Listings
                   </Link>
@@ -1063,7 +1063,7 @@ export default function TenantPaymentsPage() {
               <button
                 type="button"
                 onClick={() => handleDownloadPDF(selectedReceiptTx.id)}
-                className="py-2.5 px-4 rounded-full bg-[#0A3826] hover:bg-[#072B1D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="py-2.5 px-4 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Download PDF</span>

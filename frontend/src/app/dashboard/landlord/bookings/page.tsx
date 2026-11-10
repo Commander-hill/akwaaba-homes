@@ -294,7 +294,7 @@ export default function LandlordBookingsPage() {
             onClick={() => setActiveTab('ALL')}
             className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'ALL'
-                ? 'bg-[#14873E] text-white shadow-xs'
+                ? 'bg-[#16A34A] text-white shadow-xs'
                 : 'bg-[#F1F3F6] hover:bg-zinc-200/70 text-zinc-800'
             }`}
           >
@@ -305,7 +305,7 @@ export default function LandlordBookingsPage() {
             onClick={() => setActiveTab('Pending')}
             className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'Pending'
-                ? 'bg-[#14873E] text-white shadow-xs'
+                ? 'bg-[#16A34A] text-white shadow-xs'
                 : 'bg-[#F1F3F6] hover:bg-zinc-200/70 text-zinc-800'
             }`}
           >
@@ -316,7 +316,7 @@ export default function LandlordBookingsPage() {
             onClick={() => setActiveTab('Confirmed')}
             className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'Confirmed'
-                ? 'bg-[#14873E] text-white shadow-xs'
+                ? 'bg-[#16A34A] text-white shadow-xs'
                 : 'bg-[#F1F3F6] hover:bg-zinc-200/70 text-zinc-800'
             }`}
           >
@@ -327,7 +327,7 @@ export default function LandlordBookingsPage() {
             onClick={() => setActiveTab('Cancelled')}
             className={`px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'Cancelled'
-                ? 'bg-[#14873E] text-white shadow-xs'
+                ? 'bg-[#16A34A] text-white shadow-xs'
                 : 'bg-[#F1F3F6] hover:bg-zinc-200/70 text-zinc-800'
             }`}
           >
@@ -469,7 +469,7 @@ export default function LandlordBookingsPage() {
                       {booking.tenant.name}
                     </span>
                     {booking.tenant.verified && (
-                      <span className="w-4 h-4 rounded-full bg-[#14873E] text-white flex items-center justify-center shrink-0">
+                      <span className="w-4 h-4 rounded-full bg-[#16A34A] text-white flex items-center justify-center shrink-0">
                         <Check className="w-2.5 h-2.5 stroke-[3]" />
                       </span>
                     )}
@@ -509,7 +509,7 @@ export default function LandlordBookingsPage() {
                   <button
                     type="button"
                     onClick={() => handleConfirm(booking.id)}
-                    className="px-4 py-2.5 rounded-full bg-[#14873E] hover:bg-[#106e32] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
+                    className="px-4 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
                   >
                     Confirm Booking
                   </button>
@@ -563,7 +563,7 @@ export default function LandlordBookingsPage() {
         <div className="relative z-10 w-full sm:w-auto">
           <Link
             href="/dashboard/landlord/properties"
-            className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#0C4A26] hover:bg-[#08351B] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs transition-all shrink-0"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-2 shadow-xs transition-all shrink-0"
           >
             <span>Manage Availability</span>
             <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />

@@ -383,7 +383,7 @@ export default function AdminPropertiesPage() {
                 duration: 4000
               });
             }}
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#04793d] hover:bg-[#035f30] text-white font-bold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-sm shadow-md hover:shadow-lg transition cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Add Property</span>
@@ -849,7 +849,7 @@ export default function AdminPropertiesPage() {
                       onClick={() => setCurrentPage(pageNum)}
                       className={`w-8 h-8 rounded-lg font-bold text-xs transition ${
                         isActive
-                          ? 'bg-[#04793d] text-white shadow-xs'
+                          ? 'bg-[#16A34A] text-white shadow-xs'
                           : 'border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                       }`}
                     >
@@ -866,7 +866,7 @@ export default function AdminPropertiesPage() {
                       onClick={() => setCurrentPage(totalPages)}
                       className={`w-8 h-8 rounded-lg font-bold text-xs transition ${
                         currentPage === totalPages
-                          ? 'bg-[#04793d] text-white'
+                          ? 'bg-[#16A34A] text-white'
                           : 'border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                       }`}
                     >
@@ -1121,7 +1121,7 @@ export default function AdminPropertiesPage() {
                   toast.success('Sample batch property template downloaded');
                   setBulkUploadOpen(false);
                 }}
-                className="px-4 py-2 rounded-xl bg-[#04793d] hover:bg-[#035f30] text-white text-xs font-bold transition shadow-xs"
+                className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
               >
                 Download CSV Template
               </button>

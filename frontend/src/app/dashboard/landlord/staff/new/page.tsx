@@ -252,7 +252,7 @@ export default function NewStaffAppointmentPage() {
               className={clsx(
                 'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
                 currentStep === s.step
-                  ? 'bg-[#0F5132] text-white shadow-xs'
+                  ? 'bg-[#16A34A] text-white shadow-xs'
                   : currentStep > s.step
                   ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30'
                   : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'
@@ -546,7 +546,7 @@ export default function NewStaffAppointmentPage() {
                       onChange={(e) => setCanCheckInTenants(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0F5132]" />
+                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#16A34A]" />
                   </label>
                 </div>
 
@@ -569,7 +569,7 @@ export default function NewStaffAppointmentPage() {
                       onChange={(e) => setCanManageTickets(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0F5132]" />
+                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#16A34A]" />
                   </label>
                 </div>
 
@@ -591,7 +591,7 @@ export default function NewStaffAppointmentPage() {
                       onChange={(e) => setCanPostNotices(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0F5132]" />
+                    <div className="w-10 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#16A34A]" />
                   </label>
                 </div>
               </div>

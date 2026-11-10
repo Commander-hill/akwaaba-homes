@@ -172,7 +172,7 @@ export default function AdminConfigPage() {
             className={clsx(
               "w-12 h-6 rounded-full transition-colors relative shrink-0 mt-1",
               isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-80",
-              formData.ghanaCardVerificationEnabled ? "bg-[#0F5132]" : "bg-zinc-300 dark:bg-zinc-700"
+              formData.ghanaCardVerificationEnabled ? "bg-[#16A34A]" : "bg-zinc-300 dark:bg-zinc-700"
             )}
           >
             <span className={clsx(
@@ -289,7 +289,7 @@ export default function AdminConfigPage() {
             className={clsx(
               "w-12 h-6 rounded-full transition-colors relative shrink-0 mt-1",
               isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-80",
-              formData.roommateFinderEnabled ? "bg-[#0F5132]" : "bg-zinc-300 dark:bg-zinc-700"
+              formData.roommateFinderEnabled ? "bg-[#16A34A]" : "bg-zinc-300 dark:bg-zinc-700"
             )}
           >
             <span className={clsx(

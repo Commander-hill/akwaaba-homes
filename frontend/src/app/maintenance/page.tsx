@@ -180,7 +180,7 @@ export default function PublicMaintenancePage() {
             <div className="pt-2">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F5132] hover:bg-[#0c4027] text-white text-xs font-bold transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition cursor-pointer"
               >
                 <span>Return to Marketplace</span>
                 <ArrowRight className="w-4 h-4" />
@@ -306,7 +306,7 @@ export default function PublicMaintenancePage() {
                     <button
                       type="submit"
                       disabled={subscribeMutation.isPending}
-                      className="px-4 py-2 rounded-lg bg-[#0F5132] hover:bg-[#0c4027] text-white text-xs font-bold transition shrink-0 cursor-pointer disabled:opacity-50"
+                      className="px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shrink-0 cursor-pointer disabled:opacity-50"
                     >
                       {subscribeMutation.isPending ? 'Registering...' : 'Notify Me'}
                     </button>

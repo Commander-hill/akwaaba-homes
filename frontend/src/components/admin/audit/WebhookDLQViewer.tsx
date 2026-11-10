@@ -294,7 +294,7 @@ export function WebhookDLQViewer() {
                             'px-2.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer shadow-2xs',
                             item.status === 'RESOLVED'
                               ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed'
-                              : 'bg-[#04793d] hover:bg-[#036332] text-white'
+                              : 'bg-[#16A34A] hover:bg-[#15803D] text-white'
                           )}
                           title="1-Click Retry Webhook Delivery"
                         >
@@ -362,7 +362,7 @@ export function WebhookDLQViewer() {
                   type="button"
                   disabled={retryingId === inspectItem.id || inspectItem.status === 'RESOLVED'}
                   onClick={() => retryMutation.mutate(inspectItem.id)}
-                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-xl bg-[#04793d] hover:bg-[#036332] text-white shadow-xs transition"
+                  className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white shadow-xs transition"
                 >
                   <RefreshCw className={clsx('w-3.5 h-3.5', retryingId === inspectItem.id && 'animate-spin')} />
                   <span>Retry Webhook Delivery</span>

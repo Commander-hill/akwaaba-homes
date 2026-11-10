@@ -240,7 +240,7 @@ export default function Navbar() {
                   {/* My Account Button with Avatar */}
                   <Link
                     href={dashboardHref}
-                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
                   >
                     {user?.avatarUrl || role === 'TENANT' || role === 'LANDLORD' ? (
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
@@ -283,7 +283,7 @@ export default function Navbar() {
                   {/* My Account button */}
                   <Link
                     href="/login"
-                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
+                    className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
                   >
                     <UserCircle className="w-4 h-4" />
                     <span>My Account</span>
@@ -353,7 +353,7 @@ export default function Navbar() {
                     <Link
                       href={dashboardHref}
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#0F5A3E] hover:bg-[#0B432E] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
                     >
                       My Account
                     </Link>
@@ -377,7 +377,7 @@ export default function Navbar() {
                     <Link
                       href="/register"
                       onClick={() => setIsMenuOpen(false)}
-                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#0F5A3E] hover:bg-[#0B432E] rounded-lg"
+                      className="h-10 flex items-center justify-center text-xs font-semibold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg"
                     >
                       Create account
                     </Link>

@@ -360,7 +360,7 @@ function TwoFactorStudioContent() {
                 className={clsx(
                   'py-2 text-center font-bold rounded-lg transition-all cursor-pointer truncate px-1',
                   currentStep === s.step
-                    ? 'bg-[#0F5132] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : currentStep > s.step
                     ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30'
                     : 'text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300'

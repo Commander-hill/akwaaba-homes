@@ -457,7 +457,7 @@ export default function AdminTitleDeedsPage() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-3.5 py-1.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+            className="px-3.5 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export</span>

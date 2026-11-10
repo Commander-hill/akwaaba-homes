@@ -895,7 +895,7 @@ function MessagesContent() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
                   activeTab === 'ALL'
-                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                 )}
               >
@@ -908,7 +908,7 @@ function MessagesContent() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
                   activeTab === 'PROPERTY_TEAM'
-                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                 )}
               >
@@ -924,7 +924,7 @@ function MessagesContent() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
                   activeTab === 'MANAGEMENT'
-                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                 )}
               >
@@ -940,7 +940,7 @@ function MessagesContent() {
                 className={clsx(
                   'px-3.5 py-1.5 rounded-full font-bold transition whitespace-nowrap cursor-pointer',
                   activeTab === 'OTHERS'
-                    ? 'bg-[#0F5A3E] text-white shadow-xs'
+                    ? 'bg-[#16A34A] text-white shadow-xs'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300'
                 )}
               >
@@ -976,7 +976,7 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => setShowNewMessageModal(true)}
-                  className="mt-2 px-4 py-2 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1.5"
+                  className="mt-2 px-4 py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-2xs cursor-pointer flex items-center gap-1.5"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                   <span>Start New Chat</span>
@@ -1118,7 +1118,7 @@ function MessagesContent() {
                 <button
                   type="button"
                   onClick={() => setShowNewMessageModal(true)}
-                  className="px-5 py-2.5 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                 >
                   <Pencil className="w-4 h-4" />
                   <span>New Message</span>
@@ -1555,8 +1555,8 @@ function MessagesContent() {
                     className={clsx(
                       'w-10 h-10 rounded-full flex items-center justify-center transition shadow-2xs shrink-0 cursor-pointer',
                       newMessage.trim()
-                        ? 'bg-[#0F5A3E] hover:bg-[#0B432E] text-white'
-                        : 'bg-[#0F5A3E] text-white opacity-80 cursor-not-allowed'
+                        ? 'bg-[#16A34A] hover:bg-[#15803D] text-white'
+                        : 'bg-[#16A34A] text-white opacity-80 cursor-not-allowed'
                     )}
                     title="Send Message"
                   >

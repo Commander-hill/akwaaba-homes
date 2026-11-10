@@ -227,7 +227,7 @@ export default function AdminAdministratorsPage() {
           </p>
           <Link
             href="/admin/dashboard"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B7A46] hover:bg-[#096338] text-white text-xs font-bold transition shadow-xs"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
           >
             <span>Return to Command Centre</span>
           </Link>

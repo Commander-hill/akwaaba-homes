@@ -348,7 +348,7 @@ export default function TenantBookingsPage() {
               <div className="pt-2">
                 <Link
                   href="/properties"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#0F5A3E] hover:bg-[#0B432E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
                 >
                   <span>Explore Verified Listings</span>
                   <ArrowRight className="w-3.5 h-3.5" />

@@ -413,7 +413,7 @@ export function ProfileWorkspaceContent({
                     onClick={() => avatarInputRef.current?.click()}
                     disabled={isUploadingAvatar}
                     title="Upload profile photo"
-                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#0B3B24] hover:bg-[#16A34A] text-white border-2 border-white dark:border-zinc-900 flex items-center justify-center shadow-xs transition cursor-pointer"
+                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white border-2 border-white dark:border-zinc-900 flex items-center justify-center shadow-xs transition cursor-pointer"
                   >
                     {isUploadingAvatar ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -1166,7 +1166,7 @@ export function ProfileWorkspaceContent({
               <div
                 className={clsx(
                   'text-white px-4 py-3 flex items-center gap-2.5 transition-colors',
-                  isLocked ? 'bg-[#0B3B24]' : 'bg-[#155E38]'
+                  isLocked ? 'bg-[#16A34A]' : 'bg-[#15803D]'
                 )}
               >
                 {isLocked ? (
@@ -1579,7 +1579,7 @@ export function ProfileWorkspaceContent({
                     setGuardianModalOpen(false);
                     handleSaveChanges();
                   }}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg cursor-pointer"
                 >
                   {isLandlord ? 'Save Next of Kin' : 'Save Guardian Details'}
                 </button>
@@ -1801,7 +1801,7 @@ export function ProfileWorkspaceContent({
                     setAcademicModalOpen(false);
                     handleSaveChanges();
                   }}
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#11823B] hover:bg-[#0E6E31] rounded-lg cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#16A34A] hover:bg-[#15803D] rounded-lg cursor-pointer"
                 >
                   {isLandlord ? 'Save Business & Payouts' : 'Save Academic Profile'}
                 </button>

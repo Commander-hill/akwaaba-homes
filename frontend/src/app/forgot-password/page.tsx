@@ -274,7 +274,7 @@ export default function ForgotPasswordPage() {
                     type="button"
                     onClick={() => { setSuccess(false); }}
                     disabled={resendCooldown > 0}
-                    className="w-full h-11 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
                   >
                     {resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend link'}
                   </button>
@@ -336,7 +336,7 @@ export default function ForgotPasswordPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-11 rounded-xl bg-[#0F6848] hover:bg-[#0B543A] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
+                    className="w-full h-11 rounded-xl bg-[#16A34A] hover:bg-[#15803D] disabled:opacity-70 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

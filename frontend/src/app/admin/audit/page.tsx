@@ -293,7 +293,7 @@ export default function AuditLogsPage() {
           className={clsx(
             'flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer',
             activeTab === 'audit'
-              ? 'bg-[#04793d] text-white shadow-xs'
+              ? 'bg-[#16A34A] text-white shadow-xs'
               : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'
           )}
         >
@@ -307,7 +307,7 @@ export default function AuditLogsPage() {
           className={clsx(
             'flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition cursor-pointer',
             activeTab === 'dlq'
-              ? 'bg-[#04793d] text-white shadow-xs'
+              ? 'bg-[#16A34A] text-white shadow-xs'
               : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white border border-zinc-200 dark:border-zinc-800'
           )}
         >

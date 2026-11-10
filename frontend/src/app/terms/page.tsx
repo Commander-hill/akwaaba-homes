@@ -820,7 +820,7 @@ export default function TermsPage() {
 
               <Link
                 href="/contact?topic=legal"
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-[#0C3827] hover:bg-[#072419] text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
               >
                 <Mail className="w-3.5 h-3.5" />
                 <span>Contact Support</span>

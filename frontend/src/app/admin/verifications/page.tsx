@@ -721,7 +721,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => { setActiveCategoryTab('ALL'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
               activeCategoryTab === 'ALL'
-                ? 'bg-[#047857] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
@@ -734,7 +734,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => { setActiveCategoryTab('IDENTITY'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
               activeCategoryTab === 'IDENTITY'
-                ? 'bg-[#047857] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
@@ -747,7 +747,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => { setActiveCategoryTab('OWNERSHIP'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
               activeCategoryTab === 'OWNERSHIP'
-                ? 'bg-[#047857] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
@@ -760,7 +760,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => { setActiveCategoryTab('PENDING'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
               activeCategoryTab === 'PENDING'
-                ? 'bg-[#047857] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
@@ -773,7 +773,7 @@ export default function AdminVerificationsQueuePage() {
             onClick={() => { setActiveCategoryTab('REJECTED'); setCurrentPage(1); }}
             className={`px-4 py-2 rounded-full text-xs font-bold transition shrink-0 cursor-pointer ${
               activeCategoryTab === 'REJECTED'
-                ? 'bg-[#047857] text-white shadow-2xs'
+                ? 'bg-[#16A34A] text-white shadow-2xs'
                 : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
             }`}
           >
@@ -1013,7 +1013,7 @@ export default function AdminVerificationsQueuePage() {
                               e.stopPropagation();
                               setActiveSelectedItem(row);
                             }}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#064e3b] hover:bg-[#047857] text-white text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
                           >
                             <span>View Details</span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -1061,7 +1061,7 @@ export default function AdminVerificationsQueuePage() {
                       onClick={() => setCurrentPage(pageNumber)}
                       className={`w-8 h-8 rounded-lg text-xs font-bold transition cursor-pointer ${
                         currentPage === pageNumber
-                          ? 'bg-[#047857] text-white shadow-2xs'
+                          ? 'bg-[#16A34A] text-white shadow-2xs'
                           : 'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50'
                       }`}
                     >
@@ -1203,7 +1203,7 @@ export default function AdminVerificationsQueuePage() {
                     setDocRotation(0);
                     setActiveDocSide('front');
                   }}
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#064e3b] hover:bg-[#047857] text-white text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-2xs hover:shadow-xs cursor-pointer"
                 >
                   <Eye className="w-4 h-4" />
                   <span>View Document</span>

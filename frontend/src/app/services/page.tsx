@@ -201,7 +201,7 @@ export default function ServicesPage() {
             {/* My Account Button */}
             <Link
               href={user ? dashboardHref : '/login'}
-              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
             >
               <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-extrabold flex items-center justify-center">
                 {initials}
@@ -237,7 +237,7 @@ export default function ServicesPage() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/properties"
-                className="px-5 py-2.5 rounded-lg bg-[#0E6B38] hover:bg-[#0B562D] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
+                className="px-5 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
               >
                 <span>Explore accommodation</span>
                 <ArrowRight className="w-3.5 h-3.5" />

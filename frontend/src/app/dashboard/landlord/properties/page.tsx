@@ -477,7 +477,7 @@ export default function LandlordPropertiesPage() {
           </div>
           <Link
             href="/dashboard/landlord/subscription"
-            className="px-5 py-2.5 rounded-full bg-[#0B3B24] hover:bg-[#072818] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
+            className="px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs shrink-0"
           >
             <span>Upgrade Plan</span>
             <ArrowRight className="w-3.5 h-3.5" />

@@ -269,7 +269,7 @@ export default function AdminGlobalSearch() {
                           className={clsx(
                             'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border',
                             isSelected
-                              ? 'bg-[#0F5132] text-white border-transparent'
+                              ? 'bg-[#16A34A] text-white border-transparent'
                               : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border-zinc-200 dark:border-zinc-700'
                           )}
                         >

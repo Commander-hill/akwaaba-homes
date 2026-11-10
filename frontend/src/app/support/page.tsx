@@ -508,7 +508,7 @@ export default function SupportHelpCentrePage() {
 
             <Link
               href={user ? '/dashboard/profile' : '/login'}
-              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#0F5A3E] hover:bg-[#0B432E] text-white transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
             >
               <div className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center justify-center tracking-wide">
                 {userInitials}
@@ -783,7 +783,7 @@ export default function SupportHelpCentrePage() {
                 <span
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep >= 2
-                      ? 'bg-[#0E6B38] text-white'
+                      ? 'bg-[#16A34A] text-white'
                       : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
@@ -808,7 +808,7 @@ export default function SupportHelpCentrePage() {
                 <span
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep === 3
-                      ? 'bg-[#0E6B38] text-white'
+                      ? 'bg-[#16A34A] text-white'
                       : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
@@ -883,7 +883,7 @@ export default function SupportHelpCentrePage() {
                       onClick={() => setPriority('NORMAL')}
                       className={`py-2.5 px-3 rounded-xl text-[12.5px] font-semibold flex items-center justify-center gap-1.5 border transition-all ${
                         priority === 'NORMAL'
-                          ? 'bg-[#0E6B38] text-white border-[#0E6B38] shadow-sm'
+                          ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-sm'
                           : 'bg-white text-[#334239] border-zinc-200 hover:bg-zinc-50'
                       }`}
                     >
