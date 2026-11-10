@@ -216,7 +216,9 @@ export default function LandlordShell({
                   href={item.href}
                   onClick={() => {
                     setOptimisticPath(item.href);
-                    if (onNavigate) onNavigate();
+                    if (onNavigate) {
+                      setTimeout(() => onNavigate(), 60);
+                    }
                   }}
                   aria-current={active ? 'page' : undefined}
                   className={clsx(
@@ -372,7 +374,7 @@ export default function LandlordShell({
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-6 sm:pt-22 sm:pb-8">{children}</main>
+        <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 lg:pb-8">{children}</main>
       </div>
 
       {drawerOpen && (

@@ -35,7 +35,7 @@ export default function MobileBottomNav() {
   const user = userResponse?.user;
   const isAuthenticated = !!user;
   const isCaretaker = user?.role === 'CARETAKER' || user?.role === 'STAFF';
-  const isLandlord = user?.role === 'LANDLORD';
+  const isLandlord = user?.role === 'LANDLORD' || pathname.startsWith('/dashboard/landlord');
 
   if (
     pathname.startsWith('/admin') ||

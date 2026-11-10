@@ -93,31 +93,7 @@ export default function Navbar() {
   const isLandlord = role === 'LANDLORD' || pathname.startsWith('/dashboard/landlord');
   const isStaff = role === 'CARETAKER' || role === 'STAFF' || pathname.startsWith('/dashboard/caretaker');
 
-  const isTenantShellRoute =
-    pathname.startsWith('/dashboard/tenant') ||
-    pathname.startsWith('/bookings') ||
-    pathname.startsWith('/notifications') ||
-    pathname.startsWith('/profile') ||
-    pathname.startsWith('/settings') ||
-    (pathname.startsWith('/support') && isAuthenticated && role === 'TENANT') ||
-    (pathname.startsWith('/dashboard') &&
-      !pathname.startsWith('/dashboard/landlord') &&
-      !pathname.startsWith('/dashboard/caretaker') &&
-      (!isAuthenticated || role === 'TENANT'));
-
-  if (
-    pathname.startsWith('/admin') ||
-    pathname === '/login' ||
-    pathname === '/register' ||
-    pathname === '/forgot-password' ||
-    pathname === '/reset-password' ||
-    pathname.startsWith('/verify-email') ||
-    pathname === '/onboarding' ||
-    pathname === '/services' ||
-    pathname.startsWith('/support') ||
-    pathname.startsWith('/help') ||
-    isTenantShellRoute
-  ) {
+  if (isHiddenRoute) {
     return null;
   }
 
