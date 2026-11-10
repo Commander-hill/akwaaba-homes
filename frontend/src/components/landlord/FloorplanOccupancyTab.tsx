@@ -574,7 +574,7 @@ export default function FloorplanOccupancyTab({
             <div className="text-center space-y-2">
               <div className="w-16 h-16 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-black text-xl flex items-center justify-center mx-auto overflow-hidden">
                 {selectedOccupant.avatarUrl ? (
-                  <img src={selectedOccupant.avatarUrl} alt={selectedOccupant.name || 'User'} className="w-full h-full rounded-full object-cover" />
+                  <img decoding="async" src={selectedOccupant.avatarUrl} alt={selectedOccupant.name || 'User'} className="w-full h-full rounded-full object-cover" />
                 ) : (
                   (selectedOccupant.name || 'U').charAt(0)
                 )}

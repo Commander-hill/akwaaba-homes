@@ -552,7 +552,7 @@ function ReportIssueContent() {
               {imagePreview ? (
                 <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 max-h-56 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={imagePreview} alt="Fault Evidence" className="max-h-56 object-contain w-full" />
+                  <img decoding="async" src={imagePreview} alt="Fault Evidence" className="max-h-56 object-contain w-full" />
                   <button
                     type="button"
                     onClick={removePhoto}

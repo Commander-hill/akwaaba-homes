@@ -908,7 +908,7 @@ function LandlordDashboardContent() {
                           {/* Image Thumbnail */}
                           <div className="relative h-44 w-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                             {primaryImage ? (
-                              <img 
+                              <img decoding="async" 
                                 src={primaryImage} 
                                 alt={p.title} 
                                 className="w-full h-full object-cover" 

@@ -601,7 +601,7 @@ export function printLeaseAgreementReceipt(agreement: LeaseReceiptData) {
                 <div class="card-sub">Signed: ${agreement.tenantSignedAt ? new Date(agreement.tenantSignedAt).toLocaleString('en-GB') : 'N/A'}</div>
                 ${
                   agreement.tenantSignature 
-                    ? `<img class="sig-img" src="${agreement.tenantSignature}" alt="Tenant Signature" />` 
+                    ? `<img decoding="async" class="sig-img" src="${agreement.tenantSignature}" alt="Tenant Signature" />` 
                     : `<div class="sig-note">&#x2713; Digital Signature Verified on File</div>`
                 }
               </div>
@@ -612,7 +612,7 @@ export function printLeaseAgreementReceipt(agreement: LeaseReceiptData) {
                 <div class="card-sub">Signed: ${agreement.landlordSignedAt ? new Date(agreement.landlordSignedAt).toLocaleString('en-GB') : 'N/A'}</div>
                 ${
                   agreement.landlordSignature 
-                    ? `<img class="sig-img" src="${agreement.landlordSignature}" alt="Landlord Signature" />` 
+                    ? `<img decoding="async" class="sig-img" src="${agreement.landlordSignature}" alt="Landlord Signature" />` 
                     : `<div class="sig-note">&#x2713; Digital Signature Verified on File</div>`
                 }
               </div>

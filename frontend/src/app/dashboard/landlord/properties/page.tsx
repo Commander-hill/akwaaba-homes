@@ -143,6 +143,8 @@ export default function LandlordPropertiesPage() {
           className="absolute inset-y-0 right-0 w-full md:w-[62%] bg-cover bg-center"
           style={{ backgroundImage: "url('/images/resident/landlord-properties-hero-bldg.jpg')" }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/resident/landlord-properties-hero-bldg.jpg" alt="" fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center" />
           {/* Seamless left edge blend */}
           <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#EBF5FB] to-transparent" />
         </div>
@@ -353,7 +355,7 @@ export default function LandlordPropertiesPage() {
             {/* Property Image Container */}
             <div className="relative h-52 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <img decoding="async"
                 src={prop.image}
                 alt={prop.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"

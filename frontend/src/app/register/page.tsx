@@ -2627,7 +2627,7 @@ export default function RegisterPage() {
                 <div className="flex items-center gap-3.5 pb-2 border-b border-zinc-200/60 dark:border-zinc-800/60">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shrink-0 shadow-2xs">
                     {formData.avatarUrl ? (
-                      <img
+                      <img decoding="async"
                         src={getImageUrl(formData.avatarUrl)}
                         alt={fullNameDisplay || 'User'}
                         className="w-full h-full object-cover"

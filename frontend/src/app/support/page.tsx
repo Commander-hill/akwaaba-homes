@@ -429,12 +429,12 @@ export default function SupportHelpCentrePage() {
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 group shrink-0">
             <div className="w-10 h-10 flex items-center justify-center shrink-0">
-              <img
+              <img decoding="async"
                 src="/logo-light.png"
                 alt="AkwaabaHomes"
                 className="w-full h-full object-contain block dark:hidden transition-transform duration-300 group-hover:scale-105"
               />
-              <img
+              <img decoding="async"
                 src="/logo.png"
                 alt="AkwaabaHomes"
                 className="w-full h-full object-contain hidden dark:block transition-transform duration-300 group-hover:scale-105"
@@ -525,7 +525,7 @@ export default function SupportHelpCentrePage() {
         {/* Hero Banner */}
         <section className="relative rounded-[20px] bg-white border border-zinc-200 overflow-hidden px-5 sm:px-8 py-6 sm:py-7 shadow-xs">
           {/* Left botanical leaves accent */}
-          <img
+          <img decoding="async"
             src="/images/support/support-hero-leaves.png"
             alt=""
             aria-hidden="true"
@@ -534,7 +534,7 @@ export default function SupportHelpCentrePage() {
 
           {/* Right Ghana Independence Arch & Palm Trees Illustration */}
           <div className="hidden md:block absolute right-0 top-0 bottom-0 w-[44%] pointer-events-none select-none">
-            <img
+            <img decoding="async"
               src="/images/support/support-hero-arch.png"
               alt="Accra Independence Arch illustration"
               className="w-full h-full object-cover object-right"
@@ -1169,7 +1169,7 @@ export default function SupportHelpCentrePage() {
 
       {/* Dark Forest-Green Footer Bar matching reference */}
       <footer className="relative bg-[#0B3822] text-white overflow-hidden mt-auto">
-        <img
+        <img decoding="async"
           src="/images/support/footer-arch-lineart.png"
           alt=""
           aria-hidden="true"
@@ -1181,7 +1181,7 @@ export default function SupportHelpCentrePage() {
           <div className="flex flex-wrap items-center gap-3 sm:pl-16 text-center sm:text-left">
             <Link href="/" className="flex items-center gap-2.5">
               <div className="w-8 h-8 flex items-center justify-center shrink-0">
-                <img
+                <img decoding="async"
                   src="/logo.png"
                   alt="AkwaabaHomes"
                   className="w-full h-full object-contain"

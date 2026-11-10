@@ -524,7 +524,7 @@ export default function AdminShell({ user, onLogout, children }: AdminShellProps
               >
                 <div className="w-9 h-9 rounded-full bg-[#0B7A46] text-white text-xs font-bold flex items-center justify-center overflow-hidden shrink-0 shadow-2xs border border-[#0B7A46]">
                   {user?.avatarUrl ? (
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(user.avatarUrl)}
                       alt={fullName}
                       className="w-full h-full object-cover"

@@ -498,7 +498,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
         <div className="relative rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#141816]">
           {/* Mobile Carousel */}
           <div className="md:hidden relative aspect-[4/3] w-full bg-zinc-100">
-            <img
+            <img decoding="async"
               src={galleryImages[mobileGalleryIdx] || galleryImages[0]}
               alt={`${property.title} — photo ${mobileGalleryIdx + 1}`}
               onClick={() => setLightboxIndex(mobileGalleryIdx)}
@@ -549,7 +549,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 onClick={() => setLightboxIndex(0)}
                 className="h-[440px] w-full overflow-hidden cursor-pointer"
               >
-                <img
+                <img decoding="async"
                   src={galleryImages[0]}
                   alt={property.title}
                   onError={(e) => {
@@ -568,7 +568,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     onClick={() => setLightboxIndex(idx)}
                     className="h-full overflow-hidden cursor-pointer"
                   >
-                    <img
+                    <img decoding="async"
                       src={src}
                       alt={`${property.title} — photo ${idx + 1}`}
                       onError={(e) => {
@@ -587,7 +587,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                   onClick={() => setLightboxIndex(0)}
                   className="col-span-2 h-full overflow-hidden cursor-pointer"
                 >
-                  <img
+                  <img decoding="async"
                     src={galleryImages[0]}
                     alt={`${property.title} — primary view`}
                     onError={(e) => {
@@ -603,7 +603,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     onClick={() => setLightboxIndex(1)}
                     className="flex-1 overflow-hidden cursor-pointer"
                   >
-                    <img
+                    <img decoding="async"
                       src={galleryImages[1]}
                       alt={`${property.title} — interior view`}
                       onError={(e) => {
@@ -618,7 +618,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                     onClick={() => setLightboxIndex(2)}
                     className="flex-1 overflow-hidden relative cursor-pointer"
                   >
-                    <img
+                    <img decoding="async"
                       src={galleryImages[2]}
                       alt={`${property.title} — additional view`}
                       onError={(e) => {
@@ -1689,7 +1689,7 @@ export default function PropertyDetailsPage({ params }: { params: Promise<{ id: 
                 <ChevronLeft className="w-6 h-6" />
               </button>
             )}
-            <img
+            <img decoding="async"
               src={galleryImages[lightboxIndex]}
               alt={`${property.title} — photo ${lightboxIndex + 1}`}
               className="max-h-[75vh] max-w-full object-contain rounded-lg"

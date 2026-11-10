@@ -393,7 +393,7 @@ export function ProfileWorkspaceContent({
             <div className="relative group shrink-0">
               <div className="w-13 h-13 rounded-full bg-[#114A2E] text-white flex items-center justify-center overflow-hidden shadow-xs ring-2 ring-emerald-500/20">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <img decoding="async"
                   src={formData.avatarUrl ? getImageUrl(formData.avatarUrl) : fallbackAvatar}
                   alt={`${formData.firstName || 'User'} ${formData.lastName || ''}`.trim()}
                   className="w-full h-full object-cover"

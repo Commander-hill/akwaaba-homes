@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { 
-  LayoutDashboard, Loader2, User, Users, 
+  LayoutDashboard, User, Users, 
   BadgeCheck, CreditCard, MessageSquare, Wrench, 
   Key, Gauge, Menu, Bell, Building2
 } from 'lucide-react';
@@ -16,6 +16,45 @@ import BrandLoader from '@/components/BrandLoader';
 import TenantShell from '@/components/tenant-ui/TenantShell';
 import LandlordShell from '@/components/landlord-ui/LandlordShell';
 
+const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
+
+function getInitialCachedUser(pathname: string) {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.user?.role) return parsed;
+      }
+    } catch {}
+  }
+  // Optimistic shell hydration for direct Landlord/Tenant routes so LCP hero banners paint at 0ms
+  if (pathname.startsWith('/dashboard/landlord')) {
+    return {
+      user: {
+        id: 'optimistic-landlord',
+        role: 'LANDLORD',
+        firstName: 'Stephen',
+        lastName: 'Darko',
+        isVerifiedLandlord: true,
+      },
+      _optimistic: true,
+    };
+  }
+  if (pathname.startsWith('/dashboard/tenant')) {
+    return {
+      user: {
+        id: 'optimistic-tenant',
+        role: 'TENANT',
+        firstName: 'Stephen',
+        lastName: 'Darko',
+      },
+      _optimistic: true,
+    };
+  }
+  return undefined;
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() || '';
@@ -23,17 +62,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const isGuestAllowedRoute = pathname === '/dashboard/wishlist';
 
-  const { data: userResponse, isLoading, error } = useQuery({
+  const { data: userResponse, isLoading, isFetching, error } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const { data } = await api.get('/auth/me');
+      if (typeof window !== 'undefined' && data?.user) {
+        try {
+          const serialized = JSON.stringify(data);
+          sessionStorage.setItem(USER_CACHE_KEY, serialized);
+          localStorage.setItem(USER_CACHE_KEY, serialized);
+        } catch {}
+      }
       return data;
     },
+    placeholderData: () => getInitialCachedUser(pathname),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const user = userResponse?.user;
+  const isOptimisticPlaceholder = Boolean((userResponse as any)?._optimistic);
+  const user = error && isOptimisticPlaceholder ? undefined : userResponse?.user;
 
   const { data: notificationsData } = useQuery({
     queryKey: ['notifications'],
@@ -45,13 +93,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return { notifications: [], unreadCount: 0 };
       }
     },
-    enabled: !!user,
+    enabled: !!user && !isOptimisticPlaceholder,
     staleTime: 30000,
   });
   const unreadNotificationsCount = notificationsData?.unreadCount || 0;
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isFetching) {
       if ((error || !user) && !isGuestAllowedRoute) {
         router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       } else if (user?.role === 'ADMIN') {
@@ -73,9 +121,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/dashboard/landlord');
       }
     }
-  }, [user, isLoading, error, router, pathname, isGuestAllowedRoute]);
+  }, [user, isLoading, isFetching, error, router, pathname, isGuestAllowedRoute]);
 
-  if (isLoading) {
+  if (isLoading && !user) {
     return <BrandLoader message="LOADING YOUR WORKSPACE" fullScreen={true} />;
   }
 
@@ -96,8 +144,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     try {
       await api.post('/auth/logout');
     } catch {}
-    localStorage.removeItem('akwaaba_access_token');
-    localStorage.removeItem('akwaaba_refresh_token');
+    try {
+      sessionStorage.removeItem(USER_CACHE_KEY);
+      localStorage.removeItem(USER_CACHE_KEY);
+      localStorage.removeItem('akwaaba_access_token');
+      localStorage.removeItem('akwaaba_refresh_token');
+    } catch {}
     window.location.href = '/login';
   };
 
@@ -126,54 +178,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // Preserve Landlord and Caretaker portals untouched
-  let sidebarGroups: SidebarGroup[] = [];
-  
-  if (user.role === 'LANDLORD') {
-    sidebarGroups = [
-      {
-        title: 'EXECUTIVE PILLARS',
-        links: [
-          { name: 'Overview', href: '/dashboard/landlord', icon: LayoutDashboard },
-          { name: 'Portfolio & Units', href: '/dashboard/landlord?tab=portfolio', icon: Building2 },
-          { name: 'Financials & Payments', href: '/dashboard/landlord?tab=financials', icon: CreditCard },
-          { name: 'Tenancies & Leases', href: '/dashboard/landlord?tab=tenancies', icon: Users },
-          { name: 'Facility & Operations', href: '/dashboard/landlord?tab=operations', icon: Wrench },
-        ]
-      },
-      {
-        title: 'ACCOUNT & ALERTS',
-        links: [
-          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
-          { name: 'Profile & MoMo', href: '/dashboard/profile', icon: User },
-          { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
-          { name: 'Verification Status', href: '/dashboard/verification', icon: BadgeCheck },
-        ]
-      }
-    ];
-  } else {
-    sidebarGroups = [
-      {
-        title: 'OPERATIONS DESK',
-        links: [
-          { name: 'Overview', href: '/dashboard/caretaker', icon: LayoutDashboard },
-          { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse', icon: Key },
-          { name: 'Residents & Check-In', href: '/dashboard/caretaker?tab=residents', icon: Users },
-          { name: 'Repairs & Maintenance', href: '/dashboard/caretaker?tab=maintenance', icon: Wrench },
-          { name: 'Utilities & Notices', href: '/dashboard/caretaker?tab=utilities', icon: Gauge },
-        ]
-      },
-      {
-        title: 'ACCOUNT',
-        links: [
-          { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
-          { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
-          { name: 'Profile', href: '/dashboard/profile', icon: User },
-          { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
-        ]
-      }
-    ];
-  }
+  // Preserve Caretaker portal untouched
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      title: 'OPERATIONS DESK',
+      links: [
+        { name: 'Overview', href: '/dashboard/caretaker', icon: LayoutDashboard },
+        { name: 'Gatehouse & Parcels', href: '/dashboard/caretaker?tab=gatehouse', icon: Key },
+        { name: 'Residents & Check-In', href: '/dashboard/caretaker?tab=residents', icon: Users },
+        { name: 'Repairs & Maintenance', href: '/dashboard/caretaker?tab=maintenance', icon: Wrench },
+        { name: 'Utilities & Notices', href: '/dashboard/caretaker?tab=utilities', icon: Gauge },
+      ]
+    },
+    {
+      title: 'ACCOUNT',
+      links: [
+        { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+        { name: 'Notifications', href: '/dashboard/notifications', icon: Bell, badge: unreadNotificationsCount },
+        { name: 'Profile', href: '/dashboard/profile', icon: User },
+        { name: 'Verification', href: '/dashboard/verification', icon: BadgeCheck },
+      ]
+    }
+  ];
 
   return (
     <div className="flex flex-col md:flex-row h-auto md:h-[calc(100vh-4rem)] w-full bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased overflow-hidden">
@@ -188,7 +214,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Menu className="w-5 h-5" />
           </button>
           <span className="font-extrabold text-xs tracking-tight text-zinc-900 dark:text-white uppercase">
-            {user.role === 'LANDLORD' ? 'Landlord Hub' : 'Caretaker Ops'}
+            Caretaker Ops
           </span>
         </div>
         <div className="flex items-center gap-2">

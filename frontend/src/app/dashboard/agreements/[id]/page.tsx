@@ -542,7 +542,7 @@ export default function AgreementPage() {
 
               <div className="h-24 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
                 {agreement.landlordSignature ? (
-                  <img
+                  <img decoding="async"
                     src={agreement.landlordSignature}
                     alt="Landlord Signature"
                     className="max-h-20 object-contain mix-blend-multiply contrast-125 brightness-105"
@@ -579,7 +579,7 @@ export default function AgreementPage() {
 
               <div className="h-24 flex items-end justify-start border-b border-[#1C1917] pb-1 px-1">
                 {agreement.tenantSignature ? (
-                  <img
+                  <img decoding="async"
                     src={agreement.tenantSignature}
                     alt="Tenant Signature"
                     className="max-h-20 object-contain mix-blend-multiply contrast-125 brightness-105"

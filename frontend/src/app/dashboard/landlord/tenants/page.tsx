@@ -166,7 +166,7 @@ export default function LandlordTenantsPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center font-bold text-zinc-700 dark:text-zinc-300 shrink-0 overflow-hidden text-xs">
                             {t?.avatarUrl ? (
-                              <img src={getImageUrl(t.avatarUrl)} alt="" className="w-full h-full object-cover" />
+                              <img decoding="async" src={getImageUrl(t.avatarUrl)} alt="" className="w-full h-full object-cover" />
                             ) : (
                               `${t?.firstName?.[0] || 'U'}${t?.lastName?.[0] || ''}`
                             )}

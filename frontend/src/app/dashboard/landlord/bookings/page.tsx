@@ -184,6 +184,8 @@ export default function LandlordBookingsPage() {
           className="absolute inset-y-0 right-0 w-full md:w-[60%] bg-cover bg-center"
           style={{ backgroundImage: "url('/images/resident/landlord-bookings-hero-bldg.jpg')" }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/resident/landlord-bookings-hero-bldg.jpg" alt="" fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center" />
           {/* Seamless left edge blend */}
           <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#E8F7EE] to-transparent" />
         </div>
@@ -372,7 +374,7 @@ export default function LandlordBookingsPage() {
               {/* Property Thumbnail */}
               <div className="relative w-full sm:w-44 h-28 sm:h-30 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <img decoding="async"
                   src={booking.image}
                   alt={booking.propertyTitle}
                   className="w-full h-full object-cover"
@@ -458,7 +460,7 @@ export default function LandlordBookingsPage() {
               </span>
               <div className="flex items-center gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <img decoding="async"
                   src={booking.tenant.avatar}
                   alt={booking.tenant.name}
                   className="w-11 h-11 rounded-full object-cover ring-2 ring-zinc-100 dark:ring-zinc-800 shrink-0"
@@ -553,7 +555,7 @@ export default function LandlordBookingsPage() {
 
         {/* Accra Skyline Watermark in Background */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <img decoding="async"
           src="/images/about/terms-accra-skyline.png"
           alt=""
           className="absolute right-40 bottom-0 h-full w-auto max-w-[300px] object-contain opacity-45 dark:opacity-20 pointer-events-none select-none hidden md:block"

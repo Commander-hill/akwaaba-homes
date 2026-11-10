@@ -361,7 +361,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                   />
                 ) : (
                   <div className="overflow-auto max-h-[600px] w-full flex items-center justify-center">
-                    <img
+                    <img decoding="async"
                       src={landlord.landlordDocUrl}
                       alt="Submitted Title Deed Document"
                       style={{
@@ -897,7 +897,7 @@ export default function AdminLandlordDeedAuditPage({ params }: { params: Promise
                 title="Fullscreen Deed Document"
               />
             ) : (
-              <img
+              <img decoding="async"
                 src={landlord.landlordDocUrl}
                 alt="Fullscreen Deed"
                 className="max-h-[85vh] max-w-full object-contain rounded-lg shadow-2xl"

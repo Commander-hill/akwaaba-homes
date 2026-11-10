@@ -176,7 +176,7 @@ export default function AdminPropertyDetailPage({
                     className="relative group rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 cursor-pointer h-32 flex items-center justify-center"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(imgUrl)}
                       alt={`Property image ${idx + 1}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -452,7 +452,7 @@ export default function AdminPropertyDetailPage({
             </div>
             <div className="border border-white/20 rounded-2xl overflow-hidden max-h-[85vh] bg-black">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={zoomedImage} alt="Property Zoom" className="w-full h-full object-contain" />
+              <img decoding="async" src={zoomedImage} alt="Property Zoom" className="w-full h-full object-contain" />
             </div>
           </div>
         </div>

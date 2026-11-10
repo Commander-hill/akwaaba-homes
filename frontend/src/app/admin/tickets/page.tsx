@@ -533,7 +533,7 @@ export default function AdminTicketsPage() {
               </button>
             </div>
             <div className="border border-white/20 rounded-2xl overflow-hidden max-h-[85vh] bg-black">
-              <img src={zoomedPhoto.url} alt={zoomedPhoto.title} className="w-full h-full object-contain" />
+              <img decoding="async" src={zoomedPhoto.url} alt={zoomedPhoto.title} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>

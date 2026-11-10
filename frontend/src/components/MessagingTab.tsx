@@ -279,7 +279,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
                 >
                   <div className="relative w-10 h-10 rounded-full bg-indigo-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden shrink-0 border border-indigo-200 dark:border-slate-700">
                     {conv.partner?.avatarUrl ? (
-                      <img src={getImageUrl(conv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
+                      <img decoding="async" src={getImageUrl(conv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <UserIcon className="w-5 h-5 text-indigo-500" />
                     )}
@@ -317,7 +317,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-indigo-500/10 flex items-center justify-center overflow-hidden shrink-0 border border-indigo-500/20">
                   {activeConv.partner?.avatarUrl ? (
-                    <img src={getImageUrl(activeConv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
+                    <img decoding="async" src={getImageUrl(activeConv.partner.avatarUrl)} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <UserIcon className="w-4 h-4 text-[var(--primary)]" />
                   )}
@@ -368,7 +368,7 @@ export default function MessagingTab({ initialPartnerId }: MessagingTabProps) {
                         {/* 1. IMAGE ATTACHMENT */}
                         {msg.mediaType === 'IMAGE' && msg.mediaUrl && (
                           <div className="rounded-xl overflow-hidden border border-white/20">
-                            <img src={getImageUrl(msg.mediaUrl)} alt="Photo attachment" className="w-full max-h-60 object-cover rounded-lg" />
+                            <img decoding="async" src={getImageUrl(msg.mediaUrl)} alt="Photo attachment" className="w-full max-h-60 object-cover rounded-lg" />
                           </div>
                         )}
 

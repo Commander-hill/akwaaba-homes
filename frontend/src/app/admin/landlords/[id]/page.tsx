@@ -540,7 +540,7 @@ export default function AdminLandlordDetailPage({
                 {landlord.ghanaCardFrontUrl ? (
                   <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-2 flex flex-col items-center justify-center min-h-[180px]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(landlord.ghanaCardFrontUrl)}
                       alt="Ghana Card Front"
                       className="max-h-48 object-contain rounded-lg w-full"
@@ -567,7 +567,7 @@ export default function AdminLandlordDetailPage({
                 {landlord.ghanaCardBackUrl ? (
                   <div className="border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden bg-zinc-50 dark:bg-zinc-950 p-2 flex flex-col items-center justify-center min-h-[180px]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(landlord.ghanaCardBackUrl)}
                       alt="Ghana Card Back"
                       className="max-h-48 object-contain rounded-lg w-full"

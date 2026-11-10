@@ -951,7 +951,7 @@ export default function AdminVerificationsQueuePage() {
                         <td className="py-3.5 px-3">
                           <div className="flex items-center gap-3">
                             <div className="relative w-9 h-9 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 shrink-0 border border-zinc-200 dark:border-zinc-700">
-                              <img
+                              <img decoding="async"
                                 src={row.avatarUrl || AVATAR_FALLBACKS[0]}
                                 alt={row.applicantName}
                                 className="w-full h-full object-cover"
@@ -1100,7 +1100,7 @@ export default function AdminVerificationsQueuePage() {
               {/* Profile Card Top */}
               <div className="flex flex-col items-center text-center space-y-2 pt-1">
                 <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-500 shadow-sm">
-                  <img
+                  <img decoding="async"
                     src={activeSelectedItem.avatarUrl || AVATAR_FALLBACKS[0]}
                     alt={activeSelectedItem.applicantName}
                     className="w-full h-full object-cover"
@@ -1364,7 +1364,7 @@ export default function AdminVerificationsQueuePage() {
                     transform: `scale(${docZoom}) rotate(${docRotation}deg)`
                   }}
                 >
-                  <img
+                  <img decoding="async"
                     src={activeDocSide === 'back' && activeSelectedItem.docBackUrl ? activeSelectedItem.docBackUrl : activeSelectedItem.docUrl}
                     alt="Statutory ID Preview"
                     className="max-h-[500px] w-auto rounded-xl shadow-lg border border-zinc-200 dark:border-zinc-800 object-contain"

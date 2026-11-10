@@ -1106,7 +1106,7 @@ export default function EditPropertyPage({ params }: { params: Promise<{ id: str
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {formData.images.map((img, i) => (
                   <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700 group bg-zinc-100 dark:bg-zinc-800">
-                    <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                    <img decoding="async" src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(i)}

@@ -291,7 +291,7 @@ export default function AdminInactivityLock({ user, children }: AdminInactivityL
               <div className="relative">
                 <div className="w-20 h-20 rounded-full bg-[#0B7A46] text-white text-xl font-bold flex items-center justify-center overflow-hidden shadow-lg border-2 border-emerald-500/30">
                   {user?.avatarUrl ? (
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(user.avatarUrl)}
                       alt={fullName}
                       className="w-full h-full object-cover"

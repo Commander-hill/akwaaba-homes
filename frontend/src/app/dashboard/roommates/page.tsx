@@ -444,7 +444,7 @@ export default function RoommatesPage() {
                       {/* User Snapshot */}
                       <div className="flex items-center gap-3 mb-3">
                         {match.user.profilePictureUrl ? (
-                          <img src={match.user.profilePictureUrl} alt="Avatar" className="w-12 h-12 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700 shrink-0" />
+                          <img decoding="async" src={match.user.profilePictureUrl} alt="Avatar" className="w-12 h-12 rounded-xl object-cover border border-zinc-200 dark:border-zinc-700 shrink-0" />
                         ) : (
                           <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-black text-sm text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 shrink-0">
                             {match.user.firstName ? match.user.firstName[0] : 'U'}

@@ -38,7 +38,7 @@ export default function PropertyImage({
   }
 
   return (
-    <img
+    <img decoding="async"
       src={resolvedUrl}
       alt={alt}
       className={className}

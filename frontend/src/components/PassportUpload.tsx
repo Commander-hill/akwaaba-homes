@@ -361,7 +361,7 @@ export default function PassportUpload({
             >
               {preview ? (
                 <>
-                  <img
+                  <img decoding="async"
                     src={preview}
                     alt="Profile Preview"
                     className="w-full h-full object-cover"
@@ -539,7 +539,7 @@ export default function PassportUpload({
                   isPanning ? 'cursor-grabbing' : 'cursor-grab'
                 }`}
               >
-                <img
+                <img decoding="async"
                   ref={cropImageRef}
                   src={rawImageSrc}
                   alt="Crop source"

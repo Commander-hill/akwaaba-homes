@@ -133,6 +133,8 @@ export default function LandlordDashboardPage() {
           className="absolute inset-y-0 right-0 w-full md:w-[65%] bg-cover bg-center"
           style={{ backgroundImage: "url('/images/resident/landlord-dashboard-hero-bldg.jpg')" }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/resident/landlord-dashboard-hero-bldg.jpg" alt="" fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center" />
           {/* Seamless left edge blend */}
           <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#06331C] to-transparent" />
         </div>
@@ -314,7 +316,7 @@ export default function LandlordDashboardPage() {
                   {/* Property Image Container */}
                   <div className="relative h-36 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <img decoding="async"
                       src={prop.image}
                       alt={prop.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -407,7 +409,7 @@ export default function LandlordDashboardPage() {
 
             {/* Accra Skyline line art watermark on the right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <img decoding="async"
               src="/images/about/terms-accra-skyline.png"
               alt=""
               className="absolute right-0 bottom-0 h-full w-auto max-w-[280px] object-contain opacity-40 dark:opacity-20 pointer-events-none select-none"

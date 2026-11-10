@@ -204,7 +204,7 @@ export default function AdminTicketDetailPage({
             <div className="border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-2xl p-2 bg-slate-50 dark:bg-zinc-950 min-h-[220px] flex items-center justify-center">
               {ticket.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <img decoding="async"
                   src={getImageUrl(ticket.imageUrl)}
                   alt="Fault Evidence"
                   className="max-h-80 object-contain rounded-xl w-full"
@@ -240,7 +240,7 @@ export default function AdminTicketDetailPage({
                     Post-Repair Proof Photo:
                   </span>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <img decoding="async"
                     src={getImageUrl(ticket.completionImageUrl)}
                     alt="Completion Photo"
                     className="max-h-60 object-contain rounded-xl border border-slate-200 dark:border-zinc-800"
@@ -412,7 +412,7 @@ export default function AdminTicketDetailPage({
             </div>
             <div className="border border-white/20 rounded-2xl overflow-hidden max-h-[85vh] bg-black">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={zoomedPhoto.url} alt={zoomedPhoto.title} className="w-full h-full object-contain" />
+              <img decoding="async" src={zoomedPhoto.url} alt={zoomedPhoto.title} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>

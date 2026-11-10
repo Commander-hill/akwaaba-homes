@@ -337,7 +337,7 @@ export default function BookingDetailPage() {
           <div className="flex items-center gap-3.5 min-w-0">
             {/* Restrained Avatar */}
             {tenant.avatarUrl ? (
-              <img
+              <img decoding="async"
                 src={getImageUrl(tenant.avatarUrl)}
                 alt=""
                 className="w-12 h-12 rounded-full object-cover shrink-0 border border-zinc-200 dark:border-zinc-700"
@@ -492,7 +492,7 @@ export default function BookingDetailPage() {
             {/* Property Summary Row */}
             <div className="flex items-start gap-3.5">
               {propertyThumbnail ? (
-                <img
+                <img decoding="async"
                   src={getImageUrl(propertyThumbnail)}
                   alt=""
                   className="w-16 h-16 rounded-lg object-cover shrink-0 border border-zinc-200 dark:border-zinc-700"

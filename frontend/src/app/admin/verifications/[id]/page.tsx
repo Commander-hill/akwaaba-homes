@@ -152,7 +152,7 @@ function DocumentPreviewCard({
               </div>
             )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <img decoding="async"
               key={retryKey}
               src={resolvedUrl}
               alt={title}
@@ -547,7 +547,7 @@ export default function AdminVerificationDetailPage({
             </div>
             <div className="border border-white/15 rounded-2xl overflow-hidden max-h-[85vh] bg-zinc-950 flex items-center justify-center w-full">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={zoomedImage.url} alt={zoomedImage.title} className="max-h-[82vh] w-auto max-w-full object-contain" />
+              <img decoding="async" src={zoomedImage.url} alt={zoomedImage.title} className="max-h-[82vh] w-auto max-w-full object-contain" />
             </div>
           </div>
         </div>

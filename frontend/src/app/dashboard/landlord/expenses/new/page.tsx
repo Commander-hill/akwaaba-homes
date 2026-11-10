@@ -688,7 +688,7 @@ export default function NewExpensePage() {
                 <div className="p-4 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/20 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     {receiptPreview ? (
-                      <img
+                      <img decoding="async"
                         src={receiptPreview}
                         alt="Receipt preview"
                         className="w-14 h-14 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700"

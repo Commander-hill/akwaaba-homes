@@ -355,14 +355,14 @@ export default function TenancyAgreementsPage() {
         </head>
         <body>
           <div class="watermark">
-            <img src="${logoSrc}" alt="Akwaaba Homes Watermark" />
+            <img decoding="async" src="${logoSrc}" alt="Akwaaba Homes Watermark" />
           </div>
           <div class="doc-wrapper">
             <div class="header">
               <div class="header-logos">
-                <img src="${window.location.origin}/images/agreements/coat-of-arms-pristine.png" class="coa" alt="Republic of Ghana" />
+                <img decoding="async" src="${window.location.origin}/images/agreements/coat-of-arms-pristine.png" class="coa" alt="Republic of Ghana" />
                 <div class="header-divider"></div>
-                <img src="${window.location.origin}/images/agreements/akwaaba-header-logo-crop.png" class="akwaaba-header-logo" alt="Akwaaba Homes" />
+                <img decoding="async" src="${window.location.origin}/images/agreements/akwaaba-header-logo-crop.png" class="akwaaba-header-logo" alt="Akwaaba Homes" />
               </div>
               <p class="rep">REPUBLIC OF GHANA</p>
               <h1>RESIDENTIAL TENANCY AGREEMENT</h1>

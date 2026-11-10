@@ -244,7 +244,7 @@ export default function Navbar() {
                   >
                     {user?.avatarUrl || role === 'TENANT' || role === 'LANDLORD' ? (
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 shrink-0 relative">
-                        <img
+                        <img decoding="async"
                           src={user?.avatarUrl ? getImageUrl(user.avatarUrl) : role === 'LANDLORD' ? '/images/avatars/landlord-avatar.png' : '/images/avatars/resident-stephen-darko.png'}
                           alt={userFullName}
                           className="w-full h-full object-cover"

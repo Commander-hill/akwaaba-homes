@@ -258,7 +258,7 @@ export default function PublishPropertyPage() {
           <div className="w-full sm:w-44 h-32 rounded-xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative shrink-0 mt-5">
             {coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverImage} alt={property.title} className="w-full h-full object-cover" />
+              <img decoding="async" src={coverImage} alt={property.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
                 <Building className="w-8 h-8 mb-1 opacity-50" />

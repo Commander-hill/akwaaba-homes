@@ -573,7 +573,7 @@ export default function AdminTitleDeedsPage() {
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-800 border border-zinc-200/80 shrink-0">
-                                <img
+                                <img decoding="async"
                                   src={propertyThumbnail}
                                   alt={primaryProperty?.title || 'Property'}
                                   className="w-full h-full object-cover"
@@ -755,7 +755,7 @@ export default function AdminTitleDeedsPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-100 shrink-0 border border-zinc-100">
-                        <img src={propertyThumbnail} alt="" className="w-full h-full object-cover" />
+                        <img decoding="async" src={propertyThumbnail} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <h4 className="font-bold text-xs text-zinc-950 dark:text-white truncate">

@@ -355,7 +355,7 @@ export default function TitleDeedDrawer({
                   />
                 ) : (
                   <div className="overflow-auto w-full h-[380px] flex items-center justify-center p-4">
-                    <img
+                    <img decoding="async"
                       src={landlord.landlordDocUrl}
                       alt="Landlord Title Deed Document"
                       style={{

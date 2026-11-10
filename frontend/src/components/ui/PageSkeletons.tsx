@@ -8,17 +8,19 @@ import SkeletonTable from '@/components/SkeletonTable';
  * even when React Query data is already cached or fallback data is present,
  * and stays active as long as `isQueryLoading` is true.
  */
-export function useInitialSkeleton(isQueryLoading = false, minDurationMs = 380): boolean {
+export function useInitialSkeleton(isQueryLoading = false, minDurationMs = 160): boolean {
   const [initialLoading, setInitialLoading] = useState(true);
+  const [maxHoldExpired, setMaxHoldExpired] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setInitialLoading(false);
     }, minDurationMs);
-    return () => clearTimeout(timer);
+    const maxTimer = setTimeout(() => setMaxHoldExpired(true), 850);
+    return () => { clearTimeout(timer); clearTimeout(maxTimer); };
   }, [minDurationMs]);
 
-  return initialLoading || isQueryLoading;
+  return initialLoading || (isQueryLoading && !maxHoldExpired);
 }
 
 export function DashboardOverviewSkeleton() {

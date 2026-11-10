@@ -128,7 +128,7 @@ export default function StaffDelegationTab({ properties = [] }: { properties?: a
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] font-black text-base flex items-center justify-center">
                     {assignment.user.avatarUrl ? (
-                      <img src={assignment.user.avatarUrl} alt={assignment.user.firstName} className="w-full h-full rounded-full object-cover" />
+                      <img decoding="async" src={assignment.user.avatarUrl} alt={assignment.user.firstName} className="w-full h-full rounded-full object-cover" />
                     ) : (
                       assignment.user.firstName.charAt(0)
                     )}

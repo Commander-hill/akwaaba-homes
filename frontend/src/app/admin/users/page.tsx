@@ -694,7 +694,7 @@ export default function AdminUsersPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden border border-zinc-200/80 dark:border-zinc-700">
                               {user.avatarUrl ? (
-                                <img
+                                <img decoding="async"
                                   src={getImageUrl(user.avatarUrl)}
                                   alt={`${user.firstName} ${user.lastName}`}
                                   className="w-full h-full object-cover"
@@ -1196,7 +1196,7 @@ export default function AdminUsersPage() {
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-bold text-sm text-zinc-700 dark:text-zinc-300 overflow-hidden border border-zinc-200">
                   {selectedUserForDrawer.avatarUrl ? (
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(selectedUserForDrawer.avatarUrl)}
                       alt=""
                       className="w-full h-full object-cover"
@@ -1258,7 +1258,7 @@ export default function AdminUsersPage() {
                     </button>
                   </div>
                   <div className="max-h-40 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
-                    <img
+                    <img decoding="async"
                       src={getImageUrl(selectedUserForDrawer.ghanaCardFrontUrl)}
                       alt="Ghana Card Document"
                       className="w-full h-full object-contain"
@@ -1378,7 +1378,7 @@ export default function AdminUsersPage() {
               </button>
             </div>
             <div className="border border-white/20 rounded-2xl overflow-hidden max-h-[80vh] bg-black">
-              <img src={zoomedImage.url} alt={zoomedImage.title} className="w-full h-full object-contain" />
+              <img decoding="async" src={zoomedImage.url} alt={zoomedImage.title} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>

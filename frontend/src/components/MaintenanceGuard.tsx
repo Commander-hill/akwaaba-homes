@@ -3,8 +3,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import api from '@/lib/axios';
-import BrandLoader from './BrandLoader';
 import MaintenanceScreen from './MaintenanceScreen';
+
+const CONFIG_CACHE_KEY = 'akwaaba_public_config_v1';
+
+function getInitialPublicConfig() {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = sessionStorage.getItem(CONFIG_CACHE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+  }
+  return { maintenanceMode: false };
+}
 
 export default function MaintenanceGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -13,27 +24,32 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
   const isLoginRoute = pathname === '/login' || pathname === '/register';
   const isExemptRoute = isLoginRoute || pathname === '/button-preview' || pathname?.startsWith('/button-preview');
 
-  // ── 1. Fetch public system config (source of truth for maintenance state) ──
-  const { data: config, isLoading: isConfigLoading } = useQuery({
+  // ── 1. Fetch public system config non-blockingly so SSR & LCP render at 0ms ──
+  const { data: config } = useQuery({
     queryKey: ['public-config'],
     queryFn: async () => {
       try {
         const res = await api.get('/config/public');
+        if (typeof window !== 'undefined' && res.data) {
+          try {
+            sessionStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(res.data));
+          } catch {}
+        }
         return res.data;
       } catch {
         return { maintenanceMode: false };
       }
     },
-    // Poll every 5s as a safety fallback if socket drops.
-    // Socket broadcasts (config_updated) will update the cache instantly.
-    refetchInterval: 5000,
-    staleTime: 0,
-    // Always fetch fresh data even if the window regains focus
-    refetchOnWindowFocus: true,
+    placeholderData: getInitialPublicConfig,
+    refetchInterval: 15000,
+    staleTime: 10000,
+    refetchOnWindowFocus: false,
   });
 
-  // ── 2. Fetch session to determine if the user is an ADMIN ────────────────
-  const { data: currentUser, isLoading: isUserLoading } = useQuery({
+  const isMaintenanceActive = Boolean(config?.maintenanceMode);
+
+  // ── 2. Only check session role in MaintenanceGuard if maintenance mode is active ──
+  const { data: currentUser } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       try {
@@ -43,29 +59,16 @@ export default function MaintenanceGuard({ children }: { children: React.ReactNo
         return null;
       }
     },
-    // Keep session reasonably fresh — 30s staleTime balances performance + accuracy
-    staleTime: 30000,
-    refetchOnWindowFocus: true,
+    enabled: isMaintenanceActive && !isAdminRoute && !isExemptRoute,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
   });
 
-  const isAdminUser = currentUser?.role === 'ADMIN';
+  const isAdminUser = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
 
-  // ── 3. FOUC prevention: block UI render until we know the maintenance state.
-  //       Only block non-admin, non-exempt routes to avoid a flash of the dark
-  //       loading screen for administrators.
-  if (isConfigLoading && !isAdminRoute && !isExemptRoute) {
-    return <BrandLoader message="LOADING AKWAABA HOMES" fullScreen={true} />;
-  }
-
-  // ── 4. Admin users and admin/login/exempt routes are ALWAYS exempt ─────────
   if (isAdminUser || isAdminRoute || isExemptRoute) {
     return <>{children}</>;
   }
-
-  // ── 5. Maintenance state is the single source of truth from the backend ──
-  //       The backend auto-deactivates when maintenanceEndTime passes and
-  //       broadcasts via Socket.io. We trust config.maintenanceMode directly.
-  const isMaintenanceActive = Boolean(config?.maintenanceMode);
 
   if (isMaintenanceActive) {
     const endTime = config?.maintenanceEndTime ? new Date(config.maintenanceEndTime) : undefined;
