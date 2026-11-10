@@ -1,12 +1,12 @@
 'use client';
 
-import TenantShell from '@/components/tenant-ui/TenantShell';
+import DashboardLayout from '@/app/dashboard/layout';
 import TenantBookingDetailsPage from '@/app/dashboard/tenant/bookings/[id]/page';
 
 export default function BookingDetailsRoutePage() {
   return (
-    <TenantShell>
+    <DashboardLayout>
       <TenantBookingDetailsPage />
-    </TenantShell>
+    </DashboardLayout>
   );
 }

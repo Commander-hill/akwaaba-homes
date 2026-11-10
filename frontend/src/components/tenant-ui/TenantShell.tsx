@@ -108,7 +108,7 @@ export default function TenantShell({
       const { data } = await api.get('/notifications');
       return data;
     },
-    enabled: Boolean(user),
+    enabled: Boolean(user && user.role !== 'LANDLORD'),
     retry: false,
     staleTime: 60_000,
   });
@@ -123,7 +123,7 @@ export default function TenantShell({
         return [];
       }
     },
-    enabled: Boolean(user),
+    enabled: Boolean(user && user.role !== 'LANDLORD'),
     staleTime: 30_000,
   });
 
@@ -142,7 +142,7 @@ export default function TenantShell({
         return [];
       }
     },
-    enabled: Boolean(user),
+    enabled: Boolean(user && user.role !== 'LANDLORD'),
     staleTime: 60_000,
   });
 
@@ -160,7 +160,7 @@ export default function TenantShell({
         return [];
       }
     },
-    enabled: Boolean(user),
+    enabled: Boolean(user && user.role !== 'LANDLORD'),
     staleTime: 60_000,
   });
 

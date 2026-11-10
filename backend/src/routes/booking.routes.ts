@@ -16,10 +16,25 @@ import { authenticate, authorizeRole } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Static collection routes first
-router.get('/my-active', authenticate, authorizeRole(['TENANT', 'ADMIN']), getMyActiveBooking);
-router.get('/me', authenticate, authorizeRole(['TENANT', 'ADMIN']), getTenantBookings);
-router.get('/my-bookings', authenticate, authorizeRole(['TENANT', 'ADMIN']), getTenantBookings);
+// Static collection routes first (auto-routes Landlords vs Tenants so /bookings/me never 403s)
+router.get('/my-active', authenticate, (req, res) => {
+  if (req.user?.role === 'LANDLORD') {
+    return getLandlordBookings(req, res);
+  }
+  return getMyActiveBooking(req, res);
+});
+router.get('/me', authenticate, (req, res) => {
+  if (req.user?.role === 'LANDLORD') {
+    return getLandlordBookings(req, res);
+  }
+  return getTenantBookings(req, res);
+});
+router.get('/my-bookings', authenticate, (req, res) => {
+  if (req.user?.role === 'LANDLORD') {
+    return getLandlordBookings(req, res);
+  }
+  return getTenantBookings(req, res);
+});
 router.get('/landlord', authenticate, authorizeRole(['LANDLORD', 'ADMIN']), getLandlordBookings);
 router.post('/', authenticate, authorizeRole(['TENANT', 'ADMIN']), createBooking);
 

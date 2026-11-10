@@ -420,6 +420,7 @@ function MessagesContent() {
   // 3. Fetch Tenant's Real Bookings for Contact Picker in New Message Modal
   const { data: tenantBookings = [], isLoading: isLoadingBookings } = useQuery<any>({
     queryKey: ['myBookings', 'contacts', currentUser?.role],
+    enabled: Boolean(currentUser),
     queryFn: async () => {
       try {
         const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');

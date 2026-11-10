@@ -82,10 +82,11 @@ export default function TenantPaymentsPage() {
 
   // 2. Fetch tenant transactions
   const { data: transactionsData, isLoading: isLoadingTx } = useQuery({
-    queryKey: ['tenant-transactions'],
+    queryKey: ['tenant-transactions', currentUser?.role],
+    enabled: Boolean(currentUser),
     queryFn: async () => {
       try {
-        const { data } = await api.get('/transactions/tenant');
+        const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/transactions/landlord' : '/transactions/tenant');
         if (Array.isArray(data)) return data;
         if (Array.isArray(data?.transactions)) return data.transactions;
         return [];
@@ -97,10 +98,11 @@ export default function TenantPaymentsPage() {
 
   // 3. Fetch active/pending bookings
   const { data: bookingsData, isLoading: isLoadingBookings } = useQuery({
-    queryKey: ['tenant-bookings'],
+    queryKey: ['tenant-bookings', currentUser?.role],
+    enabled: Boolean(currentUser),
     queryFn: async () => {
       try {
-        const { data } = await api.get('/bookings/me');
+        const { data } = await api.get(currentUser?.role === 'LANDLORD' ? '/bookings/landlord' : '/bookings/me');
         if (Array.isArray(data)) return data;
         if (Array.isArray(data?.bookings)) return data.bookings;
         return [];
