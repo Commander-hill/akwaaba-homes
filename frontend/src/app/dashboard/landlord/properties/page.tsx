@@ -134,14 +134,15 @@ export default function LandlordPropertiesPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[235px] flex items-center shadow-xs bg-[#EAF5FC] border border-[#D5EBF9]">
+      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[235px] flex items-center shadow-xs bg-[#EBF5FB] border border-[#D5EBF9]">
         {/* Panoramic apartment background on right */}
         <div
-          className="absolute inset-y-0 right-0 w-full md:w-3/4 bg-cover bg-right md:bg-center"
-          style={{ backgroundImage: `url('/images/resident/hero-building-clean.jpg')` }}
-        />
-        {/* Soft sky-blue gradient mask on left */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#EBF5FB] via-[#EBF5FB]/95 via-38% md:via-48% to-transparent" />
+          className="absolute inset-y-0 right-0 w-full md:w-[62%] bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/resident/landlord-properties-hero-bldg.jpg')" }}
+        >
+          {/* Seamless left edge blend */}
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#EBF5FB] to-transparent" />
+        </div>
 
         {/* Content inside Hero */}
         <div className="relative z-10 px-6 sm:px-10 py-7 max-w-xl text-zinc-900 space-y-1.5">

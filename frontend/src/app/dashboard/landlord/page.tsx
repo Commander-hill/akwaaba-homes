@@ -124,14 +124,15 @@ export default function LandlordDashboardPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[230px] flex items-center shadow-xs bg-[#062A18]">
+      <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[230px] flex items-center shadow-xs bg-[#06331C]">
         {/* Panoramic apartment background on right */}
         <div
-          className="absolute inset-y-0 right-0 w-full md:w-3/4 bg-cover bg-right md:bg-center"
-          style={{ backgroundImage: `url('/images/resident/hero-building-clean.jpg')` }}
-        />
-        {/* Dark emerald gradient mask on left */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#062A18] via-[#062A18]/95 via-35% md:via-42% to-transparent" />
+          className="absolute inset-y-0 right-0 w-full md:w-[65%] bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/resident/landlord-dashboard-hero-bldg.jpg')" }}
+        >
+          {/* Seamless left edge blend */}
+          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#06331C] to-transparent" />
+        </div>
 
         {/* Right curved wave overlay framing the right edge */}
         <div className="absolute right-0 top-0 bottom-0 w-36 sm:w-48 md:w-64 pointer-events-none overflow-hidden">

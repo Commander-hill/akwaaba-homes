@@ -178,11 +178,12 @@ export default function LandlordBookingsPage() {
       <div className="relative rounded-3xl overflow-hidden min-h-[165px] md:h-[180px] flex items-center shadow-xs bg-[#E8F7EE] border border-[#D4F2E0]">
         {/* Panoramic apartment background on right */}
         <div
-          className="absolute inset-y-0 right-0 w-full md:w-3/4 bg-cover bg-right md:bg-center"
-          style={{ backgroundImage: `url('/images/resident/hero-building-clean.jpg')` }}
-        />
-        {/* Soft mint-green gradient mask on left */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#E6F6EC] via-[#EBF8F0]/95 via-42% md:via-50% to-transparent" />
+          className="absolute inset-y-0 right-0 w-full md:w-[60%] bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/resident/landlord-bookings-hero-bldg.jpg')" }}
+        >
+          {/* Seamless left edge blend */}
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#E8F7EE] to-transparent" />
+        </div>
 
         {/* Content inside Hero */}
         <div className="relative z-10 px-6 sm:px-10 py-6 flex items-center gap-4 sm:gap-5 max-w-2xl">
