@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
+import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import toast from 'react-hot-toast';
 import {
   MapPin,
@@ -114,7 +115,8 @@ export default function TenantDashboardPage() {
     ? Number(primaryBooking.amount)
     : 2500;
 
-  if (sessionLoading && bookingsLoading) {
+  const showSkeleton = useInitialSkeleton(sessionLoading || bookingsLoading);
+  if (showSkeleton) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-56 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />

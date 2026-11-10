@@ -27,6 +27,7 @@ import {
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import ResidentLockedTeaser from '@/components/tenant-ui/ResidentLockedTeaser';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function TenantBillsPage() {
   const queryClient = useQueryClient();
@@ -84,6 +85,8 @@ export default function TenantBillsPage() {
   });
 
   const rawSplits: any[] = billsData || [];
+  const showSkeleton = useInitialSkeleton(isLoading || isBookingsLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
 
   if (!isLoading && !isBookingsLoading && !hasActiveStay && rawSplits.length === 0) {
     return (

@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { getImageUrl } from '@/lib/utils';
+import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   MapPin,
   Calendar,
@@ -288,6 +289,8 @@ function ResidencePageContent() {
   }, [liveBooking?.property?.images]);
 
   const activeImageIndex = selectedImageIndex < galleryImages.length ? selectedImageIndex : 0;
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <DashboardOverviewSkeleton />;
   const currentMainImage = galleryImages[activeImageIndex] || galleryImages[0];
 
   const copyToClipboard = (text: string, key: string) => {

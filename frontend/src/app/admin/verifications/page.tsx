@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import toast from 'react-hot-toast';
 import {
   ShieldCheck,
@@ -541,6 +542,10 @@ export default function AdminVerificationsQueuePage() {
     await refetch();
     setTimeout(() => setIsRefreshing(false), 500);
     toast.success('Verification queue refreshed');
+  };
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={6} columns={5} />;
+  if (false) {
   };
 
   return (

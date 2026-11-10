@@ -23,6 +23,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge';
 import AdminFilterBar, { FilterConfig } from '@/components/admin/AdminFilterBar';
 import AdminDataTable, { Column } from '@/components/admin/AdminDataTable';
+import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
 
 const formatLeaseDuration = (startDate: string, endDate: string) => {
   if (!startDate || !endDate) return 'N/A';
@@ -127,6 +128,7 @@ const filterConfigs: FilterConfig[] = [
       onChange: setStatusFilter
     }
   ];
+  const showSkeleton = useInitialSkeleton(isLoading);
 
   const columns: Column<any>[] = [
     {
@@ -264,6 +266,7 @@ const filterConfigs: FilterConfig[] = [
       )
     }
   ];
+/**/
 
   return (
     <div className="space-y-6">
@@ -317,7 +320,7 @@ const filterConfigs: FilterConfig[] = [
         columns={columns}
         data={filteredBookings}
         keyExtractor={(b) => b.id}
-        isLoading={isLoading}
+        isLoading={showSkeleton}
         emptyTitle="No bookings found"
         emptyDescription="No bookings match your current filter criteria."
       />

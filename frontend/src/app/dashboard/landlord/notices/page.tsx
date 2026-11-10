@@ -26,6 +26,7 @@ import {
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import { useDialog } from '@/providers/DialogProvider';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 
 interface NoticeItem {
   id: string;
@@ -115,6 +116,8 @@ export default function LandlordNoticesPage() {
   }, [notices, selectedPropertyId, searchTerm]);
 
   const properties = propertiesData || [];
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
 
   return (
     <div className="space-y-8 pb-16 animate-in fade-in">

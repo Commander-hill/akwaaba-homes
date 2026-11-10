@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 
 const MOMO_NETWORKS = [
   { id: 'MTN', label: 'MTN Mobile Money', short: 'MTN', code: 'MTN' },
@@ -246,6 +247,8 @@ export default function LandlordWithdrawalPage() {
   const parsedAmountNum = parseFloat(amount) || 0;
   const processingFee = 0.00; // Akwaaba Homes pays payment processing fee
   const netDisbursement = Math.max(0, parsedAmountNum - processingFee);
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
 
   const applyPercentPreset = (pct: number) => {
     const val = (availableBalance * pct).toFixed(2);

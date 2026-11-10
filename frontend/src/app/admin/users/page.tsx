@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import toast from 'react-hot-toast';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { 
   Search, 
   SlidersHorizontal, 
@@ -329,7 +330,11 @@ export default function AdminUsersPage() {
     toast.success('User directory exported to CSV (GRA Tax Compliance Format).');
   };
 
-  if (isLoading) {
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) {
+    return <TablePageSkeleton rows={6} columns={6} />;
+  }
+  if (false) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[450px] gap-3">
         <Loader2 className="w-10 h-10 animate-spin text-[#16A34A]" />

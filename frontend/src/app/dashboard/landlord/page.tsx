@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Home,
   CalendarCheck,
@@ -121,6 +122,8 @@ const exactProperties = [
 ];
 
 export default function LandlordDashboardPage() {
+  const showSkeleton = useInitialSkeleton();
+  if (showSkeleton) return <DashboardOverviewSkeleton />;
   return (
     <div className="space-y-6 pb-12">
       {/* Hero Banner */}

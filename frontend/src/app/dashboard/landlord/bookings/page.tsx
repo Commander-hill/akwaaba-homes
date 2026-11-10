@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { BookingListSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   CalendarCheck,
   Clock,
@@ -132,6 +133,7 @@ const initialBookings: BookingItem[] = [
 ];
 
 export default function LandlordBookingsPage() {
+  const showSkeleton = useInitialSkeleton();
   const [bookings, setBookings] = useState<BookingItem[]>(initialBookings);
   const [activeTab, setActiveTab] = useState<'ALL' | 'Pending' | 'Confirmed' | 'Cancelled'>('ALL');
   const [period, setPeriod] = useState('This Month');
@@ -149,6 +151,7 @@ export default function LandlordBookingsPage() {
     if (activeTab === 'ALL') return bookings;
     return bookings.filter((b) => b.status === activeTab);
   }, [bookings, activeTab]);
+  if (showSkeleton) return <BookingListSkeleton />;
 
   const handleConfirm = (id: string) => {
     setBookings((prev) =>

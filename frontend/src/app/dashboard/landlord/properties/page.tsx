@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { CardGridSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Home,
   CalendarCheck,
@@ -111,6 +112,7 @@ const propertiesData: PropertyItem[] = [
 ];
 
 export default function LandlordPropertiesPage() {
+  const showSkeleton = useInitialSkeleton();
   const [activeFilter, setActiveFilter] = useState<'ALL' | 'Active' | 'Pending' | 'Under Review'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,6 +132,7 @@ export default function LandlordPropertiesPage() {
       return matchesFilter && matchesSearch;
     });
   }, [activeFilter, searchQuery]);
+  if (showSkeleton) return <CardGridSkeleton />;
 
   return (
     <div className="space-y-6 pb-12">

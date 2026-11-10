@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import api from '@/lib/axios';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Wrench,
   Clock,
@@ -96,6 +97,8 @@ export default function TenantTicketsPage() {
   });
 
   const hasActiveTenancy = Boolean(activeBookingData);
+  const showSkeleton = useInitialSkeleton(isLoadingTickets || isLoadingResidence);
+  if (showSkeleton) return <TablePageSkeleton rows={4} columns={4} />;
   const propertyTitle = activeBookingData?.property?.title || 'Residential Residence';
   const propertyLocation =
     activeBookingData?.property?.location || activeBookingData?.property?.address || 'Accra, Ghana';

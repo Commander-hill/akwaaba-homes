@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import api from '@/lib/axios';
+import SkeletonTable from '@/components/SkeletonTable';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { 
   Loader2, CreditCard, CheckCircle, AlertCircle, Calendar, Building, 
   MapPin, Smartphone, X, ExternalLink
@@ -31,6 +33,8 @@ export default function LandlordSubscriptionPage() {
   });
 
   const properties = overviewData?.properties || [];
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={5} columns={5} />;
   const stats = overviewData?.stats || {
     totalProperties: 0,
     activeSubscriptions: 0,
@@ -93,7 +97,7 @@ export default function LandlordSubscriptionPage() {
         
         {isLoading ? (
           <div className="p-12 flex justify-center">
-            <Loader2 className="w-6 h-6 animate-spin text-[#0F5132]" />
+            <SkeletonTable rows={4} columns={5} />
           </div>
         ) : properties.length === 0 ? (
           <div className="p-12 text-center text-xs text-zinc-500">

@@ -32,6 +32,7 @@ import {
   Download
 } from 'lucide-react';
 import AdminConfirmDialog from '@/components/admin/AdminConfirmDialog';
+import { TablePageSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 
 export default function AdminPropertiesPage() {
   const queryClient = useQueryClient();
@@ -329,6 +330,8 @@ export default function AdminPropertiesPage() {
       rejectedOffset
     };
   }, [stats]);
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) return <TablePageSkeleton rows={6} columns={6} />;
 
   return (
     <div className="space-y-6 pb-12">

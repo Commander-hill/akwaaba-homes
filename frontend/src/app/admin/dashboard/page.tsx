@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { LiveHealthHeartbeat } from '@/components/admin/LiveHealthHeartbeat';
+import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios';
 import { useSocket } from '@/providers/SocketProvider';
@@ -188,6 +189,8 @@ export default function AdminDashboardPage() {
       }
     ];
   }, [activityData]);
+  const showSkeleton = useInitialSkeleton();
+  if (showSkeleton) return <DashboardOverviewSkeleton />;
 
   return (
     <div className="space-y-6 pb-12">

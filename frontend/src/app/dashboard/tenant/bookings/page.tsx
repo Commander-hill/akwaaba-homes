@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
+import { useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Calendar,
   CalendarCheck,
@@ -255,7 +256,8 @@ export default function TenantBookingsPage() {
     { id: 'CANCELLED', label: 'Cancelled', count: counts.CANCELLED, icon: XCircle },
   ];
 
-  if (isLoading) {
+  const showSkeleton = useInitialSkeleton(isLoading);
+  if (showSkeleton) {
     return (
       <div className="space-y-6 animate-pulse font-sans">
         <div className="h-48 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
