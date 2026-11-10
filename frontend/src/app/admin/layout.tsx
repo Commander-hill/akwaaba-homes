@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname } from 'next/navigation';
 import api from '@/lib/axios';
@@ -11,20 +11,24 @@ import AdminPwaInstallPrompt from '@/components/AdminPwaInstallPrompt';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-// Deterministic SSR-safe optimistic admin user so SSR and client hydration match 100%
-const OPTIMISTIC_ADMIN = {
-  user: {
-    id: 'optimistic-admin',
-    role: 'ADMIN',
-    firstName: 'System',
-    lastName: 'Administrator',
-  },
-  _optimistic: true,
-};
-
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [hydrated, setHydrated] = useState(false);
+  const [cachedAdmin, setCachedAdmin] = useState<any>(undefined);
+
+  useEffect(() => {
+    setHydrated(true);
+    try {
+      const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.user?.role === 'ADMIN' || parsed?.user?.role === 'SUPER_ADMIN') {
+          setCachedAdmin(parsed);
+        }
+      }
+    } catch {}
+  }, []);
 
   const { data: userResponse, isLoading, isFetching, error } = useQuery({
     queryKey: ['auth', 'me'],
@@ -46,30 +50,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             localStorage.removeItem(USER_CACHE_KEY);
           } catch {}
         }
+        setCachedAdmin(undefined);
         throw err;
       }
     },
-    placeholderData: () => (pathname === '/admin/login' ? undefined : OPTIMISTIC_ADMIN),
+    enabled: pathname !== '/admin/login',
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const user = error ? undefined : userResponse?.user;
+  const effectiveResponse = hydrated ? (userResponse || cachedAdmin) : undefined;
+  const user = error ? undefined : effectiveResponse?.user;
 
   // Protect Admin routes
   useEffect(() => {
-    // Skip protection for the admin login page itself
     if (pathname === '/admin/login') return;
 
     if (!isLoading && !isFetching) {
-      if (error || !user) {
+      if (error || !userResponse?.user) {
         router.push('/admin/login');
-      } else if (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
-        // If a non-admin somehow gets here, kick them out
+      } else if (userResponse.user.role !== 'ADMIN' && userResponse.user.role !== 'SUPER_ADMIN') {
         window.location.href = '/login';
       }
     }
-  }, [user, isLoading, isFetching, error, router, pathname]);
+  }, [userResponse, isLoading, isFetching, error, router, pathname]);
 
   // If on login page, render children with admin manifest and install prompt
   if (pathname === '/admin/login') {
@@ -84,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (isLoading && !user) {
+  if (!hydrated || (isLoading && !user)) {
     return <BrandLoader message="VERIFYING SECURITY CLEARANCE" fullScreen={true} />;
   }
 

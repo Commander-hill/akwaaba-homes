@@ -43,12 +43,30 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const isHiddenRoute =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/bookings') ||
+    pathname.startsWith('/notifications') ||
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/settings') ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/forgot-password' ||
+    pathname === '/reset-password' ||
+    pathname.startsWith('/verify-email') ||
+    pathname === '/onboarding' ||
+    pathname === '/services' ||
+    pathname.startsWith('/support') ||
+    pathname.startsWith('/help');
+
   const { data: userResponse } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       const { data } = await api.get('/auth/me');
       return data;
     },
+    enabled: !isHiddenRoute,
     retry: false,
   });
 
@@ -58,6 +76,7 @@ export default function Navbar() {
       const { data } = await api.get('/config/public');
       return data;
     },
+    enabled: !isHiddenRoute,
     refetchInterval: 60000,
   });
 

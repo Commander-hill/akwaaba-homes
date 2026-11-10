@@ -18,44 +18,18 @@ import LandlordShell from '@/components/landlord-ui/LandlordShell';
 
 const USER_CACHE_KEY = 'akwaaba_cached_user_v1';
 
-// Deterministic SSR-safe optimistic shell based purely on pathname (100% identical on server and client)
-function getDeterministicRouteUser(pathname: string) {
-  if (pathname.startsWith('/dashboard/landlord')) {
-    return {
-      user: {
-        id: 'optimistic-landlord',
-        role: 'LANDLORD',
-        firstName: 'Stephen',
-        lastName: 'Darko',
-        isVerifiedLandlord: true,
-      },
-      _optimistic: true,
-    };
-  }
-  if (pathname.startsWith('/dashboard/tenant')) {
-    return {
-      user: {
-        id: 'optimistic-tenant',
-        role: 'TENANT',
-        firstName: 'Stephen',
-        lastName: 'Darko',
-      },
-      _optimistic: true,
-    };
-  }
-  return undefined;
-}
-
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() || '';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [cachedSession, setCachedSession] = useState<any>(undefined);
 
   const isGuestAllowedRoute = pathname === '/dashboard/wishlist';
 
-  // Read client storage only after hydration so SSR and initial client render match 100%
+  // Hydrate cached user strictly after initial client hydration pass so SSR and hydration DOM match 100%
   useEffect(() => {
+    setHydrated(true);
     try {
       const raw = sessionStorage.getItem(USER_CACHE_KEY) || localStorage.getItem(USER_CACHE_KEY);
       if (raw) {
@@ -91,16 +65,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         throw err;
       }
     },
-    placeholderData: () => getDeterministicRouteUser(pathname),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
 
-  const effectiveResponse = userResponse && !(userResponse as any)?._optimistic
-    ? userResponse
-    : cachedSession || userResponse;
-
-  const isOptimisticPlaceholder = Boolean((effectiveResponse as any)?._optimistic);
+  // Only use post-hydration session data so SSR and first client render are 100% identical
+  const effectiveResponse = hydrated ? (userResponse || cachedSession) : undefined;
+  const confirmedUser = !error ? userResponse?.user : undefined;
   const user = error ? undefined : effectiveResponse?.user;
 
   const { data: notificationsData } = useQuery({
@@ -113,14 +84,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return { notifications: [], unreadCount: 0 };
       }
     },
-    enabled: !!user && !isOptimisticPlaceholder && !error,
+    // Only fetch notifications once /auth/me has confirmed an active session (prevents 401 on expired tokens)
+    enabled: hydrated && !!confirmedUser && !error,
     staleTime: 30000,
   });
   const unreadNotificationsCount = notificationsData?.unreadCount || 0;
 
   useEffect(() => {
     if (!isLoading && !isFetching) {
-      if ((error || !user) && !isGuestAllowedRoute) {
+      if ((error || !userResponse?.user) && !isGuestAllowedRoute) {
         router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       } else if (user?.role === 'ADMIN') {
         router.push('/admin/dashboard');
@@ -141,9 +113,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.push('/dashboard/landlord');
       }
     }
-  }, [user, isLoading, isFetching, error, router, pathname, isGuestAllowedRoute]);
+  }, [user, userResponse, isLoading, isFetching, error, router, pathname, isGuestAllowedRoute]);
 
-  if (isLoading && !user) {
+  if (!hydrated || (isLoading && !user)) {
     return <BrandLoader message="LOADING YOUR WORKSPACE" fullScreen={true} />;
   }
 
