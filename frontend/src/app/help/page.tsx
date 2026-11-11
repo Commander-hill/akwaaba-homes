@@ -199,12 +199,12 @@ export default function HelpFaqPage() {
                     aria-expanded={isOpen}
                   >
                     <div className="space-y-1">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-semibold block">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-600 dark:text-zinc-300 font-semibold block">
                         {faq.categoryLabel}
                       </span>
-                      <h3 className="text-base sm:text-[17px] font-semibold text-zinc-900 dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-emerald-400 transition-colors leading-snug">
+                      <h2 className="text-base sm:text-[17px] font-semibold text-zinc-900 dark:text-white group-hover:text-[#16A34A] dark:group-hover:text-emerald-400 transition-colors leading-snug">
                         {faq.question}
-                      </h3>
+                      </h2>
                     </div>
                     <div className="pt-1 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors">
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#16A34A] dark:text-emerald-400' : ''}`} />
@@ -226,16 +226,16 @@ export default function HelpFaqPage() {
         <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800">
           <div className="p-6 sm:p-8 rounded-[16px] bg-white dark:bg-[#171C19] border border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-2xs">
             <div className="space-y-1 max-w-md">
-              <h3 className="font-editorial text-xl text-[#242925] dark:text-white">
+              <h2 className="font-editorial text-xl text-[#242925] dark:text-white">
                 Need to report a property or booking issue?
-              </h3>
+              </h2>
               <p className="text-xs sm:text-sm text-[#5E645E] dark:text-[#A0A8A2] leading-relaxed">
                 Submit a support inquiry or maintenance ticket linked to your booking and track its status online.
               </p>
             </div>
             <Link
               href="/support"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[10px] bg-[#15803D] hover:bg-[#166534] text-white text-xs sm:text-sm font-medium transition-colors shadow-xs shrink-0 cursor-pointer"
             >
               <span>Open Support &amp; Issue Center</span>
               <ArrowRight className="w-3.5 h-3.5" />

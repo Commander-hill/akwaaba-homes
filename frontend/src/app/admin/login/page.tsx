@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Lock, 
   Mail, 
@@ -31,8 +31,8 @@ import toast from 'react-hot-toast';
 
 function AdminLoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const isTimeout = searchParams.get('reason') === 'timeout';
+  const [isTimeout, setIsTimeout] = useState(false);
+  useEffect(() => { setIsTimeout(new URLSearchParams(window.location.search).get('reason') === 'timeout'); }, []);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -61,7 +61,7 @@ function AdminLoginForm() {
   });
 
   useEffect(() => {
-    if (sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('reason') !== 'timeout' && sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
       window.location.href = '/admin/dashboard';
     }
   }, [sessionData, isTimeout]);
@@ -294,7 +294,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             alt="Admin Security" 
             width={76} 
             height={76} 
-            className="object-contain drop-shadow-sm" fetchPriority="high" quality={65} 
+            className="object-contain drop-shadow-sm" fetchPriority="high" decoding="sync" quality={65} sizes="76px" 
             priority 
           />
         </div>
@@ -858,9 +858,5 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
 }
 
 export default function AdminLoginPage() {
-  return (
-    <Suspense fallback={<div className="-mt-16 min-h-screen bg-[#F4FBF7]" />}>
-      <AdminLoginForm />
-    </Suspense>
-  );
+  return <AdminLoginForm />;
 }

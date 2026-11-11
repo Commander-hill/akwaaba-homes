@@ -343,12 +343,12 @@ export default function LandlordShell({
             <div className="relative">
               <button
                 type="button"
-                aria-label="Notifications"
+                title="Notifications"
                 className="relative p-2 text-zinc-700 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
               >
                 <Bell className="w-5 h-5 stroke-[1.8]" />
-                <span className="absolute top-1 right-1 w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 leading-none">
-                  3
+                <span className="absolute top-1 right-1 w-4 h-4 bg-[#B91C1C] text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-zinc-900 leading-none">
+                  3<span className="sr-only"> unread notifications</span>
                 </span>
               </button>
             </div>

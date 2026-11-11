@@ -66,7 +66,7 @@ function ServicesContent() {
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       try {
-        const { data } = await api.get('/auth/me');
+        const { data } = await api.get('/auth/session');
         return data;
       } catch {
         return null;
@@ -203,7 +203,7 @@ function ServicesContent() {
             {/* My Account Button */}
             <Link
               href={user ? dashboardHref : '/login'}
-              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors shadow-xs"
             >
               <span className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-extrabold flex items-center justify-center">
                 {initials}
@@ -239,7 +239,7 @@ function ServicesContent() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/properties"
-                className="px-5 py-2.5 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
+                className="px-5 py-2.5 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition"
               >
                 <span>Explore accommodation</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -317,7 +317,7 @@ function ServicesContent() {
                   alt={card.title}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-fill"
+                  className="object-cover"
                 />
 
                 {/* Crisp HTML Text Overlaid in the Cleaned Bottom-Right Cream Cutout */}
@@ -498,7 +498,7 @@ function ServicesContent() {
                 key={item}
                 className="flex items-center lg:justify-center gap-1.5 first:lg:justify-start"
               >
-                <span className="w-3.5 h-3.5 rounded-full bg-[#16A34A] text-white inline-flex items-center justify-center shrink-0">
+                <span className="w-3.5 h-3.5 rounded-full bg-[#15803D] text-white inline-flex items-center justify-center shrink-0">
                   <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </span>
                 <span>{item}</span>

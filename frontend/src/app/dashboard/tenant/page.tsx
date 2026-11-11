@@ -115,23 +115,7 @@ export default function TenantDashboardPage() {
     ? Number(primaryBooking.amount)
     : 2500;
 
-  const showSkeleton = useInitialSkeleton(sessionLoading || bookingsLoading);
-  if (showSkeleton) {
-    return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-56 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 h-80 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-          <div className="lg:col-span-4 h-80 rounded-2xl bg-zinc-100 dark:bg-zinc-800" />
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="space-y-6 font-sans">
@@ -139,14 +123,7 @@ export default function TenantDashboardPage() {
       <section className="relative rounded-2xl overflow-hidden border border-zinc-200/80 dark:border-zinc-800 shadow-xs min-h-[220px] sm:min-h-[250px] flex items-center bg-[#0C3827]">
         {/* Background building image positioned on right */}
         <div className="absolute inset-0 z-0">
-          <Image
-            src="/images/resident/hero-building-clean.jpg"
-            alt="Residence Exterior"
-            fill
-            priority
-            className="object-cover object-right"
-            sizes="(max-width: 768px) 100vw, 256px"
-/>
+          <Image src="/images/resident/hero-building-clean.webp" alt="Residence Exterior" fill priority fetchPriority="high" decoding="sync" quality={65} sizes="(max-width: 640px) 384px, 50vw" className="object-cover object-right" />
           {/* Deep dark green gradient overlay on the left */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/90 to-transparent" />
         </div>
@@ -203,27 +180,27 @@ export default function TenantDashboardPage() {
 
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white truncate">
+                    <h2 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white truncate">
                       {activePropertyTitle}
-                    </h3>
+                    </h2>
                     <span className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0">
                       {primaryBooking.status === 'ACTIVE' || primaryBooking.status === 'CHECKED_IN' ? 'Active' : 'Booked'}
                     </span>
                   </div>
 
-                  <p className="text-[11px] text-zinc-500 flex items-center gap-1 truncate">
-                    <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                  <p className="text-[11px] text-zinc-600 flex items-center gap-1 truncate">
+                    <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                     <span>{activePropertyLocation}</span>
                   </p>
 
-                  <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 pt-0.5 truncate">
+                  <div className="text-[10px] text-zinc-600 flex items-center gap-1.5 pt-0.5 truncate">
                     <span className="flex items-center gap-1">
-                      <Bed className="w-3 h-3 text-zinc-400 shrink-0" />
+                      <Bed className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                       <span>Allocated Unit</span>
                     </span>
                     <span>|</span>
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-zinc-400 shrink-0" />
+                      <Calendar className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                       <span>{stayDates}</span>
                     </span>
                   </div>
@@ -232,7 +209,7 @@ export default function TenantDashboardPage() {
 
               <Link
                 href={`/dashboard/tenant/bookings/${primaryBooking.id}`}
-                className="mt-3.5 w-full py-2 rounded-xl border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                className="mt-3.5 w-full py-2 rounded-xl border border-[#15803D] text-[#15803D] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition"
               >
                 <span>View Details</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -244,12 +221,12 @@ export default function TenantDashboardPage() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                   Getting Started
                 </span>
-                <span className="text-[10px] font-semibold text-zinc-400">Step 1 of 3</span>
+                <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400">Step 1 of 3</span>
               </div>
 
-              <h4 className="text-xs sm:text-sm font-bold text-zinc-950 dark:text-white leading-snug">
+              <h2 className="text-xs sm:text-sm font-bold text-zinc-950 dark:text-white leading-snug">
                 Find your perfect verified home in Ghana
-              </h4>
+              </h2>
 
               <div className="space-y-1.5 text-[11px] text-zinc-600 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
@@ -257,18 +234,18 @@ export default function TenantDashboardPage() {
                   <span>Explore apartments, houses &amp; hostels</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 flex items-center justify-center text-[10px] font-bold">2</span>
                   <span>Submit booking &amp; Ghana Card KYC</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-500 flex items-center justify-center text-[10px] font-bold">3</span>
+                  <span className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 flex items-center justify-center text-[10px] font-bold">3</span>
                   <span>Unlock gate passes &amp; caretaker maintenance</span>
                 </div>
               </div>
 
               <Link
                 href="/properties"
-                className="w-full py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
+                className="w-full py-2 rounded-xl bg-[#15803D] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-xs"
               >
                 <span>Explore Available Listings</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -286,7 +263,7 @@ export default function TenantDashboardPage() {
             <h2 className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white leading-tight">
               Quick Actions
             </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">
               Access what you need, fast.
             </p>
           </div>
@@ -302,7 +279,7 @@ export default function TenantDashboardPage() {
               <div className="w-9 h-9 rounded-xl bg-emerald-100/80 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
                 <Calendar className="w-4 h-4" />
               </div>
-              <div className="w-6 h-6 rounded-full bg-[#16A34A] text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+              <div className="w-6 h-6 rounded-full bg-[#15803D] text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5">
                 <ArrowRight className="w-3.5 h-3.5" />
               </div>
             </div>
@@ -310,7 +287,7 @@ export default function TenantDashboardPage() {
               <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
                 Book a Space
               </h3>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                 Study rooms, events &amp; more
               </p>
             </div>
@@ -333,7 +310,7 @@ export default function TenantDashboardPage() {
               <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
                 Make Payment
               </h3>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                 Rent, utilities &amp; other fees
               </p>
             </div>
@@ -356,7 +333,7 @@ export default function TenantDashboardPage() {
               <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
                 Report an Issue
               </h3>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                 Maintenance &amp; repairs
               </p>
             </div>
@@ -379,7 +356,7 @@ export default function TenantDashboardPage() {
               <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white">
                 View Documents
               </h3>
-              <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
+              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-0.5">
                 Lease, receipts &amp; more
               </p>
             </div>
@@ -402,14 +379,14 @@ export default function TenantDashboardPage() {
                       <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white leading-tight">
                         Upcoming &amp; Recent
                       </h3>
-                      <p className="text-[10px] text-zinc-400">
+                      <p className="text-[10px] text-zinc-600 dark:text-zinc-400">
                         Your bookings, payments and important dates.
                       </p>
                     </div>
                   </div>
                   <Link
                     href="/dashboard/tenant/bookings"
-                    className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
+                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
                   >
                     <span>View All</span>
                     <ArrowRight className="w-3 h-3" />
@@ -442,12 +419,12 @@ export default function TenantDashboardPage() {
                         <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
                           Study Room Booking
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
+                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
                           Tue, 9 Sep 2026 &bull; 10:00 AM – 12:00 PM
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
                   </Link>
 
                   {/* Item 2: Rent Payment */}
@@ -468,12 +445,12 @@ export default function TenantDashboardPage() {
                         <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
                           Rent Payment
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
+                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
                           September 2026 &bull; GH₵ 2,500
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
                   </Link>
 
                   {/* Item 3: Maintenance Request */}
@@ -494,12 +471,12 @@ export default function TenantDashboardPage() {
                         <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
                           Maintenance Request
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
+                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
                           Issue with AC &bull; Submitted 3 Sep 2026
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
                   </Link>
 
                   {/* Item 4: Resident Forum */}
@@ -521,12 +498,12 @@ export default function TenantDashboardPage() {
                         <p className="font-bold text-zinc-950 dark:text-white truncate mt-0.5">
                           Resident Forum
                         </p>
-                        <p className="text-[10px] text-zinc-400 truncate">
+                        <p className="text-[10px] text-zinc-600 dark:text-zinc-400 truncate">
                           Sat, 12 Sep 2026 &bull; 5:00 PM – 7:00 PM
                         </p>
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-zinc-600 dark:text-zinc-400 shrink-0" />
                   </Link>
                 </div>
               </div>
@@ -593,11 +570,11 @@ export default function TenantDashboardPage() {
                 <div className="grid grid-cols-2 gap-4 pb-2">
                   {/* Rent */}
                   <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-zinc-500">Rent</p>
+                    <p className="text-[11px] font-medium text-zinc-600">Rent</p>
                     <p className="text-sm font-black text-zinc-950 dark:text-white">
                       GH₵ 2,300
                     </p>
-                    <p className="text-[10px] text-zinc-400">Due 6 Sep 2026</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">Due 6 Sep 2026</p>
                     <span className="inline-block bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
                       &bull; Paid
                     </span>
@@ -605,11 +582,11 @@ export default function TenantDashboardPage() {
 
                   {/* Utilities */}
                   <div className="space-y-1">
-                    <p className="text-[11px] font-medium text-zinc-500">Utilities</p>
+                    <p className="text-[11px] font-medium text-zinc-600">Utilities</p>
                     <p className="text-sm font-black text-zinc-950 dark:text-white">
                       GH₵ 200
                     </p>
-                    <p className="text-[10px] text-zinc-400">Due 15 Sep 2026</p>
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400">Due 15 Sep 2026</p>
                     <span className="inline-block bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-full mt-1">
                       Pending
                     </span>
@@ -618,7 +595,7 @@ export default function TenantDashboardPage() {
 
                 <Link
                   href="/dashboard/invoice"
-                  className="w-full py-2.5 rounded-xl border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition text-center"
+                  className="w-full py-2.5 rounded-xl border border-[#15803D] text-[#15803D] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-xs font-bold flex items-center justify-center gap-1.5 transition text-center"
                 >
                   <span>View Payment History</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -641,7 +618,7 @@ export default function TenantDashboardPage() {
               </div>
               <Link
                 href="/dashboard/notifications"
-                className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
+                className="text-[11px] font-bold text-emerald-700 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3 h-3" />
@@ -662,9 +639,9 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       Payment Confirmed
                     </p>
-                    <span className="text-[10px] text-zinc-400 shrink-0">2h ago</span>
+                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">2h ago</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-snug mt-0.5">
+                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
                     Your rent for September has been received.
                   </p>
                 </div>
@@ -683,9 +660,9 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       Maintenance Update
                     </p>
-                    <span className="text-[10px] text-zinc-400 shrink-0">5h ago</span>
+                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">5h ago</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-snug mt-0.5">
+                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
                     Your maintenance request has been assigned.
                   </p>
                 </div>
@@ -704,9 +681,9 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       New Announcement
                     </p>
-                    <span className="text-[10px] text-zinc-400 shrink-0">1d ago</span>
+                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">1d ago</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-snug mt-0.5">
+                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
                     Weekend gate access will be restricted.
                   </p>
                 </div>
@@ -725,9 +702,9 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       Upcoming Event
                     </p>
-                    <span className="text-[10px] text-zinc-400 shrink-0">2d ago</span>
+                    <span className="text-[10px] text-zinc-600 dark:text-zinc-400 shrink-0">2d ago</span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 leading-snug mt-0.5">
+                  <p className="text-[11px] text-zinc-600 leading-snug mt-0.5">
                     Resident forum &bull; 12 Sept 2026
                   </p>
                 </div>
@@ -744,14 +721,14 @@ export default function TenantDashboardPage() {
                   <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white leading-tight">
                     Explore Properties
                   </h3>
-                  <p className="text-[10px] text-zinc-400">
+                  <p className="text-[10px] text-zinc-600 dark:text-zinc-400">
                     Find your next home with us.
                   </p>
                 </div>
               </div>
               <Link
                 href="/properties"
-                className="text-[11px] font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
+                className="text-[11px] font-bold text-emerald-700 hover:text-emerald-700 flex items-center gap-0.5 shrink-0"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3 h-3" />
@@ -781,11 +758,11 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       Premium Studio
                     </p>
-                    <p className="text-[10px] text-zinc-400 flex items-center gap-1 truncate">
-                      <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                       <span>Legon Campus, Accra</span>
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 pt-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-zinc-600 pt-0.5">
                       <span className="flex items-center gap-1">
                         <Bed className="w-3 h-3" /> 1 Room
                       </span>
@@ -799,11 +776,11 @@ export default function TenantDashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs font-black text-zinc-950 dark:text-white pt-0.5">
-                      GH₵ 2,500 <span className="text-[10px] font-normal text-zinc-400">/ month</span>
+                      GH₵ 2,500 <span className="text-[10px] font-normal text-zinc-600 dark:text-zinc-400">/ month</span>
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-emerald-600 shrink-0 group-hover:translate-x-0.5 transition" />
+                <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0 group-hover:translate-x-0.5 transition" />
               </Link>
 
               {/* Property 2: KIMO APARTMENT */}
@@ -828,11 +805,11 @@ export default function TenantDashboardPage() {
                     <p className="font-bold text-xs text-zinc-950 dark:text-white truncate">
                       KIMO APARTMENT
                     </p>
-                    <p className="text-[10px] text-zinc-400 flex items-center gap-1 truncate">
-                      <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                    <p className="text-[10px] text-zinc-600 dark:text-zinc-400 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 text-zinc-600 dark:text-zinc-400 shrink-0" />
                       <span>Burma Camp, Accra</span>
                     </p>
-                    <div className="flex items-center gap-2 text-[10px] text-zinc-500 pt-0.5">
+                    <div className="flex items-center gap-2 text-[10px] text-zinc-600 pt-0.5">
                       <span className="flex items-center gap-1">
                         <Bed className="w-3 h-3" /> 1 Room
                       </span>
@@ -846,11 +823,11 @@ export default function TenantDashboardPage() {
                       </span>
                     </div>
                     <p className="text-xs font-black text-zinc-950 dark:text-white pt-0.5">
-                      GH₵ 2,000 <span className="text-[10px] font-normal text-zinc-400">/ month</span>
+                      GH₵ 2,000 <span className="text-[10px] font-normal text-zinc-600 dark:text-zinc-400">/ month</span>
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-emerald-600 shrink-0 group-hover:translate-x-0.5 transition" />
+                <ChevronRight className="w-4 h-4 text-emerald-700 shrink-0 group-hover:translate-x-0.5 transition" />
               </Link>
             </div>
           </div>
@@ -879,7 +856,7 @@ export default function TenantDashboardPage() {
             <h3 className="font-bold text-sm sm:text-base text-zinc-950 dark:text-white leading-tight">
               A Community That Feels Like Home
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
               Safe, comfortable and well-managed residences for students and young professionals.
             </p>
           </div>
@@ -888,7 +865,7 @@ export default function TenantDashboardPage() {
         {/* Button */}
         <Link
           href="/properties"
-          className="relative z-10 py-2 px-5 rounded-full border border-[#16A34A] text-[#16A34A] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold transition whitespace-nowrap"
+          className="relative z-10 py-2 px-5 rounded-full border border-[#15803D] text-[#15803D] hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold transition whitespace-nowrap"
         >
           <span>Explore More Properties</span>
           <span className="ml-1.5">&rarr;</span>

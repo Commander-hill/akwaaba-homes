@@ -37,9 +37,9 @@ export default function PublicFooter() {
 
           {/* Column 2: Explore Accommodations (3 cols) */}
           <div className="lg:col-span-3 space-y-3.5">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
               Discover Accommodation
-            </h3>
+            </p>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
                 <Link prefetch={false} href="/search" className="hover:text-[#6EE7B7] transition-colors">
@@ -71,9 +71,9 @@ export default function PublicFooter() {
 
           {/* Column 3: Resident Account (3 cols) */}
           <div className="lg:col-span-3 space-y-3.5">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
               Resident Portal
-            </h3>
+            </p>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
                 <Link prefetch={false} href="/dashboard/tenant" className="hover:text-[#6EE7B7] transition-colors">
@@ -105,9 +105,9 @@ export default function PublicFooter() {
 
           {/* Column 4: Support & Policies (2 cols) */}
           <div className="lg:col-span-2 space-y-3.5">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/90">
               Support &amp; Legal
-            </h3>
+            </p>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#9FB0A7]">
               <li>
                 <Link prefetch={false} href="/support" className="hover:text-[#6EE7B7] transition-colors">

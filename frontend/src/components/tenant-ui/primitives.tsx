@@ -50,7 +50,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const variantClasses: Record<ButtonVariant, string> = {
       primary:
-        'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#16A34A]/50',
+        'bg-[#15803D] hover:bg-[#166534] active:bg-[#14532D] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#15803D]/50',
       blue:
         'bg-[#0062BA] hover:bg-[#00529E] active:bg-[#004687] text-white border border-[#00488A]/40 shadow-xs focus-visible:ring-[#0062BA]/50',
       secondary:
@@ -293,7 +293,7 @@ export function PriceDisplay({
           formatted
         )}
       </span>
-      <span className={clsx('text-[#6F756F] dark:text-[#9EA69F] font-normal', sizeMap[size].period)}>
+      <span className={clsx('text-[#525852] dark:text-[#9EA69F] font-normal', sizeMap[size].period)}>
         {period}
       </span>
     </div>

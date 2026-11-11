@@ -57,6 +57,8 @@
 @source "../components/tenant-ui/PublicFooter.tsx";
 @source "../app/login/page.tsx";
 @source "../app/forgot-password/page.tsx";
+@source "../app/admin/login/page.tsx";
+@source "../components/AdminPwaInstallPrompt.tsx";
 @source "../app/properties/page.tsx";
 @source "../app/properties/loading.tsx";
 @source "../app/search/page.tsx";

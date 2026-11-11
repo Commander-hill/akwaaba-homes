@@ -1,8 +1,7 @@
 'use client';
 import '@/app/secondary.css';
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import api from '@/lib/axios';
@@ -10,14 +9,15 @@ import { Loader2, CheckCircle2, AlertCircle, ArrowRight, RefreshCw, Mail } from 
 import ThemeToggle from '@/components/ThemeToggle';
 
 function VerifyEmailContent() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const [token, setToken] = useState<string | null>(null);
   
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Verifying your email address with AkwaabaHomes identity services...');
 
   useEffect(() => {
-    if (!token) {
+    const t = new URLSearchParams(window.location.search).get('token');
+    setToken(t);
+    if (!t) {
       setStatus('error');
       setMessage('The verification link is missing an authorization token. Please check the full link in your email.');
       return;
@@ -25,7 +25,7 @@ function VerifyEmailContent() {
 
     const verifyToken = async () => {
       try {
-        await api.post('/auth/verify-email', { token });
+        await api.post('/auth/verify-email', { token: t });
         setStatus('success');
         setMessage('Your email address has been verified. Your AkwaabaHomes account is now fully active.');
       } catch (error: any) {
@@ -35,7 +35,7 @@ function VerifyEmailContent() {
     };
 
     verifyToken();
-  }, [token]);
+  }, []);
 
   return (
     <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col justify-between bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 antialiased selection:bg-emerald-100 selection:text-emerald-950">
@@ -75,7 +75,7 @@ function VerifyEmailContent() {
           <ThemeToggle />
           <Link 
             href="/login" 
-            className="text-xs font-semibold text-[#16A34A] dark:text-emerald-400 hover:text-[#15803D] dark:hover:text-emerald-300 transition-colors"
+            className="text-xs font-semibold text-[#15803D] dark:text-emerald-400 hover:text-[#15803D] dark:hover:text-emerald-300 transition-colors"
           >
             Sign in &rarr;
           </Link>
@@ -84,7 +84,7 @@ function VerifyEmailContent() {
 
       {/* ── Center Editorial Card ── */}
       <main className="flex-1 flex items-center justify-center px-6 sm:px-10 py-12 sm:py-20">
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto min-h-[340px] flex flex-col justify-center">
           
           {/* Status Container */}
           <div className="bg-white dark:bg-[#14181E] border border-zinc-200/80 dark:border-zinc-800/80 rounded-2xl p-7 sm:p-9 shadow-xs text-center space-y-6">
@@ -98,7 +98,7 @@ function VerifyEmailContent() {
                   <h2 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-white">
                     Verifying Credentials
                   </h2>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-xs mx-auto">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-xs mx-auto">
                     {message}
                   </p>
                 </div>
@@ -118,7 +118,7 @@ function VerifyEmailContent() {
                   <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
                     Account activated
                   </h2>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-sm mx-auto">
                     {message} You can now browse verified student and residential rooms, book viewings, and manage rent payments.
                   </p>
                 </div>
@@ -126,7 +126,7 @@ function VerifyEmailContent() {
                 <div className="pt-2">
                   <Link
                     href="/login"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                   >
                     <span>Proceed to Sign In</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -148,7 +148,7 @@ function VerifyEmailContent() {
                   <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
                     Verification unconfirmed
                   </h2>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-sm mx-auto">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-600 dark:text-zinc-300 leading-relaxed max-w-sm mx-auto">
                     {message}
                   </p>
                 </div>
@@ -156,7 +156,7 @@ function VerifyEmailContent() {
                 <div className="space-y-2.5 pt-2">
                   <Link
                     href="/login"
-                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
+                    className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer shadow-xs"
                   >
                     <span>Try Signing In</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -172,7 +172,7 @@ function VerifyEmailContent() {
             )}
 
             {/* Reassurance Metadata */}
-            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-400 dark:text-zinc-500 flex items-center justify-center gap-1.5">
+            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 text-[11px] text-zinc-600 dark:text-zinc-300 dark:text-zinc-500 flex items-center justify-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>Identity protected · Ghana Act 843 compliant</span>
             </div>
@@ -183,7 +183,7 @@ function VerifyEmailContent() {
       </main>
 
       {/* ── Subdued Footer ── */}
-      <footer className="w-full px-6 sm:px-10 lg:px-16 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-400 dark:text-zinc-500">
+      <footer className="w-full px-6 sm:px-10 lg:px-16 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600 dark:text-zinc-300 dark:text-zinc-500">
         <div>
           &copy; {new Date().getFullYear()} AkwaabaHomes Ghana. All rights reserved.
         </div>
@@ -206,13 +206,6 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <div className="-mt-18 md:-mt-20 min-h-screen flex flex-col items-center justify-center bg-[#FBFBF9] dark:bg-[#0D0F12] text-zinc-900 dark:text-zinc-100 p-6 space-y-3">
-        <Loader2 className="w-7 h-7 animate-spin text-[#0F5132]" />
-        <span className="text-xs font-medium text-zinc-500">Connecting to verification service...</span>
-      </div>
-    }>
-      <VerifyEmailContent />
-    </Suspense>
+    <VerifyEmailContent />
   );
 }

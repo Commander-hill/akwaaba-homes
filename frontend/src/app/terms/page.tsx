@@ -115,14 +115,16 @@ export default function TermsPage() {
       {/* ──── HERO SECTION: LEGAL CENTRE · GHANA ──── */}
       <section className="relative w-full bg-[#0C3827] text-white overflow-hidden py-8 sm:py-10">
         {/* Authentic Kente Geometric Line Watermark on Far Left */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 sm:w-44 opacity-20 pointer-events-none select-none">
+            <div className="hidden sm:block absolute left-0 top-0 bottom-0 w-32 sm:w-44 opacity-20 pointer-events-none select-none">
           <Image
             src="/images/about/terms-hero-kente.png"
-            alt="Kente Motif"
+            alt=""
             fill
             className="object-cover object-left"
-            priority
-            sizes="(max-width: 768px) 100vw, 256px"
+            loading="lazy"
+            fetchPriority="low"
+            quality={60}
+            sizes="160px"
 />
         </div>
 
@@ -133,8 +135,7 @@ export default function TermsPage() {
             alt="Ghanaian Modern Residential Community"
             fill
             className="object-cover object-right opacity-60"
-            priority
-            sizes="(max-width: 768px) 100vw, 256px"
+            sizes="35vw"
 />
           {/* Gradient Mask to fade building into forest green */}
           <div className="absolute inset-0 bg-gradient-to-r from-[#0C3827] via-[#0C3827]/70 to-transparent" />
@@ -190,8 +191,7 @@ export default function TermsPage() {
                     alt="Scales of Justice"
                     fill
                     className="object-contain"
-                    priority
-                    sizes="(max-width: 768px) 100vw, 256px"
+                    sizes="96px"
 />
                 </div>
               </div>
@@ -221,7 +221,7 @@ export default function TermsPage() {
                 {/* Contact Legal Team */}
                 <Link
                   href="/contact?topic=legal"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>Contact Legal Team</span>
@@ -240,13 +240,13 @@ export default function TermsPage() {
             
             {/* Col 1: Before you continue */}
             <div className="flex items-center gap-3 pr-2">
-              <div className="w-10 h-10 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800">
-                <ShieldCheck className="w-5 h-5 text-[#16A34A]" />
+              <div className="w-10 h-10 rounded-xl bg-[#EAF6EE] dark:bg-emerald-950/60 text-[#15803D] flex items-center justify-center shrink-0 border border-[#B7E8C3] dark:border-emerald-800">
+                <ShieldCheck className="w-5 h-5 text-[#15803D]" />
               </div>
               <div>
-                <h3 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white leading-tight">
+                <h2 className="font-bold text-xs sm:text-sm text-zinc-950 dark:text-white leading-tight">
                   Before you continue
-                </h3>
+                </h2>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
                   Here are some key points to note:
                 </p>
@@ -259,7 +259,7 @@ export default function TermsPage() {
                 <Check className="w-2.5 h-2.5 text-white" />
               </div>
               <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Verified Identities</h4>
+                <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Verified Identities</h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                   Ghana Card checks for relevant roles.
                 </p>
@@ -270,7 +270,7 @@ export default function TermsPage() {
             <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
               <CreditCard className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Protected Payments</h4>
+                <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Protected Payments</h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                   Paystack / MoMo and card checkout.
                 </p>
@@ -281,7 +281,7 @@ export default function TermsPage() {
             <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
               <FileText className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Digital Tenancy</h4>
+                <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Digital Tenancy</h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                   Electronically signed agreements.
                 </p>
@@ -292,7 +292,7 @@ export default function TermsPage() {
             <div className="flex items-start gap-2.5 lg:pl-4 pt-2 sm:pt-0">
               <GraduationCap className="w-4 h-4 text-[#0C3827] dark:text-emerald-400 shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Student Accommodation</h4>
+                <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Student Accommodation</h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug">
                   Campus-specific eligibility and room allocation rules.
                 </p>
@@ -330,7 +330,7 @@ export default function TermsPage() {
                           : 'hover:bg-white/60 dark:hover:bg-zinc-800/60 text-zinc-700 dark:text-zinc-300 font-medium'
                       }`}
                     >
-                      <span className={`font-mono font-bold ${isActive ? 'text-[#16A34A]' : 'text-zinc-400'}`}>
+                      <span className={`font-mono font-bold ${isActive ? 'text-[#15803D]' : 'text-zinc-600 dark:text-zinc-400'}`}>
                         {sec.num}
                       </span>
                       <span className="leading-snug">{sec.title}</span>
@@ -385,7 +385,7 @@ export default function TermsPage() {
                 >
                   {copiedSection === 'section-01' ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                      <Check className="w-3.5 h-3.5 text-[#15803D]" />
                       <span>Copied</span>
                     </>
                   ) : (
@@ -407,7 +407,7 @@ export default function TermsPage() {
                   i
                 </div>
                 <div className="space-y-0.5 text-xs">
-                  <h4 className="font-bold text-[#0E5C36] dark:text-emerald-300">Legal Reference</h4>
+                  <h3 className="font-bold text-[#0E5C36] dark:text-emerald-300">Legal Reference</h3>
                   <p className="text-[#0E5C36]/90 dark:text-emerald-200/90 leading-relaxed">
                     These terms are made in accordance with the <strong>Electronic Transactions Act, 2008 (Act 772)</strong> and the <strong>Rent Act, 1963 (Act 220)</strong>.
                   </p>
@@ -448,26 +448,26 @@ export default function TermsPage() {
               {/* 3 Role Columns matching mockup */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                 <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#15803D] flex items-center justify-center mx-auto">
                     <Users className="w-3.5 h-3.5" />
                   </div>
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h4>
+                  <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Tenants &amp; Students</h3>
                   <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">Book and rent properties</p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#15803D] flex items-center justify-center mx-auto">
                     <Home className="w-3.5 h-3.5" />
                   </div>
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Landlords &amp; Hosts</h4>
+                  <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Landlords &amp; Hosts</h3>
                   <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">List and manage properties</p>
                 </div>
 
                 <div className="p-3 rounded-lg bg-white dark:bg-zinc-800/50 border border-zinc-200/80 dark:border-zinc-700/60 text-center space-y-1">
-                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#16A34A] flex items-center justify-center mx-auto">
+                  <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-[#15803D] flex items-center justify-center mx-auto">
                     <ShieldCheck className="w-3.5 h-3.5" />
                   </div>
-                  <h4 className="font-bold text-xs text-zinc-950 dark:text-white">Caretakers &amp; Staff</h4>
+                  <h3 className="font-bold text-xs text-zinc-950 dark:text-white">Caretakers &amp; Staff</h3>
                   <p className="text-[10.5px] text-zinc-500 dark:text-zinc-400">Manage facilities</p>
                 </div>
               </div>
@@ -775,7 +775,7 @@ export default function TermsPage() {
                   className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-4 h-4 text-[#16A34A]" />
+                    <ShieldCheck className="w-4 h-4 text-[#15803D]" />
                     <span>Privacy Policy</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
@@ -786,7 +786,7 @@ export default function TermsPage() {
                   className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <Scale className="w-4 h-4 text-[#16A34A]" />
+                    <Scale className="w-4 h-4 text-[#15803D]" />
                     <span>Dispute Resolution</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
@@ -797,7 +797,7 @@ export default function TermsPage() {
                   className="p-3.5 flex items-center justify-between text-zinc-800 dark:text-zinc-200 hover:bg-white/80 dark:hover:bg-zinc-800/60 transition group"
                 >
                   <div className="flex items-center gap-2.5">
-                    <HelpCircle className="w-4 h-4 text-[#16A34A]" />
+                    <HelpCircle className="w-4 h-4 text-[#15803D]" />
                     <span>Help Centre</span>
                   </div>
                   <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[#0C3827] dark:group-hover:text-emerald-400 transition" />
@@ -808,7 +808,7 @@ export default function TermsPage() {
             {/* Card 2: Need Legal Assistance? */}
             <div className="bg-[#EAF6EE] dark:bg-emerald-950/20 border border-[#B7E8C3] dark:border-emerald-900/40 rounded-xl p-4 space-y-3 shadow-2xs">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#16A34A] flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-[#15803D] flex items-center justify-center shrink-0">
                   <Headphones className="w-4 h-4" />
                 </div>
 
@@ -824,7 +824,7 @@ export default function TermsPage() {
 
               <Link
                 href="/contact?topic=legal"
-                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs"
+                className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs"
               >
                 <Mail className="w-3.5 h-3.5" />
                 <span>Contact Support</span>
@@ -896,21 +896,21 @@ export default function TermsPage() {
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-3 text-emerald-300 text-xs">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Facebook">
-                f
+            <div className="flex items-center gap-2 text-emerald-300 text-xs">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="Facebook">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 9H16V6h-2.5C11.6 6 10 7.6 10 9.5V12H8v3h2v7h3v-7h2.5l.5-3H13V9.5c0-.3.2-.5.5-.5z"/></svg>
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="X">
-                𝕏
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="X">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.2 3h3l-6.6 7.5L22 21h-5.8l-4.5-6-5.2 6h-3l7-8L2.6 3H8.5l4.1 5.5L18.2 3z"/></svg>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Instagram">
-                ig
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="Instagram">
+                <svg className="w-3.5 h-3.5 fill-none stroke-current" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="YouTube">
-                yt
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="YouTube">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5 3-5 3z"/></svg>
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="LinkedIn">
-                in
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="LinkedIn">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10h3v9H5v-9zm5 0h2.9v1.3h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19h-3v-4.1c0-1 0-2.3-1.4-2.3s-1.6 1.1-1.6 2.2V19H10v-9z"/></svg>
               </a>
             </div>
 

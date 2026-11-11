@@ -29,6 +29,7 @@
 @source "../app/terms";
 @source "../app/verify-email";
 @source "../app/properties/[id]";
+@source "../components/properties";
 @source "../components/AdminPwaInstallPrompt.tsx";
 @source "../components/CampusTransportMap.tsx";
 @source "../components/CommuteWidget.tsx";

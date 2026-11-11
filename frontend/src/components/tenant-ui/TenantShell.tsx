@@ -598,7 +598,7 @@ export default function TenantShell({
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#E0533C] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#B91C1C] text-white text-[9px] font-bold flex items-center justify-center shadow-xs">
                 {liveUnreadCount > 0 ? liveUnreadCount : 6}
               </span>
             </Link>

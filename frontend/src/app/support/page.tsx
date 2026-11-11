@@ -182,7 +182,7 @@ function SupportHelpCentreContent() {
   const { data: userResponse } = useQuery<{ user: UserType }>({
     queryKey: ['me'],
     queryFn: async () => {
-      const { data } = await api.get('/auth/me');
+      const { data } = await api.get('/auth/session');
       return data;
     },
     retry: false,
@@ -500,19 +500,19 @@ function SupportHelpCentreContent() {
             <Link
               href={user ? '/dashboard/notifications' : '/notifications'}
               className="relative w-9 h-9 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 flex items-center justify-center text-[#334238] transition-colors"
-              aria-label="Notifications"
+              aria-label="Notifications (3 unread)"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#D93829] text-white text-[9.5px] font-bold flex items-center justify-center shadow-sm">
+              <span aria-hidden="true" className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#B91C1C] text-white text-[9.5px] font-bold flex items-center justify-center shadow-sm">
                 3
               </span>
             </Link>
 
             <Link
               href={user ? '/dashboard/profile' : '/login'}
-              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#16A34A] hover:bg-[#15803D] text-white transition-colors shadow-xs"
+              className="inline-flex items-center gap-2 h-9 px-3.5 rounded-lg text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors shadow-xs"
             >
-              <div className="w-5 h-5 rounded-full bg-white/20 text-white text-[10px] font-bold flex items-center justify-center tracking-wide">
+              <div className="w-5 h-5 rounded-full bg-black/25 text-white text-[10px] font-bold flex items-center justify-center tracking-wide">
                 {userInitials}
               </div>
               <span className="hidden sm:inline">{user ? 'My Account' : 'My Account'}</span>
@@ -576,7 +576,7 @@ function SupportHelpCentreContent() {
               />
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white text-[13px] font-semibold transition-colors shrink-0 shadow-sm cursor-pointer"
               >
                 Search
               </button>
@@ -594,7 +594,7 @@ function SupportHelpCentreContent() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'BOOKING'
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#15803D] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -611,7 +611,7 @@ function SupportHelpCentreContent() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'PAYMENTS'
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#15803D] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -628,7 +628,7 @@ function SupportHelpCentreContent() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'AGREEMENTS'
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#15803D] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -645,7 +645,7 @@ function SupportHelpCentreContent() {
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11.5px] font-semibold transition-colors cursor-pointer ${
                   activeTopic === 'MAINTENANCE'
-                    ? 'bg-[#16A34A] text-white shadow-xs'
+                    ? 'bg-[#15803D] text-white shadow-xs'
                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-200'
                 }`}
               >
@@ -785,7 +785,7 @@ function SupportHelpCentreContent() {
                 <span
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep >= 2
-                      ? 'bg-[#16A34A] text-white'
+                      ? 'bg-[#15803D] text-white'
                       : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
@@ -810,7 +810,7 @@ function SupportHelpCentreContent() {
                 <span
                   className={`w-5 h-5 rounded-full text-[11px] font-bold flex items-center justify-center ${
                     activeStep === 3
-                      ? 'bg-[#16A34A] text-white'
+                      ? 'bg-[#15803D] text-white'
                       : 'bg-zinc-100 text-[#6E7770]'
                   }`}
                 >
@@ -836,6 +836,7 @@ function SupportHelpCentreContent() {
                   </label>
                   <div className="relative">
                     <select
+                      aria-label="What do you need help with?"
                       value={category}
                       onChange={(e) => setCategory(e.target.value as SupportCategory)}
                       className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
@@ -856,6 +857,7 @@ function SupportHelpCentreContent() {
                   </label>
                   <div className="relative">
                     <select
+                      aria-label="Related booking or property"
                       value={selectedBookingId}
                       onChange={(e) => setSelectedBookingId(e.target.value)}
                       className="w-full appearance-none rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] text-[#18241D] focus:outline-none focus:border-[#0E6B38]"
@@ -885,7 +887,7 @@ function SupportHelpCentreContent() {
                       onClick={() => setPriority('NORMAL')}
                       className={`py-2.5 px-3 rounded-xl text-[12.5px] font-semibold flex items-center justify-center gap-1.5 border transition-all ${
                         priority === 'NORMAL'
-                          ? 'bg-[#16A34A] text-white border-[#16A34A] shadow-sm'
+                          ? 'bg-[#15803D] text-white border-[#15803D] shadow-sm'
                           : 'bg-white text-[#334239] border-zinc-200 hover:bg-zinc-50'
                       }`}
                     >
@@ -968,7 +970,7 @@ function SupportHelpCentreContent() {
                         <span className="font-bold text-[#1E2D24]">
                           Attach photos or documents (optional)
                         </span>
-                        <span className="block text-[11.5px] text-[#6E7A72]">
+                        <span className="block text-[11.5px] text-[#4B5850]">
                           Drag and drop files here, or click to browse
                         </span>
                       </>
@@ -980,7 +982,7 @@ function SupportHelpCentreContent() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                className="w-full py-3 px-5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[13.5px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
               >
                 Continue to review
                 <ArrowRight className="w-4 h-4" />
@@ -1074,7 +1076,7 @@ function SupportHelpCentreContent() {
                 <button
                   type="button"
                   onClick={() => setUrgentModalOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
                 >
                   Contact support
                   <ArrowRight className="w-4 h-4" />
@@ -1309,7 +1311,7 @@ function SupportHelpCentreContent() {
                 type="button"
                 disabled={submitIssueMutation.isPending}
                 onClick={() => submitIssueMutation.mutate()}
-                className="px-5 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold flex items-center gap-2 disabled:opacity-60 transition shadow-xs cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[13px] font-semibold flex items-center gap-2 disabled:opacity-60 transition shadow-xs cursor-pointer"
               >
                 {submitIssueMutation.isPending ? (
                   <>
@@ -1362,7 +1364,7 @@ function SupportHelpCentreContent() {
               <button
                 type="button"
                 onClick={() => setSelectedRequestModal(null)}
-                className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[12.5px] font-semibold transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[12.5px] font-semibold transition cursor-pointer"
               >
                 Close
               </button>
@@ -1415,7 +1417,7 @@ function SupportHelpCentreContent() {
                 setPriority('URGENT');
                 selectQuickCategory('HOME_MAINTENANCE', 'Urgent compound assistance needed');
               }}
-              className="w-full py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[13px] font-semibold transition cursor-pointer"
             >
               Log an Urgent Ticket Now
             </button>
@@ -1469,7 +1471,7 @@ function SupportHelpCentreContent() {
               <button
                 type="button"
                 onClick={() => setAllArticlesModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-[13px] font-semibold transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-[13px] font-semibold transition cursor-pointer"
               >
                 Done
               </button>

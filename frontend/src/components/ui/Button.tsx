@@ -35,7 +35,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       blue: 'bg-[#0062BA] hover:bg-[#00529E] active:bg-[#004687] text-white border border-[#00488A]/40 shadow-xs focus-visible:ring-[#0062BA]/50',
 
       // 2. Akwaaba Signature Green (Exact match to uploaded hex #16A34A)
-      emerald: 'bg-[#16A34A] hover:bg-[#15803D] active:bg-[#166534] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#16A34A]/50',
+      emerald: 'bg-[#15803D] hover:bg-[#166534] active:bg-[#14532D] text-white border border-[#14532D]/40 shadow-xs focus-visible:ring-[#15803D]/50',
 
       // 3. Secondary Filled Neutral
       secondary:

@@ -83,7 +83,7 @@ export default async function HomePage() {
             fetchPriority="high"
 
             className="object-cover object-right"
-            sizes="100vw" quality={65}
+            sizes="100vw" quality={65} decoding="sync"
           />
           {/* Green wavy gradient overlay on left (matching reference) */}
           <div

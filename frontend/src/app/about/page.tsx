@@ -1,4 +1,3 @@
-'use client';
 import '@/app/secondary.css';
 
 import React from 'react';
@@ -40,13 +39,6 @@ function HeaderSwoosh({ className }: { className?: string }) {
 }
 
 export default function AboutPage() {
-  const scrollToHowWeWork = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const target = document.getElementById('how-we-work');
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0C100D] text-[#14221A] dark:text-zinc-100 font-sans selection:bg-[#0B3B24] selection:text-white relative overflow-x-hidden">
@@ -64,7 +56,10 @@ export default function AboutPage() {
             alt=""
             fill
             className="object-cover object-left"
-            sizes="(max-width: 768px) 100vw, 256px"
+            sizes="192px"
+            loading="lazy"
+            fetchPriority="low"
+            quality={60}
 />
         </div>
 
@@ -104,22 +99,21 @@ export default function AboutPage() {
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#15803D] hover:bg-[#166534] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
               >
                 <span>Explore homes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
 
-              <button
-                type="button"
-                onClick={scrollToHowWeWork}
+              <a
+                href="#how-we-work"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-transparent hover:bg-[#0B3B24]/5 border border-[#0B3B24] dark:border-emerald-500 text-[#0B3B24] dark:text-emerald-400 text-xs sm:text-[13px] font-bold transition cursor-pointer"
               >
-                <div className="w-4 h-4 rounded-full border border-current flex items-center justify-center">
+                <span className="w-4 h-4 rounded-full border border-current flex items-center justify-center">
                   <Play className="w-2 h-2 fill-current ml-0.5" />
-                </div>
+                </span>
                 <span>How we work</span>
-              </button>
+              </a>
             </div>
           </div>
 
@@ -128,10 +122,13 @@ export default function AboutPage() {
             <div className="relative w-full h-[280px] sm:h-[360px] md:h-[420px] rounded-3xl overflow-hidden shadow-[0_10px_35px_rgba(11,59,36,0.06)] border border-[#E8E6DD] dark:border-zinc-800">
               <Image
                 src="/images/about/about-hero-group-clean.jpg"
+                fetchPriority="high"
+                decoding="sync"
+                quality={65}
                 alt="AkwaabaHomes residents and property host at apartment compound"
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 55vw"
+                sizes="(max-width: 640px) 384px, (max-width: 1024px) 100vw, 55vw"
                 className="object-cover object-center"
               />
 
@@ -159,7 +156,7 @@ export default function AboutPage() {
         <div className="bg-[#EEF4EC] dark:bg-[#121A16] border border-[#DCE5DA] dark:border-zinc-800/80 rounded-3xl p-5 sm:p-7 grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-6 items-center shadow-xs">
           {/* Left Column: Why We Started Tag + Headline (4 Cols) */}
           <div className="md:col-span-4 space-y-2 pr-2">
-            <span className="inline-block text-[11px] font-black uppercase tracking-wider text-[#C88A2E]">
+            <span className="inline-block text-[11px] font-black uppercase tracking-wider text-[#8B5A12] dark:text-amber-300">
               WHY WE STARTED
             </span>
             <h2 className="text-xl sm:text-2xl font-serif font-black text-[#14221A] dark:text-white leading-tight">

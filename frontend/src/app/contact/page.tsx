@@ -32,7 +32,7 @@ export default function ContactPage() {
   } | null>(null);
 
   useEffect(() => {
-    api.get('/auth/me')
+    api.get('/auth/session')
       .then((res) => {
         const u = res.data?.user || res.data;
         if (u) {
@@ -98,7 +98,7 @@ export default function ContactPage() {
           <h1 className="text-3xl sm:text-5xl font-black text-zinc-950 dark:text-white tracking-tight">
             Get in Touch With Us
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto">
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-600 dark:text-zinc-300 max-w-xl mx-auto">
             Have questions about residential tenancies, apartment bookings, statutory leases, landlord listing onboarding, or rent payments? We are here to help.
           </p>
         </div>
@@ -113,8 +113,8 @@ export default function ContactPage() {
               <Phone className="w-4 h-4" />
             </div>
             <div className="font-bold text-xs text-zinc-950 dark:text-white">Direct Hotline</div>
-            <div className="text-xs text-zinc-600 dark:text-zinc-400 font-mono">+233 (0) 53 631 8144</div>
-            <div className="text-[11px] text-zinc-400">Mon–Sat: 8:00 AM – 7:00 PM GMT</div>
+            <div className="text-xs text-zinc-600 dark:text-zinc-600 dark:text-zinc-300 font-mono">+233 (0) 53 631 8144</div>
+            <div className="text-[11px] text-zinc-600 dark:text-zinc-300">Mon–Sat: 8:00 AM – 7:00 PM GMT</div>
           </a>
 
           <a
@@ -125,8 +125,8 @@ export default function ContactPage() {
               <Mail className="w-4 h-4" />
             </div>
             <div className="font-bold text-xs text-zinc-950 dark:text-white">Email Support</div>
-            <div className="text-xs text-zinc-600 dark:text-zinc-400 font-mono">support@akwaabahomes.com</div>
-            <div className="text-[11px] text-zinc-400">Response within 24 hours</div>
+            <div className="text-xs text-zinc-600 dark:text-zinc-600 dark:text-zinc-300 font-mono">support@akwaabahomes.com</div>
+            <div className="text-[11px] text-zinc-600 dark:text-zinc-300">Response within 24 hours</div>
           </a>
 
           <div className="p-5 rounded-2xl bg-white dark:bg-[#12151D] border border-zinc-200 dark:border-zinc-800 space-y-2">
@@ -134,8 +134,8 @@ export default function ContactPage() {
               <MapPin className="w-4 h-4" />
             </div>
             <div className="font-bold text-xs text-zinc-950 dark:text-white">Physical Hubs</div>
-            <div className="text-xs text-zinc-600 dark:text-zinc-400">Accra (East Legon) &amp; Kumasi (Ayeduase)</div>
-            <div className="text-[11px] text-zinc-400">Republic of Ghana 🇬🇭</div>
+            <div className="text-xs text-zinc-600 dark:text-zinc-600 dark:text-zinc-300">Accra (East Legon) &amp; Kumasi (Ayeduase)</div>
+            <div className="text-[11px] text-zinc-600 dark:text-zinc-300">Republic of Ghana 🇬🇭</div>
           </div>
         </div>
 
@@ -216,8 +216,10 @@ export default function ContactPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Inquiry Category</label>
+                <label htmlFor="contact-subject" className="block text-xs font-bold text-zinc-700 dark:text-zinc-300">Inquiry Category</label>
                 <select
+                  id="contact-subject"
+                  aria-label="Inquiry Category"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 text-xs font-medium outline-none focus:border-[#0F5132] [&>option]:bg-white dark:[&>option]:bg-zinc-900"
@@ -249,12 +251,12 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={submitting || !isFormValid}
-                className="px-6 py-2.5 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 <span>{submitting ? 'Sending Inquiry...' : 'Send Message'}</span>
               </button>
-              <span className="text-[11px] text-zinc-400">
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-300">
                 Fields marked with <span className="text-red-500">*</span> are required
               </span>
             </div>

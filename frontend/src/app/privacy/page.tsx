@@ -150,8 +150,10 @@ export default function PrivacyPage() {
             alt=""
             fill
             className="object-cover object-left"
-            priority
-            sizes="(max-width: 768px) 100vw, 256px"
+            loading="lazy"
+            fetchPriority="low"
+            quality={60}
+            sizes="192px"
 />
         </div>
 
@@ -221,7 +223,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#16A34A] hover:bg-[#15803D] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#15803D] hover:bg-[#166534] text-white text-xs sm:text-[13px] font-bold transition shadow-xs cursor-pointer"
               >
                 <span>Download privacy notice</span>
                 <Download className="w-3.5 h-3.5" />
@@ -244,10 +246,13 @@ export default function PrivacyPage() {
             <div className="relative w-full h-[240px] sm:h-[300px] md:h-[340px] rounded-3xl overflow-hidden shadow-[0_10px_35px_rgba(11,59,36,0.06)] border border-zinc-200 dark:border-zinc-800">
               <Image
                 src="/images/about/privacy-hero-community-2x.jpg"
+                fetchPriority="high"
+                decoding="sync"
+                quality={65}
                 alt="Ghanaian residential community with flying national flag and data protection lock shield"
                 fill
                 priority
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 640px) 384px, (max-width: 1024px) 100vw, 50vw"
                 className="object-cover object-center"
               />
 
@@ -272,9 +277,9 @@ export default function PrivacyPage() {
                 <Leaf className="w-5 h-5 text-[#16A34A]" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                <h2 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
                   No data selling
-                </h3>
+                </h2>
                 <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
                   Personal records are not sold or rented.
                 </p>
@@ -287,9 +292,9 @@ export default function PrivacyPage() {
                 <Fingerprint className="w-5 h-5 text-[#16A34A]" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                <h2 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
                   Identity checks
-                </h3>
+                </h2>
                 <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
                   Ghana Card details used for verification where required.
                 </p>
@@ -302,9 +307,9 @@ export default function PrivacyPage() {
                 <ShieldCheck className="w-5 h-5 text-[#16A34A]" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                <h2 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
                   Secure payments
-                </h3>
+                </h2>
                 <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
                   Payment details handled by licensed payment providers.
                 </p>
@@ -317,9 +322,9 @@ export default function PrivacyPage() {
                 <Scale className="w-5 h-5 text-[#16A34A]" />
               </div>
               <div className="space-y-0.5">
-                <h3 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
+                <h2 className="font-bold text-xs sm:text-[13px] text-[#14221A] dark:text-white leading-tight">
                   Your rights
-                </h3>
+                </h2>
                 <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug">
                   Access, correction, objection and erasure requests.
                 </p>
@@ -356,7 +361,7 @@ export default function PrivacyPage() {
               <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
             </div>
             <div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Collect</h3>
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Collect</h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
                 We gather information you provide or that we obtain lawfully.
               </p>
@@ -372,7 +377,7 @@ export default function PrivacyPage() {
               <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
             </div>
             <div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Use</h3>
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Use</h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
                 To deliver our services, improve your experience and ensure safety.
               </p>
@@ -388,7 +393,7 @@ export default function PrivacyPage() {
               <ArrowRight className="w-4 h-4 text-zinc-400 dark:text-zinc-600 hidden lg:block" />
             </div>
             <div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Protect</h3>
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Protect</h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
                 With industry-standard security and strict access controls.
               </p>
@@ -403,7 +408,7 @@ export default function PrivacyPage() {
               </div>
             </div>
             <div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Retain / Delete</h3>
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">Retain / Delete</h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-snug pt-0.5">
                 Only for as long as necessary, then securely delete it.
               </p>
@@ -432,9 +437,9 @@ export default function PrivacyPage() {
               <UserCheck className="w-4 h-4 text-[#16A34A]" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
                 Identity &amp; Contact
-              </h3>
+              </h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
                 Name, contact details, Ghana Card verification outcome.
               </p>
@@ -447,9 +452,9 @@ export default function PrivacyPage() {
               <GraduationCap className="w-4 h-4 text-[#16A34A]" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
                 Student &amp; Tenancy
-              </h3>
+              </h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
                 Institution, student status, booking, lease and occupancy records.
               </p>
@@ -462,9 +467,9 @@ export default function PrivacyPage() {
               <Receipt className="w-4 h-4 text-[#16A34A]" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
                 Payments
-              </h3>
+              </h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
                 Transaction references and payment status via Paystack / Mobile Money.
               </p>
@@ -477,9 +482,9 @@ export default function PrivacyPage() {
               <Home className="w-4 h-4 text-[#16A34A]" />
             </div>
             <div className="space-y-0.5">
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white">
                 Property &amp; Host
-              </h3>
+              </h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 leading-relaxed">
                 Listing, ownership and maintenance records.
               </p>
@@ -550,7 +555,7 @@ export default function PrivacyPage() {
                 <button
                   type="button"
                   onClick={() => openDsarWithType('COPY')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs cursor-pointer"
                 >
                   <span>Start a data request</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -617,9 +622,9 @@ export default function PrivacyPage() {
               <Headphones className="w-5 h-5 text-[#16A34A]" />
             </div>
             <div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white leading-tight">
+              <h2 className="font-bold text-xs sm:text-sm text-[#14221A] dark:text-white leading-tight">
                 Contact Our Privacy Officer
-              </h3>
+              </h2>
               <p className="text-[11px] text-[#55665B] dark:text-zinc-400 mt-0.5">
                 For any privacy-related enquiries.
               </p>
@@ -631,7 +636,7 @@ export default function PrivacyPage() {
             <button
               type="button"
               onClick={() => setIsContactModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <span>Contact the privacy team</span>
               <Mail className="w-3.5 h-3.5" />
@@ -640,7 +645,7 @@ export default function PrivacyPage() {
             <button
               type="button"
               onClick={() => openDsarWithType('COPY')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               <span>Data subject request desk</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -714,21 +719,21 @@ export default function PrivacyPage() {
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-3 text-emerald-300 text-xs">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Facebook">
-                f
+            <div className="flex items-center gap-2 text-emerald-300 text-xs">
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="Facebook">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 9H16V6h-2.5C11.6 6 10 7.6 10 9.5V12H8v3h2v7h3v-7h2.5l.5-3H13V9.5c0-.3.2-.5.5-.5z"/></svg>
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="X">
-                𝕏
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="X">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.2 3h3l-6.6 7.5L22 21h-5.8l-4.5-6-5.2 6h-3l7-8L2.6 3H8.5l4.1 5.5L18.2 3z"/></svg>
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="Instagram">
-                ig
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="Instagram">
+                <svg className="w-3.5 h-3.5 fill-none stroke-current" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="YouTube">
-                yt
+              <a href="https://youtube.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="YouTube">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5 3-5 3z"/></svg>
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white transition" aria-label="LinkedIn">
-                in
+              <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="min-w-[24px] min-h-[24px] inline-flex items-center justify-center hover:text-white transition" aria-label="LinkedIn">
+                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 8.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10h3v9H5v-9zm5 0h2.9v1.3h.1c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7V19h-3v-4.1c0-1 0-2.3-1.4-2.3s-1.6 1.1-1.6 2.2V19H10v-9z"/></svg>
               </a>
             </div>
 
@@ -773,7 +778,7 @@ export default function PrivacyPage() {
               <button
                 type="button"
                 onClick={() => setActiveFaq(null)}
-                className="px-4 py-2 rounded-xl bg-[#16A34A] text-white text-xs font-bold hover:bg-[#15803D] transition shadow-2xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#15803D] text-white text-xs font-bold hover:bg-[#166534] transition shadow-2xs cursor-pointer"
               >
                 Close
               </button>
@@ -879,7 +884,7 @@ export default function PrivacyPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                 >
                   <span>{isSubmitting ? 'Submitting...' : 'Submit Request'}</span>
                   <Send className="w-3.5 h-3.5" />
@@ -959,7 +964,7 @@ export default function PrivacyPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#16A34A] hover:bg-[#15803D] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#15803D] hover:bg-[#166534] text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
                 >
                   <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
                   <Send className="w-3.5 h-3.5" />

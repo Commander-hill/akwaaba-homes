@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import {
   Home,
@@ -129,12 +130,18 @@ export default function LandlordDashboardPage() {
       {/* Hero Banner */}
       <div className="relative rounded-3xl overflow-hidden min-h-[220px] md:h-[230px] flex items-center shadow-xs bg-[#06331C]">
         {/* Panoramic apartment background on right */}
-        <div
-          className="absolute inset-y-0 right-0 w-full md:w-[65%] bg-cover bg-center"
-          style={{ backgroundImage: "url('/images/resident/landlord-dashboard-hero-bldg.jpg')" }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/resident/landlord-dashboard-hero-bldg.jpg" alt="" fetchPriority="high" decoding="async" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-y-0 right-0 w-full md:w-[65%]">
+          <Image
+            src="/images/resident/landlord-dashboard-hero-bldg.jpg"
+            alt=""
+            fill
+            priority
+            fetchPriority="high"
+            decoding="sync"
+            quality={65}
+            sizes="(max-width: 768px) 100vw, 65vw"
+            className="object-cover object-center"
+          />
           {/* Seamless left edge blend */}
           <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-[#06331C] to-transparent" />
         </div>
@@ -181,9 +188,9 @@ export default function LandlordDashboardPage() {
           <div className="pt-1">
             <Link
               href="/dashboard/landlord/new"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#14A248] hover:bg-[#11843b] text-white text-xs sm:text-sm font-semibold shadow-md transition-all hover:scale-102"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#15803D] hover:bg-[#11843b] text-white text-xs sm:text-sm font-semibold shadow-md transition-all hover:scale-102"
             >
-              <span className="w-4 h-4 rounded-full bg-white text-[#14A248] flex items-center justify-center font-bold text-xs leading-none">
+              <span className="w-4 h-4 rounded-full bg-white text-[#15803D] flex items-center justify-center font-bold text-xs leading-none">
                 +
               </span>
               <span>Add New Property</span>
@@ -201,14 +208,14 @@ export default function LandlordDashboardPage() {
           className="relative rounded-2xl p-5 overflow-hidden bg-[#EDF9F0] border border-[#DCF5E3] shadow-2xs hover:shadow-sm transition-all hover:-translate-y-0.5 flex flex-col justify-between min-h-[115px]"
         >
           <div className="flex items-start justify-between">
-            <div className="w-12 h-12 rounded-2xl bg-[#D2F5DC] text-[#14A248] flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-2xl bg-[#D2F5DC] text-[#15803D] flex items-center justify-center shrink-0">
               <Home className="w-6 h-6 stroke-[2.2]" />
             </div>
             <div className="flex-1 ml-4 min-w-0">
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
                 3
               </span>
-              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+              <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Total Properties
               </span>
             </div>
@@ -230,7 +237,7 @@ export default function LandlordDashboardPage() {
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
                 3
               </span>
-              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+              <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Total Bookings
               </span>
             </div>
@@ -252,7 +259,7 @@ export default function LandlordDashboardPage() {
               <span className="block text-3xl font-extrabold text-zinc-900 leading-none">
                 0
               </span>
-              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+              <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Pending Requests
               </span>
             </div>
@@ -274,7 +281,7 @@ export default function LandlordDashboardPage() {
               <span className="block text-2xl sm:text-3xl font-extrabold text-zinc-900 leading-none">
                 GH₵ 0.00
               </span>
-              <span className="block text-xs font-semibold text-zinc-500 mt-1.5 truncate">
+              <span className="block text-xs font-semibold text-zinc-700 mt-1.5 truncate">
                 Awaiting Payment
               </span>
             </div>
@@ -292,14 +299,14 @@ export default function LandlordDashboardPage() {
           <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Home className="w-5 h-5 text-[#14A248] stroke-[2.2]" />
+                <Home className="w-5 h-5 text-[#15803D] stroke-[2.2]" />
                 <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-white">
                   My Properties
                 </h2>
               </div>
               <Link
                 href="/dashboard/landlord/properties"
-                className="text-xs sm:text-sm font-semibold text-[#14A248] hover:text-[#11843b] hover:underline flex items-center gap-1 transition-colors"
+                className="text-xs sm:text-sm font-semibold text-[#15803D] hover:text-[#11843b] hover:underline flex items-center gap-1 transition-colors"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -316,14 +323,14 @@ export default function LandlordDashboardPage() {
                   {/* Property Image Container */}
                   <div className="relative h-36 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img decoding="async"
+                    <img decoding="async" loading="lazy"
                       src={prop.image}
                       alt={prop.title}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
 
                     {/* Active Badge on BOTTOM LEFT of image */}
-                    <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#14A248] text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
+                    <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#15803D] text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
                       <MessageSquare className="w-2.5 h-2.5 fill-white" />
                       <span>{prop.status}</span>
                     </div>
@@ -344,7 +351,7 @@ export default function LandlordDashboardPage() {
                       <h3 className="text-xs sm:text-[13px] font-bold text-zinc-900 dark:text-white uppercase truncate">
                         {prop.title}
                       </h3>
-                      <div className="flex items-center gap-1 text-[11px] text-[#14A248] font-medium truncate">
+                      <div className="flex items-center gap-1 text-[11px] text-[#15803D] font-medium truncate">
                         <MapPin className="w-3 h-3 shrink-0" />
                         <span className="truncate">{prop.location}</span>
                       </div>
@@ -362,14 +369,14 @@ export default function LandlordDashboardPage() {
                         href={`/dashboard/landlord/properties`}
                         className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
                       >
-                        <Eye className="w-3.5 h-3.5 text-[#14A248]" />
+                        <Eye className="w-3.5 h-3.5 text-[#15803D]" />
                         <span>View Details</span>
                       </Link>
                       <Link
                         href={`/dashboard/landlord/properties`}
                         className="flex-1 py-1.5 px-2 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 text-[11px] font-semibold flex items-center justify-center gap-1.5 border border-zinc-200/80 dark:border-zinc-700 transition-colors shadow-2xs"
                       >
-                        <Settings className="w-3.5 h-3.5 text-[#14A248]" />
+                        <Settings className="w-3.5 h-3.5 text-[#15803D]" />
                         <span>Manage</span>
                       </Link>
                     </div>
@@ -383,7 +390,7 @@ export default function LandlordDashboardPage() {
           <div className="relative overflow-hidden rounded-2xl bg-[#EDF9F2] dark:bg-emerald-950/30 border border-[#D0F2DC] dark:border-emerald-900/50 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
             {/* Left Icon and Text */}
             <div className="flex items-center gap-3.5 relative z-10">
-              <div className="w-10 h-10 rounded-xl bg-[#14A248] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-[#15803D] text-white flex items-center justify-center shrink-0 shadow-xs">
                 <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
               </div>
               <div>
@@ -400,7 +407,7 @@ export default function LandlordDashboardPage() {
             <div className="relative z-10 w-full sm:w-auto">
               <Link
                 href="/dashboard/verification"
-                className="w-full sm:w-auto px-5 py-2 rounded-full border border-[#14A248] text-[#14A248] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 bg-white dark:bg-zinc-900 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors shrink-0"
+                className="w-full sm:w-auto px-5 py-2 rounded-full border border-[#15803D] text-[#15803D] hover:bg-emerald-50 dark:hover:bg-emerald-900/30 bg-white dark:bg-zinc-900 text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-colors shrink-0"
               >
                 <span>View Verification Status</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -409,7 +416,7 @@ export default function LandlordDashboardPage() {
 
             {/* Accra Skyline line art watermark on the right */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img decoding="async"
+            <img decoding="async" loading="lazy"
               src="/images/about/terms-accra-skyline.png"
               alt=""
               className="absolute right-0 bottom-0 h-full w-auto max-w-[280px] object-contain opacity-40 dark:opacity-20 pointer-events-none select-none"
@@ -423,7 +430,7 @@ export default function LandlordDashboardPage() {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#0A4D28] text-white p-5 shadow-xs">
             {/* Background organic shape */}
             <div className="absolute -bottom-8 -right-8 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
-            <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-[#14A248]/40 pointer-events-none" />
+            <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-[#15803D]/40 pointer-events-none" />
 
             {/* Crown icon box */}
             <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center mb-3">
@@ -458,14 +465,14 @@ export default function LandlordDashboardPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-[#14A248]" />
+                <Activity className="w-4 h-4 text-[#15803D]" />
                 <h3 className="font-bold text-zinc-900 dark:text-white text-sm sm:text-base">
                   Recent Activity
                 </h3>
               </div>
               <Link
                 href="/dashboard/landlord/bookings"
-                className="text-xs font-semibold text-[#14A248] hover:underline flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-[#15803D] hover:underline flex items-center gap-1 transition-colors"
               >
                 <span>View All</span>
                 <ArrowRight className="w-3 h-3" />
@@ -477,7 +484,7 @@ export default function LandlordDashboardPage() {
               {/* Item 1 */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#14A248] flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#15803D] flex items-center justify-center shrink-0">
                     <CalendarCheck className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -489,7 +496,7 @@ export default function LandlordDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] text-zinc-400 font-medium shrink-0">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                   2h ago
                 </span>
               </div>
@@ -509,7 +516,7 @@ export default function LandlordDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] text-zinc-400 font-medium shrink-0">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                   4h ago
                 </span>
               </div>
@@ -517,7 +524,7 @@ export default function LandlordDashboardPage() {
               {/* Item 3 */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#14A248] flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#EAF8F0] dark:bg-emerald-950/40 text-[#15803D] flex items-center justify-center shrink-0">
                     <MessageSquare className="w-4 h-4" />
                   </div>
                   <div className="min-w-0">
@@ -529,7 +536,7 @@ export default function LandlordDashboardPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] text-zinc-400 font-medium shrink-0">
+                <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                   5h ago
                 </span>
               </div>
