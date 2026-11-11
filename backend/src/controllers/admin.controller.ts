@@ -516,6 +516,31 @@ export const getPlatformAnalytics = async (req: Request, res: Response): Promise
   }
 };
 
+const formatLatestBooking = (rawBooking: any) => {
+  if (!rawBooking) return null;
+  const rawImages = rawBooking.property?.images;
+  const parsedImages =
+    typeof rawImages === 'string'
+      ? safeJsonParse(rawImages, [])
+      : Array.isArray(rawImages)
+        ? rawImages
+        : [];
+  return {
+    id: rawBooking.id,
+    status: rawBooking.status,
+    startDate: rawBooking.startDate,
+    endDate: rawBooking.endDate,
+    property: rawBooking.property
+      ? {
+          id: rawBooking.property.id,
+          title: rawBooking.property.title,
+          location: rawBooking.property.location,
+          thumbnailUrl: Array.isArray(parsedImages) ? (parsedImages[0] || null) : null
+        }
+      : null
+  };
+};
+
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const { role, status, search, page, limit } = req.query;
@@ -586,6 +611,24 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
           businessName: true,
           primaryRegion: true,
           portfolioSize: true,
+          bookings: {
+            take: 1,
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              status: true,
+              startDate: true,
+              endDate: true,
+              property: {
+                select: {
+                  id: true,
+                  title: true,
+                  location: true,
+                  images: true
+                }
+              }
+            }
+          },
           reputationScore: true,
           _count: {
             select: { properties: true }
@@ -609,6 +652,7 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
 
       return {
         ...user,
+        latestBooking: formatLatestBooking((user as any).bookings?.[0]),
         ghanaCardNumber: maskedCard,
         ghanaCardFrontUrl: generateSignedDocumentUrl(user.ghanaCardFrontUrl),
         ghanaCardBackUrl: generateSignedDocumentUrl(user.ghanaCardBackUrl),
@@ -1845,6 +1889,164 @@ export const updateLandlordProfile = async (req: Request, res: Response): Promis
     res.status(200).json({ message: 'Landlord details updated.', landlord: updated });
   } catch (error) {
     console.error('Error updating landlord profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/** Shared account validation, duplicate email check, and password hashing for admin-created users. */
+const prepareManagedUserCreation = async (
+  body: Record<string, any>,
+  res: Response
+): Promise<{
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string | null;
+  passwordHash: string;
+} | null> => {
+  const { firstName, lastName, email, phoneNumber, password } = body;
+  if (!firstName || !lastName || !email || !password) {
+    res.status(400).json({ message: 'First name, last name, email, and temporary password are required.' });
+    return null;
+  }
+
+  if (String(password).length < 8) {
+    res.status(400).json({ message: 'Temporary password must be at least 8 characters.' });
+    return null;
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+  if (existing) {
+    res.status(409).json({ message: 'An account with this email address already exists.' });
+    return null;
+  }
+
+  const bcrypt = await import('bcrypt');
+  const passwordHash = await bcrypt.hash(String(password), 10);
+
+  return {
+    firstName: String(firstName).trim(),
+    lastName: String(lastName).trim(),
+    email: normalizedEmail,
+    phoneNumber: phoneNumber ? String(phoneNumber).trim() : null,
+    passwordHash
+  };
+};
+
+/** Create a tenant user account from the Admin Tenants workspace. */
+export const createTenant = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const base = await prepareManagedUserCreation(req.body, res);
+    if (!base) return;
+
+    const { campus, studentId, programmeOfStudy, studentType, isKycVerified } = req.body;
+    const verified = Boolean(isKycVerified);
+
+    const tenant = await prisma.user.create({
+      data: {
+        ...base,
+        role: 'TENANT',
+        campus: campus ? String(campus).trim() : null,
+        studentId: studentId ? String(studentId).trim() : null,
+        programmeOfStudy: programmeOfStudy ? String(programmeOfStudy).trim() : null,
+        studentType: studentType ? String(studentType).trim() : null,
+        isEmailVerified: true,
+        ghanaCardStatus: verified ? 'VERIFIED' : 'PENDING'
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        campus: true,
+        studentId: true,
+        programmeOfStudy: true,
+        studentType: true,
+        ghanaCardStatus: true,
+        createdAt: true
+      }
+    });
+
+    appCache.flushAll();
+    await logAudit(
+      req.user.id,
+      'CREATE_TENANT',
+      'User',
+      tenant.id,
+      null,
+      { email: base.email, campus: tenant.campus, studentId: tenant.studentId },
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(201).json({ message: 'Tenant account created successfully.', tenant });
+  } catch (error) {
+    console.error('Error creating tenant:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/** Update basic tenant profile metadata from the Admin Tenants table. */
+export const updateTenantProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, phoneNumber, campus, studentId, programmeOfStudy, studentType } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.role !== 'TENANT') {
+      res.status(404).json({ message: 'Tenant not found.' });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(firstName !== undefined ? { firstName: String(firstName).trim() } : {}),
+        ...(lastName !== undefined ? { lastName: String(lastName).trim() } : {}),
+        ...(phoneNumber !== undefined ? { phoneNumber: phoneNumber ? String(phoneNumber).trim() : null } : {}),
+        ...(campus !== undefined ? { campus: campus ? String(campus).trim() : null } : {}),
+        ...(studentId !== undefined ? { studentId: studentId ? String(studentId).trim() : null } : {}),
+        ...(programmeOfStudy !== undefined ? { programmeOfStudy: programmeOfStudy ? String(programmeOfStudy).trim() : null } : {}),
+        ...(studentType !== undefined ? { studentType: studentType ? String(studentType).trim() : null } : {})
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        campus: true,
+        studentId: true,
+        programmeOfStudy: true,
+        studentType: true
+      }
+    });
+
+    appCache.del(`user:me:${id}`);
+    appCache.flushAll();
+    await logAudit(
+      req.user.id,
+      'UPDATE_TENANT_PROFILE',
+      'User',
+      id,
+      {
+        firstName: existing.firstName,
+        lastName: existing.lastName,
+        phoneNumber: existing.phoneNumber,
+        campus: existing.campus,
+        studentId: existing.studentId,
+        programmeOfStudy: existing.programmeOfStudy,
+        studentType: existing.studentType
+      },
+      updated,
+      req.ip || req.socket.remoteAddress
+    );
+
+    res.status(200).json({ message: 'Tenant details updated.', tenant: updated });
+  } catch (error) {
+    console.error('Error updating tenant profile:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };

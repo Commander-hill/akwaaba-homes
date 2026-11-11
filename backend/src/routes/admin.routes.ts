@@ -49,6 +49,8 @@ import {
   toggleAdminStatus,
   createLandlord,
   updateLandlordProfile,
+  createTenant,
+  updateTenantProfile,
   updateLandlordSettlement
 } from '../controllers/admin.controller';
 import { 
@@ -89,6 +91,8 @@ router.get('/search', searchEntities);
 // Users (Landlords & Tenants)
 router.get('/users', getAllUsers);
 router.post('/landlords', createLandlord);
+router.post('/tenants', createTenant);
+router.put('/tenants/:id', updateTenantProfile);
 router.put('/landlords/:id', updateLandlordProfile);
 router.get('/users/:id', getUserById);
 router.put('/users/:id/suspend', toggleUserSuspension);
