@@ -46,7 +46,7 @@ function AdminLoginForm() {
   }, []);
 
   // Check if admin is already authenticated
-  const { data: sessionData, isLoading: isCheckingAuth } = useQuery({
+  const { data: sessionData } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
       try {
@@ -241,15 +241,6 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
     toast.success('Recovery codes downloaded (.txt)');
   };
 
-  // Checking Auth State
-  if (mounted && isCheckingAuth && !isTimeout) {
-    return (
-      <div className="-mt-16 min-h-screen flex flex-col items-center justify-center bg-[#F4FBF7] text-zinc-900 p-4 space-y-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F5132]" />
-        <p className="text-xs text-zinc-600 font-medium">Verifying administrator session...</p>
-      </div>
-    );
-  }
 
   // Active Authenticated State
   if (mounted && sessionData && ['ADMIN', 'SUPER_ADMIN'].includes(sessionData.role) && !isTimeout) {
@@ -271,7 +262,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => { window.location.href = '/admin/dashboard'; }}
-              className="w-full h-12 bg-[#16A34A] hover:bg-[#15803D] text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+              className="w-full h-12 bg-[#15803D] hover:bg-[#166534] text-white rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               <span>Go to Admin Dashboard</span>
               <ArrowRight className="w-4 h-4" />
@@ -303,7 +294,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             alt="Admin Security" 
             width={76} 
             height={76} 
-            className="object-contain drop-shadow-sm" 
+            className="object-contain drop-shadow-sm" fetchPriority="high" quality={65} 
             priority 
           />
         </div>
@@ -597,7 +588,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                 <button
                   type="button"
                   onClick={() => setShowRecoveryModal(true)}
-                  className="text-[11px] xl:text-xs font-bold text-[#0F5132] hover:text-[#0A3D24] hover:underline transition-colors cursor-pointer"
+                  className="min-h-[24px] py-1 -my-1 inline-flex items-center text-[11px] xl:text-xs font-bold text-[#0F5132] hover:text-[#0A3D24] hover:underline transition-colors cursor-pointer"
                 >
                   Forgot Password?
                 </button>
@@ -615,7 +606,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-zinc-400 hover:text-zinc-600 transition-colors cursor-pointer shrink-0"
+                  className="min-w-[24px] min-h-[24px] flex items-center justify-center text-zinc-500 hover:text-zinc-700 transition-colors cursor-pointer shrink-0"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -629,7 +620,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 xl:h-12 bg-[#16A34A] hover:bg-[#15803D] active:bg-[#024a25] text-white font-bold text-xs xl:text-sm rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#04793d]/25 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full h-11 xl:h-12 bg-[#15803D] hover:bg-[#166534] active:bg-[#024a25] text-white font-bold text-xs xl:text-sm rounded-2xl flex items-center justify-center gap-2.5 shadow-sm shadow-[#04793d]/25 transition-all cursor-pointer disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 xl:w-5 xl:h-5 animate-spin" />
@@ -667,7 +658,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
           src="/images/auth/admin-hero-scene-v2.png"
           alt="AkwaabaHomes Admin Portal"
           fill
-          priority
+          quality={75}
           sizes="100vw"
           className="object-fill pointer-events-none select-none"
         />
@@ -685,7 +676,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
               width={44} 
               height={44} 
               className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-xs" 
-              priority 
+              quality={65}
             />
           </div>
           <div className="flex flex-col leading-none">
@@ -794,7 +785,7 @@ ${setupData.rawCodes.map((code, idx) => `${idx + 1}. ${code}`).join('\n')}
               alt="AkwaabaHomes" 
               width={36} 
               height={36} 
-              className="w-9 h-9 object-contain drop-shadow-xs" 
+              className="w-9 h-9 object-contain drop-shadow-xs" fetchPriority="high" quality={65} 
               priority 
             />
             <div className="flex flex-col leading-none">

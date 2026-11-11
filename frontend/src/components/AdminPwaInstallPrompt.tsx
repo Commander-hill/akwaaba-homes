@@ -58,18 +58,18 @@ export default function AdminPwaInstallPrompt() {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h4 className="font-extrabold text-xs text-white">Akwaaba Admin App</h4>
+                <p className="font-extrabold text-xs text-white">Akwaaba Admin App</p>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-0.5 uppercase">
                   <Download className="w-2.5 h-2.5" /> PWA
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">Install dedicated Admin Portal</p>
+              <p className="text-[11px] text-slate-300 mt-0.5">Install dedicated Admin Portal</p>
             </div>
           </div>
 
           <button
             onClick={handleDismiss}
-            className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="w-7 h-7 min-w-[28px] min-h-[28px] rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300 hover:text-white transition-colors cursor-pointer"
             aria-label="Dismiss"
           >
             <X className="w-3.5 h-3.5" />
@@ -81,7 +81,7 @@ export default function AdminPwaInstallPrompt() {
             variant="ghost"
             size="sm"
             onClick={handleDismiss}
-            className="flex-1 text-slate-400 hover:text-white hover:bg-white/10"
+            className="flex-1 text-slate-300 hover:text-white hover:bg-white/10"
           >
             Later
           </Button>
@@ -90,7 +90,7 @@ export default function AdminPwaInstallPrompt() {
             size="sm"
             onClick={handleInstallClick}
             leftIcon={<Download className="w-3.5 h-3.5" />}
-            className="flex-1"
+            className="flex-1 !bg-[#15803D] hover:!bg-[#166534]"
           >
             Install App
           </Button>

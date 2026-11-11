@@ -88,14 +88,14 @@ export function LiveHealthHeartbeat() {
                 Live Infrastructure Pulse
               </span>
             </div>
-            <h3 className="text-sm sm:text-base font-extrabold text-zinc-950 dark:text-white mt-0.5">
+            <h2 className="text-sm sm:text-base font-extrabold text-zinc-950 dark:text-white mt-0.5">
               Command Centre Diagnostics Heartbeat
-            </h3>
+            </h2>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="text-[11px] text-zinc-400 font-mono hidden md:inline-block">
+          <span className="text-[11px] text-zinc-600 dark:text-zinc-300 font-mono hidden md:inline-block">
             Auto-probes every 30s
           </span>
           <button
@@ -127,7 +127,7 @@ export function LiveHealthHeartbeat() {
                   </div>
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">PostgreSQL DB</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-zinc-500">
+                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
                   {services.database?.latencyMs}ms
                 </span>
               </div>
@@ -139,7 +139,7 @@ export function LiveHealthHeartbeat() {
                   <span>{badge.text}</span>
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+              <p className="text-[10px] text-zinc-600 dark:text-zinc-300 truncate">
                 {services.database?.details || 'Database connection pool active'}
               </p>
             </div>
@@ -158,7 +158,7 @@ export function LiveHealthHeartbeat() {
                   </div>
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">Paystack API</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-zinc-500">
+                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
                   {services.paystack?.latencyMs}ms
                 </span>
               </div>
@@ -170,7 +170,7 @@ export function LiveHealthHeartbeat() {
                   <span>{badge.text}</span>
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+              <p className="text-[10px] text-zinc-600 dark:text-zinc-300 truncate">
                 {services.paystack?.details || 'Webhook endpoint operational'}
               </p>
             </div>
@@ -189,7 +189,7 @@ export function LiveHealthHeartbeat() {
                   </div>
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">Telco SMS Hub</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-zinc-500">
+                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
                   {services.smsGateway?.latencyMs}ms
                 </span>
               </div>
@@ -201,7 +201,7 @@ export function LiveHealthHeartbeat() {
                   <span>{badge.text}</span>
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+              <p className="text-[10px] text-zinc-600 dark:text-zinc-300 truncate">
                 {services.smsGateway?.details || 'Ghana telcos (MTN, Telecel, AT) ready'}
               </p>
             </div>
@@ -220,7 +220,7 @@ export function LiveHealthHeartbeat() {
                   </div>
                   <span className="text-xs font-bold text-zinc-900 dark:text-white">Socket Cluster</span>
                 </div>
-                <span className="text-[10px] font-mono font-bold text-zinc-500">
+                <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300">
                   {services.socketCluster?.connectedClients || 1} live
                 </span>
               </div>
@@ -232,7 +232,7 @@ export function LiveHealthHeartbeat() {
                   <span>{badge.text}</span>
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-400 dark:text-zinc-500 truncate">
+              <p className="text-[10px] text-zinc-600 dark:text-zinc-300 truncate">
                 {services.socketCluster?.details || 'Real-time telemetry streaming'}
               </p>
             </div>
@@ -243,7 +243,7 @@ export function LiveHealthHeartbeat() {
 
       {/* Diagnostics Sub-bar */}
       {data?.diagnostics && (
-        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-400 font-mono">
+        <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-300 font-mono">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-zinc-400" />

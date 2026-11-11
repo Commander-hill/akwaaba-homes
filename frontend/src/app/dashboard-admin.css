@@ -15,6 +15,9 @@
 @source "../components/tenant";
 @source "../components/tenant-ui/TenantShell.tsx";
 @source "../components/MaintenanceScreen.tsx";
+@source "../components/AdminPwaInstallPrompt.tsx";
+@source "../components/BrandLoader.tsx";
+@source "../components/NotificationBell.tsx";
 @source "../components/SkeletonTable.tsx";
 @source "../components/ui";
 @source "../providers";

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { LiveHealthHeartbeat } from '@/components/admin/LiveHealthHeartbeat';
 import { DashboardOverviewSkeleton, useInitialSkeleton } from '@/components/ui/PageSkeletons';
 import { useQuery } from '@tanstack/react-query';
@@ -27,14 +29,10 @@ import {
   Sparkles,
   Layers
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip
-} from 'recharts';
+const PlatformGrowthChart = dynamic(() => import('@/components/admin/PlatformGrowthChart'), {
+  ssr: false,
+  loading: () => <div className="h-56 w-full rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 animate-pulse" />,
+});
 
 export default function AdminDashboardPage() {
   const { socket } = useSocket();
@@ -197,15 +195,18 @@ export default function AdminDashboardPage() {
       {/* ── 1. HERO BANNER ── */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#eef8f2] via-[#e5f5eb] to-[#eaf7ee] dark:from-[#062919] dark:via-[#052014] dark:to-[#041a10] border border-[#d6f0de] dark:border-emerald-900/40 shadow-xs min-h-[148px] flex items-center justify-between p-6 sm:p-8">
         {/* Right background luxury building image */}
-        <div
-          className="absolute right-0 top-0 bottom-0 w-full sm:w-[65%] lg:w-[60%] pointer-events-none opacity-90 dark:opacity-40"
-          style={{
-            backgroundImage: "url('/images/admin/dashboard-hero-building.png')",
-            backgroundPosition: 'right center',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: 'contain'
-          }}
-        />
+        <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[65%] lg:w-[60%] pointer-events-none opacity-90 dark:opacity-40">
+          <Image
+            src="/images/admin/dashboard-hero-building.png"
+            alt="AkwaabaHomes Administration"
+            fill
+            priority
+            fetchPriority="high"
+            quality={65}
+            sizes="(max-width: 640px) 100vw, 60vw"
+            className="object-contain object-right"
+          />
+        </div>
 
         {/* Hero left content */}
         <div className="relative z-10 max-w-xl">
@@ -271,7 +272,7 @@ export default function AdminDashboardPage() {
             <CreditCard className="w-6 h-6 text-[#04793d] dark:text-emerald-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Total Transactions</div>
+            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Total Transactions</div>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 GH₵ {Number(totalRevenue).toLocaleString()}
@@ -292,7 +293,7 @@ export default function AdminDashboardPage() {
             <Users className="w-6 h-6 text-[#04793d] dark:text-emerald-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Registered Users</div>
+            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Registered Users</div>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalUsers).toLocaleString()}
@@ -313,12 +314,12 @@ export default function AdminDashboardPage() {
             <Building className="w-6 h-6 text-[#04793d] dark:text-emerald-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Catalog Listings</div>
+            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Catalog Listings</div>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalProperties).toLocaleString()}
               </span>
-              <span className="text-xs font-semibold text-zinc-400 flex items-center">
+              <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300 flex items-center">
                 → 0%
               </span>
             </div>
@@ -334,7 +335,7 @@ export default function AdminDashboardPage() {
             <CalendarCheck className="w-6 h-6 text-[#04793d] dark:text-emerald-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Tenancy Bookings</div>
+            <div className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Tenancy Bookings</div>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl font-black text-zinc-950 dark:text-white tracking-tight">
                 {Number(totalBookings).toLocaleString()}
@@ -355,10 +356,10 @@ export default function AdminDashboardPage() {
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-6 h-6 text-[#E07A10] shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-extrabold text-zinc-950 dark:text-white text-base">
+                <h2 className="font-extrabold text-zinc-950 dark:text-white text-base">
                   Action Required
-                </h3>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                </h2>
+                <p className="text-xs text-zinc-600 dark:text-zinc-300 mt-0.5">
                   {actionItemsCount} items need your attention
                 </p>
               </div>
@@ -394,9 +395,9 @@ export default function AdminDashboardPage() {
               <Check className="w-6 h-6 stroke-[3]" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-black tracking-tight text-white">
+              <h2 className="text-base sm:text-lg font-black tracking-tight text-white">
                 System Healthy
-              </h3>
+              </h2>
               <p className="text-xs text-emerald-100/90 mt-0.5 font-normal">
                 All systems are running smoothly.
               </p>
@@ -436,13 +437,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── 4. BOTTOM SECTION: PLATFORM GROWTH OVERVIEW & RECENT ACTIVITY ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 360px' }}>
         {/* Left: Platform Growth Overview */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
+            <h2 className="text-sm font-extrabold text-zinc-950 dark:text-white">
               Platform Growth Overview
-            </h3>
+            </h2>
 
             <div className="flex items-center gap-3 text-xs font-semibold">
               <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
@@ -467,60 +468,16 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={growthChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="userCurveGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#04793d" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#04793d" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="name"
-                  stroke="#a1a1aa"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="#a1a1aa"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  domain={[0, 20]}
-                  ticks={[0, 5, 10, 15, 20]}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#18181b',
-                    borderColor: '#27272a',
-                    borderRadius: '12px',
-                    fontSize: '11px',
-                    color: '#fff',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="users"
-                  stroke="#04793d"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#userCurveGrad)"
-                  dot={{ r: 4, fill: '#04793d', stroke: '#fff', strokeWidth: 1.5 }}
-                  activeDot={{ r: 6, fill: '#04793d' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <PlatformGrowthChart data={growthChartData} />
           </div>
         </div>
 
         {/* Right: Recent Activity */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between pb-1 border-b border-zinc-100 dark:border-zinc-800">
-            <h3 className="text-sm font-extrabold text-zinc-950 dark:text-white">
+            <h2 className="text-sm font-extrabold text-zinc-950 dark:text-white">
               Recent Activity
-            </h3>
+            </h2>
             <Link
               href="/admin/audit"
               className="inline-flex items-center gap-1 text-xs font-bold text-[#04793d] dark:text-emerald-400 hover:underline transition"
@@ -551,7 +508,7 @@ export default function AdminDashboardPage() {
                     <div className="text-xs font-bold text-zinc-900 dark:text-white">
                       {act.title}
                     </div>
-                    <div className="text-[11px] text-zinc-400 mt-0.5 font-normal">
+                    <div className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5 font-normal">
                       {act.timeAgo}
                     </div>
                   </div>
@@ -574,9 +531,9 @@ export default function AdminDashboardPage() {
                   <AlertTriangle className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-zinc-950 dark:text-white text-base">
+                  <h2 className="font-extrabold text-zinc-950 dark:text-white text-base">
                     Action-Required Operational Queue
-                  </h3>
+                  </h2>
                   <p className="text-xs text-zinc-500">
                     Prioritized compliance and verification items awaiting review.
                   </p>
