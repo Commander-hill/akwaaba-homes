@@ -848,7 +848,7 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
         },
         property: {
           include: {
-            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, isSuspended: true } }
           }
         },
         room: true,
@@ -880,7 +880,7 @@ export const getSubscriptionById = async (req: Request, res: Response): Promise<
       include: {
         property: {
           include: {
-            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, isSuspended: true } }
           }
         }
       }
@@ -1525,7 +1525,7 @@ export const getAllSubscriptions = async (req: Request, res: Response): Promise<
       include: {
         property: {
           include: {
-            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+            landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, isSuspended: true } }
           }
         }
       },
@@ -1538,7 +1538,15 @@ export const getAllSubscriptions = async (req: Request, res: Response): Promise<
       const endDate = new Date(sub.endDate);
       const diffMs = endDate.getTime() - now.getTime();
       const daysRemaining = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      return { ...sub, daysRemaining };
+      const rawImages = sub.property?.images;
+      const parsedImages =
+        typeof rawImages === 'string'
+          ? safeJsonParse(rawImages, [])
+          : Array.isArray(rawImages)
+            ? rawImages
+            : [];
+      const propertyThumbnail = Array.isArray(parsedImages) ? (parsedImages[0] || null) : null;
+      return { ...sub, daysRemaining, propertyThumbnail };
     });
 
     res.status(200).json(enriched);
@@ -2064,7 +2072,7 @@ export const getAllReviews = async (req: Request, res: Response): Promise<void> 
                 title: true, 
                 location: true,
                 type: true,
-                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true } }
+                landlord: { select: { id: true, firstName: true, lastName: true, email: true, phoneNumber: true, avatarUrl: true, isSuspended: true } }
               } 
             } 
           } 
